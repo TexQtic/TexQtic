@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-13 (TECS-DPP-PASSPORT-NETWORK-014 — VERIFIED_COMPLETE; trade linkage foundation; 68/68 unit tests PASS; tsc CLEAN; evidence vault 59/59, product details 50/50, node-certs 25/25 regression PASS)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-13 (TECS-DPP-PASSPORT-NETWORK-015 — VERIFIED_COMPLETE; public buyer page v2; PublicPassport.tsx upgraded with 7 new sections + 9 new testIds; DPP-E2E-15/16 added; tsc CLEAN)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,23 +11,24 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-014 Trade Linkage Foundation (2026-05-13); 68/68 unit tests PASS; evidence vault 59/59, product details 50/50, node-certs 25/25 regression PASS; tsc CLEAN; awaiting Paresh authorization for next unit
+product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-015 Public Buyer Page v2 (2026-05-13); PublicPassport.tsx upgraded; DPP-E2E-15/16 added; tsc CLEAN; awaiting Paresh authorization for next unit
 active_delivery_unit: NONE — awaiting Paresh authorization for implementation slices
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  TECS-DPP-PASSPORT-NETWORK-014 VERIFIED_COMPLETE (2026-05-13).
-  Delivered: dpp_trade_links table (migration 20260513200000_tecs_dpp_trade_links),
-  RLS (ENABLE+FORCE, 4 policies using app.current_org_id()), 4 indexes + partial unique index,
-  FKs to traceability_nodes (ON DELETE CASCADE), organizations. NO FK to orders/rfqs (domain boundary).
-  Service: server/src/services/dppTradeLinks.ts — DppTradeLinkRow, DppTradeLinkDto,
-    CreateDppTradeLinkInput, toDppTradeLinkDto, listDppTradeLinksForNode, createDppTradeLink,
-    validateDppTradeLinkSource, assertTradeLinkNodeBelongsToOrg,
-    DPP_TRADE_LINK_TYPES (9 values), DPP_TRADE_LINK_VISIBILITY_VALUES (3 values),
-    DPP_TRADE_LINK_SOURCE_TABLE_ALLOWLIST.
-  Routes: GET /api/tenant/dpp/:nodeId/trade-links (any auth member).
-          POST /api/tenant/dpp/:nodeId/trade-links (ADMIN/OWNER only).
-  Audit: tenant.dpp.trade_link.listed + tenant.dpp.trade_link.created.
-  Tests: tecs-dpp-trade-links.test.ts — 68/68 PASS.
+  TECS-DPP-PASSPORT-NETWORK-015 VERIFIED_COMPLETE (2026-05-13).
+  Delivered: components/Public/PublicPassport.tsx upgraded to v2 with 7 new sections:
+    [2] Product Story (public-passport-product-story),
+    [3] Product Identity Summary (public-passport-identity-summary),
+    [4] Supply Chain Traceability Timeline (public-passport-traceability-timeline, public-passport-lineage-depth),
+    [5] Evidence Summary updated (2-col, public-passport-approved-cert-count, public-passport-ai-claims-count),
+    [6] Certification Evidence Cards (public-passport-certification-cards, public-passport-certification-card, public-passport-certification-empty),
+    [7] QR/Share Panel preserved (public-passport-qr-label, public-passport-qr-payload-url, public-passport-print-label, public-passport-qr-url),
+    [8] Privacy Note updated ('document,' added).
+  Header: public-passport-header testId added.
+  Privacy: no org_id, nodeId, sourceId, orderId, rfqId, invoiceId, documentUrl in DOM.
+  Forbidden copy: none (DPP Foundation, mandatory EU, JSON-LD etc. absent).
+  E2E: DPP-E2E-15 (v2 API field shape check), DPP-E2E-16 (enhanced privacy regression).
+  tsc --noEmit: CLEAN.
   Regression: evidence vault 59/59, product details 50/50, node-certs 25/25 PASS.
   Typecheck: tsc --noEmit CLEAN.
   Public privacy: dpp_trade_links never queried from public routes. sourceId never exposed publicly.

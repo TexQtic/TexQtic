@@ -6405,3 +6405,28 @@ Notes: `GOV-NAV-01` remains `OPEN` pending separate governance sync and remains 
   reopening, G-026 reopening, or second-unit opening was authorized or implied.
 Refs: governance/units/GOV-NAV-01.md · governance/control/NEXT-ACTION.md ·
   governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### TECS-DPP-PASSPORT-NETWORK-015 — 2026-05-13
+Type: IMPLEMENTATION + TYPECHECK VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: TBD (pending impl commit)
+Title: Public Buyer Page v2 — product story, cert cards, supply chain timeline, identity summary
+Summary: Upgraded components/Public/PublicPassport.tsx to v2 with 7 new sections (product story,
+  identity summary, traceability timeline, evidence summary 2-col, certification cards, QR panel
+  preserved, privacy note updated). Added DPP-E2E-15 (API field shape v2 verification) and
+  DPP-E2E-16 (enhanced privacy regression for sourceId/orderId/rfqId/invoiceId/documentUrl).
+  No server changes, no schema changes, no migration changes. tsc --noEmit CLEAN.
+Layer Impact: Layer 0 (NEXT-ACTION, OPEN-SET, GOVERNANCE-CHANGELOG updated); Layer 3 (this file)
+Notes: aiExtractedClaimsCount always 0 (GUC/RLS known issue — not fixed in 015).
+  public-passport-lineage-depth moved to traceability timeline (removed from evidence summary).
+  Material Composition + Sustainability sections deferred (data not in public API response).
+  Browser DOM testId assertions for v2 sections deferred (no chromium playwright project).
+  Certification cards empty state: data-testid="public-passport-certification-empty" present.
+  Privacy boundary confirmed: no org_id, nodeId, sourceId, orderId, rfqId, invoiceId, documentUrl.
+  Full platform launch NOT AUTHORIZED. Next candidate: TECS-DPP-PASSPORT-NETWORK-016 (QR Image,
+    requires explicit Paresh approval for react-qr-code or equivalent package install).
+Refs: components/Public/PublicPassport.tsx · tests/e2e/dpp-passport-network.spec.ts ·
+  governance/control/GOVERNANCE-CHANGELOG.md · governance/control/NEXT-ACTION.md ·
+  governance/control/OPEN-SET.md · governance/log/EXECUTION-LOG.md

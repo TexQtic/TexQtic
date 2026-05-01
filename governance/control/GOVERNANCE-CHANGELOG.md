@@ -5,6 +5,61 @@
 
 ---
 
+## 2026-05-13 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-015 (Public Buyer Page v2)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-015
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-05-13
+Type:          IMPLEMENTATION + TYPECHECK VERIFICATION
+
+Delivered:
+  - components/Public/PublicPassport.tsx — upgraded to v2 with 7 new sections:
+      [2] Product Story (auto-narrative from product data)
+      [3] Product Identity Summary (nodeType, manufacturer, jurisdiction, batchId, exportedAt)
+      [4] Supply Chain Traceability Timeline (lineageDepth tiers + nodeCount)
+      [5] Evidence Summary updated (2-col: approvedCertCount + aiExtractedClaimsCount)
+      [6] Certification Evidence Cards (per-cert visual state: APPROVED/EXPIRED/REVOKED/default)
+      [7] QR/Share Panel preserved (all 4 prior testIds kept)
+      [8] Privacy Note updated ('document,' added to sensitive data list)
+    Header: data-testid="public-passport-header" added.
+    Helpers: buildProductStory, certVisualState.
+    New testIds: public-passport-header, public-passport-product-story,
+      public-passport-identity-summary, public-passport-traceability-timeline,
+      public-passport-lineage-depth (moved from evidence summary to traceability timeline),
+      public-passport-certification-cards, public-passport-certification-card,
+      public-passport-certification-empty.
+    Preserved testIds: public-passport-page, public-passport-loading, public-passport-error,
+      public-passport-status-badge, public-passport-product-name, public-passport-maturity-badge,
+      public-passport-evidence-summary, public-passport-approved-cert-count,
+      public-passport-ai-claims-count, public-passport-qr-label, public-passport-qr-payload-url,
+      public-passport-print-label, public-passport-qr-url, public-passport-privacy-note.
+  - tests/e2e/dpp-passport-network.spec.ts — DPP-E2E-15 + DPP-E2E-16 added:
+      DPP-E2E-15: API response contains all v2 section fields (VERIFIED_COMPLETE_WITH_LIMITATIONS)
+      DPP-E2E-16: Enhanced privacy regression — sourceId, orderId, rfqId, invoiceId,
+        buyer_org_id, document_url, claim_value, approved_by absent from public response.
+
+Verification:
+  - tsc --noEmit: CLEAN
+  - Privacy check: orgId, org_id, nodeId, sourceId, orderId, rfqId, invoiceId, buyerOrgId,
+      reviewedByUserId, document_url, documentUrl, public_token absent from component DOM
+  - Forbidden copy check: CLEAN (no DPP Foundation, mandatory EU, JSON-LD, carbon/chemical etc.)
+  - Route safety: no .json route reference in component or tests
+  - No server changes, no schema changes, no migration changes
+
+Design Decisions:
+  - public-passport-lineage-depth moved to traceability timeline section (primary display);
+    removed from evidence summary grid (which now shows 2 stats: certCount + aiClaims)
+  - aiExtractedClaimsCount renders '—' when 0 (known GUC/RLS issue per §9 design note);
+    testId always present regardless of value
+  - Certification cards: always rendered (with empty state when certifications.length === 0)
+  - Product story: auto-generated from available public fields; no LLM, no server changes
+  - Mobile-first: existing Tailwind max-w-3xl + px-6 preserved; sm:grid-cols-2 for cert cards
+  - Material Composition and Sustainability sections NOT implemented (data not in public API response)
+```
+
+---
+
 ## 2026-05-13 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-014 (Trade Linkage Foundation)
 
 ```

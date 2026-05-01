@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-13 (TECS-DPP-PASSPORT-NETWORK-014 — VERIFIED_COMPLETE; trade linkage foundation; 68/68 unit tests PASS; tsc CLEAN)
+**Last Updated:** 2026-05-13 (TECS-DPP-PASSPORT-NETWORK-015 — VERIFIED_COMPLETE; public buyer page v2; tsc CLEAN)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,18 @@
 
 ## Operating Notes
 
+- TECS-DPP-PASSPORT-NETWORK-015 is VERIFIED_COMPLETE (2026-05-13).
+  Public Buyer Page v2. components/Public/PublicPassport.tsx upgraded with 7 new sections and 9 new testIds.
+  Sections: Product Story, Product Identity Summary, Supply Chain Traceability Timeline, Evidence Summary (2-col),
+    Certification Evidence Cards (with empty state), QR/Share Panel preserved, Privacy Note updated.
+  New testIds: public-passport-header, public-passport-product-story, public-passport-identity-summary,
+    public-passport-traceability-timeline, public-passport-lineage-depth (moved to timeline),
+    public-passport-certification-cards, public-passport-certification-card, public-passport-certification-empty.
+  Helpers: buildProductStory (auto-narrative), certVisualState (APPROVED/EXPIRED/REVOKED/default).
+  E2E: DPP-E2E-15 (API field shape v2 check) + DPP-E2E-16 (enhanced privacy regression) added.
+  Privacy: no private fields in DOM (orgId, nodeId, sourceId, orderId, rfqId, invoiceId, documentUrl absent).
+  Forbidden copy: none present. tsc --noEmit CLEAN. No server changes. No schema changes.
+  No active delivery unit. Full platform launch NOT AUTHORIZED.
 - TECS-DPP-PASSPORT-NETWORK-014 is VERIFIED_COMPLETE (2026-05-13).
   Trade Linkage Foundation. Table: dpp_trade_links (migration 20260513200000_tecs_dpp_trade_links).
   RLS: ENABLE + FORCE ROW LEVEL SECURITY. 4 RLS policies using app.current_org_id(). 4 indexes + partial unique.
