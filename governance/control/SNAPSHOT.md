@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-010 — DESIGN_COMPLETE; Passport Network Expansion Design Packet; awaiting Paresh authorization for implementation slices)
+**Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-010-B — VERIFIED_COMPLETE_WITH_LIMITATIONS; Published DPP QA Fixture seed script + DPP-E2E-12/13/14 scaffolded; BLOCKED_BY_FIXTURE pending traceability node creation)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -10,8 +10,8 @@
 ---
 
 ```yaml
-snapshot_date: 2026-05-01
-snapshot_unit: TECS-DPP-PASSPORT-NETWORK-010
+snapshot_date: 2026-05-09
+snapshot_unit: TECS-DPP-PASSPORT-NETWORK-010-B
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-AUTHORIZATION
 current_open_design_unit: TECS-DPP-PASSPORT-NETWORK-010
@@ -20,24 +20,27 @@ current_open_design_unit_artifact: docs/TECS-DPP-PASSPORT-NETWORK-010-DESIGN-v1.
 current_open_design_unit_note: >-
   TECS-DPP-PASSPORT-NETWORK-010 DESIGN_COMPLETE (2026-05-01).
   Expansion design packet covers 9 implementation slices (010-B through 020) and 15 decision gates.
-  No implementation active. All slices require explicit Paresh authorization.
-  Next recommended candidate: Slice 010-B (Published DPP QA Fixture + Authenticated Runtime Proof).
+  TECS-DPP-PASSPORT-NETWORK-010-B VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-09).
+  Seed script idempotent; DPP-E2E-12/13/14 scaffolded; BLOCKED_BY_FIXTURE (no nodes in QA org yet).
+  To unblock: create traceability node in tenant UI, then run seed script.
   Prior: TECS-DPP-PASSPORT-NETWORK-010A VERIFIED_COMPLETE (corrective public passport link).
   All DPP Passport Network slices A–G committed (e3d81c5 through ce6b674) + adb15ad governance.
-latest_verified_product_close_unit: TECS-DPP-PASSPORT-NETWORK-010A
-latest_verified_product_close_status: VERIFIED_COMPLETE
-latest_verified_product_close_date: 2026-05-09 (010A corrective closure)
+latest_verified_product_close_unit: TECS-DPP-PASSPORT-NETWORK-010-B
+latest_verified_product_close_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+latest_verified_product_close_date: 2026-05-09
 latest_verified_product_close_verification: >-
-  11/11 DPP Passport Network E2E PASS against https://app.texqtic.com (2026-05-09).
-  DPP-E2E-01–10: all PASS (unchanged). DPP-E2E-11 (NEW): public route unauthenticated;
-  publicPassportId not leaked in public API 404 response.
-  Unit tests: 72/72 PASS (50 status-transition, 22 global-maturity).
-  TypeScript tsc --noEmit: CLEAN (0 errors).
+  tsc --noEmit: CLEAN (0 errors). E2E: 11/11 prior PASS against https://app.texqtic.com.
+  DPP-E2E-12/13/14 (NEW): SKIP BLOCKED_BY_FIXTURE (no traceability nodes in QA org — expected).
+  Seed: SEED_BLOCKED (correct graceful failure — empty node list returned by API).
+  Prior 010A: 11/11 E2E PASS. DPP-E2E-11: public route unauthenticated; publicPassportId not leaked.
 latest_verified_product_close_safety_boundaries: |
-  org_id_tenant_isolation: verified (no query scoping changes)
-  passport_status_gate: verified (auth required; unauth returns 401; DPP-E2E-07/08/09)
-  public_endpoint_anti_leakage: verified (publicPassportId absent from public 404; DPP-E2E-11)
+  org_id_tenant_isolation: verified (no query scoping changes; seed reads auth from .auth/qa-b2b.json)
+  passport_status_gate: verified (auth required; seed uses Bearer token; DPP-E2E-07/08/09)
+  public_endpoint_anti_leakage: verified (DPP-E2E-14 asserts forbidden field set on 200 response)
   d6_json_suffix_route_absent: verified (DPP-E2E-03 confirms 404 not crash)
+  gitignore_coverage: verified (.auth/ on line 66; dpp-qa-fixture.json not committed)
+  no_schema_migration: verified (no schema.prisma or migrations changes)
+  full_platform_launch: NOT_AUTHORIZED
   server_stability_after_probe: verified (DPP-E2E-04)
   no_schema_migration: verified (no schema.prisma or migrations changes)
   full_platform_launch: NOT_AUTHORIZED

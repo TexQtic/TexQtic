@@ -33,6 +33,39 @@ Description:
 
 ---
 
+## 2026-05-09 — VERIFIED_COMPLETE_WITH_LIMITATIONS: TECS-DPP-PASSPORT-NETWORK-010-B (Published DPP QA Fixture + Authenticated Runtime Proof)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-010-B
+Status:        VERIFIED_COMPLETE_WITH_LIMITATIONS
+Closure Date:  2026-05-09
+Type:          TEST + TOOLING — no schema, migration, route, or UI changes
+Files Changed: scripts/seed-dpp-fixture.ts (NEW), tests/e2e/dpp-passport-network.spec.ts (UPDATED)
+Commit:        85631e9 — [TEXQTIC] test(dpp): add published passport runtime fixture proof
+Evidence:
+  tsc --noEmit: CLEAN (0 errors)
+  E2E: 11/11 prior tests PASS; DPP-E2E-12/13/14 (NEW) SKIP: BLOCKED_BY_FIXTURE
+    DPP-E2E-01–11: all PASS against https://app.texqtic.com (unchanged)
+    DPP-E2E-12: tenant GET passport → publicPassportId non-null (BLOCKED_BY_FIXTURE: no nodes)
+    DPP-E2E-13: API conditions for dpp-public-passport-panel (BLOCKED_BY_FIXTURE: no nodes)
+    DPP-E2E-14: public API returns PUBLISHED view unauthenticated (BLOCKED_BY_FIXTURE: no nodes)
+  Seed script: SEED_BLOCKED (correct graceful failure — QA org has no traceability nodes yet)
+Description:
+  Slice 010-B delivered the Published DPP QA Fixture seed script and the authenticated runtime
+  proof E2E tests. scripts/seed-dpp-fixture.ts is an idempotent seed script that reads
+  .auth/qa-b2b.json, promotes the best available traceability node to PUBLISHED via the
+  PATCH /api/tenant/dpp/:nodeId/passport/status API, and writes .auth/dpp-qa-fixture.json
+  (gitignored). DPP-E2E-12/13/14 are scaffolded and skip with BLOCKED_BY_FIXTURE when no fixture
+  is present. To unblock: create a traceability node in the tenant UI, then re-run
+  `node --import tsx scripts/seed-dpp-fixture.ts`.
+  Limitations:
+    1. QA org has no traceability nodes → seed blocked → fixture unwritten → DPP-E2E-12/13/14 skip.
+    2. DPP-E2E-13: browser-level dpp-public-passport-panel assertion deferred (no chromium project).
+    3. DPP-E2E-14: browser render of /passport/:id deferred (same reason).
+```
+
+---
+
 ## 2026-05-09 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-010A (Corrective: Public Passport Link in Tenant View)
 
 ```

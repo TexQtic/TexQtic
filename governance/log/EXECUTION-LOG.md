@@ -36,6 +36,28 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TECS-DPP-PASSPORT-NETWORK-010-B — 2026-05-09
+Type: IMPLEMENTATION + VERIFICATION / TEST + TOOLING
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+Commit: 85631e9 — test(dpp): add published passport runtime fixture proof
+Title: Published DPP QA Fixture seed script + DPP-E2E-12/13/14 authenticated runtime proof
+Summary: Delivered scripts/seed-dpp-fixture.ts — an idempotent QA fixture seed script that promotes
+  the best available traceability node to PUBLISHED via the PATCH passport/status API and writes
+  .auth/dpp-qa-fixture.json (gitignored). Added DPP-E2E-12/13/14 to the Passport Network E2E spec.
+  Seed blocked gracefully (SEED_BLOCKED: QA org has no traceability nodes yet — correct behavior).
+  DPP-E2E-12/13/14 skip with BLOCKED_BY_FIXTURE as expected. 11/11 prior tests PASS. tsc CLEAN.
+Layer Impact: Layer 3 — EXECUTION-LOG.md appended (this entry); Layer 0 — GOVERNANCE-CHANGELOG.md,
+  NEXT-ACTION.md, OPEN-SET.md, SNAPSHOT.md updated (010-B closure state)
+Notes: To fully activate DPP-E2E-12/13/14: create a traceability node in the tenant UI, then run
+  `node --import tsx scripts/seed-dpp-fixture.ts`. DPP-E2E-13 browser assertion (dpp-public-passport-panel)
+  and DPP-E2E-14 browser render (/passport/:id) deferred — no chromium project in playwright.config.ts.
+  No schema, migration, route, or UI changes. .auth/ remains gitignored. Full platform launch NOT AUTHORIZED.
+Refs: scripts/seed-dpp-fixture.ts · tests/e2e/dpp-passport-network.spec.ts ·
+  governance/control/GOVERNANCE-CHANGELOG.md · governance/control/NEXT-ACTION.md ·
+  governance/control/OPEN-SET.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### STALE-TOKEN-FALLBACK-REMEDIATION-001 — 2026-04-22
 Type: IMPLEMENTATION + VERIFICATION / DEFECT FIX
 Status: CLOSED

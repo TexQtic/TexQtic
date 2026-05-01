@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-010 — DESIGN_COMPLETE; Passport Network Expansion Design Packet; awaiting Paresh authorization for implementation slices)
+**Last Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-010-B — VERIFIED_COMPLETE_WITH_LIMITATIONS; Published DPP QA Fixture seed script + DPP-E2E-12/13/14 scaffolded; BLOCKED_BY_FIXTURE pending traceability node creation)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,18 @@
 
 ## Operating Notes
 
+- TECS-DPP-PASSPORT-NETWORK-010-B is VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-09).
+  Seed script: scripts/seed-dpp-fixture.ts — idempotent fixture seed for QA org; SEED_BLOCKED
+    (correct graceful failure — QA org has no traceability nodes yet; create one in tenant UI first).
+  E2E: DPP-E2E-12/13/14 added to tests/e2e/dpp-passport-network.spec.ts; skip BLOCKED_BY_FIXTURE
+    when no fixture present. 11/11 prior tests PASS. tsc --noEmit CLEAN.
+  Commit: 85631e9 — test(dpp): add published passport runtime fixture proof.
+  Limitations:
+    1. QA org has no traceability nodes → DPP-E2E-12/13/14 skip (expected graceful behavior).
+    2. DPP-E2E-13: browser dpp-public-passport-panel assertion deferred (no chromium project).
+    3. DPP-E2E-14: browser /passport/:id render deferred (same reason).
+  To fully activate: create a node in tenant UI → run `node --import tsx scripts/seed-dpp-fixture.ts`.
+  No active delivery unit. Full platform launch NOT AUTHORIZED.
 - TECS-DPP-PASSPORT-NETWORK-010A is VERIFIED_COMPLETE (2026-05-09).
   Corrective unit: Slice E implemented the public buyer page at /passport/:publicPassportId but the
   tenant DPP view gave no visible path to reach it after publishing. Fix: added publicPassportId

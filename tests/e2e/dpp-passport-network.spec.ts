@@ -206,3 +206,139 @@ test('DPP-E2E-11 — 010A: public passport route is unauthenticated and does not
   expect(text).not.toContain('"publicPassportId"');
   expect(text).not.toContain('"public_token"');
 });
+
+// ── Group 5: 010-B — Published DPP fixture runtime proof ──────────────────────
+//
+// Prerequisites: run `node --import tsx scripts/seed-dpp-fixture.ts` to populate
+// .auth/dpp-qa-fixture.json before running these tests.
+//
+// Tests:
+//   DPP-E2E-12 — Tenant GET /api/tenant/dpp/:nodeId/passport returns non-null
+//                publicPassportId and status=PUBLISHED for the published fixture.
+//   DPP-E2E-13 — API-level proof of the conditions that render dpp-public-passport-panel
+//                in DPPPassport.tsx (passportStatus=PUBLISHED + publicPassportId non-null).
+//                VERIFIED_COMPLETE_WITH_LIMITATIONS: browser assertion requires
+//                authenticated browser session not available via Bearer token injection.
+//   DPP-E2E-14 — Public GET /api/public/dpp/:publicPassportId returns PUBLISHED view
+//                without auth. Anti-leakage: org_id, nodeId, public_token absent.
+//                VERIFIED_COMPLETE_WITH_LIMITATIONS: browser render of /passport/:id
+//                deferred (no chromium project in playwright.config.ts).
+
+interface DppFixtureMeta { nodeId: string; publicPassportId: string; productLabel?: string; }
+
+function loadDppFixture(): DppFixtureMeta | null {
+  try {
+    const file = join(process.cwd(), '.auth', 'dpp-qa-fixture.json');
+    if (!existsSync(file)) return null;
+    const m = JSON.parse(readFileSync(file, 'utf8')) as DppFixtureMeta;
+    if (typeof m.nodeId === 'string' && m.nodeId.length > 0 &&
+        typeof m.publicPassportId === 'string' && m.publicPassportId.length > 0) {
+      return m;
+    }
+    return null;
+  } catch { return null; }
+}
+
+const dppFixture = loadDppFixture();
+const FIXTURE_AVAILABLE = dppFixture !== null;
+
+test('DPP-E2E-12 — 010-B: tenant GET passport returns non-null publicPassportId for published fixture', async ({ request }) => {
+  if (!AUTH_AVAILABLE)    { test.skip(true, 'BLOCKED_BY_AUTH: no auth available'); return; }
+  if (!FIXTURE_AVAILABLE) { test.skip(true, 'BLOCKED_BY_FIXTURE: run scripts/seed-dpp-fixture.ts first'); return; }
+  const token = await acquireB2bToken(request);
+  if (!token) { test.skip(true, 'BLOCKED_BY_AUTH: token acquisition failed'); return; }
+
+  const res = await request.get(
+    `${BASE_URL}/api/tenant/dpp/${dppFixture!.nodeId}/passport`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  expect(res.status()).toBe(200);
+  const body = (await res.json()) as {
+    success: boolean;
+    data: { passport: { publicPassportId: string | null; passportStatus: string; passportMaturity: string } };
+  };
+  expect(body.success).toBe(true);
+  expect(body.data.passport.passportStatus).toBe('PUBLISHED');
+  expect(body.data.passport.publicPassportId).not.toBeNull();
+  expect(typeof body.data.passport.publicPassportId).toBe('string');
+  // publicPassportId must match the fixture (idempotency check)
+  expect(body.data.passport.publicPassportId).toBe(dppFixture!.publicPassportId);
+});
+
+test('DPP-E2E-13 — 010-B: API confirms dpp-public-passport-panel conditions (VERIFIED_COMPLETE_WITH_LIMITATIONS)', async ({ request }) => {
+  // NOTE: Full browser-level assertion of data-testid="dpp-public-passport-panel" requires
+  // an authenticated browser session. The SPA stores its tenant token at
+  // localStorage['texqtic_tenant_token'] (App.tsx:1432), but injecting a Bearer JWT into
+  // browser localStorage requires a chromium Playwright project and navigation to the
+  // DPPPassport view — out of scope for 010-B. This test proves the API condition gating
+  // dpp-public-passport-panel (DPPPassport.tsx:821):
+  //   passportData.passportStatus === 'PUBLISHED' && !!passportData.publicPassportId
+  // Status: VERIFIED_COMPLETE_WITH_LIMITATIONS — browser UI assertion deferred.
+  if (!AUTH_AVAILABLE)    { test.skip(true, 'BLOCKED_BY_AUTH: no auth available'); return; }
+  if (!FIXTURE_AVAILABLE) { test.skip(true, 'BLOCKED_BY_FIXTURE: run scripts/seed-dpp-fixture.ts first'); return; }
+  const token = await acquireB2bToken(request);
+  if (!token) { test.skip(true, 'BLOCKED_BY_AUTH: token acquisition failed'); return; }
+
+  const res = await request.get(
+    `${BASE_URL}/api/tenant/dpp/${dppFixture!.nodeId}/passport`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  expect(res.status()).toBe(200);
+  const body = (await res.json()) as {
+    data: { passport: { publicPassportId: string | null; passportStatus: string } };
+  };
+  const { publicPassportId, passportStatus } = body.data.passport;
+
+  // Both conditions must hold for dpp-public-passport-panel to render (DPPPassport.tsx:821)
+  expect(passportStatus).toBe('PUBLISHED');
+  expect(publicPassportId).not.toBeNull();
+
+  // Link shape: /passport/:publicPassportId — as constructed by DPPPassport.tsx:838
+  const expectedLinkSuffix = `/passport/${encodeURIComponent(publicPassportId!)}`;
+  expect(expectedLinkSuffix).toMatch(/^\/passport\/[0-9a-f-]{36}$/i);
+  expect(expectedLinkSuffix).not.toContain('.json');
+  expect(expectedLinkSuffix).not.toContain('/api/public/dpp');
+});
+
+test('DPP-E2E-14 — 010-B: public passport API returns PUBLISHED view unauthenticated (VERIFIED_COMPLETE_WITH_LIMITATIONS)', async ({ request }) => {
+  // NOTE: This tests the public JSON API contract (GET /api/public/dpp/:publicPassportId)
+  // consumed by PublicPassport.tsx. Browser rendering of the React SPA at /passport/:id
+  // requires adding a chromium project to playwright.config.ts — deferred for 010-B.
+  // Status: VERIFIED_COMPLETE_WITH_LIMITATIONS — browser render assertion deferred.
+  if (!FIXTURE_AVAILABLE) { test.skip(true, 'BLOCKED_BY_FIXTURE: run scripts/seed-dpp-fixture.ts first'); return; }
+
+  const res = await request.get(
+    `${BASE_URL}/api/public/dpp/${dppFixture!.publicPassportId}`,
+  );
+  // Must not require authentication
+  expect(res.status()).not.toBe(401);
+  expect(res.status()).not.toBe(403);
+  // Must return 200 for a known-published fixture
+  expect(res.status()).toBe(200);
+
+  const body = (await res.json()) as {
+    success: boolean;
+    data: {
+      publicPassportId: string;
+      passportStatus: string;
+      passportMaturity: string;
+      product: { nodeType: string; batchId: string };
+      lineageSummary: { lineageDepth: number; nodeCount: number };
+      certifications: Array<{ certificationType: string; lifecycleStateName: string }>;
+      evidenceSummary: { approvedCertCount: number; aiExtractedClaimsCount: number };
+      qr: { payloadUrl: string; format: string };
+    };
+  };
+  expect(body.success).toBe(true);
+  expect(body.data.passportStatus).toBe('PUBLISHED');
+  expect(body.data.publicPassportId).toBe(dppFixture!.publicPassportId);
+  expect(body.data.product).toBeDefined();
+  expect(body.data.qr.payloadUrl).toBeTruthy();
+
+  // Anti-leakage: internal identifiers must not appear in the public response
+  const text = JSON.stringify(body);
+  const forbidden = ['"org_id"', '"nodeId"', '"supplierOrgId"', '"buyerOrgId"', '"reviewedByUserId"', '"public_token"'];
+  for (const field of forbidden) {
+    expect(text).not.toContain(field);
+  }
+});
