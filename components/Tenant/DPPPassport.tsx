@@ -67,6 +67,34 @@ interface DppSnapshot {
 type DppMaturityLevel = 'LOCAL_TRUST' | 'TRADE_READY' | 'COMPLIANCE' | 'GLOBAL_DPP';
 type DppPassportStatus = 'DRAFT' | 'INTERNAL' | 'TRADE_READY' | 'PUBLISHED';
 
+// ─── D-8 (Slice 013): Product Passport Details DTO ───────────────────────────
+
+interface MaterialCompositionItem {
+  material: string;
+  percentage: number;
+}
+
+interface DppProductDetailsDto {
+  id: string;
+  orgId: string;
+  nodeId: string;
+  sku: string | null;
+  styleCode: string | null;
+  batchLotNumber: string | null;
+  productDescription: string | null;
+  seasonOrModelYear: string | null;
+  facilityName: string | null;
+  countryOfOrigin: string | null;
+  materialComposition: MaterialCompositionItem[] | null;
+  recycledContentPercent: number | null;
+  organicContentPercent: number | null;
+  dyeFinishCategory: string | null;
+  restrictedSubstancesDeclared: boolean | null;
+  productPhotoEvidenceItemId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface DppPassportView {
   nodeId: string;
   passportStatus: DppPassportStatus;
@@ -77,6 +105,7 @@ interface DppPassportView {
     approvedCertCount: number;
     lineageDepth: number;
   };
+  passportProductDetails: DppProductDetailsDto | null;
 }
 
 const PASSPORT_STATUS_CLASSES: Record<DppPassportStatus, string> = {
@@ -814,6 +843,94 @@ export function DPPPassport({ onBack, title = 'DPP Passport', subtitle = 'Digita
               </section>
             );
           })()}
+
+          {/* ── TECS-DPP-PASSPORT-NETWORK-013 D-8: Product Passport Details ── */}
+          {passportData && (
+            <section data-testid="dpp-product-details-section" className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-3">
+              <h2 className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Product Passport Details</h2>
+              {!passportData.passportProductDetails ? (
+                <p data-testid="dpp-product-details-empty" className="text-slate-400 text-sm italic">
+                  Add product details to help buyers understand what you sell.
+                </p>
+              ) : (
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                  {passportData.passportProductDetails.sku && (
+                    <div>
+                      <dt className="text-slate-400 font-medium">SKU</dt>
+                      <dd data-testid="dpp-product-sku" className="text-slate-700 font-mono text-xs">{passportData.passportProductDetails.sku}</dd>
+                    </div>
+                  )}
+                  {passportData.passportProductDetails.batchLotNumber && (
+                    <div>
+                      <dt className="text-slate-400 font-medium">Batch / Lot No.</dt>
+                      <dd data-testid="dpp-product-batch-lot" className="text-slate-700 font-mono text-xs">{passportData.passportProductDetails.batchLotNumber}</dd>
+                    </div>
+                  )}
+                  {passportData.passportProductDetails.productDescription && (
+                    <div className="sm:col-span-2">
+                      <dt className="text-slate-400 font-medium">Description</dt>
+                      <dd data-testid="dpp-product-description" className="text-slate-700">{passportData.passportProductDetails.productDescription}</dd>
+                    </div>
+                  )}
+                  {passportData.passportProductDetails.countryOfOrigin && (
+                    <div>
+                      <dt className="text-slate-400 font-medium">Country of Origin</dt>
+                      <dd data-testid="dpp-product-country-origin" className="text-slate-700">{passportData.passportProductDetails.countryOfOrigin}</dd>
+                    </div>
+                  )}
+                  {passportData.passportProductDetails.facilityName && (
+                    <div>
+                      <dt className="text-slate-400 font-medium">Facility</dt>
+                      <dd data-testid="dpp-product-facility" className="text-slate-700">{passportData.passportProductDetails.facilityName}</dd>
+                    </div>
+                  )}
+                  {passportData.passportProductDetails.materialComposition &&
+                    passportData.passportProductDetails.materialComposition.length > 0 && (
+                    <div className="sm:col-span-2">
+                      <dt className="text-slate-400 font-medium">Material Composition</dt>
+                      <dd data-testid="dpp-material-composition" className="mt-1 space-y-1">
+                        {passportData.passportProductDetails.materialComposition.map((item, i) => (
+                          <span
+                            key={i}
+                            data-testid="dpp-material-composition-item"
+                            className="inline-flex items-center gap-1.5 mr-2 px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-xs"
+                          >
+                            {item.material} — {item.percentage}%
+                          </span>
+                        ))}
+                      </dd>
+                    </div>
+                  )}
+                  {passportData.passportProductDetails.recycledContentPercent !== null && (
+                    <div>
+                      <dt className="text-slate-400 font-medium">Recycled Content</dt>
+                      <dd data-testid="dpp-recycled-content" className="text-slate-700">{passportData.passportProductDetails.recycledContentPercent}%</dd>
+                    </div>
+                  )}
+                  {passportData.passportProductDetails.organicContentPercent !== null && (
+                    <div>
+                      <dt className="text-slate-400 font-medium">Organic Content</dt>
+                      <dd data-testid="dpp-organic-content" className="text-slate-700">{passportData.passportProductDetails.organicContentPercent}%</dd>
+                    </div>
+                  )}
+                  {passportData.passportProductDetails.dyeFinishCategory && (
+                    <div>
+                      <dt className="text-slate-400 font-medium">Dye / Finish Category</dt>
+                      <dd data-testid="dpp-dye-finish" className="text-slate-700">{passportData.passportProductDetails.dyeFinishCategory}</dd>
+                    </div>
+                  )}
+                  {passportData.passportProductDetails.restrictedSubstancesDeclared !== null && (
+                    <div>
+                      <dt className="text-slate-400 font-medium">Restricted Substances Declared</dt>
+                      <dd data-testid="dpp-restricted-substances" className="text-slate-700">
+                        {passportData.passportProductDetails.restrictedSubstancesDeclared ? 'Yes' : 'No'}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              )}
+            </section>
+          )}
 
           {/* ── TECS-DPP-PASSPORT-NETWORK-010A: Public Buyer Passport link panel ── */}
           {passportData && (() => {

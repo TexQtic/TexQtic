@@ -31,6 +31,14 @@ import {
   toDppEvidenceItemDto,
 } from '../services/dppEvidenceVault.js';
 import {
+  type DppProductDetailsRow,
+  toDppProductDetailsDto,
+  getDppProductDetailsForNode,
+  upsertDppProductDetailsForNode,
+  validateMaterialComposition,
+  DPP_MATERIAL_MAX_ENTRIES,
+} from '../services/dppProductDetails.js';
+import {
   sendSuccess,
   sendError,
   sendValidationError,
@@ -6894,8 +6902,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       let lineageRows: DppLineageRow[];
       let certRows: DppCertRow[];
       let passportStateRows: DppPassportStateRow[];
+      let productDetailsRows: DppProductDetailsRow[];
       try {
-        [productRows, lineageRows, certRows, passportStateRows] = await withDbContext(
+        [productRows, lineageRows, certRows, passportStateRows, productDetailsRows] = await withDbContext(
           prisma,
           dbContext,
           async tx => {
@@ -6936,11 +6945,25 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             LIMIT 1
           `;
 
-          return [products, lineage, certs, passportStates] as [
+          // Product details — null if not yet created for this node (Slice 013)
+          const productDetails = await tx.$queryRaw<DppProductDetailsRow[]>`
+            SELECT
+              id, org_id, node_id, sku, style_code, batch_lot_number, product_description,
+              season_or_model_year, facility_name, country_of_origin, material_composition,
+              recycled_content_percent, organic_content_percent, dye_finish_category,
+              restricted_substances_declared, product_photo_evidence_item_id,
+              created_at, updated_at
+            FROM dpp_product_details
+            WHERE node_id = ${nodeId}::uuid
+            LIMIT 1
+          `;
+
+          return [products, lineage, certs, passportStates, productDetails] as [
             DppProductRow[],
             DppLineageRow[],
             DppCertRow[],
             DppPassportStateRow[],
+            DppProductDetailsRow[],
           ];
         },
         );
@@ -7067,6 +7090,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             approvedCertCount,
             lineageDepth,
           },
+
+          passportProductDetails:
+            productDetailsRows.length > 0
+              ? toDppProductDetailsDto(productDetailsRows[0])
+              : null,
 
           meta_passport: {},
         },
@@ -8249,6 +8277,141 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         });
 
         return sendSuccess(reply, { evidenceItem: toDppEvidenceItemDto(created) }, 201);
+      },
+    );
+  }
+
+  // ─── TECS-DPP-PASSPORT-NETWORK-013 D-8: DPP Product Details ─────────────────
+  // GET  (see D-3 passport route — passportProductDetails field in response)
+  // PUT  /api/tenant/dpp/:nodeId/product-details
+  //
+  // Upsert structured product identity and material composition for a DPP node.
+  // ADMIN / OWNER roles only. Not exposed on public routes (Slice 015 scope).
+  {
+    // ─── Zod body schema ─────────────────────────────────────────────────────
+    const materialItemSchema = z.object({
+      material: z.string().min(1).max(200),
+      percentage: z.number().min(0).max(100),
+    });
+
+    const productDetailsBodySchema = z.object({
+      sku: z.string().max(100).nullable().optional(),
+      styleCode: z.string().max(100).nullable().optional(),
+      batchLotNumber: z.string().max(200).nullable().optional(),
+      productDescription: z.string().max(2000).nullable().optional(),
+      seasonOrModelYear: z.string().max(100).nullable().optional(),
+      facilityName: z.string().max(300).nullable().optional(),
+      countryOfOrigin: z.string().max(100).nullable().optional(),
+      materialComposition: z.array(materialItemSchema).max(DPP_MATERIAL_MAX_ENTRIES).nullable().optional(),
+      recycledContentPercent: z.number().min(0).max(100).nullable().optional(),
+      organicContentPercent: z.number().min(0).max(100).nullable().optional(),
+      dyeFinishCategory: z.string().max(100).nullable().optional(),
+      restrictedSubstancesDeclared: z.boolean().nullable().optional(),
+      productPhotoEvidenceItemId: z.string().uuid().nullable().optional(),
+    });
+
+    /**
+     * PUT /api/tenant/dpp/:nodeId/product-details
+     *
+     * Creates or fully replaces the product details record for a DPP node.
+     * Role guard: ADMIN or OWNER only.
+     * Audit: tenant.dpp.product_details.upserted
+     */
+    fastify.put(
+      '/tenant/dpp/:nodeId/product-details',
+      { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+      async (request, reply) => {
+        const dbContext = (request as typeof request & { dbContext: DatabaseContext }).dbContext;
+        const { nodeId } = request.params as { nodeId: string };
+
+        // ── UUID validation ──
+        const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!UUID_RE.test(nodeId)) {
+          return sendValidationError(reply, 'nodeId must be a valid UUID');
+        }
+
+        // ── Role guard: ADMIN / OWNER only ──
+        const userRole = (request as typeof request & { userRole?: string }).userRole;
+        if (userRole !== 'ADMIN' && userRole !== 'OWNER') {
+          return sendError(reply, 'FORBIDDEN', 'Only ADMIN or OWNER may update product details', 403);
+        }
+
+        const userId = (request as typeof request & { userId?: string }).userId;
+        const orgId = dbContext.orgId;
+
+        // ── Body parse ──
+        const parseResult = productDetailsBodySchema.safeParse(request.body);
+        if (!parseResult.success) {
+          return sendValidationError(reply, parseResult.error.errors[0]?.message ?? 'Invalid body');
+        }
+        const body = parseResult.data;
+
+        // ── Material composition deep validation ──
+        if (body.materialComposition && body.materialComposition.length > 0) {
+          const matValidation = validateMaterialComposition(body.materialComposition);
+          if (!matValidation.valid) {
+            return sendValidationError(reply, matValidation.error ?? 'Invalid material_composition');
+          }
+        }
+
+        // ── Verify node belongs to org ──
+        let nodeExists: boolean;
+        try {
+          nodeExists = await withDbContext(prisma, dbContext, async tx =>
+            assertNodeBelongsToOrg(tx, nodeId, orgId),
+          );
+        } catch (err) {
+          fastify.log.error({ err }, '[D8] product-details node-check failed');
+          return sendError(reply, 'INTERNAL_ERROR', 'Failed to verify node ownership', 500);
+        }
+        if (!nodeExists) {
+          return sendNotFound(reply, 'Node not found or access denied');
+        }
+
+        // ── Upsert product details ──
+        let result: DppProductDetailsRow;
+        try {
+          result = await withDbContext(prisma, dbContext, async tx =>
+            upsertDppProductDetailsForNode(tx, orgId, nodeId, {
+              sku: body.sku,
+              styleCode: body.styleCode,
+              batchLotNumber: body.batchLotNumber,
+              productDescription: body.productDescription,
+              seasonOrModelYear: body.seasonOrModelYear,
+              facilityName: body.facilityName,
+              countryOfOrigin: body.countryOfOrigin,
+              materialComposition: body.materialComposition,
+              recycledContentPercent: body.recycledContentPercent,
+              organicContentPercent: body.organicContentPercent,
+              dyeFinishCategory: body.dyeFinishCategory,
+              restrictedSubstancesDeclared: body.restrictedSubstancesDeclared,
+              productPhotoEvidenceItemId: body.productPhotoEvidenceItemId,
+            }),
+          );
+        } catch (err) {
+          fastify.log.error({ err }, '[D8] product-details upsert failed');
+          return sendError(reply, 'INTERNAL_ERROR', 'Failed to save product details', 500);
+        }
+
+        await writeAuditLog(prisma, {
+          tenantId: request.tenantId ?? null,
+          realm: 'TENANT',
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'tenant.dpp.product_details.upserted',
+          entity: 'dpp_product_details',
+          entityId: result.id,
+          metadataJson: {
+            nodeId,
+            hasMaterialComposition:
+              body.materialComposition !== null &&
+              body.materialComposition !== undefined &&
+              body.materialComposition.length > 0,
+            hasProductPhotoEvidence: body.productPhotoEvidenceItemId != null,
+          },
+        });
+
+        return sendSuccess(reply, { productDetails: toDppProductDetailsDto(result) });
       },
     );
   }

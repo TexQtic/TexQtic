@@ -981,6 +981,7 @@ model TraceabilityNode {
   dpp_evidence_claims DppEvidenceClaim[]
   dpp_evidence_items  dpp_evidence_items[]
   dpp_passport_states dpp_passport_states[]
+  dpp_product_details dpp_product_details[]
   node_certifications node_certifications[]
   edgesFrom           TraceabilityEdge[]    @relation("EdgeFrom")
   edgesTo             TraceabilityEdge[]    @relation("EdgeTo")
@@ -1072,6 +1073,7 @@ model organizations {
   dppEvidenceClaims            DppEvidenceClaim[]
   dpp_evidence_items           dpp_evidence_items[]
   dpp_passport_states          dpp_passport_states[]
+  dpp_product_details          dpp_product_details[]
   escalation_events            EscalationEvent[]
   escrow_lifecycle_logs        EscrowLifecycleLog[]
   node_certifications          node_certifications[]
@@ -1358,30 +1360,61 @@ model dpp_passport_states {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model dpp_evidence_items {
-  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  org_id             String           @db.Uuid
-  node_id            String           @db.Uuid
-  evidence_type      String
-  title              String
-  source_table       String?
-  source_id          String?          @db.Uuid
-  document_url       String?
-  issuing_body       String?
-  reference_number   String?
-  issued_at          DateTime?        @db.Timestamptz(6)
-  expires_at         DateTime?        @db.Timestamptz(6)
-  visibility         String           @default("PRIVATE")
-  review_state       String           @default("PENDING")
-  reviewed_by        String?          @db.Uuid
-  reviewed_at        DateTime?        @db.Timestamptz(6)
-  created_at         DateTime         @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime         @default(now()) @db.Timestamptz(6)
-  traceability_nodes TraceabilityNode @relation(fields: [node_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "dpp_evidence_items_node_id_fk")
-  organizations      organizations    @relation(fields: [org_id], references: [id], onUpdate: NoAction, map: "dpp_evidence_items_org_id_fk")
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id              String                @db.Uuid
+  node_id             String                @db.Uuid
+  evidence_type       String
+  title               String
+  source_table        String?
+  source_id           String?               @db.Uuid
+  document_url        String?
+  issuing_body        String?
+  reference_number    String?
+  issued_at           DateTime?             @db.Timestamptz(6)
+  expires_at          DateTime?             @db.Timestamptz(6)
+  visibility          String                @default("PRIVATE")
+  review_state        String                @default("PENDING")
+  reviewed_by         String?               @db.Uuid
+  reviewed_at         DateTime?             @db.Timestamptz(6)
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime              @default(now()) @db.Timestamptz(6)
+  traceability_nodes  TraceabilityNode      @relation(fields: [node_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "dpp_evidence_items_node_id_fk")
+  organizations       organizations         @relation(fields: [org_id], references: [id], onUpdate: NoAction, map: "dpp_evidence_items_org_id_fk")
+  dpp_product_details dpp_product_details[]
 
   @@index([org_id, node_id], map: "idx_dpp_evidence_items_org_node")
   @@index([org_id, node_id, evidence_type], map: "idx_dpp_evidence_items_org_node_type")
   @@index([org_id, node_id, visibility], map: "idx_dpp_evidence_items_org_node_visibility")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model dpp_product_details {
+  id                             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id                         String              @db.Uuid
+  node_id                        String              @db.Uuid
+  sku                            String?
+  style_code                     String?
+  batch_lot_number               String?
+  product_description            String?
+  season_or_model_year           String?
+  facility_name                  String?
+  country_of_origin              String?
+  material_composition           Json?
+  recycled_content_percent       Decimal?            @db.Decimal(5, 2)
+  organic_content_percent        Decimal?            @db.Decimal(5, 2)
+  dye_finish_category            String?
+  restricted_substances_declared Boolean?
+  product_photo_evidence_item_id String?             @db.Uuid
+  created_at                     DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                     DateTime            @default(now()) @db.Timestamptz(6)
+  traceability_nodes             TraceabilityNode    @relation(fields: [node_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "dpp_product_details_node_id_fk")
+  organizations                  organizations       @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "dpp_product_details_org_id_fk")
+  dpp_evidence_items             dpp_evidence_items? @relation(fields: [product_photo_evidence_item_id], references: [id], onUpdate: NoAction, map: "dpp_product_details_photo_evidence_fk")
+
+  @@unique([org_id, node_id], map: "dpp_product_details_org_node_unique")
+  @@index([node_id], map: "idx_dpp_product_details_node_id")
+  @@index([org_id], map: "idx_dpp_product_details_org_id")
 }
 
 enum TenantType {
