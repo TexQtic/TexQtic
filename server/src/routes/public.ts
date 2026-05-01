@@ -24,6 +24,7 @@
  *   Deployed via pnpm -C server migrate:deploy:prod (OPS-ENV-001).
  */
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
+import fastifyRateLimit from '@fastify/rate-limit';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { sendSuccess, sendError, sendValidationError } from '../utils/response.js';
@@ -668,7 +669,7 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
   //
   // Public identifier: public_token UUID (Option B). No nodeId or orgId in response.
   // QR: payload URL descriptor only. No image generation (no qrcode package in repo).
-  // Rate limiting: not available (no @fastify/rate-limit in repo). Non-blocking.
+  // Rate limiting: @fastify/rate-limit@^10.x; global: false; DPP route: max 100/15 min per IP.
   // aiExtractedClaimsCount: 0 — dpp_evidence_claims RLS uses incorrect GUC key
   //   (current_setting('app.current_org_id') vs app.org_id set by withDbContext).
   //   Skipping evidence claims query for public view pending D-3/D-4 RLS migration fix.
@@ -744,6 +745,9 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     reply: FastifyReply,
     jsonRoute: boolean,
   ): Promise<unknown> {
+    // Security headers — set for all response paths on this public API endpoint
+    void reply.header('X-Robots-Tag', 'noindex');
+
     // ── Phase 1: public_token lookup as texqtic_public_lookup ──────────────────
     let stateRows: D6PassportStateRow[];
     try {
@@ -759,11 +763,13 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       });
     } catch (err) {
       fastify.log.error({ err }, '[D6] Phase 1 passport state lookup failed');
+      void reply.header('Cache-Control', 'no-store');
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to resolve DPP passport', 500);
     }
 
     if (stateRows.length === 0) {
       // Safe 404 — do not distinguish "not found" from "not PUBLISHED"
+      void reply.header('Cache-Control', 'no-store');
       return sendError(reply, 'DPP_NOT_FOUND', 'DPP passport not found', 404);
     }
 
@@ -830,11 +836,13 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       );
     } catch (err) {
       fastify.log.error({ err }, '[D6] Phase 2 DPP snapshot query failed');
+      void reply.header('Cache-Control', 'no-store');
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to load DPP passport data', 500);
     }
 
     if (productRows.length === 0) {
       // Product row missing — RLS or data issue; safe 404
+      void reply.header('Cache-Control', 'no-store');
       return sendError(reply, 'DPP_NOT_FOUND', 'DPP passport not found', 404);
     }
 
@@ -902,13 +910,33 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       void reply.header('Content-Type', 'application/json');
     }
 
+    // Cache headers for successful PUBLISHED response
+    void reply.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
+    void reply.header('Vary', 'Accept');
+
     return sendSuccess(reply, payload);
   }
 
-  // GET /api/public/dpp/:publicPassportId
-  fastify.get('/dpp/:publicPassportId', async (request, reply) => {
+  // GET /api/public/dpp/:publicPassportId — rate-limited (max 100 req/15 min per IP)
+  await fastify.register(fastifyRateLimit, {
+    global: false,
+    errorResponseBuilder: (_req, context) => ({
+      error: 'rate_limited',
+      retryAfter: Math.ceil(context.ttl / 1000),
+    }),
+  });
+
+  fastify.get('/dpp/:publicPassportId', {
+    config: {
+      rateLimit: { max: 100, timeWindow: '15 minutes' },
+    },
+  }, async (request, reply) => {
     const paramsResult = dppPublicParamSchema.safeParse(request.params);
-    if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+    if (!paramsResult.success) {
+      void reply.header('X-Robots-Tag', 'noindex');
+      void reply.header('Cache-Control', 'no-store');
+      return sendValidationError(reply, paramsResult.error.errors);
+    }
     return handlePublicDppRead(paramsResult.data.publicPassportId, request, reply, false);
   });
 
