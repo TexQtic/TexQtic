@@ -735,16 +735,36 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
 
   const APP_PUBLIC_URL = (process.env['APP_PUBLIC_URL'] ?? 'https://app.texqtic.com') as string;
 
-  // Shared handler for both routes.
-  async function handlePublicDppRead(
-    publicPassportId: string,
-    _request: FastifyRequest,
-    reply: FastifyReply,
-    jsonRoute: boolean,
-  ): Promise<unknown> {
-    // Security headers — set for all response paths on this public API endpoint
-    void reply.header('X-Robots-Tag', 'noindex');
+  // ── D-6 shared payload data type ──────────────────────────────────────────────
+  interface D6PublicDppData {
+    publicPassportId: string;
+    passportStatus: 'PUBLISHED';
+    passportMaturity: D6MaturityLevel;
+    product: {
+      batchId: string | null;
+      nodeType: string | null;
+      manufacturerName: string | null;
+      manufacturerJurisdiction: string | null;
+    };
+    lineageSummary: { lineageDepth: number; nodeCount: number };
+    certifications: Array<{
+      certificationType: string | null;
+      lifecycleStateName: string | null;
+      expiryDate: string | null;
+      issuedAt: string | null;
+    }>;
+    evidenceSummary: { approvedCertCount: number };
+  }
+  type D6FetchResult =
+    | { kind: 'OK'; data: D6PublicDppData }
+    | { kind: 'NOT_FOUND' }
+    | { kind: 'ERROR'; phase: 1 | 2 };
 
+  // Shared two-phase DPP data lookup. Does NOT touch reply headers or send response.
+  async function fetchPublicDppData(
+    publicPassportId: string,
+    routeType: string,
+  ): Promise<D6FetchResult> {
     // ── Phase 1: public_token lookup as texqtic_public_lookup ──────────────────
     let stateRows: D6PassportStateRow[];
     try {
@@ -760,14 +780,11 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       });
     } catch (err) {
       fastify.log.error({ err }, '[D6] Phase 1 passport state lookup failed');
-      void reply.header('Cache-Control', 'no-store');
-      return sendError(reply, 'INTERNAL_ERROR', 'Failed to resolve DPP passport', 500);
+      return { kind: 'ERROR', phase: 1 };
     }
 
     if (stateRows.length === 0) {
-      // Safe 404 — do not distinguish "not found" from "not PUBLISHED"
-      void reply.header('Cache-Control', 'no-store');
-      return sendError(reply, 'DPP_NOT_FOUND', 'DPP passport not found', 404);
+      return { kind: 'NOT_FOUND' };
     }
 
     const stateRow = stateRows[0];
@@ -824,7 +841,7 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
             metadataJson: {
               publicPassportId,
               passportStatus: 'PUBLISHED',
-              routeType: jsonRoute ? 'json' : 'html',
+              routeType,
             },
           });
 
@@ -833,14 +850,12 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       );
     } catch (err) {
       fastify.log.error({ err }, '[D6] Phase 2 DPP snapshot query failed');
-      void reply.header('Cache-Control', 'no-store');
-      return sendError(reply, 'INTERNAL_ERROR', 'Failed to load DPP passport data', 500);
+      return { kind: 'ERROR', phase: 2 };
     }
 
     if (productRows.length === 0) {
       // Product row missing — RLS or data issue; safe 404
-      void reply.header('Cache-Control', 'no-store');
-      return sendError(reply, 'DPP_NOT_FOUND', 'DPP passport not found', 404);
+      return { kind: 'NOT_FOUND' };
     }
 
     const product = productRows[0];
@@ -864,34 +879,85 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       activeCertsWithValidExpiry,
     });
 
+    return {
+      kind: 'OK',
+      data: {
+        publicPassportId,
+        passportStatus: 'PUBLISHED' as const,
+        passportMaturity,
+        product: {
+          batchId: product.batch_id,
+          nodeType: product.node_type,
+          manufacturerName: product.manufacturer_name,
+          manufacturerJurisdiction: product.manufacturer_jurisdiction,
+        },
+        lineageSummary: {
+          lineageDepth,
+          nodeCount: lineageRows.length,
+        },
+        certifications: certRows.map(row => ({
+          certificationType: row.certification_type,
+          lifecycleStateName: row.lifecycle_state_name,
+          expiryDate: row.expiry_date ? row.expiry_date.toISOString() : null,
+          issuedAt: row.issued_at ? row.issued_at.toISOString() : null,
+        })),
+        evidenceSummary: {
+          approvedCertCount,
+        },
+      },
+    };
+  }
+
+  // Sends the public DPP JSON response. Calls fetchPublicDppData and maps to
+  // application/json. jsonRoute is reserved for future format negotiation.
+  async function handlePublicDppRead(
+    publicPassportId: string,
+    _request: FastifyRequest,
+    reply: FastifyReply,
+    jsonRoute: boolean,
+  ): Promise<unknown> {
+    // Security headers — set for all response paths on this public API endpoint
+    void reply.header('X-Robots-Tag', 'noindex');
+
+    const result = await fetchPublicDppData(
+      publicPassportId,
+      jsonRoute ? 'json' : 'html',
+    );
+
+    if (result.kind === 'ERROR') {
+      void reply.header('Cache-Control', 'no-store');
+      const msg =
+        result.phase === 1
+          ? 'Failed to resolve DPP passport'
+          : 'Failed to load DPP passport data';
+      return sendError(reply, 'INTERNAL_ERROR', msg, 500);
+    }
+
+    if (result.kind === 'NOT_FOUND') {
+      // Safe 404 — do not distinguish "not found" from "not PUBLISHED"
+      void reply.header('Cache-Control', 'no-store');
+      return sendError(reply, 'DPP_NOT_FOUND', 'DPP passport not found', 404);
+    }
+
     // ── Shape restricted DppPublicPassportView ─────────────────────────────────
     // EXCLUDED: orgId, nodeId (raw), meta, geoHash, visibility,
     //           manufacturerRegistrationNo, certificationId, lifecycleStateId,
     //           extractionId, claim_value, approved_by, approved_at,
     //           AI confidence scores, storage URLs, admin notes.
+    const { data } = result;
     const payload = {
-      publicPassportId,
-      passportStatus: 'PUBLISHED' as const,
-      passportMaturity,
+      publicPassportId: data.publicPassportId,
+      passportStatus: 'PUBLISHED' as const, // guaranteed by fetchPublicDppData result shape
+      passportMaturity: data.passportMaturity,
       product: {
-        nodeType: product.node_type,
-        batchId: product.batch_id,
-        manufacturerName: product.manufacturer_name,
-        manufacturerJurisdiction: product.manufacturer_jurisdiction,
+        nodeType: data.product.nodeType,
+        batchId: data.product.batchId,
+        manufacturerName: data.product.manufacturerName,
+        manufacturerJurisdiction: data.product.manufacturerJurisdiction,
       },
-      lineageSummary: {
-        lineageDepth,
-        nodeCount: lineageRows.length,
-      },
-      certifications: certRows.map(row => ({
-        certificationType: row.certification_type,
-        lifecycleStateName: row.lifecycle_state_name,
-        expiryDate: row.expiry_date ? row.expiry_date.toISOString() : null,
-        issuedAt: row.issued_at ? row.issued_at.toISOString() : null,
-      })),
-      evidenceSummary: {
-        approvedCertCount,
-      },
+      lineageSummary: data.lineageSummary,
+      certifications: data.certifications,
+      evidenceSummary: data.evidenceSummary,
       qr: {
         payloadUrl: `${APP_PUBLIC_URL}/passport/${publicPassportId}`,
         format: 'url' as const,
@@ -931,6 +997,90 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       return sendValidationError(reply, paramsResult.error.errors);
     }
     return handlePublicDppRead(paramsResult.data.publicPassportId, request, reply, false);
+  });
+
+  // ─── TECS-DPP-STRUCTURED-DATA-018: JSON-LD Machine-Readable Public DPP ───────
+  // GET /api/public/dpp/:publicPassportId/structured-data
+  //
+  // Returns a privacy-filtered JSON-LD view of a PUBLISHED DPP passport.
+  // Uses the TexQtic-native DPP v1 schema context with partial schema.org mapping.
+  //
+  // Design constraints:
+  //   - Same two-phase auth model as D-6 base route (texqtic_public_lookup + withDbContext)
+  //   - Only PUBLIC_SUMMARY visibility fields: no orgId, nodeId, public_token, sourceId,
+  //     documentUrl, claimValue, extractionId, confidence, approvedBy, pricing, or any
+  //     internal IDs or storage URLs
+  //   - Content-Type: application/ld+json; charset=utf-8
+  //   - Cache: public, max-age=300, stale-while-revalidate=60 (same as base route)
+  //   - 404 is generic; must not reveal whether a token exists but is unpublished
+  //   - Rate-limited via the same fastifyRateLimit instance (max 100/15 min per IP)
+  //   - No .json suffix in route path (D-6 hotfix: find-my-way SyntaxError constraint)
+  //
+  fastify.get('/dpp/:publicPassportId/structured-data', {
+    config: {
+      rateLimit: { max: 100, timeWindow: '15 minutes' },
+    },
+  }, async (request, reply) => {
+    const paramsResult = dppPublicParamSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      void reply.header('X-Robots-Tag', 'noindex');
+      void reply.header('Cache-Control', 'no-store');
+      return sendValidationError(reply, paramsResult.error.errors);
+    }
+
+    const { publicPassportId } = paramsResult.data;
+    void reply.header('X-Robots-Tag', 'noindex');
+
+    const result = await fetchPublicDppData(publicPassportId, 'structured-data');
+
+    if (result.kind !== 'OK') {
+      // Safe response — do not distinguish ERROR from NOT_FOUND for public callers
+      void reply.header('Cache-Control', 'no-store');
+      return sendError(reply, 'DPP_NOT_FOUND', 'DPP passport not found', 404);
+    }
+
+    const { data } = result;
+
+    // ── Build JSON-LD payload ────────────────────────────────────────────────
+    // Privacy guarantee: only PUBLIC_SUMMARY fields; no internal IDs, no storage URLs,
+    // no buyer data, no pricing, no audit metadata.
+    const structuredData = {
+      '@context': {
+        '@vocab': 'https://texqtic.com/dpp/v1#',
+        'schema': 'https://schema.org/',
+        'ProductPassport': 'https://texqtic.com/dpp/v1#ProductPassport',
+        'Certification': 'https://texqtic.com/dpp/v1#Certification',
+      },
+      '@type': 'ProductPassport',
+      '@id': `${APP_PUBLIC_URL}/passport/${publicPassportId}`,
+      'passportUrl': `${APP_PUBLIC_URL}/passport/${publicPassportId}`,
+      'publicPassportId': publicPassportId,
+      'passportStatus': data.passportStatus,
+      'passportMaturity': data.passportMaturity,
+      'product': {
+        '@type': 'schema:Product',
+        'name': data.product.batchId ?? null,
+        'category': data.product.nodeType ?? null,
+        'manufacturerName': data.product.manufacturerName ?? null,
+        'manufacturerJurisdiction': data.product.manufacturerJurisdiction ?? null,
+      },
+      'certifications': data.certifications.map(cert => ({
+        '@type': 'Certification',
+        'certificationType': cert.certificationType ?? null,
+        'lifecycleStateName': cert.lifecycleStateName ?? null,
+        'issuedAt': cert.issuedAt ?? null,
+        'expiryDate': cert.expiryDate ?? null,
+      })),
+      'lineageSummary': data.lineageSummary,
+      'evidenceSummary': data.evidenceSummary,
+      'generatedAt': new Date().toISOString(),
+    };
+
+    void reply.header('Content-Type', 'application/ld+json; charset=utf-8');
+    void reply.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
+    void reply.header('Vary', 'Accept');
+
+    return reply.send(structuredData);
   });
 
 };

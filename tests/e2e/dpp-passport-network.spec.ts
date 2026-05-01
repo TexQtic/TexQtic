@@ -936,3 +936,118 @@ test('DPP-E2E-29 — 017D: public buyer page renders PUBLISHED passport without 
   expect(publicSrc).toMatch(/data-testid="public-passport-qr-image"/);
   expect(publicSrc).toMatch(/data-testid="public-passport-privacy-note"/);
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DPP-E2E-30 — 018: Structured-data JSON-LD route — source-analysis + live API
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('DPP-E2E-30 — 018: GET /api/public/dpp/:id/structured-data returns JSON-LD with correct shape and privacy contract', async ({ request }, testInfo) => {
+  // Two-tier verification:
+  //   Tier 1 (source-analysis — always runs): Route declaration, JSON-LD shape, privacy contract
+  //     asserted via static analysis of server/src/routes/public.ts.
+  //   Tier 2 (live API — runs only if FIXTURE_AVAILABLE and endpoint reachable): HTTP shape,
+  //     Content-Type, @context/@type, privacy denylist. Skipped until D-18 is deployed.
+  testInfo.annotations.push({
+    type: 'limitation',
+    description: '018 live API tier skipped until D-18 is deployed to the target environment. Source analysis covers route declaration and JSON-LD shape contract.',
+  });
+
+  // ── Tier 1: Source analysis ────────────────────────────────────────────────
+  const publicSrc = readFileSync(join(process.cwd(), 'server/src/routes/public.ts'), 'utf8');
+
+  // Route must be registered
+  expect(publicSrc).toContain('/dpp/:publicPassportId/structured-data');
+  // TECS-DPP-STRUCTURED-DATA-018 marker present
+  expect(publicSrc).toContain('TECS-DPP-STRUCTURED-DATA-018');
+  // JSON-LD @context shape present
+  expect(publicSrc).toContain('@context');
+  expect(publicSrc).toContain('@type');
+  expect(publicSrc).toContain('ProductPassport');
+  // Privacy denylist: none of these may appear in the structuredData object literal
+  const sdBlock = publicSrc.slice(
+    publicSrc.indexOf('TECS-DPP-STRUCTURED-DATA-018'),
+  );
+  // The structured data literal block must not reference internal fields
+  expect(sdBlock).not.toMatch(/['"]orgId['"]\s*:/);
+  expect(sdBlock).not.toMatch(/['"]nodeId['"]\s*:/);
+  expect(sdBlock).not.toMatch(/['"]public_token['"]\s*:/);
+  expect(sdBlock).not.toMatch(/['"]pricing['"]\s*:/);
+  // Content-Type must be application/ld+json
+  expect(sdBlock).toContain('application/ld+json');
+
+  // ── Tier 2: Live API (skipped until deployed) ─────────────────────────────
+  if (!FIXTURE_AVAILABLE) {
+    testInfo.annotations.push({ type: 'skip-reason', description: 'BLOCKED_BY_FIXTURE: live tier requires fixture' });
+    return;
+  }
+
+  // Probe if the structured-data endpoint is available on the target
+  const probeRes = await request.get(
+    `${BASE_URL}/api/public/dpp/${dppFixture!.publicPassportId}/structured-data`,
+  ).catch(() => null);
+
+  if (!probeRes || probeRes.status() === 404) {
+    testInfo.annotations.push({ type: 'skip-reason', description: 'D-18 not yet deployed to target; live API tier deferred' });
+    return;
+  }
+
+  expect(probeRes.status()).not.toBe(401);
+  expect(probeRes.status()).not.toBe(403);
+  expect(probeRes.status()).toBe(200);
+
+  const contentType = probeRes.headers()['content-type'] ?? '';
+  expect(contentType).toContain('application/ld+json');
+
+  const body = await probeRes.json() as Record<string, unknown>;
+  expect(body).toHaveProperty('@context');
+  expect(body).toHaveProperty('@type', 'ProductPassport');
+
+  const atId = body['@id'] as string | undefined;
+  expect(typeof atId).toBe('string');
+  expect(atId).toContain('/passport/');
+  expect(atId).not.toContain('/api/public/dpp');
+
+  expect(body['publicPassportId']).toBe(dppFixture!.publicPassportId);
+
+  const bodyText = JSON.stringify(body);
+  const privacyForbidden = [
+    '"orgId"', '"org_id"', '"nodeId"', '"node_id"',
+    '"public_token"', '"publicToken"',
+    '"sourceId"', '"document_url"', '"documentUrl"',
+    '"pricing"', '"claimValue"', '"claim_value"',
+    '"extractionId"', '"confidence"',
+    '"buyerOrgId"', '"createdByUserId"', '"reviewedByUserId"',
+    '"approvedBy"', '"approvedAt"',
+  ];
+  for (const field of privacyForbidden) {
+    expect(bodyText, `018 privacy: ${field} must not appear in structured-data response`).not.toContain(field);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DPP-E2E-31 — 018: Safety regression — .json route absent; bad UUID → 4xx; base route intact
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('DPP-E2E-31 — 018: .json route absent; invalid UUID → safe 4xx; base route unaffected', async ({ request }) => {
+  if (!FIXTURE_AVAILABLE) { test.skip(true, 'BLOCKED_BY_FIXTURE: run scripts/seed-dpp-fixture.ts first'); return; }
+
+  // (a) .json suffix route must NOT exist (D-6 hotfix: find-my-way SyntaxError, forever absent)
+  //     May return 404 (route not found) or 400 (param validation) — either is acceptable.
+  const jsonRes = await request.get(
+    `${BASE_URL}/api/public/dpp/${dppFixture!.publicPassportId}.json`,
+  );
+  // Must NOT be 200 (route must not exist) and must NOT be 500
+  expect(jsonRes.status()).not.toBe(200);
+  expect(jsonRes.status()).not.toBe(500);
+  expect(jsonRes.status()).toBeGreaterThanOrEqual(400);
+  expect(jsonRes.status()).toBeLessThan(500);
+
+  // (b) Base D-6 route unaffected by D-18 addition
+  const baseRes = await request.get(
+    `${BASE_URL}/api/public/dpp/${dppFixture!.publicPassportId}`,
+  );
+  expect(baseRes.status()).toBe(200);
+  const baseBody = await baseRes.json() as { success: boolean; data: { passportStatus: string } };
+  expect(baseBody.success).toBe(true);
+  expect(baseBody.data.passportStatus).toBe('PUBLISHED');
+});

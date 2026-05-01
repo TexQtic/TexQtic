@@ -177,7 +177,13 @@ describe('D6-B — Static: boundary rules', () => {
   });
 
   it("D6-B10 — no JSON-LD fields in D-6 response", () => {
-    const d6Block = src.slice(src.indexOf('TECS-DPP-PUBLIC-QR-001'));
+    // Scope strictly to the D-6 block; the D-18 structured-data route (added after
+    // TECS-DPP-STRUCTURED-DATA-018 marker) intentionally uses JSON-LD — exclude it.
+    const d6Start = src.indexOf('TECS-DPP-PUBLIC-QR-001');
+    const d18Start = src.indexOf('TECS-DPP-STRUCTURED-DATA-018');
+    const d6Block = d18Start !== -1
+      ? src.slice(d6Start, d18Start)
+      : src.slice(d6Start);
     expect(d6Block).not.toContain('@context');
     expect(d6Block).not.toContain('@type');
     expect(d6Block).not.toContain('json-ld');
@@ -309,8 +315,12 @@ describe('D6-P — Static: public payload projection', () => {
     expect(d6Block).not.toMatch(/SELECT[\s\S]{0,300}claim_value/);
   });
 
-  it('D6-P16 — aiExtractedClaimsCount fixed at 0 in D-6 (pending D-3/D-4 RLS fix)', () => {
-    expect(d6BlockFn()).toContain('aiExtractedClaimsCount: 0');
+  it('D6-P16 — aiExtractedClaimsCount removed from D-6 public payload (AF-02, 017E)', () => {
+    // In 017E (AF-02), aiExtractedClaimsCount was removed from the public evidenceSummary.
+    // The D-6 payload now exposes only approvedCertCount. This test guards against re-introducing
+    // the removed field.
+    const payloadBlock = d6BlockFn().slice(d6BlockFn().indexOf('const payload = {'));
+    expect(payloadBlock.slice(0, 600)).not.toContain('aiExtractedClaimsCount');
   });
 });
 

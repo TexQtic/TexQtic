@@ -122,13 +122,17 @@ describe('D17-B — Static: boundary — rate-limit + cache-control placement', 
   });
 
   it('D17-B01 — Cache-Control: no-store is set before Phase 1 sendError (INTERNAL_ERROR)', () => {
-    // Phase 1 catch block must set no-store before returning 500
-    const phase1Block = src.slice(
-      src.indexOf('[D6] Phase 1 passport state lookup failed'),
-      src.indexOf('[D6] Phase 1 passport state lookup failed') + 300,
-    );
-    expect(phase1Block).toMatch(/reply\.header\s*\(\s*['"]Cache-Control['"]\s*,\s*['"]no-store['"]\s*\)/);
-    expect(phase1Block).toContain('INTERNAL_ERROR');
+    // After 017E refactor: error handling is in handlePublicDppRead dispatching result.kind.
+    // Phase 1 failure returns { kind: 'ERROR', phase: 1 }; handler sets no-store before 500.
+    const fnStart = src.indexOf('async function handlePublicDppRead');
+    const fnEnd = src.indexOf('await fastify.register(fastifyRateLimit');
+    const handlerBody = src.slice(fnStart, fnEnd);
+    // The handler must set Cache-Control: no-store on ERROR path
+    expect(handlerBody).toMatch(/reply\.header\s*\(\s*['"]Cache-Control['"]\s*,\s*['"]no-store['"]\s*\)/);
+    // The handler must return INTERNAL_ERROR for kind=ERROR
+    expect(handlerBody).toContain('INTERNAL_ERROR');
+    // The fetch function must log Phase 1 failure (in fetchPublicDppData)
+    expect(src).toContain('[D6] Phase 1 passport state lookup failed');
   });
 
   it('D17-B02 — Cache-Control: no-store is set before Phase 1 DPP_NOT_FOUND (stateRows empty)', () => {
@@ -141,21 +145,29 @@ describe('D17-B — Static: boundary — rate-limit + cache-control placement', 
   });
 
   it('D17-B03 — Cache-Control: no-store is set before Phase 2 sendError (INTERNAL_ERROR)', () => {
-    const phase2Block = src.slice(
-      src.indexOf('[D6] Phase 2 DPP snapshot query failed'),
-      src.indexOf('[D6] Phase 2 DPP snapshot query failed') + 300,
-    );
-    expect(phase2Block).toMatch(/reply\.header\s*\(\s*['"]Cache-Control['"]\s*,\s*['"]no-store['"]\s*\)/);
-    expect(phase2Block).toContain('INTERNAL_ERROR');
+    // After 017E refactor: Phase 2 failure returns { kind: 'ERROR', phase: 2 };
+    // same ERROR dispatch path in handlePublicDppRead sets no-store before 500.
+    // Confirm log sentinel still present in fetchPublicDppData:
+    expect(src).toContain('[D6] Phase 2 DPP snapshot query failed');
+    // Confirm ERROR path dispatch sets no-store and sends INTERNAL_ERROR:
+    const fnStart = src.indexOf('async function handlePublicDppRead');
+    const fnEnd = src.indexOf('await fastify.register(fastifyRateLimit');
+    const handlerBody = src.slice(fnStart, fnEnd);
+    expect(handlerBody).toMatch(/reply\.header\s*\(\s*['"]Cache-Control['"]\s*,\s*['"]no-store['"]\s*\)/);
+    expect(handlerBody).toContain('INTERNAL_ERROR');
   });
 
   it('D17-B04 — Cache-Control: no-store is set before Phase 2 DPP_NOT_FOUND (productRows empty)', () => {
-    const emptyProductBlock = src.slice(
-      src.indexOf('Product row missing'),
-      src.indexOf('Product row missing') + 250,
-    );
-    expect(emptyProductBlock).toMatch(/reply\.header\s*\(\s*['"]Cache-Control['"]\s*,\s*['"]no-store['"]\s*\)/);
-    expect(emptyProductBlock).toContain('DPP_NOT_FOUND');
+    // After 017E refactor: empty productRows returns { kind: 'NOT_FOUND' };
+    // handlePublicDppRead dispatches NOT_FOUND: sets no-store before DPP_NOT_FOUND 404.
+    // Confirm guard sentinel in fetchPublicDppData:
+    expect(src).toContain('Product row missing');
+    // Confirm NOT_FOUND dispatch in handlePublicDppRead sets no-store and DPP_NOT_FOUND:
+    const fnStart = src.indexOf('async function handlePublicDppRead');
+    const fnEnd = src.indexOf('await fastify.register(fastifyRateLimit');
+    const handlerBody = src.slice(fnStart, fnEnd);
+    expect(handlerBody).toMatch(/reply\.header\s*\(\s*['"]Cache-Control['"]\s*,\s*['"]no-store['"]\s*\)/);
+    expect(handlerBody).toContain('DPP_NOT_FOUND');
   });
 
   it('D17-B05 — Cache-Control: public cached header appears AFTER all error-path no-store headers in handler body', () => {
