@@ -6497,3 +6497,28 @@ Refs: components/Public/PublicPassport.tsx Â· components/Tenant/DPPPassport.tsx 
   package.json Â· package-lock.json Â· tests/e2e/dpp-passport-network.spec.ts Â·
   governance/control/GOVERNANCE-CHANGELOG.md Â· governance/control/NEXT-ACTION.md Â·
   governance/control/OPEN-SET.md Â· governance/log/EXECUTION-LOG.md
+
+---
+
+## TECS-DPP-PASSPORT-NETWORK-017B — 2026-05-01
+
+Title: Tenant DPP UX Visibility + Passport Entry Surface — Slice 017B
+Summary: Productized the tenant DPP Passport page to present as a trust-building product surface.
+  Added entry ladder (Product Trust Ladder: LOCAL_TRUST ? TRADE_READY ? COMPLIANCE ? GLOBAL_DPP),
+  value summary grid (3 audience cards), test IDs (dpp-network-entry, dpp-network-title,
+  dpp-network-subtitle, dpp-network-value-summary, dpp-entry-ladder, dpp-entry-tier-{tier},
+  dpp-manual-node-lookup), and secondary framing for node input ("Advanced: Load by...").
+  isProductized flag derived from absence of title prop; white-label callers (App.tsx passing title)
+  are completely unaffected.
+  DPP-E2E-21/22/23 added as Group 9 source analysis tests (readFileSync pattern).
+  TypeScript: 0 errors. E2E: 21 passed, 2 skipped (chromium-only), 0 failed.
+Layer Impact: Layer 0 (NEXT-ACTION, OPEN-SET, GOVERNANCE-CHANGELOG updated); Layer 3 (this file)
+Limitations:
+  - Browser-level tenant DPP auth via storageState not yet seeded — source analysis used for 21/22/23
+  - DPP-E2E-19/20 remain chromium-only (pre-existing, NOT a regression)
+Refs: components/Tenant/DPPPassport.tsx · tests/e2e/dpp-passport-network.spec.ts ·
+  governance/control/GOVERNANCE-CHANGELOG.md · governance/control/NEXT-ACTION.md ·
+  governance/control/OPEN-SET.md · governance/log/EXECUTION-LOG.md
+Commits: b1f580a — feat; [governance commit pending]
+Next: TECS-DPP-PASSPORT-NETWORK-018 (JSON-LD) — requires explicit Paresh authorization.
+  Full platform launch NOT AUTHORIZED.

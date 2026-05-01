@@ -761,3 +761,12 @@
 - Preserved aligned anchors, including the closed onboarding-family handoff chain, remain outside
   the live canon package and outside the live control set.
 - The old `-v2` chain remains historical evidence and reconciliation input only.
+
+---
+
+## 2026-05-01 — TECS-DPP-PASSPORT-NETWORK-017B VERIFIED_COMPLETE_WITH_LIMITATIONS
+
+- Tenant DPP UX visibility slice closed. Product Trust Ladder and value summary productized.
+- DPP-E2E-21/22/23 pass (source analysis). DPP-E2E-19/20 correctly remain in chromium project.
+- Next slice: TECS-DPP-PASSPORT-NETWORK-018 (JSON-LD structured export) — NOT AUTHORIZED until Paresh opens.
+- Full platform launch NOT AUTHORIZED.

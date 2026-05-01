@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-017A — VERIFIED_COMPLETE; TS clean; chromium browser project; DPP-E2E-19/20 browser QR visibility tests; pre-JSON-LD debt gate closed)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-017B — VERIFIED_COMPLETE_WITH_LIMITATIONS; tenant DPP UX productized; entry ladder + value summary; DPP-E2E-21/22/23 source analysis tests; awaiting Paresh authorization for slice 018)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,24 +11,24 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-017A Pre-JSON-LD Debt Gate (2026-05-01); TS clean; chromium browser project; DPP-E2E-19/20 browser QR tests; awaiting Paresh authorization for TECS-DPP-PASSPORT-NETWORK-018
+product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-017B Tenant DPP UX Visibility (2026-05-01); DPP-E2E-21/22/23 source analysis pass; awaiting Paresh authorization for TECS-DPP-PASSPORT-NETWORK-018
 active_delivery_unit: NONE — awaiting Paresh authorization for TECS-DPP-PASSPORT-NETWORK-018
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  TECS-DPP-PASSPORT-NETWORK-017A VERIFIED_COMPLETE (2026-05-01).
-  Delivered: TypeScript clean (0 errors); chromium project added to playwright.config.ts;
-  DPP-E2E-19 + DPP-E2E-20 browser QR visibility tests added;
-  getDppProductDetailsForNode unused-import resolved by replacing inline $queryRaw;
-  DppTradeLinkDto unused-type removed; SEED_SCRIPT_PATH dead constant removed.
-  Pre-JSON-LD debt gate CLOSED. Do NOT open TECS-DPP-PASSPORT-NETWORK-018 without Paresh authorization.
-last_closed_unit: TECS-DPP-PASSPORT-NETWORK-017A
-last_closed_unit_status: VERIFIED_COMPLETE
+  TECS-DPP-PASSPORT-NETWORK-017B VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-01).
+  Delivered: DPPPassport.tsx productized (entry ladder, value summary, test IDs);
+  DPP-E2E-21/22/23 source analysis tests added and passing.
+  Browser-level tenant DPP page assertions deferred (storageState not yet seeded in QA fixtures).
+  DPP-E2E-19/20 remain in chromium project — not regressed.
+  Do NOT open TECS-DPP-PASSPORT-NETWORK-018 without Paresh authorization.
+last_closed_unit: TECS-DPP-PASSPORT-NETWORK-017B
+last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
 last_closed_unit_runtime_verdict: >-
-  TypeScript: 0 errors. node-certifications: 25/27 PASS. product-details: 50/50 PASS.
-  public-security: 31/31 PASS. d6-public-passport: 58/62 PASS. All target suites clean.
+  TypeScript: 0 errors. E2E: 21 passed, 2 skipped (DPP-E2E-19/20 chromium-only, NOT regressed), 0 failed.
+  DPP-E2E-21 ✅ DPP-E2E-22 ✅ DPP-E2E-23 ✅
 last_closed_unit_commits: >-
-  3e04a1e — chore(dpp): clear pre-JSON-LD verification debt
-  (Prior 017: 40add5e — feat; 145c3e5 — governance)
+  b1f580a — feat(dpp): productize tenant passport entry
+  (Prior 017A: 3e04a1e — chore; db42f55 — governance)
 last_closed_unit_closure_basis: >-
   VERIFIED_COMPLETE (TECS-DPP-PASSPORT-NETWORK-017, 2026-05-01).
   RLS hotfix applied: migration 20260512000000_tecs_dpp_rls_policy_hotfix fixes broken
