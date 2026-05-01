@@ -256,8 +256,11 @@ describe('D17-X — Cross-slice regression: D-6 behaviour preserved', () => {
     expect(src).toContain('sendSuccess');
   });
 
-  it('D17-X07 — qr.payloadUrl shape preserved', () => {
-    expect(src).toMatch(/payloadUrl\s*:\s*`.*\/dpp\/\$\{publicPassportId\}`/);
+  it('D17-X07 — qr.payloadUrl uses buyer page path /passport/:id (not API route)', () => {
+    // AF-01 fix: payloadUrl must use the SPA buyer page path, not the raw API dpp route.
+    // /passport/:id is the only SPA-routed public path. /dpp/:id is NOT registered in App.tsx.
+    expect(src).toMatch(/payloadUrl\s*:\s*`.*\/passport\/\$\{publicPassportId\}`/);
+    expect(src).not.toMatch(/payloadUrl\s*:\s*`.*\/dpp\/\$\{publicPassportId\}`/);
   });
 
   it('D17-X08 — DPP route path unchanged: /dpp/:publicPassportId', () => {

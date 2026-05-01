@@ -325,7 +325,7 @@ test('DPP-E2E-14 — 010-B: public passport API returns PUBLISHED view unauthent
       product: { nodeType: string; batchId: string };
       lineageSummary: { lineageDepth: number; nodeCount: number };
       certifications: Array<{ certificationType: string; lifecycleStateName: string }>;
-      evidenceSummary: { approvedCertCount: number; aiExtractedClaimsCount: number };
+      evidenceSummary: { approvedCertCount: number };
       qr: { payloadUrl: string; format: string };
     };
   };
@@ -386,7 +386,7 @@ test('DPP-E2E-15 — 015: public API response contains all v2 section fields (VE
         expiryDate: string | null;
         issuedAt: string | null;
       }>;
-      evidenceSummary: { approvedCertCount: number; aiExtractedClaimsCount: number };
+      evidenceSummary: { approvedCertCount: number };
       exportedAt: string;
     };
   };
@@ -415,7 +415,7 @@ test('DPP-E2E-15 — 015: public API response contains all v2 section fields (VE
 
   // v2 evidence summary section fields
   expect(typeof body.data.evidenceSummary.approvedCertCount).toBe('number');
-  expect(typeof body.data.evidenceSummary.aiExtractedClaimsCount).toBe('number');
+  // aiExtractedClaimsCount removed in 017E (AF-02): field was hardcoded 0, now absent from public API
 
   // v2 product story: exportedAt needed for publication date display
   expect(body.data.exportedAt).toBeTruthy();
@@ -894,7 +894,7 @@ test('DPP-E2E-29 — 017D: public buyer page renders PUBLISHED passport without 
       product: { nodeType: string };
       lineageSummary: { lineageDepth: number; nodeCount: number };
       certifications: Array<unknown>;
-      evidenceSummary: { approvedCertCount: number; aiExtractedClaimsCount: number };
+      evidenceSummary: { approvedCertCount: number };
       qr: { payloadUrl: string; format: string };
       exportedAt: string;
     };

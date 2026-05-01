@@ -27,7 +27,6 @@ interface PassportData {
   certifications: PassportCertification[];
   evidenceSummary: {
     approvedCertCount: number;
-    aiExtractedClaimsCount: number;
   };
   qr: {
     payloadUrl: string;
@@ -367,7 +366,7 @@ export function PublicPassport({ publicPassportId }: PublicPassportProps) {
           <h2 className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
             Evidence Summary
           </h2>
-          <dl className="grid grid-cols-2 gap-4 text-center">
+          <dl className="flex gap-4 text-center">
             <div>
               <dt className="text-xs text-slate-500">Approved Certs</dt>
               <dd
@@ -375,19 +374,6 @@ export function PublicPassport({ publicPassportId }: PublicPassportProps) {
                 className="mt-1 text-2xl font-bold text-slate-900"
               >
                 {passport.evidenceSummary.approvedCertCount}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">AI-Verified Claims</dt>
-              <dd
-                data-testid="public-passport-ai-claims-count"
-                className={`mt-1 text-2xl font-bold ${
-                  passport.evidenceSummary.aiExtractedClaimsCount > 0 ? 'text-slate-900' : 'text-slate-400'
-                }`}
-              >
-                {passport.evidenceSummary.aiExtractedClaimsCount > 0
-                  ? passport.evidenceSummary.aiExtractedClaimsCount
-                  : '—'}
               </dd>
             </div>
           </dl>
@@ -488,22 +474,8 @@ export function PublicPassport({ publicPassportId }: PublicPassportProps) {
         </section>
 
         {/* Passport Reference (API-provided URL — preserved from Slice E) */}
-        {passport.qr.payloadUrl && (
-          <section className="mt-6 rounded-2xl border border-[#d6e4e8] bg-white p-6">
-            <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-              Passport Reference
-            </h2>
-            <a
-              data-testid="public-passport-qr-url"
-              href={passport.qr.payloadUrl}
-              className="break-all text-sm text-[#2f8094] hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {passport.qr.payloadUrl}
-            </a>
-          </section>
-        )}
+        {/* Removed: passport.qr.payloadUrl secondary link was displaying the raw API path.
+            The canonical buyer page URL is already shown in the QR Verification Label above. */}
 
         {/* Privacy note */}
         <p

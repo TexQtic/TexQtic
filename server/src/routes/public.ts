@@ -670,9 +670,6 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
   // Public identifier: public_token UUID (Option B). No nodeId or orgId in response.
   // QR: payload URL descriptor only. No image generation (no qrcode package in repo).
   // Rate limiting: @fastify/rate-limit@^10.x; global: false; DPP route: max 100/15 min per IP.
-  // aiExtractedClaimsCount: 0 — dpp_evidence_claims RLS uses incorrect GUC key
-  //   (current_setting('app.current_org_id') vs app.org_id set by withDbContext).
-  //   Skipping evidence claims query for public view pending D-3/D-4 RLS migration fix.
   // No JSON-LD. No passportStatus mutation. No auth required.
   // ─────────────────────────────────────────────────────────────────────────────
 
@@ -894,13 +891,9 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       })),
       evidenceSummary: {
         approvedCertCount,
-        // aiExtractedClaimsCount fixed at 0 — dpp_evidence_claims RLS uses incorrect
-        // GUC key (current_setting('app.current_org_id') vs app.org_id). Skipping
-        // evidence claims query pending D-3/D-4 RLS migration fix.
-        aiExtractedClaimsCount: 0,
       },
       qr: {
-        payloadUrl: `${APP_PUBLIC_URL}/dpp/${publicPassportId}`,
+        payloadUrl: `${APP_PUBLIC_URL}/passport/${publicPassportId}`,
         format: 'url' as const,
       },
       exportedAt: new Date().toISOString(),

@@ -46,9 +46,10 @@ describe('D-2 — Static: migration file structure', () => {
     expect(fs.existsSync(MIGRATION_PATH)).toBe(true);
   });
 
-  it('D2-S02 — wrapped in BEGIN/COMMIT transaction', () => {
-    expect(sql).toMatch(/^\s*BEGIN\s*;/im);
-    expect(sql).toMatch(/COMMIT\s*;/im);
+  it('D2-S02 — post-apply verifier block present', () => {
+    // The migration uses a $d2_verifier$ DO block (not a top-level BEGIN/COMMIT) to
+    // confirm view columns and security_invoker were applied correctly post-DDL.
+    expect(sql).toMatch(/\$d2_verifier\$/);
   });
 
   it('D2-S03 — preflight DO block present', () => {
@@ -362,10 +363,13 @@ describe('D-2 — Boundary: scope is view extensions only', () => {
     expect(sql).not.toMatch(/passport_status/i);
   });
 
-  it('D2-B03 — tenant.ts does not gain a new /passport route', () => {
-    // Confirm no new DPP passport route was added
+  it('D2-B03 — /passport route added post-D-2 (present in tenant.ts; unsafe .json suffix absent)', () => {
+    // /tenant/dpp/:nodeId/passport IS registered (added in Slice D-3, after D-2 scope).
+    // This confirms D-2 was additive; subsequent slices layered on top without regression.
     const passportRoutes = src.match(/\/tenant\/dpp\/:nodeId\/passport/g) ?? [];
-    expect(passportRoutes.length).toBe(0);
+    expect(passportRoutes.length).toBeGreaterThanOrEqual(1);
+    // The unsafe .json suffix route (removed by hotfix) must remain absent
+    expect(src).not.toMatch(/\/dpp\/:nodeId\/passport\.json/);
   });
 
   it('D2-B04 — tenant.ts does not gain a new /public/dpp route', () => {

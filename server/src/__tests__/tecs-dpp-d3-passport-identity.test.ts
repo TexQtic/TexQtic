@@ -193,8 +193,13 @@ describe('D-3 — Static: tenant.ts passport types and route', () => {
     expect(src).toMatch(/return 'LOCAL_TRUST'/);
   });
 
-  it('D3-T07 — GLOBAL_DPP reserved/not reachable comment present', () => {
-    expect(src).toMatch(/GLOBAL_DPP[\s\S]{0,120}reserved/i);
+  it('D3-T07 — GLOBAL_DPP is reachable with correct conditions', () => {
+    // GLOBAL_DPP is now reachable (implemented in Slice D): requires
+    // passportStatus === PUBLISHED + hasPublicToken + approvedCertCount >= 3.
+    expect(src).toMatch(/GLOBAL_DPP/);
+    expect(src).toMatch(/return 'GLOBAL_DPP'/);
+    // Condition requires a public token to be present
+    expect(src).toMatch(/hasPublicToken/);
   });
 
   it('D3-T08 — passport route registered at /tenant/dpp/:nodeId/passport', () => {
@@ -336,8 +341,14 @@ describe('D-3 — Static: DPPPassport.tsx UI test IDs and additive safety', () =
     expect(ui).toMatch(/setPassportData\s*\(\s*null\s*\)/);
   });
 
-  it('D3-U15 — no public QR component added', () => {
-    expect(ui).not.toMatch(/qr[_-]code|QRCode|json-ld|JSON-LD/i);
+  it('D3-U15 — public QR in DPPPassport uses /passport/:id (not API dpp route)', () => {
+    // QRCode was added post-D-3 for the public passport preview panel.
+    // It MUST use the buyer page path (/passport/:id), not a raw API dpp route.
+    expect(ui).toMatch(/QRCode/);
+    // The publicUrl variable must be built from /passport/ path
+    expect(ui).toMatch(/\/passport\//);
+    // The QR value attribute must not point to a /dpp/ API route
+    expect(ui).not.toMatch(/value=.*\/dpp\//);
   });
 });
 
@@ -463,18 +474,22 @@ describe('D-3 — Boundary: scope is passport identity foundation only', () => {
     expect(migrationSql).not.toMatch(/dpp_evidence_claims/i);
   });
 
-  it('D3-B02 — no JSON-LD in migration or route', () => {
+  it('D3-B02 — no JSON-LD structured-data implementation in migration or route', () => {
+    // JSON-LD is referenced in design comments only (Slice 018, HOLD_FOR_AUTHORIZATION).
+    // No application/ld+json content type or @context structured data is implemented.
     expect(migrationSql).not.toMatch(/json.?ld/i);
-    expect(tenantSrc).not.toMatch(/json.?ld/i);
+    expect(tenantSrc).not.toMatch(/application\/ld\+json|'@context'|"@context"/);
   });
 
   it('D3-B03 — no /public/dpp route in tenant.ts', () => {
     expect(tenantSrc).not.toMatch(/['"]\/public\/dpp/);
   });
 
-  it('D3-B04 — no status mutation route in D-3 (read-only passport)', () => {
-    // No POST/PATCH/PUT route for passport state in D-3
-    expect(tenantSrc).not.toMatch(/fastify\.(post|patch|put)\s*\(\s*['"]\/tenant\/dpp.*passport/i);
+  it('D3-B04 — passport status mutation route exists and is auth-guarded (added post-D-3 in Slice C)', () => {
+    // PATCH /tenant/dpp/:nodeId/passport/status was introduced in Slice C (post-D-3).
+    // It must be registered via fastify.patch and protected by tenantAuthMiddleware.
+    expect(tenantSrc).toMatch(/fastify\.patch\s*\(\s*['"]\/tenant\/dpp\/:nodeId\/passport\/status['"]/i);
+    expect(tenantSrc).toMatch(/\/tenant\/dpp\/:nodeId\/passport\/status[\s\S]{0,300}tenantAuthMiddleware/);
   });
 
   it('D3-B05 — existing GET /api/tenant/dpp/:nodeId route still present (not removed)', () => {
