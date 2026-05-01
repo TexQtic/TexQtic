@@ -5,6 +5,34 @@
 
 ---
 
+## 2026-05-01 — DESIGN_COMPLETE: TECS-DPP-PASSPORT-NETWORK-010 (Passport Network Expansion Design Packet)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-010
+Status:        DESIGN_COMPLETE
+Closure Date:  2026-05-01
+Type:          DESIGN-ONLY — no schema, migration, route, UI, or test changes in this unit
+Files Changed: docs/TECS-DPP-PASSPORT-NETWORK-010-DESIGN-v1.md
+Commit:        [pending]
+Evidence:
+  File exists: docs/TECS-DPP-PASSPORT-NETWORK-010-DESIGN-v1.md
+  Grep checks: all 7 required sections verified (Evidence Vault, Trade Linkage, Public Buyer Page v2,
+               JSON-LD, Rate Limiting, AI Passport Assistant v2, "Full platform launch NOT AUTHORIZED")
+  Anti-check: no unsafe publicPassportId.json route shape found (only "absent and intentionally absent" reference)
+  Design gates: 8/8 PASS (working tree clean, prior commits verified, no .json route, no code changes)
+  Full platform launch: NOT AUTHORIZED
+Description:
+  Comprehensive expansion design packet for the DPP Passport Network.
+  Covers: evidence vault (dpp_evidence_items), trade linkage (dpp_trade_links), public buyer page v2
+  (8-section layout, cert cards, mobile QR), QR productionization (Options A/B/C; Option A recommended),
+  JSON-LD standards path (/structured-data — not .json suffix), public route rate limiting (100 req/15min),
+  AI Passport Assistant v2 (model-backed, guarded), white-label DPP naming (Options A–E),
+  fixture/verification strategy, implementation slices 010-B through 020, and 15 decision gates.
+  All slices require explicit Paresh authorization before any implementation begins.
+```
+
+---
+
 ## 2026-05-09 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-010A (Corrective: Public Passport Link in Tenant View)
 
 ```

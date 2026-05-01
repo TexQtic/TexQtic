@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-010A — VERIFIED_COMPLETE; corrective public passport link in tenant view; 11/11 E2E PASS against https://app.texqtic.com; awaiting Paresh authorization for next unit)
+**Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-010 — DESIGN_COMPLETE; Passport Network Expansion Design Packet; awaiting Paresh authorization for implementation slices)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -10,20 +10,20 @@
 ---
 
 ```yaml
-snapshot_date: 2026-05-09
-snapshot_unit: TECS-DPP-PASSPORT-NETWORK-010A
+snapshot_date: 2026-05-01
+snapshot_unit: TECS-DPP-PASSPORT-NETWORK-010
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-AUTHORIZATION
-current_open_design_unit: NONE
-current_open_design_unit_status: HOLD_FOR_AUTHORIZATION
-current_open_design_unit_artifact: N/A
+current_open_design_unit: TECS-DPP-PASSPORT-NETWORK-010
+current_open_design_unit_status: DESIGN_COMPLETE
+current_open_design_unit_artifact: docs/TECS-DPP-PASSPORT-NETWORK-010-DESIGN-v1.md
 current_open_design_unit_note: >-
-  TECS-DPP-PASSPORT-NETWORK-CLOSE-001 VERIFIED_COMPLETE (2026-05-09).
-  DPP Passport Network productization packet Slices A–G fully implemented and runtime-verified.
-  No active delivery unit. Next unit requires explicit Paresh authorization.
-  Next recommended candidate: TECS-DPP-PASSPORT-NETWORK-010 (Expansion Design Packet).
-  Prior: TECS-DPP-PASSPORT-FOUNDATION-001 D-1 through D-6 all COMPLETE.
-  All DPP Passport Network slices A–G committed (e3d81c5 through ce6b674).
+  TECS-DPP-PASSPORT-NETWORK-010 DESIGN_COMPLETE (2026-05-01).
+  Expansion design packet covers 9 implementation slices (010-B through 020) and 15 decision gates.
+  No implementation active. All slices require explicit Paresh authorization.
+  Next recommended candidate: Slice 010-B (Published DPP QA Fixture + Authenticated Runtime Proof).
+  Prior: TECS-DPP-PASSPORT-NETWORK-010A VERIFIED_COMPLETE (corrective public passport link).
+  All DPP Passport Network slices A–G committed (e3d81c5 through ce6b674) + adb15ad governance.
 latest_verified_product_close_unit: TECS-DPP-PASSPORT-NETWORK-010A
 latest_verified_product_close_status: VERIFIED_COMPLETE
 latest_verified_product_close_date: 2026-05-09 (010A corrective closure)
