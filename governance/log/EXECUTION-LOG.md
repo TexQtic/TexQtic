@@ -6411,7 +6411,7 @@ Refs: governance/units/GOV-NAV-01.md · governance/control/NEXT-ACTION.md ·
 ### TECS-DPP-PASSPORT-NETWORK-015 — 2026-05-13
 Type: IMPLEMENTATION + TYPECHECK VERIFICATION
 Status: VERIFIED_COMPLETE
-Commit: TBD (pending impl commit)
+Commit: 704db3f (impl) · d900351 (governance)
 Title: Public Buyer Page v2 — product story, cert cards, supply chain timeline, identity summary
 Summary: Upgraded components/Public/PublicPassport.tsx to v2 with 7 new sections (product story,
   identity summary, traceability timeline, evidence summary 2-col, certification cards, QR panel
@@ -6428,5 +6428,30 @@ Notes: aiExtractedClaimsCount always 0 (GUC/RLS known issue — not fixed in 015
   Full platform launch NOT AUTHORIZED. Next candidate: TECS-DPP-PASSPORT-NETWORK-016 (QR Image,
     requires explicit Paresh approval for react-qr-code or equivalent package install).
 Refs: components/Public/PublicPassport.tsx · tests/e2e/dpp-passport-network.spec.ts ·
+  governance/control/GOVERNANCE-CHANGELOG.md · governance/control/NEXT-ACTION.md ·
+  governance/control/OPEN-SET.md · governance/log/EXECUTION-LOG.md
+
+### TECS-DPP-PASSPORT-NETWORK-016 — 2026-05-14
+Type: IMPLEMENTATION + TYPECHECK VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: 3058900 (impl)
+Title: QR Image Productionization — react-qr-code SVG rendered on PublicPassport + DPPPassport
+Summary: Replaced URL-text-only QR fallback with rendered SVG QR image (react-qr-code@^2.0.21).
+  Added data-testid="public-passport-qr-image" to PublicPassport.tsx (public buyer page);
+  added data-testid="dpp-public-passport-qr-image" to DPPPassport.tsx (tenant panel).
+  QR payload uses buyerPageUrl (/passport/:publicPassportId) — not API route, no .json suffix.
+  Removed placeholder text "QR image generation requires dependency authorization."
+  Added DPP-E2E-17 (QR payload contract API assertion) and DPP-E2E-18 (QR privacy/mobile smoke).
+  react-qr-code introduces zero new npm audit vulnerabilities (pre-existing 21 confirmed baseline).
+  tsc --noEmit CLEAN. No server changes, no schema changes, no migration changes.
+Layer Impact: Layer 0 (NEXT-ACTION, OPEN-SET, GOVERNANCE-CHANGELOG updated); Layer 3 (this file)
+Notes: Browser DOM data-testid="public-passport-qr-image" visibility assertion deferred
+  (playwright.config.ts currently api-only project; chromium project addition is a separate slice).
+  DPP-E2E-17/18 use API request context following established spec pattern.
+  Mobile viewport (375px) browser assertion deferred similarly.
+  Full platform launch NOT AUTHORIZED. Next candidate: TECS-DPP-PASSPORT-NETWORK-017 (Public Route
+    Security Hardening — requires explicit Paresh authorization).
+Refs: components/Public/PublicPassport.tsx · components/Tenant/DPPPassport.tsx ·
+  package.json · package-lock.json · tests/e2e/dpp-passport-network.spec.ts ·
   governance/control/GOVERNANCE-CHANGELOG.md · governance/control/NEXT-ACTION.md ·
   governance/control/OPEN-SET.md · governance/log/EXECUTION-LOG.md

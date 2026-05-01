@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-13 (TECS-DPP-PASSPORT-NETWORK-015 — VERIFIED_COMPLETE; public buyer page v2; PublicPassport.tsx upgraded with 7 new sections + 9 new testIds; DPP-E2E-15/16 added; tsc CLEAN)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-14 (TECS-DPP-PASSPORT-NETWORK-016 — VERIFIED_COMPLETE; QR image productionization; react-qr-code@2.0.21; public-passport-qr-image + dpp-public-passport-qr-image; DPP-E2E-17/18 added; tsc CLEAN)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,30 +11,20 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-015 Public Buyer Page v2 (2026-05-13); PublicPassport.tsx upgraded; DPP-E2E-15/16 added; tsc CLEAN; awaiting Paresh authorization for next unit
+product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-016 QR Image Productionization (2026-05-14); react-qr-code SVG rendered; DPP-E2E-17/18 added; tsc CLEAN; awaiting Paresh authorization for next unit
 active_delivery_unit: NONE — awaiting Paresh authorization for implementation slices
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  TECS-DPP-PASSPORT-NETWORK-015 VERIFIED_COMPLETE (2026-05-13).
-  Delivered: components/Public/PublicPassport.tsx upgraded to v2 with 7 new sections:
-    [2] Product Story (public-passport-product-story),
-    [3] Product Identity Summary (public-passport-identity-summary),
-    [4] Supply Chain Traceability Timeline (public-passport-traceability-timeline, public-passport-lineage-depth),
-    [5] Evidence Summary updated (2-col, public-passport-approved-cert-count, public-passport-ai-claims-count),
-    [6] Certification Evidence Cards (public-passport-certification-cards, public-passport-certification-card, public-passport-certification-empty),
-    [7] QR/Share Panel preserved (public-passport-qr-label, public-passport-qr-payload-url, public-passport-print-label, public-passport-qr-url),
-    [8] Privacy Note updated ('document,' added).
-  Header: public-passport-header testId added.
-  Privacy: no org_id, nodeId, sourceId, orderId, rfqId, invoiceId, documentUrl in DOM.
-  Forbidden copy: none (DPP Foundation, mandatory EU, JSON-LD etc. absent).
-  E2E: DPP-E2E-15 (v2 API field shape check), DPP-E2E-16 (enhanced privacy regression).
+  TECS-DPP-PASSPORT-NETWORK-016 VERIFIED_COMPLETE (2026-05-14).
+  Delivered: react-qr-code@^2.0.21 installed; QR image rendered in PublicPassport.tsx and DPPPassport.tsx.
+  New testIds: public-passport-qr-image (PublicPassport, size=160), dpp-public-passport-qr-image (DPPPassport, size=128).
+  QR payload: buyerPageUrl (/passport/:publicPassportId) — not API route, no .json suffix.
+  Placeholder text removed; react-qr-code audit: 0 new vulnerabilities.
+  E2E: DPP-E2E-17 (QR payload contract), DPP-E2E-18 (QR privacy/mobile smoke).
+  Browser DOM testId visibility assertions deferred (api-only playwright project).
   tsc --noEmit: CLEAN.
-  Regression: evidence vault 59/59, product details 50/50, node-certs 25/25 PASS.
-  Typecheck: tsc --noEmit CLEAN.
-  Public privacy: dpp_trade_links never queried from public routes. sourceId never exposed publicly.
-  No buyer_org_id in v1. No FK to orders/rfqs (different domain boundaries).
-  Do NOT open any slice without explicit Paresh authorization.
-last_closed_unit: TECS-DPP-PASSPORT-NETWORK-014
+  Do NOT open TECS-DPP-PASSPORT-NETWORK-017 or any slice without explicit Paresh authorization.
+last_closed_unit: TECS-DPP-PASSPORT-NETWORK-016
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
   tsc --noEmit: CLEAN (0 errors). E2E: 14/14 PASS (dpp-passport-network.spec.ts, api project).

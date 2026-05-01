@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-13 (TECS-DPP-PASSPORT-NETWORK-015 — VERIFIED_COMPLETE; public buyer page v2; tsc CLEAN)
+**Last Updated:** 2026-05-14 (TECS-DPP-PASSPORT-NETWORK-016 — VERIFIED_COMPLETE; QR image productionization; react-qr-code SVG rendered; tsc CLEAN)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or

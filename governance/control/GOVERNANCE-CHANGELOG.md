@@ -5,6 +5,54 @@
 
 ---
 
+## 2026-05-14 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-016 (QR Image Productionization)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-016
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-05-14
+Type:          IMPLEMENTATION + TYPECHECK VERIFICATION
+
+Delivered:
+  - components/Public/PublicPassport.tsx — replaced URL-text fallback with rendered SVG QR image:
+      Added: import QRCode from 'react-qr-code'
+      Added: data-testid="public-passport-qr-image" wrapper div with <QRCode value={buyerPageUrl} size={160} />
+      Removed: placeholder paragraph "QR image generation requires dependency authorization."
+      QR payload: buyerPageUrl = window.location.origin + /passport/:publicPassportId (buyer page URL)
+      QR payload contract: NOT /api/public/dpp/..., NOT .json suffix, NOT internal identifiers
+      Preserved testIds: public-passport-qr-label, public-passport-print-label, public-passport-qr-payload-url
+  - components/Tenant/DPPPassport.tsx — added QR image to public link panel:
+      Added: import QRCode from 'react-qr-code'
+      Added: data-testid="dpp-public-passport-qr-image" wrapper div with <QRCode value={publicUrl} size={128} />
+      Placed inside dpp-public-passport-panel section, between button row and privacy note
+  - package.json — added react-qr-code@^2.0.21 to dependencies
+  - package-lock.json — auto-updated by npm install
+  - tests/e2e/dpp-passport-network.spec.ts — added Group 7 (Slice 016):
+      DPP-E2E-17: QR payload contract — API qr.payloadUrl safe (VERIFIED_COMPLETE_WITH_LIMITATIONS)
+        Asserts: format='url', no .json suffix, no private identifiers, publicPassportId present
+      DPP-E2E-18: QR privacy/mobile smoke — public response does not expose internal fields
+        Asserts: qrContextForbidden fields absent on synthetic probe + PUBLISHED fixture path
+
+Verification:
+  - tsc --noEmit: CLEAN
+  - QR payload check: value={buyerPageUrl} confirmed; /api/public/dpp reference is fetch call only (L134)
+  - Placeholder removed: "dependency authorization" text: 0 matches
+  - react-qr-code audit: 0 new vulnerabilities (pre-existing baseline = 21; unchanged after install)
+  - Route safety: no .json route reference introduced
+  - Git diff: only 5 allowlisted files modified
+  - No server changes, no schema changes, no migration changes
+
+Design Decisions:
+  - Option A (client-side SVG) selected per §10.6 recommendation
+  - QR placed inside print-label div (after maturity badge, before "Scan or open" text) — logical scan flow
+  - Tenant DPP QR added inside existing dpp-public-passport-panel section (straightforward add)
+  - Browser DOM testId visibility assertions deferred: playwright.config.ts has api-only project;
+    chromium project addition is a separate governance decision
+  - Mobile viewport (375px) browser assertion deferred similarly
+```
+
+---
+
 ## 2026-05-13 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-015 (Public Buyer Page v2)
 
 ```
