@@ -19,6 +19,10 @@ const config = {
       name: 'api',
       use: {}, // API-only tests — no browser launched
     },
+    {
+      name: 'chromium',
+      use: { browserName: 'chromium' as const },
+    },
   ],
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]] as [string, Record<string, unknown>][],
 };

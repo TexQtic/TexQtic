@@ -32,7 +32,6 @@ import { hasDb } from './helpers/dbGate.js';
 const SERVER_ROOT = path.resolve(__dirname, '../../');
 const TENANT_ROUTE_PATH = path.join(SERVER_ROOT, 'src/routes/tenant.ts');
 const PUBLIC_ROUTE_PATH  = path.join(SERVER_ROOT, 'src/routes/public.ts');
-const SEED_SCRIPT_PATH   = path.join(SERVER_ROOT, '../scripts/seed-dpp-fixture.ts');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Group 1 — Static: route registration and input validation

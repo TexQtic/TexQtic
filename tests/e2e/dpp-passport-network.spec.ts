@@ -559,3 +559,62 @@ test('DPP-E2E-18 — 016: QR privacy smoke — public response does not expose i
     expect(body200.data.qr.payloadUrl).not.toMatch(/\.json($|\?)/);
   }
 });
+
+// ─── Group 8: QR Browser Visibility (Slice 017A — debt gate) ─────────────────
+//   DPP-E2E-19 — Browser: public passport QR image is visible on the public buyer
+//                page. Navigates to /passport/:publicPassportId in a real Chromium
+//                browser, waits for the react-qr-code SVG element, and asserts:
+//                  a) data-testid="public-passport-qr-image" is visible
+//                  b) data-testid="public-passport-product-name" is visible
+//                  c) The page URL does NOT contain ".json" suffix
+//                Skipped if no fixture OR not running in the chromium project.
+//   DPP-E2E-20 — Mobile viewport (375px): same assertions at phone width to
+//                confirm the QR label section is responsive and visible.
+//   NOTE: Tenant data-testid="dpp-public-passport-qr-image" requires authenticated
+//         browser session. Auth fixture (.auth/qa-b2b.json) stores token only (no
+//         storageState / cookies). Playwright page-level auth via storageState is
+//         not available without a secure storage-state seed. The tenant QR browser
+//         assertion remains VERIFIED_COMPLETE_WITH_LIMITATIONS — covered by Vitest
+//         source analysis in tecs-dpp-public-security.test.ts (D17-P group).
+
+test('DPP-E2E-19 — 017A: browser — public passport QR image visible (chromium desktop)', async ({ page }, testInfo) => {
+  testInfo.skip(testInfo.project.name !== 'chromium', 'browser-only test — skipped in api project');
+  if (!FIXTURE_AVAILABLE) { testInfo.skip(true, 'BLOCKED_BY_FIXTURE: run scripts/seed-dpp-fixture.ts first'); return; }
+
+  const publicUrl = `${BASE_URL}/passport/${dppFixture!.publicPassportId}`;
+  await page.goto(publicUrl, { waitUntil: 'networkidle' });
+
+  // Page URL must not contain .json suffix (D6 contract)
+  expect(page.url()).not.toMatch(/\.json($|\?|#)/);
+
+  // QR image must be visible
+  const qrImage = page.locator('[data-testid="public-passport-qr-image"]');
+  await qrImage.waitFor({ state: 'visible', timeout: 15_000 });
+  await expect(qrImage).toBeVisible();
+
+  // Product name must be visible (confirms data loaded from API)
+  const productName = page.locator('[data-testid="public-passport-product-name"]');
+  await expect(productName).toBeVisible();
+});
+
+test('DPP-E2E-20 — 017A: browser — public passport QR image visible at mobile viewport (375px)', async ({ page }, testInfo) => {
+  testInfo.skip(testInfo.project.name !== 'chromium', 'browser-only test — skipped in api project');
+  if (!FIXTURE_AVAILABLE) { testInfo.skip(true, 'BLOCKED_BY_FIXTURE: run scripts/seed-dpp-fixture.ts first'); return; }
+
+  await page.setViewportSize({ width: 375, height: 812 });
+
+  const publicUrl = `${BASE_URL}/passport/${dppFixture!.publicPassportId}`;
+  await page.goto(publicUrl, { waitUntil: 'networkidle' });
+
+  // Page URL must not contain .json suffix
+  expect(page.url()).not.toMatch(/\.json($|\?|#)/);
+
+  // QR image must be visible at mobile viewport
+  const qrImage = page.locator('[data-testid="public-passport-qr-image"]');
+  await qrImage.waitFor({ state: 'visible', timeout: 15_000 });
+  await expect(qrImage).toBeVisible();
+
+  // Product name must be visible at mobile viewport
+  const productName = page.locator('[data-testid="public-passport-product-name"]');
+  await expect(productName).toBeVisible();
+});

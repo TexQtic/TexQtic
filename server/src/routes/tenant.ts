@@ -39,7 +39,6 @@ import {
   DPP_MATERIAL_MAX_ENTRIES,
 } from '../services/dppProductDetails.js';
 import {
-  type DppTradeLinkDto,
   type DppTradeLinkRow,
   DPP_TRADE_LINK_TYPES,
   DPP_TRADE_LINK_VISIBILITY_VALUES,
@@ -6956,18 +6955,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             LIMIT 1
           `;
 
-          // Product details — null if not yet created for this node (Slice 013)
-          const productDetails = await tx.$queryRaw<DppProductDetailsRow[]>`
-            SELECT
-              id, org_id, node_id, sku, style_code, batch_lot_number, product_description,
-              season_or_model_year, facility_name, country_of_origin, material_composition,
-              recycled_content_percent, organic_content_percent, dye_finish_category,
-              restricted_substances_declared, product_photo_evidence_item_id,
-              created_at, updated_at
-            FROM dpp_product_details
-            WHERE node_id = ${nodeId}::uuid
-            LIMIT 1
-          `;
+          // Product details — getDppProductDetailsForNode queries FROM dpp_product_details WHERE node_id (RLS-scoped; Slice 013)
+          const productDetailRow = await getDppProductDetailsForNode(tx, nodeId);
+          const productDetails: DppProductDetailsRow[] = productDetailRow ? [productDetailRow] : [];
 
           return [products, lineage, certs, passportStates, productDetails] as [
             DppProductRow[],
