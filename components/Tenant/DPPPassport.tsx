@@ -16,6 +16,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import QRCode from 'react-qr-code';
 import { tenantGet } from '../../services/tenantApiClient';
 import { APIError } from '../../services/apiClient';
 
@@ -997,6 +998,16 @@ export function DPPPassport({ onBack, title = 'DPP Passport', subtitle = 'Digita
                   >
                     Copy
                   </button>
+                </div>
+                <div
+                  data-testid="dpp-public-passport-qr-image"
+                  className="flex justify-center pt-2 pb-1"
+                >
+                  <QRCode
+                    value={publicUrl}
+                    size={128}
+                    aria-label={`QR code for ${publicUrl}`}
+                  />
                 </div>
                 <p className="text-[11px] text-slate-400">
                   The public page shows limited verified information only. Sensitive supplier,

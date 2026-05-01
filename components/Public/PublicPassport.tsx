@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import QRCode from 'react-qr-code';
 
 type DppMaturity = 'LOCAL_TRUST' | 'TRADE_READY' | 'COMPLIANCE' | 'GLOBAL_DPP';
 
@@ -459,6 +460,18 @@ export function PublicPassport({ publicPassportId }: PublicPassportProps) {
             <div className={`mb-3 inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${maturity.color}`}>
               {maturity.badge}
             </div>
+            {buyerPageUrl && (
+              <div
+                data-testid="public-passport-qr-image"
+                className="flex justify-center py-3"
+              >
+                <QRCode
+                  value={buyerPageUrl}
+                  size={160}
+                  aria-label={`QR code for ${buyerPageUrl}`}
+                />
+              </div>
+            )}
             <p className="mb-2 text-xs text-slate-500">
               Scan or open this link to verify the public passport.
             </p>
@@ -472,9 +485,6 @@ export function PublicPassport({ publicPassportId }: PublicPassportProps) {
               {buyerPageUrl}
             </a>
           </div>
-          <p className="mt-3 text-xs text-slate-400">
-            QR image generation requires dependency authorization. The URL above is the canonical QR payload.
-          </p>
         </section>
 
         {/* Passport Reference (API-provided URL — preserved from Slice E) */}

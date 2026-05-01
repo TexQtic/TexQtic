@@ -456,3 +456,106 @@ test('DPP-E2E-16 — 015: v2 privacy regression — API does not expose addition
     }
   }
 });
+
+// ─── Group 7: QR Image Productionization (Slice 016) ─────────────────────────
+//   DPP-E2E-17 — QR payload contract: API qr.payloadUrl is safe (no .json suffix,
+//                no internal API route, no private fields encoded).
+//                Browser data-testid="public-passport-qr-image" assertion deferred to
+//                browser project addition (playwright.config.ts currently api-only).
+//   DPP-E2E-18 — QR privacy/mobile smoke: unauthenticated public response does not
+//                expose internal fields even under QR-scanning context. Mobile
+//                viewport (375px) browser assertion deferred to browser project.
+
+test('DPP-E2E-17 — 016: QR payload contract — API qr.payloadUrl is safe (VERIFIED_COMPLETE_WITH_LIMITATIONS)', async ({ request }) => {
+  // NOTE: Browser DOM assertion data-testid="public-passport-qr-image" requires a chromium
+  // project in playwright.config.ts — currently only the api project is present.
+  // This test verifies the API-side QR payload contract:
+  //   - qr.payloadUrl must not contain .json suffix or internal API route shape
+  //   - qr.format must be 'url'
+  //   - qr.payloadUrl must not encode private fields (orgId, nodeId, etc.)
+  // Status: VERIFIED_COMPLETE_WITH_LIMITATIONS — browser QR image render assertion deferred.
+  if (!FIXTURE_AVAILABLE) { test.skip(true, 'BLOCKED_BY_FIXTURE: run scripts/seed-dpp-fixture.ts first'); return; }
+
+  const res = await request.get(
+    `${BASE_URL}/api/public/dpp/${dppFixture!.publicPassportId}`,
+  );
+  expect(res.status()).toBe(200);
+
+  const body = (await res.json()) as {
+    success: boolean;
+    data: {
+      qr: { payloadUrl: string; format: string };
+      publicPassportId: string;
+    };
+  };
+  expect(body.success).toBe(true);
+
+  const { payloadUrl, format } = body.data.qr;
+
+  // QR payload contract: format must be 'url'
+  expect(format).toBe('url');
+
+  // QR payload contract: payloadUrl must be a non-empty string
+  expect(typeof payloadUrl).toBe('string');
+  expect(payloadUrl.length).toBeGreaterThan(0);
+
+  // QR payload contract: must NOT use .json suffix (D6 contract — commit 3e5303a)
+  expect(payloadUrl).not.toMatch(/\.json($|\?)/);
+
+  // QR payload contract: payloadUrl must NOT encode internal identifiers
+  const qrForbiddenSubstrings = [
+    'orgId', 'org_id',
+    'nodeId', 'node_id',
+    'supplierOrgId', 'supplier_org_id',
+    'buyerOrgId', 'buyer_org_id',
+    'reviewedByUserId',
+  ];
+  for (const fragment of qrForbiddenSubstrings) {
+    expect(payloadUrl, `QR payloadUrl must not encode ${fragment}`).not.toContain(fragment);
+  }
+
+  // publicPassportId must be present in the response (used by client to construct buyerPageUrl)
+  expect(body.data.publicPassportId).toBeTruthy();
+  expect(typeof body.data.publicPassportId).toBe('string');
+});
+
+test('DPP-E2E-18 — 016: QR privacy smoke — public response does not expose internal fields (mobile-context)', async ({ request }) => {
+  // NOTE: Mobile viewport (375px) browser assertion of data-testid="public-passport-qr-image"
+  // and data-testid="public-passport-product-name" visibility requires a chromium project —
+  // deferred. This test covers the privacy contract from a QR-scanning context:
+  //   - Unauthenticated synthetic probe must not leak internal fields
+  //   - PUBLISHED fixture probe (if available) must also pass the QR-context privacy check
+  // Status: VERIFIED_COMPLETE_WITH_LIMITATIONS — mobile browser render assertions deferred.
+  const res404 = await request.get(`${BASE_URL}/api/public/dpp/${SYNTHETIC_UNKNOWN_UUID}`);
+  const text404 = await res404.text();
+
+  // QR-context privacy boundary: no internal fields must appear in any public response
+  const qrContextForbidden = [
+    '"orgId"', '"org_id"',
+    '"nodeId"', '"node_id"',
+    '"supplierOrgId"', '"supplier_org_id"',
+    '"reviewedByUserId"',
+    '"sourceId"', '"source_id"',
+    '"orderId"', '"order_id"',
+    '"rfqId"', '"rfq_id"',
+    '"invoiceId"', '"invoice_id"',
+    '"buyer_org_id"', '"buyerOrgId"',
+    '"document_url"', '"documentUrl"',
+  ];
+  for (const field of qrContextForbidden) {
+    expect(text404, `QR-context: field ${field} must not appear in any public response`).not.toContain(field);
+  }
+
+  // If fixture available, confirm privacy holds on PUBLISHED path too (QR scan entry point)
+  if (FIXTURE_AVAILABLE) {
+    const res200 = await request.get(`${BASE_URL}/api/public/dpp/${dppFixture!.publicPassportId}`);
+    expect(res200.status()).toBe(200);
+    const text200 = await res200.text();
+    for (const field of qrContextForbidden) {
+      expect(text200, `QR-context PUBLISHED: field ${field} must not appear`).not.toContain(field);
+    }
+    // QR payload URL in PUBLISHED response must be present and safe
+    const body200 = (await res200.json()) as { data: { qr: { payloadUrl: string } } };
+    expect(body200.data.qr.payloadUrl).not.toMatch(/\.json($|\?)/);
+  }
+});
