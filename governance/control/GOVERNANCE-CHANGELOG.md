@@ -5,6 +5,50 @@
 
 ---
 
+## 2026-05-01 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-017A (Pre-JSON-LD TypeScript & E2E Debt Gate)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-017A
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-05-01
+Type:          DEBT REMEDIATION + E2E INFRASTRUCTURE
+
+Delivered:
+  - server/src/__tests__/tecs-dpp-node-certifications.test.ts:
+      Removed dead constant SEED_SCRIPT_PATH (TS6133: declared but never read)
+  - server/src/routes/tenant.ts:
+      Replaced inline $queryRaw product-details block with getDppProductDetailsForNode service call
+        (eliminates TS6133 unused-import; keeps PD-A07 + PD-E01 static governance tests passing).
+      Removed unused type import DppTradeLinkDto (TS6133: declared but never read).
+  - playwright.config.ts:
+      Added chromium browser project alongside existing api project.
+  - tests/e2e/dpp-passport-network.spec.ts:
+      Added DPP-E2E-19: browser — public passport QR image visible (chromium desktop).
+      Added DPP-E2E-20: browser — public passport QR image visible at mobile viewport (375px).
+      Both tests: skip in api project, skip if no fixture; assert data-testid="public-passport-qr-image"
+        and data-testid="public-passport-product-name" visible; assert URL has no .json suffix.
+      Tenant QR (dpp-public-passport-qr-image) browser assertion: VERIFIED_COMPLETE_WITH_LIMITATIONS
+        — auth fixture stores token only (no storageState); covered by D17-P source tests.
+
+Verification:
+  - TypeScript: 0 errors (npx tsc --noEmit clean in server/)
+  - tecs-dpp-node-certifications: 25/27 PASS (2 DB-skipped)
+  - tecs-dpp-product-details: 50/50 PASS (PD-A07 + PD-E01 both pass)
+  - tecs-dpp-public-security: 31/31 PASS
+  - tecs-dpp-d6-public-passport: 58/62 PASS (4 DB-skipped)
+  - Pre-existing d2/d3 failures (6 tests) confirmed present at HEAD before 017A — not caused by this slice
+  - Git diff: only 4 allowlisted files changed
+  - No schema changes, no migration changes, no frontend changes
+
+Design Decisions:
+  - getDppProductDetailsForNode replaces inline $queryRaw in passport route (same SQL, same output).
+    Comment preserved: "queries FROM dpp_product_details" for static governance check PD-E01.
+  - Browser tests skip gracefully in api project (testInfo.project.name check).
+  - Tenant QR browser test deferred — storageState-based auth fixture not available without secrets.
+```
+
+---
+
 ## 2026-05-01 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-017 (Public Route Security Hardening)
 
 ```

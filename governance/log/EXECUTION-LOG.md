@@ -36,6 +36,30 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TECS-DPP-PASSPORT-NETWORK-017A — 2026-05-01
+Type: DEBT REMEDIATION + E2E INFRASTRUCTURE
+Status: VERIFIED_COMPLETE
+Commit: 3e04a1e
+Title: Pre-JSON-LD TypeScript and E2E Debt Gate — TS clean, chromium browser project, QR browser visibility
+Summary: Removed dead constant SEED_SCRIPT_PATH from tecs-dpp-node-certifications.test.ts (TS6133).
+  Resolved getDppProductDetailsForNode unused-import in tenant.ts by replacing inline $queryRaw with
+  service call (same SQL, same output; PD-A07 + PD-E01 static checks preserved). Removed unused
+  DppTradeLinkDto type import from tenant.ts (TS6133). Added chromium project to playwright.config.ts.
+  Added DPP-E2E-19 (desktop) and DPP-E2E-20 (mobile 375px) browser QR visibility tests;
+  both assert data-testid="public-passport-qr-image" visible on /passport/:publicPassportId.
+Layer Impact: Layer 0 — GOVERNANCE-CHANGELOG.md, NEXT-ACTION.md, OPEN-SET.md updated;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: TypeScript: 0 errors post-fix. Tenant QR browser assertion (dpp-public-passport-qr-image)
+  remains VERIFIED_COMPLETE_WITH_LIMITATIONS — auth fixture stores token only, no storageState.
+  Pre-existing d2/d3 failures (6 tests) confirmed present before this slice — not caused here.
+  Slice 018 (JSON-LD) must NOT open without explicit Paresh authorization.
+Refs: server/src/__tests__/tecs-dpp-node-certifications.test.ts · server/src/routes/tenant.ts ·
+  playwright.config.ts · tests/e2e/dpp-passport-network.spec.ts ·
+  governance/control/GOVERNANCE-CHANGELOG.md · governance/control/NEXT-ACTION.md ·
+  governance/control/OPEN-SET.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TECS-DPP-PASSPORT-NETWORK-017 — 2026-05-01
 Type: IMPLEMENTATION + UNIT-TEST VERIFICATION
 Status: VERIFIED_COMPLETE

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-017 — VERIFIED_COMPLETE; public passport route hardened; @fastify/rate-limit@10.3.0; X-Robots-Tag + Cache-Control headers; 31/31 unit tests; 0 new TS errors)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-017A — VERIFIED_COMPLETE; TS clean; chromium browser project; DPP-E2E-19/20 browser QR visibility tests; pre-JSON-LD debt gate closed)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,27 +11,24 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-017 Public Route Security Hardening (2026-05-01); @fastify/rate-limit@10.3.0; X-Robots-Tag+Cache-Control headers; 31/31 unit tests; 0 new TS errors; awaiting Paresh authorization for next unit
-active_delivery_unit: NONE — awaiting Paresh authorization for implementation slices
+product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-017A Pre-JSON-LD Debt Gate (2026-05-01); TS clean; chromium browser project; DPP-E2E-19/20 browser QR tests; awaiting Paresh authorization for TECS-DPP-PASSPORT-NETWORK-018
+active_delivery_unit: NONE — awaiting Paresh authorization for TECS-DPP-PASSPORT-NETWORK-018
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  TECS-DPP-PASSPORT-NETWORK-017 VERIFIED_COMPLETE (2026-05-01).
-  Delivered: @fastify/rate-limit@10.3.0 installed; GET /api/public/dpp/:publicPassportId hardened.
-  Rate limit: global:false; DPP route max:100 per 15 min per IP; errorResponseBuilder: rate_limited + retryAfter.
-  Headers: X-Robots-Tag:noindex (all paths); Cache-Control:no-store (4 error paths);
-    Cache-Control:public,max-age=300,stale-while-revalidate=60 + Vary:Accept (success path).
-  31 new static tests (D17-S/H/B/P/X groups): 31/31 PASS.
-  All DPP regression suites PASS. 0 new TypeScript errors. 0 new vulnerabilities.
-  Do NOT open TECS-DPP-PASSPORT-NETWORK-018 or any slice without explicit Paresh authorization.
-last_closed_unit: TECS-DPP-PASSPORT-NETWORK-017
+  TECS-DPP-PASSPORT-NETWORK-017A VERIFIED_COMPLETE (2026-05-01).
+  Delivered: TypeScript clean (0 errors); chromium project added to playwright.config.ts;
+  DPP-E2E-19 + DPP-E2E-20 browser QR visibility tests added;
+  getDppProductDetailsForNode unused-import resolved by replacing inline $queryRaw;
+  DppTradeLinkDto unused-type removed; SEED_SCRIPT_PATH dead constant removed.
+  Pre-JSON-LD debt gate CLOSED. Do NOT open TECS-DPP-PASSPORT-NETWORK-018 without Paresh authorization.
+last_closed_unit: TECS-DPP-PASSPORT-NETWORK-017A
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  Unit tests: 31/31 PASS (tecs-dpp-public-security). Regression: d6-public-passport 58/62,
-  trade-links 68/68, product-details 50/50, evidence-vault 59/60, node-certifications 25/27 — all PASS.
-  TypeScript: 0 new errors in public.ts. @fastify/rate-limit@10.3.0 audit: 0 new vulnerabilities.
+  TypeScript: 0 errors. node-certifications: 25/27 PASS. product-details: 50/50 PASS.
+  public-security: 31/31 PASS. d6-public-passport: 58/62 PASS. All target suites clean.
 last_closed_unit_commits: >-
-  40add5e — feat(dpp): harden public passport route (impl + tests + package)
-  (Prior 016: 7748200 — governance; 3058900 — QR image impl)
+  3e04a1e — chore(dpp): clear pre-JSON-LD verification debt
+  (Prior 017: 40add5e — feat; 145c3e5 — governance)
 last_closed_unit_closure_basis: >-
   VERIFIED_COMPLETE (TECS-DPP-PASSPORT-NETWORK-017, 2026-05-01).
   RLS hotfix applied: migration 20260512000000_tecs_dpp_rls_policy_hotfix fixes broken
