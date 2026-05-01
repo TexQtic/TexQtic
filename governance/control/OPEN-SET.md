@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-13 (TECS-DPP-PASSPORT-NETWORK-012 — VERIFIED_COMPLETE; evidence vault foundation; 59/59 unit tests PASS; tsc CLEAN)
+**Last Updated:** 2026-05-13 (TECS-DPP-PASSPORT-NETWORK-013 — VERIFIED_COMPLETE; product passport data depth; 50/50 unit tests PASS; tsc CLEAN)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,17 @@
 
 ## Operating Notes
 
+- TECS-DPP-PASSPORT-NETWORK-013 is VERIFIED_COMPLETE (2026-05-13).
+  Product Passport Data Depth. Table: dpp_product_details (migration 20260513100000_tecs_dpp_product_details).
+  RLS: ENABLE + FORCE ROW LEVEL SECURITY. 4 RLS policies using app.current_org_id(). 2 indexes. Unique (org_id, node_id).
+  FKs: traceability_nodes (ON DELETE CASCADE), organizations, dpp_evidence_items (ON DELETE SET NULL).
+  Service: server/src/services/dppProductDetails.ts — full helper set incl. validateMaterialComposition.
+  Routes: PUT /api/tenant/dpp/:nodeId/product-details (ADMIN/OWNER, audit: tenant.dpp.product_details.upserted).
+  GET /api/tenant/dpp/:nodeId/passport extended: passportProductDetails field added.
+  UI: DPPPassport.tsx — Product Passport Details section, DppProductDetailsDto interface.
+  Tests: tecs-dpp-product-details.test.ts 50/50 PASS. Evidence vault regression: 59/59 PASS. tsc CLEAN.
+  Public privacy: passportProductDetails NOT on public routes (Slice 015 scope).
+  No active delivery unit. Full platform launch NOT AUTHORIZED.
 - TECS-DPP-PASSPORT-NETWORK-012 is VERIFIED_COMPLETE (2026-05-13).
   DPP Evidence Vault Foundation. Table: dpp_evidence_items (migration 20260513000000_tecs_dpp_evidence_vault).
   RLS: ENABLE + FORCE ROW LEVEL SECURITY. 4 RLS policies using app.current_org_id(). 3 indexes.

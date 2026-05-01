@@ -36,6 +36,33 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TECS-DPP-PASSPORT-NETWORK-013 — 2026-05-13
+Type: IMPLEMENTATION + UNIT-TEST VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: TBD (pending impl commit)
+Title: Product Passport Data Depth — dpp_product_details table, RLS, service, PUT route, GET extension, UI
+Summary: Created dpp_product_details table via migration (RLS ENABLE+FORCE, 4 policies using
+  app.current_org_id(), unique (org_id, node_id), FKs to traceability_nodes/organizations/dpp_evidence_items).
+  Added server/src/services/dppProductDetails.ts with full helper set incl. validateMaterialComposition.
+  Added PUT /api/tenant/dpp/:nodeId/product-details (ADMIN/OWNER, audit: tenant.dpp.product_details.upserted).
+  Extended GET /api/tenant/dpp/:nodeId/passport with passportProductDetails field.
+  Added DppProductDetailsDto interface + Product Passport Details UI section to DPPPassport.tsx.
+  50/50 unit tests PASS. Evidence vault regression 59/59 PASS. tsc --noEmit CLEAN.
+Layer Impact: Layer 0 — GOVERNANCE-CHANGELOG.md, NEXT-ACTION.md, OPEN-SET.md updated;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: passportProductDetails is NOT exposed on any public route (Slice 015 scope).
+  material_composition stored as JSONB; validated (max 10 entries, percentage 0-100, total ≤ 100).
+  getDppProductDetailsForNode relies on RLS for org_id scoping; upsert uses ON CONFLICT (org_id, node_id).
+  DB test (PD-I01) intentionally skipped without live DB connection.
+  Full platform launch NOT AUTHORIZED.
+Refs: server/prisma/migrations/20260513100000_tecs_dpp_product_details/migration.sql ·
+  server/prisma/schema.prisma · server/src/services/dppProductDetails.ts ·
+  server/src/routes/tenant.ts · server/src/__tests__/tecs-dpp-product-details.test.ts ·
+  components/Tenant/DPPPassport.tsx · governance/control/GOVERNANCE-CHANGELOG.md ·
+  governance/control/NEXT-ACTION.md · governance/control/OPEN-SET.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TECS-DPP-PASSPORT-NETWORK-012 — 2026-05-13
 Type: IMPLEMENTATION + UNIT-TEST VERIFICATION
 Status: VERIFIED_COMPLETE

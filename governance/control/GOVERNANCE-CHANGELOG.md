@@ -5,6 +5,48 @@
 
 ---
 
+## 2026-05-13 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-013 (Product Passport Data Depth)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-013
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-05-13
+Type:          IMPLEMENTATION + UNIT-TEST VERIFICATION
+
+Delivered:
+  - Migration: server/prisma/migrations/20260513100000_tecs_dpp_product_details/migration.sql
+    CREATE TABLE dpp_product_details; ENABLE + FORCE RLS; 4 policies (app.current_org_id());
+    2 indexes; UNIQUE (org_id, node_id); FK to traceability_nodes (ON DELETE CASCADE),
+    organizations, dpp_evidence_items (ON DELETE SET NULL);
+    material_composition JSONB; NUMERIC(5,2) for percentages; 8 text length CHECKs;
+    2 percentage range CHECKs; updated_at trigger set_dpp_product_details_updated_at().
+    GRANT SELECT, INSERT, UPDATE TO texqtic_app.
+  - Schema: server/prisma/schema.prisma — dpp_product_details model added (via prisma db pull).
+  - Service: server/src/services/dppProductDetails.ts
+    DppProductDetailsRow, DppProductDetailsDto, MaterialCompositionItem,
+    UpsertDppProductDetailsInput, toDppProductDetailsDto, getDppProductDetailsForNode,
+    upsertDppProductDetailsForNode (INSERT ... ON CONFLICT (org_id, node_id) DO UPDATE SET),
+    validateMaterialComposition, DPP_MATERIAL_MAX_ENTRIES=10, DPP_MATERIAL_TOTAL_MAX_PERCENT=100.
+  - Routes: PUT /api/tenant/dpp/:nodeId/product-details in server/src/routes/tenant.ts.
+    Role guard: ADMIN/OWNER only. Idempotent upsert. Audit: tenant.dpp.product_details.upserted.
+    GET /api/tenant/dpp/:nodeId/passport extended: 5th query for dpp_product_details,
+    passportProductDetails field in response (null if no row yet created).
+  - UI: components/Tenant/DPPPassport.tsx
+    DppProductDetailsDto interface + MaterialCompositionItem.
+    DppPassportView.passportProductDetails field.
+    "Product Passport Details" section (data-testid: dpp-product-details-section).
+    13 data-testid hooks for all product detail fields.
+  - Tests: server/src/__tests__/tecs-dpp-product-details.test.ts — 50/50 PASS.
+    10 groups: route registration, validateMaterialComposition, role guard, tenant isolation,
+    GET passport extension, audit log, public privacy, migration schema, DB gate, regression.
+
+Typecheck:  tsc --noEmit CLEAN
+Regression: tecs-dpp-evidence-vault 59/59 PASS
+Public privacy: passportProductDetails NOT in public.ts (Slice 015 scope)
+```
+
+---
+
 ## 2026-05-13 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-012 (DPP Evidence Vault Foundation)
 
 ```
