@@ -343,7 +343,10 @@ interface Props {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function DPPPassport({ onBack, title = 'DPP Passport', subtitle = 'Digital Product Passport — Supply Chain Snapshot' }: Readonly<Props>) {
+export function DPPPassport({ onBack, title, subtitle }: Readonly<Props>) {
+  const isProductized = title === undefined;
+  const displayTitle = title ?? 'TexQtic DPP Passport Network';
+  const displaySubtitle = subtitle ?? 'Build product trust from local trade readiness to public buyer verification.';
   const [nodeIdInput, setNodeIdInput] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -424,7 +427,7 @@ export function DPPPassport({ onBack, title = 'DPP Passport', subtitle = 'Digita
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="p-6 max-w-4xl mx-auto animate-in fade-in duration-300 space-y-6">
+    <div data-testid="dpp-network-entry" className="p-6 max-w-4xl mx-auto animate-in fade-in duration-300 space-y-6">
 
       {/* ── Header ── */}
       <div className="flex items-center gap-4">
@@ -435,15 +438,66 @@ export function DPPPassport({ onBack, title = 'DPP Passport', subtitle = 'Digita
           ← Back
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">{title}</h1>
-          <p className="text-slate-500 text-sm mt-0.5">{subtitle}</p>
+          <h1 data-testid="dpp-network-title" className="text-2xl font-bold text-slate-800">{displayTitle}</h1>
+          <p data-testid="dpp-network-subtitle" className="text-slate-500 text-sm mt-0.5">{displaySubtitle}</p>
         </div>
       </div>
 
+      {/* ── Network value summary ── */}
+      {isProductized && (
+        <div data-testid="dpp-network-value-summary" className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+          <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3">
+            <p className="font-semibold text-slate-700">Local sellers</p>
+            <p className="text-slate-500 text-xs mt-1">Help buyers trust your products faster with verified details and certifications.</p>
+          </div>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3">
+            <p className="font-semibold text-slate-700">Trade-ready suppliers</p>
+            <p className="text-slate-500 text-xs mt-1">Connect proof, certifications, and traceability to unlock B2B trade.</p>
+          </div>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3">
+            <p className="font-semibold text-slate-700">Export-ready suppliers</p>
+            <p className="text-slate-500 text-xs mt-1">Publish buyer-facing passport links for global verification.</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Passport entry ladder (pre-load, productized only) ── */}
+      {!snapshot && isProductized && (
+        <section data-testid="dpp-entry-ladder" className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-3">
+          <h2 className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Product Trust Ladder</h2>
+          <p className="text-xs text-slate-500">Every passport starts with a local profile and grows toward public buyer verification.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+            {MATURITY_ORDER.map((tier) => {
+              const lbl = PASSPORT_MATURITY_LABELS[tier];
+              const tierColors: Record<DppMaturityLevel, string> = {
+                LOCAL_TRUST: 'border-slate-200 bg-slate-50',
+                TRADE_READY: 'border-green-200 bg-green-50',
+                COMPLIANCE:  'border-blue-200 bg-blue-50',
+                GLOBAL_DPP:  'border-purple-200 bg-purple-50',
+              };
+              return (
+                <div
+                  key={tier}
+                  data-testid={`dpp-entry-tier-${tier}`}
+                  className={`rounded-lg border px-3 py-3 text-center ${tierColors[tier]}`}
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{lbl.scoreTier}</p>
+                  <p className="text-xs font-semibold text-slate-700 mt-1">{lbl.productLabel}</p>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-xs text-slate-400">
+            Once published, your passport is available at{' '}
+            <span className="font-mono">/passport/:publicPassportId</span> for buyer verification.
+          </p>
+        </section>
+      )}
+
       {/* ── Node ID input ── */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-3">
+      <div data-testid="dpp-manual-node-lookup" className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-3">
         <label htmlFor="dpp-node-id-input" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest block">
-          Traceability Node ID
+          {isProductized ? 'Advanced: Load by Traceability Node ID' : 'Traceability Node ID'}
         </label>
         <div className="flex gap-3">
           <input
