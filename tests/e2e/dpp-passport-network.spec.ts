@@ -2,7 +2,7 @@
  * TECS-DPP-PASSPORT-NETWORK-CLOSE-001 — E2E Runtime Verification
  * DPP Passport Network productization packet closure spec (Slices A–G)
  *
- * Tests: DPP-E2E-01 through DPP-E2E-09
+ * Tests: DPP-E2E-01 through DPP-E2E-11
  * Target: https://app.texqtic.com (controlled via PLAYWRIGHT_BASE_URL env var)
  * Mode: READ-ONLY — no data mutations. All assertions use synthetic or safe probe UUIDs.
  *
@@ -189,4 +189,20 @@ test('DPP-E2E-10 — authenticated: PATCH passport/status with valid token + unk
   // 404 (node not found) or 400 (validation failure) are both acceptable —
   // what must NOT happen is 401 (auth failed) or 500 (server crash).
   expect([400, 404]).toContain(res.status());
+});
+
+// ── Group 4: 010A — public link anti-leakage ─────────────────────────────────
+
+test('DPP-E2E-11 — 010A: public passport route is unauthenticated and does not leak publicPassportId', async ({ request }) => {
+  // Slice 010A adds publicPassportId to the tenant GET /api/tenant/dpp/:nodeId/passport
+  // response. The PUBLIC API at /api/public/dpp/:publicPassportId must NOT expose the
+  // publicPassportId or raw public_token fields in any response (including 404).
+  const res = await request.get(`${BASE_URL}/api/public/dpp/${SYNTHETIC_UNKNOWN_UUID}`);
+  // Must not require authentication
+  expect(res.status()).not.toBe(401);
+  expect(res.status()).not.toBe(403);
+  // Must not expose the new publicPassportId or internal public_token fields
+  const text = await res.text();
+  expect(text).not.toContain('"publicPassportId"');
+  expect(text).not.toContain('"public_token"');
 });

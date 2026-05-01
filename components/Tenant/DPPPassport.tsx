@@ -71,6 +71,7 @@ interface DppPassportView {
   nodeId: string;
   passportStatus: DppPassportStatus;
   passportMaturity: DppMaturityLevel;
+  publicPassportId: string | null;
   passportEvidenceSummary: {
     aiExtractedClaimsCount: number;
     approvedCertCount: number;
@@ -810,6 +811,80 @@ export function DPPPassport({ onBack, title = 'DPP Passport', subtitle = 'Digita
                     ))}
                   </ul>
                 </div>
+              </section>
+            );
+          })()}
+
+          {/* ── TECS-DPP-PASSPORT-NETWORK-010A: Public Buyer Passport link panel ── */}
+          {passportData && (() => {
+            const isPublished =
+              passportData.passportStatus === 'PUBLISHED' && !!passportData.publicPassportId;
+
+            if (!isPublished) {
+              return (
+                <section
+                  data-testid="dpp-public-passport-unavailable"
+                  className="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm"
+                >
+                  <p className="text-xs text-slate-500">
+                    Public buyer page becomes available after this passport is published.
+                  </p>
+                </section>
+              );
+            }
+
+            const publicUrl =
+              (typeof window !== 'undefined' ? window.location.origin : '') +
+              `/passport/${encodeURIComponent(passportData.publicPassportId!)}`;
+
+            return (
+              <section
+                data-testid="dpp-public-passport-panel"
+                className="bg-white border border-emerald-200 rounded-xl p-5 shadow-sm space-y-3"
+              >
+                <h2 className="text-[10px] font-bold uppercase text-emerald-600 tracking-widest">
+                  Public Buyer Passport
+                </h2>
+                <p className="text-sm text-slate-600">
+                  This passport is public. Share this buyer-facing link for verification.
+                </p>
+                <div className="flex items-center gap-2">
+                  <span
+                    data-testid="dpp-public-passport-url"
+                    className="flex-1 truncate text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded px-3 py-2 font-mono"
+                  >
+                    {publicUrl}
+                  </span>
+                  <a
+                    data-testid="dpp-public-passport-open-link"
+                    href={publicUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 text-sm font-medium text-emerald-700 hover:underline px-3 py-2 border border-emerald-200 rounded bg-emerald-50"
+                  >
+                    Open
+                  </a>
+                  <button
+                    data-testid="dpp-public-passport-copy-link"
+                    type="button"
+                    className="shrink-0 text-sm font-medium text-slate-600 hover:text-slate-900 px-3 py-2 border border-slate-200 rounded bg-white"
+                    onClick={() => {
+                      if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(publicUrl).catch(() => {
+                          alert('Copy failed — please copy manually.');
+                        });
+                      } else {
+                        alert('Copy failed — please copy manually.');
+                      }
+                    }}
+                  >
+                    Copy
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  The public page shows limited verified information only. Sensitive supplier,
+                  buyer, pricing, and internal workflow data are not public.
+                </p>
               </section>
             );
           })()}

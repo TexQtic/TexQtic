@@ -7047,6 +7047,10 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
           passportMaturity,
           passportStatus,
+          publicPassportId:
+            passportStatus === 'PUBLISHED' && passportStateRows[0]?.public_token
+              ? passportStateRows[0].public_token
+              : null,
 
           passportEvidenceSummary: {
             aiExtractedClaimsCount,
