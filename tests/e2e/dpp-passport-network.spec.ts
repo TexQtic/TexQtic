@@ -732,3 +732,207 @@ test('DPP-E2E-26 – 017C: source coverage – public link panel not regressed b
   expect(dppSrc).toMatch(/dpp-passport-registry-public-link/);
   expect(dppSrc).toMatch(/PUBLISHED/);
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group 11 — 017D: QA Passport Publication + Public Buyer URL Verification
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Objective: prove the full seller-to-buyer path for a QA passport:
+//   tenant DPP node (DRAFT) --> evidence gates satisfied --> PUBLISHED
+//   --> publicPassportId generated --> /passport/:publicPassportId
+//   --> public buyer page accessible without auth
+//
+// Fixture: .auth/dpp-qa-fixture.json (populated by scripts/seed-dpp-fixture.ts)
+//   nodeId: 3f26ca48-... (QA sentinel node, org slug: qa-*)
+//   publicPassportId: 48d83d5a-...
+//
+// Carry-forward (017D design decisions):
+//   URL path is /passport/:publicPassportId
+//   URL path is NOT /api/public/dpp/...
+//   URL path does NOT use .json suffix (D-6 contract)
+//   orgId, nodeId, public_token, pricing and internal fields must NOT appear
+//   in the public API response
+//
+// Limitations:
+//   - DPP-E2E-28 tenant browser proof requires authenticated storageState
+//     (not available; .auth/qa-b2b.json stores Bearer token only)
+//   - DPP-E2E-29 browser render of /passport/:id requires chromium project
+//     (skipped in api project; covered by DPP-E2E-19/20 for render proof)
+
+test('DPP-E2E-27 — 017D: QA passport is PUBLISHED with non-null publicPassportId (activation proof)', async ({ request }) => {
+  if (!AUTH_AVAILABLE)    { test.skip(true, 'BLOCKED_BY_AUTH: no auth available'); return; }
+  if (!FIXTURE_AVAILABLE) { test.skip(true, 'BLOCKED_BY_FIXTURE: run scripts/seed-dpp-fixture.ts first'); return; }
+  const token = await acquireB2bToken(request);
+  if (!token) { test.skip(true, 'BLOCKED_BY_AUTH: token acquisition failed'); return; }
+
+  // Verify the fixture node (activated by scripts/seed-dpp-fixture.ts) is PUBLISHED
+  const res = await request.get(
+    `${BASE_URL}/api/tenant/dpp/${dppFixture!.nodeId}/passport`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  expect(res.status()).toBe(200);
+
+  const body = (await res.json()) as {
+    success: boolean;
+    data: {
+      passport: {
+        passportStatus: string;
+        publicPassportId: string | null;
+        passportMaturity: string;
+        passportEvidenceSummary: {
+          approvedCertCount: number;
+          lineageDepth: number;
+          aiExtractedClaimsCount: number;
+        };
+      };
+    };
+  };
+
+  expect(body.success).toBe(true);
+
+  // Core activation proof: node must be PUBLISHED
+  expect(body.data.passport.passportStatus).toBe('PUBLISHED');
+
+  // publicPassportId must be non-null (proves DRAFT-->INTERNAL-->TRADE_READY-->PUBLISHED chain)
+  expect(body.data.passport.publicPassportId).not.toBeNull();
+  expect(typeof body.data.passport.publicPassportId).toBe('string');
+
+  // publicPassportId must match fixture (idempotency: seed script wrote the correct ID)
+  expect(body.data.passport.publicPassportId).toBe(dppFixture!.publicPassportId);
+
+  // Evidence gates that enabled publication: certs >= 1, lineage >= 1
+  expect(body.data.passport.passportEvidenceSummary.approvedCertCount).toBeGreaterThanOrEqual(1);
+  expect(body.data.passport.passportEvidenceSummary.lineageDepth).toBeGreaterThanOrEqual(1);
+
+  // Buyer URL shape: /passport/:publicPassportId (NOT /api/public/dpp/... NOT .json)
+  const buyerUrl = `/passport/${body.data.passport.publicPassportId}`;
+  expect(buyerUrl).toMatch(/^\/passport\/[0-9a-f-]{36}$/i);
+  expect(buyerUrl).not.toContain('/api/public/dpp');
+  expect(buyerUrl).not.toContain('.json');
+});
+
+test('DPP-E2E-28 — 017D: tenant public link panel exposes buyer URL at /passport/:publicPassportId', async ({ request }, testInfo) => {
+  // Browser-level tenant page navigation requires authenticated storageState not available.
+  // This test proves: (a) panel + URL test IDs exist in source, (b) URL shape is correct,
+  // (c) the API condition that renders the panel is met by the QA fixture.
+  testInfo.annotations.push({
+    type: 'limitation',
+    description: '017D tenant public link panel browser proof requires authenticated storageState. Bearer token in .auth/qa-b2b.json is insufficient for page.goto() tenant views. Source analysis + API condition proof used instead.',
+  });
+
+  if (!AUTH_AVAILABLE)    { test.skip(true, 'BLOCKED_BY_AUTH: no auth available'); return; }
+  if (!FIXTURE_AVAILABLE) { test.skip(true, 'BLOCKED_BY_FIXTURE: run scripts/seed-dpp-fixture.ts first'); return; }
+  const token = await acquireB2bToken(request);
+  if (!token) { test.skip(true, 'BLOCKED_BY_AUTH: token acquisition failed'); return; }
+
+  // Source analysis: confirm all required public link panel test IDs are present
+  const dppSrc = readFileSync(join(process.cwd(), 'components/Tenant/DPPPassport.tsx'), 'utf8');
+  expect(dppSrc).toMatch(/data-testid="dpp-public-passport-panel"/);
+  expect(dppSrc).toMatch(/data-testid="dpp-public-passport-url"/);
+  expect(dppSrc).toMatch(/data-testid="dpp-public-passport-open-link"/);
+  expect(dppSrc).toMatch(/data-testid="dpp-public-passport-qr-image"/);
+
+  // URL construction pattern: /passport/$ present in source — not /api/public/dpp/...
+  // Matches both /passport/${entry.publicPassportId} and /passport/${encodeURIComponent(...)}
+  expect(dppSrc).toMatch(/\/passport\/\$\{/);
+  expect(dppSrc).not.toMatch(/\/api\/public\/dpp.*publicPassportId.*\.json/);
+
+  // Panel gate: only renders when passportStatus === 'PUBLISHED' && !!publicPassportId
+  expect(dppSrc).toMatch(/passportStatus.*PUBLISHED|PUBLISHED.*passportStatus/);
+
+  // API condition proof: fixture must satisfy passportStatus=PUBLISHED + publicPassportId non-null
+  // Both conditions must hold for the panel to render (DPPPassport.tsx isPublished gate)
+  const res = await request.get(
+    `${BASE_URL}/api/tenant/dpp/${dppFixture!.nodeId}/passport`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  expect(res.status()).toBe(200);
+  const body = (await res.json()) as {
+    data: { passport: { passportStatus: string; publicPassportId: string | null } };
+  };
+  expect(body.data.passport.passportStatus).toBe('PUBLISHED');
+  expect(body.data.passport.publicPassportId).not.toBeNull();
+
+  // Buyer URL from API must be in the correct shape (not .json, not /api/ route)
+  const buyerUrl = `/passport/${body.data.passport.publicPassportId}`;
+  expect(buyerUrl).toMatch(/^\/passport\/[0-9a-f-]{36}$/i);
+  expect(buyerUrl).not.toContain('.json');
+  expect(buyerUrl).not.toContain('/api/');
+});
+
+test('DPP-E2E-29 — 017D: public buyer page renders PUBLISHED passport without auth (VERIFIED_COMPLETE_WITH_LIMITATIONS)', async ({ request }, testInfo) => {
+  // Two-tier verification of the public buyer page:
+  //   Tier 1 (API — verified here): GET /api/public/dpp/:publicPassportId confirms
+  //     PUBLISHED content, all buyer-facing fields, QR payloadUrl shape, and 017D
+  //     extended privacy boundary (adds pricing, orgId, createdByUserId to prior checks).
+  //   Tier 2 (browser — chromium project only): covered by DPP-E2E-19/20 which assert
+  //     DOM test IDs and absence of auth redirect at /passport/:publicPassportId.
+  //     Browser render NOT duplicated here — api project has no browser context.
+  // Source analysis: PublicPassport.tsx buyer page test IDs confirmed present.
+  testInfo.annotations.push({
+    type: 'limitation',
+    description: '017D browser DOM assertion for /passport/:publicPassportId requires chromium project. Covered by DPP-E2E-19/20. Tier 1 API contract and source analysis verified here.',
+  });
+  if (!FIXTURE_AVAILABLE) { test.skip(true, 'BLOCKED_BY_FIXTURE: run scripts/seed-dpp-fixture.ts first'); return; }
+
+  // ── Tier 1: API contract — public endpoint accessible without auth ─────────
+  const apiRes = await request.get(
+    `${BASE_URL}/api/public/dpp/${dppFixture!.publicPassportId}`,
+  );
+  // Must not require authentication
+  expect(apiRes.status()).not.toBe(401);
+  expect(apiRes.status()).not.toBe(403);
+  // Must return 200 for a known-published fixture
+  expect(apiRes.status()).toBe(200);
+
+  const apiBody = (await apiRes.json()) as {
+    success: boolean;
+    data: {
+      passportStatus: string;
+      publicPassportId: string;
+      passportMaturity: string;
+      product: { nodeType: string };
+      lineageSummary: { lineageDepth: number; nodeCount: number };
+      certifications: Array<unknown>;
+      evidenceSummary: { approvedCertCount: number; aiExtractedClaimsCount: number };
+      qr: { payloadUrl: string; format: string };
+      exportedAt: string;
+    };
+  };
+  expect(apiBody.success).toBe(true);
+  expect(apiBody.data.passportStatus).toBe('PUBLISHED');
+  expect(apiBody.data.publicPassportId).toBe(dppFixture!.publicPassportId);
+
+  // All buyer-facing fields must be present
+  expect(apiBody.data.product).toBeDefined();
+  expect(apiBody.data.product.nodeType).toBeTruthy();
+  expect(typeof apiBody.data.lineageSummary.lineageDepth).toBe('number');
+  expect(Array.isArray(apiBody.data.certifications)).toBe(true);
+  expect(apiBody.data.qr.payloadUrl).toBeTruthy();
+  expect(apiBody.data.qr.format).toBe('url');
+  expect(apiBody.data.exportedAt).toBeTruthy();
+
+  // QR payloadUrl must be the buyer page URL — not .json suffix, not internal API route
+  expect(apiBody.data.qr.payloadUrl).not.toMatch(/\.json($|\?)/);
+  expect(apiBody.data.qr.payloadUrl).not.toContain('/api/public/dpp');
+
+  // ── 017D extended privacy boundary (supplements DPP-E2E-14/16 checks) ─────
+  const apiText = JSON.stringify(apiBody);
+  const extendedPrivacyForbidden = [
+    '"orgId"',           // camelCase form (DPP-E2E-14 covers '"org_id"')
+    '"pricing"',         // 017D new: cost/commercial data must never appear
+    '"createdByUserId"', // 017D new: internal audit field must never appear
+  ];
+  for (const field of extendedPrivacyForbidden) {
+    expect(apiText, `017D privacy: ${field} must not appear in public passport response`).not.toContain(field);
+  }
+
+  // Source analysis: buyer page test IDs must be present in PublicPassport.tsx
+  const publicSrc = readFileSync(join(process.cwd(), 'components/Public/PublicPassport.tsx'), 'utf8');
+  expect(publicSrc).toMatch(/data-testid="public-passport-page"/);
+  expect(publicSrc).toMatch(/data-testid="public-passport-product-name"/);
+  expect(publicSrc).toMatch(/data-testid="public-passport-maturity-badge"/);
+  expect(publicSrc).toMatch(/data-testid="public-passport-product-story"/);
+  expect(publicSrc).toMatch(/data-testid="public-passport-qr-image"/);
+  expect(publicSrc).toMatch(/data-testid="public-passport-privacy-note"/);
+});
