@@ -982,6 +982,7 @@ model TraceabilityNode {
   dpp_evidence_items  dpp_evidence_items[]
   dpp_passport_states dpp_passport_states[]
   dpp_product_details dpp_product_details[]
+  dpp_trade_links     dpp_trade_links[]
   node_certifications node_certifications[]
   edgesFrom           TraceabilityEdge[]    @relation("EdgeFrom")
   edgesTo             TraceabilityEdge[]    @relation("EdgeTo")
@@ -1074,6 +1075,7 @@ model organizations {
   dpp_evidence_items           dpp_evidence_items[]
   dpp_passport_states          dpp_passport_states[]
   dpp_product_details          dpp_product_details[]
+  dpp_trade_links              dpp_trade_links[]
   escalation_events            EscalationEvent[]
   escrow_lifecycle_logs        EscrowLifecycleLog[]
   node_certifications          node_certifications[]
@@ -1415,6 +1417,29 @@ model dpp_product_details {
   @@unique([org_id, node_id], map: "dpp_product_details_org_node_unique")
   @@index([node_id], map: "idx_dpp_product_details_node_id")
   @@index([org_id], map: "idx_dpp_product_details_org_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model dpp_trade_links {
+  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id             String           @db.Uuid
+  node_id            String           @db.Uuid
+  link_type          String
+  source_table       String?
+  source_id          String?          @db.Uuid
+  external_reference String?
+  title              String?
+  visibility         String           @default("PRIVATE")
+  linked_at          DateTime         @default(now()) @db.Timestamptz(6)
+  created_at         DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime         @default(now()) @db.Timestamptz(6)
+  traceability_nodes TraceabilityNode @relation(fields: [node_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "dpp_trade_links_node_id_fk")
+  organizations      organizations    @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "dpp_trade_links_org_id_fk")
+
+  @@index([org_id, node_id], map: "idx_dpp_trade_links_org_node")
+  @@index([org_id, node_id, link_type], map: "idx_dpp_trade_links_org_node_type")
+  @@index([org_id, node_id, visibility], map: "idx_dpp_trade_links_org_node_vis")
 }
 
 enum TenantType {

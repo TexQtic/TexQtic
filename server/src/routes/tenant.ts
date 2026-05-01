@@ -39,6 +39,17 @@ import {
   DPP_MATERIAL_MAX_ENTRIES,
 } from '../services/dppProductDetails.js';
 import {
+  type DppTradeLinkDto,
+  type DppTradeLinkRow,
+  DPP_TRADE_LINK_TYPES,
+  DPP_TRADE_LINK_VISIBILITY_VALUES,
+  toDppTradeLinkDto,
+  listDppTradeLinksForNode,
+  createDppTradeLink,
+  validateDppTradeLinkSource,
+  assertTradeLinkNodeBelongsToOrg,
+} from '../services/dppTradeLinks.js';
+import {
   sendSuccess,
   sendError,
   sendValidationError,
@@ -8412,6 +8423,228 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         });
 
         return sendSuccess(reply, { productDetails: toDppProductDetailsDto(result) });
+      },
+    );
+  }
+
+  // ─── TECS-DPP-PASSPORT-NETWORK-014 D-9: DPP Trade Linkage Foundation ────────
+  // GET  /api/tenant/dpp/:nodeId/trade-links
+  // POST /api/tenant/dpp/:nodeId/trade-links
+  //
+  // Tenant-private trade link records binding DPP traceability nodes to trade
+  // events (orders, RFQs, shipments, invoices, etc.) via generic source reference.
+  // NO FK to orders/rfqs (different domain boundary: tenantId vs org_id).
+  // sourceId/sourceTable are NEVER exposed on public routes.
+  {
+    const tradeLinkNodeParamSchema = z.object({
+      nodeId: z.string().uuid('nodeId must be a valid UUID'),
+    });
+
+    const postTradeLinkBodySchema = z.object({
+      linkType: z.enum(DPP_TRADE_LINK_TYPES, {
+        errorMap: () => ({
+          message: `linkType must be one of: ${DPP_TRADE_LINK_TYPES.join(', ')}`,
+        }),
+      }),
+      visibility: z
+        .enum(DPP_TRADE_LINK_VISIBILITY_VALUES, {
+          errorMap: () => ({
+            message: `visibility must be one of: ${DPP_TRADE_LINK_VISIBILITY_VALUES.join(', ')}`,
+          }),
+        })
+        .optional(),
+      sourceTable: z.string().min(1).max(100).optional().nullable(),
+      sourceId: z.string().uuid('sourceId must be a valid UUID').optional().nullable(),
+      externalReference: z.string().min(1).max(500).optional().nullable(),
+      title: z.string().min(1).max(300).optional().nullable(),
+      linkedAt: z.string().datetime().optional().nullable(),
+    });
+
+    /**
+     * GET /api/tenant/dpp/:nodeId/trade-links
+     *
+     * Returns all trade links for a DPP traceability node scoped to the
+     * authenticated tenant. RLS enforces org_id isolation.
+     *
+     * Auth:  tenantAuthMiddleware + databaseContextMiddleware
+     * Roles: any authenticated tenant member
+     * Audit: tenant.dpp.trade_link.listed
+     */
+    fastify.get(
+      '/tenant/dpp/:nodeId/trade-links',
+      { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+      async (request, reply) => {
+        const paramsResult = tradeLinkNodeParamSchema.safeParse(request.params);
+        if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+        const { nodeId } = paramsResult.data;
+
+        const dbContext = request.dbContext;
+        if (!dbContext) {
+          return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+        }
+
+        // Node existence + org membership check
+        let nodeFound: boolean;
+        try {
+          nodeFound = await withDbContext(prisma, dbContext, async tx => {
+            return assertTradeLinkNodeBelongsToOrg(tx, nodeId, dbContext.orgId);
+          });
+        } catch (err) {
+          fastify.log.error({ err }, '[D9] trade-links GET node-check failed');
+          return sendNotFound(reply, 'DPP node not found or access denied');
+        }
+        if (!nodeFound) {
+          return sendNotFound(reply, 'DPP node not found or access denied');
+        }
+
+        let rows: DppTradeLinkRow[];
+        try {
+          rows = await withDbContext(prisma, dbContext, async tx => {
+            return listDppTradeLinksForNode(tx, nodeId);
+          });
+        } catch (err) {
+          fastify.log.error({ err }, '[D9] trade-links GET list failed');
+          return sendError(reply, 'INTERNAL_ERROR', 'Failed to retrieve trade links', 500);
+        }
+
+        await writeAuditLog(prisma, {
+          tenantId: request.tenantId ?? null,
+          realm: 'TENANT',
+          actorType: 'USER',
+          actorId: request.userId ?? null,
+          action: 'tenant.dpp.trade_link.listed',
+          entity: 'traceability_node',
+          entityId: nodeId,
+          metadataJson: { nodeId, count: rows.length },
+        });
+
+        return sendSuccess(reply, {
+          nodeId,
+          tradeLinks: rows.map(toDppTradeLinkDto),
+          count: rows.length,
+        });
+      },
+    );
+
+    /**
+     * POST /api/tenant/dpp/:nodeId/trade-links
+     *
+     * Creates a new trade link for a DPP traceability node.
+     *
+     * Business rules:
+     *   - nodeId must belong to authenticated org (RLS-enforced)
+     *   - linkType must be from the approved taxonomy
+     *   - visibility defaults to PRIVATE
+     *   - sourceTable must be from the conservative application-layer allowlist
+     *   - sourceId must be a valid UUID when provided
+     *   - At least one of: sourceId, externalReference, or title must be provided
+     *   - sourceId/sourceTable are NEVER exposed on public routes (tenant-only)
+     *   - Duplicate hard-referenced links (same org/node/type/source) are rejected
+     *     by the partial unique index constraint
+     *
+     * Role guard: ADMIN or OWNER only.
+     * Auth:  tenantAuthMiddleware + databaseContextMiddleware
+     * Audit: tenant.dpp.trade_link.created
+     */
+    fastify.post(
+      '/tenant/dpp/:nodeId/trade-links',
+      { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+      async (request, reply) => {
+        const { userId, userRole } = request;
+
+        const dbContext = request.dbContext;
+        if (!dbContext) {
+          return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+        }
+
+        // Role guard: trade link writes are org-data integrity operations — ADMIN/OWNER only
+        const isAdminOrOwner = userRole === 'ADMIN' || userRole === 'OWNER';
+        if (!isAdminOrOwner) {
+          return sendError(reply, 'FORBIDDEN', 'Only ADMIN or OWNER may create trade links', 403);
+        }
+
+        const paramsResult = tradeLinkNodeParamSchema.safeParse(request.params);
+        if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+        const { nodeId } = paramsResult.data;
+
+        const bodyResult = postTradeLinkBodySchema.safeParse(request.body ?? {});
+        if (!bodyResult.success) return sendValidationError(reply, bodyResult.error.errors);
+        const body = bodyResult.data;
+
+        // Source table / source ID application-layer safety check
+        const sourceValidationError = validateDppTradeLinkSource(body.sourceTable, body.sourceId);
+        if (sourceValidationError) {
+          return sendError(reply, 'VALIDATION_ERROR', sourceValidationError, 422);
+        }
+
+        // At-least-one check: sourceId OR externalReference OR title
+        const hasIdentifier =
+          (body.sourceId != null && body.sourceId.length > 0) ||
+          (body.externalReference != null && body.externalReference.length > 0) ||
+          (body.title != null && body.title.length > 0);
+        if (!hasIdentifier) {
+          return sendError(
+            reply,
+            'VALIDATION_ERROR',
+            'At least one of sourceId, externalReference, or title must be provided',
+            422,
+          );
+        }
+
+        const orgId = dbContext.orgId;
+
+        // Verify node belongs to this org
+        let nodeFound: boolean;
+        try {
+          nodeFound = await withDbContext(prisma, dbContext, async tx => {
+            return assertTradeLinkNodeBelongsToOrg(tx, nodeId, orgId);
+          });
+        } catch (err) {
+          fastify.log.error({ err }, '[D9] trade-links POST node-check failed');
+          return sendNotFound(reply, 'DPP node not found or access denied');
+        }
+        if (!nodeFound) {
+          return sendNotFound(reply, 'DPP node not found or access denied');
+        }
+
+        let created: DppTradeLinkRow;
+        try {
+          created = await withDbContext(prisma, dbContext, async tx => {
+            return createDppTradeLink(tx, orgId, nodeId, {
+              linkType: body.linkType,
+              visibility: body.visibility,
+              sourceTable: body.sourceTable,
+              sourceId: body.sourceId,
+              externalReference: body.externalReference,
+              title: body.title,
+              linkedAt: body.linkedAt ? new Date(body.linkedAt) : null,
+            });
+          });
+        } catch (err) {
+          fastify.log.error({ err }, '[D9] trade-links POST insert failed');
+          return sendError(reply, 'INTERNAL_ERROR', 'Failed to create trade link', 500);
+        }
+
+        await writeAuditLog(prisma, {
+          tenantId: request.tenantId ?? null,
+          realm: 'TENANT',
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'tenant.dpp.trade_link.created',
+          entity: 'dpp_trade_link',
+          entityId: created.id,
+          metadataJson: {
+            nodeId,
+            tradeLinkId: created.id,
+            linkType: created.link_type,
+            visibility: created.visibility,
+            sourceTable: created.source_table ?? undefined,
+            hasSourceId: created.source_id !== null,
+            hasExternalReference: created.external_reference !== null,
+          },
+        });
+
+        return sendSuccess(reply, { tradeLink: toDppTradeLinkDto(created) }, 201);
       },
     );
   }
