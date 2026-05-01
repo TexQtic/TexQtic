@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-017B — VERIFIED_COMPLETE_WITH_LIMITATIONS; tenant DPP UX productized; entry ladder + value summary; DPP-E2E-21/22/23 source analysis tests; awaiting Paresh authorization for slice 018)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-017C — VERIFIED_COMPLETE; tenant passport registry endpoint + UI; 20/21 unit tests pass; DPP-E2E-24/25/26 pass; passportMaturity deliberate preview simplification; awaiting Paresh authorization for slice 018)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,23 +11,27 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-017B Tenant DPP UX Visibility (2026-05-01); DPP-E2E-21/22/23 source analysis pass; awaiting Paresh authorization for TECS-DPP-PASSPORT-NETWORK-018
+product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-017C Tenant Passport Registry (2026-05-01); GET /api/tenant/dpp/passports; 20/21 unit tests pass; DPP-E2E-24/25/26 pass; awaiting Paresh authorization for TECS-DPP-PASSPORT-NETWORK-018
 active_delivery_unit: NONE — awaiting Paresh authorization for TECS-DPP-PASSPORT-NETWORK-018
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  TECS-DPP-PASSPORT-NETWORK-017B VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-01).
-  Delivered: DPPPassport.tsx productized (entry ladder, value summary, test IDs);
-  DPP-E2E-21/22/23 source analysis tests added and passing.
-  Browser-level tenant DPP page assertions deferred (storageState not yet seeded in QA fixtures).
+  TECS-DPP-PASSPORT-NETWORK-017C VERIFIED_COMPLETE (2026-05-01).
+  Delivered: GET /api/tenant/dpp/passports registry endpoint + DPPPassport.tsx registry UI
+  (dpp-passport-registry section before dpp-manual-node-lookup; handleLoadByNodeId; useEffect fetch).
+  tecs-dpp-passport-registry.test.ts: 20/21 PASS (1 DB-skipped). DPP-E2E-24/25/26 pass.
+  passportMaturity in registry is status-derived preview only (deliberate 017C simplification).
+  Authoritative maturity (computeDppMaturity) remains in GET /api/tenant/dpp/:nodeId/passport.
   DPP-E2E-19/20 remain in chromium project — not regressed.
   Do NOT open TECS-DPP-PASSPORT-NETWORK-018 without Paresh authorization.
-last_closed_unit: TECS-DPP-PASSPORT-NETWORK-017B
-last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+last_closed_unit: TECS-DPP-PASSPORT-NETWORK-017C
+last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  TypeScript: 0 errors. E2E: 21 passed, 2 skipped (DPP-E2E-19/20 chromium-only, NOT regressed), 0 failed.
-  DPP-E2E-21 ✅ DPP-E2E-22 ✅ DPP-E2E-23 ✅
+  Frontend tsc: 0 errors. Server tsc: 0 errors. tecs-dpp-passport-registry: 20/21 PASS (1 DB-skipped).
+  E2E (--project=api): 24 passed, 2 skipped (DPP-E2E-19/20 chromium-only, NOT regressed), 0 failed.
+  DPP-E2E-24 ✅ DPP-E2E-25 ✅ DPP-E2E-26 ✅
 last_closed_unit_commits: >-
-  b1f580a — feat(dpp): productize tenant passport entry
+  70bcac7 — feat(dpp): add tenant passport registry (017C)
+  (Prior 017B: b1f580a — feat(dpp): productize tenant passport entry)
   (Prior 017A: 3e04a1e — chore; db42f55 — governance)
 last_closed_unit_closure_basis: >-
   VERIFIED_COMPLETE (TECS-DPP-PASSPORT-NETWORK-017, 2026-05-01).

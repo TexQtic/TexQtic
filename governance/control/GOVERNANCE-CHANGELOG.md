@@ -5,6 +5,100 @@
 
 ---
 
+## 2026-05-01 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-017C (Tenant Passport Registry)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-017C
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-05-01
+Commit:        70bcac7
+Type:          IMPLEMENTATION + UNIT-TEST VERIFICATION
+
+Delivered:
+  - server/src/routes/tenant.ts:
+      Added GET /api/tenant/dpp/passports (tenantAuthMiddleware + databaseContextMiddleware).
+      Validates limit query param via Zod (default 20, max 50).
+      Uses withDbContext(prisma, dbContext, async (tx: typeof prisma) => tx.traceabilityNode.findMany(...)).
+      Includes dpp_passport_states (status, public_token, updated_at) and
+        dpp_product_details (product_description). Where: { orgId: dbContext.orgId }.
+      Response shape: { nodeId, batchId, nodeType, productName, passportStatus, passportMaturity,
+        publicPassportId, updatedAt }. orgId NOT in response. raw public_token NOT in response.
+      passportMaturity is status-derived registry preview (deliberate 017C simplification):
+        PUBLISHED -> GLOBAL_DPP | TRADE_READY -> TRADE_READY | all others -> LOCAL_TRUST.
+        Authoritative maturity (computeDppMaturity) remains in GET /api/tenant/dpp/:nodeId/passport.
+      publicPassportId exposed only when status = PUBLISHED, else null.
+  - server/src/__tests__/tecs-dpp-passport-registry.test.ts:
+      New file: 21 tests (20 static + 1 DB-gated skip).
+      Groups: PR-S (route registration, auth, limit coerce/default/max), PR-T (orgId scoping,
+        withDbContext, dpp_passport_states, dpp_product_details), PR-F (orgId NOT in return shape,
+        public_token NOT as response key, publicPassportId alias, passportStatus, passportMaturity),
+        PR-P (publicPassportId gated behind PUBLISHED, status enum, LOCAL_TRUST default),
+        PR-X (D-6 .json route absent, orgId not as node.orgId), PR-D (DB integration skip).
+  - components/Tenant/DPPPassport.tsx:
+      Added DppRegistryEntry interface, registry state, handleLoadByNodeId callback, useEffect fetch.
+      Added registry JSX section (dpp-passport-registry) BEFORE dpp-manual-node-lookup.
+      Test IDs: dpp-passport-registry, dpp-passport-registry-title, dpp-passport-registry-summary,
+        dpp-passport-registry-loading, dpp-passport-registry-error, dpp-passport-registry-empty,
+        dpp-passport-registry-card, dpp-passport-registry-card-title, dpp-passport-registry-card-status,
+        dpp-passport-registry-card-maturity, dpp-passport-registry-load-button,
+        dpp-passport-registry-public-link. Registry renders only when isProductized && !snapshot.
+      handleLoadByNodeId accepts nodeId directly (trusts registry data).
+  - tests/e2e/dpp-passport-network.spec.ts:
+      Added Group 10 (source-analysis): DPP-E2E-24/25/26.
+      DPP-E2E-24: registry section visible (dpp-passport-registry, title, manual-node-lookup preserved).
+      DPP-E2E-25: registry loads without manual UUID first (empty state, card, load-button in source).
+      DPP-E2E-26: public link panel not regressed by registry (dpp-public-passport-panel, QR, public-link).
+
+Verification:
+  - Frontend TypeScript: 0 errors (pnpm tsc --noEmit clean)
+  - Server TypeScript: 0 errors (npx tsc --noEmit clean in server/)
+  - tecs-dpp-passport-registry: 20/21 PASS (1 DB-gated skip)
+  - E2E (--project=api): 24/26 PASS (2 skip -- DPP-E2E-19/20 chromium-only, NOT regressed)
+  - DPP-E2E-24 PASS, DPP-E2E-25 PASS, DPP-E2E-26 PASS
+  - Git diff: only 4 allowlisted files changed. No schema changes. No migration changes.
+
+Design Decisions:
+  - passportMaturity in registry list is status-derived (summary-level only). Authoritative
+    maturity (computeDppMaturity) remains in the detail route. Deliberate 017C simplification:
+    registry is a preview surface, not final maturity authority.
+  - publicPassportId uses public_token alias only when PUBLISHED -- raw token never exposed.
+  - dpp-manual-node-lookup retained as fallback below registry section.
+  - Slice 018 (JSON-LD) remains CLOSED; must not open without Paresh authorization.
+```
+
+---
+
+## 2026-05-01 — VERIFIED_COMPLETE_WITH_LIMITATIONS: TECS-DPP-PASSPORT-NETWORK-017B (Tenant DPP UX Productization)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-017B
+Status:        VERIFIED_COMPLETE_WITH_LIMITATIONS
+Closure Date:  2026-05-01
+Commit:        b1f580a
+Type:          IMPLEMENTATION + SOURCE-ANALYSIS VERIFICATION
+
+Delivered:
+  - components/Tenant/DPPPassport.tsx:
+      Productized DPP entry ladder with isProductized gating.
+      Added entry ladder section (dpp-entry-ladder), value summary, tier progression.
+  - tests/e2e/dpp-passport-network.spec.ts:
+      DPP-E2E-21: entry surface test IDs present.
+      DPP-E2E-22: mobile smoke (375px).
+      DPP-E2E-23: public link panel not regressed.
+
+Verification:
+  - TypeScript: 0 errors
+  - E2E (--project=api): 21 passed, 2 skipped (DPP-E2E-19/20 chromium-only, NOT regressed)
+  - DPP-E2E-21 PASS, DPP-E2E-22 PASS, DPP-E2E-23 PASS
+
+Design Decisions:
+  - isProductized gating preserves compatibility for non-productized nodes.
+  - Browser-level tenant DPP page assertions deferred (storageState not yet seeded in QA fixtures).
+  - Slice 018 (JSON-LD) must not open without Paresh authorization.
+```
+
+---
+
 ## 2026-05-01 â€” VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-017A (Pre-JSON-LD TypeScript & E2E Debt Gate)
 
 ```

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-017A — VERIFIED_COMPLETE; TS clean; chromium browser project; DPP-E2E-19/20 browser QR visibility tests; pre-JSON-LD debt gate closed)
+**Last Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-017C — VERIFIED_COMPLETE; GET /api/tenant/dpp/passports registry endpoint; DPPPassport.tsx registry UI; 20/21 unit tests; DPP-E2E-24/25/26 pass; passportMaturity deliberate preview simplification; slice 018 CLOSED)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,24 @@
 
 ## Operating Notes
 
+- TECS-DPP-PASSPORT-NETWORK-017C is VERIFIED_COMPLETE (2026-05-01).
+  Tenant Passport Registry. New endpoint: GET /api/tenant/dpp/passports (tenantAuthMiddleware;
+  limit Zod-validated default 20 max 50; withDbContext; includes dpp_passport_states + dpp_product_details;
+  orgId-scoped; orgId NOT in response; public_token aliased as publicPassportId PUBLISHED-only).
+  Registry UI: dpp-passport-registry section in DPPPassport.tsx before dpp-manual-node-lookup;
+  handleLoadByNodeId callback; useEffect fetch on isProductized mount.
+  passportMaturity in registry is status-derived preview only (deliberate 017C simplification):
+    PUBLISHED→GLOBAL_DPP | TRADE_READY→TRADE_READY | all others→LOCAL_TRUST.
+  Authoritative maturity (computeDppMaturity) remains in GET /api/tenant/dpp/:nodeId/passport.
+  Tests: tecs-dpp-passport-registry.test.ts 20/21 PASS (1 DB-skipped). DPP-E2E-24/25/26 PASS.
+  Frontend tsc CLEAN. Server tsc CLEAN. No schema changes. No migration changes.
+  Implementation commit: 70bcac7. Slice 018 (JSON-LD) CLOSED. Full platform launch NOT AUTHORIZED.
+- TECS-DPP-PASSPORT-NETWORK-017B is VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-01).
+  Tenant DPP UX Productization. DPPPassport.tsx productized with isProductized gating,
+  entry ladder (dpp-entry-ladder), value summary, tier progression.
+  DPP-E2E-21/22/23 source analysis tests added and passing.
+  Browser-level tenant DPP page assertions deferred (storageState not yet seeded).
+  Implementation commit: b1f580a. No active delivery unit. Full platform launch NOT AUTHORIZED.
 - TECS-DPP-PASSPORT-NETWORK-015 is VERIFIED_COMPLETE (2026-05-13).
   Public Buyer Page v2. components/Public/PublicPassport.tsx upgraded with 7 new sections and 9 new testIds.
   Sections: Product Story, Product Identity Summary, Supply Chain Traceability Timeline, Evidence Summary (2-col),
@@ -764,9 +782,9 @@
 
 ---
 
-## 2026-05-01 � TECS-DPP-PASSPORT-NETWORK-017B VERIFIED_COMPLETE_WITH_LIMITATIONS
+## 2026-05-01 � TECS-DPP-PASSPORT-NETWORK-017B VERIFIED_COMPLETE_WITH_LIMITATIONS
 
 - Tenant DPP UX visibility slice closed. Product Trust Ladder and value summary productized.
 - DPP-E2E-21/22/23 pass (source analysis). DPP-E2E-19/20 correctly remain in chromium project.
-- Next slice: TECS-DPP-PASSPORT-NETWORK-018 (JSON-LD structured export) � NOT AUTHORIZED until Paresh opens.
+- Next slice: TECS-DPP-PASSPORT-NETWORK-018 (JSON-LD structured export) � NOT AUTHORIZED until Paresh opens.
 - Full platform launch NOT AUTHORIZED.
