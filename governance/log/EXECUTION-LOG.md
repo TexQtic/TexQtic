@@ -36,6 +36,21 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TECS-DPP-PASSPORT-NETWORK-017E — 2026-05-12
+Type: CORRECTIVE CLEANUP + BOUNDARY TEST REPAIR
+Status: VERIFIED_COMPLETE
+Commit: PENDING
+Title: Pre-JSON-LD Public Payload Cleanup (AUDIT-001 AF-01 through AF-04)
+Summary: Implemented 4 audit findings before Slice 018 (JSON-LD). AF-01: qr.payloadUrl corrected
+  from /dpp/:id to /passport/:id. AF-02: aiExtractedClaimsCount (hardcoded 0 since D-3) removed
+  from public API and PublicPassport.tsx. AF-03: 7 stale tests updated to repo truth. AF-04:
+  Redundant "Passport Reference" section removed from PublicPassport.tsx.
+Layer Impact: Layer 0 (NEXT-ACTION, OPEN-SET, GOVERNANCE-CHANGELOG), Layer 3 (this file)
+Runtime verdict: Frontend tsc CLEAN. Server tsc CLEAN. D2+D3: 108/18. Core DPP: 315/14. E2E: 27/2.
+Notes: No schema changes. No new routes. No new files. Slice 018 (JSON-LD) HOLD_FOR_AUTHORIZATION.
+
+---
+
 ### TECS-DPP-PASSPORT-NETWORK-017D — 2026-05-01
 Type: RUNTIME VERIFICATION + E2E TEST
 Status: VERIFIED_COMPLETE

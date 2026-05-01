@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-017D — VERIFIED_COMPLETE; QA passport PUBLISHED + public buyer URL verified; 27/29 E2E pass; slice 018 CLOSED)
+**Last Updated:** 2026-05-12 (TECS-DPP-PASSPORT-NETWORK-017E — VERIFIED_COMPLETE; pre-JSON-LD public payload cleanup; 27/29 E2E pass; slice 018 HOLD_FOR_AUTHORIZATION)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,11 +53,12 @@
 
 ## Operating Notes
 
-- TECS-DPP-PASSPORT-NETWORK-017D is VERIFIED_COMPLETE (2026-05-01).
-  QA Passport Publication + Public Buyer URL Verification.
-  Runtime proof of seller-to-buyer activation path: QA fixture node PUBLISHED; publicPassportId confirmed.
-  New E2E tests (Group 11): DPP-E2E-27 (activation proof), DPP-E2E-28 (tenant panel URL shape),
-    DPP-E2E-29 (public buyer page API + privacy + source analysis). 27/29 pass; 2 chromium-only skipped.
+- TECS-DPP-PASSPORT-NETWORK-017E is VERIFIED_COMPLETE (2026-05-12).
+  Pre-JSON-LD public payload cleanup + D2/D3 boundary test repair (AUDIT-001 AF-01 through AF-04).
+  AF-01: qr.payloadUrl /dpp/ → /passport/ (SPA buyer page). AF-02: aiExtractedClaimsCount removed.
+  AF-03: 6 stale D2/D3 + 1 public-security test updated to repo truth.
+  AF-04: Redundant "Passport Reference" section removed from PublicPassport.tsx.
+  E2E: 27/29 pass (DPP-E2E-19/20 chromium-only, NOT regressed). Slice 018 HOLD_FOR_AUTHORIZATION.
   URL shape: /passport/:publicPassportId (NOT /api/public/dpp/... NOT .json -- D-6 intact).
   Extended 017D privacy boundary: orgId, pricing, createdByUserId absent from public response.
   tsc CLEAN (frontend + server). No schema changes. No new routes.

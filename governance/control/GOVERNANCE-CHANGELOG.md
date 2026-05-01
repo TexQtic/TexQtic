@@ -5,6 +5,45 @@
 
 ---
 
+## 2026-05-12 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-017E (Pre-JSON-LD Public Payload Cleanup)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-017E
+Status:        VERIFIED_COMPLETE
+Date:          2026-05-12
+Commits:       PENDING (two atomic commits: fix + governance)
+
+Scope:
+  Authorised corrective cleanup implementing AUDIT-001 findings AF-01 through AF-04
+  before Slice 018 (JSON-LD). No new features. No schema changes.
+
+  AF-01: qr.payloadUrl in server/src/routes/public.ts corrected from
+         /dpp/${publicPassportId} to /passport/${publicPassportId}
+         (SPA only routes /passport/:id; /dpp/:id is NOT in App.tsx).
+
+  AF-02: aiExtractedClaimsCount (hardcoded 0) removed from public route
+         evidenceSummary and from PublicPassport.tsx interface + UI.
+         Field was stale since D-3; AF-02 takes Path B (remove/hide).
+
+  AF-03: 7 stale boundary tests updated to reflect current repo truth:
+         D2-S02, D2-B03, D3-T07, D3-U15, D3-B02, D3-B04 (D2/D3 suites)
+         + D17-X07 in tecs-dpp-public-security.test.ts.
+         E2E type annotations in dpp-passport-network.spec.ts also cleaned.
+
+  AF-04: Redundant "Passport Reference" section removed from
+         PublicPassport.tsx (rendered passport.qr.payloadUrl as a
+         secondary link, superseded by buyerPageUrl in QR block above).
+
+Validation:
+  Frontend tsc:        CLEAN (0 errors)
+  Server tsc:          CLEAN (0 errors)
+  D2+D3 boundary:      108 passed / 18 skipped (2 Test Files PASS)
+  Core DPP unit (8):   315 passed / 14 skipped (8 Test Files PASS)
+  E2E --project=api:   27 passed / 2 skipped (DPP-E2E-19/20 chromium-only, NOT regressed)
+```
+
+---
+
 ## 2026-05-01 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-017D (QA Passport Publication + Public Buyer URL Verification)
 
 ```
