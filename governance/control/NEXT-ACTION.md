@@ -39,7 +39,7 @@ last_closed_unit_runtime_verdict: >-
   File existence verified. All 7 section grep checks pass.
   Anti-check: no unsafe .json route shape in artifact. Full platform launch NOT AUTHORIZED.
 last_closed_unit_commits: >-
-  [pending commit for 010 design] — docs(dpp): design Passport Network expansion packet
+  29ee688 — docs(dpp): design Passport Network expansion packet
   (Prior: adb15ad — governance 010A; 5991bd5 — feat(dpp) expose public passport link).
 last_closed_unit_closure_basis: >-
   DESIGN_COMPLETE (TECS-DPP-PASSPORT-NETWORK-010, 2026-05-01).
