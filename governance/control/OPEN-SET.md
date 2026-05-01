@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-010-B — VERIFIED_COMPLETE_WITH_LIMITATIONS; Published DPP QA Fixture seed script + DPP-E2E-12/13/14 scaffolded; BLOCKED_BY_FIXTURE pending traceability node creation)
+**Last Updated:** 2026-05-12 (TECS-DPP-PASSPORT-NETWORK-010-B — VERIFIED_COMPLETE; DPP-E2E-12/13/14 14/14 PASS; RLS hotfix applied; node-certification route committed)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,12 +53,12 @@
 
 ## Operating Notes
 
-- TECS-DPP-PASSPORT-NETWORK-010-B is VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-09).
-  Seed script: scripts/seed-dpp-fixture.ts — idempotent fixture seed for QA org; SEED_BLOCKED
-    (correct graceful failure — QA org has no traceability nodes yet; create one in tenant UI first).
-  E2E: DPP-E2E-12/13/14 added to tests/e2e/dpp-passport-network.spec.ts; skip BLOCKED_BY_FIXTURE
-    when no fixture present. 11/11 prior tests PASS. tsc --noEmit CLEAN.
-  Commit: 0c43dc9 — test(dpp): add published passport runtime fixture proof.
+- TECS-DPP-PASSPORT-NETWORK-010-B is VERIFIED_COMPLETE (2026-05-12).
+  RLS hotfix: migration 20260512000000_tecs_dpp_rls_policy_hotfix applied —
+    dpp_passport_states + dpp_evidence_claims RLS policies fixed (current_setting → app.current_org_id()).
+  Seed: node --import tsx scripts/seed-dpp-fixture.ts PASS; .auth/dpp-qa-fixture.json written.
+  E2E: 14/14 PASS (DPP-E2E-01 through DPP-E2E-14). Full runtime proof complete.
+  Also committed: POST /tenant/dpp/:nodeId/certifications + tecs-dpp-node-certifications.test.ts 25/25 PASS.
   Limitations:
     1. QA org has no traceability nodes → DPP-E2E-12/13/14 skip (expected graceful behavior).
     2. DPP-E2E-13: browser dpp-public-passport-panel assertion deferred (no chromium project).

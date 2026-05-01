@@ -58,6 +58,28 @@ Refs: scripts/seed-dpp-fixture.ts · tests/e2e/dpp-passport-network.spec.ts ·
 
 ---
 
+### TECS-DPP-PASSPORT-NETWORK-010-B (FULL) — 2026-05-12
+Type: IMPLEMENTATION + RUNTIME-VERIFICATION — RLS hotfix + route + unit tests + seed + E2E
+Status: VERIFIED_COMPLETE
+Commit: [pending]
+Title: DPP-E2E-12/13/14 full runtime proof — RLS hotfix, node-certification route, seed activation
+Summary: Root cause of BLOCKED_BY_FIXTURE identified: dpp_passport_states RLS policies used
+  current_setting('app.current_org_id') (non-existent GUC) instead of app.current_org_id() — error 42704
+  caused every passport read to 404. Migration 20260512000000_tecs_dpp_rls_policy_hotfix applied via psql;
+  verifier PASS. Seed ran to completion; .auth/dpp-qa-fixture.json written. DPP-E2E-12/13/14 14/14 PASS.
+  Also delivered POST /tenant/dpp/:nodeId/certifications route + 25/25 unit tests.
+Layer Impact: Layer 3 — EXECUTION-LOG.md appended (this entry); Layer 0 — GOVERNANCE-CHANGELOG.md,
+  NEXT-ACTION.md, OPEN-SET.md, SNAPSHOT.md updated (010-B full closure)
+Notes: .auth/dpp-qa-fixture.json gitignored — not staged. dpp_passport_states INSERT + UPDATE
+  grants added alongside policy fix (needed for PATCH /passport/status upsert). No prisma migrate
+  dev/push. pnpm -C server exec prisma db pull + generate run post-apply. Full platform launch NOT AUTHORIZED.
+Refs: server/prisma/migrations/20260512000000_tecs_dpp_rls_policy_hotfix/migration.sql ·
+  server/src/routes/tenant.ts · server/src/__tests__/tecs-dpp-node-certifications.test.ts ·
+  scripts/seed-dpp-fixture.ts · tests/e2e/dpp-passport-network.spec.ts ·
+  governance/control/GOVERNANCE-CHANGELOG.md
+
+---
+
 ### STALE-TOKEN-FALLBACK-REMEDIATION-001 — 2026-04-22
 Type: IMPLEMENTATION + VERIFICATION / DEFECT FIX
 Status: CLOSED

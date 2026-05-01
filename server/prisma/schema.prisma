@@ -335,35 +335,35 @@ model ImpersonationSession {
 }
 
 model CatalogItem {
-  id                             String      @id @default(uuid()) @db.Uuid
-  tenantId                       String      @map("tenant_id") @db.Uuid
-  name                           String      @db.VarChar(255)
-  sku                            String?     @db.VarChar(100)
-  description                    String?
-  price                          Decimal?    @db.Decimal(10, 2)
-  active                         Boolean     @default(true)
-  createdAt                      DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt                      DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
-  moq                            Int         @default(1)
-  imageUrl                       String?     @map("image_url")
-  publicationPosture             String      @default("PRIVATE_OR_AUTH_ONLY") @map("publication_posture") @db.VarChar(30)
-  productCategory                String?     @map("product_category") @db.VarChar(50)
-  fabricType                     String?     @map("fabric_type") @db.VarChar(50)
-  gsm                            Decimal?    @db.Decimal(6, 1)
-  material                       String?     @db.VarChar(50)
-  composition                    String?     @db.VarChar(500)
-  color                          String?     @db.VarChar(100)
-  widthCm                        Decimal?    @map("width_cm") @db.Decimal(6, 2)
-  construction                   String?     @db.VarChar(50)
-  certifications                 Json?
-  catalogStage                   String?     @map("catalog_stage") @db.VarChar(50)
-  stageAttributes                Json?       @map("stage_attributes")
-  priceDisclosurePolicyMode      String?     @map("price_disclosure_policy_mode") @db.VarChar(30)
-  catalogVisibilityPolicyMode    String?     @map("catalog_visibility_policy_mode") @db.VarChar(30)
-  cartItems                      CartItem[]
-  tenant                         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  orderItems                     OrderItem[]
-  rfqs                           Rfq[]
+  id                          String      @id @default(uuid()) @db.Uuid
+  tenantId                    String      @map("tenant_id") @db.Uuid
+  name                        String      @db.VarChar(255)
+  sku                         String?     @db.VarChar(100)
+  description                 String?
+  price                       Decimal?    @db.Decimal(10, 2)
+  active                      Boolean     @default(true)
+  createdAt                   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                   DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  moq                         Int         @default(1)
+  imageUrl                    String?     @map("image_url")
+  publicationPosture          String      @default("PRIVATE_OR_AUTH_ONLY") @map("publication_posture") @db.VarChar(30)
+  productCategory             String?     @map("product_category") @db.VarChar(50)
+  fabricType                  String?     @map("fabric_type") @db.VarChar(50)
+  gsm                         Decimal?    @db.Decimal(6, 1)
+  material                    String?     @db.VarChar(50)
+  composition                 String?     @db.VarChar(500)
+  color                       String?     @db.VarChar(100)
+  widthCm                     Decimal?    @map("width_cm") @db.Decimal(6, 2)
+  construction                String?     @db.VarChar(50)
+  certifications              Json?
+  catalogStage                String?     @map("catalog_stage") @db.VarChar(50)
+  stageAttributes             Json?       @map("stage_attributes")
+  priceDisclosurePolicyMode   String?     @map("price_disclosure_policy_mode") @db.VarChar(30)
+  catalogVisibilityPolicyMode String?     @map("catalog_visibility_policy_mode") @db.VarChar(30)
+  cartItems                   CartItem[]
+  tenant                      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orderItems                  OrderItem[]
+  rfqs                        Rfq[]
 
   @@index([tenantId, active])
   @@index([tenantId, updatedAt])

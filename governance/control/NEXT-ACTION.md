@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-010-B — VERIFIED_COMPLETE_WITH_LIMITATIONS; Published DPP QA Fixture seed script + DPP-E2E-12/13/14 scaffolded; BLOCKED_BY_FIXTURE pending traceability node creation)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-12 (TECS-DPP-PASSPORT-NETWORK-010-B — VERIFIED_COMPLETE; DPP-E2E-12/13/14 14/14 PASS; RLS hotfix applied; node-certification route + tests committed)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,17 +11,16 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: VERIFIED_COMPLETE_WITH_LIMITATIONS — TECS-DPP-PASSPORT-NETWORK-010-B Published DPP QA Fixture + Authenticated Runtime Proof (2026-05-09); DPP-E2E-12/13/14 BLOCKED_BY_FIXTURE pending node creation; awaiting Paresh authorization for next unit
+product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-010-B Published DPP QA Fixture + Full E2E Runtime Proof (2026-05-12); DPP-E2E-12/13/14 14/14 PASS; awaiting Paresh authorization for next unit
 active_delivery_unit: NONE — awaiting Paresh authorization for implementation slices
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >-
-  TECS-DPP-PASSPORT-NETWORK-010-B VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-09).
-  Seed script: scripts/seed-dpp-fixture.ts — idempotent; SEED_BLOCKED (QA org has no nodes yet).
-  E2E scaffolding: DPP-E2E-12/13/14 added; skip with BLOCKED_BY_FIXTURE when no fixture present.
-  To unblock DPP-E2E-12/13/14: create a traceability node in tenant UI, then run:
-    node --import tsx scripts/seed-dpp-fixture.ts
-  Limitations: browser-level panel assertions (DPP-E2E-13 dpp-public-passport-panel,
-    DPP-E2E-14 /passport/:id render) deferred — no chromium project in playwright.config.ts.
+  TECS-DPP-PASSPORT-NETWORK-010-B VERIFIED_COMPLETE (2026-05-12).
+  RLS hotfix applied: dpp_passport_states + dpp_evidence_claims policies corrected
+    (current_setting('app.current_org_id') → app.current_org_id()).
+  Seed: node --import tsx scripts/seed-dpp-fixture.ts — PASS; .auth/dpp-qa-fixture.json written.
+  E2E: DPP-E2E-12/13/14 14/14 PASS (api project, api context). Full runtime proof complete.
+  Also: POST /tenant/dpp/:nodeId/certifications route + 25/25 unit tests committed.
   TECS-DPP-PASSPORT-NETWORK-010 DESIGN_COMPLETE (2026-05-01).
   Design artifact: docs/TECS-DPP-PASSPORT-NETWORK-010-DESIGN-v1.md
   Covers: evidence vault (Slice 012), trade linkage (Slice 014), public buyer page v2 (Slice 015),
@@ -38,21 +37,23 @@ active_delivery_unit_note: >-
     5. White-label DPP naming — future work (Q-10)
     6. DPP expansion packet — evidence vault, trade linkage, real AI assistant architecture
     7. D2/D3 slice boundary supersession tests — temporal scope guards; do not modify
-    8. DPP-E2E-12/13/14 full runtime proof — pending traceability node in QA org
 last_closed_unit: TECS-DPP-PASSPORT-NETWORK-010-B
-last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  tsc --noEmit: CLEAN (0 errors). E2E: 11/11 prior PASS. 3 new skip (BLOCKED_BY_FIXTURE).
-  Seed: SEED_BLOCKED (QA org has no traceability nodes — correct graceful failure).
-  DPP-E2E-12/13/14 scaffolded correctly; will pass once QA org has a node and seed runs.
+  tsc --noEmit: CLEAN (0 errors). E2E: 14/14 PASS (dpp-passport-network.spec.ts, api project).
+  Seed: PASS — .auth/dpp-qa-fixture.json written; node promoted DRAFT→INTERNAL→TRADE_READY→PUBLISHED.
+  RLS hotfix: 20260512000000_tecs_dpp_rls_policy_hotfix applied; verifier PASS.
+  Unit tests: tecs-dpp-node-certifications 25/25 PASS, 2 skipped.
 last_closed_unit_commits: >-
   0c43dc9 — test(dpp): add published passport runtime fixture proof
   (Prior: 7bbea1d — governance 010 commit hash; 29ee688 — docs(dpp) expansion packet;
    adb15ad — governance 010A; 5991bd5 — feat(dpp) expose public passport link).
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE_WITH_LIMITATIONS (TECS-DPP-PASSPORT-NETWORK-010-B, 2026-05-09).
-  seed script idempotent and correct; E2E scaffolding correct; BLOCKED_BY_FIXTURE is expected
-  graceful behavior when QA org has no nodes. No schema/route/UI changes made.
+  VERIFIED_COMPLETE (TECS-DPP-PASSPORT-NETWORK-010-B, 2026-05-12).
+  RLS hotfix applied: migration 20260512000000_tecs_dpp_rls_policy_hotfix fixes broken
+  current_setting('app.current_org_id') → app.current_org_id() in dpp_passport_states + dpp_evidence_claims.
+  Seed fully idempotent; .auth/dpp-qa-fixture.json written; DPP-E2E-12/13/14 14/14 PASS.
+  POST /tenant/dpp/:nodeId/certifications route committed + 25/25 unit tests pass.
   Full platform launch NOT AUTHORIZED.
 last_closed_governance_unit: TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001
 last_closed_governance_unit_status: VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES

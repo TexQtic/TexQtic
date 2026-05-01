@@ -12,23 +12,62 @@
  *
  * Prerequisites:
  *   - .auth/qa-b2b.json must exist with { token, orgId }
- *   - At least one traceability node must exist for the QA org
- *   - To advance INTERNAL → TRADE_READY: node needs ≥1 approved cert + ≥1 lineage depth
+ *   - If no traceability node exists: script auto-creates QA sentinel node via Prisma
+ *   - Evidence gate (cert + lineage) is auto-satisfied via Prisma when not yet met
  *
  * Output:
  *   .auth/dpp-qa-fixture.json  (gitignored)
  *   Contents: { nodeId, publicPassportId, productLabel }
  *
  * Security: never prints token, orgId, connection strings, or credentials.
+ *
+ * AUTHORIZED: QA-only direct Prisma seed exception for DPP fixture activation
+ * DATA-ONLY: no DDL, no schema changes
+ * QA-PREFIX SAFETY: every write scoped to qa-prefixed org slug
+ * SECRETS: no password/token/cookie/connection-string printed
+ * PRODUCT SAFETY: does not alter maker-checker routes or production API behavior
+ * Authorized by: TECS-DPP-PASSPORT-NETWORK-010-B-ACTIVATE-PRISMA-SEED
  */
 
 import { readFileSync, existsSync, writeFileSync } from 'fs';
 import { join } from 'path';
+// Prisma import: resolved from server/node_modules (QA seed exception — C-first/A-fallback)
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore — relative path to server Prisma client; intentional in QA seed only
+import { PrismaClient } from '../server/node_modules/@prisma/client';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const ROOT = process.cwd();
 const BASE_URL = (process.env.PLAYWRIGHT_BASE_URL ?? 'https://app.texqtic.com').replace(/\/$/, '');
+
+/**
+ * Sentinel UUID for the QA APPROVED cert created by strategy A fallback.
+ * Fixed so subsequent runs are idempotent (upsert by this id).
+ * This value is deterministic fixture metadata — NOT a secret.
+ */
+const QA_CERT_SENTINEL_ID = 'f0000000-0000-4000-a000-000000000001';
+
+/**
+ * Sentinel batchId for the QA root traceability node created when the org has none.
+ * Fixed so subsequent runs are idempotent (upsert by orgId + batchId).
+ */
+const QA_NODE_SENTINEL_BATCH_ID = 'qa-dpp-fixture-node-001';
+
+// ── QA-prefix safety guards ───────────────────────────────────────────────────
+
+function assertQaSlug(slug: string): void {
+  if (!slug.startsWith('qa-')) {
+    throw new Error(`STOP: non-QA org slug encountered: "${slug}" — refusing to write`);
+  }
+}
+
+function assertQaOrg(orgId: string, slug: string): void {
+  assertQaSlug(slug);
+  if (typeof orgId !== 'string' || orgId.length === 0) {
+    throw new Error('STOP: orgId is empty — refusing to write');
+  }
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -100,10 +139,17 @@ async function getPassport(token: string, nodeId: string): Promise<PassportApiVi
       `${BASE_URL}/api/tenant/dpp/${encodeURIComponent(nodeId)}/passport`,
       { headers: authHeaders(token) },
     );
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '(unreadable)');
+      console.error(`  [getPassport] HTTP ${res.status} for node ${nodeId.slice(0, 8)}…: ${errBody.slice(0, 300)}`);
+      return null;
+    }
     const body = (await res.json()) as { success: boolean; data?: { passport?: PassportApiView } };
     return body?.data?.passport ?? null;
-  } catch { return null; }
+  } catch (e) {
+    console.error(`  [getPassport] fetch threw for node ${nodeId.slice(0, 8)}…:`, e instanceof Error ? e.message : String(e));
+    return null;
+  }
 }
 
 async function patchPassportStatus(
@@ -186,6 +232,141 @@ async function promoteToPublished(
   return { publicPassportId: finalPassport.publicPassportId };
 }
 
+// ── Prisma instance (QA seed exception — disconnected at end of main) ────────
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const prisma = new (PrismaClient as any)();
+
+// ── Prisma helpers (QA-only, C-first/A-fallback) ──────────────────────────────
+
+/**
+ * Strategy C-first: look for an existing APPROVED cert in this org.
+ * Strategy A fallback: create a QA-sentinel cert row directly in APPROVED state.
+ * Returns the certificationId to link to the node.
+ *
+ * Safety guards: assertQaOrg must have been called before entering this function.
+ */
+async function ensureApprovedCert(qaOrgId: string): Promise<string> {
+  // Resolve the APPROVED lifecycle state for CERTIFICATION entity type
+  const approvedState = await prisma.lifecycleState.findFirst({
+    where: { entityType: 'CERTIFICATION', stateKey: 'APPROVED' },
+    select: { id: true },
+  }) as { id: string } | null;
+  if (!approvedState) {
+    throw new Error('SEED_BLOCKED: Could not find lifecycle_state with entityType=CERTIFICATION stateKey=APPROVED. Run state machine seed first.');
+  }
+
+  // C-first: check for any existing APPROVED cert in the QA org
+  const existingCert = await prisma.certification.findFirst({
+    where: { orgId: qaOrgId, lifecycleStateId: approvedState.id },
+    select: { id: true },
+  }) as { id: string } | null;
+  if (existingCert) {
+    console.log(`[seed-dpp-fixture] C-strategy: reusing existing APPROVED cert (id prefix: ${existingCert.id.slice(0, 8)}…)`);
+    return existingCert.id;
+  }
+
+  // A-fallback: upsert a QA-sentinel cert row set to APPROVED state
+  console.log('[seed-dpp-fixture] A-strategy: no existing APPROVED cert — creating QA sentinel cert...');
+  const cert = await prisma.certification.upsert({
+    where: { id: QA_CERT_SENTINEL_ID },
+    create: {
+      id: QA_CERT_SENTINEL_ID,
+      orgId: qaOrgId,
+      certificationType: 'ISO_9001',
+      lifecycleStateId: approvedState.id,
+    },
+    update: {
+      lifecycleStateId: approvedState.id,
+    },
+    select: { id: true },
+  }) as { id: string };
+  console.log(`[seed-dpp-fixture] A-strategy: QA sentinel cert created/confirmed (id: ${cert.id})`);
+  return cert.id;
+}
+
+/**
+ * Links a certification to a node via node_certifications (idempotent upsert).
+ */
+async function linkCertToNode(qaOrgId: string, nodeId: string, certId: string): Promise<void> {
+  await prisma.node_certifications.upsert({
+    where: {
+      org_id_node_id_certification_id: {
+        org_id: qaOrgId,
+        node_id: nodeId,
+        certification_id: certId,
+      },
+    },
+    create: {
+      org_id: qaOrgId,
+      node_id: nodeId,
+      certification_id: certId,
+    },
+    update: {},
+  });
+  console.log(`[seed-dpp-fixture] Cert linked to node (cert: ${certId.slice(0, 8)}… node: ${nodeId.slice(0, 8)}…)`);
+}
+
+/**
+ * Ensures a dpp_passport_states row exists for the given node (DRAFT by default).
+ * Required because nodes created directly via Prisma bypass the API which auto-creates the state.
+ * Safe to call on any node — idempotent upsert with update: {}.
+ */
+async function ensurePassportState(qaOrgId: string, nodeId: string): Promise<void> {
+  await prisma.dpp_passport_states.upsert({
+    where: { org_id_node_id: { org_id: qaOrgId, node_id: nodeId } },
+    create: { org_id: qaOrgId, node_id: nodeId, status: 'DRAFT' },
+    update: {},
+  });
+}
+
+/**
+ * Creates a QA sentinel traceability node when the org has none.
+ * Also seeds the initial DRAFT passport state row.
+ * Uses upsert by (orgId, batchId) — fully idempotent.
+ */
+async function ensureTraceabilityNode(qaOrgId: string): Promise<void> {
+  const node = await prisma.traceabilityNode.upsert({
+    where: { orgId_batchId: { orgId: qaOrgId, batchId: QA_NODE_SENTINEL_BATCH_ID } },
+    create: { orgId: qaOrgId, batchId: QA_NODE_SENTINEL_BATCH_ID, nodeType: 'PROCESSING', meta: {} },
+    update: {},
+    select: { id: true },
+  }) as { id: string };
+  // Also ensure the passport state row exists (getPassport returns null without it)
+  await prisma.dpp_passport_states.upsert({
+    where: { org_id_node_id: { org_id: qaOrgId, node_id: node.id } },
+    create: { org_id: qaOrgId, node_id: node.id, status: 'DRAFT' },
+    update: {},
+  });
+  console.log(`[seed-dpp-fixture] QA sentinel node + DRAFT passport state created/confirmed (id prefix: ${node.id.slice(0, 8)}…)`);
+}
+
+/**
+ * Creates a child node + SOURCED_FROM edge from nodeId → child.
+ * Satisfies lineageDepth >= 1 for the evidence gate (INTERNAL → TRADE_READY).
+ * Fully idempotent — skips edge creation if one already exists.
+ */
+async function ensureLineageEdge(qaOrgId: string, nodeId: string): Promise<void> {
+  const childBatchId = `qa-dpp-child-${nodeId.slice(0, 8)}`;
+  const childNode = await prisma.traceabilityNode.upsert({
+    where: { orgId_batchId: { orgId: qaOrgId, batchId: childBatchId } },
+    create: { orgId: qaOrgId, batchId: childBatchId, nodeType: 'PROCESSING', meta: {} },
+    update: {},
+    select: { id: true },
+  }) as { id: string };
+  const existingEdge = await prisma.traceabilityEdge.findFirst({
+    where: { orgId: qaOrgId, fromNodeId: nodeId, toNodeId: childNode.id },
+    select: { id: true },
+  }) as { id: string } | null;
+  if (!existingEdge) {
+    await prisma.traceabilityEdge.create({
+      data: { orgId: qaOrgId, fromNodeId: nodeId, toNodeId: childNode.id, edgeType: 'SOURCED_FROM' },
+    });
+    console.log(`[seed-dpp-fixture] Lineage edge created: ${nodeId.slice(0, 8)}… → ${childNode.id.slice(0, 8)}…`);
+  } else {
+    console.log('[seed-dpp-fixture] Lineage edge already exists (idempotent).');
+  }
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
@@ -194,6 +375,18 @@ async function main(): Promise<void> {
 
   const auth = loadAuth();
   console.log('[seed-dpp-fixture] Auth: loaded (token redacted)');
+
+  // ── QA safety guard: resolve org slug and assert qa- prefix ─────────────────
+  console.log('[seed-dpp-fixture] Resolving org slug for QA safety guard...');
+  const orgRow = await prisma.organizations.findUnique({
+    where: { id: auth.orgId },
+    select: { slug: true },
+  }) as { slug: string } | null;
+  if (!orgRow) {
+    throw new Error(`SEED_BLOCKED: org not found for orgId (redacted). Ensure QA org exists.`);
+  }
+  assertQaOrg(auth.orgId, orgRow.slug);
+  console.log('[seed-dpp-fixture] QA safety guard: PASSED (slug prefix: qa-)');
 
   // ── Step 1: idempotency — verify existing fixture ────────────────────────────
   const existing = loadExistingFixture();
@@ -226,12 +419,35 @@ async function main(): Promise<void> {
     success: boolean;
     data?: { rows?: NodeRow[]; total?: number };
   };
-  const nodes: NodeRow[] = listBody?.data?.rows ?? [];
+  let nodes: NodeRow[] = listBody?.data?.rows ?? [];
   if (nodes.length === 0) {
-    throw new Error(
-      'SEED_BLOCKED: No traceability nodes found in QA org. Create one via the tenant UI first.',
-    );
+    console.log('[seed-dpp-fixture] No nodes found — creating QA sentinel node via Prisma (QA exception)...');
+    await ensureTraceabilityNode(auth.orgId);
+    // Re-fetch after creation so the rest of main() sees the new node
+    const refetchRes = await fetch(`${BASE_URL}/api/tenant/traceability/nodes?limit=50`, {
+      headers: authHeaders(auth.token),
+    });
+    if (!refetchRes.ok) {
+      throw new Error(`SEED_BLOCKED: Re-fetch after node creation → HTTP ${refetchRes.status}.`);
+    }
+    const refetchBody = (await refetchRes.json()) as {
+      success: boolean;
+      data?: { rows?: NodeRow[]; total?: number };
+    };
+    nodes = refetchBody?.data?.rows ?? [];
+    if (nodes.length === 0) {
+      throw new Error(
+        'SEED_BLOCKED: Node created via Prisma but API still returns 0 rows. Check RLS policies.',
+      );
+    }
   }
+  // ── Step 2b: ensure passport state rows exist for ALL fetched nodes ────────
+  // Sentinel nodes created via Prisma bypass the API which normally auto-creates the state row.
+  // This idempotent upsert repairs any such orphan nodes (update: {} is a no-op for existing rows).
+  for (const node of nodes) {
+    await ensurePassportState(auth.orgId, node.id);
+  }
+
   console.log(
     `[seed-dpp-fixture] Found ${nodes.length} node(s) — checking passport states...`,
   );
@@ -287,6 +503,22 @@ async function main(): Promise<void> {
     throw new Error('SEED_BLOCKED: No suitable node found. All nodes may be in an unsupported state.');
   }
 
+  // ── Step 4b: ensure APPROVED cert + node_certifications link (QA Prisma exception) ──────
+  // This satisfies the evidence gate (approvedCertCount >= 1) for the chosen node.
+  // C-first: reuse existing APPROVED cert in org. A-fallback: create QA sentinel cert.
+  if (!already) {
+    console.log('[seed-dpp-fixture] Ensuring APPROVED cert linked to chosen node (QA Prisma exception)...');
+    const certId = await ensureApprovedCert(auth.orgId);
+    await linkCertToNode(auth.orgId, chosen.nodeId, certId);
+    if (chosen.lineageDepth < 1) {
+      console.log('[seed-dpp-fixture] lineageDepth=0 — creating lineage edge via Prisma (QA exception)...');
+      await ensureLineageEdge(auth.orgId, chosen.nodeId);
+      console.log('[seed-dpp-fixture] Lineage edge created — evidence gate preconditions now met.');
+    } else {
+      console.log('[seed-dpp-fixture] Evidence gate preconditions satisfied (cert linked, lineageDepth ok).');
+    }
+  }
+
   // ── Step 5: use or promote ───────────────────────────────────────────────────
   if (already) {
     writeFixture({
@@ -311,8 +543,8 @@ async function main(): Promise<void> {
     throw new Error(
       `SEED_BLOCKED: Evidence gate failed for node ${chosen.nodeId.slice(0, 8)}…` +
       ` (approvedCerts=${chosen.approvedCertCount}, lineageDepth=${chosen.lineageDepth}).` +
-      ` Node needs ≥1 approved certification AND ≥1 lineage depth to reach TRADE_READY.` +
-      ` Add evidence via the tenant UI, then re-run this script.`,
+      ` Node cert was linked — lineage depth may still be 0.` +
+      ` Ensure the node has ≥1 traceability edge, then re-run this script.`,
     );
   }
   if (result === null) {
@@ -333,12 +565,14 @@ async function main(): Promise<void> {
   console.log('[seed-dpp-fixture] Written → .auth/dpp-qa-fixture.json');
 }
 
-main().catch(err => {
-  const msg = err instanceof Error ? err.message : String(err);
-  if (msg.startsWith('SEED_BLOCKED:')) {
-    console.error(`\n🛑 ${msg}\n`);
-  } else {
-    console.error('\n🛑 Unexpected seed error:', msg);
-  }
-  process.exit(1);
-});
+main()
+  .catch(err => {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.startsWith('SEED_BLOCKED:')) {
+      console.error(`\n🛑 ${msg}\n`);
+    } else {
+      console.error('\n🛑 Unexpected seed error:', msg);
+    }
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());

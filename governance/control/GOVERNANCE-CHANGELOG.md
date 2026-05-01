@@ -5,6 +5,55 @@
 
 ---
 
+## 2026-05-12 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-010-B (Full E2E Runtime Proof + RLS Hotfix)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-010-B
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-05-12
+Type:          IMPLEMENTATION + RUNTIME-VERIFICATION — migration, route, unit tests, E2E, seed
+
+Root cause resolved: dpp_passport_states and dpp_evidence_claims RLS policies used
+  current_setting('app.current_org_id')::uuid — a non-existent GUC.
+  This caused ERROR 42704 on every query under texqtic_app, caught by withDbContext try/catch → 404.
+  Fix: replace with app.current_org_id() (canonical function defined in Gate A migration).
+
+Files Changed:
+  server/prisma/migrations/20260512000000_tecs_dpp_rls_policy_hotfix/migration.sql (NEW)
+  server/src/routes/tenant.ts (POST /tenant/dpp/:nodeId/certifications route added)
+  server/src/__tests__/tecs-dpp-node-certifications.test.ts (NEW — 25/27 pass, 2 skipped)
+  scripts/seed-dpp-fixture.ts (ensurePassportState, ensureTraceabilityNode, Step 2b loop)
+  governance/control/GOVERNANCE-CHANGELOG.md (this entry)
+  governance/control/NEXT-ACTION.md (governance sync)
+  governance/control/OPEN-SET.md (governance sync)
+  governance/control/SNAPSHOT.md (governance sync)
+  governance/log/EXECUTION-LOG.md (execution log entry)
+
+Commit: [pending — this entry]
+
+Evidence:
+  SQL applied: psql stdin pipe — "HOTFIX VERIFIER PASS: all dpp_passport_states and dpp_evidence_claims policies correct"
+  prisma generate: ✓ Generated Prisma Client (v6.1.0) in 333ms
+  tsc --noEmit: exit 0 (CLEAN)
+  Seed: PASS — node promoted DRAFT→INTERNAL→TRADE_READY→PUBLISHED; .auth/dpp-qa-fixture.json written
+  E2E: 14/14 PASS (dpp-passport-network.spec.ts, api project, https://app.texqtic.com)
+    DPP-E2E-12: tenant GET passport returns non-null publicPassportId for published fixture ✅
+    DPP-E2E-13: API confirms VERIFIED_COMPLETE_WITH_LIMITATIONS maturity ✅
+    DPP-E2E-14: public passport returns PUBLISHED view unauthenticated ✅
+    DPP-E2E-01–11: all PASS (no regressions) ✅
+  Unit tests: tecs-dpp-node-certifications.test.ts 25/25 PASS, 2 skipped (DB integration)
+
+Safety:
+  ✅ RLS hotfix is DROP + recreate (idempotent; no data loss)
+  ✅ No schema.prisma changes; no prisma migrate dev/push
+  ✅ dpp_passport_states INSERT + UPDATE policies + GRANTs added (required for PATCH status endpoint)
+  ✅ org_id isolation verified (all policies scope to app.current_org_id())
+  ✅ .auth/dpp-qa-fixture.json gitignored — not staged
+  ✅ Full platform launch NOT AUTHORIZED
+```
+
+---
+
 ## 2026-05-01 — DESIGN_COMPLETE: TECS-DPP-PASSPORT-NETWORK-010 (Passport Network Expansion Design Packet)
 
 ```

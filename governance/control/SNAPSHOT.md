@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-010-B — VERIFIED_COMPLETE_WITH_LIMITATIONS; Published DPP QA Fixture seed script + DPP-E2E-12/13/14 scaffolded; BLOCKED_BY_FIXTURE pending traceability node creation)
+**Updated:** 2026-05-12 (TECS-DPP-PASSPORT-NETWORK-010-B — VERIFIED_COMPLETE; DPP-E2E-12/13/14 14/14 PASS; RLS hotfix applied; node-certification route committed)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -10,7 +10,7 @@
 ---
 
 ```yaml
-snapshot_date: 2026-05-09
+snapshot_date: 2026-05-12
 snapshot_unit: TECS-DPP-PASSPORT-NETWORK-010-B
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-AUTHORIZATION
@@ -20,19 +20,21 @@ current_open_design_unit_artifact: docs/TECS-DPP-PASSPORT-NETWORK-010-DESIGN-v1.
 current_open_design_unit_note: >-
   TECS-DPP-PASSPORT-NETWORK-010 DESIGN_COMPLETE (2026-05-01).
   Expansion design packet covers 9 implementation slices (010-B through 020) and 15 decision gates.
-  TECS-DPP-PASSPORT-NETWORK-010-B VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-09).
-  Seed script idempotent; DPP-E2E-12/13/14 scaffolded; BLOCKED_BY_FIXTURE (no nodes in QA org yet).
-  To unblock: create traceability node in tenant UI, then run seed script.
+  TECS-DPP-PASSPORT-NETWORK-010-B VERIFIED_COMPLETE (2026-05-12).
+  RLS hotfix applied; seed PASS; DPP-E2E-12/13/14 14/14 PASS; full runtime proof complete.
+  Also: POST /tenant/dpp/:nodeId/certifications committed + 25/25 unit tests pass.
   Prior: TECS-DPP-PASSPORT-NETWORK-010A VERIFIED_COMPLETE (corrective public passport link).
   All DPP Passport Network slices A–G committed (e3d81c5 through ce6b674) + adb15ad governance.
 latest_verified_product_close_unit: TECS-DPP-PASSPORT-NETWORK-010-B
-latest_verified_product_close_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-latest_verified_product_close_date: 2026-05-09
+latest_verified_product_close_status: VERIFIED_COMPLETE
+latest_verified_product_close_date: 2026-05-12
 latest_verified_product_close_verification: >-
-  tsc --noEmit: CLEAN (0 errors). E2E: 11/11 prior PASS against https://app.texqtic.com.
-  DPP-E2E-12/13/14 (NEW): SKIP BLOCKED_BY_FIXTURE (no traceability nodes in QA org — expected).
-  Seed: SEED_BLOCKED (correct graceful failure — empty node list returned by API).
-  Prior 010A: 11/11 E2E PASS. DPP-E2E-11: public route unauthenticated; publicPassportId not leaked.
+  tsc --noEmit: CLEAN (0 errors). E2E: 14/14 PASS against https://app.texqtic.com.
+  DPP-E2E-12: tenant GET passport returns non-null publicPassportId for published fixture — PASS.
+  DPP-E2E-13: API confirms VERIFIED_COMPLETE_WITH_LIMITATIONS maturity — PASS.
+  DPP-E2E-14: public passport returns PUBLISHED view unauthenticated — PASS.
+  Seed: PASS — node promoted DRAFT→INTERNAL→TRADE_READY→PUBLISHED; .auth/dpp-qa-fixture.json written.
+  RLS hotfix verifier: HOTFIX VERIFIER PASS: all policies updated.
 latest_verified_product_close_safety_boundaries: |
   org_id_tenant_isolation: verified (no query scoping changes; seed reads auth from .auth/qa-b2b.json)
   passport_status_gate: verified (auth required; seed uses Bearer token; DPP-E2E-07/08/09)

@@ -7343,6 +7343,140 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     );
   }
 
+  // ─── TECS-DPP-PASSPORT-NETWORK-010-B-UNBLOCK-001: Node Certification Link ────────
+  // POST /api/tenant/dpp/:nodeId/certifications
+  //
+  // Links an existing org-scoped certification to an existing org-scoped
+  // traceability node via the node_certifications M:N join table.
+  // Required to satisfy the INTERNAL → TRADE_READY evidence gate:
+  //   dpp_snapshot_certifications_v1 reads approved certs through node_certifications.
+  //
+  // Role guard: ADMIN or OWNER only.
+  // Idempotent: re-linking an existing pair returns success with created:false.
+  // Audit: tenant.dpp.node_certification.linked
+  {
+    fastify.post(
+      '/tenant/dpp/:nodeId/certifications',
+      { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+      async (request, reply) => {
+        const { userId, userRole, tenantId } = request;
+
+        const dbContext = request.dbContext;
+        if (!dbContext) {
+          return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+        }
+
+        // Role guard: cert-node linkage is an org-data integrity operation — ADMIN/OWNER only
+        const isAdminOrOwner = userRole === 'ADMIN' || userRole === 'OWNER';
+        if (!isAdminOrOwner) {
+          return sendError(reply, 'FORBIDDEN', 'ADMIN or OWNER role required to link a certification to a node', 403);
+        }
+
+        const paramsSchema = z.object({ nodeId: z.string().uuid('nodeId must be a valid UUID') });
+        const paramsResult = paramsSchema.safeParse(request.params);
+        if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+
+        const bodySchema = z.object({
+          certificationId: z.string().uuid('certificationId must be a valid UUID'),
+        });
+        const bodyResult = bodySchema.safeParse(request.body);
+        if (!bodyResult.success) return sendValidationError(reply, bodyResult.error.errors);
+
+        const { nodeId } = paramsResult.data;
+        const { certificationId } = bodyResult.data;
+        const orgId = dbContext.orgId;
+
+        type LinkOutcome =
+          | { error: 'NODE_NOT_FOUND' }
+          | { error: 'CERT_NOT_FOUND' }
+          | { created: boolean; nodeId: string; certificationId: string };
+
+        let outcome: LinkOutcome;
+        try {
+          outcome = await withDbContext(prisma, dbContext, async tx => {
+            // 1. Verify node belongs to current org via RLS-scoped view
+            const nodeCheck = await tx.$queryRaw<Array<{ node_id: string }>>`
+              SELECT node_id FROM dpp_snapshot_products_v1
+              WHERE node_id = ${nodeId}::uuid
+              LIMIT 1
+            `;
+            if (nodeCheck.length === 0) {
+              return { error: 'NODE_NOT_FOUND' as const };
+            }
+
+            // 2. Verify certification belongs to current org (RLS-scoped table)
+            const certCheck = await tx.$queryRaw<Array<{ id: string }>>`
+              SELECT id FROM certifications
+              WHERE id = ${certificationId}::uuid AND org_id = ${orgId}::uuid
+              LIMIT 1
+            `;
+            if (certCheck.length === 0) {
+              return { error: 'CERT_NOT_FOUND' as const };
+            }
+
+            // 3. Idempotency: return success without inserting if link already exists
+            const existing = await tx.node_certifications.findFirst({
+              where: {
+                org_id: orgId,
+                node_id: nodeId,
+                certification_id: certificationId,
+              },
+              select: { id: true },
+            });
+
+            if (existing) {
+              return { created: false, nodeId, certificationId };
+            }
+
+            // 4. Insert new link (unique constraint: org_id, node_id, certification_id)
+            await tx.node_certifications.create({
+              data: {
+                org_id: orgId,
+                node_id: nodeId,
+                certification_id: certificationId,
+              },
+            });
+
+            return { created: true, nodeId, certificationId };
+          });
+        } catch (err) {
+          fastify.log.error({ err }, '[010-B-UNBLOCK] POST /tenant/dpp/:nodeId/certifications failed');
+          return sendError(reply, 'INTERNAL_ERROR', 'Failed to link certification to node', 500);
+        }
+
+        if ('error' in outcome) {
+          if (outcome.error === 'NODE_NOT_FOUND') {
+            return sendNotFound(reply, 'Traceability node not found or access denied');
+          }
+          // CERT_NOT_FOUND
+          return sendNotFound(reply, 'Certification not found or access denied');
+        }
+
+        // Audit: always write, regardless of created flag
+        await writeAuditLog(prisma, {
+          tenantId: tenantId ?? null,
+          realm: 'TENANT',
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'tenant.dpp.node_certification.linked',
+          entity: 'traceability_node',
+          entityId: nodeId,
+          metadataJson: {
+            nodeId,
+            certificationId,
+            created: outcome.created,
+          },
+        });
+
+        return sendSuccess(
+          reply,
+          { nodeCertification: { nodeId: outcome.nodeId, certificationId: outcome.certificationId, created: outcome.created } },
+          outcome.created ? 201 : 200,
+        );
+      },
+    );
+  }
+
   // ─── TECS-DPP-AI-EVIDENCE-LINKAGE-001 D-4: DPP Evidence Claims ────────────────
   // GET  /api/tenant/dpp/:nodeId/evidence-claims
   // POST /api/tenant/dpp/:nodeId/evidence-claims
