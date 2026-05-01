@@ -21,6 +21,16 @@ import tenantCertificationRoutes from './tenant/certifications.g019.js';
 import tenantTraceabilityRoutes from './tenant/traceability.g016.js';
 import tenantDocumentRoutes from './tenant/documents.js';
 import {
+  DPP_EVIDENCE_TYPES,
+  DPP_EVIDENCE_VISIBILITY_VALUES,
+  DPP_EVIDENCE_REVIEW_STATES,
+  isAllowedSourceTable,
+  assertNodeBelongsToOrg,
+  createDppEvidenceItem,
+  listDppEvidenceItemsForNode,
+  toDppEvidenceItemDto,
+} from '../services/dppEvidenceVault.js';
+import {
   sendSuccess,
   sendError,
   sendValidationError,
@@ -8023,6 +8033,225 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       });
     },
   );
+
+  // ─── TECS-DPP-PASSPORT-NETWORK-012 D-7: DPP Evidence Vault ───────────────────
+  // GET  /api/tenant/dpp/:nodeId/evidence-items
+  // POST /api/tenant/dpp/:nodeId/evidence-items
+  //
+  // Independent of the AI extraction pipeline (no FK to document_extraction_drafts).
+  // document_url is tenant-only; never exposed on public routes.
+  // Role guard on POST: ADMIN or OWNER only.
+  // Audit: tenant.dpp.evidence_item.listed / tenant.dpp.evidence_item.created
+  {
+    const evidenceItemNodeParamSchema = z.object({
+      nodeId: z.string().uuid('nodeId must be a valid UUID'),
+    });
+
+    const postEvidenceItemBodySchema = z
+      .object({
+        evidenceType: z.enum(DPP_EVIDENCE_TYPES, {
+          errorMap: () => ({ message: `evidenceType must be one of: ${DPP_EVIDENCE_TYPES.join(', ')}` }),
+        }),
+        title: z.string().min(1, 'title must not be empty').max(500, 'title too long'),
+        visibility: z
+          .enum(DPP_EVIDENCE_VISIBILITY_VALUES, {
+            errorMap: () => ({ message: `visibility must be one of: ${DPP_EVIDENCE_VISIBILITY_VALUES.join(', ')}` }),
+          })
+          .optional(),
+        reviewState: z
+          .enum(DPP_EVIDENCE_REVIEW_STATES, {
+            errorMap: () => ({ message: `reviewState must be one of: ${DPP_EVIDENCE_REVIEW_STATES.join(', ')}` }),
+          })
+          .optional(),
+        sourceTable: z
+          .string()
+          .max(100)
+          .refine(v => isAllowedSourceTable(v), { message: 'sourceTable is not in the allowed list' })
+          .optional()
+          .nullable(),
+        sourceId: z.string().uuid('sourceId must be a valid UUID').optional().nullable(),
+        documentUrl: z.string().url('documentUrl must be a valid URL').max(2000).optional().nullable(),
+        issuingBody: z.string().max(300).optional().nullable(),
+        referenceNumber: z.string().max(200).optional().nullable(),
+        issuedAt: z.coerce.date().optional().nullable(),
+        expiresAt: z.coerce.date().optional().nullable(),
+      })
+      .refine(
+        data => {
+          if (data.expiresAt && data.issuedAt) {
+            return data.expiresAt >= data.issuedAt;
+          }
+          return true;
+        },
+        { message: 'expiresAt must be on or after issuedAt', path: ['expiresAt'] },
+      );
+
+    /**
+     * GET /api/tenant/dpp/:nodeId/evidence-items
+     *
+     * Returns all evidence vault items for a DPP node scoped to the
+     * authenticated tenant. RLS enforces org_id isolation.
+     *
+     * Auth:  tenantAuthMiddleware + databaseContextMiddleware
+     * Audit: tenant.dpp.evidence_item.listed
+     */
+    fastify.get(
+      '/tenant/dpp/:nodeId/evidence-items',
+      { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+      async (request, reply) => {
+        const paramsResult = evidenceItemNodeParamSchema.safeParse(request.params);
+        if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+        const { nodeId } = paramsResult.data;
+
+        const dbContext = request.dbContext;
+        if (!dbContext) {
+          return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+        }
+
+        // Node existence + org membership check
+        let nodeFound: boolean;
+        try {
+          nodeFound = await withDbContext(prisma, dbContext, async tx => {
+            return assertNodeBelongsToOrg(tx, nodeId, dbContext.orgId);
+          });
+        } catch (err) {
+          fastify.log.error({ err }, '[D7] evidence-items node-check failed');
+          return sendNotFound(reply, 'DPP node not found or access denied');
+        }
+        if (!nodeFound) {
+          return sendNotFound(reply, 'DPP node not found or access denied');
+        }
+
+        let rows: Awaited<ReturnType<typeof listDppEvidenceItemsForNode>>;
+        try {
+          rows = await withDbContext(prisma, dbContext, async tx => {
+            return listDppEvidenceItemsForNode(tx, nodeId);
+          });
+        } catch (err) {
+          fastify.log.error({ err }, '[D7] evidence-items list failed');
+          return sendError(reply, 'INTERNAL_ERROR', 'Failed to retrieve evidence items', 500);
+        }
+
+        await writeAuditLog(prisma, {
+          tenantId: request.tenantId ?? null,
+          realm: 'TENANT',
+          actorType: 'USER',
+          actorId: request.userId ?? null,
+          action: 'tenant.dpp.evidence_item.listed',
+          entity: 'traceability_node',
+          entityId: nodeId,
+          metadataJson: { nodeId, count: rows.length },
+        });
+
+        return sendSuccess(reply, {
+          nodeId,
+          items: rows.map(toDppEvidenceItemDto),
+          count: rows.length,
+        });
+      },
+    );
+
+    /**
+     * POST /api/tenant/dpp/:nodeId/evidence-items
+     *
+     * Creates a new evidence vault item for a DPP node.
+     *
+     * Business rules:
+     *   - nodeId must belong to authenticated org (via dpp_snapshot_products_v1)
+     *   - evidenceType and visibility must be from their respective allowlists
+     *   - expiresAt must be >= issuedAt when both are provided
+     *   - sourceTable must be from the allowed soft-reference allowlist
+     *   - document_url is tenant-internal only; never returned on public routes
+     *   - does NOT auto-promote passport maturity or change passport status
+     *
+     * Role guard: ADMIN or OWNER only.
+     * Auth:  tenantAuthMiddleware + databaseContextMiddleware
+     * Audit: tenant.dpp.evidence_item.created
+     */
+    fastify.post(
+      '/tenant/dpp/:nodeId/evidence-items',
+      { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+      async (request, reply) => {
+        const { userId, userRole } = request;
+
+        const dbContext = request.dbContext;
+        if (!dbContext) {
+          return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+        }
+
+        // Role guard: evidence vault writes are org-data integrity operations — ADMIN/OWNER only
+        const isAdminOrOwner = userRole === 'ADMIN' || userRole === 'OWNER';
+        if (!isAdminOrOwner) {
+          return sendError(reply, 'FORBIDDEN', 'ADMIN or OWNER role required to add evidence items', 403);
+        }
+
+        const paramsResult = evidenceItemNodeParamSchema.safeParse(request.params);
+        if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+        const { nodeId } = paramsResult.data;
+
+        const bodyResult = postEvidenceItemBodySchema.safeParse(request.body ?? {});
+        if (!bodyResult.success) return sendValidationError(reply, bodyResult.error.errors);
+        const input = bodyResult.data;
+
+        const orgId = dbContext.orgId;
+
+        // Verify node belongs to this org
+        let nodeFound: boolean;
+        try {
+          nodeFound = await withDbContext(prisma, dbContext, async tx => {
+            return assertNodeBelongsToOrg(tx, nodeId, orgId);
+          });
+        } catch (err) {
+          fastify.log.error({ err }, '[D7] evidence-items POST node-check failed');
+          return sendNotFound(reply, 'DPP node not found or access denied');
+        }
+        if (!nodeFound) {
+          return sendNotFound(reply, 'DPP node not found or access denied');
+        }
+
+        let created: Awaited<ReturnType<typeof createDppEvidenceItem>>;
+        try {
+          created = await withDbContext(prisma, dbContext, async tx => {
+            return createDppEvidenceItem(tx, orgId, nodeId, {
+              evidenceType: input.evidenceType,
+              title: input.title,
+              visibility: input.visibility,
+              reviewState: input.reviewState,
+              sourceTable: input.sourceTable,
+              sourceId: input.sourceId,
+              documentUrl: input.documentUrl,
+              issuingBody: input.issuingBody,
+              referenceNumber: input.referenceNumber,
+              issuedAt: input.issuedAt,
+              expiresAt: input.expiresAt,
+            });
+          });
+        } catch (err) {
+          fastify.log.error({ err }, '[D7] evidence-items POST insert failed');
+          return sendError(reply, 'INTERNAL_ERROR', 'Failed to create evidence item', 500);
+        }
+
+        await writeAuditLog(prisma, {
+          tenantId: request.tenantId ?? null,
+          realm: 'TENANT',
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'tenant.dpp.evidence_item.created',
+          entity: 'dpp_evidence_item',
+          entityId: created.id,
+          metadataJson: {
+            nodeId,
+            evidenceItemId: created.id,
+            evidenceType: created.evidence_type,
+            visibility: created.visibility,
+            reviewState: created.review_state,
+          },
+        });
+
+        return sendSuccess(reply, { evidenceItem: toDppEvidenceItemDto(created) }, 201);
+      },
+    );
+  }
 
   // ─── G-022: Tenant escalation routes ────────────────────────────────────────
   // GET  /api/tenant/escalations
