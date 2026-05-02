@@ -6860,3 +6860,48 @@ Environment fully unblocked. DPP-E2E-38 false-negative resolved.
 ### Commit
 [TEXQTIC] test(dpp): remediate Playwright E2E environment â€” DPP-E2E-41/42 VERIFIED, fix DPP-E2E-38 regex
 
+
+---
+
+## TECS-DPP-PASSPORT-NETWORK-022 — 2026-05-15 — WL Admin DPP Label Panel Human QA
+
+### Scope
+Runtime QA verification of WL admin DPP label panel: GET/PUT /api/tenant/dpp/passport-label-config;
+showTexqticBrand toggle; labelConfig public propagation. Add DPP-E2E-43/44/45 to spec.
+
+### Auth
+.auth/qa-wl-admin.json — { token, orgId } format — CONFIRMED WORKING (live API probes)
+
+### Live API QA Results
+- GET /api/tenant/dpp/passport-label-config: 200 — labelConfig defaults confirmed (buyerFacingLabel: 'Verified Supply Chain Passport', showTexqticBrand: true)
+- PUT with { buyerFacingLabel: 'QA WL Verified Passport', showTexqticBrand: false }: 200 — change confirmed
+- GET after PUT: 200 — change persisted
+- PUT restore (defaults): 200 — defaults confirmed
+- GET after restore: 200 — defaults confirmed
+- GET /api/public/dpp/48d83d5a-05da-47f4-a4a5-b48f33f70686: 200 — labelConfig present
+
+### UI Gap Found
+WLDppLabelPanel.tsx handleSave hardcodes showTexqticBrand: true — no toggle in UI.
+Implication: showTexqticBrand: false only settable via direct API call.
+Documented as finding annotation in DPP-E2E-43/44.
+
+### Tests Added (Group 18)
+- DPP-E2E-43: WL admin DPP label panel — source coverage + GET config succeeds
+- DPP-E2E-44: WL admin PUT label config — update, verify, restore (showTexqticBrand toggle via API)
+- DPP-E2E-45: label config propagation — public DPP API includes labelConfig (B2B confirmed; WL limited)
+
+### Validation
+- npx playwright@1.59.1 test tests/e2e/dpp-passport-network.spec.ts --project=api --reporter=list
+  DPP-E2E-43: PASS | DPP-E2E-44: PASS | DPP-E2E-45: PASS
+  Full suite: 39 passed / 2 skipped (DPP-E2E-19/20 browser-only, expected) / 0 failed
+- pnpm -C server test tecs-dpp-passport-label-config: 132 passed / 2 skipped
+- pnpm -C server test tecs-dpp-passport-registry: 26 passed / 1 skipped
+- pnpm -C server test tecs-dpp-public-security: 31 passed
+
+### Verdict
+VERIFIED_COMPLETE_WITH_LIMITATIONS.
+All new tests pass. WL admin API verified live. showTexqticBrand toggle exercised via API.
+WL public propagation limited by no WL published passport in QA (PROD-AUDIT-001).
+
+### Commit
+[TEXQTIC] test(dpp): verify WL admin label panel runtime — TECS-022 VERIFIED_COMPLETE_WITH_LIMITATIONS

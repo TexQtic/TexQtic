@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-15 (TECS-DPP-PASSPORT-NETWORK-021 — VERIFIED_COMPLETE; Playwright E2E environment remediated; DPP-E2E-41/42 PASS; DPP-E2E-38 false-negative fixed; 36/38 api-project E2E pass; awaiting Paresh authorization for next slice)
+**Last Updated:** 2026-05-15 (TECS-DPP-PASSPORT-NETWORK-022 — VERIFIED_COMPLETE_WITH_LIMITATIONS; WL admin DPP label panel QA; DPP-E2E-43/44/45 PASS; 39/41 api-project E2E pass; awaiting Paresh authorization for next slice)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,16 @@
 
 ## Operating Notes
 
+- TECS-DPP-PASSPORT-NETWORK-022 is VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-15).
+  WL admin GET/PUT /api/tenant/dpp/passport-label-config: VERIFIED (200 both, live API QA).
+  showTexqticBrand toggle: VERIFIED via direct API PUT (showTexqticBrand: false confirmed, defaults restored).
+  UI gap: WLDppLabelPanel.tsx handleSave hardcodes showTexqticBrand: true — no toggle exposed in UI.
+  Public DPP labelConfig propagation: VERIFIED — B2B fixture passport returns labelConfig in public API.
+  WL public propagation: VERIFIED_WITH_LIMITATIONS — no WL published passport in QA (PROD-AUDIT-001).
+  Tests added: DPP-E2E-43/44/45 (Group 18). Full api suite: 39 passed / 2 skipped (browser-only) / 0 failed.
+  Unit suites: tecs-dpp-passport-label-config (132 pass), tecs-dpp-passport-registry (26 pass), tecs-dpp-public-security (31 pass).
+  File changed: tests/e2e/dpp-passport-network.spec.ts only.
+  Next slice: NOT AUTHORIZED until Paresh opens.
 - TECS-DPP-PASSPORT-NETWORK-021 is VERIFIED_COMPLETE (2026-05-15).
   Playwright E2E environment remediated. npx playwright@1.59.1 functional; all 38 api-project tests
   discoverable and runnable. DPP-E2E-41 (020G: empty-state CTA) PASS. DPP-E2E-42 (020H: App.tsx wiring) PASS.

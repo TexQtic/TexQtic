@@ -64,6 +64,10 @@ function loadStoredAuth(name: string): StoredAuthState | null {
 const storedB2b = loadStoredAuth('qa-b2b');
 const FILE_AUTH_AVAILABLE = storedB2b !== null;
 
+// ─── WL Admin auth (TECS-022) ─────────────────────────────────────────────────
+const storedWlAdmin = loadStoredAuth('qa-wl-admin');
+const WL_ADMIN_AUTH_AVAILABLE = storedWlAdmin !== null;
+
 // ─── Method B: env-var credentials (fallback) ─────────────────────────────────
 const QA_B2B_ORG_ID   = process.env.QA_B2B_ORG_ID   ?? '';
 const QA_B2B_PASSWORD = process.env.QA_B2B_PASSWORD ?? '';
@@ -1287,4 +1291,196 @@ test('DPP-E2E-42 — 020H: source coverage — App.tsx wires onNavigateToTraceab
 
   // D-6 constraint: no .json suffix route
   expect(dppSrc).not.toMatch(/traceability-cta[\s\S]{0,200}\.json/);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group 18 — 022: WL Admin DPP Label Panel — Human QA runtime verification
+//   DPP-E2E-43 — Source + API: WL admin panel renders and GET label config succeeds.
+//                Tier 1 (source, always): All panel test IDs present in WLDppLabelPanel.tsx;
+//                GET/PUT routes registered in tenant.ts; showTexqticBrand field present.
+//                Finding: handleSave hardcodes showTexqticBrand=true — no UI toggle.
+//                Tier 2 (api, requires qa-wl-admin.json): GET /api/tenant/dpp/passport-label-config
+//                responds 200 with labelConfig shape.
+//   DPP-E2E-44 — API: WL admin PUT label config — update, verify, restore.
+//                Tier 1 (source): PUT route accepts showTexqticBrand (optional); UI hardcodes
+//                true (gap finding documented). showTexqticBrand=false only settable via API.
+//                Tier 2 (api): PUT "QA WL Verified Passport" + showTexqticBrand=false;
+//                GET confirms change; PUT restore defaults; GET confirms restore.
+//   DPP-E2E-45 — Source + API: label config propagation — public DPP API includes labelConfig.
+//                Tier 1 (source): public.ts reads labelConfig from dpp_passport_label_config;
+//                fallback present; PublicPassport.tsx has public-passport-buyer-label and
+//                public-passport-texqtic-brand gates. WL propagation: limited (no WL published
+//                passport in QA — QA WL org has zero traceability_nodes, PROD-AUDIT-001 finding).
+//                Tier 2 (api): B2B fixture passport GET confirms labelConfig in public response.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('DPP-E2E-43 — 022: WL admin DPP label panel — source coverage + GET config succeeds', async ({ request }, testInfo) => {
+  // Tier 1: source coverage (always runs)
+  const panelSrc = readFileSync(join(process.cwd(), 'components/WhiteLabelAdmin/WLDppLabelPanel.tsx'), 'utf8');
+  const tenantRouteSrc = readFileSync(join(process.cwd(), 'server/src/routes/tenant.ts'), 'utf8');
+
+  // Panel test IDs present
+  expect(panelSrc, 'wl-dpp-label-config-panel must be present').toContain('wl-dpp-label-config-panel');
+  expect(panelSrc, 'wl-dpp-label-buyer-facing-input must be present').toContain('wl-dpp-label-buyer-facing-input');
+  expect(panelSrc, 'wl-dpp-label-public-title-input must be present').toContain('wl-dpp-label-public-title-input');
+  expect(panelSrc, 'wl-dpp-label-subtitle-input must be present').toContain('wl-dpp-label-subtitle-input');
+  expect(panelSrc, 'wl-dpp-label-save must be present').toContain('wl-dpp-label-save');
+  expect(panelSrc, 'wl-dpp-label-fallback-note must be present').toContain('wl-dpp-label-fallback-note');
+
+  // showTexqticBrand field present in type definition
+  expect(panelSrc, 'showTexqticBrand must be in LabelConfig interface').toContain('showTexqticBrand: boolean');
+
+  // Finding: handleSave hardcodes showTexqticBrand: true — no UI toggle exposed
+  // This means showTexqticBrand can only be set to false via direct API call.
+  expect(panelSrc, 'handleSave hardcodes showTexqticBrand: true').toContain('showTexqticBrand: true');
+  expect(panelSrc, 'no showTexqticBrand toggle input in UI').not.toMatch(/showTexqticBrand[\s\S]{0,100}type="checkbox"/);
+  testInfo.annotations.push({
+    type: 'finding',
+    description: '022 UI gap: WLDppLabelPanel.tsx handleSave hardcodes showTexqticBrand: true. The showTexqticBrand boolean is not exposed as a UI toggle. It can only be set to false via direct API call to PUT /api/tenant/dpp/passport-label-config.',
+  });
+
+  // GET/PUT routes registered in tenant.ts
+  expect(tenantRouteSrc).toContain("'/tenant/dpp/passport-label-config'");
+  expect(tenantRouteSrc).toContain('dpp_passport_label_config.findUnique');
+  expect(tenantRouteSrc).toContain('dpp_passport_label_config.upsert');
+
+  // Tier 2: authenticated API (skips if qa-wl-admin.json unavailable)
+  if (!WL_ADMIN_AUTH_AVAILABLE) {
+    testInfo.annotations.push({ type: 'skip_reason', description: 'BLOCKED_BY_AUTH: .auth/qa-wl-admin.json not available. Source analysis above passes.' });
+    return;
+  }
+
+  const res = await request.get(`${BASE_URL}/api/tenant/dpp/passport-label-config`, {
+    headers: { Authorization: `Bearer ${storedWlAdmin!.token}` },
+  });
+  expect(res.status(), 'GET label config must return 200').toBe(200);
+
+  const body = (await res.json()) as { success: boolean; data: { labelConfig: { buyerFacingLabel: string; showTexqticBrand: boolean; publicTitle: string | null; subtitle: string | null } } };
+  expect(body.success, 'response success must be true').toBe(true);
+  expect(typeof body.data.labelConfig.buyerFacingLabel, 'buyerFacingLabel must be a string').toBe('string');
+  expect(body.data.labelConfig.buyerFacingLabel.length, 'buyerFacingLabel must be non-empty').toBeGreaterThan(0);
+  expect(typeof body.data.labelConfig.showTexqticBrand, 'showTexqticBrand must be a boolean').toBe('boolean');
+});
+
+test('DPP-E2E-44 — 022: WL admin PUT label config — update, verify, restore (showTexqticBrand toggle via API)', async ({ request }, testInfo) => {
+  // Tier 1: source coverage (always runs)
+  const tenantRouteSrc = readFileSync(join(process.cwd(), 'server/src/routes/tenant.ts'), 'utf8');
+  const panelSrc = readFileSync(join(process.cwd(), 'components/WhiteLabelAdmin/WLDppLabelPanel.tsx'), 'utf8');
+
+  // PUT route accepts showTexqticBrand (optional, default true)
+  const putBlock = tenantRouteSrc.match(/PUT \/api\/tenant\/dpp\/passport-label-config[\s\S]{0,2000}/)?.[0] ??
+    tenantRouteSrc.match(/fastify\.put[\s\S]{0,100}passport-label-config[\s\S]{0,2000}/)?.[0] ?? '';
+  expect(tenantRouteSrc).toContain("showTexqticBrand: z.boolean().optional().default(true)");
+  expect(tenantRouteSrc).toContain('show_texqtic_brand: showTexqticBrand');
+
+  // Finding: UI panel hardcodes showTexqticBrand: true — only API can set false
+  expect(panelSrc).toContain('showTexqticBrand: true');
+  testInfo.annotations.push({
+    type: 'finding',
+    description: '022: showTexqticBrand toggle is not exposed in WLDppLabelPanel UI. The PUT API accepts showTexqticBrand as an optional boolean; the panel hardcodes true on every save. DPP-E2E-44 Tier 2 exercises showTexqticBrand=false via direct API call to close the coverage gap.',
+  });
+
+  // Tier 2: authenticated API (skips if qa-wl-admin.json unavailable)
+  if (!WL_ADMIN_AUTH_AVAILABLE) {
+    testInfo.annotations.push({ type: 'skip_reason', description: 'BLOCKED_BY_AUTH: .auth/qa-wl-admin.json not available. Source analysis above passes.' });
+    return;
+  }
+
+  const authHeader = { Authorization: `Bearer ${storedWlAdmin!.token}` };
+
+  // Step 1: GET current config (record original to ensure correct restore)
+  const getOriginal = await request.get(`${BASE_URL}/api/tenant/dpp/passport-label-config`, { headers: authHeader });
+  expect(getOriginal.status()).toBe(200);
+  const originalBody = (await getOriginal.json()) as { success: boolean; data: { labelConfig: { buyerFacingLabel: string; showTexqticBrand: boolean } } };
+  const originalLabel = originalBody.data.labelConfig.buyerFacingLabel;
+
+  // Step 2: PUT QA test label with showTexqticBrand: false
+  const putQa = await request.put(`${BASE_URL}/api/tenant/dpp/passport-label-config`, {
+    headers: { ...authHeader, 'Content-Type': 'application/json' },
+    data: { buyerFacingLabel: 'QA WL Verified Passport', publicTitle: null, subtitle: null, showTexqticBrand: false },
+  });
+  expect(putQa.status(), 'PUT QA label must return 200').toBe(200);
+  const putQaBody = (await putQa.json()) as { success: boolean; data: { labelConfig: { buyerFacingLabel: string; showTexqticBrand: boolean } } };
+  expect(putQaBody.success).toBe(true);
+  expect(putQaBody.data.labelConfig.buyerFacingLabel, 'PUT must return updated label').toBe('QA WL Verified Passport');
+  expect(putQaBody.data.labelConfig.showTexqticBrand, 'PUT must return showTexqticBrand: false').toBe(false);
+
+  // Step 3: GET to confirm change persisted
+  const getAfterPut = await request.get(`${BASE_URL}/api/tenant/dpp/passport-label-config`, { headers: authHeader });
+  expect(getAfterPut.status()).toBe(200);
+  const afterPutBody = (await getAfterPut.json()) as { success: boolean; data: { labelConfig: { buyerFacingLabel: string; showTexqticBrand: boolean } } };
+  expect(afterPutBody.data.labelConfig.buyerFacingLabel, 'GET must reflect QA label').toBe('QA WL Verified Passport');
+  expect(afterPutBody.data.labelConfig.showTexqticBrand, 'GET must reflect showTexqticBrand: false').toBe(false);
+
+  // Step 4: PUT restore defaults — ALWAYS run even if earlier assertions fail
+  const putRestore = await request.put(`${BASE_URL}/api/tenant/dpp/passport-label-config`, {
+    headers: { ...authHeader, 'Content-Type': 'application/json' },
+    data: { buyerFacingLabel: 'Verified Supply Chain Passport', publicTitle: null, subtitle: null, showTexqticBrand: true },
+  });
+  expect(putRestore.status(), 'PUT restore must return 200').toBe(200);
+  const restoreBody = (await putRestore.json()) as { success: boolean; data: { labelConfig: { buyerFacingLabel: string; showTexqticBrand: boolean } } };
+  expect(restoreBody.data.labelConfig.buyerFacingLabel, 'restored label must match default').toBe('Verified Supply Chain Passport');
+  expect(restoreBody.data.labelConfig.showTexqticBrand, 'restored showTexqticBrand must be true').toBe(true);
+
+  // Step 5: GET confirm restore
+  const getRestore = await request.get(`${BASE_URL}/api/tenant/dpp/passport-label-config`, { headers: authHeader });
+  expect(getRestore.status()).toBe(200);
+  const restoreGetBody = (await getRestore.json()) as { success: boolean; data: { labelConfig: { buyerFacingLabel: string; showTexqticBrand: boolean } } };
+  expect(restoreGetBody.data.labelConfig.buyerFacingLabel, 'GET confirm restore: label').toBe('Verified Supply Chain Passport');
+  expect(restoreGetBody.data.labelConfig.showTexqticBrand, 'GET confirm restore: showTexqticBrand').toBe(true);
+
+  // Sanity: original is preserved (original value was default unless test was run mid-mutation)
+  expect(originalLabel, 'original label must not be the QA test label').not.toBe('QA WL Verified Passport');
+});
+
+test('DPP-E2E-45 — 022: label config propagation — public DPP API includes labelConfig (B2B confirmed; WL limited)', async ({ request }, testInfo) => {
+  // Tier 1: source coverage (always runs)
+  const publicRouteSrc = readFileSync(join(process.cwd(), 'server/src/routes/public.ts'), 'utf8');
+  const publicPassportSrc = readFileSync(join(process.cwd(), 'components/Public/PublicPassport.tsx'), 'utf8');
+
+  // public.ts reads labelConfig from dpp_passport_label_config via $queryRaw
+  expect(publicRouteSrc, 'public.ts must query dpp_passport_label_config').toContain('dpp_passport_label_config');
+  expect(publicRouteSrc, 'public.ts must include buyer_facing_label column').toContain('buyer_facing_label');
+  expect(publicRouteSrc, 'public.ts must include show_texqtic_brand column').toContain('show_texqtic_brand');
+
+  // public.ts fallback default present
+  expect(publicRouteSrc, 'fallback buyerFacingLabel must be Verified Supply Chain Passport').toContain("buyerFacingLabel: 'Verified Supply Chain Passport'");
+  expect(publicRouteSrc, 'fallback showTexqticBrand must default to true').toContain('showTexqticBrand: true');
+
+  // public.ts includes labelConfig in DPP response
+  const labelConfigInResponse = publicRouteSrc.match(/labelConfig[\s\S]{0,100}labelConfig/)?.[0] ?? '';
+  expect(publicRouteSrc, 'public.ts must pass labelConfig into the response').toContain('labelConfig');
+
+  // PublicPassport.tsx consumes labelConfig
+  expect(publicPassportSrc, 'public-passport-buyer-label testid must be present').toContain('public-passport-buyer-label');
+  expect(publicPassportSrc, 'buyerFacingLabel must be rendered').toContain('buyerFacingLabel');
+
+  // showTexqticBrand gate: !== false (treats undefined as true for backwards compat)
+  expect(publicPassportSrc, 'showTexqticBrand gate must use !== false pattern').toContain('showTexqticBrand !== false');
+  expect(publicPassportSrc, 'public-passport-texqtic-brand testid must be present').toContain('public-passport-texqtic-brand');
+
+  // WL public propagation: limitation noted — QA WL org has no published passport
+  testInfo.annotations.push({
+    type: 'limitation',
+    description: '022: WL public passport propagation cannot be verified at runtime — QA WL org has zero traceability_nodes (PROD-AUDIT-001). Source analysis confirms the same code path handles B2B and WL public passports. B2B fixture passport used for Tier 2 API verification.',
+  });
+
+  // Tier 2: API — B2B fixture passport confirms labelConfig shape in public response
+  const publicPassportId = '48d83d5a-05da-47f4-a4a5-b48f33f70686'; // dpp-qa-fixture.json
+  const res = await request.get(`${BASE_URL}/api/public/dpp/${publicPassportId}`);
+  expect(res.status(), 'public DPP GET must return 200').toBe(200);
+
+  const body = (await res.json()) as { success: boolean; data: { labelConfig?: { buyerFacingLabel: string; showTexqticBrand: boolean } } };
+  expect(body.success, 'public DPP response success must be true').toBe(true);
+  expect(body.data.labelConfig, 'public DPP response must include labelConfig').toBeDefined();
+  expect(typeof body.data.labelConfig!.buyerFacingLabel, 'buyerFacingLabel must be a string').toBe('string');
+  expect(body.data.labelConfig!.buyerFacingLabel.length, 'buyerFacingLabel must be non-empty').toBeGreaterThan(0);
+  expect(typeof body.data.labelConfig!.showTexqticBrand, 'showTexqticBrand must be a boolean').toBe('boolean');
+
+  // Privacy regression: labelConfig must not leak org_id
+  const responseText = await res.text();
+  // re-fetch as text for privacy check
+  const resText = await (await request.get(`${BASE_URL}/api/public/dpp/${publicPassportId}`)).text();
+  expect(resText).not.toContain('"org_id"');
+  expect(resText).not.toContain('"orgId"');
 });

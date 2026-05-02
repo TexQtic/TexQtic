@@ -7,6 +7,37 @@
 
 ---
 
+## 2026-05-15 — VERIFIED_COMPLETE_WITH_LIMITATIONS: TECS-DPP-PASSPORT-NETWORK-022 (WL Admin DPP Label Panel Human QA)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-022
+Type:          QA VERIFICATION — WL Admin DPP Label Panel + GET/PUT API + showTexqticBrand toggle
+Status:        VERIFIED_COMPLETE_WITH_LIMITATIONS
+Date:          2026-05-15
+Commits:       PENDING
+
+Scope:         tests/e2e/dpp-passport-network.spec.ts — DPP-E2E-43/44/45 added (Group 18)
+
+Verified:
+  GET /api/tenant/dpp/passport-label-config (WL admin auth)    200 — labelConfig defaults confirmed
+  PUT /api/tenant/dpp/passport-label-config (WL admin auth)    200 — buyerFacingLabel + showTexqticBrand updated
+  showTexqticBrand: false via API PUT                           VERIFIED — restored to true after QA
+  GET /api/public/dpp/:publicPassportId (B2B fixture)          200 — labelConfig present in response
+  WLDppLabelPanel.tsx source coverage                          VERIFIED — test IDs, routes, state confirmed
+  UI gap: handleSave hardcodes showTexqticBrand: true          DOCUMENTED — no toggle in UI; API-only
+
+Limitations:
+  WL public propagation: no WL published passport in QA env (PROD-AUDIT-001 finding)
+  DPP-E2E-19/20: browser-only, skip by design (2 expected skips)
+
+Test results:
+  DPP-E2E-43: PASS   DPP-E2E-44: PASS   DPP-E2E-45: PASS
+  Full api suite: 39 passed / 2 skipped / 0 failed
+  tecs-dpp-passport-label-config: 132 passed / 2 skipped
+  tecs-dpp-passport-registry: 26 passed / 1 skipped
+  tecs-dpp-public-security: 31 passed
+```
+
 ## 2026-05-15 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-021 (Playwright E2E Environment Remediation)
 
 ```

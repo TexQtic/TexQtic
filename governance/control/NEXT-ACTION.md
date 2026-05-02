@@ -264,6 +264,34 @@ Server unit tests: 15 pre-existing failures (tenant-catalog-items RLS integratio
 Not caused by this change. Scope: tests/e2e/dpp-passport-network.spec.ts only (1 line changed).
 
 Modified file: tests/e2e/dpp-passport-network.spec.ts (line 1127 regex fix)
+Commit: 309435f
+Next slice: NOT AUTHORIZED until Paresh opens
+
+## TECS-DPP-PASSPORT-NETWORK-022 — 2026-05-15 — VERIFIED_COMPLETE_WITH_LIMITATIONS
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS | Closed: 2026-05-15
+
+Task: WL Admin DPP Label Panel Human QA — runtime verify GET/PUT /api/tenant/dpp/passport-label-config;
+      verify showTexqticBrand toggle; add DPP-E2E-43/44/45.
+
+WL admin GET /api/tenant/dpp/passport-label-config: VERIFIED — 200, labelConfig defaults confirmed.
+WL admin PUT /api/tenant/dpp/passport-label-config: VERIFIED — 200, buyerFacingLabel + showTexqticBrand
+  updated (showTexqticBrand: false exercised via direct API call).
+Config restore: VERIFIED — defaults restored (buyerFacingLabel: "Verified Supply Chain Passport", showTexqticBrand: true).
+Public DPP labelConfig propagation: VERIFIED — /api/public/dpp/:publicPassportId returns labelConfig (B2B fixture).
+WL public propagation: VERIFIED_WITH_LIMITATIONS — no WL published passport in QA (PROD-AUDIT-001 finding).
+UI gap documented: WLDppLabelPanel.tsx handleSave hardcodes showTexqticBrand: true — no toggle in UI.
+  Implication: showTexqticBrand: false only settable via direct API. API accepts false; UI never sends false.
+
+Tests added:
+  DPP-E2E-43 — WL admin DPP label panel: source coverage + GET config succeeds
+  DPP-E2E-44 — WL admin PUT label config: update, verify, restore (showTexqticBrand toggle via API)
+  DPP-E2E-45 — label config propagation: public DPP API includes labelConfig (B2B confirmed; WL limited)
+
+Full api suite: 39 passed / 2 skipped (DPP-E2E-19/20 browser-only, expected) / 0 failed
+Unit suites: tecs-dpp-passport-label-config (132/2/134), tecs-dpp-passport-registry (26/1/27), tecs-dpp-public-security (31/31) — all PASS.
+Pre-existing failures: 15 server unit test failures — pre-existing, out of scope.
+
+Modified file: tests/e2e/dpp-passport-network.spec.ts (DPP-E2E-43/44/45 added + storedWlAdmin declaration)
 Commit: PENDING
 Next slice: NOT AUTHORIZED until Paresh opens
 
