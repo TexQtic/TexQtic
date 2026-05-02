@@ -6661,3 +6661,26 @@ TypeScript: server clean | frontend clean
 Commits: [feat commit] + [governance commit] — pending user approval
 Next: requires explicit Paresh authorization for next slice.
 Full platform launch NOT AUTHORIZED.
+
+
+---
+
+## 2026-05-14 — TECS-DPP-PASSPORT-NETWORK-020A
+
+Task: WL DPP Label Panel Wiring + Branding Toggle Consumption
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+
+Changes:
+1. WhiteLabelSettings.tsx — imported WLDppLabelPanel; added DPP Passport Public Label settings card (wl-dpp-label-settings-card). Option B wiring: DPP config reachable via Store Profile (branding) tab without touching forbidden App.tsx or runtime/**.
+2. PublicPassport.tsx — added showTexqticBrand attribution element (public-passport-texqtic-brand). Controlled by passport.labelConfig?.showTexqticBrand !== false. Attribution: "Powered by TexQtic". Header logo, privacy note, buyer-facing label unconditional.
+3. tecs-dpp-passport-label-config.test.ts — Groups I (7 tests) + J (10 tests) added. Path constants corrected to 3-level relative from server/src/__tests__/.
+
+Deliverables:
+  components/Tenant/WhiteLabelSettings.tsx
+  components/Public/PublicPassport.tsx
+  server/src/__tests__/tecs-dpp-passport-label-config.test.ts
+
+Tests: 66/66 non-DB PASS | 239/239 regression PASS
+TypeScript: server clean | frontend clean
+Limitation: Option A (dedicated DPP Label nav tab) deferred — requires App.tsx + runtime/sessionRuntimeDescriptor.ts (both forbidden without explicit Paresh authorization).
+Full platform launch NOT AUTHORIZED.

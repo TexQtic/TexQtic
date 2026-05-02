@@ -826,3 +826,18 @@ Tenant GET/PUT routes, public route labelConfig injection, WLDppLabelPanel, Publ
 
 Next slice: requires explicit Paresh authorization.
 Full platform launch NOT AUTHORIZED.
+
+
+---
+
+## 2026-05-14 — TECS-DPP-PASSPORT-NETWORK-020A VERIFIED_COMPLETE_WITH_LIMITATIONS
+
+TECS-DPP-PASSPORT-NETWORK-020A: WL Label Panel Wiring + Branding Toggle Consumption
+
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+  - WLDppLabelPanel accessible via WhiteLabelSettings.tsx DPP settings card (Option B).
+  - showTexqticBrand consumed in PublicPassport.tsx as attribution toggle.
+  - Limitation: dedicated DPP Label nav tab deferred (requires App.tsx + runtime/** — forbidden).
+
+Next slice: requires explicit Paresh authorization.
+Full platform launch NOT AUTHORIZED.
