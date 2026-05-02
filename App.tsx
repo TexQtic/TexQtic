@@ -5096,12 +5096,6 @@ const App: React.FC = () => {
         return (
           <DPPPassport
             onBack={() => navigateTenantDefaultManifestRoute()}
-            title={currentTenant?.is_white_label ? 'DPP Snapshot' : undefined}
-            subtitle={
-              currentTenant?.is_white_label
-                ? 'Read-only supply chain snapshot by traceability node ID.'
-                : undefined
-            }
           />
         );
       case 'escrow':

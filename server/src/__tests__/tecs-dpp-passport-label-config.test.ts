@@ -21,6 +21,7 @@
  *   Group K — 020B: Dedicated WL DPP Label navigation/tab
  *   Group L — 020B: Regression checks for public behavior and DPP wiring
  *   Group M — 020C: WL label navigation runtime proof + public branding verification
+ *   Group N — 020D: WL tenant DPP surface parity (productized UI for WL tenants)
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -59,6 +60,10 @@ const SESSION_DESCRIPTOR_PATH = path.resolve(
   '../../../runtime/sessionRuntimeDescriptor.ts',
 );
 const SHELLS_PATH = path.resolve(__dirname, '../../../layouts/Shells.tsx');
+const DPP_PASSPORT_COMPONENT_PATH = path.resolve(
+  __dirname,
+  '../../../components/Tenant/DPPPassport.tsx',
+);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Group A — Schema/source
@@ -801,6 +806,102 @@ describe('M — 020C: WL label navigation runtime proof + public branding verifi
       ['sessionRuntimeDescriptor.ts', descriptorSrc],
       ['Shells.tsx', shellsSrc],
       ['WhiteLabelSettings.tsx', settingsSrc],
+    ];
+    for (const [name, src] of sources) {
+      for (const term of forbidden) {
+        expect(src, `${name} must not contain: ${term}`).not.toContain(term);
+      }
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group N — 020D: WL tenant DPP surface parity
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('N — 020D: WL tenant DPP surface parity (productized UI for WL tenants)', () => {
+  let appSrc: string;
+  let shellsSrc: string;
+  let dppPassportSrc: string;
+
+  beforeAll(() => {
+    appSrc          = fs.readFileSync(APP_TSX_PATH, 'utf-8');
+    shellsSrc       = fs.readFileSync(SHELLS_PATH, 'utf-8');
+    dppPassportSrc  = fs.readFileSync(DPP_PASSPORT_COMPONENT_PATH, 'utf-8');
+  });
+
+  it("N01 — App.tsx case 'dpp' does NOT pass title='DPP Snapshot' for WL tenants", () => {
+    // Root cause fix: the is_white_label conditional title override must be absent.
+    const caseBlock = appSrc.match(/case 'dpp':[\s\S]{0,400}/)?.[0] ?? '';
+    expect(caseBlock).not.toContain("DPP Snapshot");
+    expect(caseBlock).not.toContain("is_white_label");
+  });
+
+  it("N02 — App.tsx case 'dpp' does NOT pass subtitle with old snapshot copy", () => {
+    const caseBlock = appSrc.match(/case 'dpp':[\s\S]{0,400}/)?.[0] ?? '';
+    expect(caseBlock).not.toContain("Read-only supply chain snapshot");
+    expect(caseBlock).not.toContain("traceability node ID");
+  });
+
+  it("N03 — App.tsx case 'dpp' renders DPPPassport without title/subtitle props (productized mode)", () => {
+    // With no title prop, isProductized===true inside DPPPassport.tsx → full UI renders.
+    const caseBlock = appSrc.match(/case 'dpp':[\s\S]{0,300}/)?.[0] ?? '';
+    expect(caseBlock).toContain('DPPPassport');
+    expect(caseBlock).toContain('onBack');
+    // No title or subtitle prop injection
+    expect(caseBlock).not.toContain('title={');
+    expect(caseBlock).not.toContain('subtitle={');
+  });
+
+  it("N04 — WL shell mobile nav 'dpp' item label is 'DPP Passport' (not 'DPP Snapshot')", () => {
+    // Mobile menu must use the updated productized label.
+    // Anchor on WhiteLabelShell component export to avoid matching other shell mobileMenuItems.
+    const wlShellBlock = shellsSrc.match(/export const WhiteLabelShell[\s\S]{0,2000}/)?.[0] ?? '';
+    expect(wlShellBlock).toContain("label: 'DPP Passport'");
+    expect(wlShellBlock).not.toContain("label: 'DPP Snapshot'");
+  });
+
+  it("N05 — WL shell desktop nav 'dpp' button text is 'DPP Passport' (not 'DPP Snapshot')", () => {
+    // Desktop nav button inside WhiteLabelShell must show 'DPP Passport'.
+    // Direct substring check: '>DPP Snapshot</button>' is the old text; it must be absent.
+    expect(shellsSrc).toContain('>DPP Passport</button>');
+    expect(shellsSrc).not.toContain('>DPP Snapshot</button>');
+  });
+
+  it('N06 — DPPPassport.tsx isProductized logic: title===undefined → productized mode active', () => {
+    // Verify the gate that enables full productized UI for WL tenants.
+    expect(dppPassportSrc).toContain('const isProductized = title === undefined');
+    // productized sections include: dpp-network-entry, dpp-entry-ladder, dpp-passport-registry
+    expect(dppPassportSrc).toContain('dpp-network-entry');
+    expect(dppPassportSrc).toContain('dpp-entry-ladder');
+    expect(dppPassportSrc).toContain('dpp-passport-registry');
+    expect(dppPassportSrc).toContain('dpp-manual-node-lookup');
+  });
+
+  it("N07 — WL Admin regression: case 'dpp_label' still routes to WLDppLabelPanel (020B intact)", () => {
+    // 020B dedicated WL Admin DPP Label tab must not be disturbed by 020D.
+    expect(appSrc).toContain("case 'dpp_label':");
+    const dppLabelBlock = appSrc.match(/case 'dpp_label':[\s\S]{0,250}/)?.[0] ?? '';
+    expect(dppLabelBlock).toContain('WLDppLabelPanel');
+    // Must not cross-contaminate with DPPPassport
+    expect(dppLabelBlock).not.toContain('DPPPassport');
+  });
+
+  it('N08 — No anti-overstatement copy added by 020D in App.tsx, Shells.tsx, or DPPPassport.tsx', () => {
+    const forbidden = [
+      'Fully white-labeled',
+      'Your branded DPP portal',
+      'Custom domain enabled',
+      'No TexQtic infrastructure',
+      'EU-compliant passport',
+      'GS1-certified passport',
+      'Regulator approved',
+      'Guaranteed compliant',
+    ];
+    const sources: [string, string][] = [
+      ['App.tsx', appSrc],
+      ['Shells.tsx', shellsSrc],
+      ['DPPPassport.tsx', dppPassportSrc],
     ];
     for (const [name, src] of sources) {
       for (const term of forbidden) {

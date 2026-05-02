@@ -508,7 +508,7 @@ export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, naviga
     { key: 'home', label: 'Portfolio', onSelect: () => navigation.onNavigateRoute('home') },
     { key: 'team', label: 'Team Access', onSelect: navigation.onNavigateTeam },
     ...(hasShellRoute(navigation.surface, 'orders') ? [{ key: 'orders', label: 'Orders', onSelect: () => navigation.onNavigateRoute('orders') }] : []),
-    ...(hasShellRoute(navigation.surface, 'dpp') ? [{ key: 'dpp', label: 'DPP Snapshot', onSelect: () => navigation.onNavigateRoute('dpp') }] : []),
+    ...(hasShellRoute(navigation.surface, 'dpp') ? [{ key: 'dpp', label: 'DPP Passport', onSelect: () => navigation.onNavigateRoute('dpp') }] : []),
     ...(hasShellRoute(navigation.surface, 'escrow') ? [{ key: 'escrow', label: 'Escrow', onSelect: () => navigation.onNavigateRoute('escrow') }] : []),
     ...(hasShellRoute(navigation.surface, 'escalations') ? [{ key: 'escalations', label: 'Escalations', onSelect: () => navigation.onNavigateRoute('escalations') }] : []),
     ...(hasShellRoute(navigation.surface, 'settlement') ? [{ key: 'settlement', label: 'Settlement', onSelect: () => navigation.onNavigateRoute('settlement') }] : []),
@@ -540,7 +540,7 @@ export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, naviga
             <button onClick={() => navigation.onNavigateRoute('home')} className="hover:opacity-40 transition-opacity">Portfolio</button>
             <button onClick={navigation.onNavigateTeam} className="hover:opacity-40 transition-opacity">Team Access</button>
             {hasShellRoute(navigation.surface, 'orders') && <button onClick={() => navigation.onNavigateRoute('orders')} className="hover:opacity-40 transition-opacity">Orders</button>}
-            {hasShellRoute(navigation.surface, 'dpp') && <button onClick={() => navigation.onNavigateRoute('dpp')} className="hover:opacity-40 transition-opacity">DPP Snapshot</button>}
+            {hasShellRoute(navigation.surface, 'dpp') && <button onClick={() => navigation.onNavigateRoute('dpp')} className="hover:opacity-40 transition-opacity">DPP Passport</button>}
             {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className="hover:opacity-40 transition-opacity">Escrow</button>}
             {hasShellRoute(navigation.surface, 'escalations') && <button onClick={() => navigation.onNavigateRoute('escalations')} className="hover:opacity-40 transition-opacity">Escalations</button>}
             {hasShellRoute(navigation.surface, 'settlement') && <button onClick={() => navigation.onNavigateRoute('settlement')} className="hover:opacity-40 transition-opacity">Settlement</button>}

@@ -1130,3 +1130,40 @@ test('DPP-E2E-38 — 020B: source coverage — Store Profile shortcut remains wi
   const appSrc = readFileSync(join(process.cwd(), 'App.tsx'), 'utf8');
   expect(appSrc).toContain('onNavigateDppLabel={() => navigateWlAdminManifestRoute(');
 });
+
+// ── Group 15: 020D — WL tenant DPP surface parity ───────────────────────────
+
+test('DPP-E2E-39 — 020D: source coverage — WL tenant DPP route uses productized DPPPassport (no title override)', async ({}, testInfo) => {
+  // WL tenant DPP route (case 'dpp') must no longer pass title/subtitle overrides
+  // that caused isProductized=false inside DPPPassport.tsx.
+  // Authenticated WL tenant browser session would prove the UI at runtime, but
+  // authenticated storageState for a WL tenant is not available in this environment.
+  testInfo.annotations.push({
+    type: 'limitation',
+    description: 'WL tenant authenticated browser session requires storageState for a WL tenant role. Not available in this test environment. Source analysis confirms case dpp no longer passes is_white_label-gated title/subtitle — DPPPassport renders in productized mode for all tenants.',
+  });
+
+  const appSrc = readFileSync(join(process.cwd(), 'App.tsx'), 'utf8');
+  // case 'dpp' block must not contain the old WL snapshot overrides
+  const caseBlock = appSrc.match(/case 'dpp':[\s\S]{0,400}/)?.[0] ?? '';
+  expect(caseBlock, "case 'dpp' must not contain DPP Snapshot title override").not.toContain('DPP Snapshot');
+  expect(caseBlock, "case 'dpp' must not contain is_white_label conditional").not.toContain('is_white_label');
+  expect(caseBlock, "case 'dpp' must not contain snapshot subtitle").not.toContain('Read-only supply chain snapshot');
+  // DPPPassport is still rendered
+  expect(caseBlock).toContain('DPPPassport');
+  expect(caseBlock).toContain('onBack');
+
+  // DPPPassport.tsx productized sections are present (gates active when no title passed)
+  const dppSrc = readFileSync(join(process.cwd(), 'components/Tenant/DPPPassport.tsx'), 'utf8');
+  expect(dppSrc).toContain('dpp-network-entry');
+  expect(dppSrc).toContain('dpp-entry-ladder');
+  expect(dppSrc).toContain('dpp-passport-registry');
+  expect(dppSrc).toContain('dpp-manual-node-lookup');
+  // isProductized gate confirmed
+  expect(dppSrc).toContain('const isProductized = title === undefined');
+
+  // WL shell nav label updated to 'DPP Passport'
+  const shellsSrc = readFileSync(join(process.cwd(), 'layouts/Shells.tsx'), 'utf8');
+  expect(shellsSrc).toContain("label: 'DPP Passport'");
+  expect(shellsSrc).not.toContain("label: 'DPP Snapshot'");
+});
