@@ -1124,7 +1124,7 @@ test('DPP-E2E-38 — 020B: source coverage — Store Profile shortcut remains wi
   expect(settingsSrc).toContain('wl-dpp-label-settings-shortcut');
   // Shortcut is conditional on the callback prop (not hardcoded)
   expect(settingsSrc).toContain('onNavigateDppLabel');
-  const conditionalBlock = settingsSrc.match(/onNavigateDppLabel\s*\?[\s\S]{0,400}/)?.[0] ?? '';
+  const conditionalBlock = settingsSrc.match(/\{onNavigateDppLabel \?[\s\S]{0,400}/)?.[0] ?? '';
   expect(conditionalBlock).toContain('wl-dpp-label-settings-shortcut');
   // Prop wired in App.tsx branding case
   const appSrc = readFileSync(join(process.cwd(), 'App.tsx'), 'utf8');

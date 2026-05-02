@@ -6642,14 +6642,14 @@ Next: TECS-DPP-PASSPORT-NETWORK-018 (JSON-LD) ï¿½ requires explicit Paresh autho
 
 ---
 
-## 2026-05-14 — TECS-DPP-PASSPORT-NETWORK-020 IMPLEMENTATION_COMPLETE
+## 2026-05-14 ï¿½ TECS-DPP-PASSPORT-NETWORK-020 IMPLEMENTATION_COMPLETE
 
-Slice: TECS-DPP-PASSPORT-NETWORK-020 — White-Label Passport Naming
+Slice: TECS-DPP-PASSPORT-NETWORK-020 ï¿½ White-Label Passport Naming
 Layer Impact: Layer 0 (NEXT-ACTION, OPEN-SET, GOVERNANCE-CHANGELOG updated); Layer 3 (this file)
 
 Deliverables:
   server/prisma/migrations/20260514000000_tecs_dpp_passport_label_config/migration.sql (applied)
-  server/prisma/schema.prisma (prisma db pull — model dpp_passport_label_config)
+  server/prisma/schema.prisma (prisma db pull ï¿½ model dpp_passport_label_config)
   server/src/routes/tenant.ts (GET + PUT /tenant/dpp/passport-label-config)
   server/src/routes/public.ts (labelConfig in D6PublicDppData + handlePublicDppRead payload)
   components/WhiteLabelAdmin/WLDppLabelPanel.tsx (NEW)
@@ -6658,22 +6658,22 @@ Deliverables:
 
 Tests: 36/36 new PASS | 135/135 regression PASS
 TypeScript: server clean | frontend clean
-Commits: [feat commit] + [governance commit] — pending user approval
+Commits: [feat commit] + [governance commit] ï¿½ pending user approval
 Next: requires explicit Paresh authorization for next slice.
 Full platform launch NOT AUTHORIZED.
 
 
 ---
 
-## 2026-05-14 — TECS-DPP-PASSPORT-NETWORK-020A
+## 2026-05-14 ï¿½ TECS-DPP-PASSPORT-NETWORK-020A
 
 Task: WL DPP Label Panel Wiring + Branding Toggle Consumption
 Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
 
 Changes:
-1. WhiteLabelSettings.tsx — imported WLDppLabelPanel; added DPP Passport Public Label settings card (wl-dpp-label-settings-card). Option B wiring: DPP config reachable via Store Profile (branding) tab without touching forbidden App.tsx or runtime/**.
-2. PublicPassport.tsx — added showTexqticBrand attribution element (public-passport-texqtic-brand). Controlled by passport.labelConfig?.showTexqticBrand !== false. Attribution: "Powered by TexQtic". Header logo, privacy note, buyer-facing label unconditional.
-3. tecs-dpp-passport-label-config.test.ts — Groups I (7 tests) + J (10 tests) added. Path constants corrected to 3-level relative from server/src/__tests__/.
+1. WhiteLabelSettings.tsx ï¿½ imported WLDppLabelPanel; added DPP Passport Public Label settings card (wl-dpp-label-settings-card). Option B wiring: DPP config reachable via Store Profile (branding) tab without touching forbidden App.tsx or runtime/**.
+2. PublicPassport.tsx ï¿½ added showTexqticBrand attribution element (public-passport-texqtic-brand). Controlled by passport.labelConfig?.showTexqticBrand !== false. Attribution: "Powered by TexQtic". Header logo, privacy note, buyer-facing label unconditional.
+3. tecs-dpp-passport-label-config.test.ts ï¿½ Groups I (7 tests) + J (10 tests) added. Path constants corrected to 3-level relative from server/src/__tests__/.
 
 Deliverables:
   components/Tenant/WhiteLabelSettings.tsx
@@ -6682,7 +6682,7 @@ Deliverables:
 
 Tests: 66/66 non-DB PASS | 239/239 regression PASS
 TypeScript: server clean | frontend clean
-Limitation: Option A (dedicated DPP Label nav tab) deferred — requires App.tsx + runtime/sessionRuntimeDescriptor.ts (both forbidden without explicit Paresh authorization).
+Limitation: Option A (dedicated DPP Label nav tab) deferred ï¿½ requires App.tsx + runtime/sessionRuntimeDescriptor.ts (both forbidden without explicit Paresh authorization).
 Full platform launch NOT AUTHORIZED.
 
 
@@ -6743,9 +6743,9 @@ Full platform launch NOT AUTHORIZED.
 
 ---
 
-## 2026-05-14 — EXECUTION-LOG: 020D TECS-DPP-PASSPORT-NETWORK
+## 2026-05-14 ï¿½ EXECUTION-LOG: 020D TECS-DPP-PASSPORT-NETWORK
 
-Task: TECS-DPP-PASSPORT-NETWORK-020D — WL Tenant DPP Passport Surface Parity
+Task: TECS-DPP-PASSPORT-NETWORK-020D ï¿½ WL Tenant DPP Passport Surface Parity
 Operator: GitHub Copilot (Claude Sonnet 4.6)
 Result: VERIFIED_COMPLETE_WITH_LIMITATIONS
 
@@ -6754,15 +6754,15 @@ Fix: 5 lines removed from case 'dpp' + 2 label renames in WhiteLabelShell.
 Tests: 104/104 non-DB PASS + Group N (8) + DPP-E2E-39. All regression suites clean.
 Pre-existing failure: DPP-E2E-38 (020C defect; not regressed).
 
-## 2026-05-14 — 020E: TECS-DPP-PASSPORT-NETWORK WL Runtime Parity Reconciliation
+## 2026-05-14 ï¿½ 020E: TECS-DPP-PASSPORT-NETWORK WL Runtime Parity Reconciliation
 Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-Root cause: Stale deployment — source clean from 020D; no code change.
+Root cause: Stale deployment ï¿½ source clean from 020D; no code change.
 Tests: Group O (O01-O07) + DPP-E2E-40. 111 pass / 2 skip / 0 fail. TypeScript clean.
 
-## 2026-05-14 — EXECUTION-LOG: 020E TECS-DPP-PASSPORT-NETWORK
+## 2026-05-14 ï¿½ EXECUTION-LOG: 020E TECS-DPP-PASSPORT-NETWORK
 Task: TECS-DPP-PASSPORT-NETWORK-020E WL Tenant DPP Runtime Parity Reconciliation
 Result: VERIFIED_COMPLETE_WITH_LIMITATIONS
-Root cause: Stale deployment at app.texqtic.com — source clean from 020D; no code change required.
+Root cause: Stale deployment at app.texqtic.com ï¿½ source clean from 020D; no code change required.
 Tests: Group O (7 tests O01-O07) + DPP-E2E-40. 111/111 non-DB PASS, 2 skip, 0 fail.
 Pre-existing failure: DPP-E2E-38 (020C; not regressed).
 
@@ -6816,4 +6816,47 @@ Wire onNavigateToTraceability in App.tsx case 'dpp' to navigateTenantManifestRou
 ### Commit
 [TEXQTIC] feat(dpp): wire onNavigateToTraceability in App.tsx case dpp â€” slice 020H
 Hash: d73d864
+
+---
+
+## 021 â€” 2026-05-15 â€” TECS-DPP-PASSPORT-NETWORK-021 Playwright E2E Environment Remediation
+
+### Task
+Remediate Playwright E2E environment so DPP-E2E-41 and DPP-E2E-42 execute and pass.
+Secondary: diagnose and fix pre-existing DPP-E2E-38 false-negative (020C origin).
+
+### Environment Discovery
+- npx playwright@1.59.1 available and functional.
+- playwright.config.ts exports plain object (no @playwright/test import) â€” Playwright runner resolves it internally.
+- Tests were previously unrunnable; now all 38 api-project tests run successfully.
+- Prior "two-versions environment blocker at line 103" = description of tests being unrunnable, not a compile error.
+  Line 103 is simply where DPP-E2E-01 starts.
+
+### DPP-E2E-38 Root Cause and Fix
+- False-negative since 020C: regex /onNavigateDppLabel\s*\?[\s\S]{0,400}/ matched TypeScript optional
+  prop declaration `onNavigateDppLabel?:` at WhiteLabelSettings.tsx:19 (first occurrence in file).
+  400-char window from there never reached wl-dpp-label-settings-shortcut at line 214.
+- Fix: regex changed to /\{onNavigateDppLabel \?[\s\S]{0,400}/ â€” requires leading { char, only present
+  in JSX conditional `{onNavigateDppLabel ? (` at line 212. Aligns with Vitest equivalent at label-config:750.
+- Source (WhiteLabelSettings.tsx) was always correct; test had a regex bug.
+
+### Implementation
+- tests/e2e/dpp-passport-network.spec.ts: line 1127 â€” 1-line regex change only.
+  Before: settingsSrc.match(/onNavigateDppLabel\s*\?[\s\S]{0,400}/)?.[0] ?? '';
+  After:  settingsSrc.match(/\{onNavigateDppLabel \?[\s\S]{0,400}/)?.[0] ?? '';
+
+### Validation
+- npx playwright test tests/e2e/dpp-passport-network.spec.ts --project=api --reporter=list
+  DPP-E2E-41: PASS | DPP-E2E-42: PASS | DPP-E2E-38: PASS (after fix)
+  Full suite: 36 passed / 2 skipped (DPP-E2E-19/20 browser-only, expected) / 0 failed
+- Server unit tests (pnpm run test:ci from server/): 15 pre-existing failures (RFQ-related,
+  tenant-catalog-items); not caused by E2E spec change; scope is tests/e2e/ only.
+- pnpm tsc --noEmit: no TS change made (spec file has @ts-expect-error suppressor at line 40).
+
+### Verdict
+VERIFIED_COMPLETE. All 36 runnable api-project E2E tests pass. 2 browser-only tests skip by design.
+Environment fully unblocked. DPP-E2E-38 false-negative resolved.
+
+### Commit
+[TEXQTIC] test(dpp): remediate Playwright E2E environment â€” DPP-E2E-41/42 VERIFIED, fix DPP-E2E-38 regex
 

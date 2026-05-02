@@ -242,3 +242,29 @@ Next slice: TECS-DPP-PASSPORT-NETWORK-020H — App.tsx wiring + runtime verifica
 - Commit: d73d864
 - Next slice: NOT AUTHORIZED until Paresh opens
 
+## TECS-DPP-PASSPORT-NETWORK-021 — 2026-05-15 — VERIFIED_COMPLETE
+Status: VERIFIED_COMPLETE | Closed: 2026-05-15
+
+Task: Playwright E2E Environment Remediation — make DPP-E2E-41 and DPP-E2E-42 execute and pass;
+      fix pre-existing DPP-E2E-38 false-negative (020C origin).
+
+Environment: npx playwright@1.59.1 functional. All 38 api-project tests discoverable and runnable.
+             Prior "two-versions environment blocker" = tests were unrunnable, not a compile error.
+
+DPP-E2E-41: PASS — source coverage: empty-state CTA + seed WL parameterization (020G)
+DPP-E2E-42: PASS — source coverage: App.tsx wires onNavigateToTraceability (020H)
+DPP-E2E-38: PASS after regex fix — pre-existing false-negative since 020C.
+             Bug: /onNavigateDppLabel\s*\?/ matched TypeScript prop `onNavigateDppLabel?:` at line 19
+             Fix: /\{onNavigateDppLabel \?/ targets JSX conditional `{onNavigateDppLabel ? (` at line 212
+             Source (WhiteLabelSettings.tsx) was always correct.
+
+Full api suite: 36 passed / 2 skipped (DPP-E2E-19/20 browser-only, expected) / 0 failed
+
+Server unit tests: 15 pre-existing failures (tenant-catalog-items RLS integration tests and others).
+Not caused by this change. Scope: tests/e2e/dpp-passport-network.spec.ts only (1 line changed).
+
+Modified file: tests/e2e/dpp-passport-network.spec.ts (line 1127 regex fix)
+Commit: PENDING
+Next slice: NOT AUTHORIZED until Paresh opens
+
+

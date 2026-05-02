@@ -7,6 +7,44 @@
 
 ---
 
+## 2026-05-15 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-021 (Playwright E2E Environment Remediation)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-021
+Type:          TEST REMEDIATION — Playwright E2E Environment + DPP-E2E-38 False-Negative Fix
+Status:        VERIFIED_COMPLETE
+Date:          2026-05-15
+Commits:       PENDING
+
+Environment:   npx playwright@1.59.1 — functional; tests previously unrunnable in prior sessions.
+               playwright.config.ts: plain object export (no @playwright/test import required).
+               Run command: npx playwright test tests/e2e/dpp-passport-network.spec.ts --project=api
+
+Target tests:  DPP-E2E-41 (020G: empty-state CTA + seed WL parameterization) — PASS
+               DPP-E2E-42 (020H: App.tsx wires onNavigateToTraceability) — PASS
+
+Bonus fix:     DPP-E2E-38 — pre-existing false-negative regex bug (020C origin)
+               Root cause: regex /onNavigateDppLabel\s*\?[\s\S]{0,400}/ matched TypeScript
+               optional prop declaration at WhiteLabelSettings.tsx:19 first; 400-char window
+               did not reach wl-dpp-label-settings-shortcut at line 214.
+               Fix: /\{onNavigateDppLabel \?[\s\S]{0,400}/ — requires { prefix, only present
+               in JSX conditional at line 212. Aligns with Vitest equivalent (label-config:750).
+               Source (WhiteLabelSettings.tsx) was always correct — test had a regex bug.
+
+Modified Files:
+  tests/e2e/dpp-passport-network.spec.ts — line 1127 regex fix only (1 line changed)
+
+E2E Results (--project=api):
+  36 passed / 2 skipped (DPP-E2E-19/20 browser-only, expected) / 0 failed
+
+Server unit regression:
+  15 pre-existing failures in server/__tests__/ (tenant-catalog-items, RFQ-related).
+  Not caused by this change: scope is E2E spec only; server tests import no E2E files.
+  Server test failures pre-date this session.
+```
+
+---
+
 ## 2026-05-14 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-019 (AI Passport Assistant v2)
 
 ```

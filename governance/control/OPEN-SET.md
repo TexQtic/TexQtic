@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-14 (TECS-DPP-PASSPORT-NETWORK-019 — VERIFIED_COMPLETE; AI Passport Assistant v2; 79/79 unit tests; 29/31 E2E pass; awaiting Paresh authorization for next slice)
+**Last Updated:** 2026-05-15 (TECS-DPP-PASSPORT-NETWORK-021 — VERIFIED_COMPLETE; Playwright E2E environment remediated; DPP-E2E-41/42 PASS; DPP-E2E-38 false-negative fixed; 36/38 api-project E2E pass; awaiting Paresh authorization for next slice)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,16 @@
 
 ## Operating Notes
 
+- TECS-DPP-PASSPORT-NETWORK-021 is VERIFIED_COMPLETE (2026-05-15).
+  Playwright E2E environment remediated. npx playwright@1.59.1 functional; all 38 api-project tests
+  discoverable and runnable. DPP-E2E-41 (020G: empty-state CTA) PASS. DPP-E2E-42 (020H: App.tsx wiring) PASS.
+  DPP-E2E-38 pre-existing false-negative (020C origin) fixed: regex now targets JSX conditional
+  `{onNavigateDppLabel ? (` (line 212) rather than TypeScript prop declaration `onNavigateDppLabel?:` (line 19).
+  WhiteLabelSettings.tsx source was always correct — test had a regex bug.
+  Full api suite: 36 passed / 2 skipped (DPP-E2E-19/20 browser-only) / 0 failed.
+  File changed: tests/e2e/dpp-passport-network.spec.ts (1 line, regex fix only).
+  Server unit test failures (15) are pre-existing and unrelated to this change.
+  Next slice: NOT AUTHORIZED until Paresh opens.
 - TECS-DPP-PASSPORT-NETWORK-018 is VERIFIED_COMPLETE (2026-05-13).
   New route: GET /api/public/dpp/:publicPassportId/structured-data. Returns JSON-LD
   (@context, @type: ProductPassport, @id = /passport/ buyer URL, passportStatus: PUBLISHED,
