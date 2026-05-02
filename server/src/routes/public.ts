@@ -754,6 +754,12 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       issuedAt: string | null;
     }>;
     evidenceSummary: { approvedCertCount: number };
+    labelConfig: {
+      publicTitle: string | null;
+      buyerFacingLabel: string;
+      subtitle: string | null;
+      showTexqticBrand: boolean;
+    };
   }
   type D6FetchResult =
     | { kind: 'OK'; data: D6PublicDppData }
@@ -790,6 +796,42 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     const stateRow = stateRows[0];
     const orgId = stateRow.org_id;
     const nodeId = stateRow.node_id;
+
+    // ── Phase 1.5: label config lookup (texqtic_public_lookup — SELECT granted) ──
+    interface D6LabelConfigRow {
+      public_title: string | null;
+      buyer_facing_label: string;
+      subtitle: string | null;
+      show_texqtic_brand: boolean;
+    }
+    let labelConfigRows: D6LabelConfigRow[] = [];
+    try {
+      labelConfigRows = await prisma.$transaction(async tx => {
+        await tx.$executeRaw`SET LOCAL ROLE texqtic_public_lookup`;
+        return tx.$queryRaw<D6LabelConfigRow[]>`
+          SELECT public_title, buyer_facing_label, subtitle, show_texqtic_brand
+          FROM dpp_passport_label_config
+          WHERE org_id = ${orgId}::uuid
+          LIMIT 1
+        `;
+      });
+    } catch {
+      // Non-fatal: fall back to defaults below
+      labelConfigRows = [];
+    }
+    const labelConfig = labelConfigRows[0]
+      ? {
+          publicTitle: labelConfigRows[0].public_title,
+          buyerFacingLabel: labelConfigRows[0].buyer_facing_label,
+          subtitle: labelConfigRows[0].subtitle,
+          showTexqticBrand: labelConfigRows[0].show_texqtic_brand,
+        }
+      : {
+          publicTitle: null,
+          buyerFacingLabel: 'Verified Supply Chain Passport',
+          subtitle: null,
+          showTexqticBrand: true,
+        };
 
     // ── Phase 2: tenant-scoped DPP snapshot queries ─────────────────────────────
     let productRows: D6ProductRow[];
@@ -904,6 +946,7 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
         evidenceSummary: {
           approvedCertCount,
         },
+        labelConfig,
       },
     };
   }
@@ -963,6 +1006,7 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
         format: 'url' as const,
       },
       exportedAt: new Date().toISOString(),
+      labelConfig: data.labelConfig,
     };
 
     if (jsonRoute) {

@@ -33,6 +33,12 @@ interface PassportData {
     format: 'url';
   };
   exportedAt: string;
+  labelConfig?: {
+    publicTitle: string | null;
+    buyerFacingLabel: string;
+    subtitle: string | null;
+    showTexqticBrand: boolean;
+  };
 }
 
 const MATURITY_LABELS: Record<
@@ -441,7 +447,9 @@ export function PublicPassport({ publicPassportId }: PublicPassportProps) {
             className="rounded-xl border border-slate-200 bg-slate-50 p-4"
           >
             <p className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-600">
-              Verified Supply Chain Passport
+              <span data-testid="public-passport-buyer-label">
+                {passport.labelConfig?.buyerFacingLabel ?? 'Verified Supply Chain Passport'}
+              </span>
             </p>
             <div className={`mb-3 inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${maturity.color}`}>
               {maturity.badge}

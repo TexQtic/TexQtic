@@ -9156,6 +9156,177 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendSuccess(reply, { deleted: existing.id });
     },
   );
+
+  // ─── TECS-DPP-PASSPORT-NETWORK-020: White-Label Passport Label Config ─────────
+  // GET  /api/tenant/dpp/passport-label-config
+  // Returns the org's label config, or fallback defaults if no row exists yet.
+  // Role: any authenticated tenant member.
+  fastify.get(
+    '/tenant/dpp/passport-label-config',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      const row = await withDbContext(prisma, dbContext, async tx => {
+        return tx.dpp_passport_label_config.findUnique({
+          where: { org_id: dbContext.orgId },
+          select: {
+            public_title: true,
+            buyer_facing_label: true,
+            subtitle: true,
+            show_texqtic_brand: true,
+          },
+        });
+      });
+
+      const labelConfig = row
+        ? {
+            publicTitle: row.public_title,
+            buyerFacingLabel: row.buyer_facing_label,
+            subtitle: row.subtitle,
+            showTexqticBrand: row.show_texqtic_brand,
+          }
+        : {
+            publicTitle: null,
+            buyerFacingLabel: 'Verified Supply Chain Passport',
+            subtitle: null,
+            showTexqticBrand: true,
+          };
+
+      return sendSuccess(reply, { labelConfig });
+    },
+  );
+
+  // PUT /api/tenant/dpp/passport-label-config
+  // Upserts the org's label config. ADMIN/OWNER only.
+  {
+    const labelConfigBodySchema = z.object({
+      buyerFacingLabel: z
+        .string()
+        .trim()
+        .min(1, 'Buyer-facing label is required')
+        .max(80, 'Max 80 characters'),
+      publicTitle: z.string().trim().max(120, 'Max 120 characters').nullable().optional(),
+      subtitle: z.string().trim().max(180, 'Max 180 characters').nullable().optional(),
+      showTexqticBrand: z.boolean().optional().default(true),
+    });
+
+    const MISLEADING_TERMS = [
+      'Government Approved',
+      'Regulator Certified',
+      'EU Compliant',
+      'GS1 Certified',
+      'Official Regulator Passport',
+    ] as const;
+
+    fastify.put(
+      '/tenant/dpp/passport-label-config',
+      { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+      async (request, reply) => {
+        const { userId, userRole } = request;
+        const dbContext = request.dbContext;
+        if (!dbContext) {
+          return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+        }
+
+        const isAdminOrOwner = userRole === 'ADMIN' || userRole === 'OWNER';
+        if (!isAdminOrOwner) {
+          return sendError(
+            reply,
+            'FORBIDDEN',
+            'ADMIN or OWNER role required to configure passport label',
+            403,
+          );
+        }
+
+        const bodyResult = labelConfigBodySchema.safeParse(request.body);
+        if (!bodyResult.success) return sendValidationError(reply, bodyResult.error.errors);
+
+        const { buyerFacingLabel, publicTitle, subtitle, showTexqticBrand } = bodyResult.data;
+
+        const htmlPattern = /<|>|&lt;|&gt;/i;
+        if (
+          htmlPattern.test(buyerFacingLabel) ||
+          (publicTitle != null && htmlPattern.test(publicTitle)) ||
+          (subtitle != null && htmlPattern.test(subtitle))
+        ) {
+          return sendError(
+            reply,
+            'VALIDATION_ERROR',
+            'Label text must not contain HTML markup',
+            400,
+          );
+        }
+
+        const combined = [buyerFacingLabel, publicTitle ?? '', subtitle ?? ''].join(' ');
+        const blocked = MISLEADING_TERMS.find(term =>
+          combined.toLowerCase().includes(term.toLowerCase()),
+        );
+        if (blocked) {
+          return sendError(
+            reply,
+            'VALIDATION_ERROR',
+            `Label must not include misleading regulatory claim: "${blocked}"`,
+            400,
+          );
+        }
+
+        const now = new Date();
+        const result = await withDbContext(prisma, dbContext, async tx => {
+          const upserted = await tx.dpp_passport_label_config.upsert({
+            where: { org_id: dbContext.orgId },
+            create: {
+              org_id: dbContext.orgId,
+              buyer_facing_label: buyerFacingLabel,
+              public_title: publicTitle ?? null,
+              subtitle: subtitle ?? null,
+              show_texqtic_brand: showTexqticBrand ?? true,
+              created_at: now,
+              updated_at: now,
+            },
+            update: {
+              buyer_facing_label: buyerFacingLabel,
+              public_title: publicTitle ?? null,
+              subtitle: subtitle ?? null,
+              show_texqtic_brand: showTexqticBrand ?? true,
+              updated_at: now,
+            },
+            select: {
+              public_title: true,
+              buyer_facing_label: true,
+              subtitle: true,
+              show_texqtic_brand: true,
+            },
+          });
+
+          await writeAuditLog(tx, {
+            realm: 'TENANT',
+            tenantId: dbContext.orgId,
+            actorType: 'USER',
+            actorId: userId ?? null,
+            action: 'dpp.passport_label_config.upserted',
+            entity: 'dpp_passport_label_config',
+            entityId: dbContext.orgId,
+            metadataJson: { buyerFacingLabel, publicTitle, subtitle, showTexqticBrand },
+          });
+
+          return upserted;
+        });
+
+        return sendSuccess(reply, {
+          labelConfig: {
+            publicTitle: result.public_title,
+            buyerFacingLabel: result.buyer_facing_label,
+            subtitle: result.subtitle,
+            showTexqticBrand: result.show_texqtic_brand,
+          },
+        });
+      },
+    );
+  }
 };
 
 export default tenantRoutes;

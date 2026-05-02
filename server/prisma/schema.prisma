@@ -1442,6 +1442,19 @@ model dpp_trade_links {
   @@index([org_id, node_id, visibility], map: "idx_dpp_trade_links_org_node_vis")
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model dpp_passport_label_config {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id             String   @unique @db.Uuid
+  public_title       String?
+  buyer_facing_label String   @default("Verified Supply Chain Passport")
+  subtitle           String?
+  show_texqtic_brand Boolean  @default(true)
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime @default(now()) @db.Timestamptz(6)
+}
+
 enum TenantType {
   B2B
   B2C
