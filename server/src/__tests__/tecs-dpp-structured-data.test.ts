@@ -1,7 +1,9 @@
 /**
  * TECS-DPP-STRUCTURED-DATA-018 — JSON-LD Machine-Readable Public DPP
+ * TECS-DPP-PASSPORT-NETWORK-024 — Group S: JSON-LD context document resolvability
  *
  * Slice: 018 — GET /api/public/dpp/:publicPassportId/structured-data
+ * Slice: 024 — JSON-LD @context document at /dpp/v1/context.jsonld
  *
  * Test strategy:
  *   Group A (SD-A) — Route registration: structured-data registered; .json absent; base route intact
@@ -10,6 +12,7 @@
  *   Group D (SD-D) — Privacy: denylist fields absent from JSON-LD source
  *   Group E (SD-E) — Response normalization: invalid/unpublished token → safe 404
  *   Group F (SD-F) — Route safety: .json absent; structured-data coexists with base route
+ *   Group S (SD-S) — 024: JSON-LD context document file: exists, parses, required terms, no forbidden terms
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -22,6 +25,7 @@ import * as path from 'node:path';
 
 const SERVER_ROOT = path.resolve(__dirname, '../../');
 const PUBLIC_ROUTE_PATH = path.join(SERVER_ROOT, 'src/routes/public.ts');
+const CONTEXT_FILE_PATH = path.resolve(SERVER_ROOT, '../public/dpp/v1/context.jsonld');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Group A (SD-A) — Route registration
@@ -319,5 +323,111 @@ describe('SD-F — Route safety regression', () => {
     const d18Block = src.slice(src.indexOf('TECS-DPP-STRUCTURED-DATA-018'));
     expect(d18Block.slice(0, 600)).not.toContain('tenantAuthMiddleware');
     expect(d18Block.slice(0, 600)).not.toContain('databaseContextMiddleware');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group S (SD-S) — 024: JSON-LD context document (public/dpp/v1/context.jsonld)
+// Verifies: file exists, JSON parses, @context key present, required terms
+// present, forbidden private terms absent.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('SD-S — 024: JSON-LD context document', () => {
+  let contextDoc: Record<string, unknown>;
+  let contextTerms: Record<string, unknown>;
+
+  beforeAll(() => {
+    expect(fs.existsSync(CONTEXT_FILE_PATH), `context.jsonld not found: ${CONTEXT_FILE_PATH}`).toBe(true);
+    const raw = fs.readFileSync(CONTEXT_FILE_PATH, 'utf-8');
+    contextDoc = JSON.parse(raw) as Record<string, unknown>;
+    contextTerms = contextDoc['@context'] as Record<string, unknown>;
+  });
+
+  it('SD-S01 — context document file exists at public/dpp/v1/context.jsonld', () => {
+    expect(fs.existsSync(CONTEXT_FILE_PATH)).toBe(true);
+  });
+
+  it('SD-S02 — context document parses as valid JSON', () => {
+    expect(contextDoc).toBeDefined();
+    expect(typeof contextDoc).toBe('object');
+  });
+
+  it('SD-S03 — @context key present at document root', () => {
+    expect(contextDoc).toHaveProperty('@context');
+    expect(contextTerms).toBeDefined();
+  });
+
+  it('SD-S04 — ProductPassport term defined in @context', () => {
+    expect(contextTerms).toHaveProperty('ProductPassport');
+  });
+
+  it('SD-S05 — Certification term defined in @context', () => {
+    expect(contextTerms).toHaveProperty('Certification');
+  });
+
+  it('SD-S06 — passportUrl term defined in @context', () => {
+    expect(contextTerms).toHaveProperty('passportUrl');
+  });
+
+  it('SD-S07 — publicPassportId term defined in @context', () => {
+    expect(contextTerms).toHaveProperty('publicPassportId');
+  });
+
+  it('SD-S08 — passportStatus term defined in @context', () => {
+    expect(contextTerms).toHaveProperty('passportStatus');
+  });
+
+  it('SD-S09 — passportMaturity term defined in @context', () => {
+    expect(contextTerms).toHaveProperty('passportMaturity');
+  });
+
+  it('SD-S10 — product term defined in @context', () => {
+    expect(contextTerms).toHaveProperty('product');
+  });
+
+  it('SD-S11 — certifications term defined in @context', () => {
+    expect(contextTerms).toHaveProperty('certifications');
+  });
+
+  it('SD-S12 — lineageSummary term defined in @context', () => {
+    expect(contextTerms).toHaveProperty('lineageSummary');
+  });
+
+  it('SD-S13 — evidenceSummary term defined in @context', () => {
+    expect(contextTerms).toHaveProperty('evidenceSummary');
+  });
+
+  it('SD-S14 — generatedAt term defined in @context', () => {
+    expect(contextTerms).toHaveProperty('generatedAt');
+  });
+
+  it('SD-S15 — context document does not contain forbidden private terms', () => {
+    const raw = fs.readFileSync(CONTEXT_FILE_PATH, 'utf-8');
+    const FORBIDDEN = [
+      'orgId', 'org_id', 'nodeId', 'node_id', 'public_token',
+      'documentUrl', 'document_url', 'sourceId', 'orderId',
+      'rfqId', 'invoiceId', 'buyerOrgId', 'pricing',
+      'claimValue', 'extractionId', 'confidence',
+    ];
+    for (const term of FORBIDDEN) {
+      expect(raw, `context.jsonld must not contain private term: ${term}`).not.toContain(term);
+    }
+  });
+
+  it('SD-S16 — texqtic namespace base URI used consistently in @context', () => {
+    const raw = fs.readFileSync(CONTEXT_FILE_PATH, 'utf-8');
+    expect(raw).toContain('https://texqtic.com/dpp/v1#');
+  });
+
+  it('SD-S17 — schema.org namespace present in @context', () => {
+    expect(contextTerms).toHaveProperty('schema');
+    expect(contextTerms['schema']).toBe('https://schema.org/');
+  });
+
+  it('SD-S18 — context document path consistent with Vercel static hosting (public/dpp/v1/)', () => {
+    // Vercel routes: handle filesystem serves dist/dpp/v1/context.jsonld
+    // Vite copies public/ → dist/ at build time.
+    // This test confirms the file is in the correct public/ subdirectory.
+    expect(CONTEXT_FILE_PATH).toContain(path.join('public', 'dpp', 'v1', 'context.jsonld'));
   });
 });

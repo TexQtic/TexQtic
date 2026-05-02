@@ -8,6 +8,14 @@
       "dest": "/api/index.ts"
     },
     {
+      "src": "/dpp/v1/context\\.jsonld",
+      "headers": {
+        "Content-Type": "application/ld+json; charset=utf-8",
+        "Cache-Control": "public, max-age=86400"
+      },
+      "continue": true
+    },
+    {
       "handle": "filesystem"
     },
     {

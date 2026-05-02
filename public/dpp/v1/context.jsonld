@@ -1,0 +1,38 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "schema": "https://schema.org/",
+    "texqtic": "https://texqtic.com/dpp/v1#",
+    "ProductPassport": "texqtic:ProductPassport",
+    "Certification": "texqtic:Certification",
+    "passportUrl": {
+      "@id": "texqtic:passportUrl",
+      "@type": "@id"
+    },
+    "publicPassportId": "texqtic:publicPassportId",
+    "passportStatus": "texqtic:passportStatus",
+    "passportMaturity": "texqtic:passportMaturity",
+    "passportLabel": "texqtic:passportLabel",
+    "product": "schema:Product",
+    "certifications": "texqtic:certifications",
+    "certificationType": "texqtic:certificationType",
+    "lifecycleStateName": "texqtic:lifecycleStateName",
+    "issuedAt": {
+      "@id": "schema:dateIssued",
+      "@type": "schema:Date"
+    },
+    "expiryDate": {
+      "@id": "schema:expires",
+      "@type": "schema:Date"
+    },
+    "lineageSummary": "texqtic:lineageSummary",
+    "lineageDepth": "texqtic:lineageDepth",
+    "nodeCount": "texqtic:nodeCount",
+    "evidenceSummary": "texqtic:evidenceSummary",
+    "approvedCertCount": "texqtic:approvedCertCount",
+    "generatedAt": {
+      "@id": "schema:dateCreated",
+      "@type": "schema:DateTime"
+    }
+  }
+}
