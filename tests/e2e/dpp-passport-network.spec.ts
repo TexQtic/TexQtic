@@ -1205,3 +1205,51 @@ test('DPP-E2E-40 — 020E: source coverage — WL tenant DPP descriptor + render
   expect(dppSrc).toContain("'TexQtic DPP Passport Network'");
   expect(dppSrc).not.toContain("'DPP Snapshot'");
 });
+
+// ── Group 17: 020G — WL Registry empty-state CTA + seed WL path ─────────────
+
+test('DPP-E2E-41 — 020G: source coverage — empty-state CTA and seed WL parameterization', async ({}, testInfo) => {
+  // Authenticated WL tenant browser session is not available in this environment.
+  // Runtime empty-state verification requires WL org seeded with 0 passports.
+  // Source analysis below confirms the CTA and seed parameterization are present.
+  testInfo.annotations.push({
+    type: 'limitation',
+    description:
+      'WL tenant authenticated browser session requires storageState for a WL tenant role — ' +
+      'not available in this environment. Source analysis confirms the empty-state CTA test ID, ' +
+      'optional prop wiring, and seed script WL parameterization are present.',
+  });
+
+  const dppSrc = readFileSync(join(process.cwd(), 'components/Tenant/DPPPassport.tsx'), 'utf8');
+  const seedSrc = readFileSync(join(process.cwd(), 'scripts/seed-dpp-fixture.ts'), 'utf8');
+  const appSrc = readFileSync(join(process.cwd(), 'App.tsx'), 'utf8');
+
+  // DPPPassport.tsx — CTA test IDs present
+  expect(dppSrc, 'dpp-passport-registry-empty must be present').toContain('dpp-passport-registry-empty');
+  expect(dppSrc, 'dpp-passport-registry-empty-help must be present').toContain('dpp-passport-registry-empty-help');
+  expect(dppSrc, 'dpp-passport-registry-traceability-cta must be present').toContain('dpp-passport-registry-traceability-cta');
+
+  // DPPPassport.tsx — optional prop exists and is safe when absent
+  expect(dppSrc).toMatch(/onNavigateToTraceability\?\s*:\s*\(\s*\)\s*=>\s*void/);
+  expect(dppSrc).toMatch(/onNavigateToTraceability\?\.\(\)/);
+
+  // DPPPassport.tsx — CTA is inside the empty-state guard
+  const emptyBlock = dppSrc.match(/registry\.length === 0[\s\S]{0,800}/)?.[0] ?? '';
+  expect(emptyBlock, 'empty-state guard block must contain CTA test ID').toContain('dpp-passport-registry-traceability-cta');
+
+  // App.tsx — call site unchanged (onNavigateToTraceability is optional, not required)
+  const caseBlock = appSrc.match(/case 'dpp':[\s\S]{0,400}/)?.[0] ?? '';
+  expect(caseBlock).toContain('DPPPassport');
+  expect(caseBlock).toContain('onBack');
+
+  // seed-dpp-fixture.ts — WL parameterization present
+  expect(seedSrc).toContain("const TARGET: 'b2b' | 'wl'");
+  expect(seedSrc).toContain('qa-wl-admin.json');
+  expect(seedSrc).toContain('dpp-qa-wl-fixture.json');
+  expect(seedSrc).toContain("QA_NODE_SENTINEL_BATCH_ID_WL = 'qa-dpp-fixture-wl-node-001'");
+  expect(seedSrc).toContain('loadAuth(TARGET)');
+  expect(seedSrc).toContain('loadExistingFixture(TARGET)');
+
+  // D-6 constraint: no .json suffix route introduced in DPPPassport.tsx
+  expect(dppSrc).not.toMatch(/traceability-cta[\s\S]{0,200}\.json/);
+});

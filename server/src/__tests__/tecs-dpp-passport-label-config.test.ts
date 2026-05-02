@@ -981,3 +981,100 @@ describe('O — 020E: WL tenant DPP runtime path parity', () => {
     expect(dppPassportSrc).not.toContain("'DPP Snapshot'");
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group P — 020G: WL Registry empty-state CTA + seed script WL parameterization
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('P — 020G: WL Registry empty-state CTA + seed parameterization', () => {
+  let dppSrc: string;
+  let seedSrc: string;
+
+  const SEED_PATH = path.resolve(__dirname, '../../../scripts/seed-dpp-fixture.ts');
+
+  beforeAll(() => {
+    dppSrc = fs.readFileSync(DPP_PASSPORT_COMPONENT_PATH, 'utf-8');
+    seedSrc = fs.readFileSync(SEED_PATH, 'utf-8');
+  });
+
+  // ── CTA source checks ─────────────────────────────────────────────────────
+
+  it('P01 — DPPPassport.tsx has onNavigateToTraceability optional prop in Props interface', () => {
+    expect(dppSrc).toMatch(/onNavigateToTraceability\?\s*:\s*\(\s*\)\s*=>\s*void/);
+  });
+
+  it('P02 — DPPPassport.tsx destructures onNavigateToTraceability in component signature', () => {
+    expect(dppSrc).toContain('onNavigateToTraceability');
+    // Must be inside the function destructuring
+    expect(dppSrc).toMatch(/DPPPassport\s*\(\s*\{[^}]*onNavigateToTraceability/s);
+  });
+
+  it('P03 — dpp-passport-registry-empty test ID is still present', () => {
+    expect(dppSrc).toContain('dpp-passport-registry-empty');
+  });
+
+  it('P04 — dpp-passport-registry-empty-help test ID is present', () => {
+    expect(dppSrc).toContain('dpp-passport-registry-empty-help');
+  });
+
+  it('P05 — dpp-passport-registry-traceability-cta test ID is present', () => {
+    expect(dppSrc).toContain('dpp-passport-registry-traceability-cta');
+  });
+
+  it('P06 — CTA button calls onNavigateToTraceability via optional chaining', () => {
+    expect(dppSrc).toMatch(/onNavigateToTraceability\?\.\(\)/);
+  });
+
+  it('P07 — CTA is inside the empty-state guard block (registry.length === 0)', () => {
+    const emptyBlock = dppSrc.match(/registry\.length === 0[\s\S]{0,800}/)?.[0] ?? '';
+    expect(emptyBlock, 'empty-state guard block not found').not.toBe('');
+    expect(emptyBlock).toContain('dpp-passport-registry-traceability-cta');
+  });
+
+  it('P08 — App.tsx DPPPassport call site still passes only onBack (no onNavigateToTraceability forced)', () => {
+    const appSrc = fs.readFileSync(APP_TSX_PATH, 'utf-8');
+    const caseBlock = appSrc.match(/case 'dpp':[\s\S]{0,400}/)?.[0] ?? '';
+    expect(caseBlock).toContain('DPPPassport');
+    expect(caseBlock).toContain('onBack');
+    // onNavigateToTraceability is optional — App.tsx not passing it is valid
+    // This test simply asserts the call site is not broken
+    expect(caseBlock).not.toContain('title={');
+  });
+
+  // ── Seed script WL parameterization source checks ─────────────────────────
+
+  it('P09 — seed-dpp-fixture.ts defines TARGET constant from --target CLI arg', () => {
+    expect(seedSrc).toContain("const TARGET: 'b2b' | 'wl'");
+    expect(seedSrc).toContain("--target");
+  });
+
+  it('P10 — seed-dpp-fixture.ts loadAuth accepts target param and uses qa-wl-admin.json for WL', () => {
+    expect(seedSrc).toMatch(/loadAuth\(target:\s*'b2b'\s*\|\s*'wl'/);
+    expect(seedSrc).toContain('qa-wl-admin.json');
+  });
+
+  it('P11 — seed-dpp-fixture.ts writeFixture accepts target param and writes to dpp-qa-wl-fixture.json for WL', () => {
+    expect(seedSrc).toMatch(/writeFixture\(meta:\s*DppFixtureMeta,\s*target:\s*'b2b'\s*\|\s*'wl'/);
+    expect(seedSrc).toContain('dpp-qa-wl-fixture.json');
+  });
+
+  it('P12 — seed-dpp-fixture.ts defines QA_NODE_SENTINEL_BATCH_ID_WL distinct from B2B sentinel', () => {
+    expect(seedSrc).toContain("QA_NODE_SENTINEL_BATCH_ID_WL = 'qa-dpp-fixture-wl-node-001'");
+    expect(seedSrc).toContain("QA_NODE_SENTINEL_BATCH_ID = 'qa-dpp-fixture-node-001'");
+  });
+
+  it('P13 — seed-dpp-fixture.ts defines QA_CERT_SENTINEL_ID_WL distinct from B2B sentinel', () => {
+    expect(seedSrc).toContain("QA_CERT_SENTINEL_ID_WL = 'f0000000-0000-4000-a000-000000000002'");
+    expect(seedSrc).toContain("QA_CERT_SENTINEL_ID = 'f0000000-0000-4000-a000-000000000001'");
+  });
+
+  it('P14 — seed-dpp-fixture.ts main() passes TARGET to loadAuth and loadExistingFixture', () => {
+    expect(seedSrc).toContain('loadAuth(TARGET)');
+    expect(seedSrc).toContain('loadExistingFixture(TARGET)');
+  });
+
+  it('P15 — D-6 constraint: no .json suffix route added in DPPPassport.tsx CTA', () => {
+    // The CTA must not add a .json URL reference of any kind
+    expect(dppSrc).not.toMatch(/traceability-cta[\s\S]{0,200}\.json/);
+  });
+});

@@ -8,15 +8,19 @@
  * for consumption by E2E tests (DPP-E2E-12/13/14).
  *
  * Usage:
- *   node --import tsx scripts/seed-dpp-fixture.ts
+ *   node --import tsx scripts/seed-dpp-fixture.ts                  # B2B (default)
+ *   node --import tsx scripts/seed-dpp-fixture.ts --target b2b     # B2B explicit
+ *   node --import tsx scripts/seed-dpp-fixture.ts --target wl      # WL tenant
  *
- * Prerequisites:
+ * Prerequisites (B2B):
  *   - .auth/qa-b2b.json must exist with { token, orgId }
+ * Prerequisites (WL):
+ *   - .auth/qa-wl-admin.json must exist with { token, orgId }
  *   - If no traceability node exists: script auto-creates QA sentinel node via Prisma
  *   - Evidence gate (cert + lineage) is auto-satisfied via Prisma when not yet met
  *
- * Output:
- *   .auth/dpp-qa-fixture.json  (gitignored)
+ * Output (B2B):   .auth/dpp-qa-fixture.json     (gitignored)
+ * Output (WL):    .auth/dpp-qa-wl-fixture.json  (gitignored)
  *   Contents: { nodeId, publicPassportId, productLabel }
  *
  * Security: never prints token, orgId, connection strings, or credentials.
@@ -53,6 +57,19 @@ const QA_CERT_SENTINEL_ID = 'f0000000-0000-4000-a000-000000000001';
  * Fixed so subsequent runs are idempotent (upsert by orgId + batchId).
  */
 const QA_NODE_SENTINEL_BATCH_ID = 'qa-dpp-fixture-node-001';
+
+/** Sentinel batchId for the WL QA root traceability node. */
+const QA_NODE_SENTINEL_BATCH_ID_WL = 'qa-dpp-fixture-wl-node-001';
+
+/** Sentinel UUID for the WL QA APPROVED cert (strategy A fallback). */
+const QA_CERT_SENTINEL_ID_WL = 'f0000000-0000-4000-a000-000000000002';
+
+// ── CLI argument parsing ──────────────────────────────────────────────────────
+
+const _cliArgs = process.argv.slice(2);
+const _targetIdx = _cliArgs.indexOf('--target');
+const TARGET: 'b2b' | 'wl' =
+  _targetIdx !== -1 && _cliArgs[_targetIdx + 1] === 'wl' ? 'wl' : 'b2b';
 
 // ── QA-prefix safety guards ───────────────────────────────────────────────────
 
@@ -93,22 +110,24 @@ type PatchResult =
 
 // ── File helpers ──────────────────────────────────────────────────────────────
 
-function loadAuth(): AuthState {
-  const file = join(ROOT, '.auth', 'qa-b2b.json');
+function loadAuth(target: 'b2b' | 'wl' = 'b2b'): AuthState {
+  const authFile = target === 'wl' ? 'qa-wl-admin.json' : 'qa-b2b.json';
+  const file = join(ROOT, '.auth', authFile);
   if (!existsSync(file)) {
-    throw new Error('SEED_BLOCKED: .auth/qa-b2b.json not found — run auth setup first.');
+    throw new Error(`SEED_BLOCKED: .auth/${authFile} not found — run auth setup first.`);
   }
   const s = JSON.parse(readFileSync(file, 'utf8')) as AuthState;
   if (typeof s.token !== 'string' || s.token.length === 0 ||
       typeof s.orgId !== 'string' || s.orgId.length === 0) {
-    throw new Error('SEED_BLOCKED: .auth/qa-b2b.json is missing token or orgId.');
+    throw new Error(`SEED_BLOCKED: .auth/${authFile} is missing token or orgId.`);
   }
   return s;
 }
 
-function loadExistingFixture(): DppFixtureMeta | null {
+function loadExistingFixture(target: 'b2b' | 'wl' = 'b2b'): DppFixtureMeta | null {
   try {
-    const file = join(ROOT, '.auth', 'dpp-qa-fixture.json');
+    const fileName = target === 'wl' ? 'dpp-qa-wl-fixture.json' : 'dpp-qa-fixture.json';
+    const file = join(ROOT, '.auth', fileName);
     if (!existsSync(file)) return null;
     const m = JSON.parse(readFileSync(file, 'utf8')) as DppFixtureMeta;
     if (typeof m.nodeId === 'string' && m.nodeId.length > 0 &&
@@ -119,9 +138,10 @@ function loadExistingFixture(): DppFixtureMeta | null {
   } catch { return null; }
 }
 
-function writeFixture(meta: DppFixtureMeta): void {
+function writeFixture(meta: DppFixtureMeta, target: 'b2b' | 'wl' = 'b2b'): void {
+  const fileName = target === 'wl' ? 'dpp-qa-wl-fixture.json' : 'dpp-qa-fixture.json';
   writeFileSync(
-    join(ROOT, '.auth', 'dpp-qa-fixture.json'),
+    join(ROOT, '.auth', fileName),
     JSON.stringify(meta, null, 2),
     'utf8',
   );
@@ -245,7 +265,8 @@ const prisma = new (PrismaClient as any)();
  *
  * Safety guards: assertQaOrg must have been called before entering this function.
  */
-async function ensureApprovedCert(qaOrgId: string): Promise<string> {
+async function ensureApprovedCert(qaOrgId: string, target: 'b2b' | 'wl' = 'b2b'): Promise<string> {
+  const sentinelCertId = target === 'wl' ? QA_CERT_SENTINEL_ID_WL : QA_CERT_SENTINEL_ID;
   // Resolve the APPROVED lifecycle state for CERTIFICATION entity type
   const approvedState = await prisma.lifecycleState.findFirst({
     where: { entityType: 'CERTIFICATION', stateKey: 'APPROVED' },
@@ -268,9 +289,9 @@ async function ensureApprovedCert(qaOrgId: string): Promise<string> {
   // A-fallback: upsert a QA-sentinel cert row set to APPROVED state
   console.log('[seed-dpp-fixture] A-strategy: no existing APPROVED cert — creating QA sentinel cert...');
   const cert = await prisma.certification.upsert({
-    where: { id: QA_CERT_SENTINEL_ID },
+    where: { id: sentinelCertId },
     create: {
-      id: QA_CERT_SENTINEL_ID,
+      id: sentinelCertId,
       orgId: qaOrgId,
       certificationType: 'ISO_9001',
       lifecycleStateId: approvedState.id,
@@ -324,10 +345,11 @@ async function ensurePassportState(qaOrgId: string, nodeId: string): Promise<voi
  * Also seeds the initial DRAFT passport state row.
  * Uses upsert by (orgId, batchId) — fully idempotent.
  */
-async function ensureTraceabilityNode(qaOrgId: string): Promise<void> {
+async function ensureTraceabilityNode(qaOrgId: string, target: 'b2b' | 'wl' = 'b2b'): Promise<void> {
+  const batchId = target === 'wl' ? QA_NODE_SENTINEL_BATCH_ID_WL : QA_NODE_SENTINEL_BATCH_ID;
   const node = await prisma.traceabilityNode.upsert({
-    where: { orgId_batchId: { orgId: qaOrgId, batchId: QA_NODE_SENTINEL_BATCH_ID } },
-    create: { orgId: qaOrgId, batchId: QA_NODE_SENTINEL_BATCH_ID, nodeType: 'PROCESSING', meta: {} },
+    where: { orgId_batchId: { orgId: qaOrgId, batchId } },
+    create: { orgId: qaOrgId, batchId, nodeType: 'PROCESSING', meta: {} },
     update: {},
     select: { id: true },
   }) as { id: string };
@@ -372,8 +394,9 @@ async function ensureLineageEdge(qaOrgId: string, nodeId: string): Promise<void>
 async function main(): Promise<void> {
   console.log('[seed-dpp-fixture] TECS-DPP-PASSPORT-NETWORK-010-B — QA published fixture seed');
   console.log(`[seed-dpp-fixture] Target: ${BASE_URL}`);
+  console.log(`[seed-dpp-fixture] Auth target: ${TARGET}`);
 
-  const auth = loadAuth();
+  const auth = loadAuth(TARGET);
   console.log('[seed-dpp-fixture] Auth: loaded (token redacted)');
 
   // ── QA safety guard: resolve org slug and assert qa- prefix ─────────────────
@@ -389,7 +412,7 @@ async function main(): Promise<void> {
   console.log('[seed-dpp-fixture] QA safety guard: PASSED (slug prefix: qa-)');
 
   // ── Step 1: idempotency — verify existing fixture ────────────────────────────
-  const existing = loadExistingFixture();
+  const existing = loadExistingFixture(TARGET);
   if (existing) {
     console.log(
       `[seed-dpp-fixture] Existing fixture: nodeId=${existing.nodeId} publicPassportId=${existing.publicPassportId}`,
@@ -422,7 +445,7 @@ async function main(): Promise<void> {
   let nodes: NodeRow[] = listBody?.data?.rows ?? [];
   if (nodes.length === 0) {
     console.log('[seed-dpp-fixture] No nodes found — creating QA sentinel node via Prisma (QA exception)...');
-    await ensureTraceabilityNode(auth.orgId);
+    await ensureTraceabilityNode(auth.orgId, TARGET);
     // Re-fetch after creation so the rest of main() sees the new node
     const refetchRes = await fetch(`${BASE_URL}/api/tenant/traceability/nodes?limit=50`, {
       headers: authHeaders(auth.token),
@@ -508,7 +531,7 @@ async function main(): Promise<void> {
   // C-first: reuse existing APPROVED cert in org. A-fallback: create QA sentinel cert.
   if (!already) {
     console.log('[seed-dpp-fixture] Ensuring APPROVED cert linked to chosen node (QA Prisma exception)...');
-    const certId = await ensureApprovedCert(auth.orgId);
+    const certId = await ensureApprovedCert(auth.orgId, TARGET);
     await linkCertToNode(auth.orgId, chosen.nodeId, certId);
     if (chosen.lineageDepth < 1) {
       console.log('[seed-dpp-fixture] lineageDepth=0 — creating lineage edge via Prisma (QA exception)...');
@@ -525,7 +548,7 @@ async function main(): Promise<void> {
       nodeId: already.nodeId,
       publicPassportId: already.publicPassportId!,
       productLabel: already.batchId,
-    });
+    }, TARGET);
     console.log('[seed-dpp-fixture] ✓ Used already-PUBLISHED node.');
     console.log(`[seed-dpp-fixture] nodeId: ${already.nodeId}`);
     console.log(`[seed-dpp-fixture] publicPassportId: ${already.publicPassportId!}`);
@@ -553,16 +576,17 @@ async function main(): Promise<void> {
     );
   }
 
+  const fixtureFileName = TARGET === 'wl' ? '.auth/dpp-qa-wl-fixture.json' : '.auth/dpp-qa-fixture.json';
   writeFixture({
     nodeId: chosen.nodeId,
     publicPassportId: result.publicPassportId,
     productLabel: chosen.batchId,
-  });
+  }, TARGET);
   console.log('[seed-dpp-fixture] ✓ Fixture seeded successfully.');
   console.log(`[seed-dpp-fixture] nodeId: ${chosen.nodeId}`);
   console.log(`[seed-dpp-fixture] publicPassportId: ${result.publicPassportId}`);
   console.log(`[seed-dpp-fixture] productLabel: ${chosen.batchId}`);
-  console.log('[seed-dpp-fixture] Written → .auth/dpp-qa-fixture.json');
+  console.log(`[seed-dpp-fixture] Written → ${fixtureFileName}`);
 }
 
 main()

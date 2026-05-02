@@ -386,11 +386,13 @@ interface Props {
   onBack: () => void;
   title?: string;
   subtitle?: string;
+  /** Optional: navigate to the tenant Traceability page from the empty registry state. */
+  onNavigateToTraceability?: () => void;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function DPPPassport({ onBack, title, subtitle }: Readonly<Props>) {
+export function DPPPassport({ onBack, title, subtitle, onNavigateToTraceability }: Readonly<Props>) {
   const isProductized = title === undefined;
   const displayTitle = title ?? 'TexQtic DPP Passport Network';
   const displaySubtitle = subtitle ?? 'Build product trust from local trade readiness to public buyer verification.';
@@ -642,8 +644,21 @@ export function DPPPassport({ onBack, title, subtitle }: Readonly<Props>) {
           )}
 
           {!registryLoading && !registryError && registryLoaded && registry.length === 0 && (
-            <div data-testid="dpp-passport-registry-empty" className="text-sm text-slate-400 py-2">
-              No product passports yet. Create or select a traceability node to begin building a passport.
+            <div>
+              <div data-testid="dpp-passport-registry-empty" className="text-sm text-slate-400 py-2">
+                No product passports yet.
+              </div>
+              <p data-testid="dpp-passport-registry-empty-help" className="text-xs text-slate-400 mt-1">
+                Traceability nodes become passport entries automatically after they are created.
+              </p>
+              <button
+                data-testid="dpp-passport-registry-traceability-cta"
+                type="button"
+                onClick={() => onNavigateToTraceability?.()}
+                className="mt-2 text-sm text-blue-600 hover:text-blue-800 underline cursor-pointer"
+              >
+                Go to Traceability &rarr;
+              </button>
             </div>
           )}
 

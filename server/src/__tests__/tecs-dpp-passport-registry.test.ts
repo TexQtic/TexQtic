@@ -252,3 +252,43 @@ describe.skipIf(!hasDb)('017C — DB: integration', () => {
     expect(hasDb).toBe(true);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group 7 — 020G: DPPPassport.tsx empty-state CTA source coverage
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('020G — DPPPassport.tsx empty-state CTA', () => {
+  const DPP_PASSPORT_PATH = path.resolve(__dirname, '../../../components/Tenant/DPPPassport.tsx');
+  let src: string;
+
+  beforeAll(() => {
+    expect(fs.existsSync(DPP_PASSPORT_PATH), `DPPPassport.tsx not found: ${DPP_PASSPORT_PATH}`).toBe(true);
+    src = fs.readFileSync(DPP_PASSPORT_PATH, 'utf-8');
+  });
+
+  it('PR-G01 — dpp-passport-registry-empty test ID present in source', () => {
+    expect(src).toContain('dpp-passport-registry-empty');
+  });
+
+  it('PR-G02 — dpp-passport-registry-empty-help test ID present in source', () => {
+    expect(src).toContain('dpp-passport-registry-empty-help');
+  });
+
+  it('PR-G03 — dpp-passport-registry-traceability-cta test ID present in source', () => {
+    expect(src).toContain('dpp-passport-registry-traceability-cta');
+  });
+
+  it('PR-G04 — CTA is inside the registry.length === 0 empty-state guard', () => {
+    const emptyBlock = src.match(/registry\.length === 0[\s\S]{0,800}/)?.[0] ?? '';
+    expect(emptyBlock, 'registry empty-state guard block not found').not.toBe('');
+    expect(emptyBlock).toContain('dpp-passport-registry-traceability-cta');
+  });
+
+  it('PR-G05 — onNavigateToTraceability is declared as optional prop', () => {
+    expect(src).toMatch(/onNavigateToTraceability\?\s*:\s*\(\s*\)\s*=>\s*void/);
+  });
+
+  it('PR-G06 — CTA uses optional chaining so it is safe when prop is absent', () => {
+    expect(src).toMatch(/onNavigateToTraceability\?\.\(\)/);
+  });
+});
