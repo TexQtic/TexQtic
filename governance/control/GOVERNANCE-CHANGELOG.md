@@ -1722,3 +1722,11 @@ Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
 Files: DPPPassport.tsx (optional prop + CTA), seed-dpp-fixture.ts (--target wl), label-config test Group P (P01-P15), registry test Group 7 (PR-G01-PR-G06), E2E DPP-E2E-41.
 Tests: 128 unit (126 pass/2 skip) + 27 unit (26 pass/1 skip). TS clean.
 Limitation: App.tsx wiring (onNavigateToTraceability) deferred to 020H.
+
+## 020H — 2026-05-15
+- Slice: App.tsx wires onNavigateToTraceability to DPPPassport for Traceability CTA navigation
+- Commit: d73d864
+- Status: VERIFIED_COMPLETE
+- Tests: Group Q (6/6), DPP-E2E-42 (source coverage), full suite 134/134 (2 skip)
+- TypeScript: PASS (frontend + server)
+

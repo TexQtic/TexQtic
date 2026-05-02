@@ -6789,3 +6789,31 @@ Artifact: governance/analysis/TECS-DPP-PASSPORT-NETWORK-020F-WL-REGISTRY-EMPTY-S
 ### Limitations
 - App.tsx not wired (forbidden in 020G); CTA click is no-op; deferred to 020H
 - WL seed runtime verification: source coverage only
+
+---
+## 020H Execution Log — 2026-05-15
+
+### Task
+Wire onNavigateToTraceability in App.tsx case 'dpp' to navigateTenantManifestRoute('traceability')
+
+### Pre-flight
+- git status: clean (3 files staged after edit)
+- git diff --name-only: App.tsx, tecs-dpp-passport-label-config.test.ts, dpp-passport-network.spec.ts
+
+### Implementation
+1. Inspected App.tsx lines 2518-2547: navigateTenantManifestRoute confirmed (routeKey: RuntimeLocalRouteKey)
+2. Inspected App.tsx line 5095: case 'dpp' call site confirmed
+3. Inspected runtime/sessionRuntimeDescriptor.ts line 126: 'traceability' confirmed in RuntimeLocalRouteKey
+4. Added onNavigateToTraceability prop to <DPPPassport> in case 'dpp'
+5. Added Group Q (Q01-Q06) to tecs-dpp-passport-label-config.test.ts
+6. Added DPP-E2E-42 to tests/e2e/dpp-passport-network.spec.ts
+
+### Validation
+- pnpm tsc --noEmit (frontend): PASS
+- pnpm tsc --noEmit (server): PASS
+- pnpm test tecs-dpp-passport-label-config: 134 tests — 132 pass / 2 skip / 0 fail
+
+### Commit
+[TEXQTIC] feat(dpp): wire onNavigateToTraceability in App.tsx case dpp — slice 020H
+Hash: d73d864
+

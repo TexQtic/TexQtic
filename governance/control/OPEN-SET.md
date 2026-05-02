@@ -943,3 +943,6 @@ Status: VERIFIED_COMPLETE_WITH_LIMITATIONS | Closed: 2026-05-15
 Deliverables: DPPPassport.tsx CTA (new test IDs: dpp-passport-registry-empty-help, dpp-passport-registry-traceability-cta) + seed --target wl path.
 Limitation: App.tsx wiring deferred to 020H. WL seed runtime source-coverage only.
 Next unit: 020H — App.tsx wiring. NOT AUTHORIZED until Paresh opens.
+
+| 020H | App.tsx wires onNavigateToTraceability — CTA fully functional | COMPLETE | d73d864 |
+

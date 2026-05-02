@@ -236,3 +236,9 @@ Deliverables: (1) DPPPassport.tsx empty-state CTA (onNavigateToTraceability opti
 Tests: Group P (P01-P15) + Group 7 (PR-G01-PR-G06) + DPP-E2E-41. 128+27 unit tests pass. TypeScript clean.
 Limitation: App.tsx not wired (forbidden in 020G). CTA renders; click is no-op until 020H. WL seed runtime not tested (source coverage only).
 Next slice: TECS-DPP-PASSPORT-NETWORK-020H — App.tsx wiring + runtime verification. NOT AUTHORIZED until Paresh opens.
+
+## 020H — 2026-05-15 — VERIFIED_COMPLETE
+- Wired onNavigateToTraceability in App.tsx case 'dpp' to navigateTenantManifestRoute('traceability')
+- Commit: d73d864
+- Next slice: NOT AUTHORIZED until Paresh opens
+
