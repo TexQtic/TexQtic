@@ -5096,6 +5096,7 @@ const App: React.FC = () => {
         return (
           <DPPPassport
             onBack={() => navigateTenantDefaultManifestRoute()}
+            onNavigateToTraceability={() => navigateTenantManifestRoute('traceability')}
           />
         );
       case 'escrow':

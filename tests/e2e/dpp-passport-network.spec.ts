@@ -1253,3 +1253,38 @@ test('DPP-E2E-41 — 020G: source coverage — empty-state CTA and seed WL param
   // D-6 constraint: no .json suffix route introduced in DPPPassport.tsx
   expect(dppSrc).not.toMatch(/traceability-cta[\s\S]{0,200}\.json/);
 });
+
+test('DPP-E2E-42 — 020H: source coverage — App.tsx wires onNavigateToTraceability to DPPPassport', async ({}, testInfo) => {
+  // Full browser runtime requires an authenticated tenant session with empty DPP registry.
+  // Source analysis below confirms App.tsx wiring is correct and state-based navigation is used.
+  testInfo.annotations.push({
+    type: 'limitation',
+    description:
+      'Full click-through test requires an authenticated tenant session with an empty DPP registry. ' +
+      'Source analysis confirms App.tsx passes onNavigateToTraceability using navigateTenantManifestRoute ' +
+      'which is the established state-based navigation pattern.',
+  });
+
+  const appSrc = readFileSync(join(process.cwd(), 'App.tsx'), 'utf8');
+  const dppSrc = readFileSync(join(process.cwd(), 'components/Tenant/DPPPassport.tsx'), 'utf8');
+
+  // App.tsx case 'dpp' block wires onNavigateToTraceability
+  const caseBlock = appSrc.match(/case 'dpp':[\s\S]{0,500}/)?.[0] ?? '';
+  expect(caseBlock, 'case dpp block must contain onNavigateToTraceability').toContain('onNavigateToTraceability');
+  expect(caseBlock, "case dpp block must call navigateTenantManifestRoute('traceability')").toContain(
+    "navigateTenantManifestRoute('traceability')",
+  );
+  expect(caseBlock, 'case dpp block must retain onBack').toContain('onBack');
+
+  // App.tsx — state-based navigation only, no URL patterns
+  expect(caseBlock).not.toMatch(/href|window\.location|router\.push/);
+
+  // DPPPassport.tsx — prop is still optional (guards against prop becoming required)
+  expect(dppSrc).toMatch(/onNavigateToTraceability\?\s*:\s*\(\s*\)\s*=>\s*void/);
+
+  // DPPPassport.tsx — safe optional chaining preserved
+  expect(dppSrc).toMatch(/onNavigateToTraceability\?\.\(\)/);
+
+  // D-6 constraint: no .json suffix route
+  expect(dppSrc).not.toMatch(/traceability-cta[\s\S]{0,200}\.json/);
+});

@@ -1078,3 +1078,49 @@ describe('P — 020G: WL Registry empty-state CTA + seed parameterization', () =
     expect(dppSrc).not.toMatch(/traceability-cta[\s\S]{0,200}\.json/);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group Q — 020H: App.tsx wires onNavigateToTraceability to DPPPassport
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('Q — 020H: App.tsx onNavigateToTraceability wiring', () => {
+  let appSrc: string;
+  let dppSrc: string;
+
+  beforeAll(() => {
+    appSrc = fs.readFileSync(APP_TSX_PATH, 'utf-8');
+    dppSrc = fs.readFileSync(
+      path.resolve(__dirname, '../../../components/Tenant/DPPPassport.tsx'),
+      'utf-8',
+    );
+  });
+
+  it('Q01 — App.tsx case dpp block passes onNavigateToTraceability prop', () => {
+    const caseBlock = appSrc.match(/case 'dpp':[\s\S]{0,500}/)?.[0] ?? '';
+    expect(caseBlock).toContain('onNavigateToTraceability');
+  });
+
+  it('Q02 — App.tsx wires onNavigateToTraceability to navigateTenantManifestRoute traceability', () => {
+    const caseBlock = appSrc.match(/case 'dpp':[\s\S]{0,500}/)?.[0] ?? '';
+    expect(caseBlock).toContain("navigateTenantManifestRoute('traceability')");
+  });
+
+  it('Q03 — App.tsx case dpp block still contains onBack prop', () => {
+    const caseBlock = appSrc.match(/case 'dpp':[\s\S]{0,500}/)?.[0] ?? '';
+    expect(caseBlock).toContain('onBack');
+  });
+
+  it('Q04 — DPPPassport.tsx defines onNavigateToTraceability as optional prop', () => {
+    expect(dppSrc).toContain('onNavigateToTraceability?: () => void');
+  });
+
+  it('Q05 — DPPPassport.tsx CTA uses optional chaining on onNavigateToTraceability', () => {
+    expect(dppSrc).toContain('onNavigateToTraceability?.()');
+  });
+
+  it('Q06 — D-6 constraint: navigateTenantManifestRoute traceability call uses state-based nav, no URL', () => {
+    const caseBlock = appSrc.match(/case 'dpp':[\s\S]{0,500}/)?.[0] ?? '';
+    // Must NOT use a URL string (state-based only)
+    expect(caseBlock).not.toMatch(/href|window\.location|router\.push/);
+  });
+});
