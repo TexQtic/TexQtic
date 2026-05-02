@@ -485,6 +485,16 @@ export function PublicPassport({ publicPassportId }: PublicPassportProps) {
         {/* Removed: passport.qr.payloadUrl secondary link was displaying the raw API path.
             The canonical buyer page URL is already shown in the QR Verification Label above. */}
 
+        {/* TexQtic attribution — controlled by showTexqticBrand (TECS-DPP-PASSPORT-NETWORK-020A) */}
+        {passport.labelConfig?.showTexqticBrand !== false && (
+          <p
+            data-testid="public-passport-texqtic-brand"
+            className="mt-6 text-center text-xs text-slate-400"
+          >
+            Powered by TexQtic
+          </p>
+        )}
+
         {/* Privacy note */}
         <p
           data-testid="public-passport-privacy-note"

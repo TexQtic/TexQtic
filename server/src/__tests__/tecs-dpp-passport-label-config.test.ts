@@ -16,6 +16,8 @@
  *   Group F — Regression: structured-data route unaffected, existing DPP routes present
  *   Group G — UI: WLDppLabelPanel.tsx test IDs, PublicPassport.tsx buyer-label testid
  *   Group H — DB integration (gated by hasDb)
+ *   Group I — 020A: WL panel wiring into WhiteLabelSettings.tsx (Option B)
+ *   Group J — 020A: showTexqticBrand public-page attribution toggle
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -38,11 +40,15 @@ const MIGRATION_PATH = path.join(
 );
 const WL_PANEL_PATH = path.resolve(
   __dirname,
-  '../../../../components/WhiteLabelAdmin/WLDppLabelPanel.tsx',
+  '../../../components/WhiteLabelAdmin/WLDppLabelPanel.tsx',
 );
 const PUBLIC_PASSPORT_PATH = path.resolve(
   __dirname,
-  '../../../../components/Public/PublicPassport.tsx',
+  '../../../components/Public/PublicPassport.tsx',
+);
+const WL_SETTINGS_PATH = path.resolve(
+  __dirname,
+  '../../../components/Tenant/WhiteLabelSettings.tsx',
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -399,5 +405,122 @@ describe.skipIf(!hasDb)('H — DB integration', () => {
     } finally {
       await prisma.$disconnect();
     }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group I — 020A: WL panel wiring into WhiteLabelSettings.tsx (Option B)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('I — 020A: WL panel wiring (WhiteLabelSettings.tsx)', () => {
+  let wlSettingsSrc: string;
+
+  beforeAll(() => {
+    expect(
+      fs.existsSync(WL_SETTINGS_PATH),
+      `WhiteLabelSettings.tsx not found: ${WL_SETTINGS_PATH}`,
+    ).toBe(true);
+    wlSettingsSrc = fs.readFileSync(WL_SETTINGS_PATH, 'utf-8');
+  });
+
+  it('I01 — WhiteLabelSettings imports WLDppLabelPanel', () => {
+    expect(wlSettingsSrc).toContain('WLDppLabelPanel');
+  });
+
+  it('I02 — WhiteLabelSettings renders <WLDppLabelPanel />', () => {
+    expect(wlSettingsSrc).toMatch(/<WLDppLabelPanel\s*\/>/);
+  });
+
+  it('I03 — WhiteLabelSettings has wl-dpp-label-settings-card testid', () => {
+    expect(wlSettingsSrc).toContain('wl-dpp-label-settings-card');
+  });
+
+  it('I04 — WhiteLabelSettings card label is "DPP Passport Public Label"', () => {
+    expect(wlSettingsSrc).toContain('DPP Passport Public Label');
+  });
+
+  it('I05 — WhiteLabelSettings card copy states label-only behavior', () => {
+    expect(wlSettingsSrc).toContain('This changes display text only');
+  });
+
+  it('I06 — WhiteLabelSettings card copy states evidence/compliance not affected', () => {
+    expect(wlSettingsSrc).toContain('does not change passport status, evidence, or compliance claims');
+  });
+
+  it('I07 — WhiteLabelSettings does NOT import custom-domain or full-WL portal logic', () => {
+    expect(wlSettingsSrc).not.toContain('custom-domain');
+    expect(wlSettingsSrc).not.toContain('customDomain');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group J — 020A: showTexqticBrand public-page attribution toggle
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('J — 020A: showTexqticBrand public-page attribution', () => {
+  let passportSrc: string;
+
+  beforeAll(() => {
+    expect(
+      fs.existsSync(PUBLIC_PASSPORT_PATH),
+      `PublicPassport.tsx not found: ${PUBLIC_PASSPORT_PATH}`,
+    ).toBe(true);
+    passportSrc = fs.readFileSync(PUBLIC_PASSPORT_PATH, 'utf-8');
+  });
+
+  it('J01 — PublicPassport has testid public-passport-texqtic-brand', () => {
+    expect(passportSrc).toContain('public-passport-texqtic-brand');
+  });
+
+  it('J02 — PublicPassport gates attribution on showTexqticBrand !== false', () => {
+    // The attribution element should only render when showTexqticBrand is not explicitly false
+    expect(passportSrc).toMatch(/showTexqticBrand\s*!==\s*false/);
+  });
+
+  it('J03 — PublicPassport attribution reads from labelConfig?.showTexqticBrand', () => {
+    expect(passportSrc).toContain('labelConfig?.showTexqticBrand');
+  });
+
+  it('J04 — PublicPassport attribution copy is "Powered by TexQtic"', () => {
+    expect(passportSrc).toContain('Powered by TexQtic');
+  });
+
+  it('J05 — PublicPassport privacy note is still present', () => {
+    expect(passportSrc).toContain('public-passport-privacy-note');
+    expect(passportSrc).toContain('Sensitive supplier');
+  });
+
+  it('J06 — PublicPassport buyer-facing label still present when brand toggled', () => {
+    // Both attribution and buyer-facing label coexist in source
+    expect(passportSrc).toContain('public-passport-texqtic-brand');
+    expect(passportSrc).toContain('public-passport-buyer-label');
+  });
+
+  it('J07 — PublicPassport does NOT remove header logo from source', () => {
+    // The TexQtic header logo is independent of showTexqticBrand and must remain
+    expect(passportSrc).toContain('texqtic-logo.png');
+  });
+
+  it('J08 — PublicPassport does NOT use dangerouslySetInnerHTML for attribution', () => {
+    expect(passportSrc).not.toContain('dangerouslySetInnerHTML');
+  });
+
+  it('J09 — PublicPassport attribution element is plain text (no custom-domain implication)', () => {
+    // Must not imply custom-domain or full white-label portal
+    expect(passportSrc).not.toContain('customDomain');
+    expect(passportSrc).not.toContain('custom-domain');
+    expect(passportSrc).not.toContain('Your branded DPP portal');
+    expect(passportSrc).not.toContain('Fully white-labeled');
+  });
+
+  it('J10 — PublicPassport attribution does not expose private IDs or pricing', () => {
+    // The attribution section is bounded — no private data exposure
+    const attributionBlock = passportSrc.match(
+      /public-passport-texqtic-brand[\s\S]{0,300}/,
+    )?.[0] ?? '';
+    expect(attributionBlock).not.toContain('orgId');
+    expect(attributionBlock).not.toContain('org_id');
+    expect(attributionBlock).not.toContain('nodeId');
+    expect(attributionBlock).not.toContain('pricing');
   });
 });

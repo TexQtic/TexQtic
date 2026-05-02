@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { TenantConfig } from '../../types';
 import { updateBranding } from '../../services/tenantService';
 import { APIError } from '../../services/apiClient';
+import { WLDppLabelPanel } from '../WhiteLabelAdmin/WLDppLabelPanel';
 
 export const WhiteLabelSettings: React.FC<{
   tenant: TenantConfig;
@@ -192,6 +193,20 @@ export const WhiteLabelSettings: React.FC<{
           </button>
         </div>
       </div>
+
+      {/* DPP Passport Public Label — TECS-DPP-PASSPORT-NETWORK-020A */}
+      <section
+        data-testid="wl-dpp-label-settings-card"
+        className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4"
+      >
+        <div>
+          <h3 className="font-bold text-slate-900">DPP Passport Public Label</h3>
+          <p className="text-sm text-slate-500 mt-1">
+            Configure the label buyers see on public DPP passport pages. This changes display text only; it does not change passport status, evidence, or compliance claims.
+          </p>
+        </div>
+        <WLDppLabelPanel />
+      </section>
     </div>
   );
 };
