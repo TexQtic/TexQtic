@@ -6711,3 +6711,31 @@ Tests: 88/88 non-DB PASS (2 DB-skipped) | regression clean
 TypeScript: server clean | frontend clean
 Limitation: layouts/Shells.tsx required minimal change within 020B task scope.
 Full platform launch NOT AUTHORIZED.
+
+
+---
+
+## Execution Entry: TECS-DPP-PASSPORT-NETWORK-020C (2026-05-14)
+
+Task: WL DPP Label Navigation Runtime Proof + Public Branding Verification
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+
+Actions taken:
+1. All 020B precheck gates confirmed (6/6 wiring gates, anti-overstatement clean, privacy clean, .json route absent, QR payload canonical).
+2. Added Group M (8 source-level unit tests) to tecs-dpp-passport-label-config.test.ts verifying:
+   M01: QR URL form /passport/:publicPassportId | M02: .json suffix absent
+   M03: Shortcut conditional on JSX ternary {onNavigateDppLabel ? ...} | M04: Backward-compat inline panel
+   M05: case 'dpp_label' renders WLDppLabelPanel only | M06: No custom-domain copy in panel
+   M07: Nav label text 'DPP Passport Label' in Shells.tsx | M08: Anti-overstatement across 4 source files
+3. Added DPP-E2E-36/37/38 (source-coverage) to tests/e2e/dpp-passport-network.spec.ts verifying:
+   DPP-E2E-36: wl-dpp-label-nav-item in Shells.tsx | DPP-E2E-37: case 'dpp_label' in App.tsx
+   DPP-E2E-38: wl-dpp-label-settings-shortcut in WhiteLabelSettings.tsx
+4. Fixed M03/M04 regex anchor from onNavigateDppLabel\s*\? to \{onNavigateDppLabel \? to target JSX ternary.
+
+Deliverables:
+  server/src/__tests__/tecs-dpp-passport-label-config.test.ts (Group M: 8 tests)
+  tests/e2e/dpp-passport-network.spec.ts (DPP-E2E-36/37/38)
+
+Tests: 96/96 non-DB PASS (2 DB-skipped) | regression clean | TypeScript clean
+Limitation: WL Admin browser proof requires storageState not available; source-level tests used.
+Full platform launch NOT AUTHORIZED.

@@ -1657,3 +1657,35 @@ Tests:
   TypeScript: server clean | frontend clean
 ```
 
+
+
+---
+
+```yaml
+# TECS-DPP-PASSPORT-NETWORK-020C — WL DPP Label Navigation Runtime Proof + Public Branding Verification
+slice: 020C
+date: 2026-05-14
+status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+
+Scope: Post-020B bounded runtime verification slice.
+  - Group M (8 tests): PublicPassport QR URL canonical form, .json suffix absent, WhiteLabelSettings
+    conditional shortcut, backward-compat inline panel, App.tsx case renders WLDppLabelPanel only,
+    WLDppLabelPanel contains no custom-domain copy, Shells.tsx nav label text, anti-overstatement
+    check across all four 020B-modified source files.
+  - DPP-E2E-36: source coverage — WL DPP Label nav item exists in layouts/Shells.tsx.
+  - DPP-E2E-37: source coverage — case 'dpp_label' routes to WLDppLabelPanel in App.tsx.
+  - DPP-E2E-38: source coverage — wl-dpp-label-settings-shortcut wired in WhiteLabelSettings.tsx.
+
+Modified Files:
+  server/src/__tests__/tecs-dpp-passport-label-config.test.ts (Group M: 8 tests)
+  tests/e2e/dpp-passport-network.spec.ts (DPP-E2E-36/37/38)
+
+Tests:
+  tecs-dpp-passport-label-config: 96/96 non-DB PASS (2 DB-skipped; +8 from Group M)
+  tecs-dpp-structured-data: 46/46 PASS | tecs-dpp-public-security: 31/31 PASS
+  tecs-dpp-passport-registry: 20/20 PASS
+  TypeScript: server clean | frontend clean
+
+Limitation: WL Admin browser navigation proof requires authenticated storageState not available.
+  Source-level coverage used (same pattern as DPP-E2E-21 through DPP-E2E-26).
+```
