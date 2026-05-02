@@ -17,7 +17,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import QRCode from 'react-qr-code';
-import { tenantGet } from '../../services/tenantApiClient';
+import { tenantGet, tenantPost } from '../../services/tenantApiClient';
 import { APIError } from '../../services/apiClient';
 
 // ─── Response types (mirrors server/src/routes/tenant.ts DPP route) ────────────
@@ -107,6 +107,40 @@ interface DppPassportView {
     lineageDepth: number;
   };
   passportProductDetails: DppProductDetailsDto | null;
+}
+
+// ─── TECS-DPP-PASSPORT-NETWORK-019: AI Passport Assistant response types ──────
+
+interface AiAssistantRecommendation {
+  priority: 'low' | 'medium' | 'high';
+  category: string;
+  message: string;
+  actionLabel: string;
+}
+
+interface AiAssistantWarning {
+  severity: 'medium' | 'high';
+  message: string;
+}
+
+interface AiAssistantResponse {
+  mode: 'ai' | 'deterministic_fallback';
+  humanReviewRequired: true;
+  summary: string;
+  buyerReadiness: {
+    label: string;
+    confidence: 'low' | 'medium' | 'high';
+    notes: string;
+  };
+  recommendations: AiAssistantRecommendation[];
+  warnings: AiAssistantWarning[];
+  guardrails: {
+    advisoryOnly: true;
+    doesNotMutateStatus: true;
+    doesNotCreateEvidence: true;
+    doesNotPublishPassport: true;
+  };
+  generatedAt: string;
 }
 
 // ─── D-NETWORK-017C: Passport Registry entry ─────────────────────────────────
@@ -373,6 +407,10 @@ export function DPPPassport({ onBack, title, subtitle }: Readonly<Props>) {
   const [registryLoading, setRegistryLoading] = useState(false);
   const [registryError, setRegistryError] = useState<string | null>(null);
   const [registryLoaded, setRegistryLoaded] = useState(false);
+  // TECS-DPP-PASSPORT-NETWORK-019: AI Passport Assistant state
+  const [aiAssistant, setAiAssistant] = useState<AiAssistantResponse | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
   const handleLoad = useCallback(async () => {
@@ -480,6 +518,30 @@ export function DPPPassport({ onBack, title, subtitle }: Readonly<Props>) {
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+  }, [snapshot]);
+
+  // ── TECS-DPP-PASSPORT-NETWORK-019: AI Passport Assistant handler ──────────
+  const handleGenerateAiAssistance = useCallback(async () => {
+    if (!snapshot) return;
+    setAiError(null);
+    setAiLoading(true);
+    try {
+      const result = await tenantPost<{ assistant: AiAssistantResponse }>(
+        `/api/tenant/dpp/${encodeURIComponent(snapshot.nodeId)}/passport/assistant`,
+        { mode: 'advisory' },
+      );
+      setAiAssistant(result.assistant);
+    } catch (err) {
+      if (err instanceof APIError && err.status === 429) {
+        setAiError('AI guidance rate limit reached. Please wait a moment and try again.');
+      } else if (err instanceof APIError) {
+        setAiError(`Unable to generate AI guidance (${err.status}). Please try again.`);
+      } else {
+        setAiError('Unable to generate AI guidance. Please try again.');
+      }
+    } finally {
+      setAiLoading(false);
+    }
   }, [snapshot]);
 
   // ── Lineage display (cap at 200 rows) ────────────────────────────────────
@@ -983,7 +1045,7 @@ export function DPPPassport({ onBack, title, subtitle }: Readonly<Props>) {
             </section>
           )}
 
-          {/* ── D-NETWORK-009 Slice G: Passport Assistant ── */}
+          {/* ── D-NETWORK-009 Slice G + TECS-DPP-PASSPORT-NETWORK-019: Passport Assistant ── */}
           {passportData && (() => {
             const guidance = buildPassportGuidance(passportData, snapshot.certifications);
             return (
@@ -991,15 +1053,63 @@ export function DPPPassport({ onBack, title, subtitle }: Readonly<Props>) {
                 data-testid="dpp-passport-assistant"
                 className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4"
               >
-                <h2 className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Passport Assistant</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Passport Assistant</h2>
+                  {/* TECS-019: AI mode badge */}
+                  {aiAssistant && (
+                    <span
+                      data-testid="dpp-passport-assistant-mode"
+                      className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold tracking-widest uppercase ${
+                        aiAssistant.mode === 'ai'
+                          ? 'bg-purple-50 text-purple-700 border-purple-200'
+                          : 'bg-slate-100 text-slate-500 border-slate-200'
+                      }`}
+                    >
+                      {aiAssistant.mode === 'ai' ? 'AI Enhanced' : 'Standard'}
+                    </span>
+                  )}
+                </div>
+
                 <p
                   data-testid="dpp-passport-assistant-summary"
                   className="text-sm text-slate-600"
                 >
-                  Guidance is advisory only. Review these suggestions to strengthen buyer readiness.
+                  {aiAssistant
+                    ? aiAssistant.summary
+                    : 'Guidance is advisory only. Review these suggestions to strengthen buyer readiness.'}
                 </p>
 
-                {guidance.expiryWarnings.length > 0 && (
+                {/* TECS-019: Deterministic fallback indicator */}
+                {aiAssistant?.mode === 'deterministic_fallback' && (
+                  <div
+                    data-testid="dpp-passport-assistant-fallback"
+                    className="text-xs text-slate-400 italic"
+                  >
+                    Showing standard guidance — AI guidance unavailable at this time.
+                  </div>
+                )}
+
+                {/* TECS-019: AI warnings */}
+                {aiAssistant && aiAssistant.warnings.length > 0 && (
+                  <div className="space-y-2">
+                    {aiAssistant.warnings.map((warn, i) => (
+                      <div
+                        key={i}
+                        data-testid="dpp-passport-assistant-warning"
+                        className={`px-4 py-3 rounded-lg text-sm border ${
+                          warn.severity === 'high'
+                            ? 'bg-red-50 border-red-200 text-red-700'
+                            : 'bg-amber-50 border-amber-200 text-amber-700'
+                        }`}
+                      >
+                        {warn.message}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Deterministic expiry warnings (shown when no AI result yet) */}
+                {!aiAssistant && guidance.expiryWarnings.length > 0 && (
                   <div data-testid="dpp-passport-assistant-expiry-warning" className="space-y-2">
                     {guidance.expiryWarnings.map((warn) => (
                       <div
@@ -1016,34 +1126,106 @@ export function DPPPassport({ onBack, title, subtitle }: Readonly<Props>) {
                   </div>
                 )}
 
-                <div
-                  data-testid="dpp-passport-assistant-status-guidance"
-                  className="text-sm text-slate-600 border-l-2 border-slate-200 pl-3 italic"
-                >
-                  {guidance.statusGuidance}
-                </div>
+                {!aiAssistant && (
+                  <>
+                    <div
+                      data-testid="dpp-passport-assistant-status-guidance"
+                      className="text-sm text-slate-600 border-l-2 border-slate-200 pl-3 italic"
+                    >
+                      {guidance.statusGuidance}
+                    </div>
 
-                <div
-                  data-testid="dpp-passport-assistant-buyer-readiness"
-                  className="text-sm font-medium text-slate-700"
-                >
-                  {guidance.buyerReadiness}
-                </div>
+                    <div
+                      data-testid="dpp-passport-assistant-buyer-readiness"
+                      className="text-sm font-medium text-slate-700"
+                    >
+                      {guidance.buyerReadiness}
+                    </div>
 
-                <div data-testid="dpp-passport-assistant-recommendations" className="space-y-2">
-                  <p className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Improvement Suggestions</p>
-                  <ul className="space-y-2" aria-label="Improvement suggestions">
-                    {guidance.recommendations.map((rec) => (
-                      <li
-                        key={rec.text}
-                        data-testid="dpp-passport-assistant-recommendation"
-                        className="flex items-start gap-2 text-sm text-slate-600"
-                      >
-                        <span className="text-slate-400 mt-0.5 shrink-0" aria-hidden="true">→</span>
-                        {rec.text}
-                      </li>
-                    ))}
-                  </ul>
+                    <div data-testid="dpp-passport-assistant-recommendations" className="space-y-2">
+                      <p className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Improvement Suggestions</p>
+                      <ul className="space-y-2" aria-label="Improvement suggestions">
+                        {guidance.recommendations.map((rec) => (
+                          <li
+                            key={rec.text}
+                            data-testid="dpp-passport-assistant-recommendation"
+                            className="flex items-start gap-2 text-sm text-slate-600"
+                          >
+                            <span className="text-slate-400 mt-0.5 shrink-0" aria-hidden="true">→</span>
+                            {rec.text}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </>
+                )}
+
+                {/* TECS-019: AI recommendations */}
+                {aiAssistant && aiAssistant.recommendations.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">AI Recommendations</p>
+                    <ul className="space-y-2" aria-label="AI improvement recommendations">
+                      {aiAssistant.recommendations.map((rec, i) => (
+                        <li
+                          key={i}
+                          data-testid="dpp-passport-assistant-recommendation"
+                          className="flex items-start gap-2 text-sm text-slate-600"
+                        >
+                          <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-widest shrink-0 mt-0.5 ${
+                              rec.priority === 'high'
+                                ? 'bg-red-100 text-red-600'
+                                : rec.priority === 'medium'
+                                  ? 'bg-amber-100 text-amber-600'
+                                  : 'bg-slate-100 text-slate-500'
+                            }`}
+                          >
+                            {rec.priority}
+                          </span>
+                          <span>{rec.message}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* TECS-019: Guardrails badge */}
+                {aiAssistant?.humanReviewRequired && (
+                  <div
+                    data-testid="dpp-passport-assistant-guardrails"
+                    className="flex items-center gap-2 pt-2 border-t border-slate-100"
+                  >
+                    <span className="text-[10px] px-2 py-0.5 rounded-full border bg-slate-50 text-slate-500 border-slate-200 tracking-widest uppercase font-semibold">
+                      Advisory only — human review required
+                    </span>
+                  </div>
+                )}
+
+                {/* TECS-019: AI error */}
+                {aiError && (
+                  <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+                    {aiError}
+                  </div>
+                )}
+
+                {/* TECS-019: Generate AI guidance button */}
+                <div className="pt-2 flex items-center gap-3">
+                  <button
+                    data-testid="dpp-passport-assistant-generate"
+                    onClick={() => { void handleGenerateAiAssistance(); }}
+                    disabled={aiLoading}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 text-purple-700 font-medium hover:bg-purple-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {aiAssistant ? 'Refresh AI Guidance' : 'Generate AI Guidance'}
+                  </button>
+                  {aiLoading && (
+                    <span
+                      data-testid="dpp-passport-assistant-loading"
+                      className="text-xs text-slate-400 italic"
+                    >
+                      Generating guidance…
+                    </span>
+                  )}
                 </div>
               </section>
             );

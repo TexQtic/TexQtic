@@ -110,6 +110,10 @@ import { rankSupplierCandidates } from '../services/ai/supplierMatching/supplier
 import { buildSupplierMatchExplanation } from '../services/ai/supplierMatching/supplierMatchExplanationBuilder.service.js';
 import { guardSupplierMatchOutput } from '../services/ai/supplierMatching/supplierMatchRuntimeGuard.service.js';
 import type { SupplierMatchCandidateDraft, SupplierMatchCandidate } from '../services/ai/supplierMatching/supplierMatch.types.js';
+import {
+  runPassportAssistantInference,
+  type PassportAssistantBuyerContext,
+} from '../services/passportAssistant.js';
 
 type InviteEmailDeliveryStatus = EmailDispatchOutcome['status'] | 'FAILED_NON_FATAL';
 
@@ -7378,6 +7382,212 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             changed: true,
           },
         });
+      },
+    );
+  }
+
+  // ─── TECS-DPP-PASSPORT-NETWORK-019: AI Passport Assistant ───────────────────
+  // POST /api/tenant/dpp/:nodeId/passport/assistant
+  //
+  // Returns advisory AI-backed passport quality guidance.
+  // NEVER mutates: passport status, evidence, maturity, publication state.
+  // humanReviewRequired: true — ALWAYS in response.
+  // advisoryOnly: true — ALWAYS in guardrails.
+  // On provider unavailability, timeout, budget exceeded, or parse failure →
+  // deterministic_fallback mode (HTTP 200 still returned).
+  // Budget exceeded / rate limit → HTTP 429.
+  {
+    fastify.post(
+      '/tenant/dpp/:nodeId/passport/assistant',
+      { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+      async (request, reply) => {
+        const dbContext = request.dbContext;
+        if (!dbContext) {
+          return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+        }
+
+        // ── 1. Validate params ──
+        const paramsSchema = z.object({
+          nodeId: z.string().uuid('nodeId must be a valid UUID'),
+        });
+        const paramsResult = paramsSchema.safeParse(request.params);
+        if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+        const { nodeId } = paramsResult.data;
+
+        // ── 2. Validate body ──
+        const bodySchema = z.object({
+          mode: z.literal('advisory'),
+          buyerContext: z
+            .enum(['local', 'domestic_b2b', 'export'])
+            .nullable()
+            .optional()
+            .default(null),
+          includeExportGuidance: z.boolean().optional().default(false),
+        });
+        const bodyResult = bodySchema.safeParse(request.body);
+        if (!bodyResult.success) return sendValidationError(reply, bodyResult.error.errors);
+        const { mode, buyerContext, includeExportGuidance } = bodyResult.data;
+
+        // ── 3. Load passport data (read-only) ──
+        type AssistantCertRow = {
+          certification_type: string | null;
+          lifecycle_state_name: string | null;
+          expiry_date: Date | null;
+        };
+        type AssistantLineageRow = { depth: number };
+        type AssistantPassportStateRow = { status: string };
+        type AssistantProductRow = { node_id: string };
+        type AssistantAiClaimsCount = { count: bigint };
+
+        let productRows: AssistantProductRow[];
+        let certRows: AssistantCertRow[];
+        let lineageRows: AssistantLineageRow[];
+        let passportStateRows: AssistantPassportStateRow[];
+        let aiClaimsRows: AssistantAiClaimsCount[];
+        let productDetailsRow: DppProductDetailsRow | null;
+
+        try {
+          [productRows, certRows, lineageRows, passportStateRows, aiClaimsRows, productDetailsRow] =
+            await withDbContext(prisma, dbContext, async (tx) => {
+              const products = await tx.$queryRaw<AssistantProductRow[]>`
+                SELECT node_id
+                FROM dpp_snapshot_products_v1
+                WHERE node_id = ${nodeId}::uuid
+                LIMIT 1
+              `;
+
+              const certs = await tx.$queryRaw<AssistantCertRow[]>`
+                SELECT certification_type, lifecycle_state_name, expiry_date
+                FROM dpp_snapshot_certifications_v1
+                WHERE node_id = ${nodeId}::uuid
+              `;
+
+              const lineage = await tx.$queryRaw<AssistantLineageRow[]>`
+                SELECT depth
+                FROM dpp_snapshot_lineage_v1
+                WHERE root_node_id = ${nodeId}::uuid
+              `;
+
+              const passportStates = await tx.$queryRaw<AssistantPassportStateRow[]>`
+                SELECT status
+                FROM dpp_passport_states
+                WHERE node_id = ${nodeId}::uuid
+                LIMIT 1
+              `;
+
+              const aiClaims = await tx.$queryRaw<AssistantAiClaimsCount[]>`
+                SELECT COUNT(*)::bigint as count
+                FROM dpp_evidence_claims
+                WHERE node_id = ${nodeId}::uuid
+                  AND org_id = ${dbContext.orgId}::uuid
+              `;
+
+              const pd = await getDppProductDetailsForNode(tx, nodeId);
+
+              return [products, certs, lineage, passportStates, aiClaims, pd] as [
+                AssistantProductRow[],
+                AssistantCertRow[],
+                AssistantLineageRow[],
+                AssistantPassportStateRow[],
+                AssistantAiClaimsCount[],
+                DppProductDetailsRow | null,
+              ];
+            });
+        } catch (err) {
+          fastify.log.error({ err }, '[DPP-019] passport assistant data fetch failed');
+          return sendNotFound(reply, 'DPP passport not found or access denied');
+        }
+
+        if (productRows.length === 0) {
+          return sendNotFound(reply, 'DPP passport not found or access denied');
+        }
+
+        // ── 4. Compute derived fields ──
+        const rawStatus = passportStateRows[0]?.status ?? 'DRAFT';
+        const passportStatus: DppPassportStatus = (
+          ['DRAFT', 'INTERNAL', 'TRADE_READY', 'PUBLISHED'] as const
+        ).includes(rawStatus as DppPassportStatus)
+          ? (rawStatus as DppPassportStatus)
+          : 'DRAFT';
+
+        const approvedCertCount = certRows.filter(
+          (c) => c.lifecycle_state_name === 'APPROVED',
+        ).length;
+        const lineageDepth =
+          lineageRows.length > 0 ? Math.max(...lineageRows.map((r) => r.depth)) : 0;
+        const aiExtractedClaimsCount = Number(aiClaimsRows[0]?.count ?? 0);
+
+        const activeCertsWithValidExpiry = certRows.filter((c) => {
+          if (c.lifecycle_state_name !== 'APPROVED' || !c.expiry_date) return false;
+          return new Date(c.expiry_date) > new Date();
+        }).length;
+
+        const passportMaturity: DppMaturityLevel = computeDppMaturity({
+          approvedCertCount,
+          lineageDepth,
+          passportStatus,
+          hasPublicToken: false, // not needed for assistant context
+          activeCertsWithValidExpiry,
+        });
+
+        // Build cert summaries (safe — no raw claim values)
+        const now = new Date();
+        const certSummaries = certRows.map((c) => ({
+          certificationType: c.certification_type,
+          daysUntilExpiry: c.expiry_date
+            ? Math.floor(
+                (new Date(c.expiry_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+              )
+            : null,
+          isApproved: c.lifecycle_state_name === 'APPROVED',
+        }));
+
+        // Build product details context (safe subset only)
+        const assistantProductDetails = productDetailsRow
+          ? {
+              sku: productDetailsRow.sku,
+              countryOfOrigin: productDetailsRow.country_of_origin ?? null,
+              materialComposition:
+                (productDetailsRow.material_composition as
+                  | Array<{ material: string; percentage: number }>
+                  | null) ?? null,
+              productDescription: productDetailsRow.product_description ?? null,
+            }
+          : null;
+
+        const monthKey = getMonthKey();
+
+        // ── 5. Run assistant inference ──
+        try {
+          const result = await runPassportAssistantInference({
+            orgId: dbContext.orgId,
+            passportStatus,
+            passportMaturity,
+            approvedCertCount,
+            lineageDepth,
+            aiExtractedClaimsCount,
+            certifications: certSummaries,
+            productDetails: assistantProductDetails,
+            mode,
+            buyerContext: (buyerContext ?? null) as PassportAssistantBuyerContext,
+            includeExportGuidance: includeExportGuidance ?? false,
+            monthKey,
+            prisma,
+            dbContext,
+          });
+
+          return sendSuccess(reply, result);
+        } catch (err) {
+          if (err instanceof BudgetExceededError || err instanceof AiRateLimitExceededError) {
+            return sendError(
+              reply,
+              'RATE_LIMIT_EXCEEDED',
+              'AI inference rate limit or budget exceeded',
+              429,
+            );
+          }
+          throw err;
+        }
       },
     );
   }
