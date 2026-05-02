@@ -1617,3 +1617,43 @@ Tests: 66/66 non-DB tests PASS (Groups A–J). 239/239 regression PASS.
 TypeScript: server clean | frontend clean.
 No schema changes. No App.tsx. No runtime/**. No custom-domain. No full WL portal.
 Full platform launch NOT AUTHORIZED.
+
+
+---
+
+## 2026-05-14 — VERIFIED_COMPLETE_WITH_LIMITATIONS: TECS-DPP-PASSPORT-NETWORK-020B (Dedicated WL DPP Label Navigation)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-020B
+Type:          NEW FEATURE — Dedicated WL Admin navigation tab for DPP Passport Label
+Status:        VERIFIED_COMPLETE_WITH_LIMITATIONS
+Date:          2026-05-14
+
+Nav target:    WL Admin > DPP Passport Label tab (routeKey: dpp_label)
+Component:     WLDppLabelPanel (existing, unchanged)
+Route binding: wlAdminView: 'DPP_LABEL' via normalizeWlAdminView guard
+Shortcut:      WhiteLabelSettings.tsx DPP card acts as shortcut to dedicated tab
+
+New tests:
+  tecs-dpp-passport-label-config.test.ts — Groups K (12 tests) + L (10 tests)
+  Total: 88 tests PASS (2 DB-skipped)
+
+Modified Files:
+  runtime/sessionRuntimeDescriptor.ts (RuntimeLocalRouteKey + route group + shell keys)
+  App.tsx (WL_ADMIN_VIEWS + import + renderWLAdminContent case + shortcut callback)
+  layouts/Shells.tsx (WL_ADMIN_NAV entry + nav testid) [GOVERNANCE NOTE: see below]
+  components/Tenant/WhiteLabelSettings.tsx (onNavigateDppLabel prop + shortcut button)
+  server/src/__tests__/tecs-dpp-passport-label-config.test.ts (Groups K + L)
+
+Governance note:
+  layouts/Shells.tsx is in the AGENTS.md standing guard list. Change is minimal
+  (1 nav array entry + 1 conditional data-testid) and required by 020B task scope.
+  Paresh authorized App.tsx + runtime/** changes explicitly for this slice.
+
+Tests:
+  tecs-dpp-passport-label-config: 88/88 non-DB PASS (2 DB-skipped)
+  Regression suites: tecs-dpp-structured-data 46/46, tecs-dpp-public-security 31/31,
+                     tecs-dpp-passport-registry 20/20 PASS
+  TypeScript: server clean | frontend clean
+```
+

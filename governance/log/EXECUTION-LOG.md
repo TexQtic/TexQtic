@@ -6684,3 +6684,30 @@ Tests: 66/66 non-DB PASS | 239/239 regression PASS
 TypeScript: server clean | frontend clean
 Limitation: Option A (dedicated DPP Label nav tab) deferred � requires App.tsx + runtime/sessionRuntimeDescriptor.ts (both forbidden without explicit Paresh authorization).
 Full platform launch NOT AUTHORIZED.
+
+
+---
+
+## 2026-05-14 — TECS-DPP-PASSPORT-NETWORK-020B
+
+Task: Dedicated WL DPP Label Navigation Tab
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+
+Changes:
+1. runtime/sessionRuntimeDescriptor.ts — added 'dpp_label' to RuntimeLocalRouteKey union; added defineRuntimeRoute('dpp_label', ...) in WL_ADMIN_MANAGEMENT_ROUTE_GROUP with wlAdminView: 'DPP_LABEL'; added 'dpp_label' to WL_ADMIN_SHELL_ROUTE_KEYS.
+2. App.tsx — added 'DPP_LABEL' to WL_ADMIN_VIEWS; import WLDppLabelPanel; case 'dpp_label' in renderWLAdminContent(); onNavigateDppLabel callback in case 'branding'.
+3. layouts/Shells.tsx — added dpp_label entry to WL_ADMIN_NAV; data-testid="wl-dpp-label-nav-item" on nav button.
+4. components/Tenant/WhiteLabelSettings.tsx — onNavigateDppLabel prop; shortcut button (wl-dpp-label-settings-shortcut) when prop provided.
+5. server/src/__tests__/tecs-dpp-passport-label-config.test.ts — Groups K (12 tests) + L (10 tests) added.
+
+Deliverables:
+  runtime/sessionRuntimeDescriptor.ts
+  App.tsx
+  layouts/Shells.tsx
+  components/Tenant/WhiteLabelSettings.tsx
+  server/src/__tests__/tecs-dpp-passport-label-config.test.ts
+
+Tests: 88/88 non-DB PASS (2 DB-skipped) | regression clean
+TypeScript: server clean | frontend clean
+Limitation: layouts/Shells.tsx required minimal change within 020B task scope.
+Full platform launch NOT AUTHORIZED.
