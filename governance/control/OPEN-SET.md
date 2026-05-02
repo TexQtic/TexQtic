@@ -811,3 +811,18 @@
 - DPP-E2E-21/22/23 pass (source analysis). DPP-E2E-19/20 correctly remain in chromium project.
 - Next slice: TECS-DPP-PASSPORT-NETWORK-018 (JSON-LD structured export) ï¿½ NOT AUTHORIZED until Paresh opens.
 - Full platform launch NOT AUTHORIZED.
+
+---
+
+## 2026-05-14 — TECS-DPP-PASSPORT-NETWORK-020 IMPLEMENTATION_COMPLETE
+
+TECS-DPP-PASSPORT-NETWORK-020: White-Label Passport Naming slice closed.
+
+Option C implemented. Tenant-configurable buyer-facing DPP passport label.
+Default: "Verified Supply Chain Passport". Branding removal NOT authorized.
+Table: dpp_passport_label_config, RLS enforced, UNIQUE(org_id).
+Tenant GET/PUT routes, public route labelConfig injection, WLDppLabelPanel, PublicPassport updated.
+36/36 new tests PASS. 135/135 regression PASS. TypeScript clean.
+
+Next slice: requires explicit Paresh authorization.
+Full platform launch NOT AUTHORIZED.

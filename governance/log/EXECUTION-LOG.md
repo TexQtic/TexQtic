@@ -6639,3 +6639,25 @@ Refs: components/Tenant/DPPPassport.tsx ï¿½ tests/e2e/dpp-passport-network.spec.
 Commits: b1f580a ï¿½ feat; [governance commit pending]
 Next: TECS-DPP-PASSPORT-NETWORK-018 (JSON-LD) ï¿½ requires explicit Paresh authorization.
   Full platform launch NOT AUTHORIZED.
+
+---
+
+## 2026-05-14 — TECS-DPP-PASSPORT-NETWORK-020 IMPLEMENTATION_COMPLETE
+
+Slice: TECS-DPP-PASSPORT-NETWORK-020 — White-Label Passport Naming
+Layer Impact: Layer 0 (NEXT-ACTION, OPEN-SET, GOVERNANCE-CHANGELOG updated); Layer 3 (this file)
+
+Deliverables:
+  server/prisma/migrations/20260514000000_tecs_dpp_passport_label_config/migration.sql (applied)
+  server/prisma/schema.prisma (prisma db pull — model dpp_passport_label_config)
+  server/src/routes/tenant.ts (GET + PUT /tenant/dpp/passport-label-config)
+  server/src/routes/public.ts (labelConfig in D6PublicDppData + handlePublicDppRead payload)
+  components/WhiteLabelAdmin/WLDppLabelPanel.tsx (NEW)
+  components/Public/PublicPassport.tsx (labelConfig?.buyerFacingLabel + buyer-label testid)
+  server/src/__tests__/tecs-dpp-passport-label-config.test.ts (36 tests)
+
+Tests: 36/36 new PASS | 135/135 regression PASS
+TypeScript: server clean | frontend clean
+Commits: [feat commit] + [governance commit] — pending user approval
+Next: requires explicit Paresh authorization for next slice.
+Full platform launch NOT AUTHORIZED.

@@ -1560,3 +1560,31 @@ Governance files updated:
   governance/control/NEXT-ACTION.md
   governance/log/EXECUTION-LOG.md
   governance/control/GOVERNANCE-CHANGELOG.md (this file)
+
+---
+
+## 2026-05-14 — TECS-DPP-PASSPORT-NETWORK-020 IMPLEMENTATION_COMPLETE
+
+TECS-DPP-PASSPORT-NETWORK-020: White-Label Passport Naming
+
+Status: IMPLEMENTATION_COMPLETE
+Option: C — tenant-configurable buyer-facing DPP passport label
+Default fallback: "Verified Supply Chain Passport"
+showTexqticBrand stored (default true); branding removal NOT authorized in this slice.
+
+Table: dpp_passport_label_config
+  - UNIQUE(org_id), RLS ENABLE + FORCE, SELECT to texqtic_public_lookup
+  - CHECK: buyer_facing_label 1–80 chars, public_title ≤120, subtitle ≤180
+
+Files delivered:
+  server/prisma/migrations/20260514000000_tecs_dpp_passport_label_config/migration.sql
+  server/prisma/schema.prisma (via prisma db pull — model dpp_passport_label_config added)
+  server/src/routes/tenant.ts (GET + PUT /tenant/dpp/passport-label-config)
+  server/src/routes/public.ts (labelConfig in D6PublicDppData + payload)
+  components/WhiteLabelAdmin/WLDppLabelPanel.tsx (NEW)
+  components/Public/PublicPassport.tsx (labelConfig?.buyerFacingLabel + testid)
+  server/src/__tests__/tecs-dpp-passport-label-config.test.ts (36 tests PASS)
+
+Tests: 36/36 new + 135/135 regression PASS
+TypeScript: clean (server + frontend)
+Next: requires explicit Paresh authorization for next slice.
