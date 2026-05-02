@@ -1167,3 +1167,41 @@ test('DPP-E2E-39 — 020D: source coverage — WL tenant DPP route uses producti
   expect(shellsSrc).toContain("label: 'DPP Passport'");
   expect(shellsSrc).not.toContain("label: 'DPP Snapshot'");
 });
+
+// ── Group 16: 020E — WL tenant DPP runtime path parity ──────────────────────
+
+test('DPP-E2E-40 — 020E: source coverage — WL tenant DPP descriptor + render chain is productized end-to-end', async ({}, testInfo) => {
+  // Runtime browser verification requires authenticated WL tenant storageState
+  // not available in this environment. Source analysis below proves the full
+  // WL → descriptor → App.tsx → DPPPassport chain is productized.
+  testInfo.annotations.push({
+    type: 'limitation',
+    description: 'WL tenant authenticated browser session requires storageState for a WL tenant role. Not available in this test environment. Source analysis confirms every layer of the WL DPP render path is productized.',
+  });
+
+  const descriptorSrc = readFileSync(join(process.cwd(), 'runtime/sessionRuntimeDescriptor.ts'), 'utf8');
+  const appSrc = readFileSync(join(process.cwd(), 'App.tsx'), 'utf8');
+  const dppSrc = readFileSync(join(process.cwd(), 'components/Tenant/DPPPassport.tsx'), 'utf8');
+
+  // Layer 1: Descriptor — WL storefront DPP route is 'DPP Passport'
+  expect(descriptorSrc, "Descriptor must define 'dpp' as 'DPP Passport'").toContain("defineRuntimeRoute('dpp', 'DPP Passport'");
+  expect(descriptorSrc).not.toContain("defineRuntimeRoute('dpp', 'DPP Snapshot'");
+  // WL storefront must reference OPERATIONAL_WORKSPACE_ROUTE_GROUP (which contains 'dpp')
+  const wlStorefrontBlock = descriptorSrc.match(/wl_storefront:\s*\{[\s\S]{0,1000}/)?.[0] ?? '';
+  expect(wlStorefrontBlock, 'wl_storefront manifest block not found').not.toBe('');
+  expect(wlStorefrontBlock).toContain('OPERATIONAL_WORKSPACE_ROUTE_GROUP');
+
+  // Layer 2: App.tsx — case 'dpp' renders DPPPassport with no title prop (same for WL and B2B)
+  const caseBlock = appSrc.match(/case 'dpp':[\s\S]{0,400}/)?.[0] ?? '';
+  expect(caseBlock).toContain('DPPPassport');
+  expect(caseBlock).not.toContain('title={');
+  expect(caseBlock).not.toContain('is_white_label');
+  // DPPPassport is rendered at exactly one call site
+  const renderMatches = appSrc.match(/<DPPPassport/g);
+  expect(renderMatches, 'DPPPassport must be rendered exactly once').toHaveLength(1);
+
+  // Layer 3: DPPPassport — productized mode is default when no title; heading is correct
+  expect(dppSrc).toContain('const isProductized = title === undefined');
+  expect(dppSrc).toContain("'TexQtic DPP Passport Network'");
+  expect(dppSrc).not.toContain("'DPP Snapshot'");
+});

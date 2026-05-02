@@ -910,3 +910,74 @@ describe('N — 020D: WL tenant DPP surface parity (productized UI for WL tenant
     }
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group O — 020E: WL tenant DPP runtime path parity (descriptor + render chain)
+// ─────────────────────────────────────────────────────────────────────────────
+describe('O — 020E: WL tenant DPP runtime path parity', () => {
+  let descriptorSrc: string;
+  let appSrc: string;
+  let dppPassportSrc: string;
+
+  beforeAll(() => {
+    descriptorSrc  = fs.readFileSync(SESSION_DESCRIPTOR_PATH, 'utf-8');
+    appSrc         = fs.readFileSync(APP_TSX_PATH, 'utf-8');
+    dppPassportSrc = fs.readFileSync(DPP_PASSPORT_COMPONENT_PATH, 'utf-8');
+  });
+
+  it("O01 — sessionRuntimeDescriptor.ts defines 'dpp' route with title 'DPP Passport' (not 'DPP Snapshot')", () => {
+    // The descriptor is the authoritative route title source for all tenant types.
+    // Pre-020E risk: descriptor could carry a legacy 'DPP Snapshot' title for WL.
+    expect(descriptorSrc).toContain("defineRuntimeRoute('dpp', 'DPP Passport'");
+    expect(descriptorSrc).not.toContain("defineRuntimeRoute('dpp', 'DPP Snapshot'");
+  });
+
+  it("O02 — sessionRuntimeDescriptor.ts WL_STOREFRONT_SHELL_ROUTE_KEYS includes 'dpp'", () => {
+    // WL tenants must expose DPP in their navigation surface.
+    const wlKeysBlock = descriptorSrc.match(/WL_STOREFRONT_SHELL_ROUTE_KEYS[\s\S]{0,400}/)?.[0] ?? '';
+    expect(wlKeysBlock, 'WL_STOREFRONT_SHELL_ROUTE_KEYS block not found').not.toBe('');
+    expect(wlKeysBlock).toContain("'dpp'");
+  });
+
+  it("O03 — sessionRuntimeDescriptor.ts wl_storefront manifest entry includes OPERATIONAL_WORKSPACE_ROUTE_GROUP", () => {
+    // The DPP route lives in OPERATIONAL_WORKSPACE_ROUTE_GROUP.
+    // WL storefront must reference this group so 'dpp' is a reachable route.
+    const wlStorefrontBlock = descriptorSrc.match(/wl_storefront:\s*\{[\s\S]{0,1000}/)?.[0] ?? '';
+    expect(wlStorefrontBlock, 'wl_storefront manifest block not found').not.toBe('');
+    expect(wlStorefrontBlock).toContain('OPERATIONAL_WORKSPACE_ROUTE_GROUP');
+  });
+
+  it("O04 — App.tsx DPPPassport is rendered at exactly one call site (no hidden WL-specific DPP path)", () => {
+    // If a second WL-specific render site existed, it could re-introduce stale props.
+    const renderMatches = appSrc.match(/<DPPPassport/g);
+    expect(renderMatches, 'DPPPassport must be rendered exactly once').toHaveLength(1);
+  });
+
+  it("O05 — App.tsx renderExperienceContent switch does not gate 'dpp' case behind WL capability check", () => {
+    // The renderExperienceContent switch (on tenantLocalRouteSelection.routeKey) must
+    // handle 'dpp' uniformly for all tenants — no is_white_label / whiteLabelCapability
+    // guard must appear before case 'dpp':
+    const fnStart = appSrc.indexOf('const renderExperienceContent = ()');
+    expect(fnStart, 'renderExperienceContent function not found').toBeGreaterThan(-1);
+    // Find first case 'dpp': after the function declaration
+    const dppCasePos = appSrc.indexOf("case 'dpp':", fnStart);
+    expect(dppCasePos, "case 'dpp': not found after renderExperienceContent").toBeGreaterThan(fnStart);
+    // Everything from function start to case 'dpp': must not contain WL capability guards
+    const beforeDppCase = appSrc.slice(fnStart, dppCasePos);
+    expect(beforeDppCase).not.toContain('tenantHasWhiteLabelCapability');
+    expect(beforeDppCase).not.toContain('is_white_label');
+  });
+
+  it("O06 — sessionRuntimeDescriptor.ts contains no legacy 'DPP Snapshot' route text", () => {
+    // All DPP-related route registration text in the descriptor must be productized.
+    expect(descriptorSrc).not.toContain('DPP Snapshot');
+    expect(descriptorSrc).not.toContain('Read-only supply chain snapshot');
+  });
+
+  it("O07 — DPPPassport.tsx displayTitle fallback is 'TexQtic DPP Passport Network' (not 'DPP Snapshot')", () => {
+    // When no title prop is passed (productized mode), the heading must be the
+    // productized copy, not the old snapshot label.
+    expect(dppPassportSrc).toContain("'TexQtic DPP Passport Network'");
+    expect(dppPassportSrc).not.toContain("'DPP Snapshot'");
+  });
+});
