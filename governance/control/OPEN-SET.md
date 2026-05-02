@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-15 (TECS-DPP-PASSPORT-NETWORK-024 — VERIFIED_COMPLETE_WITH_LIMITATIONS; JSON-LD context document published; 64/64 unit tests pass incl. Group S; DPP-E2E-48 PASS; awaiting Paresh authorization for next slice)
+**Last Updated:** 2026-05-15 (TECS-DPP-PASSPORT-NETWORK-025 — VERIFIED_COMPLETE_WITH_LIMITATIONS; passportMaturityLabel in structured-data JSON-LD; 77/77 unit tests pass incl. Group T; DPP-E2E-49 PASS; awaiting Paresh authorization for next slice)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,17 @@
 
 ## Operating Notes
 
+- TECS-DPP-PASSPORT-NETWORK-025 is VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-15).
+  Additive only: passportMaturityLabel human-readable field added to GET /api/public/dpp/:publicPassportId/structured-data JSON-LD response.
+  Label map: LOCAL_TRUST→"Bronze — Verified Local", TRADE_READY→"Silver — Trade Ready", COMPLIANCE→"Gold — Certified", GLOBAL_DPP→"Platinum — Export Ready".
+  Fallback: MATURITY_LABEL[enum] ?? raw enum value (safe for unexpected future values).
+  context.jsonld: passportMaturityLabel term added at texqtic:passportMaturityLabel.
+  Unit tests: Group T added (SD-T01–SD-T13, 13 tests); total 77/77 PASS.
+  E2E: DPP-E2E-49 added (Group 21); api-project PASS.
+  TypeScript: Frontend tsc CLEAN. Server tsc CLEAN.
+  Limitation: Runtime passportMaturityLabel in structured-data response pending prod deploy. QA fixture passport (48d83d5a) will return "Silver — Trade Ready" after deploy.
+  Files changed: server/src/routes/public.ts, public/dpp/v1/context.jsonld, server/src/__tests__/tecs-dpp-structured-data.test.ts, tests/e2e/dpp-passport-network.spec.ts.
+  Next slice: NOT AUTHORIZED until Paresh opens.
 - TECS-DPP-PASSPORT-NETWORK-024 is VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-15).
   Strategy: Option A — keep inline @context in public.ts unchanged; publish JSON-LD context document as new static file.
   Context document: public/dpp/v1/context.jsonld — 22 terms; texqtic.com/dpp/v1# namespace; schema.org mapping.

@@ -7,6 +7,43 @@
 
 ---
 
+## 2026-05-15 — VERIFIED_COMPLETE_WITH_LIMITATIONS: TECS-DPP-PASSPORT-NETWORK-025 (passportMaturityLabel in structured-data JSON-LD)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-025
+Type:          FEATURE (additive — new field in existing JSON-LD response + context term)
+Status:        VERIFIED_COMPLETE_WITH_LIMITATIONS
+Date:          2026-05-15
+Commits:       PENDING (two commits: feat + governance)
+
+Scope:
+  server/src/routes/public.ts                                     — MATURITY_LABEL map + passportMaturityLabel field in JSON-LD
+  public/dpp/v1/context.jsonld                                    — passportMaturityLabel term added
+  server/src/__tests__/tecs-dpp-structured-data.test.ts           — Group T added (SD-T01–SD-T13)
+  tests/e2e/dpp-passport-network.spec.ts                          — DPP-E2E-49 added (Group 21)
+
+Label map:
+  LOCAL_TRUST  → "Bronze — Verified Local"
+  TRADE_READY  → "Silver — Trade Ready"
+  COMPLIANCE   → "Gold — Certified"
+  GLOBAL_DPP   → "Platinum — Export Ready"
+  fallback     → raw enum value (MATURITY_LABEL[enum] ?? enum)
+
+Validation:
+  Frontend tsc:                   0 errors (CLEAN)
+  Server tsc:                     0 errors (CLEAN)
+  tecs-dpp-structured-data:       77/77 PASS (incl. Group T SD-T01–SD-T13)
+  tecs-dpp-public-security:       31/31 PASS
+  tecs-dpp-passport-label-config: 139/141 (2 skipped — DB integration; unchanged)
+  E2E DPP-E2E-49 (api project):   PASS
+
+Limitation:
+  Runtime passportMaturityLabel in structured-data response pending prod deploy.
+  QA fixture (48d83d5a) will return passportMaturityLabel: "Silver — Trade Ready" after deploy.
+```
+
+---
+
 ## 2026-05-15 — VERIFIED_COMPLETE_WITH_LIMITATIONS: TECS-DPP-PASSPORT-NETWORK-024 (Resolvable JSON-LD @context at texqtic.com/dpp/v1)
 
 ```

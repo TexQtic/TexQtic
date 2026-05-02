@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-15 (TECS-DPP-PASSPORT-NETWORK-024 — VERIFIED_COMPLETE_WITH_LIMITATIONS; JSON-LD context document; 64/64 unit tests; DPP-E2E-48 PASS; awaiting Paresh authorization for next slice)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-15 (TECS-DPP-PASSPORT-NETWORK-025 — VERIFIED_COMPLETE_WITH_LIMITATIONS; passportMaturityLabel in structured-data JSON-LD; 77/77 unit tests; DPP-E2E-49 PASS; awaiting Paresh authorization for next slice)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,30 +11,31 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: VERIFIED_COMPLETE_WITH_LIMITATIONS — TECS-DPP-PASSPORT-NETWORK-024 JSON-LD context document (2026-05-15); 64/64 unit tests; DPP-E2E-48 PASS; awaiting Paresh authorization for next DPP slice
+product_delivery_priority: VERIFIED_COMPLETE_WITH_LIMITATIONS — TECS-DPP-PASSPORT-NETWORK-025 passportMaturityLabel (2026-05-15); 77/77 unit tests; DPP-E2E-49 PASS; awaiting Paresh authorization for next DPP slice
 active_delivery_unit: NONE — awaiting Paresh authorization for next DPP slice
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  TECS-DPP-PASSPORT-NETWORK-024 VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-15).
-  Strategy: Option A — keep inline @context; publish JSON-LD context document as static file.
-  New file: public/dpp/v1/context.jsonld (22 terms; texqtic.com/dpp/v1# namespace; schema.org mapping).
-  Vercel: /dpp/v1/context.jsonld header rule (Content-Type: application/ld+json).
-  Unit tests: Group S added (SD-S01–SD-S18, 18 tests); 64/64 PASS.
-  E2E: DPP-E2E-48 added (Group 20); api-project PASS.
-  Limitation: runtime serving pending Vite build + Vercel deploy.
+  TECS-DPP-PASSPORT-NETWORK-025 VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-15).
+  Additive only: passportMaturityLabel human-readable field added to structured-data JSON-LD response.
+  Label map: LOCAL_TRUST→"Bronze — Verified Local", TRADE_READY→"Silver — Trade Ready",
+             COMPLIANCE→"Gold — Certified", GLOBAL_DPP→"Platinum — Export Ready".
+  context.jsonld: passportMaturityLabel term added (texqtic:passportMaturityLabel).
+  Unit tests: Group T added (SD-T01–SD-T13, 13 tests); 77/77 PASS.
+  E2E: DPP-E2E-49 added (Group 21); api-project PASS.
+  Limitation: runtime serving of passportMaturityLabel pending prod deploy.
   Do NOT open next slice without Paresh authorization.
-last_closed_unit: TECS-DPP-PASSPORT-NETWORK-024
+last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
 last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
 last_closed_unit_runtime_verdict: >-
   Frontend tsc: 0 errors. Server tsc: 0 errors.
-  tecs-dpp-structured-data: 64/64 PASS (incl. Group S SD-S01–SD-S18).
-  E2E DPP-E2E-48 (api project): PASS.
-  context.jsonld JSON parse: OK. Forbidden terms: NONE.
+  tecs-dpp-structured-data: 77/77 PASS (incl. Group T SD-T01–SD-T13).
+  E2E DPP-E2E-49 (api project): PASS.
+  context.jsonld passportMaturityLabel term: ADDED. All 4 enum→label mappings: VERIFIED.
 last_closed_unit_commits: PENDING (two commits: feat + governance)
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE_WITH_LIMITATIONS. Source file correct, Vercel header configured.
-  Runtime serving at texqtic.com/dpp/v1/context.jsonld pending deploy.
-last_closed_governance_unit: TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001
+  VERIFIED_COMPLETE_WITH_LIMITATIONS. Source mapping correct, context.jsonld updated.
+  Runtime passportMaturityLabel in structured-data response pending prod deploy.
+last_closed_governance_unit: TECS-DPP-PASSPORT-NETWORK-024
 last_closed_governance_unit_status: VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES
 last_closed_governance_unit_date: 2026-04-30
 last_closed_governance_unit_note: >-

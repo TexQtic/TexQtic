@@ -6934,3 +6934,51 @@ WL public propagation limited by no WL published passport in QA (PROD-AUDIT-001)
 
 ### Commit
 [TEXQTIC] test(dpp): verify WL admin label panel runtime � TECS-022 VERIFIED_COMPLETE_WITH_LIMITATIONS
+
+---
+
+## 2026-05-15 -- TECS-DPP-PASSPORT-NETWORK-025
+
+### Task
+Add passportMaturityLabel human-readable field to GET /api/public/dpp/:publicPassportId/structured-data JSON-LD response alongside existing passportMaturity raw enum.
+
+### Allowlist
+- server/src/routes/public.ts (MODIFY)
+- public/dpp/v1/context.jsonld (MODIFY)
+- server/src/__tests__/tecs-dpp-structured-data.test.ts (MODIFY)
+- tests/e2e/dpp-passport-network.spec.ts (MODIFY)
+- governance/control/NEXT-ACTION.md (MODIFY)
+- governance/control/OPEN-SET.md (MODIFY)
+- governance/control/GOVERNANCE-CHANGELOG.md (MODIFY)
+- governance/log/EXECUTION-LOG.md (MODIFY)
+
+### Implementation
+MATURITY_LABEL const defined in handler scope in public.ts:
+  LOCAL_TRUST  -> "Bronze -- Verified Local"
+  TRADE_READY  -> "Silver -- Trade Ready"
+  COMPLIANCE   -> "Gold -- Certified"
+  GLOBAL_DPP   -> "Platinum -- Export Ready"
+  fallback     -> raw enum value
+Field: 'passportMaturityLabel': MATURITY_LABEL[data.passportMaturity] ?? data.passportMaturity
+context.jsonld: "passportMaturityLabel": "texqtic:passportMaturityLabel" term added after passportMaturity.
+
+### Tests Added
+Unit: Group T (SD-T01--SD-T13, 13 tests) appended to tecs-dpp-structured-data.test.ts.
+E2E: DPP-E2E-49 (Group 21) -- two-tier pattern.
+
+### Validation
+- Frontend tsc --noEmit: 0 errors (CLEAN)
+- Server tsc --noEmit: 0 errors (CLEAN)
+- pnpm -C server test tecs-dpp-structured-data: 77/77 PASS
+- pnpm -C server test tecs-dpp-public-security: 31/31 PASS
+- pnpm -C server test tecs-dpp-passport-label-config: 139/141 (2 skipped -- expected)
+- npx playwright@1.59.1 test tests/e2e/dpp-passport-network.spec.ts --project=api --grep DPP-E2E-49: PASS
+
+### Verdict
+VERIFIED_COMPLETE_WITH_LIMITATIONS.
+All source + unit + E2E gates pass. Runtime passportMaturityLabel pending prod deploy.
+QA fixture passport (48d83d5a) will return passportMaturityLabel: "Silver -- Trade Ready" after deploy.
+
+### Commits
+[TEXQTIC] feat(dpp): add maturity label to structured data -- TECS-025
+[TEXQTIC] governance(dpp): close maturity label structured-data slice -- TECS-025
