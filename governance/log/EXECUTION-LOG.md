@@ -36,6 +36,27 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TECS-DPP-PASSPORT-NETWORK-019 — 2026-05-14
+Type: NEW FEATURE — AI Passport Quality Guidance (Gemini)
+Status: VERIFIED_COMPLETE
+Commit: PENDING (two: feat + governance)
+Title: AI Passport Assistant v2 (Slice 019)
+Summary: Added POST /api/tenant/dpp/:nodeId/passport/assistant backed by Google Gemini
+  (gemini-2.5-flash). New passportAssistant.ts service: budget guard, 20 req/min rate limit
+  (per orgId), deterministic fallback on provider absence / timeout / parse failure.
+  humanReviewRequired: true always — advisory-only; no compliance claims.
+  DPPPassport.tsx updated with AI assistant UI (generate button, loading, mode, warnings, guardrails).
+  79 new unit tests (Groups A-H; tecs-dpp-passport-assistant-v2.test.ts).
+Layer Impact: Layer 0 (NEXT-ACTION, OPEN-SET, GOVERNANCE-CHANGELOG), Layer 3 (this file)
+Runtime verdict: Frontend tsc CLEAN. Server tsc CLEAN.
+  tecs-dpp-passport-assistant-v2: 79/79 PASS.
+  tecs-dpp-structured-data: 46/46. tecs-dpp-d6-public-passport: 58/62 (4 DB-skipped).
+  tecs-dpp-public-security: 31/31. E2E (--project=api): 29 passed, 2 skipped, 0 failed.
+Notes: No mutation of dpp_passport_states from assistant route. Fallback green on missing API key.
+  Live AI tier: deferred until deployed to app.texqtic.com.
+
+---
+
 ### TECS-DPP-PASSPORT-NETWORK-018 — 2026-05-13
 Type: NEW FEATURE — Public JSON-LD Structured Data Route
 Status: VERIFIED_COMPLETE

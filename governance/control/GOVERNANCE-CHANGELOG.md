@@ -7,6 +7,47 @@
 
 ---
 
+## 2026-05-14 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-019 (AI Passport Assistant v2)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-019
+Type:          NEW FEATURE — AI Passport Quality Guidance (Gemini)
+Status:        VERIFIED_COMPLETE
+Date:          2026-05-14
+Commits:       PENDING (two: feat + governance)
+
+Route:         POST /api/tenant/dpp/:nodeId/passport/assistant
+Auth:          tenantAuthMiddleware + databaseContextMiddleware (org_id scoped)
+AI Provider:   Google Gemini (gemini-2.5-flash) via @google/generative-ai
+               Falls back to deterministic guidance when provider unavailable or on timeout/parse failure
+Budget guard:  enforceBudgetOrThrow -> 429 BudgetExceededError / AiRateLimitExceededError
+Rate limit:    20 req/min per tenant (in-memory; keyed by orgId)
+Guardrail:     humanReviewRequired: true - always present; advisory-only; no compliance claims
+
+New Files:
+  server/src/services/passportAssistant.ts
+  server/src/__tests__/tecs-dpp-passport-assistant-v2.test.ts - 79 tests (Groups A-H)
+
+Modified Files:
+  server/src/routes/tenant.ts - import + POST route registration
+  components/Tenant/DPPPassport.tsx - AI assistant UI (generate, loading, mode, warnings, guardrails)
+
+Tests:
+  tecs-dpp-passport-assistant-v2.test.ts:    79/79 PASS
+  tecs-dpp-structured-data:                  46/46 PASS
+  tecs-dpp-d6-public-passport:               58/62 (4 DB-skipped)
+  tecs-dpp-public-security:                  31/31 PASS
+  E2E (--project=api):                       29 passed, 2 skipped (BLOCKED_BY_FIXTURE), 0 failed
+
+Constraints:
+  humanReviewRequired must always be true - no automated compliance claim permitted.
+  No mutation of dpp_passport_states from assistant route (read-only data path).
+  AI provider absent (GEMINI_API_KEY) -> graceful deterministic fallback; no 500.
+  Live AI tier: deferred until deployed.
+```
+
+---
+
 ## 2026-05-13 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-018 (JSON-LD Machine-Readable Public DPP)
 
 ```
