@@ -907,3 +907,31 @@ Tests:
   tecs-dpp-passport-registry: 20/20 PASS | tecs-dpp-product-details: 50/50 PASS
   tecs-dpp-evidence-vault: 59/59 PASS (1 DB-skipped)
   TypeScript: server clean | frontend clean
+
+## TECS-DPP-PASSPORT-NETWORK-020E — WL Tenant DPP Runtime Parity Reconciliation + Fix
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+Closed: 2026-05-14
+
+Root cause: Stale deployment at app.texqtic.com — source entirely clean from 020D. No source code change required.
+App.tsx case 'dpp' renders <DPPPassport> without title prop for all tenants (WL and B2B identical path).
+
+Tests added:
+  tecs-dpp-passport-label-config.test.ts: Group O (7 tests O01-O07) — WL tenant DPP descriptor + render chain parity
+  dpp-passport-network.spec.ts: DPP-E2E-40 — WL DPP end-to-end productized source-coverage test
+
+Test results: 111/111 non-DB PASS (2 DB-skipped; 113 total). DPP-E2E-40 PASS. All regression suites clean. TypeScript clean.
+Limitation: WL tenant authenticated browser session requires storageState not available in test environment.
+Pre-existing known failure: DPP-E2E-38 (020C defect; not regressed).
+Next slice: NOT AUTHORIZED until Paresh opens.
+
+## TECS-DPP-PASSPORT-NETWORK-020E
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS | Closed: 2026-05-14
+Root cause: Stale deployment � source clean from 020D; no code change required.
+Tests: Group O (7 tests O01-O07) + DPP-E2E-40. 111 pass / 2 skip / 0 fail. TypeScript clean.
+Pre-existing failure: DPP-E2E-38 (020C; not regressed). Next slice: NOT AUTHORIZED.
+
+## TECS-DPP-PASSPORT-NETWORK-020E
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS | Closed: 2026-05-14
+Root cause: Stale deployment � source clean from 020D; no code change required.
+Tests: Group O (7 tests O01-O07) + DPP-E2E-40. 111 pass / 2 skip / 0 fail. TypeScript clean.
+Pre-existing failure: DPP-E2E-38 (020C; not regressed). Next slice: NOT AUTHORIZED.

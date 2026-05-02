@@ -1705,3 +1705,14 @@ Changes:
 3. layouts/Shells.tsx WhiteLabelShell: Desktop button 'DPP Snapshot' -> 'DPP Passport'.
 4. tecs-dpp-passport-label-config.test.ts: Group N (8 tests N01-N08) added.
 5. dpp-passport-network.spec.ts: DPP-E2E-39 source-coverage test added.
+
+## 2026-05-14 — 020E: TECS-DPP-PASSPORT-NETWORK WL Runtime Parity Reconciliation
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+Root cause: Stale deployment — source entirely clean from 020D. No code change.
+Tests added: Group O (O01-O07) in tecs-dpp-passport-label-config.test.ts + DPP-E2E-40 in dpp-passport-network.spec.ts.
+Results: 111/111 non-DB PASS, 2 skip, 0 fail. TypeScript clean.
+
+## 2026-05-14 — 020E: TECS-DPP-PASSPORT-NETWORK WL Runtime Parity Reconciliation
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+Root cause: Stale deployment — source clean from 020D; no code change.
+Tests: Group O (O01-O07) + DPP-E2E-40. 111 pass / 2 skip / 0 fail. TypeScript clean.
