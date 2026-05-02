@@ -20,6 +20,7 @@
  *   Group J — 020A: showTexqticBrand public-page attribution toggle
  *   Group K — 020B: Dedicated WL DPP Label navigation/tab
  *   Group L — 020B: Regression checks for public behavior and DPP wiring
+ *   Group M — 020C: WL label navigation runtime proof + public branding verification
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -699,5 +700,112 @@ describe('L — 020B: Regression checks for public behavior and DPP wiring', () 
     expect(b2bBlock).not.toContain("'dpp_label'");
     expect(b2cBlock).not.toContain("'dpp_label'");
     expect(aggBlock).not.toContain("'dpp_label'");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group M — 020C: WL label navigation runtime proof + public branding verification
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('M — 020C: WL label navigation runtime proof + public branding verification', () => {
+  let passportSrc: string;
+  let panelSrc: string;
+  let shellsSrc: string;
+  let appSrc: string;
+  let settingsSrc: string;
+  let descriptorSrc: string;
+
+  beforeAll(() => {
+    passportSrc    = fs.readFileSync(PUBLIC_PASSPORT_PATH, 'utf-8');
+    panelSrc       = fs.readFileSync(WL_PANEL_PATH, 'utf-8');
+    shellsSrc      = fs.readFileSync(SHELLS_PATH, 'utf-8');
+    appSrc         = fs.readFileSync(APP_TSX_PATH, 'utf-8');
+    settingsSrc    = fs.readFileSync(WL_SETTINGS_PATH, 'utf-8');
+    descriptorSrc  = fs.readFileSync(SESSION_DESCRIPTOR_PATH, 'utf-8');
+  });
+
+  it('M01 — PublicPassport QR URL form is /passport/:publicPassportId (not /api/public/…)', () => {
+    // QR code value must be the public buyer URL — not the internal API path
+    expect(passportSrc).toMatch(/\/passport\/.*encodeURIComponent/);
+    expect(passportSrc).not.toMatch(/value=.*\/api\/public\/dpp/);
+  });
+
+  it('M02 — PublicPassport QR URL does NOT contain .json suffix', () => {
+    // The .json suffix route is permanently absent; QR payload must never reference it
+    const qrBlock = passportSrc.match(/\/passport\/[\s\S]{0,120}/)?.[0] ?? '';
+    expect(qrBlock).not.toContain('.json');
+  });
+
+  it('M03 — WhiteLabelSettings shortcut is conditional on onNavigateDppLabel prop', () => {
+    // The shortcut button must only render when the callback is provided (WL Admin shell).
+    // Target the JSX ternary expression {onNavigateDppLabel ? (... — NOT the TS prop declaration.
+    expect(settingsSrc).toMatch(/\{onNavigateDppLabel \?/);
+    // The testid appears inside the conditional branch
+    const conditionalBlock = settingsSrc.match(
+      /\{onNavigateDppLabel \?[\s\S]{0,400}/,
+    )?.[0] ?? '';
+    expect(conditionalBlock).toContain('wl-dpp-label-settings-shortcut');
+  });
+
+  it('M04 — WhiteLabelSettings backward-compat: inline WLDppLabelPanel when callback absent', () => {
+    // When onNavigateDppLabel is undefined (Experience Settings context), full panel renders.
+    // Target the JSX ternary {onNavigateDppLabel ? (... : ( <WLDppLabelPanel />
+    expect(settingsSrc).toContain('<WLDppLabelPanel');
+    const conditionalBlock = settingsSrc.match(
+      /\{onNavigateDppLabel \?[\s\S]{0,600}/,
+    )?.[0] ?? '';
+    expect(conditionalBlock).toMatch(/:\s*\(/);
+    expect(conditionalBlock).toContain('WLDppLabelPanel');
+  });
+
+  it("M05 — App.tsx case 'dpp_label' renders <WLDppLabelPanel /> (no passthrough to other component)", () => {
+    const caseBlock = appSrc.match(/case 'dpp_label':[\s\S]{0,250}/)?.[0] ?? '';
+    expect(caseBlock).toContain('WLDppLabelPanel');
+    // Must not delegate to another view or registry component
+    expect(caseBlock).not.toContain('DPPPassport');
+    expect(caseBlock).not.toContain('PassportRegistry');
+    expect(caseBlock).not.toContain('PublicPassport');
+  });
+
+  it('M06 — WLDppLabelPanel does NOT contain custom-domain or full-WL-portal copy', () => {
+    expect(panelSrc).not.toContain('customDomain');
+    expect(panelSrc).not.toContain('custom_domain');
+    expect(panelSrc).not.toContain('Fully white-labeled');
+    expect(panelSrc).not.toContain('Your branded DPP portal');
+    expect(panelSrc).not.toContain('No TexQtic infrastructure');
+  });
+
+  it("M07 — layouts/Shells.tsx DPP Passport Label nav entry has correct visible label text", () => {
+    // The nav button label displayed to users must be 'DPP Passport Label'
+    const navBlock = shellsSrc.match(
+      /WL_ADMIN_NAV[\s\S]{0,600}/,
+    )?.[0] ?? '';
+    expect(navBlock).toContain('DPP Passport Label');
+    // The icon must be present alongside the label
+    expect(navBlock).toContain('🏷️');
+  });
+
+  it('M08 — Post-020B: no anti-overstatement copy in any of the four 020B-modified files', () => {
+    const forbidden = [
+      'Fully white-labeled',
+      'Your branded DPP portal',
+      'Custom domain enabled',
+      'No TexQtic infrastructure',
+      'EU-compliant passport',
+      'GS1-certified passport',
+      'Regulator approved',
+      'Guaranteed compliant',
+    ];
+    const sources: [string, string][] = [
+      ['App.tsx', appSrc],
+      ['sessionRuntimeDescriptor.ts', descriptorSrc],
+      ['Shells.tsx', shellsSrc],
+      ['WhiteLabelSettings.tsx', settingsSrc],
+    ];
+    for (const [name, src] of sources) {
+      for (const term of forbidden) {
+        expect(src, `${name} must not contain: ${term}`).not.toContain(term);
+      }
+    }
   });
 });

@@ -1051,3 +1051,82 @@ test('DPP-E2E-31 — 018: .json route absent; invalid UUID → safe 4xx; base ro
   expect(baseBody.success).toBe(true);
   expect(baseBody.data.passportStatus).toBe('PUBLISHED');
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group 14 — 020B/020C: WL DPP Label navigation source proof
+//   DPP-E2E-36 — Source coverage: WL DPP Label nav item exists in layouts/Shells.tsx.
+//                Verifies: wl-dpp-label-nav-item, 'dpp_label' route key, 'DPP Passport Label'
+//                label text. Browser-level WL Admin navigation requires authenticated
+//                storageState (not available). Source analysis is the available
+//                verification layer — consistent with DPP-E2E-21 through DPP-E2E-26 approach.
+//   DPP-E2E-37 — Source coverage: WL DPP Label nav routes to WLDppLabelPanel.
+//                Verifies: case 'dpp_label' in App.tsx renderWLAdminContent,
+//                WLDppLabelPanel import, DPP_LABEL in WL_ADMIN_VIEWS.
+//   DPP-E2E-38 — Source coverage: Store Profile shortcut remains wired.
+//                Verifies: wl-dpp-label-settings-card, wl-dpp-label-settings-shortcut
+//                in WhiteLabelSettings.tsx (conditional on onNavigateDppLabel prop).
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('DPP-E2E-36 — 020B: source coverage — WL DPP Label nav item exists', async ({}, testInfo) => {
+  // WL Admin browser navigation requires authenticated storageState not available.
+  // Source analysis confirms the nav item is correctly wired — same approach as DPP-E2E-21.
+  testInfo.annotations.push({
+    type: 'limitation',
+    description: 'WL Admin authenticated browser session requires storageState not available. Source analysis confirms wl-dpp-label-nav-item is wired in layouts/Shells.tsx and runtime/sessionRuntimeDescriptor.ts.',
+  });
+  const shellsSrc = readFileSync(join(process.cwd(), 'layouts/Shells.tsx'), 'utf8');
+  const descriptorSrc = readFileSync(join(process.cwd(), 'runtime/sessionRuntimeDescriptor.ts'), 'utf8');
+  // Nav item testid present
+  expect(shellsSrc).toContain('wl-dpp-label-nav-item');
+  // Testid is conditional on dpp_label key
+  expect(shellsSrc).toContain("routeKey === 'dpp_label'");
+  // Visible label text correct
+  expect(shellsSrc).toContain('DPP Passport Label');
+  // Icon present
+  expect(shellsSrc).toContain('🏷️');
+  // Shell route keys gate passes
+  expect(descriptorSrc).toContain("'dpp_label'");
+  const keysBlock = descriptorSrc.match(/WL_ADMIN_SHELL_ROUTE_KEYS[\s\S]{0,400}/)?.[0] ?? '';
+  expect(keysBlock).toContain("'dpp_label'");
+});
+
+test('DPP-E2E-37 — 020B: source coverage — WL DPP Label nav routes to WLDppLabelPanel', async ({}, testInfo) => {
+  // App.tsx renderWLAdminContent switch-case must route dpp_label to WLDppLabelPanel.
+  testInfo.annotations.push({
+    type: 'limitation',
+    description: 'WL Admin panel render verification requires authenticated storageState not available. Source analysis confirms case dpp_label renders WLDppLabelPanel and DPP_LABEL is in WL_ADMIN_VIEWS.',
+  });
+  const appSrc = readFileSync(join(process.cwd(), 'App.tsx'), 'utf8');
+  // DPP_LABEL in WL_ADMIN_VIEWS (normalizeWlAdminView gate)
+  const viewsBlock = appSrc.match(/WL_ADMIN_VIEWS\s*=\s*\[[\s\S]{0,200}/)?.[0] ?? '';
+  expect(viewsBlock).toContain("'DPP_LABEL'");
+  // Import present
+  expect(appSrc).toContain("import { WLDppLabelPanel }");
+  // Case block routes to panel
+  expect(appSrc).toContain("case 'dpp_label':");
+  const caseBlock = appSrc.match(/case 'dpp_label':[\s\S]{0,200}/)?.[0] ?? '';
+  expect(caseBlock).toContain('WLDppLabelPanel');
+  // Case block does NOT route to any other component (no custom-domain, no registry)
+  expect(caseBlock).not.toContain('DPPPassport');
+  expect(caseBlock).not.toContain('PublicPassport');
+});
+
+test('DPP-E2E-38 — 020B: source coverage — Store Profile shortcut remains wired', async ({}, testInfo) => {
+  // Branding tab (WhiteLabelSettings) must still expose the DPP label shortcut button.
+  testInfo.annotations.push({
+    type: 'limitation',
+    description: 'Store Profile / Branding tab navigation requires authenticated storageState not available. Source analysis confirms wl-dpp-label-settings-shortcut is conditionally wired to onNavigateDppLabel prop.',
+  });
+  const settingsSrc = readFileSync(join(process.cwd(), 'components/Tenant/WhiteLabelSettings.tsx'), 'utf8');
+  // Card testid present
+  expect(settingsSrc).toContain('wl-dpp-label-settings-card');
+  // Shortcut testid present
+  expect(settingsSrc).toContain('wl-dpp-label-settings-shortcut');
+  // Shortcut is conditional on the callback prop (not hardcoded)
+  expect(settingsSrc).toContain('onNavigateDppLabel');
+  const conditionalBlock = settingsSrc.match(/onNavigateDppLabel\s*\?[\s\S]{0,400}/)?.[0] ?? '';
+  expect(conditionalBlock).toContain('wl-dpp-label-settings-shortcut');
+  // Prop wired in App.tsx branding case
+  const appSrc = readFileSync(join(process.cwd(), 'App.tsx'), 'utf8');
+  expect(appSrc).toContain('onNavigateDppLabel={() => navigateWlAdminManifestRoute(');
+});
