@@ -7,6 +7,42 @@
 
 ---
 
+## 2026-05-15 — VERIFIED_COMPLETE_WITH_LIMITATIONS: TECS-DPP-PASSPORT-NETWORK-024 (Resolvable JSON-LD @context at texqtic.com/dpp/v1)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-024
+Type:          FEATURE (static/SEO — new file + config + tests)
+Status:        VERIFIED_COMPLETE_WITH_LIMITATIONS
+Date:          2026-05-15
+Commits:       PENDING (two commits: feat + governance)
+
+Scope:
+  public/dpp/v1/context.jsonld                                    — NEW: JSON-LD context document (22 terms)
+  vercel.json                                                     — header rule for /dpp/v1/context.jsonld
+  server/src/__tests__/tecs-dpp-structured-data.test.ts           — Group S added (SD-S01–SD-S18)
+  tests/e2e/dpp-passport-network.spec.ts                          — DPP-E2E-48 added (Group 20)
+
+Strategy:      Option A — inline @context in public.ts unchanged; context document is new static file.
+               Preserves SD-B01/SD-B02/SD-B03 source-text assertions.
+               Context URI path: https://texqtic.com/dpp/v1/context.jsonld
+               Namespace: https://texqtic.com/dpp/v1#
+               Schema.org mapping: "schema": "https://schema.org/"
+
+Validation:
+  Frontend tsc: CLEAN (0 errors)
+  Server tsc:   CLEAN (0 errors)
+  context.jsonld JSON parse: OK — 22 terms; forbidden terms: NONE
+  tecs-dpp-structured-data: 64/64 PASS (incl. Group S 18 new tests)
+  E2E DPP-E2E-48 (api project): PASS
+
+Limitation:
+  Runtime serving at https://texqtic.com/dpp/v1/context.jsonld not verifiable until
+  Vite build + Vercel deploy. Source file is correct; Vercel header rule configured.
+  Status: VERIFIED_COMPLETE_WITH_LIMITATIONS per TexQtic doctrine.
+```
+
+---
+
 ## 2026-05-15 — VERIFIED_COMPLETE_WITH_LIMITATIONS: TECS-DPP-PASSPORT-NETWORK-023 (WL Buyer Label Propagation to Public Passport)
 
 ```

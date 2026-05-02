@@ -36,6 +36,15 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TECS-DPP-PASSPORT-NETWORK-024 — 2026-05-15
+Type: FEATURE (static/SEO — context document + vercel header + unit/E2E tests)
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+Commit: PENDING (two commits: feat + governance)
+Title: Publish resolvable JSON-LD @context at texqtic.com/dpp/v1
+Summary: Published public/dpp/v1/context.jsonld (22 terms, texqtic.com/dpp/v1# namespace, schema.org mapping) via Option A (inline @context in public.ts unchanged). Added Vercel header rule. Added Group S unit tests (18 tests, 64/64 PASS) and DPP-E2E-48 E2E test. Runtime serving pending deploy.
+Layer Impact: Layer 0, Layer 3
+Notes: Runtime serving at https://texqtic.com/dpp/v1/context.jsonld requires Vite build + Vercel deploy. SD-B01/SD-B02/SD-B03 source-text assertions preserved (inline @context not changed).
+
 ### TECS-DPP-PASSPORT-NETWORK-023 — 2026-05-15
 Type: VERIFICATION (test-only — no source fix required)
 Status: VERIFIED_COMPLETE_WITH_LIMITATIONS

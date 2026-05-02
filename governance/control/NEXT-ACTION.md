@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-14 (TECS-DPP-PASSPORT-NETWORK-019 — VERIFIED_COMPLETE; AI Passport Assistant v2; 79/79 unit tests pass; 29/31 E2E pass; awaiting Paresh authorization for next slice)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-15 (TECS-DPP-PASSPORT-NETWORK-024 — VERIFIED_COMPLETE_WITH_LIMITATIONS; JSON-LD context document; 64/64 unit tests; DPP-E2E-48 PASS; awaiting Paresh authorization for next slice)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,33 +11,29 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-019 AI Passport Assistant v2 (2026-05-14); 79/79 unit tests; 29/31 E2E pass; awaiting Paresh authorization for next DPP slice
+product_delivery_priority: VERIFIED_COMPLETE_WITH_LIMITATIONS — TECS-DPP-PASSPORT-NETWORK-024 JSON-LD context document (2026-05-15); 64/64 unit tests; DPP-E2E-48 PASS; awaiting Paresh authorization for next DPP slice
 active_delivery_unit: NONE — awaiting Paresh authorization for next DPP slice
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  TECS-DPP-PASSPORT-NETWORK-019 VERIFIED_COMPLETE (2026-05-14).
-  New route: POST /api/tenant/dpp/:nodeId/passport/assistant (org_id scoped).
-  AI provider: Google Gemini (gemini-2.5-flash). Fallback: deterministic guidance.
-  Budget guard: BudgetExceededError / AiRateLimitExceededError -> 429.
-  Rate limit: 20 req/min per tenant. humanReviewRequired: true always.
-  New service: server/src/services/passportAssistant.ts.
-  79 new unit tests (tecs-dpp-passport-assistant-v2.test.ts; Groups A-H).
-  Frontend: DPPPassport.tsx AI assistant UI (generate, loading, mode, warnings, guardrails).
-  E2E: 29 passed, 2 skipped (BLOCKED_BY_FIXTURE), 0 failed.
+  TECS-DPP-PASSPORT-NETWORK-024 VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-15).
+  Strategy: Option A — keep inline @context; publish JSON-LD context document as static file.
+  New file: public/dpp/v1/context.jsonld (22 terms; texqtic.com/dpp/v1# namespace; schema.org mapping).
+  Vercel: /dpp/v1/context.jsonld header rule (Content-Type: application/ld+json).
+  Unit tests: Group S added (SD-S01–SD-S18, 18 tests); 64/64 PASS.
+  E2E: DPP-E2E-48 added (Group 20); api-project PASS.
+  Limitation: runtime serving pending Vite build + Vercel deploy.
   Do NOT open next slice without Paresh authorization.
-last_closed_unit: TECS-DPP-PASSPORT-NETWORK-019
-last_closed_unit_status: VERIFIED_COMPLETE
+last_closed_unit: TECS-DPP-PASSPORT-NETWORK-024
+last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
 last_closed_unit_runtime_verdict: >-
   Frontend tsc: 0 errors. Server tsc: 0 errors.
-  tecs-dpp-passport-assistant-v2: 79/79 PASS.
-  tecs-dpp-structured-data: 46/46 PASS.
-  tecs-dpp-d6-public-passport: 58/62 (4 DB-skipped).
-  tecs-dpp-public-security: 31/31 PASS.
-  E2E (--project=api): 29 passed, 2 skipped (BLOCKED_BY_FIXTURE), 0 failed.
+  tecs-dpp-structured-data: 64/64 PASS (incl. Group S SD-S01–SD-S18).
+  E2E DPP-E2E-48 (api project): PASS.
+  context.jsonld JSON parse: OK. Forbidden terms: NONE.
 last_closed_unit_commits: PENDING (two commits: feat + governance)
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE. humanReviewRequired enforced. Fallback path green. Budget guard 429 confirmed.
-  No dpp_passport_states mutation. Live AI tier deferred until deployed.
+  VERIFIED_COMPLETE_WITH_LIMITATIONS. Source file correct, Vercel header configured.
+  Runtime serving at texqtic.com/dpp/v1/context.jsonld pending deploy.
 last_closed_governance_unit: TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001
 last_closed_governance_unit_status: VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES
 last_closed_governance_unit_date: 2026-04-30

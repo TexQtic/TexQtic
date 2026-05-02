@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-15 (TECS-DPP-PASSPORT-NETWORK-023 — VERIFIED_COMPLETE_WITH_LIMITATIONS; WL buyer label propagation verified; DPP-E2E-46/47 + Group R unit tests PASS; 41/43 api-project E2E pass; awaiting Paresh authorization for next slice)
+**Last Updated:** 2026-05-15 (TECS-DPP-PASSPORT-NETWORK-024 — VERIFIED_COMPLETE_WITH_LIMITATIONS; JSON-LD context document published; 64/64 unit tests pass incl. Group S; DPP-E2E-48 PASS; awaiting Paresh authorization for next slice)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,16 @@
 
 ## Operating Notes
 
+- TECS-DPP-PASSPORT-NETWORK-024 is VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-15).
+  Strategy: Option A — keep inline @context in public.ts unchanged; publish JSON-LD context document as new static file.
+  Context document: public/dpp/v1/context.jsonld — 22 terms; texqtic.com/dpp/v1# namespace; schema.org mapping.
+  Vercel: /dpp/v1/context.jsonld header rule added (Content-Type: application/ld+json; Cache-Control: public, max-age=86400).
+  Unit tests: Group S added (SD-S01–SD-S18, 18 tests); total 64/64 PASS.
+  E2E: DPP-E2E-48 added (Group 20); api-project PASS.
+  TypeScript: Frontend tsc CLEAN. Server tsc CLEAN.
+  Limitation: Runtime serving at https://texqtic.com/dpp/v1/context.jsonld not verifiable until Vite build + Vercel deploy.
+  Files changed: public/dpp/v1/context.jsonld (NEW), vercel.json, server/src/__tests__/tecs-dpp-structured-data.test.ts, tests/e2e/dpp-passport-network.spec.ts.
+  Next slice: NOT AUTHORIZED until Paresh opens.
 - TECS-DPP-PASSPORT-NETWORK-023 is VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-15).
   Finding: no source fix required — propagation already correctly implemented in public.ts + PublicPassport.tsx.
   Live API QA: WL admin PUT "QA WL Public Label 023" → GET verify → B2B fixture isolation confirmed → restore defaults.
