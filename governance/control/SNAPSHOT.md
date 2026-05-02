@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-05-12 (TECS-DPP-PASSPORT-NETWORK-010-B — VERIFIED_COMPLETE; DPP-E2E-12/13/14 14/14 PASS; RLS hotfix applied; node-certification route committed)
+**Updated:** 2026-05-02 (TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 — VERIFIED_COMPLETE; DPP Passport Network PRODUCTION_READY; launch authorization HOLD_FOR_PARESH_DECISION; PROD-AUDIT-002 authority commit 17c252c)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -10,24 +10,27 @@
 ---
 
 ```yaml
-snapshot_date: 2026-05-12
-snapshot_unit: TECS-DPP-PASSPORT-NETWORK-010-B
+snapshot_date: 2026-05-02
+snapshot_unit: TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
-current_governance_posture: HOLD-FOR-AUTHORIZATION
-current_open_design_unit: TECS-DPP-PASSPORT-NETWORK-010
-current_open_design_unit_status: DESIGN_COMPLETE
-current_open_design_unit_artifact: docs/TECS-DPP-PASSPORT-NETWORK-010-DESIGN-v1.md
-current_open_design_unit_note: >-
-  TECS-DPP-PASSPORT-NETWORK-010 DESIGN_COMPLETE (2026-05-01).
-  Expansion design packet covers 9 implementation slices (010-B through 020) and 15 decision gates.
-  TECS-DPP-PASSPORT-NETWORK-010-B VERIFIED_COMPLETE (2026-05-12).
-  RLS hotfix applied; seed PASS; DPP-E2E-12/13/14 14/14 PASS; full runtime proof complete.
-  Also: POST /tenant/dpp/:nodeId/certifications committed + 25/25 unit tests pass.
-  Prior: TECS-DPP-PASSPORT-NETWORK-010A VERIFIED_COMPLETE (corrective public passport link).
-  All DPP Passport Network slices A–G committed (e3d81c5 through ce6b674) + adb15ad governance.
-latest_verified_product_close_unit: TECS-DPP-PASSPORT-NETWORK-010-B
-latest_verified_product_close_status: VERIFIED_COMPLETE
-latest_verified_product_close_date: 2026-05-12
+current_governance_posture: HOLD_FOR_PARESH_DECISION
+dpp_passport_network_readiness: PRODUCTION_READY
+dpp_readiness_authority: TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002
+dpp_readiness_commit: 17c252c
+dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
+dpp_v3_design_status: OPTIONAL_POLISH
+next_delivery_unit: HOLD_FOR_AUTHORIZATION
+launch_gate_closure_note: >-
+  TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 VERIFIED_COMPLETE (2026-05-02).
+  All 5 PROD-AUDIT-001 limitations resolved by slices 021–025. Runtime evidence in PROD-AUDIT-002.
+  HTTP 200: public DPP, structured-data, context.jsonld. passportMaturityLabel live.
+  43 E2E pass / 0 fail. ~639 unit tests pass / 0 fail. Frontend tsc + server tsc CLEAN.
+  Technical readiness: PRODUCTION_READY. Launch: HOLD_FOR_PARESH_DECISION.
+  v3 design items: OPTIONAL_POLISH (not blocking). No source/test/schema changes.
+  Next unit: HOLD_FOR_AUTHORIZATION.
+# --- Historical snapshot below (TECS-DPP-PASSPORT-NETWORK-010-B, 2026-05-12) ---
+snapshot_date_historical: 2026-05-12
+snapshot_unit_historical: TECS-DPP-PASSPORT-NETWORK-010-B
 latest_verified_product_close_verification: >-
   tsc --noEmit: CLEAN (0 errors). E2E: 14/14 PASS against https://app.texqtic.com.
   DPP-E2E-12: tenant GET passport returns non-null publicPassportId for published fixture — PASS.

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-15 (TECS-DPP-PASSPORT-NETWORK-025 — VERIFIED_COMPLETE_WITH_LIMITATIONS; passportMaturityLabel in structured-data JSON-LD; 77/77 unit tests; DPP-E2E-49 PASS; awaiting Paresh authorization for next slice)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-02 (TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 — VERIFIED_COMPLETE; DPP Passport Network PRODUCTION_READY; launch authorization HOLD_FOR_PARESH_DECISION)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,30 +11,41 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: VERIFIED_COMPLETE_WITH_LIMITATIONS — TECS-DPP-PASSPORT-NETWORK-025 passportMaturityLabel (2026-05-15); 77/77 unit tests; DPP-E2E-49 PASS; awaiting Paresh authorization for next DPP slice
-active_delivery_unit: NONE — awaiting Paresh authorization for next DPP slice
+product_delivery_priority: >-
+  LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
+  DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
+  Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
+active_delivery_unit: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  TECS-DPP-PASSPORT-NETWORK-025 VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-15).
-  Additive only: passportMaturityLabel human-readable field added to structured-data JSON-LD response.
-  Label map: LOCAL_TRUST→"Bronze — Verified Local", TRADE_READY→"Silver — Trade Ready",
-             COMPLIANCE→"Gold — Certified", GLOBAL_DPP→"Platinum — Export Ready".
-  context.jsonld: passportMaturityLabel term added (texqtic:passportMaturityLabel).
-  Unit tests: Group T added (SD-T01–SD-T13, 13 tests); 77/77 PASS.
-  E2E: DPP-E2E-49 added (Group 21); api-project PASS.
-  Limitation: runtime serving of passportMaturityLabel pending prod deploy.
+  TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 VERIFIED_COMPLETE (2026-05-02).
+  The DPP Passport Network is technically production-ready based on PROD-AUDIT-002.
+  All 5 PROD-AUDIT-001 limitations resolved by slices 021–025. Runtime verified: HTTP 200 on
+  all public DPP endpoints; passportMaturityLabel "Silver — Trade Ready" live at runtime;
+  JSON-LD context document resolvable; 43 E2E pass / 0 fail; ~639 unit tests pass / 0 fail.
+  Launch authorization: HOLD_FOR_PARESH_DECISION.
+  v3 design: OPTIONAL_POLISH — no v3 implementation unit is opened by this closure.
   Do NOT open next slice without Paresh authorization.
-last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
-last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+  Full external/product launch: HOLD_FOR_PARESH_DECISION. Not authorized without explicit Paresh instruction.
+last_closed_unit: TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001
+last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  Frontend tsc: 0 errors. Server tsc: 0 errors.
-  tecs-dpp-structured-data: 77/77 PASS (incl. Group T SD-T01–SD-T13).
-  E2E DPP-E2E-49 (api project): PASS.
-  context.jsonld passportMaturityLabel term: ADDED. All 4 enum→label mappings: VERIFIED.
-last_closed_unit_commits: PENDING (two commits: feat + governance)
+  Read-only governance closure. No source changes. No test changes.
+  Authority: PROD-AUDIT-002 (commit 17c252c). All runtime evidence confirmed in that audit.
+  DPP Passport Network: PRODUCTION_READY. Launch Authorization: HOLD_FOR_PARESH_DECISION.
+  v3 Design: OPTIONAL_POLISH. Next unit: HOLD_FOR_AUTHORIZATION.
+last_closed_unit_commits: governance-only (launch-gate artifact + control file updates)
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE_WITH_LIMITATIONS. Source mapping correct, context.jsonld updated.
-  Runtime passportMaturityLabel in structured-data response pending prod deploy.
+  VERIFIED_COMPLETE. Governance closure records technical production-readiness based on PROD-AUDIT-002.
+  All 5 PROD-AUDIT-001 limitations resolved. 43 E2E / ~639 unit tests / TS CLEAN.
+  Launch authorization explicitly held for Paresh decision.
+dpp_passport_network_readiness: PRODUCTION_READY
+dpp_readiness_authority: TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002
+dpp_readiness_commit: 17c252c
+dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
+dpp_v3_design_status: OPTIONAL_POLISH
+prior_last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
+prior_last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
 last_closed_governance_unit: TECS-DPP-PASSPORT-NETWORK-024
 last_closed_governance_unit_status: VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES
 last_closed_governance_unit_date: 2026-04-30
@@ -339,4 +350,38 @@ Modified files:
 Commit: PENDING
 Next slice: NOT AUTHORIZED until Paresh opens
 
+---
+
+## TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 — 2026-05-02 — VERIFIED_COMPLETE
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001
+Type:          GOVERNANCE_CLOSURE — Production Readiness Closure + Launch Authorization Decision
+Status:        VERIFIED_COMPLETE
+Date:          2026-05-02
+Commits:       governance-only (no source changes)
+
+Authority:     TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002 (commit 17c252c)
+
+DPP Passport Network technical readiness: PRODUCTION_READY
+  All 5 PROD-AUDIT-001 limitations resolved (slices 021–025).
+  Runtime verified: HTTP 200 public DPP + structured-data + context.jsonld endpoints.
+  passportMaturityLabel: "Silver — Trade Ready" live at runtime.
+  Test evidence: ~639 unit pass / 0 fail; 43 E2E pass / 2 skip (expected) / 0 fail.
+  Privacy: 9/9 + 6/6 checks passed. Frontend tsc + server tsc: CLEAN.
+
+Launch authorization: HOLD_FOR_PARESH_DECISION
+  DPP Passport Network is technically ready; full public/product launch is explicitly
+  gated on Paresh's separate business/product decision. Not launched by this closure.
+
+v3 Design: OPTIONAL_POLISH
+  Carry-forward non-blockers (BS-004, BS-005, BS-011, BS-012, BS-013, BS-014):
+  CTA click-through, AI assistant live invocation, UX polish, WL branding,
+  browser automation for WL published passport flows, GS1/EU mapping hardening.
+  None are launch blockers. v3 has no opened implementation unit.
+
+No source files changed. No test files changed. No schema changes.
+No new implementation unit opened.
+Next delivery unit: HOLD_FOR_AUTHORIZATION — requires explicit Paresh authorization.
+```
 
