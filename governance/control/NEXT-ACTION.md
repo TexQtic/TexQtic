@@ -229,3 +229,10 @@ Root cause: QA WL org has zero traceability_nodes rows in DB. seed-dpp-fixture.t
 Secondary finding: empty-state has no CTA link to Traceability page (UX gap — non-blocking).
 Files changed: governance/analysis/TECS-DPP-PASSPORT-NETWORK-020F-WL-REGISTRY-EMPTY-STATE-AUDIT.md (audit artifact).
 Next slice: TECS-DPP-PASSPORT-NETWORK-020G — WL Registry QA Seed + Empty-State UX. NOT AUTHORIZED until Paresh opens.
+
+## TECS-DPP-PASSPORT-NETWORK-020G — WL Registry QA Seed + Empty-State UX CTA
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS | Closed: 2026-05-15
+Deliverables: (1) DPPPassport.tsx empty-state CTA (onNavigateToTraceability optional prop + button + help text). (2) seed-dpp-fixture.ts --target wl parameterization with distinct WL sentinels.
+Tests: Group P (P01-P15) + Group 7 (PR-G01-PR-G06) + DPP-E2E-41. 128+27 unit tests pass. TypeScript clean.
+Limitation: App.tsx not wired (forbidden in 020G). CTA renders; click is no-op until 020H. WL seed runtime not tested (source coverage only).
+Next slice: TECS-DPP-PASSPORT-NETWORK-020H — App.tsx wiring + runtime verification. NOT AUTHORIZED until Paresh opens.

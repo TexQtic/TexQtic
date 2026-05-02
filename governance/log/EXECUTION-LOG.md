@@ -6772,3 +6772,20 @@ Result: CLOSED — INVESTIGATION_COMPLETE
 Classification: A — Expected empty QA WL data / fixture absence.
 Root cause: QA WL org has zero traceability_nodes rows. seed-dpp-fixture.ts B2B-only (.auth/qa-b2b.json); no WL seed path; no .auth/qa-wl.json. Registry backend/frontend correct. No source, schema, or test changes.
 Artifact: governance/analysis/TECS-DPP-PASSPORT-NETWORK-020F-WL-REGISTRY-EMPTY-STATE-AUDIT.md
+
+## 020G | 2026-05-15 | TECS-DPP-PASSPORT-NETWORK WL Registry QA Seed + Empty-State UX CTA
+### Implementation
+- DPPPassport.tsx: added onNavigateToTraceability optional prop; empty-state block now renders help text (dpp-passport-registry-empty-help) + CTA button (dpp-passport-registry-traceability-cta) with optional chaining; App.tsx call site unchanged (prop optional = TypeScript clean).
+- seed-dpp-fixture.ts: added --target wl CLI parameterization; TARGET constant; WL sentinel IDs (qa-dpp-fixture-wl-node-001, f0000000-0000-4000-a000-000000000002); loadAuth/loadExistingFixture/writeFixture/ensureApprovedCert/ensureTraceabilityNode all parameterized; main() uses TARGET throughout.
+### Tests added
+- server/__tests__/tecs-dpp-passport-label-config.test.ts: Group P (P01-P15) — 15 new tests
+- server/__tests__/tecs-dpp-passport-registry.test.ts: Group 7 (PR-G01-PR-G06) — 6 new tests
+- tests/e2e/dpp-passport-network.spec.ts: DPP-E2E-41 (source-analysis + limitation annotation)
+### Validation
+- pnpm tsc --noEmit: PASS (frontend + server)
+- tecs-dpp-passport-label-config: 126 pass / 2 skip / 0 fail (128 total)
+- tecs-dpp-passport-registry: 26 pass / 1 skip / 0 fail (27 total)
+- E2E: pre-existing Playwright env blocker (not regressed by 020G)
+### Limitations
+- App.tsx not wired (forbidden in 020G); CTA click is no-op; deferred to 020H
+- WL seed runtime verification: source coverage only

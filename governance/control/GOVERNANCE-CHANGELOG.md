@@ -1716,3 +1716,9 @@ Status: CLOSED — INVESTIGATION_COMPLETE
 Classification: A — Expected empty QA WL data / fixture absence.
 Root cause: QA WL org has zero traceability_nodes rows. seed-dpp-fixture.ts B2B-only; no WL seed. No source changes.
 Artifact: governance/analysis/TECS-DPP-PASSPORT-NETWORK-020F-WL-REGISTRY-EMPTY-STATE-AUDIT.md
+
+## 2026-05-15 — 020G: TECS-DPP-PASSPORT-NETWORK WL Registry QA Seed + Empty-State UX CTA
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+Files: DPPPassport.tsx (optional prop + CTA), seed-dpp-fixture.ts (--target wl), label-config test Group P (P01-P15), registry test Group 7 (PR-G01-PR-G06), E2E DPP-E2E-41.
+Tests: 128 unit (126 pass/2 skip) + 27 unit (26 pass/1 skip). TS clean.
+Limitation: App.tsx wiring (onNavigateToTraceability) deferred to 020H.
