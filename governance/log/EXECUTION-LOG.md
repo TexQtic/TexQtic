@@ -6739,3 +6739,17 @@ Deliverables:
 Tests: 96/96 non-DB PASS (2 DB-skipped) | regression clean | TypeScript clean
 Limitation: WL Admin browser proof requires storageState not available; source-level tests used.
 Full platform launch NOT AUTHORIZED.
+
+
+---
+
+## 2026-05-14 — EXECUTION-LOG: 020D TECS-DPP-PASSPORT-NETWORK
+
+Task: TECS-DPP-PASSPORT-NETWORK-020D — WL Tenant DPP Passport Surface Parity
+Operator: GitHub Copilot (Claude Sonnet 4.6)
+Result: VERIFIED_COMPLETE_WITH_LIMITATIONS
+
+Root cause: App.tsx case 'dpp' passed title/subtitle overrides for WL tenants triggering isProductized=false.
+Fix: 5 lines removed from case 'dpp' + 2 label renames in WhiteLabelShell.
+Tests: 104/104 non-DB PASS + Group N (8) + DPP-E2E-39. All regression suites clean.
+Pre-existing failure: DPP-E2E-38 (020C defect; not regressed).

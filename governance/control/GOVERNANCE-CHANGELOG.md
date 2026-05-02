@@ -1689,3 +1689,19 @@ Tests:
 Limitation: WL Admin browser navigation proof requires authenticated storageState not available.
   Source-level coverage used (same pattern as DPP-E2E-21 through DPP-E2E-26).
 ```
+
+
+---
+
+## 2026-05-14 — GOVERNANCE-CHANGELOG: 020D TECS-DPP-PASSPORT-NETWORK
+
+Slice: TECS-DPP-PASSPORT-NETWORK-020D — WL Tenant DPP Passport Surface Parity
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+
+Changes:
+1. App.tsx: Removed is_white_label conditional passing title='DPP Snapshot'/subtitle from case 'dpp'.
+   Effect: isProductized=true for all tenants including WL; full productized UI renders.
+2. layouts/Shells.tsx WhiteLabelShell: Mobile item 'DPP Snapshot' -> 'DPP Passport'.
+3. layouts/Shells.tsx WhiteLabelShell: Desktop button 'DPP Snapshot' -> 'DPP Passport'.
+4. tecs-dpp-passport-label-config.test.ts: Group N (8 tests N01-N08) added.
+5. dpp-passport-network.spec.ts: DPP-E2E-39 source-coverage test added.

@@ -152,3 +152,18 @@ Tests: 96/96 non-DB PASS (2 DB-skipped). Group M (8 tests) + DPP-E2E-36/37/38 (3
 Limitation: WL Admin browser proof requires authenticated storageState; source-level tests confirm all wiring (same approach as DPP-E2E-21 through DPP-E2E-26).
 Next slice: NOT AUTHORIZED until Paresh opens.
 Full platform launch NOT AUTHORIZED.
+
+
+---
+
+## 2026-05-14 — TECS-DPP-PASSPORT-NETWORK-020D VERIFIED_COMPLETE_WITH_LIMITATIONS
+
+Active delivery unit: NONE — awaiting Paresh authorization.
+Last closed: TECS-DPP-PASSPORT-NETWORK-020D (WL Tenant DPP Passport Surface Parity).
+Tests: 104/104 non-DB PASS (2 DB-skipped). Group N (8 tests) + DPP-E2E-39 (1 E2E source-coverage test). Regression clean. TypeScript clean.
+Root cause fixed: App.tsx case 'dpp' previously passed title='DPP Snapshot' for is_white_label tenants causing isProductized=false in DPPPassport.tsx. Fix: remove WL-specific title/subtitle conditional. All tenants now receive productized UI.
+Nav labels updated: layouts/Shells.tsx WhiteLabelShell mobile + desktop 'DPP Snapshot' ? 'DPP Passport'.
+Limitation: WL tenant authenticated browser session requires storageState not available. Source-coverage tests confirm all wiring.
+Pre-existing known failure: DPP-E2E-38 (regex anchored on interface declaration instead of JSX ternary; introduced in 020C; not a 020D regression — confirmed by stash test on HEAD before 020D changes).
+Next slice: NOT AUTHORIZED until Paresh opens.
+Full platform launch NOT AUTHORIZED.

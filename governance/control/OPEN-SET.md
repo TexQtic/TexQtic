@@ -875,3 +875,35 @@ Delivered: post-020B runtime verification slice. Verified QR URL canonical form,
 Limitation: WL Admin browser navigation requires authenticated storageState not available. Source-coverage pattern used (DPP-E2E-21 to DPP-E2E-26 precedent).
 Next slice: requires explicit Paresh authorization.
 Full platform launch NOT AUTHORIZED.
+
+
+---
+
+## 2026-05-14 — TECS-DPP-PASSPORT-NETWORK-020D VERIFIED_COMPLETE_WITH_LIMITATIONS
+
+TECS-DPP-PASSPORT-NETWORK-020D: WL Tenant DPP Passport Surface Parity
+
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+104/104 non-DB tests PASS (2 DB-skipped). Group N (8 new tests) + DPP-E2E-39 (1 E2E source-coverage test added). Regression clean. TypeScript clean.
+
+Root Cause: App.tsx case 'dpp' passed title='DPP Snapshot' and Read-only subtitle when currentTenant?.is_white_label, causing isProductized=false inside DPPPassport.tsx and hiding all productized sections (ladder, registry, value cards).
+Fix: Removed WL-specific title/subtitle conditional from App.tsx case 'dpp'. All tenants now hit isProductized=true ? full TexQtic DPP Passport Network UI renders.
+Nav labels: WhiteLabelShell mobile item and desktop button updated from 'DPP Snapshot' to 'DPP Passport'.
+
+Pre-existing known failure: DPP-E2E-38 regex anchors on interface declaration not JSX ternary (020C defect; confirmed not regressed by 020D via stash test).
+Limitation: WL tenant authenticated browser session requires storageState not available. Source-coverage pattern used.
+Next slice: requires explicit Paresh authorization.
+Full platform launch NOT AUTHORIZED.
+
+Modified Files:
+  App.tsx (remove WL title/subtitle override from case 'dpp')
+  layouts/Shells.tsx (2 label changes in WhiteLabelShell)
+  server/src/__tests__/tecs-dpp-passport-label-config.test.ts (Group N: 8 tests)
+  tests/e2e/dpp-passport-network.spec.ts (DPP-E2E-39)
+
+Tests:
+  tecs-dpp-passport-label-config: 104/104 non-DB PASS (2 DB-skipped; +8 from Group N)
+  tecs-dpp-structured-data: 46/46 PASS | tecs-dpp-public-security: 31/31 PASS
+  tecs-dpp-passport-registry: 20/20 PASS | tecs-dpp-product-details: 50/50 PASS
+  tecs-dpp-evidence-vault: 59/59 PASS (1 DB-skipped)
+  TypeScript: server clean | frontend clean
