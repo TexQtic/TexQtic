@@ -292,6 +292,53 @@ Unit suites: tecs-dpp-passport-label-config (132/2/134), tecs-dpp-passport-regis
 Pre-existing failures: 15 server unit test failures — pre-existing, out of scope.
 
 Modified file: tests/e2e/dpp-passport-network.spec.ts (DPP-E2E-43/44/45 added + storedWlAdmin declaration)
+Commit: 0d9a6c7
+Next slice: NOT AUTHORIZED until Paresh opens
+
+## TECS-DPP-PASSPORT-NETWORK-023 — 2026-05-15 — VERIFIED_COMPLETE_WITH_LIMITATIONS
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS | Closed: 2026-05-15
+
+Task: WL Buyer Label Propagation to Public Passport — verify org_id scoping, propagation chain,
+      and tenant isolation for dpp_passport_label_config → public DPP API → PublicPassport.tsx.
+
+Finding: No source fix required. Propagation was already correctly implemented.
+  public.ts Phase 1.5 labelConfig lookup already scopes to stateRow.org_id (passport owner's org).
+  PublicPassport.tsx already renders labelConfig?.buyerFacingLabel at public-passport-buyer-label.
+  TECS-023 is a test-only verification slice.
+
+Live API QA (against https://app.texqtic.com):
+  WL admin GET (init)                 VERIFIED — "Verified Supply Chain Passport"
+  WL admin PUT "QA WL Public Label 023"  VERIFIED — 200, stored
+  WL admin GET (verify)               VERIFIED — "QA WL Public Label 023" returned
+  B2B fixture public GET (isolation)  VERIFIED — "Verified Supply Chain Passport" (not WL value)
+  WL admin PUT (restore defaults)     VERIFIED — 200, defaults restored
+  WL admin GET (confirm restore)      VERIFIED — "Verified Supply Chain Passport" restored
+  Org isolation proof: WHERE org_id = stateRow.org_id correctly scopes each passport to its owner's config
+
+Tests added:
+  DPP-E2E-46 — 023: WL buyer label propagation — org_id scoping + WL admin set/get/restore cycle
+    Tier 1 (source): stateRow.org_id; WHERE org_id = ${orgId}; buyer_facing_label; fallback; labelConfig?.buyerFacingLabel; public-passport-buyer-label
+    Tier 2 (api): GET init → PUT "QA WL Public Label 023" → GET verify → GET B2B (isolation) → PUT restore → GET confirm
+  DPP-E2E-47 — 023: WL public passport label — propagation mechanism verified (B2B confirmed; WL limited)
+    Tier 1 (source): stateRow.org_id ordering; ::uuid cast; LIMIT 1; no WL branching in Phase 1.5; buyerFacingLabel mapping
+    Tier 2 (api): B2B fixture GET → 200 + labelConfig defined + buyerFacingLabel non-empty + not "QA WL Public Label 023"
+
+  Group R (unit, tecs-dpp-passport-label-config.test.ts): R01–R07 (7 tests)
+    R01 — WHERE org_id = ${orgId} scoping | R02 — stateRow.org_id ordering | R03 — ::uuid cast
+    R04 — LIMIT 1 | R05 — no WL-specific branching in Phase 1.5 | R06 — buyer_facing_label mapping
+    R07 — PublicPassport.tsx renders buyerFacingLabel with fallback + public-passport-buyer-label
+
+Full api suite: 41 passed / 2 skipped (DPP-E2E-19/20 browser-only, expected) / 0 failed
+Unit suites: tecs-dpp-passport-label-config (139/2/141), tecs-dpp-passport-registry (26/1/27), tecs-dpp-public-security (31/31) — all PASS.
+TypeScript: Frontend tsc CLEAN. Server tsc CLEAN.
+
+Limitations:
+  WL public propagation: no WL published passport in QA (PROD-AUDIT-001 — persistent).
+  WL registry returned 0 nodes — re-confirmed this session. DPP-E2E-47 Tier 2 uses B2B fixture + limitation annotation.
+
+Modified files:
+  tests/e2e/dpp-passport-network.spec.ts (DPP-E2E-46/47 added — Group 19)
+  server/src/__tests__/tecs-dpp-passport-label-config.test.ts (Group R, R01-R07 added)
 Commit: PENDING
 Next slice: NOT AUTHORIZED until Paresh opens
 

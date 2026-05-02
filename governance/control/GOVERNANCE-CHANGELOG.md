@@ -7,6 +7,53 @@
 
 ---
 
+## 2026-05-15 — VERIFIED_COMPLETE_WITH_LIMITATIONS: TECS-DPP-PASSPORT-NETWORK-023 (WL Buyer Label Propagation to Public Passport)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-023
+Type:          VERIFICATION (test-only — no source fix required)
+Status:        VERIFIED_COMPLETE_WITH_LIMITATIONS
+Date:          2026-05-15
+Commits:       PENDING
+
+Scope:
+  tests/e2e/dpp-passport-network.spec.ts        — DPP-E2E-46/47 added (Group 19)
+  server/src/__tests__/tecs-dpp-passport-label-config.test.ts — Group R added (R01-R07)
+
+Finding:       Propagation already correctly implemented. No source change required.
+               public.ts Phase 1.5 scopes labelConfig to stateRow.org_id (passport owner's org).
+               PublicPassport.tsx renders labelConfig?.buyerFacingLabel at public-passport-buyer-label.
+
+Live API QA:
+  WL admin GET (init)                          200 — "Verified Supply Chain Passport"
+  WL admin PUT "QA WL Public Label 023"        200 — stored
+  WL admin GET (verify)                        200 — "QA WL Public Label 023"
+  B2B fixture public GET (org isolation proof) 200 — "Verified Supply Chain Passport" (not WL value)
+  WL admin PUT (restore defaults)              200 — defaults restored
+  WL admin GET (confirm restore)               200 — "Verified Supply Chain Passport"
+
+Unit tests (Group R):
+  R01 — WHERE org_id = ${orgId} scoping
+  R02 — stateRow.org_id ordering before labelConfig query
+  R03 — ${orgId}::uuid cast
+  R04 — LIMIT 1
+  R05 — no WL-specific branching in Phase 1.5 block
+  R06 — buyer_facing_label → buyerFacingLabel mapping
+  R07 — PublicPassport.tsx renders buyerFacingLabel with fallback + public-passport-buyer-label testid
+
+E2E results:   41 passed / 2 skipped (DPP-E2E-19/20 chromium-only) / 0 failed
+Unit results:  tecs-dpp-passport-label-config (139/2/141)
+               tecs-dpp-passport-registry (26/1/27)
+               tecs-dpp-public-security (31/31)
+TypeScript:    Frontend tsc CLEAN. Server tsc CLEAN.
+
+Limitation:    PROD-AUDIT-001 persistent — no WL published passport in QA.
+               WL public propagation runtime proof not possible in this environment.
+               DPP-E2E-47 Tier 2 uses B2B fixture with limitation annotation.
+```
+
+---
+
 ## 2026-05-15 — VERIFIED_COMPLETE_WITH_LIMITATIONS: TECS-DPP-PASSPORT-NETWORK-022 (WL Admin DPP Label Panel Human QA)
 
 ```

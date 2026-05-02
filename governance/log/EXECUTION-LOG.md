@@ -36,8 +36,28 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TECS-DPP-PASSPORT-NETWORK-023 â€” 2026-05-15
+Type: VERIFICATION (test-only â€” no source fix required)
+Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
+Commit: PENDING
+Title: WL Buyer Label Propagation to Public Passport (Slice 023)
+Summary: Verified that public.ts correctly scopes dpp_passport_label_config lookup to
+  stateRow.org_id (passport owner's org) and PublicPassport.tsx correctly renders
+  labelConfig?.buyerFacingLabel. No source change required. Live API QA confirmed org isolation:
+  WL label change did not affect B2B fixture public passport. Group R (R01-R07) unit tests +
+  DPP-E2E-46/47 added to verify the complete propagation chain.
+Layer Impact: Layer 0 (NEXT-ACTION, OPEN-SET, GOVERNANCE-CHANGELOG), Layer 3 (this file)
+Runtime verdict: Frontend tsc CLEAN. Server tsc CLEAN.
+  tecs-dpp-passport-label-config: 139/141 (2 pre-existing DB skips).
+  tecs-dpp-passport-registry: 26/27 (1 pre-existing DB skip).
+  tecs-dpp-public-security: 31/31. E2E (--project=api): 41 passed, 2 skipped, 0 failed.
+Notes: PROD-AUDIT-001 persistent â€” no WL published passport in QA.
+  WL public propagation runtime proof limited to source analysis + B2B fixture isolation proof.
+  Pre-existing server unit test failures (15) unrelated to this change.
+
+---
+
 ### TECS-DPP-PASSPORT-NETWORK-019 â€” 2026-05-14
-Type: NEW FEATURE â€” AI Passport Quality Guidance (Gemini)
 Status: VERIFIED_COMPLETE
 Commit: PENDING (two: feat + governance)
 Title: AI Passport Assistant v2 (Slice 019)
@@ -6863,32 +6883,32 @@ Environment fully unblocked. DPP-E2E-38 false-negative resolved.
 
 ---
 
-## TECS-DPP-PASSPORT-NETWORK-022 — 2026-05-15 — WL Admin DPP Label Panel Human QA
+## TECS-DPP-PASSPORT-NETWORK-022 ï¿½ 2026-05-15 ï¿½ WL Admin DPP Label Panel Human QA
 
 ### Scope
 Runtime QA verification of WL admin DPP label panel: GET/PUT /api/tenant/dpp/passport-label-config;
 showTexqticBrand toggle; labelConfig public propagation. Add DPP-E2E-43/44/45 to spec.
 
 ### Auth
-.auth/qa-wl-admin.json — { token, orgId } format — CONFIRMED WORKING (live API probes)
+.auth/qa-wl-admin.json ï¿½ { token, orgId } format ï¿½ CONFIRMED WORKING (live API probes)
 
 ### Live API QA Results
-- GET /api/tenant/dpp/passport-label-config: 200 — labelConfig defaults confirmed (buyerFacingLabel: 'Verified Supply Chain Passport', showTexqticBrand: true)
-- PUT with { buyerFacingLabel: 'QA WL Verified Passport', showTexqticBrand: false }: 200 — change confirmed
-- GET after PUT: 200 — change persisted
-- PUT restore (defaults): 200 — defaults confirmed
-- GET after restore: 200 — defaults confirmed
-- GET /api/public/dpp/48d83d5a-05da-47f4-a4a5-b48f33f70686: 200 — labelConfig present
+- GET /api/tenant/dpp/passport-label-config: 200 ï¿½ labelConfig defaults confirmed (buyerFacingLabel: 'Verified Supply Chain Passport', showTexqticBrand: true)
+- PUT with { buyerFacingLabel: 'QA WL Verified Passport', showTexqticBrand: false }: 200 ï¿½ change confirmed
+- GET after PUT: 200 ï¿½ change persisted
+- PUT restore (defaults): 200 ï¿½ defaults confirmed
+- GET after restore: 200 ï¿½ defaults confirmed
+- GET /api/public/dpp/48d83d5a-05da-47f4-a4a5-b48f33f70686: 200 ï¿½ labelConfig present
 
 ### UI Gap Found
-WLDppLabelPanel.tsx handleSave hardcodes showTexqticBrand: true — no toggle in UI.
+WLDppLabelPanel.tsx handleSave hardcodes showTexqticBrand: true ï¿½ no toggle in UI.
 Implication: showTexqticBrand: false only settable via direct API call.
 Documented as finding annotation in DPP-E2E-43/44.
 
 ### Tests Added (Group 18)
-- DPP-E2E-43: WL admin DPP label panel — source coverage + GET config succeeds
-- DPP-E2E-44: WL admin PUT label config — update, verify, restore (showTexqticBrand toggle via API)
-- DPP-E2E-45: label config propagation — public DPP API includes labelConfig (B2B confirmed; WL limited)
+- DPP-E2E-43: WL admin DPP label panel ï¿½ source coverage + GET config succeeds
+- DPP-E2E-44: WL admin PUT label config ï¿½ update, verify, restore (showTexqticBrand toggle via API)
+- DPP-E2E-45: label config propagation ï¿½ public DPP API includes labelConfig (B2B confirmed; WL limited)
 
 ### Validation
 - npx playwright@1.59.1 test tests/e2e/dpp-passport-network.spec.ts --project=api --reporter=list
@@ -6904,4 +6924,4 @@ All new tests pass. WL admin API verified live. showTexqticBrand toggle exercise
 WL public propagation limited by no WL published passport in QA (PROD-AUDIT-001).
 
 ### Commit
-[TEXQTIC] test(dpp): verify WL admin label panel runtime — TECS-022 VERIFIED_COMPLETE_WITH_LIMITATIONS
+[TEXQTIC] test(dpp): verify WL admin label panel runtime ï¿½ TECS-022 VERIFIED_COMPLETE_WITH_LIMITATIONS

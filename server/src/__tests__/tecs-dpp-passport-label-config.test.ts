@@ -22,6 +22,10 @@
  *   Group L — 020B: Regression checks for public behavior and DPP wiring
  *   Group M — 020C: WL label navigation runtime proof + public branding verification
  *   Group N — 020D: WL tenant DPP surface parity (productized UI for WL tenants)
+ *   Group O — 020E: WL tenant DPP runtime path parity (descriptor + render chain)
+ *   Group P — 020F: (reserved)
+ *   Group Q — 020H: App.tsx onNavigateToTraceability wiring
+ *   Group R — 023: WL buyer label propagation — org_id scoping + propagation chain
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -1122,5 +1126,65 @@ describe('Q — 020H: App.tsx onNavigateToTraceability wiring', () => {
     const caseBlock = appSrc.match(/case 'dpp':[\s\S]{0,500}/)?.[0] ?? '';
     // Must NOT use a URL string (state-based only)
     expect(caseBlock).not.toMatch(/href|window\.location|router\.push/);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group R — 023: WL Buyer Label Propagation — org_id scoping + propagation chain
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('R — 023: WL buyer label propagation — org_id scoping + propagation chain', () => {
+  let publicRouteSrc: string;
+  let publicPassportSrc: string;
+
+  beforeAll(() => {
+    publicRouteSrc   = fs.readFileSync(PUBLIC_ROUTE_PATH, 'utf-8');
+    publicPassportSrc = fs.readFileSync(PUBLIC_PASSPORT_PATH, 'utf-8');
+  });
+
+  it('R01 — public.ts labelConfig SQL scopes lookup to passport-owner org (WHERE org_id = orgId)', () => {
+    // The SQL query MUST be scoped to the passport owner's org_id (stateRow.org_id),
+    // not the requesting user's org or a hardcoded value.
+    expect(publicRouteSrc).toMatch(/WHERE org_id\s*=\s*\$\{orgId\}/);
+  });
+
+  it('R02 — public.ts derives orgId from stateRow BEFORE labelConfig lookup (ordering)', () => {
+    // orgId assignment (stateRow.org_id) must appear before dpp_passport_label_config query.
+    // This ensures the SQL lookup is always anchored to the correct passport owner.
+    const orgIdAssignIndex = publicRouteSrc.indexOf('stateRow.org_id');
+    const labelConfigQueryIndex = publicRouteSrc.indexOf('dpp_passport_label_config');
+    expect(orgIdAssignIndex, 'stateRow.org_id must be present').toBeGreaterThan(-1);
+    expect(labelConfigQueryIndex, 'dpp_passport_label_config must be present').toBeGreaterThan(-1);
+    expect(orgIdAssignIndex).toBeLessThan(labelConfigQueryIndex);
+  });
+
+  it('R03 — public.ts SQL casts orgId as uuid (type safety)', () => {
+    expect(publicRouteSrc).toMatch(/\$\{orgId\}::uuid/);
+  });
+
+  it('R04 — public.ts SQL uses LIMIT 1 (single config row per org)', () => {
+    expect(publicRouteSrc).toContain('LIMIT 1');
+  });
+
+  it('R05 — public.ts labelConfig block has no WL-specific branching (same path for all org types)', () => {
+    // B2B and WL passports use the same org_id-scoped labelConfig lookup.
+    // No branching on is_white_label or org_type inside the labelConfig block.
+    const labelConfigBlock = publicRouteSrc.match(/Phase 1\.5[\s\S]{0,3000}Phase 2/)?.[0] ?? '';
+    expect(labelConfigBlock, 'labelConfig block must be present (Phase 1.5 marker)').not.toBe('');
+    expect(labelConfigBlock, 'must not branch on is_white_label').not.toContain('is_white_label');
+    expect(labelConfigBlock, 'must not branch on org_type').not.toContain('org_type');
+  });
+
+  it('R06 — propagation chain: buyer_facing_label column maps to buyerFacingLabel in response', () => {
+    // The DB column buyer_facing_label must be explicitly mapped to the API response field.
+    expect(publicRouteSrc).toContain('buyerFacingLabel: labelConfigRows[0].buyer_facing_label');
+  });
+
+  it('R07 — PublicPassport.tsx renders labelConfig?.buyerFacingLabel with fallback (full propagation chain)', () => {
+    // Full chain: dpp_passport_label_config.buyer_facing_label
+    //   → public API labelConfig.buyerFacingLabel
+    //   → PublicPassport.tsx public-passport-buyer-label
+    expect(publicPassportSrc).toMatch(/labelConfig\?\.buyerFacingLabel.*\?\?.*Verified Supply Chain Passport/);
+    expect(publicPassportSrc).toContain('public-passport-buyer-label');
   });
 });

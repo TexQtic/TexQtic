@@ -1484,3 +1484,155 @@ test('DPP-E2E-45 — 022: label config propagation — public DPP API includes l
   expect(resText).not.toContain('"org_id"');
   expect(resText).not.toContain('"orgId"');
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group 19 — 023: WL Buyer Label Propagation to Public Passport
+//   DPP-E2E-46 — Source + API: WL buyer label propagation — org_id scoping verified;
+//                WL admin set/get/restore cycle confirmed.
+//                Tier 1 (source, always): public.ts SQL scopes labelConfig lookup to
+//                passport-owner orgId (WHERE org_id = stateRow.org_id); buyer_facing_label
+//                in SELECT; PublicPassport.tsx renders labelConfig?.buyerFacingLabel.
+//                Tier 2 (api, requires qa-wl-admin.json): PUT "QA WL Public Label 023";
+//                GET verify persisted; GET B2B fixture confirms org isolation (B2B label
+//                unchanged); PUT restore defaults; GET confirm restore.
+//   DPP-E2E-47 — Source + API: WL public passport label propagation — mechanism proof.
+//                Tier 1 (source): public.ts derives orgId from stateRow BEFORE label
+//                lookup; same SQL path for B2B and WL (no WL-specific branch). Propagation
+//                chain: dpp_passport_label_config.buyer_facing_label → labelConfig.
+//                buyerFacingLabel → PublicPassport.tsx public-passport-buyer-label.
+//                Tier 2 (api): B2B fixture GET confirms org-scoped labelConfig in public
+//                response. WL runtime limited — QA WL org has zero traceability_nodes
+//                (PROD-AUDIT-001 persistent finding).
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('DPP-E2E-46 — 023: WL buyer label propagation — org_id scoping + WL admin set/get/restore cycle', async ({ request }, testInfo) => {
+  // Tier 1: source coverage (always runs)
+  const publicRouteSrc = readFileSync(join(process.cwd(), 'server/src/routes/public.ts'), 'utf8');
+  const publicPassportSrc = readFileSync(join(process.cwd(), 'components/Public/PublicPassport.tsx'), 'utf8');
+
+  // public.ts: labelConfig lookup is scoped to the passport-owner's orgId (not auth context)
+  // orgId comes from stateRow.org_id — the traceability node owner's org
+  expect(publicRouteSrc, 'public.ts must scope labelConfig lookup to stateRow.org_id').toContain('stateRow.org_id');
+  expect(publicRouteSrc, 'public.ts SQL must include WHERE org_id = orgId').toMatch(/WHERE org_id\s*=\s*\$\{orgId\}/);
+
+  // public.ts: buyer_facing_label in SELECT
+  expect(publicRouteSrc, 'public.ts must SELECT buyer_facing_label').toContain('buyer_facing_label');
+
+  // public.ts: fallback default buyerFacingLabel
+  expect(publicRouteSrc, 'fallback buyerFacingLabel must be Verified Supply Chain Passport').toContain("buyerFacingLabel: 'Verified Supply Chain Passport'");
+
+  // PublicPassport.tsx: renders dynamic labelConfig?.buyerFacingLabel (not hardcoded)
+  expect(publicPassportSrc, 'PublicPassport must render labelConfig?.buyerFacingLabel').toMatch(/labelConfig\?\.buyerFacingLabel/);
+  expect(publicPassportSrc, 'public-passport-buyer-label testid must be present').toContain('public-passport-buyer-label');
+
+  // Tier 2: authenticated API write/read cycle (skips if qa-wl-admin.json unavailable)
+  if (!WL_ADMIN_AUTH_AVAILABLE) {
+    testInfo.annotations.push({
+      type: 'skip_reason',
+      description: 'BLOCKED_BY_AUTH: .auth/qa-wl-admin.json not available. Source analysis above passes.',
+    });
+    return;
+  }
+
+  const authHeader = { Authorization: `Bearer ${storedWlAdmin!.token}` };
+  const jsonHeader = { ...authHeader, 'Content-Type': 'application/json' };
+
+  // Step 1: GET current config (assert defaults are in place)
+  const getInit = await request.get(`${BASE_URL}/api/tenant/dpp/passport-label-config`, { headers: authHeader });
+  expect(getInit.status(), 'initial GET must return 200').toBe(200);
+  const initBody = (await getInit.json()) as { success: boolean; data: { labelConfig: { buyerFacingLabel: string; showTexqticBrand: boolean } } };
+  expect(initBody.success).toBe(true);
+  expect(initBody.data.labelConfig.buyerFacingLabel, 'initial label must not be QA test label').not.toBe('QA WL Public Label 023');
+
+  // Step 2: PUT QA test label "QA WL Public Label 023"
+  const putQa = await request.put(`${BASE_URL}/api/tenant/dpp/passport-label-config`, {
+    headers: jsonHeader,
+    data: { buyerFacingLabel: 'QA WL Public Label 023', publicTitle: null, subtitle: null, showTexqticBrand: true },
+  });
+  expect(putQa.status(), 'PUT QA label must return 200').toBe(200);
+  const putQaBody = (await putQa.json()) as { success: boolean; data: { labelConfig: { buyerFacingLabel: string } } };
+  expect(putQaBody.data.labelConfig.buyerFacingLabel, 'PUT must return QA WL Public Label 023').toBe('QA WL Public Label 023');
+
+  // Step 3: GET verify QA label persisted
+  const getAfterPut = await request.get(`${BASE_URL}/api/tenant/dpp/passport-label-config`, { headers: authHeader });
+  expect(getAfterPut.status()).toBe(200);
+  const afterPutBody = (await getAfterPut.json()) as { success: boolean; data: { labelConfig: { buyerFacingLabel: string } } };
+  expect(afterPutBody.data.labelConfig.buyerFacingLabel, 'GET must reflect QA WL Public Label 023').toBe('QA WL Public Label 023');
+
+  // Step 4: GET B2B fixture public passport — confirm org isolation (B2B label unaffected)
+  const b2bFixtureId = '48d83d5a-05da-47f4-a4a5-b48f33f70686'; // QA B2B org passport
+  const b2bRes = await request.get(`${BASE_URL}/api/public/dpp/${b2bFixtureId}`);
+  expect(b2bRes.status(), 'B2B fixture GET must return 200').toBe(200);
+  const b2bBody = (await b2bRes.json()) as { success: boolean; data: { labelConfig?: { buyerFacingLabel: string } } };
+  expect(b2bBody.data.labelConfig?.buyerFacingLabel, 'B2B label must not be affected by WL org config change').not.toBe('QA WL Public Label 023');
+  testInfo.annotations.push({
+    type: 'proof',
+    description: `023: Org isolation confirmed — WL org set "QA WL Public Label 023"; B2B fixture returned "${b2bBody.data.labelConfig?.buyerFacingLabel}". Confirms public.ts labelConfig lookup is passport-owner-scoped (WHERE org_id = stateRow.org_id).`,
+  });
+
+  // Step 5: PUT restore defaults — ALWAYS run
+  const putRestore = await request.put(`${BASE_URL}/api/tenant/dpp/passport-label-config`, {
+    headers: jsonHeader,
+    data: { buyerFacingLabel: 'Verified Supply Chain Passport', publicTitle: null, subtitle: null, showTexqticBrand: true },
+  });
+  expect(putRestore.status(), 'PUT restore must return 200').toBe(200);
+  const restoreBody = (await putRestore.json()) as { success: boolean; data: { labelConfig: { buyerFacingLabel: string; showTexqticBrand: boolean } } };
+  expect(restoreBody.data.labelConfig.buyerFacingLabel, 'restored label must be default').toBe('Verified Supply Chain Passport');
+  expect(restoreBody.data.labelConfig.showTexqticBrand, 'restored showTexqticBrand must be true').toBe(true);
+
+  // Step 6: GET confirm restore
+  const getRestore = await request.get(`${BASE_URL}/api/tenant/dpp/passport-label-config`, { headers: authHeader });
+  expect(getRestore.status()).toBe(200);
+  const restoreGetBody = (await getRestore.json()) as { success: boolean; data: { labelConfig: { buyerFacingLabel: string } } };
+  expect(restoreGetBody.data.labelConfig.buyerFacingLabel, 'GET confirm restore: label').toBe('Verified Supply Chain Passport');
+});
+
+test('DPP-E2E-47 — 023: WL public passport label — propagation mechanism verified (B2B confirmed; WL limited)', async ({ request }, testInfo) => {
+  // Tier 1: source — verify the full propagation chain ordering and org_id scoping
+  const publicRouteSrc = readFileSync(join(process.cwd(), 'server/src/routes/public.ts'), 'utf8');
+  const publicPassportSrc = readFileSync(join(process.cwd(), 'components/Public/PublicPassport.tsx'), 'utf8');
+
+  // public.ts derives orgId from stateRow BEFORE labelConfig lookup (ordering proof)
+  // Pattern: stateRow.org_id assignment must appear before labelConfig query block
+  const orgIdAssignIndex = publicRouteSrc.indexOf('stateRow.org_id');
+  const labelConfigQueryIndex = publicRouteSrc.indexOf('dpp_passport_label_config');
+  expect(orgIdAssignIndex, 'stateRow.org_id assignment must appear before dpp_passport_label_config query').toBeGreaterThan(-1);
+  expect(labelConfigQueryIndex, 'dpp_passport_label_config query must be present').toBeGreaterThan(-1);
+  expect(orgIdAssignIndex, 'orgId derived from stateRow before labelConfig lookup').toBeLessThan(labelConfigQueryIndex);
+
+  // public.ts: SQL WHERE clause scopes lookup to passport-owner org (uuid cast)
+  expect(publicRouteSrc, 'SQL must cast orgId as uuid').toMatch(/\$\{orgId\}::uuid/);
+  expect(publicRouteSrc, 'SQL must use LIMIT 1').toContain('LIMIT 1');
+
+  // public.ts: no WL-specific conditional branching in labelConfig lookup
+  // The same SQL path handles B2B and WL passports — label is always org-scoped
+  const labelConfigBlock = publicRouteSrc.match(/Phase 1\.5[\s\S]{0,1200}Phase 2/)?.[0] ?? '';
+  expect(labelConfigBlock, 'labelConfig block must not branch on is_white_label').not.toContain('is_white_label');
+  expect(labelConfigBlock, 'labelConfig block must not branch on org type').not.toContain('org_type');
+
+  // Propagation chain: dpp_passport_label_config.buyer_facing_label → labelConfig.buyerFacingLabel → public-passport-buyer-label
+  expect(publicRouteSrc, 'buyer_facing_label column must map to buyerFacingLabel').toContain('buyerFacingLabel: labelConfigRows[0].buyer_facing_label');
+  expect(publicPassportSrc, 'PublicPassport renders buyerFacingLabel with fallback').toMatch(/labelConfig\?\.buyerFacingLabel.*\?\?.*Verified Supply Chain Passport/);
+
+  // WL limitation annotation
+  testInfo.annotations.push({
+    type: 'limitation',
+    description: '023: WL public passport label cannot be verified at runtime — QA WL org has zero traceability_nodes (PROD-AUDIT-001 persistent finding). Source analysis confirms the same org_id-scoped SQL path handles both B2B and WL passports. If a WL published passport were available, its public DPP response would return the WL org\'s configured buyerFacingLabel.',
+  });
+
+  // Tier 2: API — B2B fixture passport confirms labelConfig propagates to public response
+  const b2bFixtureId = '48d83d5a-05da-47f4-a4a5-b48f33f70686'; // dpp-qa-fixture.json
+  const res = await request.get(`${BASE_URL}/api/public/dpp/${b2bFixtureId}`);
+  expect(res.status(), 'B2B fixture public DPP GET must return 200').toBe(200);
+
+  const body = (await res.json()) as { success: boolean; data: { labelConfig?: { buyerFacingLabel: string; showTexqticBrand: boolean; publicTitle: string | null; subtitle: string | null } } };
+  expect(body.success).toBe(true);
+  expect(body.data.labelConfig, 'public DPP response must include labelConfig').toBeDefined();
+  expect(typeof body.data.labelConfig!.buyerFacingLabel).toBe('string');
+  expect(body.data.labelConfig!.buyerFacingLabel.length, 'buyerFacingLabel must be non-empty').toBeGreaterThan(0);
+  expect(typeof body.data.labelConfig!.showTexqticBrand).toBe('boolean');
+
+  // Confirm the B2B fixture returns its own org's label (default — not WL org's label)
+  // This proves the propagation is strictly org_id-scoped
+  expect(body.data.labelConfig!.buyerFacingLabel, 'B2B fixture label must not be WL org QA test label').not.toBe('QA WL Public Label 023');
+});

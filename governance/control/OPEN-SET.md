@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-15 (TECS-DPP-PASSPORT-NETWORK-022 — VERIFIED_COMPLETE_WITH_LIMITATIONS; WL admin DPP label panel QA; DPP-E2E-43/44/45 PASS; 39/41 api-project E2E pass; awaiting Paresh authorization for next slice)
+**Last Updated:** 2026-05-15 (TECS-DPP-PASSPORT-NETWORK-023 — VERIFIED_COMPLETE_WITH_LIMITATIONS; WL buyer label propagation verified; DPP-E2E-46/47 + Group R unit tests PASS; 41/43 api-project E2E pass; awaiting Paresh authorization for next slice)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,17 @@
 
 ## Operating Notes
 
+- TECS-DPP-PASSPORT-NETWORK-023 is VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-15).
+  Finding: no source fix required — propagation already correctly implemented in public.ts + PublicPassport.tsx.
+  Live API QA: WL admin PUT "QA WL Public Label 023" → GET verify → B2B fixture isolation confirmed → restore defaults.
+  Org isolation proof: WHERE org_id = stateRow.org_id correctly scopes each passport to its owner's config.
+  Tests added: DPP-E2E-46/47 (Group 19) + Group R unit tests (R01-R07, 7 tests).
+  Full api suite: 41 passed / 2 skipped (browser-only) / 0 failed.
+  Unit suites: tecs-dpp-passport-label-config (139/141), tecs-dpp-passport-registry (26/27), tecs-dpp-public-security (31/31).
+  TypeScript: Frontend tsc CLEAN. Server tsc CLEAN.
+  Limitation: PROD-AUDIT-001 persistent — no WL published passport in QA; WL public propagation runtime unverified.
+  Files changed: tests/e2e/dpp-passport-network.spec.ts + server/src/__tests__/tecs-dpp-passport-label-config.test.ts.
+  Next slice: NOT AUTHORIZED until Paresh opens.
 - TECS-DPP-PASSPORT-NETWORK-022 is VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-15).
   WL admin GET/PUT /api/tenant/dpp/passport-label-config: VERIFIED (200 both, live API QA).
   showTexqticBrand toggle: VERIFIED via direct API PUT (showTexqticBrand: false confirmed, defaults restored).
