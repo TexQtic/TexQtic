@@ -1749,3 +1749,94 @@ test('DPP-E2E-48 — 024: JSON-LD context document — source valid + runtime re
     });
   }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group 21 — 025: passportMaturityLabel human-readable mapping
+//   DPP-E2E-49 — Source + optional runtime: passportMaturityLabel present in
+//                structured-data response; mapping values correct; context term added
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('DPP-E2E-49 — 025: passportMaturityLabel — source proven; label mapping and context term verified', async ({ request }, testInfo) => {
+  // ── Tier 1: source proof ──────────────────────────────────────────────────
+  const publicRoutePath = join(process.cwd(), 'server', 'src', 'routes', 'public.ts');
+  const contextFilePath = join(process.cwd(), 'public', 'dpp', 'v1', 'context.jsonld');
+
+  expect(existsSync(publicRoutePath), 'server/src/routes/public.ts must exist').toBe(true);
+  const routeSource = readFileSync(publicRoutePath, 'utf-8');
+
+  // Label map present
+  expect(routeSource, 'MATURITY_LABEL map must be present in route source').toContain('MATURITY_LABEL');
+
+  // All four enum→label mappings
+  expect(routeSource, 'LOCAL_TRUST must map to Bronze label').toContain("LOCAL_TRUST: 'Bronze \u2014 Verified Local'");
+  expect(routeSource, 'TRADE_READY must map to Silver label').toContain("TRADE_READY: 'Silver \u2014 Trade Ready'");
+  expect(routeSource, 'COMPLIANCE must map to Gold label').toContain("COMPLIANCE:  'Gold \u2014 Certified'");
+  expect(routeSource, 'GLOBAL_DPP must map to Platinum label').toContain("GLOBAL_DPP:  'Platinum \u2014 Export Ready'");
+
+  // Field emitted in payload
+  expect(routeSource, 'passportMaturityLabel must be present in JSON-LD payload').toContain("'passportMaturityLabel': MATURITY_LABEL");
+
+  // Fallback safety
+  expect(routeSource, 'fallback to raw enum value must be present').toContain('?? data.passportMaturity');
+
+  // Original passportMaturity unchanged
+  expect(routeSource, 'passportMaturity raw field must remain unchanged').toContain("'passportMaturity': data.passportMaturity,");
+
+  // Context document updated
+  expect(existsSync(contextFilePath), 'public/dpp/v1/context.jsonld must exist').toBe(true);
+  const contextRaw = readFileSync(contextFilePath, 'utf-8');
+  const contextParsed = JSON.parse(contextRaw) as Record<string, unknown>;
+  const terms = (contextParsed['@context'] ?? {}) as Record<string, unknown>;
+  expect(terms, 'context.jsonld must contain passportMaturityLabel term').toHaveProperty('passportMaturityLabel');
+  expect(terms['passportMaturityLabel'], 'passportMaturityLabel must use texqtic namespace').toBe('texqtic:passportMaturityLabel');
+
+  testInfo.annotations.push({
+    type: 'source_proof',
+    description: '025: passportMaturityLabel source verified — all 4 enum→label mappings correct; field emitted in JSON-LD payload; context.jsonld term added. Runtime serving requires prod deploy with new code.',
+  });
+
+  // ── Tier 2: runtime API probe (best-effort) ───────────────────────────────
+  const QA_PASSPORT_ID = '48d83d5a-05da-47f4-a4a5-b48f33f70686'; // PROD-AUDIT-001 fixture
+  let runtimeProven = false;
+  try {
+    const res = await request.get(`${BASE_URL}/api/public/dpp/${QA_PASSPORT_ID}/structured-data`, {
+      headers: { Accept: 'application/ld+json' },
+      timeout: 8000,
+    });
+    if (res.status() === 200) {
+      const body = await res.json() as Record<string, unknown>;
+      if ('passportMaturityLabel' in body) {
+        runtimeProven = true;
+        const label = body['passportMaturityLabel'];
+        expect(typeof label, 'passportMaturityLabel must be a string').toBe('string');
+        expect((label as string).length, 'passportMaturityLabel must not be empty').toBeGreaterThan(0);
+        testInfo.annotations.push({
+          type: 'runtime_proof',
+          description: `025: GET /api/public/dpp/${QA_PASSPORT_ID}/structured-data → 200. passportMaturityLabel: "${label as string}".`,
+        });
+      } else {
+        testInfo.annotations.push({
+          type: 'limitation',
+          description: `025: structured-data endpoint returned 200 but passportMaturityLabel absent — new code not yet deployed to production.`,
+        });
+      }
+    } else {
+      testInfo.annotations.push({
+        type: 'limitation',
+        description: `025: structured-data endpoint returned HTTP ${res.status()} — runtime label not verified.`,
+      });
+    }
+  } catch {
+    testInfo.annotations.push({
+      type: 'limitation',
+      description: '025: structured-data endpoint not reachable at runtime — source verification is sufficient for VERIFIED_COMPLETE_WITH_LIMITATIONS.',
+    });
+  }
+
+  if (!runtimeProven) {
+    testInfo.annotations.push({
+      type: 'status',
+      description: 'VERIFIED_COMPLETE_WITH_LIMITATIONS: source verified; runtime passportMaturityLabel pending prod deploy.',
+    });
+  }
+});

@@ -1,9 +1,11 @@
 /**
  * TECS-DPP-STRUCTURED-DATA-018 — JSON-LD Machine-Readable Public DPP
  * TECS-DPP-PASSPORT-NETWORK-024 — Group S: JSON-LD context document resolvability
+ * TECS-DPP-PASSPORT-NETWORK-025 — Group T: passportMaturityLabel human-readable mapping
  *
  * Slice: 018 — GET /api/public/dpp/:publicPassportId/structured-data
  * Slice: 024 — JSON-LD @context document at /dpp/v1/context.jsonld
+ * Slice: 025 — passportMaturityLabel field in structured-data JSON-LD response
  *
  * Test strategy:
  *   Group A (SD-A) — Route registration: structured-data registered; .json absent; base route intact
@@ -13,6 +15,7 @@
  *   Group E (SD-E) — Response normalization: invalid/unpublished token → safe 404
  *   Group F (SD-F) — Route safety: .json absent; structured-data coexists with base route
  *   Group S (SD-S) — 024: JSON-LD context document file: exists, parses, required terms, no forbidden terms
+ *   Group T (SD-T) — 025: passportMaturityLabel mapping correctness in source; context term present
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -431,3 +434,96 @@ describe('SD-S — 024: JSON-LD context document', () => {
     expect(CONTEXT_FILE_PATH).toContain(path.join('public', 'dpp', 'v1', 'context.jsonld'));
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Group T — 025: passportMaturityLabel mapping (source-proven)
+// ───────────────────────────────────────────────────────────────────────────────
+describe('Group T — 025 passportMaturityLabel mapping', () => {
+  // All tests in this group are source-proven:
+  // they read server/src/routes/public.ts and public/dpp/v1/context.jsonld directly.
+  // Runtime serving of the full structured-data response with the label field
+  // requires production deployment (VERIFIED_COMPLETE_WITH_LIMITATIONS).
+
+  let routeSource: string;
+  let contextParsed: Record<string, unknown>;
+
+  beforeAll(() => {
+    routeSource = fs.readFileSync(PUBLIC_ROUTE_PATH, 'utf-8');
+    const raw = fs.readFileSync(CONTEXT_FILE_PATH, 'utf-8');
+    contextParsed = JSON.parse(raw) as Record<string, unknown>;
+  });
+
+  it('SD-T01 — MATURITY_LABEL map present in route source', () => {
+    expect(routeSource).toContain('MATURITY_LABEL');
+  });
+
+  it('SD-T02 — LOCAL_TRUST maps to “Bronze — Verified Local”', () => {
+    expect(routeSource).toContain("LOCAL_TRUST: 'Bronze \u2014 Verified Local'");
+  });
+
+  it('SD-T03 — TRADE_READY maps to “Silver — Trade Ready”', () => {
+    expect(routeSource).toContain("TRADE_READY: 'Silver \u2014 Trade Ready'");
+  });
+
+  it('SD-T04 — COMPLIANCE maps to “Gold — Certified”', () => {
+    expect(routeSource).toContain("COMPLIANCE:  'Gold \u2014 Certified'");
+  });
+
+  it('SD-T05 — GLOBAL_DPP maps to “Platinum — Export Ready”', () => {
+    expect(routeSource).toContain("GLOBAL_DPP:  'Platinum \u2014 Export Ready'");
+  });
+
+  it('SD-T06 — passportMaturityLabel field present in JSON-LD payload source', () => {
+    expect(routeSource).toContain("'passportMaturityLabel'");
+  });
+
+  it('SD-T07 — passportMaturityLabel placed immediately after passportMaturity in source', () => {
+    const maturityIdx = routeSource.indexOf("'passportMaturity': data.passportMaturity,");
+    const labelIdx = routeSource.indexOf("'passportMaturityLabel': MATURITY_LABEL");
+    expect(maturityIdx).toBeGreaterThan(-1);
+    expect(labelIdx).toBeGreaterThan(-1);
+    // label must appear after maturity
+    expect(labelIdx).toBeGreaterThan(maturityIdx);
+    // nothing should come between them — the diff must be <= 80 chars
+    expect(labelIdx - maturityIdx).toBeLessThanOrEqual(80);
+  });
+
+  it('SD-T08 — passportMaturity raw enum field still present (unchanged)', () => {
+    expect(routeSource).toContain("'passportMaturity': data.passportMaturity,");
+  });
+
+  it('SD-T09 — fallback to raw value present in label expression', () => {
+    expect(routeSource).toContain('?? data.passportMaturity');
+  });
+
+  it('SD-T10 — passportMaturityLabel term present in context.jsonld', () => {
+    const ctx = (contextParsed['@context'] ?? {}) as Record<string, unknown>;
+    expect(ctx).toHaveProperty('passportMaturityLabel');
+  });
+
+  it('SD-T11 — passportMaturityLabel term maps to texqtic namespace in context.jsonld', () => {
+    const ctx = (contextParsed['@context'] ?? {}) as Record<string, unknown>;
+    expect(ctx['passportMaturityLabel']).toBe('texqtic:passportMaturityLabel');
+  });
+
+  it('SD-T12 — passportMaturity term still present in context.jsonld (unchanged)', () => {
+    const ctx = (contextParsed['@context'] ?? {}) as Record<string, unknown>;
+    expect(ctx).toHaveProperty('passportMaturity');
+    expect(ctx['passportMaturity']).toBe('texqtic:passportMaturity');
+  });
+
+  it('SD-T13 — no forbidden private terms added to route source by this slice', () => {
+    const FORBIDDEN = [
+      'org_id', 'orgId', 'nodeId', 'node_id', 'public_token',
+      'documentUrl', 'sourceId', 'pricing', 'claimValue', 'extractionId', 'confidence',
+    ];
+    // Only check the MATURITY_LABEL block itself for leaked terms
+    const blockStart = routeSource.indexOf('MATURITY_LABEL');
+    const blockEnd = routeSource.indexOf('passportMaturityLabel');
+    const block = routeSource.slice(blockStart, blockEnd + 60);
+    for (const term of FORBIDDEN) {
+      expect(block, `Leaked private term: ${term}`).not.toContain(term);
+    }
+  });
+});
+

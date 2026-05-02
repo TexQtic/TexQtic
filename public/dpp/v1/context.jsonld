@@ -12,6 +12,7 @@
     "publicPassportId": "texqtic:publicPassportId",
     "passportStatus": "texqtic:passportStatus",
     "passportMaturity": "texqtic:passportMaturity",
+    "passportMaturityLabel": "texqtic:passportMaturityLabel",
     "passportLabel": "texqtic:passportLabel",
     "product": "schema:Product",
     "certifications": "texqtic:certifications",

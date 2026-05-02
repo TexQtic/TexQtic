@@ -1088,6 +1088,12 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     // ── Build JSON-LD payload ────────────────────────────────────────────────
     // Privacy guarantee: only PUBLIC_SUMMARY fields; no internal IDs, no storage URLs,
     // no buyer data, no pricing, no audit metadata.
+    const MATURITY_LABEL: Record<string, string> = {
+      LOCAL_TRUST: 'Bronze — Verified Local',
+      TRADE_READY: 'Silver — Trade Ready',
+      COMPLIANCE:  'Gold — Certified',
+      GLOBAL_DPP:  'Platinum — Export Ready',
+    };
     const structuredData = {
       '@context': {
         '@vocab': 'https://texqtic.com/dpp/v1#',
@@ -1101,6 +1107,7 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       'publicPassportId': publicPassportId,
       'passportStatus': data.passportStatus,
       'passportMaturity': data.passportMaturity,
+      'passportMaturityLabel': MATURITY_LABEL[data.passportMaturity] ?? data.passportMaturity,
       'product': {
         '@type': 'schema:Product',
         'name': data.product.batchId ?? null,
