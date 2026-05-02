@@ -18,6 +18,7 @@ import { WhiteLabelSettings } from './components/Tenant/WhiteLabelSettings';
 import { WLOrdersPanel } from './components/WhiteLabelAdmin/WLOrdersPanel';
 import { WLCollectionsPanel } from './components/WhiteLabelAdmin/WLCollectionsPanel';
 import { WLDomainsPanel } from './components/WhiteLabelAdmin/WLDomainsPanel';
+import { WLDppLabelPanel } from './components/WhiteLabelAdmin/WLDppLabelPanel';
 import { EXPOrdersPanel } from './components/Tenant/EXPOrdersPanel';
 import { DPPPassport } from './components/Tenant/DPPPassport';
 import { EscrowPanel } from './components/Tenant/EscrowPanel';
@@ -1124,7 +1125,7 @@ const continueBuyerRfqTradeFromRfqCreatePath = async ({
   }
 };
 
-const WL_ADMIN_VIEWS = ['BRANDING', 'STAFF', 'PRODUCTS', 'COLLECTIONS', 'ORDERS', 'DOMAINS'] as const;
+const WL_ADMIN_VIEWS = ['BRANDING', 'STAFF', 'PRODUCTS', 'COLLECTIONS', 'ORDERS', 'DOMAINS', 'DPP_LABEL'] as const;
 type WLAdminView = (typeof WL_ADMIN_VIEWS)[number];
 
 const EXPERIENCE_VIEWS = [
@@ -4265,11 +4266,15 @@ const App: React.FC = () => {
         return <TeamManagement onInvite={() => navigateWlAdminManifestRoute('staff_invite')} />;
       case 'domains':
         return <WLDomainsPanel tenantSlug={currentTenant.slug} />;
+      case 'dpp_label':
+        // TECS-DPP-PASSPORT-NETWORK-020B: dedicated DPP Passport Label configuration tab
+        return <WLDppLabelPanel />;
       case 'branding':
         return (
           <WhiteLabelSettings
             tenant={currentTenant}
             onNavigateDomains={() => navigateWlAdminManifestRoute('domains')}
+            onNavigateDppLabel={() => navigateWlAdminManifestRoute('dpp_label')}
           />
         );
       case 'collections':

@@ -130,6 +130,7 @@ export type RuntimeLocalRouteKey =
   | 'products'
   | 'collections'
   | 'domains'
+  | 'dpp_label'
   | 'tenant_registry'
   | 'tenant_registry_invited'
   | 'tenant_registry_closed'
@@ -365,6 +366,8 @@ const WL_ADMIN_MANAGEMENT_ROUTE_GROUP = defineRuntimeRouteGroup('admin_branding_
     wlAdminInviting: false,
   }),
   defineRuntimeRoute('domains', 'Domains', 'DOMAINS', { wlAdminView: 'DOMAINS' }),
+  // TECS-DPP-PASSPORT-NETWORK-020B: dedicated DPP Passport Label configuration tab
+  defineRuntimeRoute('dpp_label', 'DPP Passport Label', 'DPP_LABEL', { wlAdminView: 'DPP_LABEL' }),
 ]);
 
 const WL_ADMIN_CATALOG_ROUTE_GROUP = defineRuntimeRouteGroup('catalog_browse', [
@@ -437,6 +440,7 @@ const WL_ADMIN_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
   'collections',
   'orders',
   'domains',
+  'dpp_label',
 ];
 
 const CONTROL_PLANE_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [

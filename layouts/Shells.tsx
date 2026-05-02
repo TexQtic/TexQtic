@@ -571,12 +571,14 @@ interface WLAdminShellProps {
 }
 
 const WL_ADMIN_NAV = [
-  { routeKey: 'branding',    label: 'Store Profile',  icon: '🎨' },
-  { routeKey: 'staff',       label: 'Staff',          icon: '👥' },
-  { routeKey: 'products',    label: 'Products',       icon: '📦' },
-  { routeKey: 'collections', label: 'Collections',    icon: '🗂️' },
-  { routeKey: 'orders',      label: 'Orders',         icon: '🛍️' },
-  { routeKey: 'domains',     label: 'Domains',        icon: '🌐' },
+  { routeKey: 'branding',    label: 'Store Profile',       icon: '🎨' },
+  { routeKey: 'staff',       label: 'Staff',               icon: '👥' },
+  { routeKey: 'products',    label: 'Products',            icon: '📦' },
+  { routeKey: 'collections', label: 'Collections',         icon: '🗂️' },
+  { routeKey: 'orders',      label: 'Orders',              icon: '🛍️' },
+  { routeKey: 'domains',     label: 'Domains',             icon: '🌐' },
+  // TECS-DPP-PASSPORT-NETWORK-020B: dedicated DPP Passport Label tab
+  { routeKey: 'dpp_label',   label: 'DPP Passport Label',  icon: '🏷️' },
 ] as const;
 
 export const WhiteLabelAdminShell: React.FC<WLAdminShellProps> = ({
@@ -631,6 +633,7 @@ export const WhiteLabelAdminShell: React.FC<WLAdminShellProps> = ({
           <button
             key={routeKey}
             onClick={() => onNavigateRoute(routeKey)}
+            data-testid={routeKey === 'dpp_label' ? 'wl-dpp-label-nav-item' : undefined}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors ${
               isActive
                 ? 'bg-slate-900 text-white font-semibold'

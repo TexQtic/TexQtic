@@ -13,7 +13,11 @@ export const WhiteLabelSettings: React.FC<{
   onNavigateDomains?: () => void;
   /** Optional entry from reachable shared-core settings into the existing WL admin overlay. */
   onEnterOverlay?: () => void;
-}> = ({ tenant, onNavigateDomains, onEnterOverlay }) => {
+  /** TECS-DPP-PASSPORT-NETWORK-020B: optional callback to navigate to the dedicated DPP label tab.
+   * When provided (WL_ADMIN BRANDING context), the embedded DPP label card becomes a shortcut.
+   * When absent (EXPERIENCE SETTINGS context), the full panel remains embedded. */
+  onNavigateDppLabel?: () => void;
+}> = ({ tenant, onNavigateDomains, onEnterOverlay, onNavigateDppLabel }) => {
   const [primaryColor, setPrimaryColor] = useState(tenant.theme.primaryColor);
   const [secondaryColor, setSecondaryColor] = useState(tenant.theme.secondaryColor);
   const [logoUrl, setLogoUrl] = useState(
@@ -194,7 +198,7 @@ export const WhiteLabelSettings: React.FC<{
         </div>
       </div>
 
-      {/* DPP Passport Public Label — TECS-DPP-PASSPORT-NETWORK-020A */}
+      {/* DPP Passport Public Label — TECS-DPP-PASSPORT-NETWORK-020A/020B */}
       <section
         data-testid="wl-dpp-label-settings-card"
         className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4"
@@ -205,7 +209,17 @@ export const WhiteLabelSettings: React.FC<{
             Configure the label buyers see on public DPP passport pages. This changes display text only; it does not change passport status, evidence, or compliance claims.
           </p>
         </div>
-        <WLDppLabelPanel />
+        {onNavigateDppLabel ? (
+          <button
+            data-testid="wl-dpp-label-settings-shortcut"
+            onClick={onNavigateDppLabel}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
+          >
+            Open DPP Passport Label Settings →
+          </button>
+        ) : (
+          <WLDppLabelPanel />
+        )}
       </section>
     </div>
   );

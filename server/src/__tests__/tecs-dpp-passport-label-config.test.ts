@@ -18,6 +18,8 @@
  *   Group H — DB integration (gated by hasDb)
  *   Group I — 020A: WL panel wiring into WhiteLabelSettings.tsx (Option B)
  *   Group J — 020A: showTexqticBrand public-page attribution toggle
+ *   Group K — 020B: Dedicated WL DPP Label navigation/tab
+ *   Group L — 020B: Regression checks for public behavior and DPP wiring
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -50,6 +52,12 @@ const WL_SETTINGS_PATH = path.resolve(
   __dirname,
   '../../../components/Tenant/WhiteLabelSettings.tsx',
 );
+const APP_TSX_PATH = path.resolve(__dirname, '../../../App.tsx');
+const SESSION_DESCRIPTOR_PATH = path.resolve(
+  __dirname,
+  '../../../runtime/sessionRuntimeDescriptor.ts',
+);
+const SHELLS_PATH = path.resolve(__dirname, '../../../layouts/Shells.tsx');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Group A — Schema/source
@@ -522,5 +530,174 @@ describe('J — 020A: showTexqticBrand public-page attribution', () => {
     expect(attributionBlock).not.toContain('org_id');
     expect(attributionBlock).not.toContain('nodeId');
     expect(attributionBlock).not.toContain('pricing');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group K — 020B: Dedicated WL DPP Label navigation/tab
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('K — 020B: Dedicated WL DPP Label navigation/tab', () => {
+  let descriptorSrc: string;
+  let appSrc: string;
+  let shellsSrc: string;
+  let settingsSrc: string;
+
+  beforeAll(() => {
+    descriptorSrc = fs.readFileSync(SESSION_DESCRIPTOR_PATH, 'utf8');
+    appSrc = fs.readFileSync(APP_TSX_PATH, 'utf8');
+    shellsSrc = fs.readFileSync(SHELLS_PATH, 'utf8');
+    settingsSrc = fs.readFileSync(WL_SETTINGS_PATH, 'utf8');
+  });
+
+  it('K01 — sessionRuntimeDescriptor RuntimeLocalRouteKey includes dpp_label', () => {
+    expect(descriptorSrc).toContain("'dpp_label'");
+  });
+
+  it('K02 — sessionRuntimeDescriptor WL_ADMIN_MANAGEMENT_ROUTE_GROUP has dpp_label route', () => {
+    expect(descriptorSrc).toContain("defineRuntimeRoute('dpp_label'");
+    expect(descriptorSrc).toContain("'DPP_LABEL'");
+  });
+
+  it('K03 — sessionRuntimeDescriptor WL_ADMIN_SHELL_ROUTE_KEYS includes dpp_label', () => {
+    // dpp_label must appear in the WL_ADMIN_SHELL_ROUTE_KEYS array
+    const keysBlock = descriptorSrc.match(
+      /WL_ADMIN_SHELL_ROUTE_KEYS[\s\S]{0,400}/,
+    )?.[0] ?? '';
+    expect(keysBlock).toContain("'dpp_label'");
+  });
+
+  it('K04 — App.tsx WL_ADMIN_VIEWS includes DPP_LABEL', () => {
+    expect(appSrc).toContain("'DPP_LABEL'");
+    // Confirm it is within the WL_ADMIN_VIEWS context
+    const viewsBlock = appSrc.match(/WL_ADMIN_VIEWS\s*=\s*\[[\s\S]{0,200}?]/)?.[0] ?? '';
+    expect(viewsBlock).toContain("'DPP_LABEL'");
+  });
+
+  it('K05 — App.tsx imports WLDppLabelPanel', () => {
+    expect(appSrc).toContain("WLDppLabelPanel");
+    expect(appSrc).toMatch(/import.*WLDppLabelPanel.*WhiteLabelAdmin/);
+  });
+
+  it("K06 — App.tsx renderWLAdminContent has case 'dpp_label'", () => {
+    expect(appSrc).toContain("case 'dpp_label':");
+    // The case must render WLDppLabelPanel
+    const caseBlock = appSrc.match(/case 'dpp_label':[\s\S]{0,200}/)?.[0] ?? '';
+    expect(caseBlock).toContain('WLDppLabelPanel');
+  });
+
+  it('K07 — layouts/Shells.tsx WL_ADMIN_NAV includes dpp_label entry', () => {
+    expect(shellsSrc).toContain("'dpp_label'");
+    expect(shellsSrc).toContain('DPP Passport Label');
+  });
+
+  it('K08 — layouts/Shells.tsx nav button has wl-dpp-label-nav-item testid for dpp_label', () => {
+    expect(shellsSrc).toContain('wl-dpp-label-nav-item');
+    // The testid must be conditionally applied on dpp_label key
+    expect(shellsSrc).toContain("routeKey === 'dpp_label'");
+  });
+
+  it('K09 — WhiteLabelSettings.tsx has onNavigateDppLabel prop', () => {
+    expect(settingsSrc).toContain('onNavigateDppLabel');
+  });
+
+  it('K10 — WhiteLabelSettings.tsx has wl-dpp-label-settings-shortcut testid', () => {
+    expect(settingsSrc).toContain('wl-dpp-label-settings-shortcut');
+  });
+
+  it('K11 — WhiteLabelSettings.tsx wl-dpp-label-settings-card still present', () => {
+    expect(settingsSrc).toContain('wl-dpp-label-settings-card');
+  });
+
+  it('K12 — No forbidden WL overstatement copy in new route wiring', () => {
+    const combined = appSrc + shellsSrc + descriptorSrc;
+    expect(combined).not.toContain('Fully white-labeled DPP');
+    expect(combined).not.toContain('branded DPP portal is live');
+    expect(combined).not.toContain('Custom domain enabled');
+    expect(combined).not.toContain('EU-compliant passport');
+    expect(combined).not.toContain('GS1-certified');
+    expect(combined).not.toContain('Regulator approved');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Group L — 020B: Regression checks for public behavior and DPP wiring
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('L — 020B: Regression checks for public behavior and DPP wiring', () => {
+  let appSrc: string;
+  let passportSrc: string;
+  let panelSrc: string;
+  let descriptorSrc: string;
+  let publicRouteSrc: string;
+
+  beforeAll(() => {
+    appSrc = fs.readFileSync(APP_TSX_PATH, 'utf8');
+    passportSrc = fs.readFileSync(PUBLIC_PASSPORT_PATH, 'utf8');
+    panelSrc = fs.readFileSync(WL_PANEL_PATH, 'utf8');
+    descriptorSrc = fs.readFileSync(SESSION_DESCRIPTOR_PATH, 'utf8');
+    publicRouteSrc = fs.readFileSync(PUBLIC_ROUTE_PATH, 'utf8');
+  });
+
+  it('L01 — PublicPassport showTexqticBrand behavior unchanged', () => {
+    expect(passportSrc).toContain('showTexqticBrand');
+    expect(passportSrc).toContain('!== false');
+  });
+
+  it('L02 — public-passport-texqtic-brand testid still in PublicPassport', () => {
+    expect(passportSrc).toContain('public-passport-texqtic-brand');
+  });
+
+  it('L03 — public-passport-buyer-label testid still in PublicPassport', () => {
+    expect(passportSrc).toContain('public-passport-buyer-label');
+  });
+
+  it('L04 — .json route NOT registered in public route (forbidden active route)', () => {
+    // The .json route was removed (governance note in comments is acceptable).
+    // Check that no ACTIVE fastify.get() route definition uses a .json suffix.
+    expect(publicRouteSrc).not.toMatch(/fastify\.(get|post|put)\s*\(\s*['"`][^'"`]*\.json/);
+  });
+
+  it('L05 — wl-dpp-label-config-panel testid still in WLDppLabelPanel', () => {
+    expect(panelSrc).toContain('wl-dpp-label-config-panel');
+  });
+
+  it('L06 — App.tsx WL_ADMIN_VIEWS does not include unsupported view strings', () => {
+    // Only expected views should be in WL_ADMIN_VIEWS
+    const forbidden = ['FULL_WL_PORTAL', 'CUSTOM_DOMAIN', 'LAUNCH'];
+    for (const view of forbidden) {
+      expect(appSrc).not.toContain(`'${view}'`);
+    }
+  });
+
+  it("L07 — App.tsx case 'dpp_label' does not introduce custom-domain logic", () => {
+    const caseBlock = appSrc.match(/case 'dpp_label':[\s\S]{0,300}/)?.[0] ?? '';
+    expect(caseBlock).not.toContain('customDomain');
+    expect(caseBlock).not.toContain('custom_domain');
+    expect(caseBlock).not.toContain('orgId');
+  });
+
+  it('L08 — No private ID exposure in nav wiring (no orgId in dpp_label nav area)', () => {
+    const dppLabelNavBlock = appSrc.match(
+      /case 'dpp_label':[\s\S]{0,500}/,
+    )?.[0] ?? '';
+    expect(dppLabelNavBlock).not.toContain('orgId');
+    expect(dppLabelNavBlock).not.toContain('org_id');
+    expect(dppLabelNavBlock).not.toContain('nodeId');
+  });
+
+  it('L09 — sessionRuntimeDescriptor dpp_label route has wlAdminView DPP_LABEL binding', () => {
+    // The route must bind to wlAdminView: 'DPP_LABEL' so normalizeWlAdminView resolves it
+    expect(descriptorSrc).toContain("wlAdminView: 'DPP_LABEL'");
+  });
+
+  it('L10 — dpp_label is NOT in non-WL route key arrays (no cross-contamination)', () => {
+    // B2B/B2C/Aggregator shell keys must not include dpp_label
+    const b2bBlock = descriptorSrc.match(/B2B_SHELL_ROUTE_KEYS[\s\S]{0,300}/)?.[0] ?? '';
+    const b2cBlock = descriptorSrc.match(/B2C_SHELL_ROUTE_KEYS[\s\S]{0,300}/)?.[0] ?? '';
+    const aggBlock = descriptorSrc.match(/AGGREGATOR_SHELL_ROUTE_KEYS[\s\S]{0,300}/)?.[0] ?? '';
+    expect(b2bBlock).not.toContain("'dpp_label'");
+    expect(b2cBlock).not.toContain("'dpp_label'");
+    expect(aggBlock).not.toContain("'dpp_label'");
   });
 });
