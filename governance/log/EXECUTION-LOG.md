@@ -29,6 +29,29 @@ Notes: TTP feature surface is inert at runtime (ttp_enabled=false).
 
 ---
 
+### TEXQTIC-TTP-SLICE-2-GST-VERIFICATION-GATE — 2026-05-03
+Type: IMPLEMENTATION — Backend Service + Routes + Frontend Components + Unit Tests
+Status: VERIFIED_COMPLETE
+Commit: a4c0d31 — feat(tradetrust-pay): add gst verification gate
+Title: TradeTrust Pay Slice 2 — GST Verification Gate (GstVerificationService, tenant/control routes, frontend card + queue, 25 unit tests)
+Summary: Implemented the complete GST Verification Gate application layer on top of the Slice 1
+  `gst_verifications` table. Created GstVerificationService with GSTIN validation (15 chars, state
+  codes 01–38, regex), tenant submit/GET routes (D-017-A org isolation, z.never() body guards),
+  control/admin GET+PATCH routes (SUPER_ADMIN gated, audit logged, org status advancement on APPROVED),
+  frontend API client, GstVerificationCard (tenant), GstVerificationQueue (admin), and 25 unit tests
+  (25/25 PASS). TypeScript: 0 errors. No migrations, no schema changes, no live GST API, no env changes.
+  ttp_enabled=false. Frontend components created but not wired into navigation (adjacent finding).
+Layer Impact: Layer 2 (decision/verification record), Layer 3 (this file)
+Notes: Frontend components (GstVerificationCard, GstVerificationQueue) are implementation-complete
+  but require UI wiring into navigation/pages (adjacent finding — implementation-ready, no design gate).
+  raw_verification_json seeded as {} — reserved for future live GST portal integration (design-gated).
+  org.status advancement (PENDING_VERIFICATION → VERIFICATION_APPROVED) on APPROVED requires live
+  integration verification when ttp_enabled is activated. ttp_enabled remains false.
+  Next candidate unit: TEXQTIC-TTP-SLICE-3-CIBIL-ELIGIBILITY-GATE — NOT AUTHORIZED until Paresh opens.
+  Authority: governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-SLICE-2-GST-VERIFICATION-VERIFIED-001.md
+
+---
+
 ## Log Schema
 
 Each entry uses this structure (defined by GOV-OS-001 Section 3.5, extended per GOV-OS-006):
