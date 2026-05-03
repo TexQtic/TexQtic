@@ -7068,3 +7068,12 @@ QA fixture passport (48d83d5a) will return passportMaturityLabel: "Silver -- Tra
 ### Commits
 [TEXQTIC] feat(dpp): add maturity label to structured data -- TECS-025
 [TEXQTIC] governance(dpp): close maturity label structured-data slice -- TECS-025
+
+---
+
+## [2026-05-15] Slice 4 — Invoice Domain
+
+**Commit:** `4d51f6e` — `feat(tradetrust-pay): add invoice domain`
+**Tests:** 18 invoice unit tests pass; 116 regression tests pass; tsc clean
+**Governance record:** `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-SLICE-4-INVOICE-DOMAIN-VERIFIED-001.md`
+**Status:** SLICE_4_INVOICE_DOMAIN_GATE_VERIFIED_COMPLETE
