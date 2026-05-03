@@ -80,6 +80,7 @@ model User {
   updatedAt                DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
   carts                    Cart[]
   approvedEvidenceClaims   DppEvidenceClaim[]
+  invoices                 invoices[]
   marketplaceCartSummaries MarketplaceCartSummary[]
   memberships              Membership[]
   orders                   Order[]
@@ -268,6 +269,7 @@ model FeatureFlag {
   description     String?
   createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+  value           String?
   tenantOverrides TenantFeatureOverride[]
 
   @@map("feature_flags")
@@ -476,26 +478,28 @@ model Order {
 /// Populated via governance migrations only.
 /// entity_type IN ('TRADE', 'ESCROW', 'CERTIFICATION') — enforced by DB CHECK.
 model LifecycleState {
-  id                                                                                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                                                                                   String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// Domain discriminant: TRADE | ESCROW | CERTIFICATION
-  entityType                                                                           String              @map("entity_type")
+  entityType                                                                           String                          @map("entity_type")
   /// Uppercase machine-readable state key, e.g. ORDER_CONFIRMED
-  stateKey                                                                             String              @map("state_key")
+  stateKey                                                                             String                          @map("state_key")
   /// If true, no outbound transitions are permitted from this state
-  isTerminal                                                                           Boolean             @default(false) @map("is_terminal")
+  isTerminal                                                                           Boolean                         @default(false) @map("is_terminal")
   /// If true, transitioning INTO this state cannot be undone by normal service calls
-  isIrreversible                                                                       Boolean             @default(false) @map("is_irreversible")
+  isIrreversible                                                                       Boolean                         @default(false) @map("is_irreversible")
   /// G-022 integration: 0=routine, 1=notable, 2=significant, 3=high, 4=critical
-  severityLevel                                                                        Int                 @default(0) @map("severity_level")
+  severityLevel                                                                        Int                             @default(0) @map("severity_level")
   /// Default MC gate for any transition INTO this state
-  requiresMakerChecker                                                                 Boolean             @default(false) @map("requires_maker_checker")
+  requiresMakerChecker                                                                 Boolean                         @default(false) @map("requires_maker_checker")
   description                                                                          String?
-  createdAt                                                                            DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  allowed_transitions_allowed_transitions_entity_type_from_state_keyTolifecycle_states AllowedTransition[] @relation("allowed_transitions_entity_type_from_state_keyTolifecycle_states")
-  allowed_transitions_allowed_transitions_entity_type_to_state_keyTolifecycle_states   AllowedTransition[] @relation("allowed_transitions_entity_type_to_state_keyTolifecycle_states")
+  createdAt                                                                            DateTime                        @default(now()) @map("created_at") @db.Timestamptz(6)
+  allowed_transitions_allowed_transitions_entity_type_from_state_keyTolifecycle_states AllowedTransition[]             @relation("allowed_transitions_entity_type_from_state_keyTolifecycle_states")
+  allowed_transitions_allowed_transitions_entity_type_to_state_keyTolifecycle_states   AllowedTransition[]             @relation("allowed_transitions_entity_type_to_state_keyTolifecycle_states")
   certifications                                                                       Certification[]
   escrow_accounts                                                                      escrow_accounts[]
+  invoices                                                                             invoices[]
   trades                                                                               Trade[]
+  verified_payable_certificates                                                        verified_payable_certificates[]
 
   @@unique([entityType, stateKey])
   @@index([entityType], map: "idx_lifecycle_states_entity_type")
@@ -839,37 +843,39 @@ model EscalationEvent {
 /// RLS: RESTRICTIVE guard + PERMISSIVE SELECT/INSERT for texqtic_app.
 /// No superadmin policy in Day 1 — deferred.
 model Trade {
-  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenantId          String           @map("tenant_id") @db.Uuid
-  buyerOrgId        String           @map("buyer_org_id") @db.Uuid
-  sellerOrgId       String           @map("seller_org_id") @db.Uuid
+  id                            String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId                      String                          @map("tenant_id") @db.Uuid
+  buyerOrgId                    String                          @map("buyer_org_id") @db.Uuid
+  sellerOrgId                   String                          @map("seller_org_id") @db.Uuid
   /// G-020: Current lifecycle state. Reuses lifecycle_states registry.
-  lifecycleStateId  String           @map("lifecycle_state_id") @db.Uuid
+  lifecycleStateId              String                          @map("lifecycle_state_id") @db.Uuid
   /// Human-readable external reference. Unique per tenant.
-  tradeReference    String           @map("trade_reference")
-  currency          String
+  tradeReference                String                          @map("trade_reference")
+  currency                      String
   /// DB CHECK: gross_amount > 0
-  grossAmount       Decimal          @map("gross_amount") @db.Decimal(18, 6)
+  grossAmount                   Decimal                         @map("gross_amount") @db.Decimal(18, 6)
   /// G-022 compatibility: informational flag. Never auto-toggles any config (D-022-C).
-  freezeRecommended Boolean          @default(false) @map("freeze_recommended")
+  freezeRecommended             Boolean                         @default(false) @map("freeze_recommended")
   /// G-023: optional link to the reasoning_logs row that informed this trade.
   /// ON DELETE RESTRICT — reasoning_logs is immutable anyway.
-  reasoningLogId    String?          @map("reasoning_log_id") @db.Uuid
-  createdByUserId   String?          @map("created_by_user_id") @db.Uuid
-  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  reasoningLogId                String?                         @map("reasoning_log_id") @db.Uuid
+  createdByUserId               String?                         @map("created_by_user_id") @db.Uuid
+  createdAt                     DateTime                        @default(now()) @map("created_at") @db.Timestamptz(6)
   /// Maintained by DB trigger trg_trades_set_updated_at on BEFORE UPDATE.
-  updatedAt         DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
-  escrow_id         String?          @db.Uuid
+  updatedAt                     DateTime                        @default(now()) @map("updated_at") @db.Timestamptz(6)
+  escrow_id                     String?                         @db.Uuid
   /// TECS-EXC-003: Optional source RFQ link for bounded RFQ-derived trade conversion.
-  sourceRfqId       String?          @unique @map("source_rfq_id") @db.Uuid
-  events            TradeEvent[]
-  buyerOrg          organizations    @relation("TradeBuyer", fields: [buyerOrgId], references: [id], onUpdate: NoAction, map: "fk_trades_buyer_org_id")
-  sellerOrg         organizations    @relation("TradeSeller", fields: [sellerOrgId], references: [id], onUpdate: NoAction, map: "fk_trades_seller_org_id")
-  escrow_accounts   escrow_accounts? @relation(fields: [escrow_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "trades_escrow_id_fk")
-  lifecycleState    LifecycleState   @relation(fields: [lifecycleStateId], references: [id], onUpdate: NoAction)
-  reasoningLog      ReasoningLog?    @relation(fields: [reasoningLogId], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  sourceRfq         Rfq?             @relation("trade_source_rfq", fields: [sourceRfqId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "trades_source_rfq_id_fk")
-  tenant            Tenant           @relation(fields: [tenantId], references: [id], onUpdate: NoAction)
+  sourceRfqId                   String?                         @unique @map("source_rfq_id") @db.Uuid
+  invoices                      invoices[]
+  events                        TradeEvent[]
+  buyerOrg                      organizations                   @relation("TradeBuyer", fields: [buyerOrgId], references: [id], onUpdate: NoAction, map: "fk_trades_buyer_org_id")
+  sellerOrg                     organizations                   @relation("TradeSeller", fields: [sellerOrgId], references: [id], onUpdate: NoAction, map: "fk_trades_seller_org_id")
+  escrow_accounts               escrow_accounts?                @relation(fields: [escrow_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "trades_escrow_id_fk")
+  lifecycleState                LifecycleState                  @relation(fields: [lifecycleStateId], references: [id], onUpdate: NoAction)
+  reasoningLog                  ReasoningLog?                   @relation(fields: [reasoningLogId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  sourceRfq                     Rfq?                            @relation("trade_source_rfq", fields: [sourceRfqId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "trades_source_rfq_id_fk")
+  tenant                        Tenant                          @relation(fields: [tenantId], references: [id], onUpdate: NoAction)
+  verified_payable_certificates verified_payable_certificates[]
 
   @@unique([tenantId, tradeReference], map: "trades_tenant_ref_unique")
   @@index([tenantId])
@@ -1044,51 +1050,61 @@ model BuyerSupplierRelationship {
 }
 
 model organizations {
-  id                           String                         @id @db.Uuid
-  slug                         String                         @unique @db.VarChar(100)
-  legal_name                   String                         @db.VarChar(500)
-  jurisdiction                 String                         @default("UNKNOWN") @db.VarChar(100)
-  registration_no              String?                        @db.VarChar(200)
-  org_type                     String                         @default("B2B") @db.VarChar(50)
-  risk_score                   Int                            @default(0) @db.SmallInt
+  id                                                                                       String                          @id @db.Uuid
+  slug                                                                                     String                          @unique @db.VarChar(100)
+  legal_name                                                                               String                          @db.VarChar(500)
+  jurisdiction                                                                             String                          @default("UNKNOWN") @db.VarChar(100)
+  registration_no                                                                          String?                         @db.VarChar(200)
+  org_type                                                                                 String                          @default("B2B") @db.VarChar(50)
+  risk_score                                                                               Int                             @default(0) @db.SmallInt
   /// Canonical organization lifecycle + onboarding state.
   /// Enforced by SQL check constraint and migration history, not a native Prisma enum.
   /// Legal values: ACTIVE | SUSPENDED | CLOSED | PENDING_VERIFICATION |
   /// VERIFICATION_APPROVED | VERIFICATION_REJECTED | VERIFICATION_NEEDS_MORE_INFO
-  status                       String                         @default("ACTIVE") @db.VarChar(30)
-  plan                         String                         @default("FREE") @db.VarChar(30)
-  effective_at                 DateTime                       @default(now()) @db.Timestamptz(6)
-  superseded_at                DateTime?                      @db.Timestamptz(6)
-  created_at                   DateTime                       @default(now()) @db.Timestamptz(6)
-  updated_at                   DateTime                       @default(now()) @db.Timestamptz(6)
-  is_white_label               Boolean                        @default(false)
-  external_orchestration_ref   String?                        @unique @db.VarChar(255)
-  primary_segment_key          String?                        @db.VarChar(100)
-  publication_posture          String                         @default("PRIVATE_OR_AUTH_ONLY") @db.VarChar(30)
-  price_disclosure_policy_mode String?                        @db.VarChar(30)
-  buyerRelationships           BuyerSupplierRelationship[]    @relation("BuyerSupplierRelationshipBuyer")
-  supplierRelationships        BuyerSupplierRelationship[]    @relation("BuyerSupplierRelationshipSupplier")
-  certification_lifecycle_logs CertificationLifecycleLog[]
-  certifications               Certification[]
-  documentEmbeddings           DocumentEmbedding[]
-  dppEvidenceClaims            DppEvidenceClaim[]
-  dpp_evidence_items           dpp_evidence_items[]
-  dpp_passport_states          dpp_passport_states[]
-  dpp_product_details          dpp_product_details[]
-  dpp_trade_links              dpp_trade_links[]
-  escalation_events            EscalationEvent[]
-  escrow_lifecycle_logs        EscrowLifecycleLog[]
-  node_certifications          node_certifications[]
-  role_positions               OrganizationRolePosition[]
-  secondary_segments           OrganizationSecondarySegment[]
-  tenants                      Tenant                         @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  pending_approvals            PendingApproval[]
-  sanctions                    Sanction[]
-  traceabilityEdges            TraceabilityEdge[]
-  traceabilityNodes            TraceabilityNode[]
-  trade_lifecycle_logs         TradeLifecycleLog[]
-  tradesBuyer                  Trade[]                        @relation("TradeBuyer")
-  tradesSeller                 Trade[]                        @relation("TradeSeller")
+  status                                                                                   String                          @default("ACTIVE") @db.VarChar(30)
+  plan                                                                                     String                          @default("FREE") @db.VarChar(30)
+  effective_at                                                                             DateTime                        @default(now()) @db.Timestamptz(6)
+  superseded_at                                                                            DateTime?                       @db.Timestamptz(6)
+  created_at                                                                               DateTime                        @default(now()) @db.Timestamptz(6)
+  updated_at                                                                               DateTime                        @default(now()) @db.Timestamptz(6)
+  is_white_label                                                                           Boolean                         @default(false)
+  external_orchestration_ref                                                               String?                         @unique @db.VarChar(255)
+  primary_segment_key                                                                      String?                         @db.VarChar(100)
+  publication_posture                                                                      String                          @default("PRIVATE_OR_AUTH_ONLY") @db.VarChar(30)
+  price_disclosure_policy_mode                                                             String?                         @db.VarChar(30)
+  buyerRelationships                                                                       BuyerSupplierRelationship[]     @relation("BuyerSupplierRelationshipBuyer")
+  supplierRelationships                                                                    BuyerSupplierRelationship[]     @relation("BuyerSupplierRelationshipSupplier")
+  certification_lifecycle_logs                                                             CertificationLifecycleLog[]
+  certifications                                                                           Certification[]
+  documentEmbeddings                                                                       DocumentEmbedding[]
+  dppEvidenceClaims                                                                        DppEvidenceClaim[]
+  dpp_evidence_items                                                                       dpp_evidence_items[]
+  dpp_passport_states                                                                      dpp_passport_states[]
+  dpp_product_details                                                                      dpp_product_details[]
+  dpp_trade_links                                                                          dpp_trade_links[]
+  escalation_events                                                                        EscalationEvent[]
+  escrow_lifecycle_logs                                                                    EscrowLifecycleLog[]
+  gst_verifications                                                                        gst_verifications?
+  invoice_lifecycle_logs                                                                   invoice_lifecycle_logs[]
+  invoices_invoices_buyer_org_idToorganizations                                            invoices[]                      @relation("invoices_buyer_org_idToorganizations")
+  invoices_invoices_org_idToorganizations                                                  invoices[]                      @relation("invoices_org_idToorganizations")
+  node_certifications                                                                      node_certifications[]
+  role_positions                                                                           OrganizationRolePosition[]
+  secondary_segments                                                                       OrganizationSecondarySegment[]
+  tenants                                                                                  Tenant                          @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  partner_routing_stubs                                                                    partner_routing_stubs[]
+  pending_approvals                                                                        PendingApproval[]
+  sanctions                                                                                Sanction[]
+  traceabilityEdges                                                                        TraceabilityEdge[]
+  traceabilityNodes                                                                        TraceabilityNode[]
+  trade_lifecycle_logs                                                                     TradeLifecycleLog[]
+  tradesBuyer                                                                              Trade[]                         @relation("TradeBuyer")
+  tradesSeller                                                                             Trade[]                         @relation("TradeSeller")
+  ttp_eligibility_assessments                                                              ttp_eligibility_assessments[]
+  ttp_enrollment_logs                                                                      ttp_enrollment_logs[]
+  verified_payable_certificates_verified_payable_certificates_buyer_org_idToorganizations  verified_payable_certificates[] @relation("verified_payable_certificates_buyer_org_idToorganizations")
+  verified_payable_certificates_verified_payable_certificates_org_idToorganizations        verified_payable_certificates[] @relation("verified_payable_certificates_org_idToorganizations")
+  verified_payable_certificates_verified_payable_certificates_seller_org_idToorganizations verified_payable_certificates[] @relation("verified_payable_certificates_seller_org_idToorganizations")
 
   @@index([effective_at(sort: Desc)], map: "idx_organizations_effective_at")
   @@index([jurisdiction], map: "idx_organizations_jurisdiction")
@@ -1307,6 +1323,7 @@ model DocumentExtractionDraft {
   updatedAt           DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   tenant              Tenant             @relation(fields: [orgId], references: [id], onUpdate: NoAction)
   dppEvidenceClaims   DppEvidenceClaim[]
+  invoices            invoices[]
 
   @@index([orgId], map: "idx_document_extraction_drafts_org_id")
   @@index([documentId], map: "idx_document_extraction_drafts_document_id")
@@ -1453,6 +1470,199 @@ model dpp_passport_label_config {
   show_texqtic_brand Boolean  @default(true)
   created_at         DateTime @default(now()) @db.Timestamptz(6)
   updated_at         DateTime @default(now()) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model gst_verifications {
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id                String        @unique(map: "gst_verifications_org_id_unique") @db.Uuid
+  gstin                 String        @db.VarChar(20)
+  legal_name_on_gst     String        @db.VarChar(500)
+  state_code            String        @db.VarChar(10)
+  registration_type     String        @db.VarChar(50)
+  filing_status         String        @default("UNKNOWN") @db.VarChar(30)
+  submitted_at          DateTime      @default(now()) @db.Timestamptz(6)
+  reviewed_at           DateTime?     @db.Timestamptz(6)
+  reviewed_by_admin_id  String?       @db.Uuid
+  review_outcome        String?       @db.VarChar(30)
+  review_notes          String?
+  raw_verification_json Json          @default("{}")
+  created_at            DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime      @default(now()) @db.Timestamptz(6)
+  organizations         organizations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "gst_verifications_org_id_fk")
+
+  @@index([gstin], map: "idx_gst_verifications_gstin")
+  @@index([org_id], map: "idx_gst_verifications_org_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model invoice_lifecycle_logs {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id           String        @db.Uuid
+  invoice_id       String        @db.Uuid
+  from_state_key   String?       @db.VarChar(100)
+  to_state_key     String        @db.VarChar(100)
+  actor_user_id    String?       @db.Uuid
+  actor_admin_id   String?       @db.Uuid
+  actor_type       String        @db.VarChar(50)
+  actor_role       String        @db.VarChar(50)
+  escalation_level Int?
+  maker_user_id    String?       @db.Uuid
+  checker_user_id  String?       @db.Uuid
+  ai_triggered     Boolean       @default(false)
+  impersonation_id String?       @db.Uuid
+  reason           String
+  request_id       String?       @db.VarChar(200)
+  created_at       DateTime      @default(now()) @db.Timestamptz(6)
+  invoices         invoices      @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "invoice_lifecycle_logs_invoice_id_fk")
+  organizations    organizations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "invoice_lifecycle_logs_org_id_fk")
+
+  @@index([invoice_id, created_at(sort: Desc)], map: "idx_invoice_lifecycle_logs_invoice_created")
+  @@index([org_id, created_at(sort: Desc)], map: "idx_invoice_lifecycle_logs_org_created")
+  @@index([to_state_key, created_at(sort: Desc)], map: "idx_invoice_lifecycle_logs_to_state_created")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model invoices {
+  id                                                 String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id                                             String                         @db.Uuid
+  buyer_org_id                                       String                         @db.Uuid
+  trade_id                                           String                         @db.Uuid
+  invoice_number                                     String                         @db.VarChar(100)
+  invoice_date                                       DateTime                       @db.Timestamptz(6)
+  due_date                                           DateTime?                      @db.Timestamptz(6)
+  currency                                           String                         @db.VarChar(10)
+  gross_amount                                       Decimal                        @db.Decimal(18, 6)
+  lifecycle_state_id                                 String                         @db.Uuid
+  document_url                                       String?                        @db.VarChar(1000)
+  extraction_draft_id                                String?                        @db.Uuid
+  notes                                              String?
+  created_by_user_id                                 String?                        @db.Uuid
+  created_at                                         DateTime                       @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime                       @default(now()) @db.Timestamptz(6)
+  invoice_lifecycle_logs                             invoice_lifecycle_logs[]
+  organizations_invoices_buyer_org_idToorganizations organizations                  @relation("invoices_buyer_org_idToorganizations", fields: [buyer_org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "invoices_buyer_org_id_fk")
+  users                                              User?                          @relation(fields: [created_by_user_id], references: [id], onUpdate: NoAction, map: "invoices_created_by_user_id_fk")
+  document_extraction_drafts                         DocumentExtractionDraft?       @relation(fields: [extraction_draft_id], references: [id], onUpdate: NoAction, map: "invoices_extraction_draft_id_fk")
+  lifecycle_states                                   LifecycleState                 @relation(fields: [lifecycle_state_id], references: [id], onUpdate: NoAction, map: "invoices_lifecycle_state_id_fk")
+  organizations_invoices_org_idToorganizations       organizations                  @relation("invoices_org_idToorganizations", fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "invoices_org_id_fk")
+  trades                                             Trade                          @relation(fields: [trade_id], references: [id], onUpdate: NoAction, map: "invoices_trade_id_fk")
+  verified_payable_certificates                      verified_payable_certificates?
+
+  @@unique([org_id, trade_id, invoice_number], map: "invoices_org_trade_number_unique")
+  @@index([buyer_org_id, created_at(sort: Desc)], map: "idx_invoices_buyer_org_created")
+  @@index([lifecycle_state_id], map: "idx_invoices_lifecycle_state_id")
+  @@index([org_id, created_at(sort: Desc)], map: "idx_invoices_org_created")
+  @@index([trade_id], map: "idx_invoices_trade_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model partner_routing_stubs {
+  id                            String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id                        String                        @db.Uuid
+  vpc_id                        String                        @db.Uuid
+  partner_type                  String                        @default("NBFC_STUB") @db.VarChar(50)
+  payload_json                  Json                          @default("{}")
+  payload_version               String                        @default("1.0") @db.VarChar(10)
+  generated_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  transmitted_at                DateTime?                     @db.Timestamptz(6)
+  transmission_status           String                        @default("PENDING") @db.VarChar(30)
+  response_json                 Json                          @default("{}")
+  created_at                    DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime                      @default(now()) @db.Timestamptz(6)
+  organizations                 organizations                 @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "partner_routing_stubs_org_id_fk")
+  verified_payable_certificates verified_payable_certificates @relation(fields: [vpc_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "partner_routing_stubs_vpc_id_fk")
+
+  @@index([org_id], map: "idx_partner_routing_stubs_org_id")
+  @@index([transmission_status, created_at(sort: Desc)], map: "idx_partner_routing_stubs_status")
+  @@index([vpc_id], map: "idx_partner_routing_stubs_vpc_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ttp_eligibility_assessments {
+  id                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id               String        @db.Uuid
+  assessment_type      String        @default("MANUAL") @db.VarChar(50)
+  risk_tier            Int           @default(0) @db.SmallInt
+  eligibility_outcome  String        @db.VarChar(30)
+  max_invoice_amount   Decimal?      @db.Decimal(18, 6)
+  currency             String        @default("INR") @db.VarChar(10)
+  assessed_at          DateTime      @default(now()) @db.Timestamptz(6)
+  valid_until          DateTime?     @db.Timestamptz(6)
+  assessed_by_admin_id String?       @db.Uuid
+  assessment_notes     String?
+  raw_bureau_json      Json          @default("{}")
+  created_at           DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime      @default(now()) @db.Timestamptz(6)
+  organizations        organizations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ttp_eligibility_assessments_org_id_fk")
+
+  @@index([org_id, assessed_at(sort: Desc)], map: "idx_ttp_eligibility_org_assessed")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ttp_enrollment_logs {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id        String        @db.Uuid
+  from_state    String?       @db.VarChar(50)
+  to_state      String        @db.VarChar(50)
+  actor_type    String        @db.VarChar(50)
+  actor_id      String?       @db.Uuid
+  reason        String
+  ai_triggered  Boolean       @default(false)
+  created_at    DateTime      @default(now()) @db.Timestamptz(6)
+  organizations organizations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ttp_enrollment_logs_org_id_fk")
+
+  @@index([org_id, created_at(sort: Desc)], map: "idx_ttp_enrollment_logs_org_created")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model verified_payable_certificates {
+  id                                                                       String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id                                                                   String                  @db.Uuid
+  invoice_id                                                               String                  @unique(map: "vpc_invoice_id_unique") @db.Uuid
+  trade_id                                                                 String                  @db.Uuid
+  buyer_org_id                                                             String                  @db.Uuid
+  seller_org_id                                                            String                  @db.Uuid
+  vpc_reference                                                            String                  @unique(map: "vpc_reference_unique") @db.VarChar(100)
+  currency                                                                 String                  @db.VarChar(10)
+  invoice_amount                                                           Decimal                 @db.Decimal(18, 6)
+  risk_tier                                                                Int                     @db.SmallInt
+  lifecycle_state_id                                                       String                  @db.Uuid
+  issued_at                                                                DateTime                @default(now()) @db.Timestamptz(6)
+  expires_at                                                               DateTime?               @db.Timestamptz(6)
+  voided_at                                                                DateTime?               @db.Timestamptz(6)
+  void_reason                                                              String?
+  partner_routing_eligible                                                 Boolean                 @default(false)
+  created_by_admin_id                                                      String?                 @db.Uuid
+  created_at                                                               DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                                                               DateTime                @default(now()) @db.Timestamptz(6)
+  partner_routing_stubs                                                    partner_routing_stubs[]
+  organizations_verified_payable_certificates_buyer_org_idToorganizations  organizations           @relation("verified_payable_certificates_buyer_org_idToorganizations", fields: [buyer_org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "vpc_buyer_org_id_fk")
+  invoices                                                                 invoices                @relation(fields: [invoice_id], references: [id], onUpdate: NoAction, map: "vpc_invoice_id_fk")
+  lifecycle_states                                                         LifecycleState          @relation(fields: [lifecycle_state_id], references: [id], onUpdate: NoAction, map: "vpc_lifecycle_state_id_fk")
+  organizations_verified_payable_certificates_org_idToorganizations        organizations           @relation("verified_payable_certificates_org_idToorganizations", fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "vpc_org_id_fk")
+  organizations_verified_payable_certificates_seller_org_idToorganizations organizations           @relation("verified_payable_certificates_seller_org_idToorganizations", fields: [seller_org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "vpc_seller_org_id_fk")
+  trades                                                                   Trade                   @relation(fields: [trade_id], references: [id], onUpdate: NoAction, map: "vpc_trade_id_fk")
+
+  @@index([buyer_org_id], map: "idx_vpc_buyer_org_id")
+  @@index([lifecycle_state_id], map: "idx_vpc_lifecycle_state_id")
+  @@index([org_id], map: "idx_vpc_org_id")
+  @@index([org_id, issued_at(sort: Desc)], map: "idx_vpc_org_issued")
+  @@index([trade_id], map: "idx_vpc_trade_id")
 }
 
 enum TenantType {
