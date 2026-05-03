@@ -21,6 +21,8 @@ import tenantCertificationRoutes from './tenant/certifications.g019.js';
 import tenantTraceabilityRoutes from './tenant/traceability.g016.js';
 import tenantDocumentRoutes from './tenant/documents.js';
 import tenantGstVerificationRoutes from './tenant/gst-verification.js';
+import tenantInvoiceRoutes from './tenant/invoices.js';
+import tenantInvoiceApprovalRoutes from './tenant/invoice-approval.js';
 import {
   DPP_EVIDENCE_TYPES,
   DPP_EVIDENCE_VISIBILITY_VALUES,
@@ -8982,6 +8984,16 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   // POST /api/tenant/gst-verification  — submit / re-submit for admin review
   // GET  /api/tenant/gst-verification  — get own verification status
   await fastify.register(tenantGstVerificationRoutes, { prefix: '/tenant/gst-verification' });
+
+  // ─── TTP Slice 4: Invoice Domain ─────────────────────────────────────────────
+  // POST   /api/tenant/invoices                             — create invoice (seller)
+  // GET    /api/tenant/invoices                             — list invoices (seller)
+  // GET    /api/tenant/invoices/:invoiceId                  — get invoice detail (seller)
+  // POST   /api/tenant/invoices/:invoiceId/transition       — submit invoice (DRAFT→SUBMITTED)
+  // GET    /api/tenant/trades/:tradeId/invoice-approval     — buyer invoice view
+  // POST   /api/tenant/invoices/:invoiceId/buyer-action     — buyer acknowledge / dispute
+  await fastify.register(tenantInvoiceRoutes, { prefix: '/tenant/invoices' });
+  await fastify.register(tenantInvoiceApprovalRoutes, { prefix: '/tenant' });
 
   // ─── G-026 TECS 6D: Domain CRUD (OPS-WLADMIN-DOMAINS-001) ────────────────
   // GET    /api/tenant/domains        — list custom domains for current tenant

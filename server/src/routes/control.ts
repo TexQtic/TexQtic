@@ -27,6 +27,7 @@ import adminTraceabilityRoutes from './admin/traceability.g016.js';
 import controlPlaneAiRoutes from './control/ai.g028.js';
 import controlGstVerificationRoutes from './control/gst-verification.js';
 import controlTtpEligibilityRoutes from './control/ttp-eligibility.js';
+import controlInvoiceRoutes from './control/invoices.js';
 
 // ── Admin context helper (G-004) ──────────────────────────────────────────────
 // Canonical replacement for withDbContextLegacy({ isAdmin: true }).
@@ -2419,6 +2420,12 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   // POST  /api/control/ttp/eligibility/:orgId  — create assessment (SUPER_ADMIN)
   // GET   /api/control/ttp/eligibility/:orgId  — get history + latest
   await fastify.register(controlTtpEligibilityRoutes, { prefix: '/ttp/eligibility' });
+
+  // ─── TTP Slice 4: Invoice Domain ─────────────────────────────────────────────
+  // GET    /api/control/invoices              — list invoices (cross-tenant, admin)
+  // GET    /api/control/invoices/:invoiceId   — get invoice detail
+  // PATCH  /api/control/invoices/:invoiceId/transition — admin lifecycle transition (SUPER_ADMIN)
+  await fastify.register(controlInvoiceRoutes, { prefix: '/invoices' });
 };
 
 export default controlRoutes;
