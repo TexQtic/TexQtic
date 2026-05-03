@@ -410,7 +410,7 @@ export default function InvoiceOversight() {
                     ['Invoice Date', new Date(detail.invoice_date).toLocaleDateString()],
                     detail.due_date ? ['Due Date', new Date(detail.due_date).toLocaleDateString()] : null,
                   ]
-                    .filter(Boolean)
+                    .filter((row): row is (string | React.ReactElement)[] => row !== null)
                     .map(([label, value]) => (
                       <div key={String(label)} className="flex justify-between gap-2">
                         <dt className="text-slate-500 shrink-0">{label}</dt>

@@ -119,8 +119,7 @@ export type BuyerAction = 'ACKNOWLEDGE' | 'DISPUTE';
 // ─── Tenant seller API ────────────────────────────────────────────────────────
 
 export async function createInvoice(input: CreateInvoiceInput): Promise<TenantInvoiceRecord> {
-  const res = await tenantPost('/api/tenant/invoices', input);
-  return res.data as TenantInvoiceRecord;
+  return tenantPost<TenantInvoiceRecord>('/api/tenant/invoices', input);
 }
 
 export async function listInvoices(params?: {
@@ -130,13 +129,11 @@ export async function listInvoices(params?: {
   const query = params
     ? '?' + new URLSearchParams(Object.entries(params).filter(([, v]) => v != null) as [string, string][]).toString()
     : '';
-  const res = await tenantGet(`/api/tenant/invoices${query}`);
-  return res.data as TenantInvoiceRecord[];
+  return tenantGet<TenantInvoiceRecord[]>(`/api/tenant/invoices${query}`);
 }
 
 export async function getInvoice(invoiceId: string): Promise<TenantInvoiceRecord> {
-  const res = await tenantGet(`/api/tenant/invoices/${invoiceId}`);
-  return res.data as TenantInvoiceRecord;
+  return tenantGet<TenantInvoiceRecord>(`/api/tenant/invoices/${invoiceId}`);
 }
 
 export async function transitionInvoice(
@@ -144,11 +141,10 @@ export async function transitionInvoice(
   to_state_key: 'SUBMITTED',
   reason: string,
 ): Promise<TenantInvoiceRecord> {
-  const res = await tenantPost(`/api/tenant/invoices/${invoiceId}/transition`, {
+  return tenantPost<TenantInvoiceRecord>(`/api/tenant/invoices/${invoiceId}/transition`, {
     to_state_key,
     reason,
   });
-  return res.data as TenantInvoiceRecord;
 }
 
 // ─── Tenant buyer API ─────────────────────────────────────────────────────────
@@ -156,8 +152,7 @@ export async function transitionInvoice(
 export async function getBuyerInvoiceApproval(
   tradeId: string,
 ): Promise<BuyerInvoiceRecord[]> {
-  const res = await tenantGet(`/api/tenant/trades/${tradeId}/invoice-approval`);
-  return res.data as BuyerInvoiceRecord[];
+  return tenantGet<BuyerInvoiceRecord[]>(`/api/tenant/trades/${tradeId}/invoice-approval`);
 }
 
 export async function submitBuyerAction(
@@ -165,11 +160,10 @@ export async function submitBuyerAction(
   action: BuyerAction,
   reason: string,
 ): Promise<{ acknowledged: boolean; new_state_key: InvoiceStateKey }> {
-  const res = await tenantPost(`/api/tenant/invoices/${invoiceId}/buyer-action`, {
-    action,
-    reason,
-  });
-  return res.data as { acknowledged: boolean; new_state_key: InvoiceStateKey };
+  return tenantPost<{ acknowledged: boolean; new_state_key: InvoiceStateKey }>(
+    `/api/tenant/invoices/${invoiceId}/buyer-action`,
+    { action, reason },
+  );
 }
 
 // ─── Admin (control-plane) API ────────────────────────────────────────────────
@@ -188,19 +182,16 @@ export async function adminListInvoices(params?: {
           .map(([k, v]) => [k, String(v)]),
       ).toString()
     : '';
-  const res = await adminGet(`/api/control/invoices${query}`);
-  return res.data as AdminInvoiceRecord[];
+  return adminGet<AdminInvoiceRecord[]>(`/api/control/invoices${query}`);
 }
 
 export async function adminGetInvoice(invoiceId: string): Promise<AdminInvoiceRecord> {
-  const res = await adminGet(`/api/control/invoices/${invoiceId}`);
-  return res.data as AdminInvoiceRecord;
+  return adminGet<AdminInvoiceRecord>(`/api/control/invoices/${invoiceId}`);
 }
 
 export async function adminTransitionInvoice(
   invoiceId: string,
   input: AdminTransitionInput,
 ): Promise<AdminInvoiceRecord> {
-  const res = await adminPatch(`/api/control/invoices/${invoiceId}/transition`, input);
-  return res.data as AdminInvoiceRecord;
+  return adminPatch<AdminInvoiceRecord>(`/api/control/invoices/${invoiceId}/transition`, input);
 }
