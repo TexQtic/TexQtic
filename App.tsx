@@ -37,6 +37,14 @@ import { TenantAuditLogs } from './components/Tenant/TenantAuditLogs';
 // TECS-FBW-002-B: G-017 tenant trade read-only panel
 import { TradesPanel } from './components/Tenant/TradesPanel';
 import { TraceabilityAdmin } from './components/ControlPlane/TraceabilityAdmin';
+// TTP UI surfaces: tenant GST verification, invoices, invoice approval
+import { GstVerificationCard } from './components/Tenant/GstVerificationCard';
+import InvoicesPanel from './components/Tenant/InvoicesPanel';
+import InvoiceApprovalView from './components/Tenant/InvoiceApprovalView';
+// TTP UI surfaces: control-plane GST queue, TTP eligibility, invoice oversight
+import { GstVerificationQueue } from './components/ControlPlane/GstVerificationQueue';
+import { TtpEligibilityConsole } from './components/ControlPlane/TtpEligibilityConsole';
+import InvoiceOversight from './components/ControlPlane/InvoiceOversight';
 // TECS-FBW-007: marketplace_cart_summaries projection admin panel (read-only)
 import { CartSummariesPanel } from './components/ControlPlane/CartSummariesPanel';
 // PW5-W2: G-018 cross-tenant escrow admin read panel (D-020-B: no balance)
@@ -1030,6 +1038,8 @@ const VERIFICATION_BLOCKED_VIEWS = new Set([
   'SUPPLIER_RFQ_INBOX',
   'ESCROW',
   'SETTLEMENT',
+  'INVOICES',
+  'INVOICE_APPROVAL',
 ]);
 const ENTERPRISE_HOME_CATALOG_FIRST_PAINT_LIMIT = 8;
 const ENTERPRISE_HOME_CATALOG_TAIL_LIMIT = 12;
@@ -1142,6 +1152,9 @@ const EXPERIENCE_VIEWS = [
   'TRADES',
   'RFQS',
   'SUPPLIER_RFQ_INBOX',
+  'GST_VERIFICATION',
+  'INVOICES',
+  'INVOICE_APPROVAL',
 ] as const;
 type ExperienceView = (typeof EXPERIENCE_VIEWS)[number];
 
@@ -2143,6 +2156,8 @@ const App: React.FC = () => {
   const [adminView, setAdminView] = useState<AdminView>('TENANTS');
   const [disputeEscalationBridge, setDisputeEscalationBridge] = useState<DisputeEscalationBridgeTarget | null>(null);
   const [financeEscrowBridge, setFinanceEscrowBridge] = useState<FinanceEscrowBridgeTarget | null>(null);
+  const [invoiceApprovalTradeId, setInvoiceApprovalTradeId] = useState<string | null>(null);
+  const [ttpEligibilityBridgeOrgId, setTtpEligibilityBridgeOrgId] = useState<string | null>(null);
   const controlPlaneActorLabel = useMemo(() => {
     return formatControlPlaneActorLabel(controlPlaneIdentity);
   }, [controlPlaneIdentity]);
@@ -2154,6 +2169,7 @@ const App: React.FC = () => {
       setSelectedTenant(null);
       setDisputeEscalationBridge(null);
       setFinanceEscrowBridge(null);
+      setTtpEligibilityBridgeOrgId(null);
       setAdminView('TENANTS');
       setAppState('EXPERIENCE');
       return;
@@ -2164,6 +2180,7 @@ const App: React.FC = () => {
     setSelectedTenant(null);
     setDisputeEscalationBridge(null);
     setFinanceEscrowBridge(null);
+    setTtpEligibilityBridgeOrgId(null);
     setAdminView('TENANTS');
     setAppState('CONTROL_PLANE');
   };
@@ -5101,6 +5118,25 @@ const App: React.FC = () => {
         );
       case 'escrow':
         return <EscrowPanel onBack={() => navigateTenantDefaultManifestRoute()} />;
+      case 'gst_verification':
+        return <GstVerificationCard onBack={() => navigateTenantDefaultManifestRoute()} />;
+      case 'invoices':
+        return <InvoicesPanel />;
+      case 'invoice_approval':
+        if (!invoiceApprovalTradeId) {
+          return (
+            <div className="flex flex-col items-center justify-center py-24 text-slate-400">
+              <div className="text-4xl mb-3">📄</div>
+              <p className="text-sm font-medium">No trade selected.</p>
+              <p className="text-xs mt-1">Navigate to a trade to view its invoices.</p>
+            </div>
+          );
+        }
+        return (
+          <InvoiceApprovalView
+            tradeId={invoiceApprovalTradeId}
+          />
+        );
       case 'escalations':
         return <EscalationsPanel onBack={() => navigateTenantDefaultManifestRoute()} />;
       case 'settlement':
@@ -5743,6 +5779,22 @@ const App: React.FC = () => {
         return <AdminRBAC />;
       case 'events':
         return <EventStream />;
+      // TTP control-plane surfaces
+      case 'gst_verification_queue':
+        return <GstVerificationQueue />;
+      case 'ttp_eligibility':
+        if (!ttpEligibilityBridgeOrgId) {
+          return (
+            <div className="flex flex-col items-center justify-center py-24 text-slate-400">
+              <div className="text-4xl mb-3">🏢</div>
+              <p className="text-sm font-medium">No tenant selected.</p>
+              <p className="text-xs mt-1">Navigate from a Tenant Detail view to run a TTP eligibility assessment.</p>
+            </div>
+          );
+        }
+        return <TtpEligibilityConsole orgId={ttpEligibilityBridgeOrgId} />;
+      case 'invoice_oversight':
+        return <InvoiceOversight />;
       default:
         return null;
     }

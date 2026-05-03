@@ -389,7 +389,7 @@ export function EscrowPanel({ onBack }: Props) {
               ← Back
             </button>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">Escrow Accounts</h1>
+              <h1 className="text-xl font-bold text-slate-900">TradeTrust Ledger</h1>
               <p className="text-xs text-slate-500 mt-0.5">
                 Tenant escrow lifecycle. Click a row to view detail and manage.
               </p>
@@ -402,7 +402,7 @@ export function EscrowPanel({ onBack }: Props) {
                 onClick={openCreate}
                 className="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition"
               >
-                + New Escrow
+                + New Ledger
               </button>
             </div>
           )}
@@ -412,14 +412,14 @@ export function EscrowPanel({ onBack }: Props) {
         {listLoading && (
           <div className="text-center py-16 text-slate-400">
             <div className="text-3xl mb-3">⏳</div>
-            <p className="text-sm">Loading escrow accounts…</p>
+            <p className="text-sm">Loading TradeTrust Ledger accounts…</p>
           </div>
         )}
 
         {/* Error */}
         {!listLoading && listError && (
           <div className="bg-rose-50 border border-rose-200 rounded-lg p-4 text-sm text-rose-700">
-            <strong>Error loading escrow accounts:</strong> {listError}
+            <strong>Error loading TradeTrust Ledger accounts:</strong> {listError}
           </div>
         )}
 
@@ -427,13 +427,13 @@ export function EscrowPanel({ onBack }: Props) {
         {!listLoading && !listError && escrows.length === 0 && (
           <div className="text-center py-16 text-slate-400 bg-white rounded-xl border border-slate-200">
             <div className="text-4xl mb-3">🔒</div>
-            <p className="text-sm font-medium">No escrow accounts found.</p>
-            <p className="text-xs mt-1">Create your first escrow account to get started.</p>
+            <p className="text-sm font-medium">No TradeTrust Ledger accounts found.</p>
+            <p className="text-xs mt-1">Create your first TradeTrust Ledger account to get started.</p>
             <button
               onClick={openCreate}
               className="mt-4 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition"
             >
-              + New Escrow
+              + New Ledger
             </button>
           </div>
         )}
@@ -497,7 +497,7 @@ export function EscrowPanel({ onBack }: Props) {
             ← Back to list
           </button>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Create Escrow Account</h1>
+            <h1 className="text-xl font-bold text-slate-900">Create TradeTrust Ledger Account</h1>
             <p className="text-xs text-slate-500 mt-0.5">
               New accounts start in DRAFT state. D-017-A: no tenant identifier sent.
             </p>
@@ -507,8 +507,8 @@ export function EscrowPanel({ onBack }: Props) {
         {/* Success state */}
         {createSuccess ? (
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 space-y-3">
-            <p className="text-sm font-bold text-emerald-800">✅ Escrow account created</p>
-            <p className="text-xs text-emerald-700 font-mono">Escrow ID: {createSuccess}</p>
+            <p className="text-sm font-bold text-emerald-800">✅ TradeTrust Ledger account created</p>
+            <p className="text-xs text-emerald-700 font-mono">Ledger ID: {createSuccess}</p>
             <div className="flex gap-3 pt-1">
               <button
                 onClick={() => openDetail(createSuccess)}

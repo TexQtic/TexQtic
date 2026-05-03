@@ -59,7 +59,7 @@ const AGGREGATOR_ROUTE_LABELS: Partial<Record<RuntimeLocalRouteKey, string>> = {
   home: 'Companies',
   orders: 'Orders',
   dpp: 'DPP Passport',
-  escrow: 'Escrow',
+  escrow: 'TradeTrust Ledger',
   escalations: 'Escalations',
   settlement: 'Settlement',
   certifications: 'Certifications',
@@ -326,7 +326,7 @@ export const B2BShell: React.FC<B2BShellProps> = ({
         ...(hasShellRoute(navigation.surface, 'buyer_catalog') ? [{ key: 'buyer_catalog', label: 'Browse Suppliers', active: activeRouteKey === 'buyer_catalog', onSelect: () => navigation.onNavigateRoute('buyer_catalog') }] : []),
         ...(hasShellRoute(navigation.surface, 'orders') ? [{ key: 'orders', label: 'Orders', active: activeRouteKey === 'orders', onSelect: () => navigation.onNavigateRoute('orders') }] : []),
         ...(hasShellRoute(navigation.surface, 'dpp') ? [{ key: 'dpp', label: 'DPP Passport', active: activeRouteKey === 'dpp', onSelect: () => navigation.onNavigateRoute('dpp') }] : []),
-        ...(hasShellRoute(navigation.surface, 'escrow') ? [{ key: 'escrow', label: 'Escrow', active: activeRouteKey === 'escrow', onSelect: () => navigation.onNavigateRoute('escrow') }] : []),
+        ...(hasShellRoute(navigation.surface, 'escrow') ? [{ key: 'escrow', label: 'TradeTrust Ledger', active: activeRouteKey === 'escrow', onSelect: () => navigation.onNavigateRoute('escrow') }] : []),
         ...(hasShellRoute(navigation.surface, 'escalations') ? [{ key: 'escalations', label: 'Escalations', active: activeRouteKey === 'escalations', onSelect: () => navigation.onNavigateRoute('escalations') }] : []),
         ...(hasShellRoute(navigation.surface, 'settlement') ? [{ key: 'settlement', label: 'Settlement', active: activeRouteKey === 'settlement', onSelect: () => navigation.onNavigateRoute('settlement') }] : []),
         ...(hasShellRoute(navigation.surface, 'certifications') ? [{ key: 'certifications', label: 'Certifications', active: activeRouteKey === 'certifications', onSelect: () => navigation.onNavigateRoute('certifications') }] : []),
@@ -368,7 +368,7 @@ export const B2BShell: React.FC<B2BShellProps> = ({
             {hasShellRoute(navigation.surface, 'buyer_catalog') && <button onClick={() => navigation.onNavigateRoute('buyer_catalog')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'buyer_catalog' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>🏪 Browse Suppliers</button>}
             {hasShellRoute(navigation.surface, 'orders') && <button onClick={() => navigation.onNavigateRoute('orders')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'orders' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>🛍️ Orders</button>}
             {hasShellRoute(navigation.surface, 'dpp') && <button onClick={() => navigation.onNavigateRoute('dpp')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'dpp' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>🔍 DPP Passport</button>}
-            {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'escrow' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>🔒 Escrow</button>}
+            {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'escrow' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>� TradeTrust Ledger</button>}
             {hasShellRoute(navigation.surface, 'escalations') && <button onClick={() => navigation.onNavigateRoute('escalations')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'escalations' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>🚨 Escalations</button>}
             {hasShellRoute(navigation.surface, 'settlement') && <button onClick={() => navigation.onNavigateRoute('settlement')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'settlement' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>💸 Settlement</button>}
             {hasShellRoute(navigation.surface, 'certifications') && <button onClick={() => navigation.onNavigateRoute('certifications')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'certifications' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>📋 Certifications</button>}
@@ -416,7 +416,7 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, navigation })
     { key: 'home', label: 'Home', onSelect: () => navigation.onNavigateRoute('home') },
     ...(showAuthenticatedAffordances && hasShellRoute(navigation.surface, 'orders') ? [{ key: 'orders', label: 'Orders', onSelect: () => navigation.onNavigateRoute('orders') }] : []),
     ...(showAuthenticatedAffordances && hasShellRoute(navigation.surface, 'dpp') ? [{ key: 'dpp', label: 'DPP Passport', onSelect: () => navigation.onNavigateRoute('dpp') }] : []),
-    ...(showAuthenticatedAffordances && hasShellRoute(navigation.surface, 'escrow') ? [{ key: 'escrow', label: 'Escrow', onSelect: () => navigation.onNavigateRoute('escrow') }] : []),
+    ...(showAuthenticatedAffordances && hasShellRoute(navigation.surface, 'escrow') ? [{ key: 'escrow', label: 'TradeTrust Ledger', onSelect: () => navigation.onNavigateRoute('escrow') }] : []),
     ...(showAuthenticatedAffordances && hasShellRoute(navigation.surface, 'escalations') ? [{ key: 'escalations', label: 'Escalations', onSelect: () => navigation.onNavigateRoute('escalations') }] : []),
     ...(showAuthenticatedAffordances && hasShellRoute(navigation.surface, 'settlement') ? [{ key: 'settlement', label: 'Settlement', onSelect: () => navigation.onNavigateRoute('settlement') }] : []),
     ...(showAuthenticatedAffordances && hasShellRoute(navigation.surface, 'certifications') ? [{ key: 'certifications', label: 'Certifications', onSelect: () => navigation.onNavigateRoute('certifications') }] : []),
@@ -478,7 +478,7 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, navigation })
           <div className="hidden md:flex gap-6 items-center">
             {hasShellRoute(navigation.surface, 'orders') && <button onClick={() => navigation.onNavigateRoute('orders')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Orders</button>}
             {hasShellRoute(navigation.surface, 'dpp') && <button onClick={() => navigation.onNavigateRoute('dpp')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">DPP Passport</button>}
-            {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Escrow</button>}
+            {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">TradeTrust Ledger</button>}
             {hasShellRoute(navigation.surface, 'escalations') && <button onClick={() => navigation.onNavigateRoute('escalations')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Escalations</button>}
             {hasShellRoute(navigation.surface, 'settlement') && <button onClick={() => navigation.onNavigateRoute('settlement')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Settlement</button>}
             {hasShellRoute(navigation.surface, 'certifications') && <button onClick={() => navigation.onNavigateRoute('certifications')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Certifications</button>}
@@ -509,7 +509,7 @@ export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, naviga
     { key: 'team', label: 'Team Access', onSelect: navigation.onNavigateTeam },
     ...(hasShellRoute(navigation.surface, 'orders') ? [{ key: 'orders', label: 'Orders', onSelect: () => navigation.onNavigateRoute('orders') }] : []),
     ...(hasShellRoute(navigation.surface, 'dpp') ? [{ key: 'dpp', label: 'DPP Passport', onSelect: () => navigation.onNavigateRoute('dpp') }] : []),
-    ...(hasShellRoute(navigation.surface, 'escrow') ? [{ key: 'escrow', label: 'Escrow', onSelect: () => navigation.onNavigateRoute('escrow') }] : []),
+    ...(hasShellRoute(navigation.surface, 'escrow') ? [{ key: 'escrow', label: 'TradeTrust Ledger', onSelect: () => navigation.onNavigateRoute('escrow') }] : []),
     ...(hasShellRoute(navigation.surface, 'escalations') ? [{ key: 'escalations', label: 'Escalations', onSelect: () => navigation.onNavigateRoute('escalations') }] : []),
     ...(hasShellRoute(navigation.surface, 'settlement') ? [{ key: 'settlement', label: 'Settlement', onSelect: () => navigation.onNavigateRoute('settlement') }] : []),
     ...(hasShellRoute(navigation.surface, 'certifications') ? [{ key: 'certifications', label: 'Certifications', onSelect: () => navigation.onNavigateRoute('certifications') }] : []),

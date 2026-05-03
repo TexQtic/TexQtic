@@ -150,7 +150,13 @@ export type RuntimeLocalRouteKey =
   | 'logs'
   | 'rbac'
   | 'events'
-  | 'buyer_catalog';
+  | 'buyer_catalog'
+  | 'gst_verification'
+  | 'invoices'
+  | 'invoice_approval'
+  | 'gst_verification_queue'
+  | 'ttp_eligibility'
+  | 'invoice_oversight';
 
 export interface RuntimeLocalRouteStateBinding {
   expView?: string;
@@ -330,6 +336,9 @@ const CONTROL_PLANE_ROUTE_GROUP = defineRuntimeRouteGroup('control_plane_operati
   defineRuntimeRoute('maker_checker', 'Maker-Checker', 'MAKER_CHECKER', { adminView: 'MAKER_CHECKER' }),
   defineRuntimeRoute('ai', 'AI Governance', 'AI', { adminView: 'AI' }),
   defineRuntimeRoute('events', 'Live Event Stream', 'EVENTS', { adminView: 'EVENTS' }),
+  defineRuntimeRoute('gst_verification_queue', 'GST Verification Queue', 'GST_VERIFICATION_QUEUE', { adminView: 'GST_VERIFICATION_QUEUE' }),
+  defineRuntimeRoute('ttp_eligibility', 'TTP Eligibility', 'TTP_ELIGIBILITY', { adminView: 'TTP_ELIGIBILITY' }),
+  defineRuntimeRoute('invoice_oversight', 'Invoice Oversight', 'INVOICE_OVERSIGHT', { adminView: 'INVOICE_OVERSIGHT' }),
   defineRuntimeRoute('logs', 'Audit Logs', 'LOGS', { adminView: 'LOGS' }),
   defineRuntimeRoute('rbac', 'Access Control', 'RBAC', { adminView: 'RBAC' }),
   defineRuntimeRoute('health', 'Health Status', 'HEALTH', { adminView: 'HEALTH' }),
@@ -346,7 +355,10 @@ const RFQ_ROUTE_GROUP = defineRuntimeRouteGroup('rfq_sourcing', [
 
 const OPERATIONAL_WORKSPACE_ROUTE_GROUP = defineRuntimeRouteGroup('operational_workspace', [
   defineRuntimeRoute('dpp', 'DPP Passport', 'DPP', { expView: 'DPP' }),
-  defineRuntimeRoute('escrow', 'Escrow', 'ESCROW', { expView: 'ESCROW' }),
+  defineRuntimeRoute('escrow', 'TradeTrust Ledger', 'ESCROW', { expView: 'ESCROW' }),
+  defineRuntimeRoute('gst_verification', 'GST Verification', 'GST_VERIFICATION', { expView: 'GST_VERIFICATION' }),
+  defineRuntimeRoute('invoices', 'Invoices', 'INVOICES', { expView: 'INVOICES' }),
+  defineRuntimeRoute('invoice_approval', 'Invoice Approval', 'INVOICE_APPROVAL', { expView: 'INVOICE_APPROVAL' }),
   defineRuntimeRoute('escalations', 'Escalations', 'ESCALATIONS', { expView: 'ESCALATIONS' }),
   defineRuntimeRoute('settlement', 'Settlement', 'SETTLEMENT', { expView: 'SETTLEMENT' }),
   defineRuntimeRoute('certifications', 'Certifications', 'CERTIFICATIONS', { expView: 'CERTIFICATIONS' }),
@@ -390,6 +402,9 @@ const AGGREGATOR_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
   'traceability',
   'audit_logs',
   'trades',
+  'gst_verification',
+  'invoices',
+  'invoice_approval',
 ];
 
 const B2B_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
@@ -404,6 +419,9 @@ const B2B_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
   'traceability',
   'audit_logs',
   'trades',
+  'gst_verification',
+  'invoices',
+  'invoice_approval',
 ];
 
 const B2C_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
@@ -418,6 +436,9 @@ const B2C_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
   'audit_logs',
   'trades',
   'cart',
+  'gst_verification',
+  'invoices',
+  'invoice_approval',
 ];
 
 const WL_STOREFRONT_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
@@ -431,6 +452,9 @@ const WL_STOREFRONT_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
   'traceability',
   'audit_logs',
   'trades',
+  'gst_verification',
+  'invoices',
+  'invoice_approval',
 ];
 
 const WL_ADMIN_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
@@ -461,6 +485,9 @@ const CONTROL_PLANE_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
   'maker_checker',
   'ai',
   'events',
+  'gst_verification_queue',
+  'ttp_eligibility',
+  'invoice_oversight',
   'logs',
   'rbac',
   'health',
