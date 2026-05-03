@@ -20,6 +20,7 @@ import tenantSettlementRoutes from './tenant/settlement.js';
 import tenantCertificationRoutes from './tenant/certifications.g019.js';
 import tenantTraceabilityRoutes from './tenant/traceability.g016.js';
 import tenantDocumentRoutes from './tenant/documents.js';
+import tenantGstVerificationRoutes from './tenant/gst-verification.js';
 import {
   DPP_EVIDENCE_TYPES,
   DPP_EVIDENCE_VISIBILITY_VALUES,
@@ -8976,6 +8977,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   // ─── TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 K-1: Document Classification ───────
   // POST /api/tenant/documents/:documentId/classify
   await fastify.register(tenantDocumentRoutes, { prefix: '/tenant/documents' });
+
+  // ─── TTP Slice 2: GST Verification Gate ──────────────────────────────────────
+  // POST /api/tenant/gst-verification  — submit / re-submit for admin review
+  // GET  /api/tenant/gst-verification  — get own verification status
+  await fastify.register(tenantGstVerificationRoutes, { prefix: '/tenant/gst-verification' });
 
   // ─── G-026 TECS 6D: Domain CRUD (OPS-WLADMIN-DOMAINS-001) ────────────────
   // GET    /api/tenant/domains        — list custom domains for current tenant

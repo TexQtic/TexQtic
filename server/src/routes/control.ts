@@ -25,6 +25,7 @@ import controlSettlementRoutes from './control/settlement.js';
 import controlCertificationRoutes from './control/certifications.g019.js';
 import adminTraceabilityRoutes from './admin/traceability.g016.js';
 import controlPlaneAiRoutes from './control/ai.g028.js';
+import controlGstVerificationRoutes from './control/gst-verification.js';
 
 // ── Admin context helper (G-004) ──────────────────────────────────────────────
 // Canonical replacement for withDbContextLegacy({ isAdmin: true }).
@@ -2406,6 +2407,12 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   // GET  /api/control/ai/health   — SUPER_ADMIN health probe
   // POST /api/control/ai/insights — SUPER_ADMIN platform-level AI insights
   await fastify.register(controlPlaneAiRoutes, { prefix: '/ai' });
+
+  // ─── TTP Slice 2: GST Verification Gate ──────────────────────────────────────
+  // GET   /api/control/gst-verification        — list pending (review_outcome IS NULL)
+  // GET   /api/control/gst-verification/:orgId — get full record
+  // PATCH /api/control/gst-verification/:orgId — record review outcome (SUPER_ADMIN)
+  await fastify.register(controlGstVerificationRoutes, { prefix: '/gst-verification' });
 };
 
 export default controlRoutes;
