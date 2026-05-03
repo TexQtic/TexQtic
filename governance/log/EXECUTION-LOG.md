@@ -52,6 +52,31 @@ Notes: Frontend components (GstVerificationCard, GstVerificationQueue) are imple
 
 ---
 
+### TEXQTIC-TTP-SLICE-3-CIBIL-ELIGIBILITY-GATE — 2026-05-03
+Type: IMPLEMENTATION — Backend Service + Routes + Frontend Components + Unit Tests
+Status: VERIFIED_COMPLETE
+Commit: d3b748d — feat(tradetrust-pay): add ttp eligibility gate
+Title: TradeTrust Pay Slice 3 — CIBIL Eligibility Gate (TtpEligibilityService, control routes, frontend client + console, 27 unit tests)
+Summary: Implemented the complete CIBIL Eligibility Gate application layer on top of the Slice 1
+  `ttp_eligibility_assessments` table. Created TtpEligibilityService with GST pre-requisite check
+  (APPROVED gst_verifications required), tier/outcome validation (tier 0 → MANUAL_REVIEW only;
+  ELIGIBLE → tier >= 1), feature-flag-resolved invoice caps (tier 1: ₹2.5L / tier 2: ₹5L / tier 3: ₹10L)
+  and validity windows (default 180 days), org risk_score propagation on ELIGIBLE, and full admin
+  history projection. Created control POST+GET routes (SUPER_ADMIN gated, audit logged), frontend
+  API client, TtpEligibilityConsole admin component (latest summary + history table + assessment modal),
+  and 27 unit tests (27/27 PASS). TypeScript: 0 errors. No migrations, no schema changes, no live CIBIL
+  API, no env changes. ttp_enabled=false. Frontend component created but not wired into navigation
+  (adjacent finding — matches Slice 2 pattern).
+Layer Impact: Layer 2 (decision/verification record), Layer 3 (this file)
+Notes: No live CIBIL or credit bureau integration in this phase. raw_bureau_json seeded as {} — reserved
+  for future bureau API integration (design-gated). Tier-0 constraint: both ELIGIBLE and INELIGIBLE
+  throw for tier 0 — only MANUAL_REVIEW is valid for thin-file entities. TtpEligibilityConsole,
+  GstVerificationCard, and GstVerificationQueue all await UI navigation wiring (adjacent finding).
+  ttp_enabled remains false. Next candidate unit: TEXQTIC-TTP-SLICE-4 — NOT AUTHORIZED until Paresh opens.
+  Authority: governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-SLICE-3-TTP-ELIGIBILITY-VERIFIED-001.md
+
+---
+
 ## Log Schema
 
 Each entry uses this structure (defined by GOV-OS-001 Section 3.5, extended per GOV-OS-006):
