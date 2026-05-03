@@ -26,6 +26,7 @@ import controlCertificationRoutes from './control/certifications.g019.js';
 import adminTraceabilityRoutes from './admin/traceability.g016.js';
 import controlPlaneAiRoutes from './control/ai.g028.js';
 import controlGstVerificationRoutes from './control/gst-verification.js';
+import controlTtpEligibilityRoutes from './control/ttp-eligibility.js';
 
 // ── Admin context helper (G-004) ──────────────────────────────────────────────
 // Canonical replacement for withDbContextLegacy({ isAdmin: true }).
@@ -2413,6 +2414,11 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   // GET   /api/control/gst-verification/:orgId — get full record
   // PATCH /api/control/gst-verification/:orgId — record review outcome (SUPER_ADMIN)
   await fastify.register(controlGstVerificationRoutes, { prefix: '/gst-verification' });
+
+  // ─── TTP Slice 3: CIBIL Eligibility Gate ─────────────────────────────────────
+  // POST  /api/control/ttp/eligibility/:orgId  — create assessment (SUPER_ADMIN)
+  // GET   /api/control/ttp/eligibility/:orgId  — get history + latest
+  await fastify.register(controlTtpEligibilityRoutes, { prefix: '/ttp/eligibility' });
 };
 
 export default controlRoutes;
