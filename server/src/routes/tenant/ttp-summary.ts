@@ -87,7 +87,7 @@ const tenantTtpSummaryRoutes: FastifyPluginAsync = async fastify => {
 
       try {
         const summary = await withDbContext(prisma, dbContext, async tx => {
-          const svc = new TtpSummaryService(makeTxBoundPrisma(tx));
+          const svc = new TtpSummaryService(makeTxBoundPrisma(tx), prisma);
           return svc.getTradeTtpSummary({ tradeId, actorOrgId, actorUserId });
         });
 

@@ -1,9 +1,9 @@
 /**
  * TtpSummaryService unit tests — TTP Slice 7
  *
- * 14 test cases covering:
+ * 24 test cases covering:
  *   TC-001: returns summary for seller party
- *   TC-002: returns summary for buyer party
+ *   TC-002: returns summary for buyer party (uses rootDb for trade lookup)
  *   TC-003: blocks non-party org
  *   TC-004: returns GST readiness when record found
  *   TC-005: returns GST not-found readiness when no record
@@ -16,12 +16,23 @@
  *   TC-012: does NOT create routing stub
  *   TC-013: does NOT expose raw_bureau_json in response
  *   TC-014: does NOT expose raw_verification_json in response
+ *   TC-015: seller summary returns all readiness fields populated
+ *   TC-016: buyer summary uses rootDb for trade lookup (not scoped db)
+ *   TC-017: empty optional data returns graceful response (no VPC/routing/enrollment)
+ *   TC-018: missing trade throws TtpSummaryTradeNotFoundError
+ *   TC-019: non-party org throws TtpSummaryPartyMismatchError
+ *   TC-020: gst_verifications null → found:false + blocker
+ *   TC-021: expired eligibility assessment → is_expired:true
+ *   TC-022: invoice in non-VERIFIED state → is_verified:false + blocker
+ *   TC-023: trade with buyer_org_id match → actor_role BUYER
+ *   TC-024: full happy path — all readiness checks pass, zero blockers
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   TtpSummaryService,
   TtpSummaryPartyMismatchError,
+  TtpSummaryTradeNotFoundError,
 } from '../services/ttpSummary.service.js';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
@@ -96,7 +107,8 @@ describe('TtpSummaryService.getTradeTtpSummary', () => {
 
   beforeEach(() => {
     db = makeDb();
-    svc = new TtpSummaryService(db);
+    // Pass db as rootDb so the unscoped trade lookup hits the same mock
+    svc = new TtpSummaryService(db, db);
   });
 
   it('TC-001: returns summary for seller party', async () => {
@@ -243,5 +255,119 @@ describe('TtpSummaryService.getTradeTtpSummary', () => {
     const result = await svc.getTradeTtpSummary({ tradeId: TRADE_ID, actorOrgId: SELLER_ORG });
     const serialized = JSON.stringify(result);
     expect(serialized).not.toContain('raw_verification_json');
+  });
+
+  it('TC-015: seller summary returns all readiness fields populated', async () => {
+    db.lifecycleState.findFirst
+      .mockResolvedValueOnce({ stateKey: 'VERIFIED' })
+      .mockResolvedValueOnce({ stateKey: 'ACTIVE' });
+    const result = await svc.getTradeTtpSummary({ tradeId: TRADE_ID, actorOrgId: SELLER_ORG });
+    expect(result.gst_readiness).toBeDefined();
+    expect(result.eligibility_readiness).toBeDefined();
+    expect(result.invoice_readiness).toBeDefined();
+    expect(result.vpc_readiness).toBeDefined();
+    expect(result.routing_readiness).toBeDefined();
+    expect(result.enrollment_state).toBe('APPROVED');
+    expect(result.actor_role).toBe('SELLER');
+  });
+
+  it('TC-016: buyer summary uses rootDb for trade lookup (rootDb.trade.findUnique called)', async () => {
+    const rootDb = makeDb();
+    rootDb.lifecycleState.findFirst
+      .mockResolvedValueOnce({ stateKey: 'VERIFIED' })
+      .mockResolvedValueOnce({ stateKey: 'ACTIVE' });
+    const scopedDb = makeDb();
+    scopedDb.lifecycleState.findFirst
+      .mockResolvedValueOnce({ stateKey: 'VERIFIED' })
+      .mockResolvedValueOnce({ stateKey: 'ACTIVE' });
+    const svcWithRoot = new TtpSummaryService(scopedDb, rootDb);
+    const result = await svcWithRoot.getTradeTtpSummary({ tradeId: TRADE_ID, actorOrgId: BUYER_ORG });
+    expect(result.actor_role).toBe('BUYER');
+    // rootDb.trade.findUnique called; scopedDb.trade.findUnique not called
+    expect(rootDb.trade.findUnique).toHaveBeenCalledOnce();
+    expect(scopedDb.trade.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('TC-017: empty optional data returns graceful response when no VPC/routing/enrollment', async () => {
+    db.invoices.findMany.mockResolvedValue([]);
+    db.verified_payable_certificates.findMany.mockResolvedValue([]);
+    db.partner_routing_stubs.findMany.mockResolvedValue([]);
+    db.ttp_enrollment_logs.findMany.mockResolvedValue([]);
+    const result = await svc.getTradeTtpSummary({ tradeId: TRADE_ID, actorOrgId: SELLER_ORG });
+    expect(result.invoice_readiness.found).toBe(false);
+    expect(result.vpc_readiness.found).toBe(false);
+    expect(result.routing_readiness.found).toBe(false);
+    expect(result.enrollment_state).toBeNull();
+    expect(result.blockers).toContain('No invoice found for this trade');
+    expect(result.blockers).toContain('No Verified Payable Certificate issued for this trade');
+  });
+
+  it('TC-018: missing trade throws TtpSummaryTradeNotFoundError', async () => {
+    db.trade.findUnique.mockResolvedValue(null);
+    await expect(
+      svc.getTradeTtpSummary({ tradeId: TRADE_ID, actorOrgId: SELLER_ORG }),
+    ).rejects.toThrow(TtpSummaryTradeNotFoundError);
+  });
+
+  it('TC-019: non-party org throws TtpSummaryPartyMismatchError', async () => {
+    await expect(
+      svc.getTradeTtpSummary({ tradeId: TRADE_ID, actorOrgId: OTHER_ORG }),
+    ).rejects.toThrow(TtpSummaryPartyMismatchError);
+  });
+
+  it('TC-020: gst_verifications null → found:false + blocker added', async () => {
+    db.gst_verifications.findUnique.mockResolvedValue(null);
+    db.lifecycleState.findFirst
+      .mockResolvedValueOnce({ stateKey: 'VERIFIED' })
+      .mockResolvedValueOnce({ stateKey: 'ACTIVE' });
+    const result = await svc.getTradeTtpSummary({ tradeId: TRADE_ID, actorOrgId: SELLER_ORG });
+    expect(result.gst_readiness.found).toBe(false);
+    expect(result.gst_readiness.is_approved).toBe(false);
+    expect(result.blockers).toContain('GST verification not submitted');
+  });
+
+  it('TC-021: expired eligibility assessment → is_expired:true + is_eligible:false', async () => {
+    db.ttp_eligibility_assessments.findMany.mockResolvedValue([
+      { eligibility_outcome: 'ELIGIBLE', risk_tier: 1, valid_until: new Date(PAST_DATE) },
+    ]);
+    db.lifecycleState.findFirst
+      .mockResolvedValueOnce({ stateKey: 'VERIFIED' })
+      .mockResolvedValueOnce({ stateKey: 'ACTIVE' });
+    const result = await svc.getTradeTtpSummary({ tradeId: TRADE_ID, actorOrgId: SELLER_ORG });
+    expect(result.eligibility_readiness.is_expired).toBe(true);
+    expect(result.eligibility_readiness.is_eligible).toBe(false);
+    expect(result.blockers).toContain('TTP eligibility assessment has expired');
+  });
+
+  it('TC-022: invoice in non-VERIFIED state → is_verified:false + blocker', async () => {
+    db.lifecycleState.findFirst
+      .mockResolvedValueOnce({ stateKey: 'SUBMITTED' }) // invoice
+      .mockResolvedValueOnce({ stateKey: 'ACTIVE' });   // vpc
+    const result = await svc.getTradeTtpSummary({ tradeId: TRADE_ID, actorOrgId: SELLER_ORG });
+    expect(result.invoice_readiness.is_verified).toBe(false);
+    expect(result.invoice_readiness.state_key).toBe('SUBMITTED');
+    expect(result.blockers).toContain('Latest invoice is in state SUBMITTED (must be VERIFIED)');
+  });
+
+  it('TC-023: trade with buyer_org_id match → actor_role BUYER', async () => {
+    db.lifecycleState.findFirst
+      .mockResolvedValueOnce({ stateKey: 'VERIFIED' })
+      .mockResolvedValueOnce({ stateKey: 'ACTIVE' });
+    const result = await svc.getTradeTtpSummary({ tradeId: TRADE_ID, actorOrgId: BUYER_ORG });
+    expect(result.actor_role).toBe('BUYER');
+    expect(result.buyer_org_id).toBe(BUYER_ORG);
+    expect(result.seller_org_id).toBe(SELLER_ORG);
+  });
+
+  it('TC-024: full happy path — all readiness checks pass, zero blockers', async () => {
+    db.lifecycleState.findFirst
+      .mockResolvedValueOnce({ stateKey: 'VERIFIED' }) // invoice
+      .mockResolvedValueOnce({ stateKey: 'ACTIVE' });  // vpc
+    const result = await svc.getTradeTtpSummary({ tradeId: TRADE_ID, actorOrgId: SELLER_ORG });
+    expect(result.blockers).toHaveLength(0);
+    expect(result.gst_readiness.is_approved).toBe(true);
+    expect(result.eligibility_readiness.is_eligible).toBe(true);
+    expect(result.invoice_readiness.is_verified).toBe(true);
+    expect(result.vpc_readiness.is_active).toBe(true);
   });
 });

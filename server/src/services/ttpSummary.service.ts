@@ -96,7 +96,11 @@ export interface TradeTtpSummary {
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export class TtpSummaryService {
-  constructor(private db: PrismaClient) {}
+  constructor(
+    private db: PrismaClient,
+    /** Optional unscoped client for cross-org trade party verification */
+    private rootDb?: PrismaClient,
+  ) {}
 
   /**
    * Build a read-only TTP summary for a trade.
@@ -113,7 +117,10 @@ export class TtpSummaryService {
     actorUserId?: string | null;
   }): Promise<TradeTtpSummary> {
     // ── 1. Load trade (includes lifecycle state) ──────────────────────────────
-    const trade = await (this.db as any).trade.findUnique({
+    // Use rootDb (unscoped) when available so buyer can pass party verification.
+    // The caller is responsible for passing an appropriate unscoped client.
+    const tradeDb = (this.rootDb ?? this.db) as any;
+    const trade = await tradeDb.trade.findUnique({
       where: { id: tradeId },
       select: {
         id: true,
@@ -187,7 +194,7 @@ export class TtpSummaryService {
 
     let invoiceStateKey: string | null = null;
     if (latestInvoice) {
-      const stateRow = await this.db.lifecycleState.findFirst({
+      const stateRow = await (this.db as any).lifecycleState.findFirst({
         where: { id: latestInvoice.lifecycle_state_id, entityType: 'INVOICE' },
         select: { stateKey: true },
       });
@@ -212,7 +219,7 @@ export class TtpSummaryService {
 
     let vpcStateKey: string | null = null;
     if (latestVpc) {
-      const stateRow = await this.db.lifecycleState.findFirst({
+      const stateRow = await (this.db as any).lifecycleState.findFirst({
         where: { id: latestVpc.lifecycle_state_id, entityType: 'VPC' },
         select: { stateKey: true },
       });
