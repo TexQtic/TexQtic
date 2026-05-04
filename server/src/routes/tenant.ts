@@ -23,6 +23,8 @@ import tenantDocumentRoutes from './tenant/documents.js';
 import tenantGstVerificationRoutes from './tenant/gst-verification.js';
 import tenantInvoiceRoutes from './tenant/invoices.js';
 import tenantInvoiceApprovalRoutes from './tenant/invoice-approval.js';
+import tenantTtpSummaryRoutes from './tenant/ttp-summary.js';
+import tenantTtpEnrollmentRoutes from './tenant/ttp-enrollment.js';
 import {
   DPP_EVIDENCE_TYPES,
   DPP_EVIDENCE_VISIBILITY_VALUES,
@@ -8994,6 +8996,13 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   // POST   /api/tenant/invoices/:invoiceId/buyer-action     — buyer acknowledge / dispute
   await fastify.register(tenantInvoiceRoutes, { prefix: '/tenant/invoices' });
   await fastify.register(tenantInvoiceApprovalRoutes, { prefix: '/tenant' });
+
+  // ─── TTP Slice 7: TTP Summary & Enrollment ────────────────────────────────
+  // GET  /api/tenant/trades/:tradeId/ttp-summary    — tenant TTP readiness summary
+  // GET  /api/tenant/trades/:tradeId/ttp-enrollment — get enrollment state
+  // POST /api/tenant/trades/:tradeId/ttp-enrollment — request enrollment
+  await fastify.register(tenantTtpSummaryRoutes,    { prefix: '/tenant' });
+  await fastify.register(tenantTtpEnrollmentRoutes, { prefix: '/tenant' });
 
   // ─── G-026 TECS 6D: Domain CRUD (OPS-WLADMIN-DOMAINS-001) ────────────────
   // GET    /api/tenant/domains        — list custom domains for current tenant

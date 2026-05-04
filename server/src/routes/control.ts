@@ -30,6 +30,7 @@ import controlTtpEligibilityRoutes from './control/ttp-eligibility.js';
 import controlInvoiceRoutes from './control/invoices.js';
 import controlVpcRoutes from './control/vpc.js';
 import controlTtpRoutingStubRoutes from './control/ttp-routing-stubs.js';
+import controlTtpEnrollmentRoutes from './control/ttp-enrollments.js';
 
 // ── Admin context helper (G-004) ──────────────────────────────────────────────
 // Canonical replacement for withDbContextLegacy({ isAdmin: true }).
@@ -2439,6 +2440,12 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   // ─── TTP Slice 6: Partner Routing Stub ───────────────────────────────────────
   // GET    /api/control/ttp/routing-stubs/:vpcId — get or create routing stub (SUPER_ADMIN)
   await fastify.register(controlTtpRoutingStubRoutes, { prefix: '/ttp' });
+
+  // ─── TTP Slice 7: TTP Enrollment Admin ────────────────────────────────────
+  // GET    /api/control/ttp/enrollments              — list enrollments
+  // GET    /api/control/ttp/enrollments/:tradeId     — get enrollment detail
+  // PATCH  /api/control/ttp/enrollments/:tradeId     — review (approve/reject/suspend/cancel)
+  await fastify.register(controlTtpEnrollmentRoutes, { prefix: '/ttp' });
 };
 
 export default controlRoutes;

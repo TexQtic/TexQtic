@@ -245,6 +245,44 @@ export const TTP_ASSESSMENT_TYPE = {
 export type TtpAssessmentType =
   (typeof TTP_ASSESSMENT_TYPE)[keyof typeof TTP_ASSESSMENT_TYPE];
 
+// ─── Enrollment state constants ───────────────────────────────────────────────
+// Mirrors ttp_enrollment_logs.to_state values (TTP Slice 7).
+
+export const TTP_ENROLLMENT_STATE = {
+  /** Tenant has requested TTP enrollment. Initial state. */
+  REQUESTED: 'REQUESTED',
+  /** Admin has approved enrollment (all gates passed). */
+  APPROVED: 'APPROVED',
+  /** Admin has rejected enrollment. Terminal. */
+  REJECTED: 'REJECTED',
+  /** Enrollment suspended by admin. Reversible. */
+  SUSPENDED: 'SUSPENDED',
+  /** Enrollment cancelled. Terminal. */
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export type TtpEnrollmentState =
+  (typeof TTP_ENROLLMENT_STATE)[keyof typeof TTP_ENROLLMENT_STATE];
+
+/** Enrollment states from which no further transitions are possible. */
+export const TTP_ENROLLMENT_TERMINAL_STATES: ReadonlySet<TtpEnrollmentState> = new Set([
+  TTP_ENROLLMENT_STATE.REJECTED,
+  TTP_ENROLLMENT_STATE.CANCELLED,
+]);
+
+// ─── Admin review outcome constants ──────────────────────────────────────────
+// Valid outcomes for TtpEnrollmentService.adminReviewEnrollment (TTP Slice 7).
+
+export const TTP_ENROLLMENT_REVIEW_OUTCOME = {
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  SUSPENDED: 'SUSPENDED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export type TtpEnrollmentReviewOutcome =
+  (typeof TTP_ENROLLMENT_REVIEW_OUTCOME)[keyof typeof TTP_ENROLLMENT_REVIEW_OUTCOME];
+
 // ─── D-020-C: AI trigger audit constants ─────────────────────────────────────
 // Used in invoice_lifecycle_logs.reason when ai_triggered = true.
 
