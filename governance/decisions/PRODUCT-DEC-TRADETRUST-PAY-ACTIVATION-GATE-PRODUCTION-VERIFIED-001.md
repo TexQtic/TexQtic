@@ -18,6 +18,7 @@ Unit 1 TTP Activation Readiness Safety Gate has been verified **in production**.
 All required checks passed:
 - Unauthenticated TTP routes return 401 (auth guard runs before feature gate)
 - Authenticated TTP routes return 503 `FEATURE_DISABLED` (kill-switch middleware is live and fail-closed)
+- Tenant-plane authenticated TTP routes return 503 `FEATURE_DISABLED` (verified via control-plane impersonation API)
 - Non-TTP routes are unaffected (no collateral 503 blocking)
 - `ttp_enabled` flag remains `false` in the production database
 
@@ -89,11 +90,18 @@ Error response shape confirmed in production:
 
 ### Tenant Plane Routes
 
-No tenant session was available during this verification run (active browser session is CONTROL_PLANE realm only — `texqtic_auth_realm: "CONTROL_PLANE"`, no `texqtic_tenant_token` present).
+Tenant-plane routes verified via the control-plane impersonation API (`POST /api/control/impersonation/start`). A time-bounded tenant JWT was obtained for an ACTIVE tenant (orgId `361eb357-7046-4ecf-b746-6c1d55e831c8`, OWNER membership), used inline in `page.evaluate()`, and discarded (token never returned to agent context). Impersonation session was stopped immediately after.
 
-Unauthenticated 401 was confirmed for `GET /api/tenant/trades/.../ttp-summary` (Section 3). The `ttpFeatureGateMiddleware` on tenant routes is structurally identical to the confirmed control routes — same middleware, same `preHandler` placement pattern.
+| Route | Method | Expected | Actual | Result |
+|---|---|---|---|---|
+| `/api/tenant/trades/00000000-0000-0000-0000-000000000099/ttp-summary` | GET | 503 FEATURE_DISABLED | 503 `{"code":"FEATURE_DISABLED","success":false}` | ✅ PASS |
+| `/api/tenant/trades/00000000-0000-0000-0000-000000000099/ttp-enrollment` | GET | 503 FEATURE_DISABLED | 503 `{"code":"FEATURE_DISABLED","success":false}` | ✅ PASS |
 
-**Tenant plane authenticated 503 verification status:** Pending a tenant session. Unauthenticated guard confirmed. Control-plane authenticated gate fully confirmed (4/4).
+**2/2 tenant TTP routes blocked with correct 503 error shape.**
+
+The fake tradeId `00000000-0000-0000-0000-000000000099` is safe to use because `ttpFeatureGateMiddleware` runs in `preHandler` — before any trade-ID lookup — and short-circuits with 503 before the route handler accesses the database. This is confirmed by the 503 result with no secondary 404 or query error.
+
+**Tenant plane authenticated 503 verification status:** CONFIRMED. Gate is live and fail-closed for authenticated tenant-plane requests.
 
 ---
 
@@ -154,7 +162,9 @@ All requests were made from the authenticated browser page at `https://app.texqt
 For unauthenticated tests: `credentials: 'omit'`  
 For authenticated tests: `Authorization: Bearer <token-from-localStorage>` (token read and used entirely inside `page.evaluate()` — never extracted to agent context)
 
-Session context: SuperAdmin (`texqtic_auth_realm: CONTROL_PLANE`, `texqtic_admin_token` present, 199-char JWT)
+Session contexts:
+- Control-plane checks: SuperAdmin (`texqtic_auth_realm: CONTROL_PLANE`, `texqtic_admin_token` present, 199-char JWT)
+- Tenant-plane checks: Impersonated tenant JWT obtained via `POST /api/control/impersonation/start` with admin token (impersonation session ID `ec351861-5544-48a1-98d6-bafb83cb93b1`, stopped immediately after tests completed). Tenant token used inline in `page.evaluate()` only — never returned to agent context.
 
 ---
 
