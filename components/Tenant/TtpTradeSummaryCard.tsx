@@ -21,6 +21,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   tenantGetTradeTtpSummary,
   type TradeTtpSummary,
+  type TradeTrustScore,
+  type TradeTrustScoreFactor,
 } from '../../services/ttpSummaryService';
 import { APIError } from '../../services/apiClient';
 
@@ -49,6 +51,79 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <div className="space-y-1">
       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{title}</p>
       <div className="flex flex-wrap gap-2">{children}</div>
+    </div>
+  );
+}
+
+const BAND_STYLE: Record<TradeTrustScore['band'], string> = {
+  READY:       'bg-emerald-100 text-emerald-700 border-emerald-200',
+  NEAR_READY:  'bg-sky-100 text-sky-700 border-sky-200',
+  NEEDS_REVIEW:'bg-amber-100 text-amber-700 border-amber-200',
+  NOT_READY:   'bg-rose-100 text-rose-600 border-rose-200',
+};
+
+const FACTOR_STATUS_DOT: Record<TradeTrustScoreFactor['status'], string> = {
+  PASS:           'bg-emerald-500',
+  PARTIAL:        'bg-amber-400',
+  FAIL:           'bg-rose-400',
+  NOT_APPLICABLE: 'bg-slate-300',
+};
+
+function TtpScorePanel({ score }: { score: TradeTrustScore }) {
+  const bandStyle = BAND_STYLE[score.band] ?? 'bg-slate-100 text-slate-600 border-slate-200';
+
+  return (
+    <div className="space-y-3">
+      {/* Score header */}
+      <div className="flex items-center gap-3">
+        <span className={`rounded-full px-3 py-1 text-sm font-semibold border ${bandStyle}`}>
+          {score.band.replace('_', ' ')}
+        </span>
+        <span className="text-2xl font-bold text-slate-800">{score.score}</span>
+        <span className="text-xs text-slate-400">/ 100</span>
+      </div>
+
+      {/* Factor breakdown */}
+      <div className="space-y-1">
+        {score.factors.map((f) => (
+          <div key={f.key} className="flex items-center gap-2 text-xs text-slate-600">
+            <span
+              className={`inline-block h-2 w-2 rounded-full flex-shrink-0 ${FACTOR_STATUS_DOT[f.status] ?? 'bg-slate-300'}`}
+            />
+            <span className="flex-1 min-w-0 truncate">{f.label}</span>
+            <span className="text-slate-400 tabular-nums">
+              {f.points_awarded}/{f.points_possible}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Score blockers */}
+      {score.blockers.length > 0 && (
+        <div className="rounded-lg bg-rose-50 border border-rose-200 p-2.5 space-y-0.5">
+          <p className="text-xs font-semibold text-rose-700">Score blockers:</p>
+          <ul className="list-disc list-inside space-y-0.5">
+            {score.blockers.map((b) => (
+              <li key={b} className="text-xs text-rose-600">{b}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Next steps */}
+      {score.next_steps.length > 0 && (
+        <div className="rounded-lg bg-sky-50 border border-sky-200 p-2.5 space-y-0.5">
+          <p className="text-xs font-semibold text-sky-700">Next steps:</p>
+          <ul className="list-disc list-inside space-y-0.5">
+            {score.next_steps.map((s) => (
+              <li key={s} className="text-xs text-sky-700">{s}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Mandatory disclaimer */}
+      <p className="text-[10px] text-slate-400 leading-tight">{score.disclaimer}</p>
     </div>
   );
 }
@@ -192,6 +267,16 @@ export default function TtpTradeSummaryCard({ tradeId }: Props) {
               <li key={b} className="text-xs text-amber-700">{b}</li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* TradeTrust Score Advisory */}
+      {summary.trade_trust_score && (
+        <div className="border-t border-slate-100 pt-4">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+            TradeTrust Score
+          </p>
+          <TtpScorePanel score={summary.trade_trust_score} />
         </div>
       )}
     </div>

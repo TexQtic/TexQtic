@@ -370,4 +370,39 @@ describe('TtpSummaryService.getTradeTtpSummary', () => {
     expect(result.invoice_readiness.is_verified).toBe(true);
     expect(result.vpc_readiness.is_active).toBe(true);
   });
+
+  it('TC-025: trade_trust_score is present in summary response and has required fields', async () => {
+    db.lifecycleState.findFirst
+      .mockResolvedValueOnce({ stateKey: 'VERIFIED' })
+      .mockResolvedValueOnce({ stateKey: 'ACTIVE' });
+    const result = await svc.getTradeTtpSummary({ tradeId: TRADE_ID, actorOrgId: SELLER_ORG });
+    expect(result.trade_trust_score).toBeDefined();
+    expect(typeof result.trade_trust_score.score).toBe('number');
+    expect(['READY', 'NEAR_READY', 'NEEDS_REVIEW', 'NOT_READY']).toContain(result.trade_trust_score.band);
+    expect(Array.isArray(result.trade_trust_score.factors)).toBe(true);
+    expect(result.trade_trust_score.factors.length).toBeGreaterThan(0);
+    expect(Array.isArray(result.trade_trust_score.blockers)).toBe(true);
+    expect(Array.isArray(result.trade_trust_score.next_steps)).toBe(true);
+    expect(result.trade_trust_score.disclaimer).toContain('advisory readiness indicator only');
+  });
+
+  it('TC-026: full happy-path summary returns score 100 and band READY', async () => {
+    db.lifecycleState.findFirst
+      .mockResolvedValueOnce({ stateKey: 'VERIFIED' })
+      .mockResolvedValueOnce({ stateKey: 'ACTIVE' });
+    const result = await svc.getTradeTtpSummary({ tradeId: TRADE_ID, actorOrgId: SELLER_ORG });
+    expect(result.trade_trust_score.score).toBe(100);
+    expect(result.trade_trust_score.band).toBe('READY');
+    expect(result.trade_trust_score.blockers).toHaveLength(0);
+  });
+
+  it('TC-027: score response does not contain raw_bureau_json or raw_verification_json', async () => {
+    db.lifecycleState.findFirst
+      .mockResolvedValueOnce({ stateKey: 'VERIFIED' })
+      .mockResolvedValueOnce({ stateKey: 'ACTIVE' });
+    const result = await svc.getTradeTtpSummary({ tradeId: TRADE_ID, actorOrgId: SELLER_ORG });
+    const scoreJson = JSON.stringify(result.trade_trust_score);
+    expect(scoreJson).not.toContain('raw_bureau_json');
+    expect(scoreJson).not.toContain('raw_verification_json');
+  });
 });

@@ -55,6 +55,27 @@ export interface RoutingReadiness {
   routing_state: string | null;
 }
 
+// ─── Score types (Slice 8) ────────────────────────────────────────────────────
+
+export interface TradeTrustScoreFactor {
+  key: string;
+  label: string;
+  points_awarded: number;
+  points_possible: number;
+  status: 'PASS' | 'PARTIAL' | 'FAIL' | 'NOT_APPLICABLE';
+  explanation: string;
+}
+
+export interface TradeTrustScore {
+  score: number;
+  band: 'READY' | 'NEAR_READY' | 'NEEDS_REVIEW' | 'NOT_READY';
+  factors: TradeTrustScoreFactor[];
+  blockers: string[];
+  next_steps: string[];
+  /** MANDATORY advisory disclaimer. */
+  disclaimer: string;
+}
+
 export interface TradeTtpSummary {
   trade_id: string;
   trade_reference: string;
@@ -70,6 +91,8 @@ export interface TradeTtpSummary {
   vpc_readiness: VpcReadiness;
   routing_readiness: RoutingReadiness;
   blockers: string[];
+  /** Advisory readiness score. ADVISORY ONLY — not a credit score or payment guarantee. */
+  trade_trust_score: TradeTrustScore;
 }
 
 // ─── API functions ────────────────────────────────────────────────────────────

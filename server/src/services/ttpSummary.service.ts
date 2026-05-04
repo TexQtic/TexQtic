@@ -20,6 +20,7 @@
 
 import type { PrismaClient } from '@prisma/client';
 import { TTP_GST_REVIEW_OUTCOME, TTP_ELIGIBILITY_OUTCOME } from '../ttp/ttp.constants.js';
+import { computeTtpScore, type TradeTrustScore } from './ttpScore.service.js';
 
 // ─── Error classes ────────────────────────────────────────────────────────────
 
@@ -91,6 +92,8 @@ export interface TradeTtpSummary {
   vpc_readiness: VpcReadiness;
   routing_readiness: RoutingReadiness;
   blockers: string[];
+  /** Advisory readiness score. ADVISORY ONLY — not a credit score or payment guarantee. */
+  trade_trust_score: TradeTrustScore;
 }
 
 // ─── Service ──────────────────────────────────────────────────────────────────
@@ -317,6 +320,16 @@ export class TtpSummaryService {
       blockers.push('No Verified Payable Certificate issued for this trade');
     }
 
+    // ── 10. Advisory readiness score ──────────────────────────────────────────
+    const trade_trust_score = computeTtpScore({
+      gst_readiness: gstReadiness,
+      eligibility_readiness: eligibilityReadiness,
+      invoice_readiness: invoiceReadiness,
+      vpc_readiness: vpcReadiness,
+      routing_readiness: routingReadiness,
+      enrollment_state: enrollmentState,
+    });
+
     return {
       trade_id: trade.id,
       trade_reference: trade.tradeReference,
@@ -332,6 +345,7 @@ export class TtpSummaryService {
       vpc_readiness: vpcReadiness,
       routing_readiness: routingReadiness,
       blockers,
+      trade_trust_score,
     };
   }
 }
