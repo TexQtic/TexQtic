@@ -93,6 +93,7 @@ const CONTROL_PLANE_NAV = [
   { routeKey: 'maker_checker', icon: '✍️', label: 'Maker-Checker' },
   { routeKey: 'gst_verification_queue', icon: '🔐', label: 'GST Verification Queue' },
   { routeKey: 'ttp_eligibility', icon: '⚡', label: 'TTP Eligibility' },
+  { routeKey: 'vpc_console', icon: '🧾', label: 'VPC Console' },
   { routeKey: 'ai', icon: '🤖', label: 'AI Governance' },
   { routeKey: 'events', icon: '⚡', label: 'Live Event Stream' },
   { routeKey: 'logs', icon: '📜', label: 'Audit Logs' },
@@ -154,7 +155,7 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
           })}
 
           <SectionTitle>Risk & Compliance</SectionTitle>
-          {CONTROL_PLANE_NAV.slice(10, 19).map(item => {
+          {CONTROL_PLANE_NAV.slice(10, 20).map(item => {
             if (!hasNavigationRoute(navigation, item.routeKey)) {
               return null;
             }
@@ -171,7 +172,7 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
           })}
 
           <SectionTitle>Infrastructure</SectionTitle>
-          {CONTROL_PLANE_NAV.slice(19).map(item => {
+          {CONTROL_PLANE_NAV.slice(20).map(item => {
             if (!hasNavigationRoute(navigation, item.routeKey)) {
               return null;
             }

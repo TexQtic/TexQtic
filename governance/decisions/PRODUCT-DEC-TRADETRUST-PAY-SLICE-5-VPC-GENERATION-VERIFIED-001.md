@@ -1,6 +1,6 @@
 # PRODUCT-DEC-TRADETRUST-PAY-SLICE-5-VPC-GENERATION-VERIFIED-001
 
-**Decision Date:** 2025-01-01 (recorded on commit 079d449)
+**Decision Date:** 2026-05-04 (recorded on commit 079d449)
 **Slice:** TradeTrust Pay — Slice 5: VPC Generation
 **Status:** VERIFIED
 
