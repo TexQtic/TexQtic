@@ -204,3 +204,77 @@ SLICE_8_SCORE_ADVISORY_VERIFIED_COMPLETE
 Slice 8 implementation is complete. All 19 score tests pass. All 27 summary tests pass.
 213 regression tests pass. Frontend build clean. Governance boundary audit: PASS.
 Commit `08b355e` — ready for E2E verification.
+
+---
+
+## 13. Production E2E Verification Plan
+
+**Spec file:** `tests/e2e/ttp-score-advisory-production-e2e.spec.ts`
+**Target:** `https://app.texqtic.com`
+**Governance ref:** TTP-SCORE-E2E-001
+
+### Test groups
+
+| Group | Description | Phase |
+|-------|-------------|-------|
+| TTA-1 | `GET /api/health` returns 200 | Both |
+| TTA-2 | Unauthenticated request returns 401 (auth gate precedes feature gate) | Both |
+| TTA-3 | Authenticated request returns 503 FEATURE_DISABLED (ttp_enabled=false) | Phase 1 (flag off) |
+| TTA-3 | Gate open, authenticated request returns 200 (ttp_enabled=true) | Phase 2 (flag on) |
+| TTB-1–TTB-9 | Seller API: HTTP 200, actor_role=SELLER, score=100, band=READY, 7 PASS factors, no blockers, verbatim disclaimer, no anti-leakage fields | Phase 2 (flag on) |
+| TTC-1–TTC-6 | Buyer API: HTTP 200, actor_role=BUYER, trade_trust_score present, disclaimer present, no anti-leakage fields | Phase 2 (flag on) |
+| TTD-1 | UI smoke: "TradeTrust Score" section visible in tenant SPA | Phase 2 (flag on) |
+
+### Run sequence
+
+```powershell
+# Phase 1 — Preflight (TTP_FLAG_ENABLED not set; .auth/qa-b2b.json provides gate token)
+$ptBin = "C:\Users\PARESH\TexQtic\node_modules\.bin\playwright.cmd"
+Remove-Item Env:TTP_FLAG_ENABLED -ErrorAction SilentlyContinue
+& $ptBin test tests/e2e/ttp-score-advisory-production-e2e.spec.ts --reporter=list
+# Expected: TTA-1, TTA-2, TTA-3 (gate-closed) PASS. TTB/TTC/TTD SKIP (AUTH_MODE=gate-only).
+
+# Phase 2 — Requires TTP credentials (Mode A or B):
+#   Mode A (preferred): create .auth/ttp-seller.json + .auth/ttp-buyer.json
+#     with { "token": "<jwt>", "orgId": "<sentinel-org-uuid>" }
+#   Mode B: $env:QA_AUTH_PWD = "<shared-qa-password>"   # seeded in commit b721947
+
+# Phase 2 — Enable flag (run via psql with DATABASE_URL from .env.local)
+# UPDATE public.feature_flags SET enabled=true WHERE key='ttp_enabled';
+# SELECT enabled, updated_at FROM public.feature_flags WHERE key='ttp_enabled';
+
+# Phase 2 — Score verification
+$env:TTP_FLAG_ENABLED = "1"
+& $ptBin test tests/e2e/ttp-score-advisory-production-e2e.spec.ts --reporter=list
+# Expected: ALL groups PASS (AUTH_MODE=file or env, ttpCredentialsAvailable=true).
+
+# Phase 2 — Restore flag immediately (CRITICAL)
+# UPDATE public.feature_flags SET enabled=false WHERE key='ttp_enabled';
+# SELECT enabled, updated_at FROM public.feature_flags WHERE key='ttp_enabled';
+# Verify: enabled = false
+```
+
+### Critical constraints
+
+- `ttp_enabled` MUST be restored to `false` immediately after Phase 2 run
+- Score is ADVISORY ONLY — disclaimer must be present and verbatim in every response
+- Buyer view MUST NOT expose any of: `raw_bureau_json`, `raw_verification_json`, `cibil_score`, `cibil_rank`, `bureau_report_id`, `admin_notes`, `internal_risk_notes`
+- `ttpFeatureGateMiddleware` must remain enforced and unmodified
+- Spec is READ-ONLY: no DB writes, no schema changes, no migrations
+
+### Evidence required before closing
+
+- [x] Phase 1: TTA-1, TTA-2, TTA-3 (gate-closed) all PASS — **2026-06 session**
+  ```
+  ✓  TTA-1: GET /api/health returns 200 (462ms)           × 2 projects
+  ✓  TTA-2: unauthenticated TTP request returns 401 (307ms) × 2 projects
+  ✓  TTA-3: ttp_enabled=false — authenticated request returns 503 FEATURE_DISABLED (3.1s) × 2 projects
+  32 skipped (TTB/TTC/TTD — AUTH_MODE=gate-only, ttpCredentialsAvailable=false)
+  6 passed (5.2s)
+  AUTH_MODE=gate-only — token source: .auth/qa-b2b.json, orgId: faf2e4a7-5d79-4b00-811b-8d0dce4f4d80
+  ```
+- [ ] Phase 2: All TTB-1 through TTB-9 PASS — paste terminal output
+- [ ] Phase 2: All TTC-1 through TTC-6 PASS — paste terminal output
+- [ ] Phase 2: TTD-1 PASS or documented with `TENANT_UI_QA_TRADE_NOT_REACHABLE_FROM_NAV` annotation
+- [ ] Flag restored to false — paste `SELECT enabled` output confirmation
+- [ ] Update this section with actual run results and timestamps
