@@ -156,7 +156,8 @@ export type RuntimeLocalRouteKey =
   | 'invoice_approval'
   | 'gst_verification_queue'
   | 'ttp_eligibility'
-  | 'invoice_oversight';
+  | 'invoice_oversight'
+  | 'vpc_console';
 
 export interface RuntimeLocalRouteStateBinding {
   expView?: string;
@@ -339,6 +340,7 @@ const CONTROL_PLANE_ROUTE_GROUP = defineRuntimeRouteGroup('control_plane_operati
   defineRuntimeRoute('gst_verification_queue', 'GST Verification Queue', 'GST_VERIFICATION_QUEUE', { adminView: 'GST_VERIFICATION_QUEUE' }),
   defineRuntimeRoute('ttp_eligibility', 'TTP Eligibility', 'TTP_ELIGIBILITY', { adminView: 'TTP_ELIGIBILITY' }),
   defineRuntimeRoute('invoice_oversight', 'Invoice Oversight', 'INVOICE_OVERSIGHT', { adminView: 'INVOICE_OVERSIGHT' }),
+  defineRuntimeRoute('vpc_console', 'VPC Console', 'VPC_CONSOLE', { adminView: 'VPC_CONSOLE' }),
   defineRuntimeRoute('logs', 'Audit Logs', 'LOGS', { adminView: 'LOGS' }),
   defineRuntimeRoute('rbac', 'Access Control', 'RBAC', { adminView: 'RBAC' }),
   defineRuntimeRoute('health', 'Health Status', 'HEALTH', { adminView: 'HEALTH' }),
@@ -488,6 +490,7 @@ const CONTROL_PLANE_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
   'gst_verification_queue',
   'ttp_eligibility',
   'invoice_oversight',
+  'vpc_console',
   'logs',
   'rbac',
   'health',

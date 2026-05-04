@@ -28,6 +28,7 @@ import controlPlaneAiRoutes from './control/ai.g028.js';
 import controlGstVerificationRoutes from './control/gst-verification.js';
 import controlTtpEligibilityRoutes from './control/ttp-eligibility.js';
 import controlInvoiceRoutes from './control/invoices.js';
+import controlVpcRoutes from './control/vpc.js';
 
 // ── Admin context helper (G-004) ──────────────────────────────────────────────
 // Canonical replacement for withDbContextLegacy({ isAdmin: true }).
@@ -2426,6 +2427,13 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   // GET    /api/control/invoices/:invoiceId   — get invoice detail
   // PATCH  /api/control/invoices/:invoiceId/transition — admin lifecycle transition (SUPER_ADMIN)
   await fastify.register(controlInvoiceRoutes, { prefix: '/invoices' });
+
+  // ─── TTP Slice 5: VPC Generation ─────────────────────────────────────────────
+  // POST   /api/control/vpc/generate/:invoiceId — generate VPC for VERIFIED invoice (SUPER_ADMIN)
+  // GET    /api/control/vpc                     — list VPCs (cross-tenant, admin)
+  // GET    /api/control/vpc/:vpcId              — get VPC detail
+  // PATCH  /api/control/vpc/:vpcId/transition   — admin lifecycle transition (SUPER_ADMIN)
+  await fastify.register(controlVpcRoutes, { prefix: '/vpc' });
 };
 
 export default controlRoutes;

@@ -45,6 +45,7 @@ import InvoiceApprovalView from './components/Tenant/InvoiceApprovalView';
 import { GstVerificationQueue } from './components/ControlPlane/GstVerificationQueue';
 import { TtpEligibilityConsole } from './components/ControlPlane/TtpEligibilityConsole';
 import InvoiceOversight from './components/ControlPlane/InvoiceOversight';
+import VpcConsole from './components/ControlPlane/VpcConsole';
 // TECS-FBW-007: marketplace_cart_summaries projection admin panel (read-only)
 import { CartSummariesPanel } from './components/ControlPlane/CartSummariesPanel';
 // PW5-W2: G-018 cross-tenant escrow admin read panel (D-020-B: no balance)
@@ -5799,6 +5800,8 @@ const App: React.FC = () => {
         return <TtpEligibilityConsole orgId={ttpEligibilityBridgeOrgId} />;
       case 'invoice_oversight':
         return <InvoiceOversight />;
+      case 'vpc_console':
+        return <VpcConsole />;
       default:
         return null;
     }
