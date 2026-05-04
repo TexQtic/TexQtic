@@ -70,8 +70,8 @@ export interface AdminRoutingStubRecord {
  * Transmission_status will always be PENDING — no live routing occurs in Slice 6.
  */
 export async function adminGetPartnerRoutingStub(vpcId: string): Promise<AdminRoutingStubRecord> {
-  const response = await adminGet<{ success: true; data: { stub: AdminRoutingStubRecord } }>(
+  const response = await adminGet<{ stub: AdminRoutingStubRecord }>(
     `/api/control/ttp/routing-stubs/${vpcId}`,
   );
-  return response.data.stub;
+  return response.stub;
 }

@@ -86,10 +86,9 @@ export interface AdminVpcListResponse {
  * Enforces all eligibility gates server-side.
  */
 export async function adminGenerateVpc(invoiceId: string): Promise<AdminVpcRecord> {
-  const response = await adminPost<{ success: true; data: AdminVpcRecord }>(
+  return adminPost<AdminVpcRecord>(
     `/api/control/vpc/generate/${invoiceId}`,
   );
-  return response.data;
 }
 
 /**
@@ -105,20 +104,18 @@ export async function adminListVpcs(filters: VpcListFilters = {}): Promise<Admin
   if (filters.offset != null) params.set('offset', String(filters.offset));
 
   const query = params.toString();
-  const response = await adminGet<{ success: true; data: AdminVpcRecord[] }>(
+  return adminGet<AdminVpcRecord[]>(
     `/api/control/vpc${query ? `?${query}` : ''}`,
   );
-  return response.data;
 }
 
 /**
  * Get a single VPC by ID.
  */
 export async function adminGetVpc(vpcId: string): Promise<AdminVpcRecord> {
-  const response = await adminGet<{ success: true; data: AdminVpcRecord }>(
+  return adminGet<AdminVpcRecord>(
     `/api/control/vpc/${vpcId}`,
   );
-  return response.data;
 }
 
 /**
@@ -128,9 +125,8 @@ export async function adminTransitionVpc(
   vpcId: string,
   input: VpcTransitionInput,
 ): Promise<AdminVpcRecord> {
-  const response = await adminPatch<{ success: true; data: AdminVpcRecord }>(
+  return adminPatch<AdminVpcRecord>(
     `/api/control/vpc/${vpcId}/transition`,
     input,
   );
-  return response.data;
 }
