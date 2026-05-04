@@ -61,7 +61,7 @@ DO $$ BEGIN IF EXISTS (
   FROM public.feature_flags
   WHERE key = 'ttp_enabled'
     AND enabled = true
-) THEN RAISE EXCEPTION 'QA-TTP-SEED PRE-CHECK ABORT: ttp_enabled = true detected. ' 'This seed must NEVER run while TTP is active. Aborting transaction.';
+) THEN RAISE EXCEPTION 'QA-TTP-SEED PRE-CHECK ABORT: ttp_enabled = true detected. This seed must NEVER run while TTP is active. Aborting transaction.';
 END IF;
 END;
 $$;
@@ -72,18 +72,20 @@ $$;
 --     Insert tenants first (parent), then organizations (child).
 --     Minimum required columns: id, slug, name (rest have DB defaults).
 -- ════════════════════════════════════════════════════════════════════════════
-INSERT INTO public.tenants (id, slug, name)
+INSERT INTO public.tenants (id, slug, name, updated_at)
 VALUES -- QA TTP Seller Org tenant
   (
     'ee000000-0000-0000-0000-000000000001',
     'qa-ttp-seller-001',
-    'QA TTP Seller Org 001'
+    'QA TTP Seller Org 001',
+    now()
   ),
   -- QA TTP Buyer Org tenant
   (
     'ee000000-0000-0000-0000-000000000002',
     'qa-ttp-buyer-001',
-    'QA TTP Buyer Org 001'
+    'QA TTP Buyer Org 001',
+    now()
   ) ON CONFLICT (id) DO NOTHING;
 -- ════════════════════════════════════════════════════════════════════════════
 -- §2  QA ORGANIZATIONS
@@ -447,7 +449,7 @@ DO $$ BEGIN IF EXISTS (
   FROM public.feature_flags
   WHERE key = 'ttp_enabled'
     AND enabled = true
-) THEN RAISE EXCEPTION 'QA-TTP-SEED POST-CHECK ABORT: ttp_enabled = true detected after seed writes. ' 'This script never activates TTP. Investigate and rollback immediately.';
+) THEN RAISE EXCEPTION 'QA-TTP-SEED POST-CHECK ABORT: ttp_enabled = true detected after seed writes. This script never activates TTP. Investigate and rollback immediately.';
 END IF;
 RAISE NOTICE 'QA-TTP-SEED: ttp_enabled = false confirmed. TTP kill-switch remains active.';
 END;
