@@ -25,6 +25,7 @@ import { type Prisma, type PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
 import { requireAdminRole } from '../../middleware/auth.js';
+import { ttpFeatureGateMiddleware } from '../../middleware/ttpFeatureGate.middleware.js';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../utils/response.js';
 import { withDbContext, type DatabaseContext } from '../../lib/database-context.js';
 import { prisma } from '../../db/prisma.js';
@@ -140,7 +141,7 @@ const controlVpcRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.post(
     '/generate/:invoiceId',
-    { preHandler: requireAdminRole('SUPER_ADMIN') },
+    { preHandler: [requireAdminRole('SUPER_ADMIN'), ttpFeatureGateMiddleware] },
     async (request, reply) => {
       if (!request.adminId) return sendError(reply, 'UNAUTHORIZED', 'Admin auth required', 401);
 
@@ -208,7 +209,7 @@ const controlVpcRoutes: FastifyPluginAsync = async fastify => {
    * GET /api/control/vpc
    * List VPCs cross-tenant (admin view). Supports filters: org_id, invoice_id, trade_id, state_key.
    */
-  fastify.get('/', async (request, reply) => {
+  fastify.get('/', { preHandler: [ttpFeatureGateMiddleware] }, async (request, reply) => {
     if (!request.adminId) return sendError(reply, 'UNAUTHORIZED', 'Admin auth required', 401);
 
     const queryResult = listQuerySchema.safeParse(request.query);
@@ -230,7 +231,7 @@ const controlVpcRoutes: FastifyPluginAsync = async fastify => {
    * GET /api/control/vpc/:vpcId
    * Get a single VPC with full admin detail.
    */
-  fastify.get('/:vpcId', async (request, reply) => {
+  fastify.get('/:vpcId', { preHandler: [ttpFeatureGateMiddleware] }, async (request, reply) => {
     if (!request.adminId) return sendError(reply, 'UNAUTHORIZED', 'Admin auth required', 401);
 
     const paramResult = vpcIdParamSchema.safeParse(request.params);
@@ -262,7 +263,7 @@ const controlVpcRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.patch(
     '/:vpcId/transition',
-    { preHandler: requireAdminRole('SUPER_ADMIN') },
+    { preHandler: [requireAdminRole('SUPER_ADMIN'), ttpFeatureGateMiddleware] },
     async (request, reply) => {
       if (!request.adminId) return sendError(reply, 'UNAUTHORIZED', 'Admin auth required', 401);
 

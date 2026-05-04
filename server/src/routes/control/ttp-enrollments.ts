@@ -30,6 +30,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import type { PrismaClient } from '@prisma/client';
 import { requireAdminRole } from '../../middleware/auth.js';
+import { ttpFeatureGateMiddleware } from '../../middleware/ttpFeatureGate.middleware.js';
 import {
   sendSuccess,
   sendError,
@@ -115,7 +116,7 @@ const controlTtpEnrollmentRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.get(
     '/enrollments',
-    { preHandler: [requireAdminRole('SUPER_ADMIN')] },
+    { preHandler: [requireAdminRole('SUPER_ADMIN'), ttpFeatureGateMiddleware] },
     async (request, reply) => {
       const queryResult = listQuerySchema.safeParse(request.query);
       if (!queryResult.success) return sendValidationError(reply, queryResult.error.errors);
@@ -141,7 +142,7 @@ const controlTtpEnrollmentRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.get(
     '/enrollments/:tradeId',
-    { preHandler: [requireAdminRole('SUPER_ADMIN')] },
+    { preHandler: [requireAdminRole('SUPER_ADMIN'), ttpFeatureGateMiddleware] },
     async (request, reply) => {
       const paramResult = tradeIdParamSchema.safeParse(request.params);
       if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
@@ -171,7 +172,7 @@ const controlTtpEnrollmentRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.patch(
     '/enrollments/:tradeId',
-    { preHandler: [requireAdminRole('SUPER_ADMIN')] },
+    { preHandler: [requireAdminRole('SUPER_ADMIN'), ttpFeatureGateMiddleware] },
     async (request, reply) => {
       const paramResult = tradeIdParamSchema.safeParse(request.params);
       if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);

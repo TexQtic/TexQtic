@@ -26,6 +26,7 @@ import { z } from 'zod';
 import type { PrismaClient, Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { requireAdminRole } from '../../middleware/auth.js';
+import { ttpFeatureGateMiddleware } from '../../middleware/ttpFeatureGate.middleware.js';
 import {
   sendSuccess,
   sendError,
@@ -135,7 +136,7 @@ const controlTtpEligibilityRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.post(
     '/:orgId',
-    { preHandler: requireAdminRole('SUPER_ADMIN') },
+    { preHandler: [requireAdminRole('SUPER_ADMIN'), ttpFeatureGateMiddleware] },
     async (request, reply) => {
       if (!request.adminId) {
         return sendError(reply, 'UNAUTHORIZED', 'Admin authentication required', 401);
@@ -219,7 +220,7 @@ const controlTtpEligibilityRoutes: FastifyPluginAsync = async fastify => {
    * Get assessment history (newest-first) and the latest assessment for an org.
    * Returns { assessments, latest, count }.
    */
-  fastify.get('/:orgId', async (request, reply) => {
+  fastify.get('/:orgId', { preHandler: [ttpFeatureGateMiddleware] }, async (request, reply) => {
     if (!request.adminId) {
       return sendError(reply, 'UNAUTHORIZED', 'Admin authentication required', 401);
     }

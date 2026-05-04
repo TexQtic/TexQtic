@@ -27,6 +27,7 @@ import { type Prisma, type PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
 import { requireAdminRole } from '../../middleware/auth.js';
+import { ttpFeatureGateMiddleware } from '../../middleware/ttpFeatureGate.middleware.js';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../utils/response.js';
 import { withDbContext, type DatabaseContext } from '../../lib/database-context.js';
 import { prisma } from '../../db/prisma.js';
@@ -110,7 +111,7 @@ const controlTtpRoutingStubRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.get(
     '/routing-stubs/:vpcId',
-    { preHandler: requireAdminRole('SUPER_ADMIN') },
+    { preHandler: [requireAdminRole('SUPER_ADMIN'), ttpFeatureGateMiddleware] },
     async (request, reply) => {
       if (!request.adminId) return sendError(reply, 'UNAUTHORIZED', 'Admin auth required', 401);
 

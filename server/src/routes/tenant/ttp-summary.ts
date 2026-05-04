@@ -24,6 +24,7 @@ import { z } from 'zod';
 import type { PrismaClient, Prisma } from '@prisma/client';
 import { tenantAuthMiddleware } from '../../middleware/auth.js';
 import { databaseContextMiddleware } from '../../middleware/database-context.middleware.js';
+import { ttpFeatureGateMiddleware } from '../../middleware/ttpFeatureGate.middleware.js';
 import {
   sendSuccess,
   sendError,
@@ -69,7 +70,10 @@ const tenantTtpSummaryRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.get(
     '/trades/:tradeId/ttp-summary',
-    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: [ttpFeatureGateMiddleware],
+    },
     async (request, reply) => {
       const dbContext = request.dbContext;
       if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
