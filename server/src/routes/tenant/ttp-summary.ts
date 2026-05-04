@@ -86,9 +86,29 @@ const tenantTtpSummaryRoutes: FastifyPluginAsync = async fastify => {
       const { tradeId } = paramResult.data;
 
       try {
+        // Fetch trade OUTSIDE the transaction to avoid deadlocking the connection pool.
+        // With connection_limit=1 (Supabase serverless pooler), calling prisma.X()
+        // inside prisma.$transaction() starves the pool — the outer tx holds the only
+        // connection, so the inner query waits forever until Vercel's 10s timeout fires
+        // and returns an empty 500 with no body.
+        const rawTrade = await (prisma as any).trade.findUnique({
+          where: { id: tradeId },
+          select: {
+            id: true,
+            buyerOrgId: true,
+            sellerOrgId: true,
+            tradeReference: true,
+            currency: true,
+            lifecycleState: { select: { stateKey: true } },
+          },
+        });
+        if (!rawTrade) {
+          return sendNotFound(reply, 'Trade not found');
+        }
+
         const summary = await withDbContext(prisma, dbContext, async tx => {
           const svc = new TtpSummaryService(makeTxBoundPrisma(tx), prisma);
-          return svc.getTradeTtpSummary({ tradeId, actorOrgId, actorUserId });
+          return svc.getTradeTtpSummary({ tradeId, actorOrgId, actorUserId, preloadedTrade: rawTrade });
         });
 
         return sendSuccess(reply, summary);

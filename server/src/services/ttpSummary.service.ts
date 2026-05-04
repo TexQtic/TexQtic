@@ -111,26 +111,52 @@ export class TtpSummaryService {
   async getTradeTtpSummary({
     tradeId,
     actorOrgId,
+    preloadedTrade,
   }: {
     tradeId: string;
     actorOrgId: string;
     actorUserId?: string | null;
+    /** Pre-fetched trade record. When provided, skips the DB trade lookup to avoid
+     *  deadlocking on connection_limit=1 poolers (rootDb inside prisma.$transaction). */
+    preloadedTrade?: {
+      id: string;
+      buyerOrgId: string;
+      sellerOrgId: string;
+      tradeReference: string;
+      currency: string;
+      lifecycleState: { stateKey: string } | null;
+    };
   }): Promise<TradeTtpSummary> {
     // ── 1. Load trade (includes lifecycle state) ──────────────────────────────
-    // Use rootDb (unscoped) when available so buyer can pass party verification.
-    // The caller is responsible for passing an appropriate unscoped client.
-    const tradeDb = (this.rootDb ?? this.db) as any;
-    const trade = await tradeDb.trade.findUnique({
-      where: { id: tradeId },
-      select: {
-        id: true,
-        buyerOrgId: true,
-        sellerOrgId: true,
-        tradeReference: true,
-        currency: true,
-        lifecycleState: { select: { stateKey: true } },
-      },
-    });
+    // If preloadedTrade is supplied by the route (fetched outside the transaction),
+    // use it directly. Otherwise fall back to rootDb (unscoped) or db.
+    // Motivation: calling rootDb.trade.findUnique() INSIDE prisma.$transaction()
+    // with connection_limit=1 (Supabase serverless pooler) deadlocks — the outer
+    // tx holds the only connection and the inner query can never acquire one.
+    let trade: {
+      id: string;
+      buyerOrgId: string;
+      sellerOrgId: string;
+      tradeReference: string;
+      currency: string;
+      lifecycleState: { stateKey: string } | null;
+    } | null;
+    if (preloadedTrade !== undefined) {
+      trade = preloadedTrade;
+    } else {
+      const tradeDb = (this.rootDb ?? this.db) as any;
+      trade = await tradeDb.trade.findUnique({
+        where: { id: tradeId },
+        select: {
+          id: true,
+          buyerOrgId: true,
+          sellerOrgId: true,
+          tradeReference: true,
+          currency: true,
+          lifecycleState: { select: { stateKey: true } },
+        },
+      });
+    }
     if (!trade) throw new TtpSummaryTradeNotFoundError(tradeId);
 
     // ── 2. Verify actor is a party ────────────────────────────────────────────
