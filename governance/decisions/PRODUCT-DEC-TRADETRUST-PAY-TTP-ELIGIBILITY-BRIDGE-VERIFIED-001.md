@@ -4,7 +4,7 @@
 **Domain:** TradeTrust Pay — TTP Eligibility  
 **Status:** VERIFIED  
 **Commit:** `ec06a89`  
-**Date:** 2025-01-31  
+**Date:** 2026-05-04  
 
 ---
 
@@ -90,3 +90,36 @@ None. The bridge fix is self-contained. The RISK tab in TenantDetails retains it
 `TTP_ELIGIBILITY_BRIDGE_PRODUCTION_VERIFIED_COMPLETE`
 
 The TTP Eligibility bridge is fully wired. A SuperAdmin can navigate from any tenant's detail page (OVERVIEW → Risk Visibility → Run TTP Eligibility) into the `TtpEligibilityConsole` with the correct `orgId` bound. The bridge follows the established pattern (`onXxx → setBridgeState → navigateControlPlaneManifestRoute`) used by the Finance → Escrow and Cases → Escalations bridges.
+
+---
+
+## 9. Production Verification Evidence
+
+**Production URL:** https://app.texqtic.com  
+**Deployed commit:** `ec06a89` / `91edf64` (truth-sync)  
+**Verification date:** 2026-05-04  
+**Verified by:** admin@texqtic.com (SuperAdmin)  
+**Tenant tested:** Test Tenant E3 1777862837447  
+**org_id:** `361eb357-7046-4ecf-b746-6c1d55e831c8`  
+
+| Check | Result |
+|---|---|
+| Page load — Active Tenants renders | ✅ PASS |
+| TradeTrust Ledger sidebar label | ✅ PASS — `🔒 TradeTrust Ledger` |
+| TradeTrust Ledger browser tab | ✅ PASS — `TradeTrust Ledger \| TexQtic Control Plane` |
+| TradeTrust Ledger h2 | ✅ PASS — `TradeTrust Ledger Accounts` |
+| Tenant Detail → OVERVIEW → Risk Visibility card | ✅ PASS — card visible |
+| "Run TTP Eligibility" button (indigo) visible | ✅ PASS |
+| "Manual assessment only — no live CIBIL" disclaimer | ✅ PASS |
+| Click button → page title changes to `TTP Eligibility \| TexQtic Control Plane` | ✅ PASS |
+| TtpEligibilityConsole renders (not "No tenant selected") | ✅ PASS |
+| h2: `TTP Eligibility Console` | ✅ PASS |
+| Subtitle: `Manual assessment only — no live CIBIL or credit bureau pull in this phase` | ✅ PASS |
+| Org-bound API response (no `null` org error) | ✅ PASS — `No eligibility assessment on record for this org.` |
+| GST prerequisite message visible | ✅ PASS — `GST verification must be approved before creating an assessment.` |
+| `New Assessment` button present | ✅ PASS |
+| `Refresh` button present | ✅ PASS |
+| Direct sidebar (without bridge) → `No tenant selected.` placeholder | ✅ PASS — expected behavior |
+| Guidance text: `Navigate from a Tenant Detail view to run a TTP eligibility assessment.` | ✅ PASS |
+| Browser console errors | ✅ PASS — no errors observed |
+| No live CIBIL or external credit bureau call triggered | ✅ PASS — manual-only phase confirmed |
