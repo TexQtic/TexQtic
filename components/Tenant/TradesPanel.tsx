@@ -30,6 +30,8 @@ import {
 import { LoadingState } from '../shared/LoadingState';
 import { ErrorState } from '../shared/ErrorState';
 import { EmptyState } from '../shared/EmptyState';
+import TtpEnrollmentBanner from './TtpEnrollmentBanner';
+import TtpTradeSummaryCard from './TtpTradeSummaryCard';
 
 interface Props {
   onBack: () => void;
@@ -169,6 +171,7 @@ export function TradesPanel({ onBack, initialTradeId = null, onInitialTradeHandl
   const [userRole, setUserRole] = useState<string | null>(null);
   const [selectedTradeId, setSelectedTradeId] = useState<string | null>(null);
   const [selectedTrade, setSelectedTrade] = useState<TenantTrade | null>(null);
+  const [currentOrgId, setCurrentOrgId] = useState<string | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [transitionReason, setTransitionReason] = useState('');
@@ -190,6 +193,7 @@ export function TradesPanel({ onBack, initialTradeId = null, onInitialTradeHandl
       setTrades(res.trades);
       setCount(res.count);
       setUserRole(meRes?.role ?? null);
+      setCurrentOrgId(meRes?.tenant?.id ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load trades.');
     } finally {
@@ -369,6 +373,16 @@ export function TradesPanel({ onBack, initialTradeId = null, onInitialTradeHandl
               <DetailRow label="Updated" value={formatDateTime(selectedTrade.updatedAt)} />
               <DetailRow label="Trade ID" value={<span className="font-mono text-xs">{selectedTrade.id}</span>} />
             </div>
+
+            {selectedTradeId && (
+              <TtpTradeSummaryCard tradeId={selectedTradeId} />
+            )}
+            {selectedTradeId && (
+              <TtpEnrollmentBanner
+                tradeId={selectedTradeId}
+                actorRole={selectedTrade.sellerOrgId === currentOrgId ? 'SELLER' : 'BUYER'}
+              />
+            )}
 
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
               <div>

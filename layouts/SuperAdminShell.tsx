@@ -94,6 +94,7 @@ const CONTROL_PLANE_NAV = [
   { routeKey: 'gst_verification_queue', icon: '🔐', label: 'GST Verification Queue' },
   { routeKey: 'ttp_eligibility', icon: '⚡', label: 'TTP Eligibility' },
   { routeKey: 'vpc_console', icon: '🧾', label: 'VPC Console' },
+  { routeKey: 'ttp_enrollment_admin', icon: '📋', label: 'TTP Enrollment' },
   { routeKey: 'ai', icon: '🤖', label: 'AI Governance' },
   { routeKey: 'events', icon: '⚡', label: 'Live Event Stream' },
   { routeKey: 'logs', icon: '📜', label: 'Audit Logs' },

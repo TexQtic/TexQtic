@@ -46,6 +46,7 @@ import { GstVerificationQueue } from './components/ControlPlane/GstVerificationQ
 import { TtpEligibilityConsole } from './components/ControlPlane/TtpEligibilityConsole';
 import InvoiceOversight from './components/ControlPlane/InvoiceOversight';
 import VpcConsole from './components/ControlPlane/VpcConsole';
+import TtpEnrollmentAdmin from './components/ControlPlane/TtpEnrollmentAdmin';
 // TECS-FBW-007: marketplace_cart_summaries projection admin panel (read-only)
 import { CartSummariesPanel } from './components/ControlPlane/CartSummariesPanel';
 // PW5-W2: G-018 cross-tenant escrow admin read panel (D-020-B: no balance)
@@ -5802,6 +5803,9 @@ const App: React.FC = () => {
         return <InvoiceOversight />;
       case 'vpc_console':
         return <VpcConsole />;
+      // TTP Slice 7: enrollment admin console (SuperAdmin only)
+      case 'ttp_enrollment_admin':
+        return <TtpEnrollmentAdmin />;
       default:
         return null;
     }
