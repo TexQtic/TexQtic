@@ -18,6 +18,7 @@ interface TenantDetailsProps {
   tenant: TenantConfig;
   onBack: () => void;
   onImpersonate: (tenant: TenantConfig) => void;
+  onRunTtpEligibility?: (orgId: string) => void;
 }
 
 interface ControlPlaneIdentityPresentation {
@@ -64,7 +65,7 @@ const buildControlPlaneIdentityPresentation = ({
   };
 };
 
-export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, onImpersonate }) => {
+export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, onImpersonate, onRunTtpEligibility }) => {
   const [activeTab, setActiveTab] = useState<TenantDetailsTabId>('OVERVIEW');
   const [tenantStatus, setTenantStatus] = useState<TenantStatus>(tenant.status);
   const [onboardingStatus, setOnboardingStatus] = useState<string | null>(tenant.onboarding_status ?? null);
@@ -333,6 +334,19 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
                      This tenant deep-dive does not provide a tenant-real risk score or launch-ready risk workflow depth.
                    </div>
                  </div>
+                 {onRunTtpEligibility && (
+                   <div className="mt-4">
+                     <button
+                       onClick={() => onRunTtpEligibility(tenant.id)}
+                       className="px-4 py-2 bg-indigo-600 text-white rounded text-xs font-bold uppercase hover:bg-indigo-700 transition"
+                     >
+                       Run TTP Eligibility
+                     </button>
+                     <div className="mt-1 text-[10px] uppercase tracking-widest text-slate-500">
+                       Manual assessment only — no live CIBIL
+                     </div>
+                   </div>
+                 )}
               </div>
             </div>
           </div>

@@ -5687,6 +5687,10 @@ const App: React.FC = () => {
           tenant={selectedTenant}
           onBack={() => navigateControlPlaneManifestRoute(backRouteKey)}
           onImpersonate={handleImpersonate}
+          onRunTtpEligibility={(orgId) => {
+            setTtpEligibilityBridgeOrgId(orgId);
+            navigateControlPlaneManifestRoute('ttp_eligibility');
+          }}
         />
       );
     }

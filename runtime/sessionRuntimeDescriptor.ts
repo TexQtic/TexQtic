@@ -326,7 +326,7 @@ const CONTROL_PLANE_ROUTE_GROUP = defineRuntimeRouteGroup('control_plane_operati
   defineRuntimeRoute('finance', 'Finance & Fees', 'FINANCE', { adminView: 'FINANCE' }),
   defineRuntimeRoute('trades', 'Trade Oversight', 'TRADES', { adminView: 'TRADES' }),
   defineRuntimeRoute('cart_summaries', 'Cart Summaries', 'CART_SUMMARIES', { adminView: 'CART_SUMMARIES' }),
-  defineRuntimeRoute('escrow_admin', 'Escrow Accounts', 'ESCROW_ADMIN', { adminView: 'ESCROW_ADMIN' }),
+  defineRuntimeRoute('escrow_admin', 'TradeTrust Ledger', 'ESCROW_ADMIN', { adminView: 'ESCROW_ADMIN' }),
   defineRuntimeRoute('settlement_admin', 'Settlement Admin', 'SETTLEMENT_ADMIN', { adminView: 'SETTLEMENT_ADMIN' }),
   defineRuntimeRoute('compliance', 'Compliance Queue', 'COMPLIANCE', { adminView: 'COMPLIANCE' }),
   defineRuntimeRoute('cases', 'Disputes', 'CASES', { adminView: 'CASES' }),
