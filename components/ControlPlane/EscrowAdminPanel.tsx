@@ -195,13 +195,13 @@ export const EscrowAdminPanel: React.FC<EscrowAdminPanelProps> = ({
   const accountSuffix = count === 1 ? '' : 's';
   let resultSummary = `Showing ${visibleEscrows.length} of ${count} account${accountSuffix}.`;
   if (count === 0) {
-    resultSummary = 'No escrow accounts found.';
+    resultSummary = 'No TradeTrust Ledger accounts found.';
   }
   if (bridgeScope) {
     if (visibleEscrows.length === 0) {
-      resultSummary = 'Scoped escrow was not found in the current tenant result set.';
+      resultSummary = 'Scoped ledger was not found in the current tenant result set.';
     } else {
-      resultSummary = `Showing scoped escrow 1 of ${count} account${accountSuffix}.`;
+      resultSummary = `Showing scoped ledger 1 of ${count} account${accountSuffix}.`;
     }
   }
 
@@ -211,7 +211,7 @@ export const EscrowAdminPanel: React.FC<EscrowAdminPanelProps> = ({
         <div className="space-y-1">
           <p className="font-semibold">Scoped from finance record {bridgeScope.financeRecordId.slice(0, 8)}...</p>
           <p className="text-xs text-sky-200/80">
-            Tenant <span className="font-mono">{bridgeScope.tenantId}</span> · Escrow <span className="font-mono">{bridgeScope.escrowId}</span>
+              Tenant <span className="font-mono">{bridgeScope.tenantId}</span> · Ledger <span className="font-mono">{bridgeScope.escrowId}</span>
           </p>
           {bridgeScope.referenceId && (
             <p className="text-xs text-sky-200/80">
@@ -223,7 +223,7 @@ export const EscrowAdminPanel: React.FC<EscrowAdminPanelProps> = ({
           onClick={handleClearScope}
           className="rounded-lg border border-sky-400/30 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-sky-100 transition-colors hover:bg-sky-500/10"
         >
-          Show All Tenant Escrows
+          Show All Tenant Ledgers
         </button>
       </div>
     </div>
@@ -234,9 +234,9 @@ export const EscrowAdminPanel: React.FC<EscrowAdminPanelProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-100">Escrow Accounts</h2>
+          <h2 className="text-xl font-bold text-slate-100">TradeTrust Ledger Accounts</h2>
           <p className="text-slate-400 text-sm mt-0.5">
-            Cross-tenant read-only view — G-018
+            Cross-tenant TradeTrust Ledger read-only view — G-018
           </p>
         </div>
         <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest bg-slate-800 px-2 py-1 rounded">
@@ -246,7 +246,7 @@ export const EscrowAdminPanel: React.FC<EscrowAdminPanelProps> = ({
 
       {/* D-020-B notice */}
       <div className="rounded-lg border border-amber-800/40 bg-amber-900/10 px-4 py-2.5 text-amber-400 text-xs leading-relaxed">
-        <strong>D-020-B:</strong> Balance is not displayed. Escrow balance is derived from the
+        <strong>D-020-B:</strong> Balance is not displayed. TradeTrust Ledger balance is derived from the
         transaction ledger by the server and is only available on the detail endpoint.
       </div>
 
@@ -259,10 +259,10 @@ export const EscrowAdminPanel: React.FC<EscrowAdminPanelProps> = ({
               onClick={resetDetail}
               className="text-sm font-semibold text-sky-300 transition hover:text-sky-200"
             >
-              ← Back to escrow list
+              ← Back to ledger list
             </button>
             <div>
-              <h3 className="text-lg font-bold text-slate-100">Escrow Detail</h3>
+              <h3 className="text-lg font-bold text-slate-100">Ledger Detail</h3>
               <p className="text-xs font-mono text-slate-500">{selectedEscrowId}</p>
             </div>
           </div>
@@ -288,7 +288,7 @@ export const EscrowAdminPanel: React.FC<EscrowAdminPanelProps> = ({
               <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-5">
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Escrow ID</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Ledger ID</p>
                     <p className="mt-1 font-mono text-xs text-slate-300" title={detail.escrow.id}>{detail.escrow.id}</p>
                   </div>
                   <div>
@@ -395,7 +395,7 @@ export const EscrowAdminPanel: React.FC<EscrowAdminPanelProps> = ({
               disabled={fetchState === 'LOADING'}
               className="h-9 px-5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-100 text-sm font-semibold rounded-lg transition"
             >
-              {fetchState === 'LOADING' ? 'Loading…' : 'Fetch Escrows'}
+              {fetchState === 'LOADING' ? 'Loading…' : 'Fetch Ledgers'}
             </button>
           </div>
 
@@ -406,9 +406,9 @@ export const EscrowAdminPanel: React.FC<EscrowAdminPanelProps> = ({
 
           {/* States */}
           {fetchState === 'IDLE' && (
-            <EmptyState title="No data loaded" message="Enter optional filters and click Fetch Escrows." />
+            <EmptyState title="No data loaded" message="Enter optional filters and click Fetch Ledgers." />
           )}
-          {fetchState === 'LOADING' && <LoadingState message="Loading escrow accounts…" />}
+          {fetchState === 'LOADING' && <LoadingState message="Loading TradeTrust Ledger accounts…" />}
           {fetchState === 'ERROR' && error && (
             <div className="rounded-lg border border-rose-800/50 bg-rose-900/10 px-4 py-3 text-rose-400 text-sm">
               {error}
@@ -425,14 +425,14 @@ export const EscrowAdminPanel: React.FC<EscrowAdminPanelProps> = ({
 
           {/* Table */}
           {fetchState === 'DONE' && visibleEscrows.length === 0 && (
-            <EmptyState title="No escrow accounts" message="No escrow accounts match the current filter." />
+            <EmptyState title="No TradeTrust Ledger accounts" message="No TradeTrust Ledger accounts match the current filter." />
           )}
           {fetchState === 'DONE' && visibleEscrows.length > 0 && (
             <div className="overflow-x-auto rounded-lg border border-slate-800">
               <table className="w-full text-sm text-left text-slate-300">
                 <thead className="text-[10px] uppercase tracking-widest text-slate-500 border-b border-slate-800 bg-slate-900/60">
                   <tr>
-                    <th className="px-4 py-3">Escrow ID</th>
+                    <th className="px-4 py-3">Ledger ID</th>
                     <th className="px-4 py-3">Tenant ID</th>
                     <th className="px-4 py-3">Currency</th>
                     <th className="px-4 py-3">State</th>

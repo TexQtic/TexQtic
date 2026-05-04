@@ -82,7 +82,7 @@ const CONTROL_PLANE_NAV = [
   { routeKey: 'finance', icon: '💰', label: 'Finance & Fees' },
   { routeKey: 'trades', icon: '🔁', label: 'Trade Oversight' },
   { routeKey: 'cart_summaries', icon: '🛒', label: 'Cart Summaries' },
-  { routeKey: 'escrow_admin', icon: '🔒', label: 'Escrow Accounts' },
+  { routeKey: 'escrow_admin', icon: '🔒', label: 'TradeTrust Ledger' },
   { routeKey: 'settlement_admin', icon: '💸', label: 'Settlement Admin' },
   { routeKey: 'invoice_oversight', icon: '📄', label: 'Invoice Oversight' },
   { routeKey: 'compliance', icon: '✅', label: 'Compliance Queue' },
