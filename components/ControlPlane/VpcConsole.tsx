@@ -25,6 +25,7 @@ import {
 } from '../../services/vpcService';
 import { APIError } from '../../services/apiClient';
 import { VpcStatusBadge } from './VpcStatusBadge';
+import { PartnerRoutingStubPanel } from './PartnerRoutingStubPanel';
 
 // ─── Generate VPC dialog ──────────────────────────────────────────────────────
 
@@ -256,6 +257,7 @@ export function VpcConsole(): React.ReactElement {
     vpc: AdminVpcRecord;
     target: AllowedTransitionTarget;
   } | null>(null);
+  const [routingStubVpc, setRoutingStubVpc] = useState<AdminVpcRecord | null>(null);
 
   const fetchVpcs = useCallback(async () => {
     setLoading(true);
@@ -430,6 +432,14 @@ export function VpcConsole(): React.ReactElement {
                             Expire
                           </button>
                         )}
+                        {(vpc.state_key === 'ACTIVE' || vpc.state_key === 'ROUTING_READY') && (
+                          <button
+                            onClick={() => setRoutingStubVpc(vpc)}
+                            className="px-2 py-0.5 text-xs font-medium text-indigo-700 border border-indigo-300 rounded hover:bg-indigo-50"
+                          >
+                            View Routing Stub
+                          </button>
+                        )}
                       </div>
                     )}
                     {vpc.is_terminal && (
@@ -456,6 +466,13 @@ export function VpcConsole(): React.ReactElement {
           target={transition.target}
           onComplete={handleTransitionComplete}
           onCancel={() => setTransition(null)}
+        />
+      )}
+      {routingStubVpc && (
+        <PartnerRoutingStubPanel
+          vpcId={routingStubVpc.id}
+          vpcReference={routingStubVpc.vpc_reference}
+          onClose={() => setRoutingStubVpc(null)}
         />
       )}
     </div>
