@@ -84,12 +84,15 @@ const CONTROL_PLANE_NAV = [
   { routeKey: 'cart_summaries', icon: '🛒', label: 'Cart Summaries' },
   { routeKey: 'escrow_admin', icon: '🔒', label: 'Escrow Accounts' },
   { routeKey: 'settlement_admin', icon: '💸', label: 'Settlement Admin' },
+  { routeKey: 'invoice_oversight', icon: '📄', label: 'Invoice Oversight' },
   { routeKey: 'compliance', icon: '✅', label: 'Compliance Queue' },
   { routeKey: 'cases', icon: '⚠️', label: 'Disputes' },
   { routeKey: 'escalations', icon: '🚨', label: 'Escalations' },
   { routeKey: 'certifications', icon: '📋', label: 'Cert Lifecycle' },
   { routeKey: 'traceability', icon: '🔗', label: 'Traceability' },
   { routeKey: 'maker_checker', icon: '✍️', label: 'Maker-Checker' },
+  { routeKey: 'gst_verification_queue', icon: '🔐', label: 'GST Verification Queue' },
+  { routeKey: 'ttp_eligibility', icon: '⚡', label: 'TTP Eligibility' },
   { routeKey: 'ai', icon: '🤖', label: 'AI Governance' },
   { routeKey: 'events', icon: '⚡', label: 'Live Event Stream' },
   { routeKey: 'logs', icon: '📜', label: 'Audit Logs' },
@@ -134,7 +137,7 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
       <aside className="w-64 border-r border-slate-800 bg-slate-900/30 hidden md:flex flex-col p-4 sticky top-14 h-[calc(100vh-3.5rem)]">
         <nav className="space-y-0.5 overflow-y-auto pr-2 custom-scrollbar">
           <SectionTitle>Governance</SectionTitle>
-          {CONTROL_PLANE_NAV.slice(0, 9).map(item => {
+          {CONTROL_PLANE_NAV.slice(0, 10).map(item => {
             if (!hasNavigationRoute(navigation, item.routeKey)) {
               return null;
             }
@@ -151,7 +154,7 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
           })}
 
           <SectionTitle>Risk & Compliance</SectionTitle>
-          {CONTROL_PLANE_NAV.slice(9, 16).map(item => {
+          {CONTROL_PLANE_NAV.slice(10, 19).map(item => {
             if (!hasNavigationRoute(navigation, item.routeKey)) {
               return null;
             }
@@ -168,7 +171,7 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
           })}
 
           <SectionTitle>Infrastructure</SectionTitle>
-          {CONTROL_PLANE_NAV.slice(16).map(item => {
+          {CONTROL_PLANE_NAV.slice(19).map(item => {
             if (!hasNavigationRoute(navigation, item.routeKey)) {
               return null;
             }
