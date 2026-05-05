@@ -33,6 +33,7 @@ import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
 import { TTP_VPC_STATE } from '../../ttp/ttp.constants.js';
 import {
   VpcService,
+  type AdminVpcRecord,
   VpcInvoiceNotFoundError,
   VpcInvoiceIneligibleStateError,
   VpcGstNotApprovedError,
@@ -47,6 +48,10 @@ import {
   VpcTransitionNotAllowedError,
   VpcTerminalStateError,
 } from '../../services/vpc.service.js';
+import {
+  TtpScoreSnapshotService,
+  TTP_SCORE_TRIGGER_EVENT,
+} from '../../services/ttpScoreSnapshot.service.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -130,6 +135,58 @@ const transitionBodySchema = z.object({
   notes: z.string().trim().min(1).max(5000).optional().nullable(),
 });
 
+// ─── Post-commit VPC_ISSUED snapshot helper ────────────────────────────────────
+
+/**
+ * Best-effort: capture a `VPC_ISSUED` score snapshot after successful VPC generation.
+ *
+ * Called AFTER the VPC insert has committed. Swallows all errors from
+ * `snapshotSvc.captureSnapshot` — snapshot failure must never affect the VPC response.
+ * Logs a structured `ttp.score_snapshot.capture_failed` event on error.
+ *
+ * Exported for unit testing only (do not call from outside the VPC route handler).
+ *
+ * @param params.record     The successfully generated AdminVpcRecord.
+ * @param params.invoiceId  Invoice ID used to generate the VPC.
+ * @param params.adminId    Admin actor ID from the VPC generation request.
+ * @param params.snapshotSvc An already DB-context-wrapped TtpScoreSnapshotService.
+ * @param params.log        Fastify request.log (or compatible logger).
+ */
+export async function captureVpcIssuedSnapshot(params: {
+  record: AdminVpcRecord;
+  invoiceId: string;
+  adminId: string;
+  snapshotSvc: Pick<TtpScoreSnapshotService, 'captureSnapshot'>;
+  log: { error(obj: Record<string, unknown>, msg: string): void };
+}): Promise<void> {
+  const { record, invoiceId, adminId, snapshotSvc, log } = params;
+  try {
+    await snapshotSvc.captureSnapshot({
+      orgId: record.org_id,
+      triggerEvent: TTP_SCORE_TRIGGER_EVENT.VPC_ISSUED,
+      tradeId: record.trade_id,
+      invoiceId,
+      vpcId: record.id,
+      sourceEventId: record.id,
+      actorId: adminId,
+    });
+  } catch (snapshotErr) {
+    log.error(
+      {
+        event: 'ttp.score_snapshot.capture_failed',
+        trigger_event: 'VPC_ISSUED',
+        vpc_id: record.id,
+        invoice_id: invoiceId,
+        trade_id: record.trade_id,
+        org_id: record.org_id,
+        err_name: snapshotErr instanceof Error ? snapshotErr.name : 'UnknownError',
+        err_msg: snapshotErr instanceof Error ? snapshotErr.message : String(snapshotErr),
+      },
+      'ttp.score_snapshot.capture_failed',
+    );
+  }
+}
+
 // ─── Plugin ───────────────────────────────────────────────────────────────────
 
 const controlVpcRoutes: FastifyPluginAsync = async fastify => {
@@ -178,6 +235,37 @@ const controlVpcRoutes: FastifyPluginAsync = async fastify => {
             org_id: record.org_id,
           }),
         );
+
+        // Post-commit best-effort: VPC_ISSUED score snapshot.
+        // withVpcAdminWriteContext provides RLS-safe DB context for assembleTtpScoreInput reads
+        // and the ttp_score_snapshots insert. captureVpcIssuedSnapshot swallows captureSnapshot
+        // errors internally. This outer try/catch handles DB context setup failures only.
+        // VPC HTTP response is never affected by snapshot errors.
+        try {
+          await withVpcAdminWriteContext(record.org_id, adminId, async tx => {
+            await captureVpcIssuedSnapshot({
+              record,
+              invoiceId,
+              adminId,
+              snapshotSvc: new TtpScoreSnapshotService(makeTxBoundPrisma(tx)),
+              log: request.log,
+            });
+          });
+        } catch (snapshotCtxErr) {
+          request.log.error(
+            {
+              event: 'ttp.score_snapshot.capture_failed',
+              trigger_event: 'VPC_ISSUED',
+              vpc_id: record.id,
+              invoice_id: invoiceId,
+              trade_id: record.trade_id,
+              org_id: record.org_id,
+              err_name: snapshotCtxErr instanceof Error ? snapshotCtxErr.name : 'UnknownError',
+              err_msg: snapshotCtxErr instanceof Error ? snapshotCtxErr.message : String(snapshotCtxErr),
+            },
+            'ttp.score_snapshot.capture_failed',
+          );
+        }
 
         return sendSuccess(reply, record, 201);
       } catch (err) {
