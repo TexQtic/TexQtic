@@ -79,7 +79,7 @@ Prisma generated client updated in-place by `prisma generate` (not committed sep
 | `ttp_score_snapshots_trade_id_fk` | FK → `trade_transactions(id)` ON DELETE SET NULL |
 | `ttp_score_snapshots_invoice_id_fk` | FK → `invoices(id)` ON DELETE SET NULL |
 | `ttp_score_snapshots_vpc_id_fk` | FK → `vpc_documents(id)` ON DELETE SET NULL |
-| `ttp_score_snapshots_enrollment_id_fk` | FK → `ttp_enrollments(id)` ON DELETE SET NULL |
+| `ttp_score_snapshots_enrollment_id_fk` | FK → `ttp_enrollment_logs(id)` ON DELETE NO ACTION |
 
 ### 3.3 Indexes (4 custom + 1 PKey = 5 total)
 

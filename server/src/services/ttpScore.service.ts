@@ -102,7 +102,7 @@ export interface TradeTrustScore {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const SCORE_DISCLAIMER =
+export const SCORE_DISCLAIMER =
   'TradeTrust Score is an advisory readiness indicator only. It is not a credit score, payment guarantee, financing approval, or partner commitment.';
 
 const ENROLLMENT_ACTIVE_STATES = new Set(['APPROVED', 'REQUESTED']);
