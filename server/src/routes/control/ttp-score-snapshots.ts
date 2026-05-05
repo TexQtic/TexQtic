@@ -15,6 +15,7 @@
  * No write operations, no state mutations, no ttp_enabled activation.
  *
  * Governance: TTP Slice 6, TTP-SCORE-SNAPSHOT-READ-ADMIN-001,
+ *             TTP-TEXQTICSCORE-V2-ADMIN-READ-001,
  *             TEXQTIC-TRADETRUST-PAY-DESIGN-001
  */
 
@@ -53,13 +54,14 @@ async function withAdminReadContext<T>(callback: (db: PrismaClient) => Promise<T
 
 // ─── Query schemas ────────────────────────────────────────────────────────────
 
-const snapshotListQuerySchema = z.object({
+export const snapshotListQuerySchema = z.object({
   limit:         z.coerce.number().min(1).max(200).default(50),
   trigger_event: z.string().optional(),
   trade_id:      z.string().uuid().optional(),
   vpc_id:        z.string().uuid().optional(),
   invoice_id:    z.string().uuid().optional(),
   enrollment_id: z.string().uuid().optional(),
+  score_version: z.enum(['TTP_V1', 'TEXQTICSCORE_V2']).optional(),
 });
 
 type SnapshotListFilters = z.infer<typeof snapshotListQuerySchema>;
@@ -99,6 +101,7 @@ export async function querySnapshotList(
   if (filters.vpc_id        !== undefined) where.vpc_id        = filters.vpc_id;
   if (filters.invoice_id    !== undefined) where.invoice_id    = filters.invoice_id;
   if (filters.enrollment_id !== undefined) where.enrollment_id = filters.enrollment_id;
+  if (filters.score_version !== undefined) where.score_version = filters.score_version;
 
   return (db as any).ttp_score_snapshots.findMany({
     where,
