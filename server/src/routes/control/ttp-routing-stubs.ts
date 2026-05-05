@@ -153,7 +153,11 @@ const controlTtpRoutingStubRoutes: FastifyPluginAsync = async fastify => {
         if (err instanceof RoutingStubVpcTerminalError) {
           return sendError(reply, 'ROUTING_STUB_VPC_TERMINAL', err.message, 409);
         }
-        throw err;
+        request.log.error(
+          { event: 'ttp.route.error', route: 'GET /api/control/ttp/routing-stubs/:vpcId', vpcId, errMsg: err instanceof Error ? err.message : String(err) },
+          'ttp.route.error',
+        );
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to retrieve routing stub', 500);
       }
     },
   );

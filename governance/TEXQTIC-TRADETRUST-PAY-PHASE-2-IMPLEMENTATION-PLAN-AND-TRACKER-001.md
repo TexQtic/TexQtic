@@ -429,8 +429,8 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-SCOPED-ACTIVATION-DESIGN-001` | Wave 0 | P0 | Design | `DESIGN_APPROVED` |
 | `TTP-SCOPED-ACTIVATION-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` |
 | `TTP-QA-SENTINEL-FLAG-IMPL-001` | Wave 0 | P0 | Implementation + migration | `TRUTH_SYNCED` |
-| `TTP-ACTIVATION-MONITORING-IMPL-001` | Wave 0 | P0 | Implementation | `NOT_OPENED` |
-| `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` | Wave 0 | P0 | Governance / runbook | `IMPLEMENTATION_OPEN` (TTP-IMPL-006) |
+| `TTP-ACTIVATION-MONITORING-IMPL-001` | Wave 0 | P0 | Implementation | `IMPLEMENTATION_OPEN` (TTP-ACTIVATION-MONITORING-IMPL-001) |
+| `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` | Wave 0 | P0 | Governance / runbook | `TRUTH_SYNCED` — impl `0c96c7f`, gov `8f6356e`, final decision `TTP_IMPL_006_ACTIVATION_ROLLBACK_RUNBOOK_VERIFIED_COMPLETE` |
 | `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` |
 | `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` | Wave 1 | P0/P2 | Governance / legal | `PARALLEL_RECOMMENDED_NON_CODE` |
 | `TTP-SCORE-SNAPSHOT-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_TARGET_ONLY__WAITING` |
@@ -480,13 +480,14 @@ Sub-slice of `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` — that unit is now `T
 **TTP-IMPL-001 is complete** (`TRUTH_SYNCED`): impl `c6e24eaa`, gov `9e5f443a`,
 final decision `TTP_IMPL_001_QA_SENTINEL_FLAG_VERIFIED_COMPLETE`.
 
-**TTP-IMPL-006 is OPEN** (`IMPLEMENTATION_OPEN`): Activation / rollback runbook (TTP-ACTIVATION-ROLLBACK-RUNBOOK-001).
-Governance / runbook only — no code, no schema, no migration, no DB changes, no deployment.
-Runbook path: `governance/runbooks/TTP-ACTIVATION-ROLLBACK-RUNBOOK-001.md`.
-`ttp_enabled = false` unchanged throughout.
+**TTP-IMPL-006 is complete** (`TRUTH_SYNCED`): impl `0c96c7f`, gov `8f6356e`,
+final decision `TTP_IMPL_006_ACTIVATION_ROLLBACK_RUNBOOK_VERIFIED_COMPLETE`.
+Activation / rollback runbook created at `governance/runbooks/TTP-ACTIVATION-ROLLBACK-RUNBOOK-001.md`.
+Runbook Section B and D.1 stale entries corrected. `ttp_enabled = false` unchanged throughout.
 
-**Next unit after TTP-IMPL-006:** `TTP-ACTIVATION-MONITORING-IMPL-001` — NOT yet opened. Requires separate Paresh-approved prompt.
-Remaining `NOT_OPENED` Wave 0 units: `TTP-ACTIVATION-MONITORING-IMPL-001`.
+**Current unit: TTP-ACTIVATION-MONITORING-IMPL-001** (`IMPLEMENTATION_OPEN`): Structured TTP pino log events.
+Route monitoring events for 5xx, VPC generate error, eligibility expiry, enrollment gate failure.
+Remaining `NOT_OPENED` Wave 0 units: none (all units at IMPLEMENTATION_OPEN or above).
 
 ### Parallel — may open now (non-code)
 

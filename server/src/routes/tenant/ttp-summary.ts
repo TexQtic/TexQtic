@@ -119,7 +119,10 @@ const tenantTtpSummaryRoutes: FastifyPluginAsync = async fastify => {
         if (err instanceof TtpSummaryPartyMismatchError) {
           return sendError(reply, 'FORBIDDEN', err.message, 403);
         }
-        request.log.error(err, 'ttp-summary.get');
+        request.log.error(
+          { event: 'ttp.route.error', route: 'GET /api/tenant/trades/:tradeId/ttp-summary', orgId: actorOrgId, errMsg: err instanceof Error ? err.message : String(err) },
+          'ttp.route.error',
+        );
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to retrieve TTP summary', 500);
       }
     },

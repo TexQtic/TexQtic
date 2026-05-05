@@ -130,7 +130,10 @@ const controlTtpEnrollmentRoutes: FastifyPluginAsync = async fastify => {
         });
         return sendSuccess(reply, enrollments);
       } catch (err) {
-        request.log.error(err, 'control.ttp-enrollments.list');
+        request.log.error(
+          { event: 'ttp.route.error', route: 'GET /api/control/ttp/enrollments', errMsg: err instanceof Error ? err.message : String(err) },
+          'ttp.route.error',
+        );
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to list TTP enrollments', 500);
       }
     },
@@ -159,7 +162,10 @@ const controlTtpEnrollmentRoutes: FastifyPluginAsync = async fastify => {
         if (err instanceof EnrollmentTradeNotFoundError) {
           return sendNotFound(reply, 'Trade not found');
         }
-        request.log.error(err, 'control.ttp-enrollments.get');
+        request.log.error(
+          { event: 'ttp.route.error', route: 'GET /api/control/ttp/enrollments/:tradeId', tradeId, errMsg: err instanceof Error ? err.message : String(err) },
+          'ttp.route.error',
+        );
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to retrieve TTP enrollment', 500);
       }
     },
@@ -206,17 +212,30 @@ const controlTtpEnrollmentRoutes: FastifyPluginAsync = async fastify => {
         if (err instanceof EnrollmentTradeNotFoundError) {
           return sendNotFound(reply, 'Trade not found');
         }
+        if (err instanceof EnrollmentReviewEligibilityExpiredError) {
+          request.log.info(
+            { event: 'ttp.eligibility.expired', route: 'PATCH /api/control/ttp/enrollments/:tradeId', tradeId, errMsg: (err as Error).message },
+            'ttp.eligibility.expired',
+          );
+          return sendError(reply, 'UNPROCESSABLE_ENTITY', (err as Error).message, 422);
+        }
         if (
           err instanceof EnrollmentReviewGstError ||
-          err instanceof EnrollmentReviewEligibilityMissingError ||
-          err instanceof EnrollmentReviewEligibilityExpiredError
+          err instanceof EnrollmentReviewEligibilityMissingError
         ) {
+          request.log.info(
+            { event: 'ttp.enrollment.gate_failed', route: 'PATCH /api/control/ttp/enrollments/:tradeId', tradeId, errMsg: (err as Error).message },
+            'ttp.enrollment.gate_failed',
+          );
           return sendError(reply, 'UNPROCESSABLE_ENTITY', (err as Error).message, 422);
         }
         if (err instanceof EnrollmentReviewOutcomeInvalidError) {
           return sendError(reply, 'BAD_REQUEST', (err as Error).message, 400);
         }
-        request.log.error(err, 'control.ttp-enrollments.patch');
+        request.log.error(
+          { event: 'ttp.route.error', route: 'PATCH /api/control/ttp/enrollments/:tradeId', tradeId, errMsg: err instanceof Error ? err.message : String(err) },
+          'ttp.route.error',
+        );
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to review TTP enrollment', 500);
       }
     },

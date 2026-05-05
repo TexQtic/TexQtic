@@ -151,14 +151,15 @@ const controlVpcRoutes: FastifyPluginAsync = async fastify => {
       const { invoiceId } = paramResult.data;
       const adminId = request.adminId;
 
+      let invoiceSnap: { org_id: string } | null = null;
       try {
         // Read invoice to get org_id for write context
-        const invoiceSnap = await withVpcAdminReadContext(async tx => {
+        invoiceSnap = await withVpcAdminReadContext(async tx => {
           const row = await (makeTxBoundPrisma(tx) as any).invoices.findUnique({
             where: { id: invoiceId },
             select: { org_id: true },
           });
-          return row;
+          return row as { org_id: string } | null;
         });
 
         if (!invoiceSnap) return sendNotFound(reply, `Invoice not found: ${invoiceId}`);
@@ -180,6 +181,7 @@ const controlVpcRoutes: FastifyPluginAsync = async fastify => {
 
         return sendSuccess(reply, record, 201);
       } catch (err) {
+        const orgId = invoiceSnap?.org_id ?? null;
         if (err instanceof VpcInvoiceNotFoundError) return sendNotFound(reply, err.message);
         if (err instanceof VpcInvoiceIneligibleStateError)
           return sendError(reply, 'INVOICE_INELIGIBLE_STATE', err.message, 422);
@@ -189,8 +191,13 @@ const controlVpcRoutes: FastifyPluginAsync = async fastify => {
           return sendError(reply, 'ELIGIBILITY_MISSING', err.message, 422);
         if (err instanceof VpcEligibilityOutcomeError)
           return sendError(reply, 'ELIGIBILITY_OUTCOME', err.message, 422);
-        if (err instanceof VpcEligibilityExpiredError)
+        if (err instanceof VpcEligibilityExpiredError) {
+          request.log.info(
+            { event: 'ttp.eligibility.expired', route: 'POST /api/control/vpc/generate/:invoiceId', orgId, errMsg: err.message },
+            'ttp.eligibility.expired',
+          );
           return sendError(reply, 'ELIGIBILITY_EXPIRED', err.message, 422);
+        }
         if (err instanceof VpcRiskTierBlockedError)
           return sendError(reply, 'RISK_TIER_BLOCKED', err.message, 422);
         if (err instanceof VpcAmountExceedsCapError)
@@ -199,7 +206,10 @@ const controlVpcRoutes: FastifyPluginAsync = async fastify => {
           return sendError(reply, 'DUE_DATE_MISSING', err.message, 422);
         if (err instanceof VpcDuplicateError)
           return sendError(reply, 'VPC_DUPLICATE', err.message, 409);
-        request.log.error(err, 'control.vpc.generate');
+        request.log.error(
+          { event: 'ttp.vpc.generate.error', route: 'POST /api/control/vpc/generate/:invoiceId', orgId, errMsg: err instanceof Error ? err.message : String(err) },
+          'ttp.vpc.generate.error',
+        );
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to generate VPC', 500);
       }
     },
@@ -222,7 +232,10 @@ const controlVpcRoutes: FastifyPluginAsync = async fastify => {
       });
       return sendSuccess(reply, records);
     } catch (err) {
-      request.log.error(err, 'control.vpc.list');
+        request.log.error(
+          { event: 'ttp.route.error', route: 'GET /api/control/vpc', errMsg: err instanceof Error ? err.message : String(err) },
+          'ttp.route.error',
+        );
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to list VPCs', 500);
     }
   });
@@ -247,7 +260,10 @@ const controlVpcRoutes: FastifyPluginAsync = async fastify => {
       return sendSuccess(reply, record);
     } catch (err) {
       if (err instanceof VpcNotFoundError) return sendNotFound(reply, err.message);
-      request.log.error(err, 'control.vpc.get');
+      request.log.error(
+        { event: 'ttp.route.error', route: 'GET /api/control/vpc/:vpcId', vpcId, errMsg: err instanceof Error ? err.message : String(err) },
+        'ttp.route.error',
+      );
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to get VPC', 500);
     }
   });
@@ -311,7 +327,10 @@ const controlVpcRoutes: FastifyPluginAsync = async fastify => {
           return sendError(reply, 'TERMINAL_STATE', err.message, 422);
         if (err instanceof VpcTransitionNotAllowedError)
           return sendError(reply, 'TRANSITION_NOT_ALLOWED', err.message, 422);
-        request.log.error(err, 'control.vpc.transition');
+        request.log.error(
+          { event: 'ttp.route.error', route: 'PATCH /api/control/vpc/:vpcId/transition', vpcId, errMsg: err instanceof Error ? err.message : String(err) },
+          'ttp.route.error',
+        );
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to transition VPC', 500);
       }
     },

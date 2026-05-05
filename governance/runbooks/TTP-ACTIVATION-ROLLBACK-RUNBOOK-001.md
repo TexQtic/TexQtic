@@ -44,8 +44,8 @@ No command in this document has been executed against any environment.**
 | `feature_flags.ttp_enabled` | `false` | Supabase production DB (authoritative) |
 | `TenantFeatureOverride` rows for `ttp_enabled` | **None** | Schema confirmed empty for this key |
 | All 13 TTP routes | **Returning 503 FEATURE_DISABLED** | Global gate middleware |
-| Per-org scoped gate | **Not implemented** | Phase 2 middleware not yet deployed |
-| QA orgs activated | **No** | `is_qa_sentinel` column not yet applied |
+| Per-org scoped gate | **Implemented and truth-synced** | `TTP-SCOPED-ACTIVATION-IMPL-001`, commit `b7950b7`, `TRUTH_SYNCED` |
+| QA sentinel column | **Exists** | `is_qa_sentinel` column applied (`TTP-QA-SENTINEL-FLAG-IMPL-001`, commit `c6e24eaa`, `TRUTH_SYNCED`). No QA org activated (`ttp_enabled=false`) |
 
 **`ttp_enabled = false` is the production invariant. This runbook does not change it.**
 
@@ -111,15 +111,15 @@ This is a gate checklist — each item requires explicit written confirmation.**
 
 | Unit | Status required | Verified? |
 |---|---|---|
-| TTP-IMPL-001: QA sentinel flag | `TRUTH_SYNCED` | ⬜ |
-| TTP-IMPL-002: Disclaimer constant | `TRUTH_SYNCED` | ⬜ |
-| TTP-IMPL-003: Production runtime | `TRUTH_SYNCED` | ⬜ |
-| TTP-IMPL-004: Structured Pino logs | `TRUTH_SYNCED` | ⬜ |
-| TTP-IMPL-005: Advisory disclaimer responses | `TRUTH_SYNCED` | ⬜ |
-| TTP-IMPL-006: This runbook | `TRUTH_SYNCED` | ⬜ |
+| TTP-IMPL-001: QA sentinel flag | `TRUTH_SYNCED` | ✅ (`c6e24eaa`) |
+| TTP-IMPL-002: Disclaimer constant | `TRUTH_SYNCED` | ✅ (`42931f7`) |
+| TTP-IMPL-003: Production runtime | `TRUTH_SYNCED` | ✅ (`b7950b7`) |
+| TTP-IMPL-004: Structured Pino logs | `TRUTH_SYNCED` | ✅ (`0cc305d`) |
+| TTP-IMPL-005: Advisory disclaimer responses | `TRUTH_SYNCED` | ✅ (`26c8329`) |
+| TTP-IMPL-006: This runbook | `TRUTH_SYNCED` | ✅ (`0c96c7f` / `8f6356e`) |
 | TTP-ACTIVATION-MONITORING-IMPL-001 | `TRUTH_SYNCED` | ⬜ |
-| `TTP-SCOPED-ACTIVATION-IMPL-001` (per-org gate middleware) | `TRUTH_SYNCED` | ⬜ |
-| `TTP-QA-SENTINEL-FLAG-IMPL-001` (`is_qa_sentinel` column + QA seed) | `TRUTH_SYNCED` | ⬜ |
+| `TTP-SCOPED-ACTIVATION-IMPL-001` (per-org gate middleware) | `TRUTH_SYNCED` | ✅ (`b7950b7`) |
+| `TTP-QA-SENTINEL-FLAG-IMPL-001` (`is_qa_sentinel` column + QA seed) | `TRUTH_SYNCED` | ✅ (`c6e24eaa`) |
 
 ### D.2 Activation authorizations
 

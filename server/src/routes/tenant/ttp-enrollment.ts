@@ -109,7 +109,10 @@ const tenantTtpEnrollmentRoutes: FastifyPluginAsync = async fastify => {
         if (err instanceof EnrollmentPartyMismatchError) {
           return sendError(reply, 'FORBIDDEN', err.message, 403);
         }
-        request.log.error(err, 'ttp-enrollment.get');
+        request.log.error(
+          { event: 'ttp.route.error', route: 'GET /api/tenant/trades/:tradeId/ttp-enrollment', orgId: actorOrgId, errMsg: err instanceof Error ? err.message : String(err) },
+          'ttp.route.error',
+        );
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to retrieve TTP enrollment', 500);
       }
     },
@@ -159,7 +162,10 @@ const tenantTtpEnrollmentRoutes: FastifyPluginAsync = async fastify => {
         if (err instanceof EnrollmentAlreadyActiveError) {
           return sendError(reply, 'CONFLICT', err.message, 409);
         }
-        request.log.error(err, 'ttp-enrollment.post');
+        request.log.error(
+          { event: 'ttp.route.error', route: 'POST /api/tenant/trades/:tradeId/ttp-enrollment', orgId: actorOrgId, errMsg: err instanceof Error ? err.message : String(err) },
+          'ttp.route.error',
+        );
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to submit TTP enrollment request', 500);
       }
     },

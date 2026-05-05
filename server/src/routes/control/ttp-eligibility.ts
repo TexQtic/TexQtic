@@ -205,9 +205,9 @@ const controlTtpEligibilityRoutes: FastifyPluginAsync = async fastify => {
         if (error instanceof EligibilityTierOutcomeMismatchError) {
           return sendError(reply, 'VALIDATION_ERROR', error.message, 422);
         }
-        fastify.log.error(
-          { err: error, orgId, adminId },
-          '[TTP-ELIGIBILITY] POST /control/ttp/eligibility/:orgId error',
+        request.log.error(
+          { event: 'ttp.route.error', route: 'POST /api/control/ttp/eligibility/:orgId', orgId, errMsg: error instanceof Error ? error.message : String(error) },
+          'ttp.route.error',
         );
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to create eligibility assessment', 500);
       }
@@ -246,9 +246,9 @@ const controlTtpEligibilityRoutes: FastifyPluginAsync = async fastify => {
         count: assessments.length,
       });
     } catch (error: unknown) {
-      fastify.log.error(
-        { err: error, orgId },
-        '[TTP-ELIGIBILITY] GET /control/ttp/eligibility/:orgId error',
+      request.log.error(
+        { event: 'ttp.route.error', route: 'GET /api/control/ttp/eligibility/:orgId', orgId, errMsg: error instanceof Error ? error.message : String(error) },
+        'ttp.route.error',
       );
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to retrieve eligibility assessments', 500);
     }
