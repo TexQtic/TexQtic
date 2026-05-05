@@ -305,3 +305,22 @@ export const TTP_AI_REASON_PREFIX = 'HUMAN_CONFIRMED:' as const;
  */
 export const TTP_DISCLAIMER_TEXT =
   'TradeTrust Pay readiness signals are informational and advisory only. They are not a credit score, financing approval, payment guarantee, lending decision, or partner commitment.';
+
+// ─── TexQticScore v2 constants ────────────────────────────────────────────────
+// TTP-TEXQTICSCORE-V2-SERVICE-001 — OQ-V2-03 (Option B): separate v2-specific disclaimer.
+// LEGAL_REVIEW_PENDING — interim advisory wording; no tenant/public surface authorized.
+// Do not expose this constant on tenant-facing routes or public surfaces until legal clearance.
+// Do not modify TTP_DISCLAIMER_TEXT or SCORE_DISCLAIMER (defined in ttpScore.service.ts).
+
+/**
+ * Interim advisory disclaimer for TexQticScore v2 readiness signals.
+ *
+ * LEGAL_REVIEW_PENDING — interim advisory wording only.
+ * Final text pending legal review under TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001.
+ * Must NOT be exposed to tenants or public surfaces until legal clearance is granted.
+ *
+ * Admin/internal use only in Wave 2 (OQ-V2-04, OQ-V2-07, OQ-V2-08).
+ * Governance: TTP-TEXQTICSCORE-V2-SERVICE-001; OQ-V2-03 Option B.
+ */
+export const TEXQTICSCORE_V2_DISCLAIMER =
+  'TexQticScore is an advisory readiness indicator only. It is not a credit score, payment guarantee, financing approval, or partner commitment.';
