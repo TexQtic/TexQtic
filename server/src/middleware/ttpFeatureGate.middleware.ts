@@ -55,6 +55,15 @@ export async function ttpFeatureGateMiddleware(
   request: FastifyRequest,
   reply: FastifyReply,
 ): Promise<void> {
+  // Layer tracker for structured error logging — identifies which layer's DB call failed.
+  // Declared outside try so catch block can log the correct layer. No behavior change.
+  let currentLayer: 1 | 2 = 1;
+
+  // Resolve subject orgId early — pure property access, no DB calls, no behavior change.
+  // Moved before try so catch block can include orgId in error log events.
+  const resolvedOrgId =
+    request.dbContext?.orgId ?? (request.params as Record<string, unknown>)?.orgId ?? null;
+
   try {
     // ─── Layer 1: Global kill-switch (preserved from Phase 1) ─────────────────
     const globalFlag = await prisma.featureFlag.findUnique({
@@ -64,6 +73,10 @@ export async function ttpFeatureGateMiddleware(
 
     if (globalFlag?.enabled !== true) {
       // Global flag is off, missing, or unreadable → block immediately
+      request.log.info(
+        { event: 'ttp.feature_gate.global_blocked', feature: TTP_FEATURE_FLAG.TTP_ENABLED, orgId: resolvedOrgId },
+        'ttp.feature_gate.global_blocked',
+      );
       return sendError(
         reply,
         'FEATURE_DISABLED',
@@ -73,16 +86,14 @@ export async function ttpFeatureGateMiddleware(
     }
 
     // ─── Layer 2: Per-org TenantFeatureOverride (new in TTP-IMPL-003) ─────────
-    // Resolve subject orgId — priority: auth context (tenant routes) → path param (control routes)
-    const orgId =
-      request.dbContext?.orgId ?? (request.params as Record<string, unknown>)?.orgId ?? null;
+    currentLayer = 2;
 
-    if (orgId) {
+    if (resolvedOrgId) {
       // OrgId resolved — enforce per-org override
       const tenantOverride = await prisma.tenantFeatureOverride.findUnique({
         where: {
           tenantId_key: {
-            tenantId: orgId as string,
+            tenantId: resolvedOrgId as string,
             key: TTP_FEATURE_FLAG.TTP_ENABLED,
           },
         },
@@ -91,6 +102,10 @@ export async function ttpFeatureGateMiddleware(
 
       if (tenantOverride?.enabled !== true) {
         // Override missing or disabled → block (fail-closed; missing row ≡ disabled)
+        request.log.info(
+          { event: 'ttp.feature_gate.org_blocked', feature: TTP_FEATURE_FLAG.TTP_ENABLED, orgId: resolvedOrgId },
+          'ttp.feature_gate.org_blocked',
+        );
         return sendError(
           reply,
           'FEATURE_DISABLED',
@@ -98,13 +113,41 @@ export async function ttpFeatureGateMiddleware(
           503,
         ) as unknown as void;
       }
-    }
-    // OrgId not resolvable → aggregated admin-list route; global gate is sufficient (OQ-1)
 
-    // Both layers passed (or no orgId for aggregated routes) → allow request to proceed
+      // Both layers passed — per OQ-3: tenant-read paths at debug, control-plane at info
+      const isTenantPlane = request.dbContext?.realm === 'tenant';
+      if (isTenantPlane) {
+        request.log.debug(
+          { event: 'ttp.feature_gate.allowed', feature: TTP_FEATURE_FLAG.TTP_ENABLED, orgId: resolvedOrgId },
+          'ttp.feature_gate.allowed',
+        );
+      } else {
+        request.log.info(
+          { event: 'ttp.feature_gate.allowed', feature: TTP_FEATURE_FLAG.TTP_ENABLED, orgId: resolvedOrgId },
+          'ttp.feature_gate.allowed',
+        );
+      }
+      return;
+    }
+
+    // No orgId — aggregated route (Layer 2 skipped per OQ-1); control-plane path → info
+    request.log.info(
+      { event: 'ttp.feature_gate.allowed', feature: TTP_FEATURE_FLAG.TTP_ENABLED, orgId: null },
+      'ttp.feature_gate.allowed',
+    );
     return;
-  } catch {
-    // Any DB error → fail-closed (block access)
+  } catch (err) {
+    // Any DB error → fail-closed (block access) + structured error log event
+    request.log.error(
+      {
+        event: 'ttp.feature_gate.db_error',
+        feature: TTP_FEATURE_FLAG.TTP_ENABLED,
+        layer: currentLayer,
+        orgId: resolvedOrgId,
+        errMsg: err instanceof Error ? err.message : String(err),
+      },
+      'ttp.feature_gate.db_error',
+    );
     return sendError(
       reply,
       'FEATURE_DISABLED',

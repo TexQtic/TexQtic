@@ -459,6 +459,13 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 
 ### Primary — current implementation unit
 
+**TTP-IMPL-004 is OPEN** (`IMPLEMENTATION_OPEN`): Structured Pino log events for TTP activation
+gate. Adds 4 structured `request.log` events (`ttp.feature_gate.global_blocked`,
+`ttp.feature_gate.org_blocked`, `ttp.feature_gate.allowed`, `ttp.feature_gate.db_error`) to
+`ttpFeatureGateMiddleware` per design `TTP-SCOPED-ACTIVATION-DESIGN-001 §9` and OQ-3 level policy.
+8 new unit tests (TC-019–TC-026) added. 26/26 tests passing. tsc clean.
+Governance record: `PRODUCT-DEC-TRADETRUST-PAY-TTP-IMPL-004-STRUCTURED-PINO-LOGS-VERIFIED-001`.
+
 **TTP-IMPL-003 is complete** (`TRUTH_SYNCED`): impl `b7950b7a`, unit-gov `e237405`,
 prod-gov `PRODUCT-DEC-TRADETRUST-PAY-TTP-IMPL-003-PRODUCTION-RUNTIME-VERIFIED-001`,
 final decision `TTP_IMPL_003_PRODUCTION_RUNTIME_VERIFIED_COMPLETE`.
@@ -471,7 +478,7 @@ Sub-slice of `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` — that unit is now `T
 **TTP-IMPL-001 is complete** (`TRUTH_SYNCED`): impl `c6e24eaa`, gov `9e5f443a`,
 final decision `TTP_IMPL_001_QA_SENTINEL_FLAG_VERIFIED_COMPLETE`.
 
-**Next unit:** `TTP-IMPL-004` — NOT yet opened. Requires separate Paresh-approved prompt.
+**Next unit after TTP-IMPL-004:** `TTP-IMPL-005` — NOT yet opened. Requires separate Paresh-approved prompt.
 Remaining `NOT_OPENED` Wave 0 units: `TTP-ACTIVATION-MONITORING-IMPL-001`, `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001`.
 
 ### Parallel — may open now (non-code)
@@ -486,8 +493,6 @@ sign-offs required before Wave 2 (score), Wave 3 (consent), and Wave 4 (partner 
 
 All Wave 2, Wave 3, Wave 4, and Wave 5 units must wait. Do not open any implementation unit without
 an approved design. Do not open any P1/P2/P3/P4 design without meeting the named gate.
-
----
 
 ## 19. No-Change Confirmation
 

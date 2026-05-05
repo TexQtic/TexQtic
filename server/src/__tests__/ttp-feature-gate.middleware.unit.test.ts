@@ -49,6 +49,12 @@ function makeRequest(overrides: Record<string, unknown> = {}): any {
   return {
     url: '/api/tenant/trades/trade-id/ttp-summary',
     method: 'GET',
+    log: {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    },
     ...overrides,
   };
 }
@@ -557,5 +563,261 @@ describe('ttpFeatureGateMiddleware', () => {
       },
       select: { enabled: true },
     });
+  });
+
+  // ─── Structured Pino log event tests (TTP-IMPL-004) ────────────────────────
+  //
+  //   TC-019: ttp.feature_gate.global_blocked emitted at info when global flag missing
+  //   TC-020: ttp.feature_gate.db_error emitted at error on Layer 1 DB failure
+  //   TC-021: ttp.feature_gate.org_blocked emitted at info when per-org override missing
+  //   TC-022: ttp.feature_gate.db_error emitted at error on Layer 2 DB failure (layer=2)
+  //   TC-023: ttp.feature_gate.allowed emitted at debug for tenant-plane allowed path
+  //   TC-024: ttp.feature_gate.allowed emitted at info for control-plane allowed path
+  //   TC-025: ttp.feature_gate.allowed emitted at info for aggregated route (no orgId)
+  //   TC-026: log events do not include request body, auth tokens, or cookies
+
+  // TC-019: Global flag missing → log.info called with ttp.feature_gate.global_blocked
+  it('TC-019: emits ttp.feature_gate.global_blocked at info when global flag is missing', async () => {
+    vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue(null);
+
+    const request = makeRequest();
+    const reply = makeReply();
+
+    await ttpFeatureGateMiddleware(request, reply);
+
+    expect(request.log.info).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'ttp.feature_gate.global_blocked', feature: 'ttp_enabled' }),
+      'ttp.feature_gate.global_blocked',
+    );
+    // Must not emit allowed or error events on this path
+    expect(request.log.debug).not.toHaveBeenCalled();
+    expect(request.log.error).not.toHaveBeenCalled();
+  });
+
+  // TC-020: Layer 1 DB throws → log.error called with ttp.feature_gate.db_error, layer=1
+  it('TC-020: emits ttp.feature_gate.db_error at error on Layer 1 DB failure (layer=1)', async () => {
+    vi.mocked(prisma.featureFlag.findUnique).mockRejectedValue(
+      new Error('connection refused'),
+    );
+
+    const request = makeRequest();
+    const reply = makeReply();
+
+    await ttpFeatureGateMiddleware(request, reply);
+
+    expect(request.log.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'ttp.feature_gate.db_error',
+        feature: 'ttp_enabled',
+        layer: 1,
+        errMsg: 'connection refused',
+      }),
+      'ttp.feature_gate.db_error',
+    );
+    // Must still return 503 (fail-closed)
+    expect(reply._code).toBe(503);
+  });
+
+  // TC-021: Global true, orgId present, no override row → log.info with ttp.feature_gate.org_blocked
+  it('TC-021: emits ttp.feature_gate.org_blocked at info when per-org override row is missing', async () => {
+    vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue({
+      key: 'ttp_enabled',
+      enabled: true,
+      description: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      value: null,
+    });
+    vi.mocked(prisma.tenantFeatureOverride.findUnique).mockResolvedValue(null);
+
+    const OrgId = 'aa000000-0000-0000-0000-000000000001';
+    const request = makeRequest({
+      dbContext: { orgId: OrgId, actorId: 'user-id', realm: 'tenant', requestId: 'req-id' },
+    });
+    const reply = makeReply();
+
+    await ttpFeatureGateMiddleware(request, reply);
+
+    expect(request.log.info).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'ttp.feature_gate.org_blocked',
+        feature: 'ttp_enabled',
+        orgId: OrgId,
+      }),
+      'ttp.feature_gate.org_blocked',
+    );
+    // global_blocked must NOT have been emitted
+    const allInfoCalls: Array<[Record<string, unknown>, string]> = request.log.info.mock.calls;
+    expect(allInfoCalls.every(([obj]) => obj['event'] !== 'ttp.feature_gate.global_blocked')).toBe(true);
+  });
+
+  // TC-022: Global true, orgId present, Layer 2 DB throws → log.error with layer=2
+  it('TC-022: emits ttp.feature_gate.db_error at error on Layer 2 DB failure (layer=2)', async () => {
+    vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue({
+      key: 'ttp_enabled',
+      enabled: true,
+      description: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      value: null,
+    });
+    vi.mocked(prisma.tenantFeatureOverride.findUnique).mockRejectedValue(
+      new Error('DB connection timeout'),
+    );
+
+    const OrgId = 'aa000000-0000-0000-0000-000000000001';
+    const request = makeRequest({
+      dbContext: { orgId: OrgId, actorId: 'user-id', realm: 'tenant', requestId: 'req-id' },
+    });
+    const reply = makeReply();
+
+    await ttpFeatureGateMiddleware(request, reply);
+
+    expect(request.log.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'ttp.feature_gate.db_error',
+        feature: 'ttp_enabled',
+        layer: 2,
+        orgId: OrgId,
+        errMsg: 'DB connection timeout',
+      }),
+      'ttp.feature_gate.db_error',
+    );
+    expect(reply._code).toBe(503);
+  });
+
+  // TC-023: Tenant-plane allowed path → log.debug with ttp.feature_gate.allowed (not info)
+  it('TC-023: emits ttp.feature_gate.allowed at debug for tenant-plane route (OQ-3 level policy)', async () => {
+    vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue({
+      key: 'ttp_enabled',
+      enabled: true,
+      description: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      value: null,
+    });
+    vi.mocked(prisma.tenantFeatureOverride.findUnique).mockResolvedValue({
+      id: 'override-id',
+      tenantId: 'aa000000-0000-0000-0000-000000000001',
+      key: 'ttp_enabled',
+      enabled: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const OrgId = 'aa000000-0000-0000-0000-000000000001';
+    const request = makeRequest({
+      dbContext: { orgId: OrgId, actorId: 'user-id', realm: 'tenant', requestId: 'req-id' },
+    });
+    const reply = makeReply();
+
+    await ttpFeatureGateMiddleware(request, reply);
+
+    // Tenant-plane → debug (not info) per OQ-3
+    expect(request.log.debug).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'ttp.feature_gate.allowed', orgId: OrgId }),
+      'ttp.feature_gate.allowed',
+    );
+    // Must NOT emit allowed at info level for tenant paths
+    const infoAllowedCalls = (request.log.info.mock.calls as Array<[Record<string, unknown>, string]>)
+      .filter(([obj]) => obj['event'] === 'ttp.feature_gate.allowed');
+    expect(infoAllowedCalls).toHaveLength(0);
+    // Request passes through
+    expect(reply._sent).toBeNull();
+    expect(reply._code).toBe(200);
+  });
+
+  // TC-024: Control-plane route with orgId (no dbContext.realm) → log.info with ttp.feature_gate.allowed
+  it('TC-024: emits ttp.feature_gate.allowed at info for control-plane route with orgId', async () => {
+    vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue({
+      key: 'ttp_enabled',
+      enabled: true,
+      description: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      value: null,
+    });
+    vi.mocked(prisma.tenantFeatureOverride.findUnique).mockResolvedValue({
+      id: 'override-id',
+      tenantId: 'bb000000-0000-0000-0000-000000000001',
+      key: 'ttp_enabled',
+      enabled: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    // Control-plane route: no dbContext, orgId from params
+    const OrgId = 'bb000000-0000-0000-0000-000000000001';
+    const request = makeRequest({
+      url: '/api/control/ttp/eligibility/bb000000-0000-0000-0000-000000000001',
+      params: { orgId: OrgId },
+    });
+    const reply = makeReply();
+
+    await ttpFeatureGateMiddleware(request, reply);
+
+    // Control-plane → info (not debug) per OQ-3
+    expect(request.log.info).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'ttp.feature_gate.allowed', orgId: OrgId }),
+      'ttp.feature_gate.allowed',
+    );
+    expect(request.log.debug).not.toHaveBeenCalled();
+    expect(reply._sent).toBeNull();
+    expect(reply._code).toBe(200);
+  });
+
+  // TC-025: Aggregated route (no orgId) → log.info with ttp.feature_gate.allowed, orgId null
+  it('TC-025: emits ttp.feature_gate.allowed at info for aggregated route with no orgId', async () => {
+    vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue({
+      key: 'ttp_enabled',
+      enabled: true,
+      description: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      value: null,
+    });
+
+    const request = makeRequest({ url: '/api/control/ttp/enrollments' });
+    const reply = makeReply();
+
+    await ttpFeatureGateMiddleware(request, reply);
+
+    expect(request.log.info).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'ttp.feature_gate.allowed', orgId: null }),
+      'ttp.feature_gate.allowed',
+    );
+    // tenantFeatureOverride must not have been queried (Layer 2 skipped)
+    expect(prisma.tenantFeatureOverride.findUnique).not.toHaveBeenCalled();
+    expect(reply._sent).toBeNull();
+    expect(reply._code).toBe(200);
+  });
+
+  // TC-026: Log events do not include request body, auth headers, cookies, or other sensitive fields
+  it('TC-026: log events do not include request body, authorization header, or cookie', async () => {
+    vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue(null);
+
+    const request = makeRequest({
+      body: { gstNumber: 'XXXXX1234', secret: 'should-never-appear' },
+      headers: { authorization: 'Bearer eyJtoken123', cookie: 'session=abc' },
+    });
+    const reply = makeReply();
+
+    await ttpFeatureGateMiddleware(request, reply);
+
+    // Inspect every info log call — none should contain body/headers/auth/cookie
+    const allLogCalls: Array<[Record<string, unknown>, string]> = [
+      ...request.log.info.mock.calls,
+      ...request.log.debug.mock.calls,
+      ...request.log.warn.mock.calls,
+      ...request.log.error.mock.calls,
+    ];
+    for (const [logObj] of allLogCalls) {
+      expect(logObj).not.toHaveProperty('body');
+      expect(logObj).not.toHaveProperty('headers');
+      expect(logObj).not.toHaveProperty('authorization');
+      expect(logObj).not.toHaveProperty('cookie');
+      expect(JSON.stringify(logObj)).not.toContain('eyJtoken123');
+      expect(JSON.stringify(logObj)).not.toContain('should-never-appear');
+    }
   });
 });
