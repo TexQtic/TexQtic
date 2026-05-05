@@ -144,7 +144,7 @@ Every Phase 2 unit follows this exact sequence. Steps may not be skipped or reor
 |---|---|---|---|---|---|---|
 | **Wave 0** | Control and safety foundation | Scoped activation, QA sentinel, monitoring, rollback runbook, language governance baseline | TQ-01, TQ-08, TQ-09, TQ-10, TQ-20 | None — P0 cleared | `COMPLETE / TRUTH_SYNCED` | All P0 units complete — see §18 |
 | **Wave 1** | Legal/compliance copy review | Final disclaimer text, forbidden-term list, consent wording, DPDP notes, VPC/score language sign-off | TQ-20 (final text), TQ-05/14 wording | None (non-code) — may start in parallel | `OPERATOR_READY__LEGAL_PENDING` | `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` `TRUTH_SYNCED`; `TTP-LEGAL-COPY-COUNSEL-PACKET-001` ready for Paresh review; final legal sign-off pending |
-| **Wave 2** | Score architecture foundation | Score snapshots, hybrid live + snapshot triggers, TexQticScore v2 design, score versioning | TQ-06, TQ-07, TQ-11, TQ-12 | P0 design complete | `IMPLEMENTATION_IN_PROGRESS` | Slices 1–6 `TRUTH_SYNCED` — SQL/RLS, service, VPC trigger, enrollment trigger, admin-review trigger, admin read endpoints all complete; 59/59 unit tests; tsc clean; runtime verification (`TTP-SCORE-SNAPSHOT-RUNTIME-VERIFY-001`) `PRODUCTION_VERIFIED` (commit `9a58b0d`, final decision `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED`); next unit: `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_OPEN` |
+| **Wave 2** | Score architecture foundation | Score snapshots, hybrid live + snapshot triggers, TexQticScore v2 design, score versioning | TQ-06, TQ-07, TQ-11, TQ-12 | P0 design complete | `IMPLEMENTATION_IN_PROGRESS` | Slices 1–6 `TRUTH_SYNCED` — SQL/RLS, service, VPC trigger, enrollment trigger, admin-review trigger, admin read endpoints all complete; 59/59 unit tests; tsc clean; runtime verification (`TTP-SCORE-SNAPSHOT-RUNTIME-VERIFY-001`) `PRODUCTION_VERIFIED` (commit `9a58b0d`, final decision `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED`); `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_DECISIONS_RECORDED`; options audit complete (commit `07a7e82`); decisions recorded in `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001`; next candidate: `TTP-TEXQTICSCORE-V2-SERVICE-001` pending explicit Paresh authorization |
 | **Wave 3** | Consent and data-sharing design | Data consents table, internal-only score Phase 2 / external Phase 3, time-bounded consent | TQ-05, TQ-13, TQ-14 | Legal gate (DPDP, GSTN, CIBIL consent) | `LEGAL_GATED__WAITING` | Do not start until Wave 1 complete |
 | **Wave 4** | Partner marketplace design | Partner workflows, VPC TRANSMITTED after persisted ack, callback events, finance requests, partner offers, dynamic discounting | TQ-02, TQ-03, TQ-04, TQ-15, TQ-16, TQ-17 | Legal gate AND partner contract signed | `PARTNER_GATED__WAITING` | Do not start until Wave 1 + partner contract |
 | **Wave 5** | Future finance/legal positioning | Buyer Trust Score, fee events / fee disclosure | TQ-18, TQ-19 | TQ-11 design (TQ-18); legal fee review (TQ-19) | `FUTURE_DESIGN_TARGET__WAITING` | Phase 3 design targets; no near-term action |
@@ -258,7 +258,7 @@ new decision, not an assumption.
 |---|---|---|---|---|---|
 | `TTP-SCORE-SNAPSHOT-DESIGN-001` | Score snapshots design | TQ-06, TQ-07 | Design | Wave 0 complete and TRUTH_SYNCED — **CLEARED** | `DESIGN_DECISIONS_RECORDED` |
 | `TTP-SCORE-SNAPSHOT-IMPL-001` | `ttp_score_snapshots` table + trigger write logic | TQ-06, TQ-07 | Implementation + migration | `TTP-SCORE-SNAPSHOT-DESIGN-001` approved by Paresh | `TRUTH_SYNCED` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`); Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `TRUTH_SYNCED` (`b780afd`, `436fd72`); Slice 5 (`TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001`) `TRUTH_SYNCED` (`16ccbdf`, `c9a8ee6`); Slice 6 (`TTP-SCORE-SNAPSHOT-READ-ADMIN-001`) `TRUTH_SYNCED` (`e73c0b0`, `908781b`) |
-| `TTP-TEXQTICSCORE-V2-DESIGN-001` | TexQticScore v2 design | TQ-11, TQ-12 | Design | Runtime verification complete — `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED` | `DESIGN_OPEN` |
+| `TTP-TEXQTICSCORE-V2-DESIGN-001` | TexQticScore v2 design | TQ-11, TQ-12 | Design | Runtime verification complete — `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED` | `DESIGN_DECISIONS_RECORDED` — options audit (commit `07a7e82`); decisions in `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001`; OQ-V2-01 through OQ-V2-09 resolved |
 | `TTP-TEXQTICSCORE-V2-IMPL-001` | `computeTexQticScore` function + v2 score contract | TQ-11 | Implementation | `TTP-TEXQTICSCORE-V2-DESIGN-001` approved | `NOT_OPENED` |
 | `TTP-SCORE-VERSIONING-IMPL-001` | `score_version` column on `ttp_score_snapshots` | TQ-12 | Implementation | TQ-06 and TQ-11 design approved | `NOT_OPENED` |
 
@@ -450,7 +450,7 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-LEGAL-COPY-COUNSEL-PACKET-001` | Wave 1 | P0/P2 | Governance / legal | `TRUTH_SYNCED` — gov `f0ead0f`, final decision `TTP_LEGAL_COUNSEL_REVIEW_PACKET_001_READY_FOR_PARESH`; `LEGAL_REVIEW_PENDING` |
 | `TTP-SCORE-SNAPSHOT-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_DECISIONS_RECORDED` |
 | `TTP-SCORE-SNAPSHOT-IMPL-001` | Wave 2 | P1 | Implementation + migration | `TRUTH_SYNCED` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`); Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `TRUTH_SYNCED` (`b780afd`, `436fd72`); Slice 5 (`TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001`) `TRUTH_SYNCED` (`16ccbdf`, `c9a8ee6`); Slice 6 (`TTP-SCORE-SNAPSHOT-READ-ADMIN-001`) `TRUTH_SYNCED` (`e73c0b0`, `908781b`) |
-| `TTP-TEXQTICSCORE-V2-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_OPEN` |
+| `TTP-TEXQTICSCORE-V2-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_DECISIONS_RECORDED` — options audit (commit `07a7e82`); decisions in `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001`; OQ-V2-01 through OQ-V2-09 resolved |
 | `TTP-TEXQTICSCORE-V2-IMPL-001` | Wave 2 | P1 | Implementation | `NOT_OPENED` |
 | `TTP-SCORE-VERSIONING-IMPL-001` | Wave 2 | P1 | Implementation | `NOT_OPENED` |
 | `TTP-DATA-CONSENT-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
@@ -548,14 +548,20 @@ All 6 `TTP-SCORE-SNAPSHOT-IMPL-001` slices verified in the production environmen
 at `https://app.texqtic.com`. 59/59 unit tests pass. tsc clean. Runtime verification record:
 `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-RUNTIME-VERIFIED-001.md`.
 
-### Next open unit — TTP-TEXQTICSCORE-V2-DESIGN-001
+### Next open unit — TTP-TEXQTICSCORE-V2-SERVICE-001 (pending explicit Paresh authorization)
 
-**TTP-TEXQTICSCORE-V2-DESIGN-001 is now `DESIGN_OPEN`:**
-Design/governance-only unit. Creates the bounded design artifact for TexQticScore v2.
-No code, schema, SQL, migration, route, or feature flag changes authorized by this unit.
-`ttp_enabled=false` remains unchanged. `LEGAL_REVIEW_PENDING` remains unchanged.
-All Wave 3, Wave 4, and Wave 5 units remain gated.
-No implementation slice is open.
+**TTP-TEXQTICSCORE-V2-DESIGN-001 is now `DESIGN_DECISIONS_RECORDED`:**
+All 9 open questions (OQ-V2-01 through OQ-V2-09) resolved by Paresh Sharma.
+Options audit complete (commit `07a7e82`; `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-OPTIONS-AUDIT-001`).
+Decisions recorded in `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001`.
+
+**Next candidate:** `TTP-TEXQTICSCORE-V2-SERVICE-001`
+- Scope: `computeTexQticScore` function + `TexQticScoreV2Input/Output` types + `TEXQTICSCORE_V2_DISCLAIMER` constant + unit tests only
+- No routes, no snapshot writes, no schema changes, no DB interaction
+- No tenant surface (admin/internal only)
+- No `ttp_enabled` change
+- `LEGAL_REVIEW_PENDING` unchanged
+- Gate: explicit Paresh authorization to open this slice is required before any implementation begins
 
 ## 19. No-Change Confirmation
 
@@ -595,6 +601,8 @@ PHASE_2_TRACKER_UPDATED__TTP_SCORE_SNAPSHOT_READ_ADMIN_001_TRUTH_SYNCED
 TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED
 PHASE_2_TRACKER_UPDATED__TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED
 PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_DESIGN_001_OPEN
+PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_OPTIONS_AUDIT_001_COMPLETE
+PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_DESIGN_DECISIONS_001_RECORDED
 ```
 
 **Authority:** Paresh Patel — TexQtic founder / operator  
@@ -608,7 +616,7 @@ PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_DESIGN_001_OPEN
 **Slice 4 status:** `TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001` `TRUTH_SYNCED` — enrollment route trigger; `captureEnrollmentApprovedSnapshot` helper; 12/12 tests pass; tsc clean; commits `b780afd` + `436fd72`; verification record TRUTH_SYNCED  
 **Slice 5 status:** `TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001` `TRUTH_SYNCED` — eligibility route trigger; `captureAdminReviewSnapshot` helper; 12/12 tests pass; tsc clean; commits `16ccbdf` + `c9a8ee6`; verification record `TRUTH_SYNCED`  
 **Slice 6 status:** `TTP-SCORE-SNAPSHOT-READ-ADMIN-001` `TRUTH_SYNCED` — admin read routes; `SNAPSHOT_SELECT` projection; 12/12 tests pass; 59/59 total; tsc clean; commits `e73c0b0` + `908781b`; verification record `TRUTH_SYNCED`  
-**Wave 2+ status:** `TTP-SCORE-SNAPSHOT-IMPL-001` `TRUTH_SYNCED` (all 6 slices complete); runtime verification (`TTP-SCORE-SNAPSHOT-RUNTIME-VERIFY-001`) `PRODUCTION_VERIFIED` (commit `9a58b0d`, final decision `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED`); `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_OPEN` (design/governance-only; no implementation authorized) — all other Wave 2 units, Wave 3, Wave 4, Wave 5 remain gated — do not open without explicit Paresh authorization
+**Wave 2+ status:** `TTP-SCORE-SNAPSHOT-IMPL-001` `TRUTH_SYNCED` (all 6 slices complete); runtime verification (`TTP-SCORE-SNAPSHOT-RUNTIME-VERIFY-001`) `PRODUCTION_VERIFIED` (commit `9a58b0d`, final decision `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED`); `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_DECISIONS_RECORDED` — options audit complete (commit `07a7e82`); decisions in `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001`; OQ-V2-01 through OQ-V2-09 all resolved; next candidate `TTP-TEXQTICSCORE-V2-SERVICE-001` (service-only, no routes/snapshots/schema/tenant surface) pending explicit Paresh authorization — all other Wave 2 implementation units, Wave 3, Wave 4, Wave 5 remain gated — do not open without explicit Paresh authorization
 
 ---
 

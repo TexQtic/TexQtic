@@ -521,17 +521,18 @@ The following implementation slices are **recommended** for future consideration
 by this document.** Each requires explicit Paresh authorization before any design or implementation
 prompt is opened.
 
-| Suggested slice | Purpose | Gate |
-|---|---|---|
-| `TTP-TEXQTICSCORE-V2-OPTIONS-AUDIT-001` | Survey open questions (§15) and produce a short options doc for each unresolved question | This design approved by Paresh |
-| `TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001` | Record Paresh's decisions on OQ-V2-01 through OQ-V2-09 (§15) | Options audit complete |
-| `TTP-TEXQTICSCORE-V2-SERVICE-001` | Implement `computeTexQticScore` + unit tests; no route changes | Design decisions recorded + Paresh approval |
-| `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` | Extend `TtpScoreSnapshotService` to support `TEXQTICSCORE_V2`; dual-run logging | v2 service unit verified |
-| `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` | Extend admin score snapshot read endpoints to filter/label by `score_version` | Snapshot integration authorized |
-| `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` | Design tenant-visible v2 score surface (read-only, admin-gated) | **Legal clearance required (`LEGAL_REVIEW_PENDING` resolved)** |
-| `TTP-SCORE-VERSIONING-IMPL-001` | `score_version` migration/constraint work if current schema proves insufficient | Only if design proves current `String` type insufficient |
+| Suggested slice | Purpose | Status | Gate |
+|---|---|---|---|
+| `TTP-TEXQTICSCORE-V2-OPTIONS-AUDIT-001` | Survey open questions and produce a short options doc for each unresolved question | **COMPLETE** — commit `07a7e82` | This design approved by Paresh |
+| `TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001` | Record Paresh's decisions on OQ-V2-01 through OQ-V2-09 | **COMPLETE** — `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001` | Options audit complete |
+| `TTP-TEXQTICSCORE-V2-SERVICE-001` | Implement `computeTexQticScore` + types + constants + unit tests; no routes, no snapshots, no schema | `NOT_OPENED` | Design decisions recorded + explicit Paresh authorization |
+| `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` | Extend `TtpScoreSnapshotService` for `TEXQTICSCORE_V2`; dual-run logging strategy + v2 snapshot persistence | `NOT_OPENED` | v2 service unit verified + Paresh authorization |
+| `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` | Extend admin snapshot read endpoints to filter/label by `score_version` (if needed) | `NOT_OPENED` | Snapshot integration authorized + Paresh authorization |
+| `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` | Tenant-visible v2 score surface | `LEGAL_GATED__NOT_OPENED` | **Legal clearance required (`LEGAL_REVIEW_PENDING` resolved)** + Paresh authorization |
+| `TTP-SCORE-VERSIONING-IMPL-001` | `score_version` migration/constraint work if current schema proves insufficient | `NOT_OPENED` | Only if implementation discovers current `String` type insufficient |
 
 > Paresh must explicitly authorize each slice. No slice is auto-opened.
+> `TTP-TEXQTICSCORE-V2-OPTIONS-AUDIT-001` and `TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001` are now COMPLETE.
 
 ---
 
@@ -554,22 +555,25 @@ The following tests are required when implementation is authorized. None are imp
 
 ---
 
-## 15. Open Questions — Decisions Required Before Implementation
+## 15. Design Decisions — Resolved
 
-The following questions must be resolved before `TTP-TEXQTICSCORE-V2-IMPL-001` or any v2
-implementation slice may be opened.
+> **All 9 open questions are resolved.** Decisions recorded in:
+> `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001`
 
-| OQ-ID | Question | Options | Notes |
+The following table summarizes the decisions. Full rationale, implementation consequences, and AF items
+are in the decision record artifact.
+
+| OQ-ID | Question | Selected Option | Decision Summary |
 |---|---|---|---|
-| OQ-V2-01 | Exact v2 factor keys and weights — keep 1:1 with v1, or change? | A: 1:1 rename only (100pt, same weights); B: Adjust weights; C: Add/remove factors | This design proposes Option A (safest for v1 parity); Paresh decides |
-| OQ-V2-02 | Keep current 4-band labels or rename? | A: Keep `READY/NEAR_READY/NEEDS_REVIEW/NOT_READY`; B: New labels | Recommend Option A unless legal review suggests different labels |
-| OQ-V2-03 | What v2 disclaimer text? | A: Keep current `SCORE_DISCLAIMER`; B: New v2-specific disclaimer | Requires legal clearance regardless; `LEGAL_REVIEW_PENDING` |
-| OQ-V2-04 | Is v2 internal/admin-only first, or should a tenant-facing surface be designed in parallel? | A: Admin/control-plane only first; B: Tenant-facing in same slice | Recommend Option A; tenant surface requires separate legal clearance |
-| OQ-V2-05 | Should v2 dual-run alongside v1 before any API response changes? | A: Yes — log both, return v1 until explicitly switched; B: Switch immediately after impl | Strongly recommend Option A to avoid regression risk |
-| OQ-V2-06 | Is the current `ttp_score_snapshots` schema sufficient for v2? | A: Yes — `score_version String` is sufficient; B: Additional column needed | This design believes Option A; implementation may discover otherwise |
-| OQ-V2-07 | Does legal approval gate implementation or only public/tenant exposure? | A: Legal required only before tenant surface; B: Legal required before any implementation | Recommend clarifying before opening `TTP-TEXQTICSCORE-V2-IMPL-001` |
-| OQ-V2-08 | Can any score history or v2 `score_detail_json` factor detail be exposed to tenants? | A: No — admin-only until legal clearance; B: Aggregate only (score + band, no factor detail) | Recommend Option A; factor detail sensitivity requires consent design (Wave 3) |
-| OQ-V2-09 | Should `TEXQTICSCORE_V2` be persisted to `ttp_score_snapshots` immediately after impl, or design-only for now? | A: Persist immediately alongside `TTP_V1`; B: Keep as design-only until verified | Recommend deciding at `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` time |
+| OQ-V2-01 | Factor keys and weights | **Option A** — 1:1 rename | Same 7 factors, same 100pt weights, same pass conditions; key renames only (`gst_readiness→gst_verification`, `eligibility_readiness→eligibility_status`, `invoice_readiness→invoice_verification`, `vpc_readiness→vpc_issuance`, `enrollment_readiness→enrollment_status`; `risk_tier` and `routing_readiness` unchanged) |
+| OQ-V2-02 | Band labels | **Option A** — keep current | `READY/NEAR_READY/NEEDS_REVIEW/NOT_READY` and band thresholds unchanged |
+| OQ-V2-03 | v2 disclaimer text | **Option B** — new `TEXQTICSCORE_V2_DISCLAIMER` | New constant in future service slice; preferred location `server/src/ttp/ttp.constants.ts`; marked `LEGAL_REVIEW_PENDING`; do NOT change `SCORE_DISCLAIMER` or `TTP_DISCLAIMER_TEXT` |
+| OQ-V2-04 | Admin-only first or tenant-parallel | **Option A** — admin/internal only | No tenant-facing surface, no public v2 score, no tenant score history until legal clearance + Paresh approval |
+| OQ-V2-05 | Dual-run before API switch | **Option A** — dual-run v1/v2 | Compute and log both; return v1 until separate explicit switch authorization; dual-run strategy defined in `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` |
+| OQ-V2-06 | Schema sufficiency | **Option A** — current schema sufficient | No schema migration required; DB `CHECK` already allows `TEXQTICSCORE_V2`; `TTP-SCORE-VERSIONING-IMPL-001` remains `NOT_OPENED` |
+| OQ-V2-07 | Legal gate scope | **Option A** — legal gates tenant/public only | Backend/internal/admin-only v2 implementation may proceed while `LEGAL_REVIEW_PENDING`; tenant/public surface remains `LEGAL_GATED__NOT_OPENED` |
+| OQ-V2-08 | Tenant factor detail exposure | **Option A** — no tenant exposure | `score_detail_json` admin/internal-only; `risk_tier` never buyer/seller visible without legal/consent design; no tenant factor detail route or tenant score history route |
+| OQ-V2-09 | Snapshot persistence timing | **Option B** — service-only first | `TTP-TEXQTICSCORE-V2-SERVICE-001` = function + types + constants + tests only; `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` = separate later slice for dual-run and persistence |
 
 ---
 
@@ -602,6 +606,7 @@ design without explicit Paresh authorization:
 
 ```
 TTP_TEXQTICSCORE_V2_DESIGN_001_READY_FOR_PARESH_REVIEW
+TTP_TEXQTICSCORE_V2_DESIGN_001_DECISIONS_RECORDED_READY_FOR_IMPLEMENTATION_PLANNING
 ```
 
 **Authority:** Paresh Sharma — TexQtic founder / operator  
@@ -613,8 +618,9 @@ TTP_TEXQTICSCORE_V2_DESIGN_001_READY_FOR_PARESH_REVIEW
 **SQL migrations authorized:** No  
 **Route changes authorized:** No  
 **Score logic changes authorized:** No  
-**Wave 2 implementation slices opened:** None  
-**Wave 3/4/5 units opened:** None
+**Wave 2 implementation slices opened:** None — `TTP-TEXQTICSCORE-V2-SERVICE-001` is the next candidate pending explicit Paresh authorization  
+**Wave 3/4/5 units opened:** None  
+**Design decisions recorded:** All 9 OQs resolved — `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001`
 
 ---
 
