@@ -144,7 +144,7 @@ Every Phase 2 unit follows this exact sequence. Steps may not be skipped or reor
 |---|---|---|---|---|---|---|
 | **Wave 0** | Control and safety foundation | Scoped activation, QA sentinel, monitoring, rollback runbook, language governance baseline | TQ-01, TQ-08, TQ-09, TQ-10, TQ-20 | None — P0 cleared | `COMPLETE / TRUTH_SYNCED` | All P0 units complete — see §18 |
 | **Wave 1** | Legal/compliance copy review | Final disclaimer text, forbidden-term list, consent wording, DPDP notes, VPC/score language sign-off | TQ-20 (final text), TQ-05/14 wording | None (non-code) — may start in parallel | `OPERATOR_READY__LEGAL_PENDING` | `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` `TRUTH_SYNCED`; `TTP-LEGAL-COPY-COUNSEL-PACKET-001` ready for Paresh review; final legal sign-off pending |
-| **Wave 2** | Score architecture foundation | Score snapshots, hybrid live + snapshot triggers, TexQticScore v2 design, score versioning | TQ-06, TQ-07, TQ-11, TQ-12 | P0 design complete | `DESIGN_DECISIONS_RECORDED` | `TTP-SCORE-SNAPSHOT-DESIGN-001` design decisions recorded — OQ-SS-01 through OQ-SS-07 resolved; no implementation authorized until Paresh opens implementation slice |
+| **Wave 2** | Score architecture foundation | Score snapshots, hybrid live + snapshot triggers, TexQticScore v2 design, score versioning | TQ-06, TQ-07, TQ-11, TQ-12 | P0 design complete | `IMPLEMENTATION_IN_PROGRESS` | `TTP-SCORE-SNAPSHOT-SQL-RLS-001` (Slice 1) `IMPLEMENTED_PENDING_VERIFICATION` — `ttp_score_snapshots` table + RLS applied to Supabase; `prisma db pull` + `generate` + `tsc --noEmit` clean; commit 1 pending |
 | **Wave 3** | Consent and data-sharing design | Data consents table, internal-only score Phase 2 / external Phase 3, time-bounded consent | TQ-05, TQ-13, TQ-14 | Legal gate (DPDP, GSTN, CIBIL consent) | `LEGAL_GATED__WAITING` | Do not start until Wave 1 complete |
 | **Wave 4** | Partner marketplace design | Partner workflows, VPC TRANSMITTED after persisted ack, callback events, finance requests, partner offers, dynamic discounting | TQ-02, TQ-03, TQ-04, TQ-15, TQ-16, TQ-17 | Legal gate AND partner contract signed | `PARTNER_GATED__WAITING` | Do not start until Wave 1 + partner contract |
 | **Wave 5** | Future finance/legal positioning | Buyer Trust Score, fee events / fee disclosure | TQ-18, TQ-19 | TQ-11 design (TQ-18); legal fee review (TQ-19) | `FUTURE_DESIGN_TARGET__WAITING` | Phase 3 design targets; no near-term action |
@@ -248,7 +248,7 @@ artifact only.
 
 ## 9. P1 Score Architecture Tracker
 
-**Current status:** `DESIGN_DECISIONS_RECORDED` — `TTP-SCORE-SNAPSHOT-DESIGN-001` design complete; OQ-SS-01 through OQ-SS-07 resolved; decisions in `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001`; no implementation authorized
+**Current status:** `IMPLEMENTATION_IN_PROGRESS` — `TTP-SCORE-SNAPSHOT-SQL-RLS-001` (Slice 1) `IMPLEMENTED_PENDING_VERIFICATION`; `ttp_score_snapshots` table + RLS applied to Supabase; `prisma db pull` + `generate` + `tsc --noEmit` clean; commit 1 pending; verification record pending
 
 Do not open any P1 implementation unit before the design is reviewed and approved by Paresh.
 If Paresh explicitly reprioritizes, a P1 unit may be opened in parallel — but this requires an explicit
@@ -257,7 +257,7 @@ new decision, not an assumption.
 | Unit ID | Unit Name | TQ | Type | Blocking Gate | Status |
 |---|---|---|---|---|---|
 | `TTP-SCORE-SNAPSHOT-DESIGN-001` | Score snapshots design | TQ-06, TQ-07 | Design | Wave 0 complete and TRUTH_SYNCED — **CLEARED** | `DESIGN_DECISIONS_RECORDED` |
-| `TTP-SCORE-SNAPSHOT-IMPL-001` | `ttp_score_snapshots` table + trigger write logic | TQ-06, TQ-07 | Implementation + migration | `TTP-SCORE-SNAPSHOT-DESIGN-001` approved by Paresh | `NOT_OPENED` |
+| `TTP-SCORE-SNAPSHOT-IMPL-001` | `ttp_score_snapshots` table + trigger write logic | TQ-06, TQ-07 | Implementation + migration | `TTP-SCORE-SNAPSHOT-DESIGN-001` approved by Paresh | `IMPLEMENTATION_IN_PROGRESS` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `IMPLEMENTED_PENDING_VERIFICATION` |
 | `TTP-TEXQTICSCORE-V2-DESIGN-001` | TexQticScore v2 design | TQ-11, TQ-12 | Design | Wave 0 design approved; separate design artifact required before any code | `DESIGN_TARGET_ONLY__WAITING` |
 | `TTP-TEXQTICSCORE-V2-IMPL-001` | `computeTexQticScore` function + v2 score contract | TQ-11 | Implementation | `TTP-TEXQTICSCORE-V2-DESIGN-001` approved | `NOT_OPENED` |
 | `TTP-SCORE-VERSIONING-IMPL-001` | `score_version` column on `ttp_score_snapshots` | TQ-12 | Implementation | TQ-06 and TQ-11 design approved | `NOT_OPENED` |
@@ -449,7 +449,7 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` | Wave 1 | P0/P2 | Governance / legal | `TRUTH_SYNCED` — gov `1e539da`, final decision `TTP_LEGAL_COMPLIANCE_COPY_REVIEW_001_OPERATOR_REVIEW_READY` |
 | `TTP-LEGAL-COPY-COUNSEL-PACKET-001` | Wave 1 | P0/P2 | Governance / legal | `TRUTH_SYNCED` — gov `f0ead0f`, final decision `TTP_LEGAL_COUNSEL_REVIEW_PACKET_001_READY_FOR_PARESH`; `LEGAL_REVIEW_PENDING` |
 | `TTP-SCORE-SNAPSHOT-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_DECISIONS_RECORDED` |
-| `TTP-SCORE-SNAPSHOT-IMPL-001` | Wave 2 | P1 | Implementation + migration | `NOT_OPENED` |
+| `TTP-SCORE-SNAPSHOT-IMPL-001` | Wave 2 | P1 | Implementation + migration | `IMPLEMENTATION_IN_PROGRESS` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `IMPLEMENTED_PENDING_VERIFICATION`; SQL+RLS applied; Prisma synced; tsc clean |
 | `TTP-TEXQTICSCORE-V2-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_TARGET_ONLY__WAITING` |
 | `TTP-TEXQTICSCORE-V2-IMPL-001` | Wave 2 | P1 | Implementation | `NOT_OPENED` |
 | `TTP-SCORE-VERSIONING-IMPL-001` | Wave 2 | P1 | Implementation | `NOT_OPENED` |
@@ -524,13 +524,11 @@ Packages `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` outputs for external legal couns
 
 **Design decisions recorded:** `TTP-SCORE-SNAPSHOT-DESIGN-001` design complete. OQ-SS-01 through OQ-SS-07 resolved by Paresh Sharma. Full rationale and implementation consequences in `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001`.
 
-**Next step (pending explicit Paresh authorization):** Open `TTP-SCORE-SNAPSHOT-SQL-RLS-001` (or equivalent Slice 1 prompt — SQL + RLS + `prisma db pull` + `prisma generate` only). No implementation slice is opened by this governance update.
+**`TTP-SCORE-SNAPSHOT-SQL-RLS-001` (Slice 1) is `IMPLEMENTED_PENDING_VERIFICATION`:** `ttp_score_snapshots` table created with 17 columns, 4 CHECK constraints, 5 FK constraints, 1 PK, 4 indexes, immutability trigger (`trg_ttp_score_snapshot_immutable`), 5-policy RLS (guard RESTRICTIVE + select/insert/update/delete PERMISSIVE), and GRANT to `texqtic_app`. Applied to Supabase via psql. `prisma db pull` introspected 65 models. `prisma generate` succeeded. `tsc --noEmit` clean. Commit 1 + verification record pending.
 
 ### Do not open yet
 
-All Wave 2 implementation units, Wave 3, Wave 4, and Wave 5 units must wait. Do not open any implementation
-unit without an approved design. Do not open `TTP-SCORE-SNAPSHOT-IMPL-001` until `TTP-SCORE-SNAPSHOT-DESIGN-001`
-is reviewed and approved by Paresh.
+`TTP-SCORE-SNAPSHOT-IMPL-001` Slice 2+ (service, routes, trigger integration) must not be opened until Slice 1 verification record is committed. All Wave 3, Wave 4, and Wave 5 units remain gated. Do not open any unit without an approved design and explicit Paresh authorization.
 
 ## 19. No-Change Confirmation
 
@@ -557,6 +555,7 @@ is reviewed and approved by Paresh.
 ```
 PHASE_2_IMPLEMENTATION_PLAN_AND_TRACKER_CREATED
 PHASE_2_TRACKER_UPDATED__TTP_SCORE_SNAPSHOT_DESIGN_DECISIONS_RECORDED
+PHASE_2_TRACKER_UPDATED__TTP_SCORE_SNAPSHOT_SQL_RLS_001_IMPLEMENTED_PENDING_VERIFICATION
 ```
 
 **Authority:** Paresh Sharma — TexQtic founder / operator  
@@ -564,8 +563,8 @@ PHASE_2_TRACKER_UPDATED__TTP_SCORE_SNAPSHOT_DESIGN_DECISIONS_RECORDED
 **Files changed by this document:** This document only  
 **Implementation authorized:** No  
 **Score snapshot design decisions:** Recorded — `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001`; OQ-SS-01 through OQ-SS-07 resolved  
-**Next candidate unit:** `TTP-SCORE-SNAPSHOT-SQL-RLS-001` (Slice 1 — SQL + RLS + `prisma db pull` + `prisma generate` only) — NOT opened; requires explicit Paresh authorization  
-**Wave 2+ status:** `TTP-SCORE-SNAPSHOT-DESIGN-001` `DESIGN_DECISIONS_RECORDED` (Wave 2); all implementation units, Wave 3, Wave 4, Wave 5 remain gated — do not open without explicit Paresh authorization
+**Current Slice 1 status:** `TTP-SCORE-SNAPSHOT-SQL-RLS-001` `IMPLEMENTED_PENDING_VERIFICATION` — SQL applied, Prisma synced, tsc clean; commits and verification record pending  
+**Wave 2+ status:** `TTP-SCORE-SNAPSHOT-IMPL-001` `IMPLEMENTATION_IN_PROGRESS` (Slice 1 SQL+RLS done); all other Wave 2 units, Wave 3, Wave 4, Wave 5 remain gated — do not open without explicit Paresh authorization
 
 ---
 

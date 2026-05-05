@@ -875,6 +875,7 @@ model Trade {
   reasoningLog                  ReasoningLog?                   @relation(fields: [reasoningLogId], references: [id], onDelete: Restrict, onUpdate: NoAction)
   sourceRfq                     Rfq?                            @relation("trade_source_rfq", fields: [sourceRfqId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "trades_source_rfq_id_fk")
   tenant                        Tenant                          @relation(fields: [tenantId], references: [id], onUpdate: NoAction)
+  ttp_score_snapshots           ttp_score_snapshots[]
   verified_payable_certificates verified_payable_certificates[]
 
   @@unique([tenantId, tradeReference], map: "trades_tenant_ref_unique")
@@ -1103,6 +1104,7 @@ model organizations {
   tradesSeller                                                                             Trade[]                         @relation("TradeSeller")
   ttp_eligibility_assessments                                                              ttp_eligibility_assessments[]
   ttp_enrollment_logs                                                                      ttp_enrollment_logs[]
+  ttp_score_snapshots                                                                      ttp_score_snapshots[]
   verified_payable_certificates_verified_payable_certificates_buyer_org_idToorganizations  verified_payable_certificates[] @relation("verified_payable_certificates_buyer_org_idToorganizations")
   verified_payable_certificates_verified_payable_certificates_org_idToorganizations        verified_payable_certificates[] @relation("verified_payable_certificates_org_idToorganizations")
   verified_payable_certificates_verified_payable_certificates_seller_org_idToorganizations verified_payable_certificates[] @relation("verified_payable_certificates_seller_org_idToorganizations")
@@ -1554,6 +1556,7 @@ model invoices {
   lifecycle_states                                   LifecycleState                 @relation(fields: [lifecycle_state_id], references: [id], onUpdate: NoAction, map: "invoices_lifecycle_state_id_fk")
   organizations_invoices_org_idToorganizations       organizations                  @relation("invoices_org_idToorganizations", fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "invoices_org_id_fk")
   trades                                             Trade                          @relation(fields: [trade_id], references: [id], onUpdate: NoAction, map: "invoices_trade_id_fk")
+  ttp_score_snapshots                                ttp_score_snapshots[]
   verified_payable_certificates                      verified_payable_certificates?
 
   @@unique([org_id, trade_id, invoice_number], map: "invoices_org_trade_number_unique")
@@ -1614,16 +1617,17 @@ model ttp_eligibility_assessments {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model ttp_enrollment_logs {
-  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  org_id        String        @db.Uuid
-  from_state    String?       @db.VarChar(50)
-  to_state      String        @db.VarChar(50)
-  actor_type    String        @db.VarChar(50)
-  actor_id      String?       @db.Uuid
-  reason        String
-  ai_triggered  Boolean       @default(false)
-  created_at    DateTime      @default(now()) @db.Timestamptz(6)
-  organizations organizations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ttp_enrollment_logs_org_id_fk")
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id              String                @db.Uuid
+  from_state          String?               @db.VarChar(50)
+  to_state            String                @db.VarChar(50)
+  actor_type          String                @db.VarChar(50)
+  actor_id            String?               @db.Uuid
+  reason              String
+  ai_triggered        Boolean               @default(false)
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  organizations       organizations         @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ttp_enrollment_logs_org_id_fk")
+  ttp_score_snapshots ttp_score_snapshots[]
 
   @@index([org_id, created_at(sort: Desc)], map: "idx_ttp_enrollment_logs_org_created")
 }
@@ -1652,6 +1656,7 @@ model verified_payable_certificates {
   created_at                                                               DateTime                @default(now()) @db.Timestamptz(6)
   updated_at                                                               DateTime                @default(now()) @db.Timestamptz(6)
   partner_routing_stubs                                                    partner_routing_stubs[]
+  ttp_score_snapshots                                                      ttp_score_snapshots[]
   organizations_verified_payable_certificates_buyer_org_idToorganizations  organizations           @relation("verified_payable_certificates_buyer_org_idToorganizations", fields: [buyer_org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "vpc_buyer_org_id_fk")
   invoices                                                                 invoices                @relation(fields: [invoice_id], references: [id], onUpdate: NoAction, map: "vpc_invoice_id_fk")
   lifecycle_states                                                         LifecycleState          @relation(fields: [lifecycle_state_id], references: [id], onUpdate: NoAction, map: "vpc_lifecycle_state_id_fk")
@@ -1664,6 +1669,37 @@ model verified_payable_certificates {
   @@index([org_id], map: "idx_vpc_org_id")
   @@index([org_id, issued_at(sort: Desc)], map: "idx_vpc_org_issued")
   @@index([trade_id], map: "idx_vpc_trade_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ttp_score_snapshots {
+  id                            String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id                        String                         @db.Uuid
+  trade_id                      String?                        @db.Uuid
+  invoice_id                    String?                        @db.Uuid
+  vpc_id                        String?                        @db.Uuid
+  enrollment_id                 String?                        @db.Uuid
+  score_value                   Int                            @db.SmallInt
+  score_band                    String
+  score_version                 String
+  score_detail_json             Json
+  trigger_event                 String
+  source_event_id               String?                        @db.Uuid
+  actor_id                      String?                        @db.Uuid
+  score_disclaimer_hash         String
+  route_disclaimer_hash         String
+  metadata_json                 Json?
+  created_at                    DateTime                       @default(now()) @db.Timestamptz(6)
+  ttp_enrollment_logs           ttp_enrollment_logs?           @relation(fields: [enrollment_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ttp_score_snapshots_enrollment_id_fk")
+  invoices                      invoices?                      @relation(fields: [invoice_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ttp_score_snapshots_invoice_id_fk")
+  organizations                 organizations                  @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ttp_score_snapshots_org_id_fk")
+  trades                        Trade?                         @relation(fields: [trade_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ttp_score_snapshots_trade_id_fk")
+  verified_payable_certificates verified_payable_certificates? @relation(fields: [vpc_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ttp_score_snapshots_vpc_id_fk")
+
+  @@index([org_id, created_at(sort: Desc)], map: "idx_ttp_score_snapshots_org_created")
+  @@index([trigger_event, source_event_id], map: "idx_ttp_score_snapshots_trigger_source")
 }
 
 enum TenantType {
