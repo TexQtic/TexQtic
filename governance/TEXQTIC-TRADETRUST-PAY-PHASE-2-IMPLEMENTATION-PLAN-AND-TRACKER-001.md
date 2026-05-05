@@ -248,7 +248,7 @@ artifact only.
 
 ## 9. P1 Score Architecture Tracker
 
-**Current status:** `IMPLEMENTATION_IN_PROGRESS` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`) — `TtpScoreSnapshotService` + 13 tests; Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `IMPLEMENTATION_IN_PROGRESS` — enrollment route `captureEnrollmentApprovedSnapshot` + 12 tests; tsc clean; commits pending
+**Current status:** `IMPLEMENTATION_IN_PROGRESS` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`) — `TtpScoreSnapshotService` + 13 tests; Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `TRUTH_SYNCED` (`b780afd`, `436fd72`); Slice 5 (`TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001`) `IMPLEMENTATION_IN_PROGRESS` — eligibility route `captureAdminReviewSnapshot` + 12 tests; tsc clean; commits pending
 
 Do not open any P1 implementation unit before the design is reviewed and approved by Paresh.
 If Paresh explicitly reprioritizes, a P1 unit may be opened in parallel — but this requires an explicit
@@ -257,7 +257,7 @@ new decision, not an assumption.
 | Unit ID | Unit Name | TQ | Type | Blocking Gate | Status |
 |---|---|---|---|---|---|
 | `TTP-SCORE-SNAPSHOT-DESIGN-001` | Score snapshots design | TQ-06, TQ-07 | Design | Wave 0 complete and TRUTH_SYNCED — **CLEARED** | `DESIGN_DECISIONS_RECORDED` |
-| `TTP-SCORE-SNAPSHOT-IMPL-001` | `ttp_score_snapshots` table + trigger write logic | TQ-06, TQ-07 | Implementation + migration | `TTP-SCORE-SNAPSHOT-DESIGN-001` approved by Paresh | `IMPLEMENTATION_IN_PROGRESS` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`); Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `IMPLEMENTATION_IN_PROGRESS` |
+| `TTP-SCORE-SNAPSHOT-IMPL-001` | `ttp_score_snapshots` table + trigger write logic | TQ-06, TQ-07 | Implementation + migration | `TTP-SCORE-SNAPSHOT-DESIGN-001` approved by Paresh | `IMPLEMENTATION_IN_PROGRESS` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`); Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `TRUTH_SYNCED` (`b780afd`, `436fd72`); Slice 5 (`TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001`) `IMPLEMENTATION_IN_PROGRESS` |
 | `TTP-TEXQTICSCORE-V2-DESIGN-001` | TexQticScore v2 design | TQ-11, TQ-12 | Design | Wave 0 design approved; separate design artifact required before any code | `DESIGN_TARGET_ONLY__WAITING` |
 | `TTP-TEXQTICSCORE-V2-IMPL-001` | `computeTexQticScore` function + v2 score contract | TQ-11 | Implementation | `TTP-TEXQTICSCORE-V2-DESIGN-001` approved | `NOT_OPENED` |
 | `TTP-SCORE-VERSIONING-IMPL-001` | `score_version` column on `ttp_score_snapshots` | TQ-12 | Implementation | TQ-06 and TQ-11 design approved | `NOT_OPENED` |
@@ -449,7 +449,7 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` | Wave 1 | P0/P2 | Governance / legal | `TRUTH_SYNCED` — gov `1e539da`, final decision `TTP_LEGAL_COMPLIANCE_COPY_REVIEW_001_OPERATOR_REVIEW_READY` |
 | `TTP-LEGAL-COPY-COUNSEL-PACKET-001` | Wave 1 | P0/P2 | Governance / legal | `TRUTH_SYNCED` — gov `f0ead0f`, final decision `TTP_LEGAL_COUNSEL_REVIEW_PACKET_001_READY_FOR_PARESH`; `LEGAL_REVIEW_PENDING` |
 | `TTP-SCORE-SNAPSHOT-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_DECISIONS_RECORDED` |
-| `TTP-SCORE-SNAPSHOT-IMPL-001` | Wave 2 | P1 | Implementation + migration | `IMPLEMENTATION_IN_PROGRESS` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`); Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `IMPLEMENTATION_IN_PROGRESS` |
+| `TTP-SCORE-SNAPSHOT-IMPL-001` | Wave 2 | P1 | Implementation + migration | `IMPLEMENTATION_IN_PROGRESS` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`); Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `TRUTH_SYNCED` (`b780afd`, `436fd72`); Slice 5 (`TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001`) `IMPLEMENTATION_IN_PROGRESS` |
 | `TTP-TEXQTICSCORE-V2-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_TARGET_ONLY__WAITING` |
 | `TTP-TEXQTICSCORE-V2-IMPL-001` | Wave 2 | P1 | Implementation | `NOT_OPENED` |
 | `TTP-SCORE-VERSIONING-IMPL-001` | Wave 2 | P1 | Implementation | `NOT_OPENED` |
@@ -530,11 +530,13 @@ Packages `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` outputs for external legal couns
 
 **`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001` (Slice 3) is `TRUTH_SYNCED`:** VPC route (`server/src/routes/control/vpc.ts`) modified — `captureVpcIssuedSnapshot` exported helper added; post-commit best-effort snapshot trigger integrated into `POST /generate/:invoiceId` handler after `writeAuditLog`. `TtpScoreSnapshotService` called within `withVpcAdminWriteContext` (RLS-safe). Snapshot failure caught and logged as `ttp.score_snapshot.capture_failed` structured event; VPC HTTP response unaffected. New 10-test file `server/src/__tests__/ttp-score-snapshot-trigger-vpc.unit.test.ts` — 10/10 pass. `tsc --noEmit` clean. Commits `a2c9d0d` + `33dd382`; verification record `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-TRIGGER-VPC-VERIFIED-001` TRUTH_SYNCED.
 
-**`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001` (Slice 4) is `IMPLEMENTATION_IN_PROGRESS`:** Enrollment route (`server/src/routes/control/ttp-enrollments.ts`) modified — `captureEnrollmentApprovedSnapshot` exported helper added; post-commit best-effort snapshot trigger integrated into `PATCH /enrollments/:tradeId` handler after `adminReviewEnrollment` succeeds with `APPROVED` outcome. `TtpScoreSnapshotService` called within second `withAdminWriteContext` (RLS-safe, new transaction). Snapshot failure caught and logged as `ttp.score_snapshot.capture_failed` structured event; enrollment HTTP response unaffected. New 12-test file `server/src/__tests__/ttp-score-snapshot-trigger-enrollment.unit.test.ts` — 12/12 pass. `tsc --noEmit` clean. Commits and verification record pending.
+**`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001` (Slice 4) is `TRUTH_SYNCED`:** Enrollment route (`server/src/routes/control/ttp-enrollments.ts`) modified — `captureEnrollmentApprovedSnapshot` exported helper added; post-commit best-effort snapshot trigger integrated into `PATCH /enrollments/:tradeId` handler after `adminReviewEnrollment` succeeds with `APPROVED` outcome. `TtpScoreSnapshotService` called within second `withAdminWriteContext` (RLS-safe, new transaction). Snapshot failure caught and logged as `ttp.score_snapshot.capture_failed` structured event; enrollment HTTP response unaffected. New 12-test file `server/src/__tests__/ttp-score-snapshot-trigger-enrollment.unit.test.ts` — 12/12 pass. `tsc --noEmit` clean. Commits `b780afd` (feat: capture score snapshot on enrollment approval) + `436fd72` (docs: verify enrollment score snapshot trigger). Verification record `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-VERIFIED-001.md` TRUTH_SYNCED.
+
+**`TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001` (Slice 5) is `IMPLEMENTATION_IN_PROGRESS`:** Eligibility route (`server/src/routes/control/ttp-eligibility.ts`) modified — `captureAdminReviewSnapshot` exported helper added; post-commit best-effort snapshot trigger integrated into `POST /eligibility/:orgId` handler after every successful `createAssessment`. `TtpScoreSnapshotService` called within second `withTtpAdminWriteContext` (RLS-safe, new transaction). Trigger applies to ALL successful assessments (no APPROVED-only gate). `tradeId = null`, `enrollmentId = null` (org-scoped route, AF-06). Snapshot failure caught and logged as `ttp.score_snapshot.capture_failed` structured event; assessment HTTP response unaffected. New 12-test file `server/src/__tests__/ttp-score-snapshot-trigger-admin-review.unit.test.ts` — 12/12 pass. `tsc --noEmit` clean. Commits and verification record pending.
 
 ### Do not open yet
 
-All Wave 3, Wave 4, and Wave 5 units remain gated. Slice 5 (admin-review trigger), Slice 6 (read endpoint), and all Wave 3/4/5 units must not be opened without explicit Paresh authorization. `PARTNER_TRANSMITTED` write path has no implementation in Wave 2.
+All Wave 3, Wave 4, and Wave 5 units remain gated. Slice 6 (read endpoint) and all Wave 3/4/5 units must not be opened without explicit Paresh authorization. `PARTNER_TRANSMITTED` write path has no implementation in Wave 2.
 
 ## 19. No-Change Confirmation
 
@@ -567,6 +569,8 @@ PHASE_2_TRACKER_UPDATED__TTP_SCORE_SNAPSHOT_SERVICE_001_TRUTH_SYNCED
 PHASE_2_TRACKER_UPDATED__TTP_SCORE_SNAPSHOT_TRIGGER_VPC_001_IMPLEMENTATION_IN_PROGRESS
 PHASE_2_TRACKER_UPDATED__TTP_SCORE_SNAPSHOT_TRIGGER_VPC_001_TRUTH_SYNCED
 PHASE_2_TRACKER_UPDATED__TTP_SCORE_SNAPSHOT_TRIGGER_ENROLLMENT_001_IMPLEMENTATION_IN_PROGRESS
+PHASE_2_TRACKER_UPDATED__TTP_SCORE_SNAPSHOT_TRIGGER_ENROLLMENT_001_TRUTH_SYNCED
+PHASE_2_TRACKER_UPDATED__TTP_SCORE_SNAPSHOT_TRIGGER_ADMIN_REVIEW_001_IMPLEMENTATION_IN_PROGRESS
 ```
 
 **Authority:** Paresh Patel — TexQtic founder / operator  
@@ -577,8 +581,9 @@ PHASE_2_TRACKER_UPDATED__TTP_SCORE_SNAPSHOT_TRIGGER_ENROLLMENT_001_IMPLEMENTATIO
 **Slice 1 status:** `TTP-SCORE-SNAPSHOT-SQL-RLS-001` `TRUTH_SYNCED` — SQL applied, Prisma synced, tsc clean; commits `5e8ac44` + `f9a1ecd`; FK reconciliation Outcome B (doc normalization complete)  
 **Slice 2 status:** `TTP-SCORE-SNAPSHOT-SERVICE-001` `TRUTH_SYNCED` — `TtpScoreSnapshotService` implemented; 13/13 unit tests pass; tsc clean; commits `371b739` + `86b6373`  
 **Slice 3 status:** `TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001` `TRUTH_SYNCED` — VPC route trigger; `captureVpcIssuedSnapshot` helper; 10/10 tests pass; tsc clean; commits `a2c9d0d` + `33dd382`; verification record `TRUTH_SYNCED`  
-**Slice 4 status:** `TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001` `IMPLEMENTATION_IN_PROGRESS` — enrollment route trigger; `captureEnrollmentApprovedSnapshot` helper; 12/12 tests pass; tsc clean; commits pending  
-**Wave 2+ status:** `TTP-SCORE-SNAPSHOT-IMPL-001` `IMPLEMENTATION_IN_PROGRESS` (Slices 1+2+3 TRUTH_SYNCED; Slice 4 in progress); all other Wave 2 units, Wave 3, Wave 4, Wave 5 remain gated — do not open without explicit Paresh authorization
+**Slice 4 status:** `TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001` `TRUTH_SYNCED` — enrollment route trigger; `captureEnrollmentApprovedSnapshot` helper; 12/12 tests pass; tsc clean; commits `b780afd` + `436fd72`; verification record TRUTH_SYNCED  
+**Slice 5 status:** `TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001` `IMPLEMENTATION_IN_PROGRESS` — eligibility route trigger; `captureAdminReviewSnapshot` helper; 12/12 tests pass; tsc clean; commits pending  
+**Wave 2+ status:** `TTP-SCORE-SNAPSHOT-IMPL-001` `IMPLEMENTATION_IN_PROGRESS` (Slices 1+2+3+4 TRUTH_SYNCED; Slice 5 in progress); all other Wave 2 units, Wave 3, Wave 4, Wave 5 remain gated — do not open without explicit Paresh authorization
 
 ---
 

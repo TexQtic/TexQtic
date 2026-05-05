@@ -39,8 +39,13 @@ import {
   TtpEligibilityService,
   EligibilityGstPrerequisiteError,
   EligibilityTierOutcomeMismatchError,
+  type TtpEligibilityAssessmentRecord,
 } from '../../services/ttpEligibility.service.js';
 import { TTP_ELIGIBILITY_OUTCOME } from '../../ttp/ttp.constants.js';
+import {
+  TtpScoreSnapshotService,
+  TTP_SCORE_TRIGGER_EVENT,
+} from '../../services/ttpScoreSnapshot.service.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -123,6 +128,63 @@ const createAssessmentBodySchema = z.object({
     .transform(v => (v ? new Date(v) : null)),
 });
 
+// ─── Score Snapshot Trigger ──────────────────────────────────────────────────
+
+/**
+ * Post-commit, best-effort score snapshot capture for ADMIN_REVIEW_COMPLETE.
+ * Exported for unit testing.
+ *
+ * Called after every successful TtpEligibilityService.createAssessment().
+ * AF-06: ADMIN_REVIEW_COMPLETE is org-scoped — tradeId and enrollmentId are always null.
+ * Never throws — all errors are structured-logged and swallowed.
+ */
+export async function captureAdminReviewSnapshot(params: {
+  assessment: TtpEligibilityAssessmentRecord;
+  orgId: string;
+  adminId: string;
+  snapshotSvc: Pick<TtpScoreSnapshotService, 'captureSnapshot'>;
+  log: { error(obj: Record<string, unknown>, msg: string): void };
+}): Promise<void> {
+  const { assessment, orgId, adminId, snapshotSvc, log } = params;
+  const assessmentId = assessment.id;
+
+  if (!assessmentId) {
+    log.error(
+      {
+        event: 'ttp.score_snapshot.capture_failed',
+        trigger_event: TTP_SCORE_TRIGGER_EVENT.ADMIN_REVIEW_COMPLETE,
+        org_id: orgId,
+        reason: 'missing_assessment_id',
+      },
+      'ttp.score_snapshot.capture_failed',
+    );
+    return;
+  }
+
+  try {
+    await snapshotSvc.captureSnapshot({
+      orgId,
+      triggerEvent: TTP_SCORE_TRIGGER_EVENT.ADMIN_REVIEW_COMPLETE,
+      tradeId: null,
+      enrollmentId: null,
+      sourceEventId: assessmentId,
+      actorId: adminId,
+    });
+  } catch (snapshotErr) {
+    log.error(
+      {
+        event: 'ttp.score_snapshot.capture_failed',
+        trigger_event: TTP_SCORE_TRIGGER_EVENT.ADMIN_REVIEW_COMPLETE,
+        assessment_id: assessmentId,
+        org_id: orgId,
+        err_name: snapshotErr instanceof Error ? snapshotErr.name : 'UnknownError',
+        err_msg: snapshotErr instanceof Error ? snapshotErr.message : String(snapshotErr),
+      },
+      'ttp.score_snapshot.capture_failed',
+    );
+  }
+}
+
 // ─── Plugin ───────────────────────────────────────────────────────────────────
 
 const controlTtpEligibilityRoutes: FastifyPluginAsync = async fastify => {
@@ -193,6 +255,31 @@ const controlTtpEligibilityRoutes: FastifyPluginAsync = async fastify => {
 
           return assessment;
         });
+
+        // Post-commit best-effort: ADMIN_REVIEW_COMPLETE score snapshot.
+        try {
+          await withTtpAdminWriteContext(orgId, adminId, async tx => {
+            await captureAdminReviewSnapshot({
+              assessment: result,
+              orgId,
+              adminId,
+              snapshotSvc: new TtpScoreSnapshotService(makeTxBoundPrisma(tx)),
+              log: request.log,
+            });
+          });
+        } catch (snapshotCtxErr) {
+          request.log.error(
+            {
+              event: 'ttp.score_snapshot.capture_failed',
+              trigger_event: TTP_SCORE_TRIGGER_EVENT.ADMIN_REVIEW_COMPLETE,
+              assessment_id: result.id,
+              org_id: orgId,
+              err_name: snapshotCtxErr instanceof Error ? snapshotCtxErr.name : 'UnknownError',
+              err_msg: snapshotCtxErr instanceof Error ? snapshotCtxErr.message : String(snapshotCtxErr),
+            },
+            'ttp.score_snapshot.capture_failed',
+          );
+        }
 
         return reply.status(201).send({
           success: true,
