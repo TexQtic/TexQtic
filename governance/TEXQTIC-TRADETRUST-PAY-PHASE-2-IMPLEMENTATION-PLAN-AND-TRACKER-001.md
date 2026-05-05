@@ -75,9 +75,10 @@ This document is grounded in the following authoritative sources:
 | **Slice 8 status** | Complete — TradeTrust Score Advisory Layer verified; `computeTtpScore` is ephemeral pure function |
 | **E2E test status** | 38/38 Playwright tests pass (57.9s) after QA routing-readiness correction |
 | **`ttp_enabled`** | `false` — global. All 13 TTP routes return HTTP 503 `FEATURE_DISABLED` |
-| **Activation gate** | `ttpFeatureGateMiddleware` reads only `feature_flags WHERE key='ttp_enabled'`. Single Boolean check. |
-| **Per-tenant activation** | `TenantFeatureOverride` model exists (`unique([tenantId, key])`). NOT consulted by TTP middleware. Not wired. |
-| **QA sentinel isolation** | UUID-namespace only (`ee000000-0000-0000-0000-0000000000XX`). No `is_qa_sentinel` column. |
+| **Wave 0 P0 units** | All 6 Wave 0 P0 implementation units `TRUTH_SYNCED`. Scoped activation (two-layer gate), QA sentinel flag, structured monitoring events, rollback runbook, language governance baseline — all complete. See §18 for commit registry. |
+| **Activation gate** | `ttpFeatureGateMiddleware` reads `feature_flags WHERE key='ttp_enabled'` (global). If global `true`, also consults `TenantFeatureOverride` for per-org override. Two-layer gate in effect (TTP-IMPL-003 `TRUTH_SYNCED`). |
+| **Per-tenant activation** | `TenantFeatureOverride` model exists and IS consulted by TTP middleware. Per-org override wired. `ttp_enabled=false` globally → all orgs blocked regardless of override. |
+| **QA sentinel isolation** | `is_qa_sentinel Boolean @default(false)` column on `organizations`. QA orgs (`ee000000-0000-0000-0000-0000000000XX`) have `is_qa_sentinel=true`. Real orgs: `is_qa_sentinel=false`. (TTP-IMPL-001 `TRUTH_SYNCED`) |
 | **TradeTrust Score** | Ephemeral, 100pt, 7 factors, 4 bands. No `ttp_score_snapshots` table. No DB writes. |
 | **Partner routing** | `partner_routing_stubs` is create-on-read readiness evidence only. No outbound HTTP. No state machine. |
 | **Consent** | No consent table. No consent recording. |
@@ -85,7 +86,7 @@ This document is grounded in the following authoritative sources:
 | **Fee events** | No `ttp_fee_events` table. No fee recording or disclosure logic. |
 | **Live external integrations** | None — GST manual only, CIBIL stub only, no partner transmission. |
 | **Payment / lending / custody** | None — TexQtic does not lend, hold funds, or act as payment intermediary. |
-| **Language governance** | Single advisory disclaimer in `ttpScore.service.ts`. No API-level enforcement. No legal copy review complete. |
+| **Language governance** | `TTP_DISCLAIMER_TEXT` constant in `server/src/ttp/ttp.constants.ts`. `advisory_disclaimer` field in all TTP API responses (`TtpSummary`, `TtpEnrollmentRecord`). `SCORE_DISCLAIMER` in `ttpScore.service.ts`. Structured Pino monitoring events (`ttp.route.error`, `ttp.vpc.generate.error`, `ttp.eligibility.expired`, `ttp.enrollment.gate_failed`) in all 13 TTP route catch blocks. Rollback runbook at `governance/runbooks/TTP-ACTIVATION-ROLLBACK-RUNBOOK-001.md`. Legal copy review NOT yet complete — pending `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001`. |
 
 ---
 
@@ -141,8 +142,8 @@ Every Phase 2 unit follows this exact sequence. Steps may not be skipped or reor
 
 | Wave | Name | Purpose | TQs | Gate | Status | Next Action |
 |---|---|---|---|---|---|---|
-| **Wave 0** | Control and safety foundation | Scoped activation, QA sentinel, monitoring, rollback runbook, language governance baseline | TQ-01, TQ-08, TQ-09, TQ-10, TQ-20 | None — P0 cleared | `NEXT` | Open `TTP-SCOPED-ACTIVATION-DESIGN-001` |
-| **Wave 1** | Legal/compliance copy review | Final disclaimer text, forbidden-term list, consent wording, DPDP notes, VPC/score language sign-off | TQ-20 (final text), TQ-05/14 wording | None (non-code) — may start in parallel | `PARALLEL_NON_CODE` | Open `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` in parallel |
+| **Wave 0** | Control and safety foundation | Scoped activation, QA sentinel, monitoring, rollback runbook, language governance baseline | TQ-01, TQ-08, TQ-09, TQ-10, TQ-20 | None — P0 cleared | `COMPLETE / TRUTH_SYNCED` | All P0 units complete — see §18 |
+| **Wave 1** | Legal/compliance copy review | Final disclaimer text, forbidden-term list, consent wording, DPDP notes, VPC/score language sign-off | TQ-20 (final text), TQ-05/14 wording | None (non-code) — may start in parallel | `NEXT_RECOMMENDED_NON_CODE` | Open `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` now |
 | **Wave 2** | Score architecture foundation | Score snapshots, hybrid live + snapshot triggers, TexQticScore v2 design, score versioning | TQ-06, TQ-07, TQ-11, TQ-12 | P0 design complete | `DESIGN_TARGET_ONLY__WAITING` | Do not start until Wave 0 design approved |
 | **Wave 3** | Consent and data-sharing design | Data consents table, internal-only score Phase 2 / external Phase 3, time-bounded consent | TQ-05, TQ-13, TQ-14 | Legal gate (DPDP, GSTN, CIBIL consent) | `LEGAL_GATED__WAITING` | Do not start until Wave 1 complete |
 | **Wave 4** | Partner marketplace design | Partner workflows, VPC TRANSMITTED after persisted ack, callback events, finance requests, partner offers, dynamic discounting | TQ-02, TQ-03, TQ-04, TQ-15, TQ-16, TQ-17 | Legal gate AND partner contract signed | `PARTNER_GATED__WAITING` | Do not start until Wave 1 + partner contract |
@@ -154,28 +155,32 @@ Every Phase 2 unit follows this exact sequence. Steps may not be skipped or reor
 
 | Field | Value |
 |---|---|
-| **Unit ID** | `TTP-SCOPED-ACTIVATION-DESIGN-001` |
+| **Unit ID** | `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` |
 | **Status** | `NEXT_RECOMMENDED_UNIT` |
-| **Type** | Design artifact (governance only — no code) |
-| **Purpose** | Design the P0 control and safety layer for Wave 0 |
-| **Authorized by** | `PRODUCT-DEC-TRADETRUST-PAY-PHASE-2-ARCHITECTURE-QUESTIONS-001.md` (§4, P0 approvals) |
+| **Type** | Governance / legal (non-code) |
+| **Purpose** | Produce final disclaimer text, forbidden-term list, VPC/score/consent wording sign-offs required before Wave 2 (score), Wave 3 (consent), and Wave 4 (partner marketplace) can proceed |
+| **Gate** | None — non-code; may proceed immediately |
+| **Authorized by** | This tracker document; Wave 1 status `NEXT_RECOMMENDED_NON_CODE`; §8 Parallel Legal / Compliance Tracker |
 
-### Minimum design scope for `TTP-SCOPED-ACTIVATION-DESIGN-001`
+### What this unit must produce
 
-| Item | TQ | Required Design Output |
+| Output | Used By | Required Before |
 |---|---|---|
-| Two-layer activation gate semantics | TQ-01 | Global `feature_flags.ttp_enabled=false` blocks all. Global `true` + per-org `TenantFeatureOverride(key='ttp_enabled', enabled=true)` allows. Design lookup logic and failure semantics. |
-| `TenantFeatureOverride` wiring design | TQ-01 | How `ttpFeatureGateMiddleware` will be extended to consult `TenantFeatureOverride` after global flag check. Exact SQL / Prisma query design. |
-| `is_qa_sentinel` flag design | TQ-08 | Additive `is_qa_sentinel Boolean @default(false)` on `organizations`. SQL statement, Prisma model impact, seed update, RLS review. |
-| Structured TTP pino log event set | TQ-09 | Define minimum events: gate blocked, route 5xx, VPC generation error, eligibility expiry, enrollment gate failure. Define log schema (event type, org_id, request_id, timestamp). |
-| Manual activation / rollback runbook | TQ-10 | Step-by-step: enable for pilot org, disable for pilot org, emergency global off, void non-terminal VPCs, state audit. |
-| Language governance baseline | TQ-20 | `TTP_DISCLAIMER_TEXT` constant: location (likely `ttp.constants.ts`), placeholder value, plan for legal-reviewed final value. `advisory_disclaimer` field added to all 13 TTP API response types. |
+| Approved `TTP_DISCLAIMER_TEXT` constant value | `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` (TRUTH_SYNCED with interim text) | Final constant value — pending Paresh legal sign-off |
+| Forbidden-term list | Pre-commit lint hook | Any public-facing TTP copy deployment |
+| VPC certificate wording sign-off | VPC export format (Wave 2+) | Any public VPC representation |
+| Score advisory wording sign-off | `TexQticScore v2` design (Wave 2) | Any external score language |
+| Consent wording (DPDP-aligned) | `TTP-DATA-CONSENT-DESIGN-001` (Wave 3) | Consent table design |
+| Dynamic discounting wording | `TTP-DYNAMIC-DISCOUNTING-DESIGN-001` (Wave 4) | Discounting design |
+| Lender data-sharing wording | `TTP-EXTERNAL-SCORE-SHARING-PHASE-3-DESIGN-001` (Wave 3/4) | External score sharing |
+| Origination fee disclosure notes | `TTP-FEE-EVENTS-DESIGN-001` (Wave 5) | Fee events design |
 
-### Critical clarifications for the design unit
+### Critical clarifications for this unit
 
-- **This is design only.** No code changes, no schema changes, no SQL, no migrations in the design artifact itself.
-- **Implementation is not authorized** until Paresh reviews and approves the design.
-- **Opening this design unit does not enable TTP.** `ttp_enabled` remains `false`.
+- **This is a governance / legal artifact only.** No code changes, no schema changes, no SQL, no migrations, no route changes, no feature flags.
+- **`ttp_enabled` remains `false` throughout.** This unit does not authorize or request activation.
+- **Legal copy status is `LEGAL_REVIEW_PENDING`** until Paresh provides formal legal sign-off. The artifact marks copy as operator-reviewed only (`OPERATOR_REVIEW_READY`), not legally approved.
+- **Do not open any Wave 2, Wave 3, Wave 4, or Wave 5 unit** during or as a result of this unit.
 
 ---
 
@@ -186,12 +191,12 @@ No unit below may be opened as an implementation unit before the design is appro
 
 | Unit ID | Unit Name | TQ | Type | Likely Files Affected | Gate | Verification Required | Status |
 |---|---|---|---|---|---|---|---|
-| `TTP-SCOPED-ACTIVATION-DESIGN-001` | Scoped activation design | TQ-01, TQ-08, TQ-09, TQ-10, TQ-20 | Design | Governance docs only | None — cleared by P0 approvals | Read-only validation + Paresh review | `NEXT_RECOMMENDED_UNIT` |
-| `TTP-SCOPED-ACTIVATION-IMPL-001` | Per-org activation middleware | TQ-01 | Implementation | `server/src/middleware/ttpFeatureGate.middleware.ts`; feature-gate unit tests | Design approved by Paresh | (1) global false → all blocked; (2) global true + no override → blocked; (3) global true + org override true → allowed; (4) global true + org override false → blocked; (5) production smoke after deploy | `NOT_OPENED` |
+| `TTP-SCOPED-ACTIVATION-DESIGN-001` | Scoped activation design | TQ-01, TQ-08, TQ-09, TQ-10, TQ-20 | Design | Governance docs only | None — cleared by P0 approvals | Read-only validation + Paresh review | `DESIGN_APPROVED` |
+| `TTP-SCOPED-ACTIVATION-IMPL-001` | Per-org activation middleware | TQ-01 | Implementation | `server/src/middleware/ttpFeatureGate.middleware.ts`; feature-gate unit tests | Design approved by Paresh | (1) global false → all blocked; (2) global true + no override → blocked; (3) global true + org override true → allowed; (4) global true + org override false → blocked; (5) production smoke after deploy | `TRUTH_SYNCED` — impl `b7950b7`, unit-gov `e237405`, final decision `TTP_IMPL_003_TWO_LAYER_MIDDLEWARE_VERIFIED_COMPLETE` |
 | `TTP-QA-SENTINEL-FLAG-IMPL-001` | QA sentinel flag on organizations | TQ-08 | Implementation + migration | `server/prisma/schema.prisma`; SQL migration; `scripts/qa-ttp-seed.sql`; Prisma generated types | Design approved + SQL verified (no ERROR / ROLLBACK) | QA orgs: `is_qa_sentinel=true`; real orgs: `is_qa_sentinel=false`; no RLS leaks; `prisma db pull` + `generate` pass; unit test for sentinel query | `TRUTH_SYNCED` — impl `c6e24eaa`, gov `9e5f443a`, final decision `TTP_IMPL_001_QA_SENTINEL_FLAG_VERIFIED_COMPLETE` |
-| `TTP-ACTIVATION-MONITORING-IMPL-001` | Structured TTP pino log events | TQ-09 | Implementation | TTP route handlers (13 routes); `ttpFeatureGate.middleware.ts`; pino logger setup | Design approved by Paresh | Log events emitted for gate block, 5xx, VPC generation error, eligibility expiry, enrollment gate failure; server typecheck passes | `TRUTH_SYNCED` — impl `63b660b`, gov (see §18), final decision `TTP_ACTIVATION_MONITORING_IMPL_001_VERIFIED_COMPLETE` |
-| `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` | Activation / rollback runbook | TQ-10 | Governance / runbook | `governance/` runbook doc only (no code) | Design approved by Paresh | Runbook contains: enable pilot org, disable pilot org, global emergency off, void non-terminal VPCs, post-rollback state audit checklist | `NOT_OPENED` |
-| `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` | TTP language governance baseline | TQ-20 | Implementation | `server/src/ttp/ttp.constants.ts`; all 13 TTP route handler response types; server typecheck | Design approved by Paresh; placeholder disclaimer text until legal review completes | `advisory_disclaimer` field present in all 13 TTP API responses; `TTP_DISCLAIMER_TEXT` constant referenced (not inline string); no forbidden wording introduced; server typecheck + unit test pass; production API response verified | `NOT_OPENED` |
+| `TTP-ACTIVATION-MONITORING-IMPL-001` | Structured TTP pino log events | TQ-09 | Implementation | TTP route handlers (13 routes); `ttpFeatureGate.middleware.ts`; pino logger setup | Design approved by Paresh | Log events emitted for gate block, 5xx, VPC generation error, eligibility expiry, enrollment gate failure; server typecheck passes | `TRUTH_SYNCED` — impl `63b660b`, gov `62fb7fe`, final decision `TTP_ACTIVATION_MONITORING_IMPL_001_VERIFIED_COMPLETE` |
+| `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` | Activation / rollback runbook | TQ-10 | Governance / runbook | `governance/` runbook doc only (no code) | Design approved by Paresh | Runbook contains: enable pilot org, disable pilot org, global emergency off, void non-terminal VPCs, post-rollback state audit checklist | `TRUTH_SYNCED` — impl `0c96c7f`, gov `8f6356e`, final decision `TTP_IMPL_006_ACTIVATION_ROLLBACK_RUNBOOK_VERIFIED_COMPLETE` |
+| `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` | TTP language governance baseline | TQ-20 | Implementation | `server/src/ttp/ttp.constants.ts`; all 13 TTP route handler response types; server typecheck | Design approved by Paresh; interim disclaimer text in place — final text pending `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` | `advisory_disclaimer` field present in all TTP API responses; `TTP_DISCLAIMER_TEXT` constant referenced (not inline string); no forbidden wording introduced; server typecheck + unit test pass | `TRUTH_SYNCED` — impl `42931f7` (constant) + `26c8329` (advisory_disclaimer responses), gov `a922085` + `274a3ad`, final decision `TTP_IMPL_002_DISCLAIMER_CONSTANT_VERIFIED_COMPLETE` + `TTP_IMPL_005_ADVISORY_DISCLAIMER_RESPONSES_VERIFIED_COMPLETE` |
 
 ### P0 Middleware verification matrix
 
@@ -429,7 +434,7 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-SCOPED-ACTIVATION-DESIGN-001` | Wave 0 | P0 | Design | `DESIGN_APPROVED` |
 | `TTP-SCOPED-ACTIVATION-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` |
 | `TTP-QA-SENTINEL-FLAG-IMPL-001` | Wave 0 | P0 | Implementation + migration | `TRUTH_SYNCED` |
-| `TTP-ACTIVATION-MONITORING-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` — impl `63b660b`, gov (see §18), final decision `TTP_ACTIVATION_MONITORING_IMPL_001_VERIFIED_COMPLETE` |
+| `TTP-ACTIVATION-MONITORING-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` — impl `63b660b`, gov `62fb7fe`, final decision `TTP_ACTIVATION_MONITORING_IMPL_001_VERIFIED_COMPLETE` |
 | `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` | Wave 0 | P0 | Governance / runbook | `TRUTH_SYNCED` — impl `0c96c7f`, gov `8f6356e`, final decision `TTP_IMPL_006_ACTIVATION_ROLLBACK_RUNBOOK_VERIFIED_COMPLETE` |
 | `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` |
 | `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` | Wave 1 | P0/P2 | Governance / legal | `PARALLEL_RECOMMENDED_NON_CODE` |
@@ -485,22 +490,23 @@ final decision `TTP_IMPL_006_ACTIVATION_ROLLBACK_RUNBOOK_VERIFIED_COMPLETE`.
 Activation / rollback runbook created at `governance/runbooks/TTP-ACTIVATION-ROLLBACK-RUNBOOK-001.md`.
 Runbook Section B and D.1 stale entries corrected. `ttp_enabled = false` unchanged throughout.
 
-**TTP-ACTIVATION-MONITORING-IMPL-001 is complete** (`TRUTH_SYNCED`): impl `63b660b`, gov (commit 2 of this unit),
+**TTP-ACTIVATION-MONITORING-IMPL-001 is complete** (`TRUTH_SYNCED`): impl `63b660b`, gov `62fb7fe`,
 final decision `TTP_ACTIVATION_MONITORING_IMPL_001_VERIFIED_COMPLETE`.
 Structured Pino monitoring events added to all 13 TTP route catch blocks: `ttp.route.error`, `ttp.vpc.generate.error`,
 `ttp.eligibility.expired`, `ttp.enrollment.gate_failed`. `invoiceSnap` hoisted for catch-block scope.
 `fastify.log` → `request.log` corrected in ttp-eligibility routes. `adminId` excluded (PII boundary).
 Bare `throw err` in ttp-routing-stubs replaced with structured log + sendError. 10 new unit tests (TC-001–TC-010). tsc clean.
 
-**All Wave 0 implementation units are now TRUTH_SYNCED.** Awaiting Paresh decision on next phase.
+**All Wave 0 implementation units are now TRUTH_SYNCED.** All P0 units complete. Recommended immediate next unit: `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001`.
 
-### Parallel — may open now (non-code)
+### Immediate next — open now (non-code)
 
-**Optionally open:** `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001`
+**Open now:** `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001`
 
-This is a governance/legal artifact only. No code. No schema changes. It may run in parallel with the
-scoped activation design. It produces the final disclaimer text, forbidden-term list, and wording
-sign-offs required before Wave 2 (score), Wave 3 (consent), and Wave 4 (partner marketplace) can proceed.
+This is a governance/legal artifact only. No code. No schema changes. No activation. It produces the
+final disclaimer text, forbidden-term list, and wording sign-offs required before Wave 2 (score),
+Wave 3 (consent), and Wave 4 (partner marketplace) can proceed. Status transitions to
+`IMPLEMENTATION_OPEN` once Paresh opens this unit.
 
 ### Do not open yet
 
@@ -509,16 +515,21 @@ an approved design. Do not open any P1/P2/P3/P4 design without meeting the named
 
 ## 19. No-Change Confirmation
 
+> **Scope:** This table confirms no changes made *by this tracker document update*. Wave 0 implementation
+> units each had their own code changes (see §18 for commit registry). This table does NOT claim Wave 0
+> had no code changes — it did. The rows below apply only to this governance-only tracker update.
+
 | Invariant | Confirmed State |
 |---|---|
 | `ttp_enabled` | `false` — UNCHANGED |
-| Runtime behavior | No change — NONE |
-| Code changes | No code changes — NONE |
+| Runtime behavior | No change — this tracker update only |
+| Code changes | No code changes made by this document. Wave 0 implementation units had code changes; see §18 commit registry. |
 | Schema / migration changes | No schema or migration changes — NONE |
 | Seed / auth changes | No seed or auth changes — NONE |
 | External API calls | No external API calls — NONE |
 | Partner transmission | No partner transmission — NONE |
 | Implementation authorization | Not authorized by this document |
+| Wave 2/3/4/5 units opened | None — all remain gated |
 
 ---
 
@@ -532,8 +543,8 @@ PHASE_2_IMPLEMENTATION_PLAN_AND_TRACKER_CREATED
 **`ttp_enabled` state:** `false` — UNCHANGED  
 **Files changed by this document:** This document only  
 **Implementation authorized:** No  
-**Next unit:** `TTP-SCOPED-ACTIVATION-DESIGN-001`  
-**Parallel non-code unit:** `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001`
+**Next unit:** `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` (governance/legal, non-code, no activation)  
+**Wave 2+ status:** All Wave 2, Wave 3, Wave 4, Wave 5 units remain gated — do not open without explicit Paresh decision
 
 ---
 
