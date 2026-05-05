@@ -101,7 +101,8 @@ INSERT INTO public.organizations (
     jurisdiction,
     org_type,
     status,
-    plan
+    plan,
+    is_qa_sentinel
   )
 VALUES -- QA TTP Seller Org (TTP subject — all TTP records use this org_id)
   (
@@ -111,7 +112,8 @@ VALUES -- QA TTP Seller Org (TTP subject — all TTP records use this org_id)
     'IN',
     'B2B',
     'ACTIVE',
-    'FREE'
+    'FREE',
+    true
   ),
   -- QA TTP Buyer Org (trade counterparty only)
   (
@@ -121,8 +123,16 @@ VALUES -- QA TTP Seller Org (TTP subject — all TTP records use this org_id)
     'IN',
     'B2B',
     'ACTIVE',
-    'FREE'
+    'FREE',
+    true
   ) ON CONFLICT (id) DO NOTHING;
+-- Idempotent sentinel flag: ensure existing rows are marked (ON CONFLICT DO NOTHING skips updates)
+UPDATE public.organizations
+SET is_qa_sentinel = true
+WHERE id IN (
+    'ee000000-0000-0000-0000-000000000001',
+    'ee000000-0000-0000-0000-000000000002'
+  );
 -- ════════════════════════════════════════════════════════════════════════════
 -- §3  QA TRADE
 --     One trade: seller org 001 (tenant) selling to buyer org 002.
@@ -504,8 +514,8 @@ COMMIT;
  'ee000000-0000-0000-0000-000000000002'
  );
  
- -- Expected: 2 rows
- SELECT id, slug, legal_name, status
+ -- Expected: 2 rows, both is_qa_sentinel = true
+ SELECT id, slug, legal_name, status, is_qa_sentinel
  FROM public.organizations
  WHERE id IN (
  'ee000000-0000-0000-0000-000000000001',

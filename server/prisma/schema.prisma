@@ -1072,6 +1072,7 @@ model organizations {
   primary_segment_key                                                                      String?                         @db.VarChar(100)
   publication_posture                                                                      String                          @default("PRIVATE_OR_AUTH_ONLY") @db.VarChar(30)
   price_disclosure_policy_mode                                                             String?                         @db.VarChar(30)
+  is_qa_sentinel                                                                           Boolean                         @default(false)
   buyerRelationships                                                                       BuyerSupplierRelationship[]     @relation("BuyerSupplierRelationshipBuyer")
   supplierRelationships                                                                    BuyerSupplierRelationship[]     @relation("BuyerSupplierRelationshipSupplier")
   certification_lifecycle_logs                                                             CertificationLifecycleLog[]
