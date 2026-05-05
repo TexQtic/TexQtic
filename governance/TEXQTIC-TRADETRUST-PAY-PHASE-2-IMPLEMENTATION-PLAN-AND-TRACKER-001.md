@@ -427,7 +427,7 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | Unit ID | Wave | P-tier | Type | Status |
 |---|---|---|---|---|
 | `TTP-SCOPED-ACTIVATION-DESIGN-001` | Wave 0 | P0 | Design | `DESIGN_APPROVED` |
-| `TTP-SCOPED-ACTIVATION-IMPL-001` | Wave 0 | P0 | Implementation | `IMPLEMENTATION_OPEN` |
+| `TTP-SCOPED-ACTIVATION-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` |
 | `TTP-QA-SENTINEL-FLAG-IMPL-001` | Wave 0 | P0 | Implementation + migration | `TRUTH_SYNCED` |
 | `TTP-ACTIVATION-MONITORING-IMPL-001` | Wave 0 | P0 | Implementation | `NOT_OPENED` |
 | `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` | Wave 0 | P0 | Governance / runbook | `NOT_OPENED` |
@@ -459,11 +459,10 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 
 ### Primary — current implementation unit
 
-**Open:** `TTP-IMPL-003 — Two-Layer TTP Middleware Gate` (`TTP-SCOPED-ACTIVATION-IMPL-001`)
-
-This is the current implementation unit. It extends `ttpFeatureGateMiddleware` in
-`server/src/middleware/ttpFeatureGate.middleware.ts` to add a second per-org layer that consults
-`TenantFeatureOverride` when the global `ttp_enabled` flag is true. Status: `IMPLEMENTATION_OPEN`.
+**TTP-IMPL-003 is complete** (`TRUTH_SYNCED`): impl `b7950b7a`, unit-gov `e237405`,
+prod-gov `PRODUCT-DEC-TRADETRUST-PAY-TTP-IMPL-003-PRODUCTION-RUNTIME-VERIFIED-001`,
+final decision `TTP_IMPL_003_PRODUCTION_RUNTIME_VERIFIED_COMPLETE`.
+Unit: `TTP-SCOPED-ACTIVATION-IMPL-001` — now `TRUTH_SYNCED`.
 
 **TTP-IMPL-002 is complete** (`TRUTH_SYNCED`): impl `42931f7f`, gov `a9220856`,
 final decision `TTP_IMPL_002_DISCLAIMER_CONSTANT_VERIFIED_COMPLETE`.
@@ -471,6 +470,9 @@ Sub-slice of `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` — that unit is now `T
 
 **TTP-IMPL-001 is complete** (`TRUTH_SYNCED`): impl `c6e24eaa`, gov `9e5f443a`,
 final decision `TTP_IMPL_001_QA_SENTINEL_FLAG_VERIFIED_COMPLETE`.
+
+**Next unit:** `TTP-IMPL-004` — NOT yet opened. Requires separate Paresh-approved prompt.
+Remaining `NOT_OPENED` Wave 0 units: `TTP-ACTIVATION-MONITORING-IMPL-001`, `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001`.
 
 ### Parallel — may open now (non-code)
 
