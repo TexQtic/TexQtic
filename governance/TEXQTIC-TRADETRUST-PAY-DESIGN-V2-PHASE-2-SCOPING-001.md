@@ -2,7 +2,9 @@
 
 **Type:** Phase 2 Product Scoping Artifact — Design V2 Boundary Definition
 **Status:** `SCOPING_COMPLETE — DESIGN_V2_REQUIRED_BEFORE_LIVE_INTEGRATIONS`
+**Amendment Status:** `AMENDED — TEXQTICSCORE_AND_EMBEDDED_FINANCE_MARKETPLACE_ADDED`
 **Final Recommendation:** `SCOPED_ACTIVATION_DESIGN_RECOMMENDED_NEXT`
+**Final Decision:** `PHASE_2_SCOPING_AMENDED_WITH_TEXQTICSCORE_EMBEDDED_FINANCE_EXTENSION`
 **Date:** 2026-05-05
 **Author:** Copilot Agent (GitHub Copilot / Claude Sonnet 4.6)
 **Authority Basis:** Phase 1 completion confirmed by `PRODUCT-DEC-TRADETRUST-PAY-PHASE-1-ACTIVATION-READINESS-SIGNOFF-001.md` and QA routing-readiness correction `PRODUCT-DEC-TRADETRUST-PAY-QA-SEED-ROUTING-READINESS-CORRECTION-001.md`
@@ -127,6 +129,162 @@ The following product and operational drivers make Phase 2 necessary:
 | P2-16 | Activation runbook / rollback automation | Define step-by-step activation and rollback procedures for per-org and global TTP activation. | Operations | Medium | Yes (runbook) | No |
 | P2-17 | Phase 2 data retention policy | Define retention, archival, and deletion rules for GST records, eligibility assessments, VPCs, audit logs. | Compliance | High | Yes | No — legal gate first |
 | P2-18 | API partner credentials / secrets management | Secure storage, rotation, and audit of API credentials for GST provider, bureau, and finance partners. | Security | Very High | Yes | No — partner contracts required |
+| P2-19 | TexQticScore v2 | Proprietary platform-generated behavioural and transactional readiness signal; multi-dimensional input model evolving from Phase 1 TradeTrust Score | Product / Scoring | Medium | Yes | No — separate design required |
+| P2-20 | Seller TexQticScore | Seller execution reliability and liquidity readiness signal | Product / Scoring | Medium | Yes | No |
+| P2-21 | Buyer Trust Score | Buyer payment reliability and invoice approval behaviour signal | Product / Scoring | Medium | Yes | No |
+| P2-22 | Invoice Financeability Score | Whether a specific invoice/VPC is finance-ready for a given partner rail | Product / Scoring | Medium | Yes | No |
+| P2-23 | Embedded Finance Marketplace | Marketplace surface routing eligible VPCs/invoices to licensed finance partner rails with consent gates | Finance marketplace | Very High | Yes | No — legal + partner contract required |
+| P2-24 | TReDS invoice discounting design | Route eligible invoices to licensed TReDS platform; TexQtic pre-fills VPC/invoice evidence; no TexQtic balance sheet exposure | Partner integration | Very High | Yes | No — partner contract + legal required |
+| P2-25 | SIDBI / NBFC / SCF partner routing design | Route eligible sellers to working-capital or invoice-finance partners using TexQticScore as optional underwriting input | Partner integration | Very High | Yes | No — partner contract + legal required |
+| P2-26 | Dynamic discounting design | Buyer-funded early-payment option for supplier; TexQtic records/facilitates only, does not hold or move funds | Finance marketplace | High | Yes | No — product/legal review required |
+| P2-27 | Consent architecture for data sharing | Consent capture for sharing platform behavioural data with lenders; per-org, per-trade, or per-request | Compliance | High | Yes | No |
+| P2-28 | Partner fee / origination model | Record and audit origination/facilitation fees for embedded finance referrals; legal review required | Compliance | High | Yes | No — legal review required |
+| P2-29 | Data-sharing API design | Structured API contract for lender/partner data consumption of TexQticScore and VPC evidence | Partner integration | High | Yes | No — partner contract required |
+| P2-30 | Score snapshot / versioning | Snapshot TexQticScore per invoice/trade/org at trigger events; version history for audit | Engineering | Medium | Yes | No |
+| P2-31 | Finance marketplace audit trail | Append-only audit log for marketplace requests, partner interactions, and consent events | Compliance | High | Yes | No |
+| P2-32 | Partner offer comparison UI | Tenant-facing surface showing available partner financing options for eligible invoices/VPCs | Product | Medium | Yes | No |
+
+---
+
+## 5A. TexQticScore + Embedded Finance Marketplace Strategic Extension
+
+This section records the strategic direction for TexQtic TradeTrust Pay beyond the original Phase 2 candidate map. It is a **scoping addendum only** — not an implementation authorization, design artifact, or activation order.
+
+### 5A.1 Strategic Vision
+
+TexQtic TradeTrust Pay is designed to evolve from a **verified invoice readiness and routing-readiness layer** into a **textile-specific embedded finance enablement layer**.
+
+> *TexQtic verifies trade events, computes TexQticScore, prepares finance-ready invoice and VPC evidence, and routes eligible trade opportunities to licensed finance partners — without lending, holding funds, underwriting loans, or moving money.*
+
+This is not a new product. It is the natural Phase 2/3 extension of TexQtic TradeTrust Pay:
+
+| Layer | Name | Purpose |
+|---|---|---|
+| Product umbrella | TexQtic TradeTrust Pay | Verified invoice, VPC, routing-readiness, enrollment, trust workflow |
+| Scoring layer | TexQticScore | Proprietary behavioural and transactional advisory signal |
+| Finance marketplace layer | Embedded Finance Marketplace | TReDS, NBFC/SCF, dynamic discounting option routing |
+| Future intelligence layer | Payment / liquidity intelligence | Recommendations and warnings, not credit approval |
+
+The internal concept name **TexCredit** is treated as a strategic concept for internal discussion only. The governance and product umbrella remains **TexQtic TradeTrust Pay**. No separate product or standalone module is authorized by this document.
+
+### 5A.2 TexQticScore — Definition and Boundaries
+
+**TexQticScore** is a proprietary TexQtic platform-generated behavioural and transactional readiness signal.
+
+#### What TexQticScore is
+
+- A platform-native advisory signal computed from verified in-platform trade and compliance data.
+- A multi-dimensional readiness indicator evolving from Phase 1 TradeTrust Score.
+- A structured input that licensed finance partners may optionally use as one underwriting data point.
+- Advisory and non-binding in all cases.
+
+#### What TexQticScore is NOT
+
+TexQticScore is not, and must never be represented as:
+
+- A CIBIL score
+- A statutory credit score under any Indian or international regulatory framework
+- A loan approval or loan eligibility confirmation
+- A payment guarantee
+- A financing commitment from TexQtic or any partner
+- A partner approval or lender acceptance decision
+- A regulated credit decision
+- A legally binding creditworthiness assessment
+
+All user-facing and partner-facing language must preserve these boundaries. TexQticScore wording requires legal/compliance review before any public use.
+
+#### TexQticScore v2 — Future Input Dimensions
+
+TexQticScore v2 is a Phase 2/3 design target only. The following input dimensions are proposed; none are implemented by this document.
+
+**1. Procurement consistency**
+- Purchase frequency and regularity
+- Procurement regularity across trade cycles
+- Raw material buying patterns relative to seasonal norms
+
+**2. Order execution fidelity**
+- Delivery completion rate
+- Quality gate pass rate
+- Dispute history and dispute resolution speed
+- On-time fulfilment rate
+
+**3. Network position**
+- Repeat counterparty depth (repeat buyer-seller pairs)
+- Syndicate lead or member status
+- Buyer/seller relationship depth and tenure
+
+**4. Payment behaviour**
+- Promptness of on-platform invoice payments
+- Invoice acceptance rate and payment history
+- Dispute-linked payment delays
+
+**5. Compliance and GST linkage**
+- GST verification status (Phase 1: manual review; future: GSTN/GSP with consent)
+- Tax-filed turnover triangulation (future only — requires legal approval and consent framework)
+
+**Future extension factors (post-partner integration and legal approval only)**
+
+6. VPC performance history — financing resolution on prior VPCs
+7. Partner repayment / settlement feedback — only after partner integrations exist and legal/data-sharing approval is obtained
+
+> Phase 1 TradeTrust Score is a simpler advisory readiness indicator. TexQticScore v2 requires a separate design artifact before any implementation.
+
+### 5A.3 TexQticScore Types
+
+TexQtic should avoid a single monolithic score. Three future score types are proposed:
+
+| Score Type | Purpose |
+|---|---|
+| Seller TexQticScore | Seller execution reliability and liquidity readiness |
+| Buyer Trust Score | Buyer payment reliability and invoice approval behaviour |
+| Invoice Financeability Score | Whether a specific invoice/VPC is finance-ready for a given partner rail |
+
+- Phase 1 TradeTrust Score is the current advisory readiness score.
+- TexQticScore v2 and the three score types are Phase 2/3 design targets.
+- **No new score implementation is authorized by this amendment.**
+
+### 5A.4 Embedded Finance Marketplace Rails
+
+TexQtic TradeTrust Pay should offer an embedded finance marketplace — a structured surface where eligible verified invoices and VPCs can be routed to licensed finance partners on the seller's behalf, with appropriate consent and legal gates.
+
+TexQtic is always a **data channel and routing layer only** in this model. It does not lend, underwrite, guarantee, hold funds, or operate regulated finance rails.
+
+#### Rail 1 — TReDS Invoice Discounting
+
+- Future route for eligible invoices accepted by larger or anchor buyers
+- TexQtic pre-fills structured VPC/invoice evidence to reduce manual data entry on TReDS platforms
+- Actual financing occurs entirely on licensed TReDS platform rails (RXIL, M1xchange, INVOICEMART, etc.)
+- TexQtic acts as origination and data preparation channel only; no TexQtic balance sheet exposure; no payment handling
+- **Requires:** partner contract with TReDS platform, legal review, consent design, API design, and explicit Paresh authorization — none authorized by this document
+
+#### Rail 2 — SIDBI / NBFC / SCF Partner Routing
+
+- Future route for working capital, invoice finance, and supplier credit
+- TexQticScore may become one optional, non-binding underwriting input for licensed finance partners
+- TexQtic acts as origination and data channel only; no credit risk on TexQtic balance sheet
+- TexQtic does not lend, co-sign, or guarantee
+- **Requires:** signed partner agreement, consent architecture, legal review, sandbox credentials, and explicit Paresh authorization — none authorized by this document
+
+#### Rail 3 — Dynamic Discounting
+
+- Future buyer-funded early payment option for supplier
+- Anchor buyer may offer a discount to supplier in exchange for earlier invoice settlement
+- Lower regulatory complexity if TexQtic records and facilitates only and does not hold or move funds
+- **Requires:** product and legal review of payment flow, consent design, buyer agreement model, and explicit Paresh authorization — none authorized by this document
+
+#### Finance Rails — No-Go Boundaries
+
+All three rails share the following absolute no-go boundaries until separately authorized:
+
+| Item | Status |
+|---|---|
+| Any live implementation of finance rails | NO-GO |
+| Any live API integration with TReDS, NBFC, SIDBI, SCF | NO-GO |
+| Any partner transmission or outbound partner HTTP to finance partners | NO-GO |
+| Any funds movement, custody, disbursement, or payment handling | NO-GO |
+| Any TexQtic credit risk, lending, or loan underwriting | NO-GO |
+| Any regulated credit decision issued by or attributed to TexQtic | NO-GO |
+| Any finance partner credentials or secrets | NO-GO |
 
 ---
 
@@ -211,7 +369,57 @@ These items replace the partner routing stub with an actual transmission and cal
 | Digital negotiable instrument issuance | FORBIDDEN — OD-004A (product branding only) |
 | ICC/Singapore TradeTrust / W3C VC/DID/PKI/eBL | FORBIDDEN — OD-004A |
 
-**Bucket E remains forbidden until TexQtic obtains applicable regulatory authorization, legal opinion, and explicit Paresh approval. No Phase 2 unit may approach Bucket E without a separate, standalone authorization artifact.**
+**Bucket E remains UNCONDITIONALLY FORBIDDEN until TexQtic obtains applicable regulatory authorization, legal opinion, and explicit Paresh approval. No Phase 2 or Phase 3 unit may approach Bucket E without a separate, standalone authorization artifact signed by Paresh.**
+
+**Explicit behavioral prohibitions for TexQtic at all phases:**
+
+- TexQtic does not lend.
+- TexQtic does not underwrite loans.
+- TexQtic does not hold funds.
+- TexQtic does not guarantee payment.
+- TexQtic does not act as a payment aggregator.
+- TexQtic does not become a TReDS platform.
+- TexQtic does not issue regulated credit decisions.
+- TexQtic routes verified, consented data only to licensed partners after full legal and contract gates.
+
+---
+
+### Bucket F — TexQticScore + Embedded Finance Marketplace
+
+These items constitute the Phase 2/3 strategic extension of TexQtic TradeTrust Pay. They are **design targets only** — no implementation is authorized by this document.
+
+| Item | Reference |
+|---|---|
+| TexQticScore v2 design — multi-dimensional input model | P2-19 |
+| Score snapshots and versioning | P2-30 |
+| Three score types (Seller TexQticScore, Buyer Trust Score, Invoice Financeability Score) | P2-20, P2-21, P2-22 |
+| Embedded Finance Marketplace design | P2-23 |
+| TReDS invoice discounting design | P2-24 |
+| SIDBI / NBFC / SCF partner routing design | P2-25 |
+| Dynamic discounting design | P2-26 |
+| Partner offer comparison UI | P2-32 |
+| Origination / facilitation fee model | P2-28 |
+| Lender data-sharing contract model | P2-29 |
+| Consent architecture for data sharing | P2-27 |
+| Finance marketplace audit trail | P2-31 |
+
+**Classification:** Strategic Phase 2/3 extension.
+
+**Prerequisites (all must exist before any Bucket F implementation begins):**
+
+- Scoped activation design complete (Bucket A)
+- Legal/compliance review complete for TexQticScore wording, consent, and partner representations (Section 7 gates)
+- Partner contracts in place for any external finance rails (Section 8 gates)
+- No Bucket E regulated behavior introduced
+
+**Absolute constraints:**
+
+- TexQtic does not lend or underwrite loans in any Bucket F implementation.
+- TexQtic does not hold or move funds.
+- TexQtic does not guarantee payment or repayment.
+- TexQtic does not act as a TReDS platform or payment aggregator.
+- TexQtic does not issue regulated credit decisions.
+- TexQtic routes verified, consented data only to licensed partners after full legal and contract gates.
 
 ---
 
@@ -231,8 +439,18 @@ The following Phase 2 items require **legal and compliance approval before any d
 | Consent capture for bureau / GST pulls | Informed consent mechanism required before any live data pull |
 | Audit log retention and export | Compliance requirement for regulated-adjacent operations |
 | PSP / payment / lending / custody language | Absolutely forbidden without legal opinion and regulatory authorization |
+| TexQticScore public wording | Must not imply credit score, statutory creditworthiness assessment, or regulated credit decision |
+| Partner-facing score interpretation | Language describing TexQticScore to lenders must be pre-approved, non-binding, and advisory-only |
+| Consent to share platform behavioural data with lenders | Informed consent required before any platform data is shared with finance partners |
+| GSTN / GSP consent for live verification | Org-level consent required before any live GSTN/GSP data pull |
+| CIBIL / bureau consent | Separate org-level consent required before any bureau data pull |
+| Account Aggregator framework usage | If AA framework is used for data aggregation, separate compliance design and consent model required |
+| Lender data-sharing agreements | Commercial data-sharing contract with each lender/partner required before any data flows |
+| Dynamic discounting wording | Must not imply TexQtic payment facilitation, guarantee, or platform-held funds |
+| Origination / facilitation fee disclosure | Any fee model must be disclosed and reviewed by legal before implementation |
+| Avoidance of "approval / guarantee / credit score" claims | All public-facing and tenant-facing language must be reviewed to eliminate regulated-instrument implications |
 
-**Action required:** Legal review must be completed for all Bucket C, D, and E items before those buckets can enter design. Bucket A legal copy review (`P2-12`) is a prerequisite for Bucket C and D.
+**Action required:** Legal review must be completed for all Bucket C, D, E, and F items before those buckets can enter design. Bucket A legal copy review (`P2-12`) is a prerequisite for Buckets C, D, and F.
 
 ---
 
@@ -249,8 +467,16 @@ The following Phase 2 items require **external partner contracts or sandbox cred
 | Webhook callback verification | Partner-side signing key / HMAC scheme; requires partner cooperation |
 | Partner API SLA / retries / idempotency | Defined in partner contract; cannot be designed without partner input |
 | API credentials / secrets management | Requires credentials from each external provider before storage design is finalized |
+| SIDBI | Partnership or referral agreement for working-capital routing; sandbox API access |
+| NBFCs | Individual signed data-sharing and referral agreements; sandbox API credentials |
+| SCF fintechs | API integration contract; event schema agreement; sandbox and production access |
+| TReDS platforms (RXIL, M1xchange, INVOICEMART) | Data pre-fill API agreement; onboarding contract; sandbox credentials |
+| GSTN / GSP providers | Licensed GSP agreement; GSTN sandbox and production API access for live verification |
+| Credit bureau providers (CIBIL, Experian, etc.) | Bureau API agreement; consent audit requirements; data-pull SLA |
+| Account Aggregator participants | AA network registration and FIP/FIU framework agreement if AA is used |
+| Buyer-funded dynamic discounting participants | Buyer agreement; payment-confirmation flow model; legal review |
 
-**No Phase 2 unit in Bucket C, D, or E may begin implementation until the relevant external partner contract is signed and sandbox credentials are confirmed.**
+**No Phase 2 or Phase 3 unit in Bucket C, D, E, or F may begin implementation until the relevant external partner contract is signed and sandbox credentials are confirmed.**
 
 ---
 
@@ -270,6 +496,16 @@ The following open technical questions must be answered in Design V2 before impl
 | TQ-08 | How should QA sentinel fixtures be separated from production data in the single-DB architecture? Options: `is_qa_sentinel` flag, separate UUID namespace, separate lifecycle state namespace, or schema prefix. | P2-11, environment isolation |
 | TQ-09 | What monitoring and alerting signals are needed after TTP activation? Candidates: feature gate bypass attempts, VPC generation errors, eligibility expiry volume, 5xx on TTP routes, partner callback failures. | P2-13, operations |
 | TQ-10 | What is the rollback path for a partial activation failure? If `ttp_enabled` is set to true for an org and must be reverted, what state cleanup is required? Are VPCs and routing stubs affected? | P2-16, rollback design |
+| TQ-11 | How should TexQticScore v2 differ from Phase 1 TradeTrust Score in data model, input dimensions, and output contract? What migration path exists from the current `computeTtpScore` implementation? | P2-19, score design |
+| TQ-12 | Should TexQticScore be snapshotted per invoice/trade/org at trigger events (VPC issuance, enrollment approval, admin review), or remain purely ephemeral as in Phase 1? | P2-30, score history |
+| TQ-13 | Should TexQticScore history be externally shareable with lenders, or remain an internal platform signal only? What data-sharing API contract is required? | P2-29, P2-13, consent |
+| TQ-14 | What consent model is required for sharing platform behavioural data with lenders? Per-org, per-trade, per-request, or time-bounded? What table or model stores consent records? | P2-27, consent design |
+| TQ-15 | Should partner finance requests (TReDS, NBFC routing, dynamic discounting) be modeled as a new `ttp_finance_requests` table, or extend the existing `partner_routing_stubs` model? | P2-24, P2-25, P2-26, schema |
+| TQ-16 | How should partner financing offers be represented and stored when a lender responds with terms? What status machine governs offer lifecycle? | P2-32, schema |
+| TQ-17 | How should dynamic discounting offers be modeled — as buyer-initiated events, platform-generated from payment history, or admin-created? | P2-26, product |
+| TQ-18 | Should Buyer Trust Score be computed from buyer invoice acceptance and payment history on-platform, or does it require separate buyer-consent data access beyond what is currently captured? | P2-21, privacy |
+| TQ-19 | How should origination and facilitation fees be recorded, audited, and disclosed — as `ttp_fee_events`, as an extension of `ttp_audit_log`, or a separate compliance table? | P2-28, compliance |
+| TQ-20 | How should TexQtic's data model and UI language be structured to prevent any interpretation of TexQtic as a lender, payment intermediary, or regulated finance provider at all points in the user journey? | Section 5A.2, legal |
 
 ---
 
@@ -281,18 +517,28 @@ Design V2 should be a **focused, bounded design artifact** that answers the arch
 
 1. **Scoped activation architecture** — Replace global `ttp_enabled` with per-org or per-tier activation. Define the data model, migration path, and middleware changes (TQ-01).
 2. **Activation runbook and monitoring** — Step-by-step operational guide for controlled TTP activation, monitoring signals, and rollback procedures (TQ-09, TQ-10).
-3. **Legal/compliance copy model** — Reviewed disclaimer text, VPC certificate wording, Score advisory wording, consent flow design. Enables Bucket A and is prerequisite for Buckets C/D.
+3. **Legal/compliance copy model** — Reviewed disclaimer text, VPC certificate wording, Score advisory wording, consent flow design. Enables Bucket A and is prerequisite for Buckets C/D/F.
 4. **Relationship-specific caps** — Data model for per-relationship or per-trade invoice cap overrides (P2-02).
 5. **VPC export/share format** — Canonical structured format and PDF generation design for VPC (P2-07, P2-08).
 6. **Live GST/CIBIL integration design only** — Architecture design (data flow, consent model, error handling, retry model), not implementation. Requires legal gate first (TQ-05).
 7. **Partner routing transmission design only** — Protocol, state machine, callback handling design, not implementation. Requires partner contract first (TQ-02, TQ-03, TQ-04).
 8. **Phase 2 data / audit model** — Score versioning, QA isolation, audit log export, data retention design (TQ-06, TQ-07, TQ-08).
+9. **TexQticScore v2 architecture** — Multi-dimensional input model, score types, computation pipeline design, and distinction from Phase 1 TradeTrust Score (TQ-11, TQ-12).
+10. **Score snapshot and versioning design** — Trigger events, snapshot model, external sharing policy (TQ-12, TQ-13).
+11. **Consent and data-sharing model** — Consent design for lender data access, bureau data pulls, GSTN/GSP calls (TQ-14).
+12. **Finance marketplace conceptual design** — Three rails (TReDS, NBFC/SCF, dynamic discounting), routing workflow, consent gates; design only, not implementation (TQ-15, TQ-16, TQ-17).
+13. **Partner routing workflow design** — State machine for finance requests vs. routing stubs; partner offer model (TQ-15, TQ-16).
+14. **Origination fee model** — Recording, auditing, and disclosure design (TQ-19).
 
 ### Design V2 must NOT include
 
 - Any implementation of live GST or CIBIL APIs (Bucket C blocked by legal gate)
 - Any implementation of partner routing transmission (Bucket D blocked by partner contract gate)
 - Any PSP, payment, lending, custody, or Bucket E item (absolutely forbidden)
+- Any live TexQticScore implementation using external bureau or GSTN data (requires Bucket C legal gate first)
+- Any live partner finance rail implementation (TReDS, NBFC, dynamic discounting) — requires Bucket D partner contract gate
+- Any fee collection, disbursement, or payment handling
+- Any regulated credit decision output attributed to TexQtic
 - Any Prisma migrations (requires separate approval)
 - Any schema changes (requires separate approval)
 - Any feature flag activation (`ttp_enabled` stays false)
@@ -326,6 +572,8 @@ Scoped activation solves this before any other Phase 2 work begins:
 
 **If Paresh prefers immediate activation of Phase 1 before scoped activation design**, Option B (`TTP-PHASE-1-LIMITED-ACTIVATION-PLAN-001`) is the appropriate next step. This would define the operational runbook and monitoring requirements for a controlled global activation of Phase 1 as-built. However, this should be considered carefully given the global-only kill-switch constraint.
 
+> **TexQticScore and Embedded Finance Marketplace note:** Both TexQticScore v2 and the Embedded Finance Marketplace (Bucket F) become safer and more actionable after scoped activation exists. Legal/compliance review (`TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001`) can proceed in parallel with scoped activation design and does not require code changes.
+
 ---
 
 ## 12. Phase 2 No-Go Boundaries
@@ -345,21 +593,52 @@ Until Design V2 is complete and separate implementation authorization exists fro
 | Automatic global TTP activation (`ttp_enabled=true`) | NO-GO — requires separate Paresh decision |
 | Per-org activation without a scoped activation design in place | NO-GO |
 | Any ICC/Singapore TradeTrust / W3C VC/DID/PKI/eBL implementation | NO-GO |
+| Live TexQticScore v2 implementation using external bureau or GSTN data | NO-GO — design + legal gate required |
+| Any partner finance rail implementation (TReDS, NBFC, dynamic discounting) | NO-GO — design + legal gate + partner contract required |
+| Any TexQtic lending, underwriting, or credit-risk-taking behavior | NO-GO |
+| Any platform funds movement, custody, or disbursement | NO-GO |
+| TexQticScore wording that implies a regulated credit decision | NO-GO — legal review required before any public use |
+| Data sharing with lenders without consent framework and legal approval | NO-GO |
+| Finance partner credentials or API keys of any kind | NO-GO — no partner contracts authorized |
 
 ---
 
 ## 13. Final Recommendation
 
-**Final decision value: `SCOPED_ACTIVATION_DESIGN_RECOMMENDED_NEXT`**
+**Final decision value: `PHASE_2_SCOPING_AMENDED_WITH_TEXQTICSCORE_EMBEDDED_FINANCE_EXTENSION`**
+
+**Next recommended unit: `SCOPED_ACTIVATION_DESIGN_RECOMMENDED_NEXT`**
 
 Phase 1 is technically complete, production-deployed, and verified across 38/38 E2E tests. The platform has a correct, production-safe TTP foundation behind a global kill-switch.
+
+This scoping document has been amended to incorporate:
+
+- TexCredit merged under TexQtic TradeTrust Pay as a strategic concept name only
+- TexQticScore defined as the proprietary scoring layer of TradeTrust Pay
+- Embedded Finance Marketplace added as Phase 2/3 strategic direction (Bucket F)
+- Three finance rails defined as future design targets: TReDS invoice discounting, SIDBI/NBFC/SCF partner routing, and dynamic discounting
+- No-go boundaries strengthened and TexQtic's non-lender, non-payment-intermediary position reinforced across all phases
 
 The next prioritized action is:
 
 1. **Initiate `TTP-SCOPED-ACTIVATION-DESIGN-001`** — design the per-org activation architecture so that future activation decisions can be made at granularity below global.
-2. **Initiate `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` in parallel** — this unblocks Bucket C and D without requiring code.
-3. **Hold all live integrations** (Bucket C, D, E) behind the legal gate and partner contract gate.
+2. **Initiate `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` in parallel** — this unblocks Buckets C, D, and F without requiring code changes.
+3. **Hold all live integrations** (Buckets C, D, E, and F external rails) behind the legal gate and partner contract gate.
 4. **Do not activate `ttp_enabled=true`** until either a scoped activation design exists or a deliberate limited-global activation decision is made by Paresh via a separate activation plan unit.
+
+### No-Change Confirmation (Amendment)
+
+This document amendment confirms:
+
+- `ttp_enabled=false` — unchanged
+- No runtime change
+- No code change
+- No schema or migration change
+- No seed or auth change
+- No external API call
+- No partner transmission
+- No payment, lending, or custody behavior
+- No implementation authorization of any kind
 
 ---
 
