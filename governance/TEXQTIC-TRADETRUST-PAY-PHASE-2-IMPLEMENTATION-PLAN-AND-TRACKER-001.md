@@ -426,12 +426,12 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 
 | Unit ID | Wave | P-tier | Type | Status |
 |---|---|---|---|---|
-| `TTP-SCOPED-ACTIVATION-DESIGN-001` | Wave 0 | P0 | Design | `NEXT_RECOMMENDED_UNIT` |
-| `TTP-SCOPED-ACTIVATION-IMPL-001` | Wave 0 | P0 | Implementation | `NOT_OPENED` |
+| `TTP-SCOPED-ACTIVATION-DESIGN-001` | Wave 0 | P0 | Design | `DESIGN_APPROVED` |
+| `TTP-SCOPED-ACTIVATION-IMPL-001` | Wave 0 | P0 | Implementation | `IMPLEMENTATION_OPEN` |
 | `TTP-QA-SENTINEL-FLAG-IMPL-001` | Wave 0 | P0 | Implementation + migration | `TRUTH_SYNCED` |
 | `TTP-ACTIVATION-MONITORING-IMPL-001` | Wave 0 | P0 | Implementation | `NOT_OPENED` |
 | `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` | Wave 0 | P0 | Governance / runbook | `NOT_OPENED` |
-| `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` | Wave 0 | P0 | Implementation | `NOT_OPENED` |
+| `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` |
 | `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` | Wave 1 | P0/P2 | Governance / legal | `PARALLEL_RECOMMENDED_NON_CODE` |
 | `TTP-SCORE-SNAPSHOT-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_TARGET_ONLY__WAITING` |
 | `TTP-SCORE-SNAPSHOT-IMPL-001` | Wave 2 | P1 | Implementation + migration | `NOT_OPENED` |
@@ -457,17 +457,20 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 
 ## 18. Recommended Immediate Action
 
-### Primary — next implementation unit
+### Primary — current implementation unit
 
-**Open:** `TTP-IMPL-002 — TTP Disclaimer Constant`
+**Open:** `TTP-IMPL-003 — Two-Layer TTP Middleware Gate` (`TTP-SCOPED-ACTIVATION-IMPL-001`)
 
-This is the immediate next implementation unit. It adds the shared interim `TTP_DISCLAIMER_TEXT` constant
-to `server/src/ttp/ttp.constants.ts`. Constants only — no route, middleware, UI, schema, or migration changes.
+This is the current implementation unit. It extends `ttpFeatureGateMiddleware` in
+`server/src/middleware/ttpFeatureGate.middleware.ts` to add a second per-org layer that consults
+`TenantFeatureOverride` when the global `ttp_enabled` flag is true. Status: `IMPLEMENTATION_OPEN`.
+
+**TTP-IMPL-002 is complete** (`TRUTH_SYNCED`): impl `42931f7f`, gov `a9220856`,
+final decision `TTP_IMPL_002_DISCLAIMER_CONSTANT_VERIFIED_COMPLETE`.
+Sub-slice of `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` — that unit is now `TRUTH_SYNCED`.
 
 **TTP-IMPL-001 is complete** (`TRUTH_SYNCED`): impl `c6e24eaa`, gov `9e5f443a`,
 final decision `TTP_IMPL_001_QA_SENTINEL_FLAG_VERIFIED_COMPLETE`.
-
-**Do not open TTP-IMPL-003** (two-layer middleware update) until TTP-IMPL-002 is verified complete.
 
 ### Parallel — may open now (non-code)
 
