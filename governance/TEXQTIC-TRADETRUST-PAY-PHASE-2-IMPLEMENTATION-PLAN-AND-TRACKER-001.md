@@ -86,7 +86,7 @@ This document is grounded in the following authoritative sources:
 | **Fee events** | No `ttp_fee_events` table. No fee recording or disclosure logic. |
 | **Live external integrations** | None — GST manual only, CIBIL stub only, no partner transmission. |
 | **Payment / lending / custody** | None — TexQtic does not lend, hold funds, or act as payment intermediary. |
-| **Language governance** | `TTP_DISCLAIMER_TEXT` constant in `server/src/ttp/ttp.constants.ts`. `advisory_disclaimer` field in all TTP API responses (`TtpSummary`, `TtpEnrollmentRecord`). `SCORE_DISCLAIMER` in `ttpScore.service.ts`. Structured Pino monitoring events (`ttp.route.error`, `ttp.vpc.generate.error`, `ttp.eligibility.expired`, `ttp.enrollment.gate_failed`) in all 13 TTP route catch blocks. Rollback runbook at `governance/runbooks/TTP-ACTIVATION-ROLLBACK-RUNBOOK-001.md`. Legal copy review complete: `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` `TRUTH_SYNCED` (`1e539da`); counsel packet ready for Paresh review: `TTP-LEGAL-COPY-COUNSEL-PACKET-001` (`f0ead0f`, `LEGAL_REVIEW_PENDING`). Score snapshot design open: `TTP-SCORE-SNAPSHOT-DESIGN-001` (`DESIGN_OPEN`). |
+| **Language governance** | `TTP_DISCLAIMER_TEXT` constant in `server/src/ttp/ttp.constants.ts`. `advisory_disclaimer` field in all TTP API responses (`TtpSummary`, `TtpEnrollmentRecord`). `SCORE_DISCLAIMER` in `ttpScore.service.ts`. Structured Pino monitoring events (`ttp.route.error`, `ttp.vpc.generate.error`, `ttp.eligibility.expired`, `ttp.enrollment.gate_failed`) in all 13 TTP route catch blocks. Rollback runbook at `governance/runbooks/TTP-ACTIVATION-ROLLBACK-RUNBOOK-001.md`. Legal copy review complete: `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` `TRUTH_SYNCED` (`1e539da`); counsel packet ready for Paresh review: `TTP-LEGAL-COPY-COUNSEL-PACKET-001` (`f0ead0f`, `LEGAL_REVIEW_PENDING`). Score snapshot design decisions recorded: `TTP-SCORE-SNAPSHOT-DESIGN-001` (`DESIGN_DECISIONS_RECORDED`); decisions in `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001`. |
 
 ---
 
@@ -144,7 +144,7 @@ Every Phase 2 unit follows this exact sequence. Steps may not be skipped or reor
 |---|---|---|---|---|---|---|
 | **Wave 0** | Control and safety foundation | Scoped activation, QA sentinel, monitoring, rollback runbook, language governance baseline | TQ-01, TQ-08, TQ-09, TQ-10, TQ-20 | None — P0 cleared | `COMPLETE / TRUTH_SYNCED` | All P0 units complete — see §18 |
 | **Wave 1** | Legal/compliance copy review | Final disclaimer text, forbidden-term list, consent wording, DPDP notes, VPC/score language sign-off | TQ-20 (final text), TQ-05/14 wording | None (non-code) — may start in parallel | `OPERATOR_READY__LEGAL_PENDING` | `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` `TRUTH_SYNCED`; `TTP-LEGAL-COPY-COUNSEL-PACKET-001` ready for Paresh review; final legal sign-off pending |
-| **Wave 2** | Score architecture foundation | Score snapshots, hybrid live + snapshot triggers, TexQticScore v2 design, score versioning | TQ-06, TQ-07, TQ-11, TQ-12 | P0 design complete | `DESIGN_OPEN` | `TTP-SCORE-SNAPSHOT-DESIGN-001` open — design artifact only, no schema/SQL/impl authorized |
+| **Wave 2** | Score architecture foundation | Score snapshots, hybrid live + snapshot triggers, TexQticScore v2 design, score versioning | TQ-06, TQ-07, TQ-11, TQ-12 | P0 design complete | `DESIGN_DECISIONS_RECORDED` | `TTP-SCORE-SNAPSHOT-DESIGN-001` design decisions recorded — OQ-SS-01 through OQ-SS-07 resolved; no implementation authorized until Paresh opens implementation slice |
 | **Wave 3** | Consent and data-sharing design | Data consents table, internal-only score Phase 2 / external Phase 3, time-bounded consent | TQ-05, TQ-13, TQ-14 | Legal gate (DPDP, GSTN, CIBIL consent) | `LEGAL_GATED__WAITING` | Do not start until Wave 1 complete |
 | **Wave 4** | Partner marketplace design | Partner workflows, VPC TRANSMITTED after persisted ack, callback events, finance requests, partner offers, dynamic discounting | TQ-02, TQ-03, TQ-04, TQ-15, TQ-16, TQ-17 | Legal gate AND partner contract signed | `PARTNER_GATED__WAITING` | Do not start until Wave 1 + partner contract |
 | **Wave 5** | Future finance/legal positioning | Buyer Trust Score, fee events / fee disclosure | TQ-18, TQ-19 | TQ-11 design (TQ-18); legal fee review (TQ-19) | `FUTURE_DESIGN_TARGET__WAITING` | Phase 3 design targets; no near-term action |
@@ -156,11 +156,11 @@ Every Phase 2 unit follows this exact sequence. Steps may not be skipped or reor
 | Field | Value |
 |---|---|
 | **Unit ID** | `TTP-SCORE-SNAPSHOT-DESIGN-001` |
-| **Status** | `DESIGN_OPEN` |
+| **Status** | `DESIGN_DECISIONS_RECORDED` |
 | **Type** | Design / governance artifact (non-code) |
 | **Purpose** | Produce the canonical design for `ttp_score_snapshots` table: conceptual schema, trigger event model (`VPC_ISSUED`, `ENROLLMENT_APPROVED`, `ADMIN_REVIEW_COMPLETE`), hybrid live + snapshot architecture, data integrity, tenant isolation, legal boundaries, and implementation slicing plan. Covers TQ-06 and TQ-07. |
 | **Gate** | Wave 0 implementation complete and TRUTH_SYNCED — **CLEARED** |
-| **Authorized by** | This tracker document; Wave 2 status `DESIGN_OPEN`; §9 P1 Score Architecture Tracker; TQ-06 + TQ-07 `APPROVED_AS_DESIGN_TARGET` |
+| **Authorized by** | This tracker document; Wave 2 status `DESIGN_DECISIONS_RECORDED`; §9 P1 Score Architecture Tracker; TQ-06 + TQ-07 `APPROVED_AS_DESIGN_TARGET`; design decisions at `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001` |
 
 ### What this unit must produce
 
@@ -248,7 +248,7 @@ artifact only.
 
 ## 9. P1 Score Architecture Tracker
 
-**Current status:** `DESIGN_OPEN` — `TTP-SCORE-SNAPSHOT-DESIGN-001` open for design artifact only; no implementation authorized
+**Current status:** `DESIGN_DECISIONS_RECORDED` — `TTP-SCORE-SNAPSHOT-DESIGN-001` design complete; OQ-SS-01 through OQ-SS-07 resolved; decisions in `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001`; no implementation authorized
 
 Do not open any P1 implementation unit before the design is reviewed and approved by Paresh.
 If Paresh explicitly reprioritizes, a P1 unit may be opened in parallel — but this requires an explicit
@@ -256,7 +256,7 @@ new decision, not an assumption.
 
 | Unit ID | Unit Name | TQ | Type | Blocking Gate | Status |
 |---|---|---|---|---|---|
-| `TTP-SCORE-SNAPSHOT-DESIGN-001` | Score snapshots design | TQ-06, TQ-07 | Design | Wave 0 complete and TRUTH_SYNCED — **CLEARED** | `DESIGN_OPEN` |
+| `TTP-SCORE-SNAPSHOT-DESIGN-001` | Score snapshots design | TQ-06, TQ-07 | Design | Wave 0 complete and TRUTH_SYNCED — **CLEARED** | `DESIGN_DECISIONS_RECORDED` |
 | `TTP-SCORE-SNAPSHOT-IMPL-001` | `ttp_score_snapshots` table + trigger write logic | TQ-06, TQ-07 | Implementation + migration | `TTP-SCORE-SNAPSHOT-DESIGN-001` approved by Paresh | `NOT_OPENED` |
 | `TTP-TEXQTICSCORE-V2-DESIGN-001` | TexQticScore v2 design | TQ-11, TQ-12 | Design | Wave 0 design approved; separate design artifact required before any code | `DESIGN_TARGET_ONLY__WAITING` |
 | `TTP-TEXQTICSCORE-V2-IMPL-001` | `computeTexQticScore` function + v2 score contract | TQ-11 | Implementation | `TTP-TEXQTICSCORE-V2-DESIGN-001` approved | `NOT_OPENED` |
@@ -415,6 +415,7 @@ by a separate Paresh activation decision.
 | `NOT_OPENED` | Unit exists in plan; no design or implementation work has started |
 | `NEXT_RECOMMENDED_UNIT` | The single recommended next unit to open |
 | `DESIGN_OPEN` | Design artifact in progress |
+| `DESIGN_DECISIONS_RECORDED` | Design artifact complete and open questions resolved; decisions recorded in a decision artifact; awaiting Paresh authorization to open implementation slice |
 | `DESIGN_APPROVED` | Paresh has reviewed and approved the design; implementation may begin |
 | `IMPLEMENTATION_OPEN` | Implementation prompt is open; work in progress |
 | `IMPLEMENTED_PENDING_VERIFICATION` | Code written; verification not yet complete |
@@ -447,7 +448,7 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` |
 | `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` | Wave 1 | P0/P2 | Governance / legal | `TRUTH_SYNCED` — gov `1e539da`, final decision `TTP_LEGAL_COMPLIANCE_COPY_REVIEW_001_OPERATOR_REVIEW_READY` |
 | `TTP-LEGAL-COPY-COUNSEL-PACKET-001` | Wave 1 | P0/P2 | Governance / legal | `TRUTH_SYNCED` — gov `f0ead0f`, final decision `TTP_LEGAL_COUNSEL_REVIEW_PACKET_001_READY_FOR_PARESH`; `LEGAL_REVIEW_PENDING` |
-| `TTP-SCORE-SNAPSHOT-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_OPEN` |
+| `TTP-SCORE-SNAPSHOT-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_DECISIONS_RECORDED` |
 | `TTP-SCORE-SNAPSHOT-IMPL-001` | Wave 2 | P1 | Implementation + migration | `NOT_OPENED` |
 | `TTP-TEXQTICSCORE-V2-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_TARGET_ONLY__WAITING` |
 | `TTP-TEXQTICSCORE-V2-IMPL-001` | Wave 2 | P1 | Implementation | `NOT_OPENED` |
@@ -521,12 +522,9 @@ review packet created at `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-LE
 Packages `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` outputs for external legal counsel review.
 `LEGAL_REVIEW_PENDING` throughout — awaiting Paresh legal sign-off.
 
-**Open now:** `TTP-SCORE-SNAPSHOT-DESIGN-001`
+**Design decisions recorded:** `TTP-SCORE-SNAPSHOT-DESIGN-001` design complete. OQ-SS-01 through OQ-SS-07 resolved by Paresh Sharma. Full rationale and implementation consequences in `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001`.
 
-This is a design / governance artifact only. No code. No schema changes. No SQL. No migrations. No activation.
-Designs the `ttp_score_snapshots` table (conceptual only), trigger event model (`VPC_ISSUED`, `ENROLLMENT_APPROVED`,
-`ADMIN_REVIEW_COMPLETE`), hybrid live + snapshot architecture, tenant isolation, legal boundaries, and
-implementation slicing plan. Covers TQ-06 and TQ-07. Gate: Wave 0 complete and TRUTH_SYNCED — CLEARED.
+**Next step (pending explicit Paresh authorization):** Open `TTP-SCORE-SNAPSHOT-SQL-RLS-001` (or equivalent Slice 1 prompt — SQL + RLS + `prisma db pull` + `prisma generate` only). No implementation slice is opened by this governance update.
 
 ### Do not open yet
 
@@ -558,14 +556,16 @@ is reviewed and approved by Paresh.
 
 ```
 PHASE_2_IMPLEMENTATION_PLAN_AND_TRACKER_CREATED
+PHASE_2_TRACKER_UPDATED__TTP_SCORE_SNAPSHOT_DESIGN_DECISIONS_RECORDED
 ```
 
 **Authority:** Paresh Sharma — TexQtic founder / operator  
 **`ttp_enabled` state:** `false` — UNCHANGED  
 **Files changed by this document:** This document only  
 **Implementation authorized:** No  
-**Next unit:** `TTP-SCORE-SNAPSHOT-DESIGN-001` (design/governance artifact, non-code, no schema/SQL/impl authorized)  
-**Wave 2+ status:** `TTP-SCORE-SNAPSHOT-DESIGN-001` `DESIGN_OPEN` (Wave 2); all implementation units, Wave 3, Wave 4, Wave 5 remain gated — do not open without explicit Paresh decision
+**Score snapshot design decisions:** Recorded — `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001`; OQ-SS-01 through OQ-SS-07 resolved  
+**Next candidate unit:** `TTP-SCORE-SNAPSHOT-SQL-RLS-001` (Slice 1 — SQL + RLS + `prisma db pull` + `prisma generate` only) — NOT opened; requires explicit Paresh authorization  
+**Wave 2+ status:** `TTP-SCORE-SNAPSHOT-DESIGN-001` `DESIGN_DECISIONS_RECORDED` (Wave 2); all implementation units, Wave 3, Wave 4, Wave 5 remain gated — do not open without explicit Paresh authorization
 
 ---
 

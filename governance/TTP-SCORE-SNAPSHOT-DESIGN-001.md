@@ -146,15 +146,16 @@ The following facts were confirmed by direct code inspection on 2026-05-05 (HEAD
 | `trade_id` | `UUID` | Yes | FK → `trades.id` | Trade context (nullable: some triggers may not have a trade) |
 | `invoice_id` | `UUID` | Yes | FK → `invoices.id` | Invoice context (nullable) |
 | `vpc_id` | `UUID` | Yes | FK → `verified_payable_certificates.id` | VPC context (nullable; set when trigger is VPC_ISSUED) |
-| `enrollment_id` | `UUID` | Yes | — | Enrollment log entry id at time of trigger (nullable) |
+| `enrollment_id` | `UUID` | Yes | FK → `ttp_enrollment_logs.id` (nullable) | Enrollment log entry id at time of trigger. Populated for `ENROLLMENT_APPROVED`; optionally for `VPC_ISSUED`; NULL for `ADMIN_REVIEW_COMPLETE` |
 | `score_value` | `SMALLINT` | No | CHECK (score_value BETWEEN 0 AND 100) | Computed score 0–100 |
 | `score_band` | `TEXT` | No | CHECK (score_band IN ('READY','NEAR_READY','NEEDS_REVIEW','NOT_READY')) | Score band label |
-| `score_version` | `TEXT` | No | NOT NULL | Score engine version. `'TTP_V1'` = Phase 1 `computeTtpScore`; `'TEXQTICSCORE_V2'` = future |
-| `factors_json` | `JSONB` | No | NOT NULL | Serialized `TradeTrustScoreFactor[]` at snapshot time |
+| `score_version` | `TEXT` | No | NOT NULL, initial value `'TTP_V1'`; CHECK (see §5.4) | Score engine version. `'TTP_V1'` = Phase 1 `computeTtpScore`; `'TEXQTICSCORE_V2'` = future |
+| `score_detail_json` | `JSONB` | No | NOT NULL | Serialized score detail at snapshot time: `{ factors: TradeTrustScoreFactor[], blockers: string[], next_steps: string[] }`. No raw bureau data, no PII, no admin notes. |
 | `trigger_event` | `TEXT` | No | CHECK (see §6) | Event that caused the snapshot |
 | `source_event_id` | `UUID` | Yes | — | ID of the source record (e.g. VPC id, enrollment log id) |
 | `actor_id` | `UUID` | Yes | — | Admin or system actor who triggered the event (nullable for system events) |
-| `disclaimer_text_hash` | `TEXT` | No | NOT NULL | SHA-256 hex of the disclaimer text in effect at snapshot time |
+| `score_disclaimer_hash` | `TEXT` | No | NOT NULL | SHA-256 hex of `SCORE_DISCLAIMER` constant (file-scoped in `ttpScore.service.ts`, embedded in `TradeTrustScore.disclaimer`) at snapshot time |
+| `route_disclaimer_hash` | `TEXT` | No | NOT NULL | SHA-256 hex of `TTP_DISCLAIMER_TEXT` constant (exported from `ttp.constants.ts`, used in `advisory_disclaimer` route responses) at snapshot time |
 | `metadata_json` | `JSONB` | Yes | — | Optional extensibility bag for future fields |
 | `created_at` | `TIMESTAMPTZ` | No | NOT NULL, `DEFAULT now()` | Snapshot timestamp (immutable) |
 
@@ -174,12 +175,16 @@ The following facts were confirmed by direct code inspection on 2026-05-05 (HEAD
 - **RLS policy:** Row-level security must enforce `org_id` = authenticated tenant's `org_id` for all SELECT operations.
 - **Service-role writes only.** Only the platform server (service role) may INSERT. Tenant users may not insert.
 
-### 5.4 `score_version` values (initial design)
+### 5.4 `score_version` values (finalized — OQ-SS-07 resolved)
 
-| Value | Engine | Phase |
-|---|---|---|
-| `TTP_V1` | `computeTtpScore` — 7-factor, 100pt, Phase 1 pure function | Phase 2 initial implementation |
-| `TEXQTICSCORE_V2` | `computeTexQticScore` — future, separate function | Phase 2, after `TTP-TEXQTICSCORE-V2-DESIGN-001` approved |
+| Value | Engine | Phase | CHECK constraint |
+|---|---|---|---|
+| `TTP_V1` | `computeTtpScore` — 7-factor, 100pt, Phase 1 pure function | Phase 2 initial implementation | ✅ Included |
+| `TEXQTICSCORE_V2` | `computeTexQticScore` — future, separate function | Phase 2, after `TTP-TEXQTICSCORE-V2-DESIGN-001` approved | ✅ Included |
+
+SQL: `CHECK (score_version IN ('TTP_V1', 'TEXQTICSCORE_V2'))`
+
+Initial implementation always writes `'TTP_V1'`. Do not use dot-version format.
 
 ---
 
@@ -216,14 +221,42 @@ At each trigger event, the score snapshot service must:
 
 **No new score computation logic is required.** The existing `computeTtpScore` function is the engine.
 
-### 6.4 Trigger atomicity requirement
+### 6.4 Snapshot write model — post-commit sequential best-effort (OQ-SS-06 resolved)
 
-Score snapshot writes must occur within the **same database transaction** as the triggering event
-(e.g. VPC creation, enrollment approval). If the snapshot write fails, the triggering event must
-also roll back. Partial state — a VPC issued without a snapshot — is not acceptable.
+Score snapshot writes use a **post-commit sequential best-effort** pattern. The snapshot is written
+after the triggering event completes successfully, not inside the triggering service's database
+operation.
 
-This is an implementation constraint; the mechanism (Prisma transaction, `$transaction`) is to be
-determined in `TTP-SCORE-SNAPSHOT-IMPL-001`.
+**Execution sequence:**
+
+1. Route calls triggering service (`generateVpc`, `adminReviewEnrollment`, or `createAssessment`).
+2. Triggering service writes its primary row (VPC, enrollment log, or assessment) and returns.
+3. Route calls `TtpScoreSnapshotService.captureSnapshot(...)` — assembles `TtpScoreInput`, calls
+   `computeTtpScore`, writes snapshot row.
+
+**Best-effort contract:**
+
+- If the snapshot write fails (DB error, timeout, etc.), the triggering event result is returned
+  to the caller normally. The triggering event is **NOT** rolled back.
+- Snapshot write failures must be logged as a Pino structured event for reconciliation. The
+  mechanism for failure alerting and reconciliation is to be defined in `TTP-SCORE-SNAPSHOT-IMPL-001`.
+
+**Why not same-transaction atomicity?**
+
+Repo-truth inspection confirmed none of the three trigger services use `$transaction`. The
+`TtpSummaryService` `preloadedTrade` pattern was introduced specifically to avoid pooler deadlocks
+from nested query chains. Wrapping a snapshot write inside a triggering transaction would reintroduce
+that risk across all three trigger points. Post-commit sequential is the established TexQtic pattern
+for TTP service operations.
+
+**Partial-state acceptability:**
+
+A VPC issued without a corresponding snapshot is recoverable (through reconciliation). A VPC rolled
+back because of a snapshot failure is an operational disruption to the triggering business flow. The
+partial-state risk is lower than the rollback risk.
+
+This is a confirmed design decision (OQ-SS-06 Option A). It replaces the prior "same `$transaction`"
+requirement. The mechanism is to be finalized in `TTP-SCORE-SNAPSHOT-IMPL-001`.
 
 ---
 
@@ -269,20 +302,41 @@ never be accepted from request input.
 
 This follows D-017-A, consistent with all other TTP tables.
 
-### 8.2 RLS policy design intent
+### 8.2 RLS policy design (finalized — OQ-SS-04 resolved)
+
+Five-policy RLS block, following the established TexQtic TTP table pattern
+(`ttp_eligibility_assessments` §19 and `ttp_enrollment_logs` §31 in the foundation migration):
 
 ```sql
--- Row-level security: tenant may only read their own snapshots.
-CREATE POLICY "tenant_read_own_snapshots"
-ON ttp_score_snapshots
-FOR SELECT
-USING (org_id = auth.uid()::uuid OR /* platform admin role check */ ...);
+-- 1. RESTRICTIVE guard (all operations)
+CREATE POLICY ttp_score_snapshots_guard AS RESTRICTIVE FOR ALL TO texqtic_app USING (
+  app.require_org_context() OR current_setting('app.is_admin', true) = 'true' OR app.bypass_enabled()
+);
 
--- No tenant INSERT or UPDATE is permitted.
--- Only service role may insert.
+-- 2. PERMISSIVE SELECT (tenant reads own org; admin reads all)
+CREATE POLICY ttp_score_snapshots_select_unified AS PERMISSIVE FOR SELECT TO texqtic_app USING (
+  (app.require_org_context() AND org_id = app.current_org_id())
+  OR current_setting('app.is_admin', true) = 'true' OR app.bypass_enabled()
+);
+
+-- 3. PERMISSIVE INSERT (admin/bypass only — no tenant INSERT)
+CREATE POLICY ttp_score_snapshots_insert_unified AS PERMISSIVE FOR INSERT TO texqtic_app WITH CHECK (
+  current_setting('app.is_admin', true) = 'true' OR app.bypass_enabled()
+);
+
+-- 4. UPDATE block (append-only enforcement — database layer)
+CREATE POLICY ttp_score_snapshots_update_block AS PERMISSIVE FOR UPDATE TO texqtic_app USING (false);
+
+-- 5. DELETE block (append-only enforcement — database layer)
+CREATE POLICY ttp_score_snapshots_delete_block AS PERMISSIVE FOR DELETE TO texqtic_app USING (false);
+
+GRANT SELECT, INSERT ON public.ttp_score_snapshots TO texqtic_app;
 ```
 
-The exact RLS policy SQL is to be written in the implementation slice, not this design document.
+The exact SQL is the implementation-layer responsibility (`TTP-SCORE-SNAPSHOT-IMPL-001`).
+This design document records the intent and confirmed policy structure.
+No tenant INSERT, UPDATE, or DELETE is permitted. Tenant-facing read endpoints require a
+separate Paresh authorization (Slice 6) even though the RLS SELECT policy is present.
 
 ### 8.3 Append-only enforcement
 
@@ -297,29 +351,45 @@ is permitted. Aggregate analytics (e.g. platform-wide score distribution) requir
 service-role analytics query with explicit approval — they must never be exposed on tenant-facing
 endpoints.
 
-### 8.5 `factors_json` PII and sensitivity
+### 8.5 `score_detail_json` PII and sensitivity (OQ-SS-01 resolved)
 
-The `factors_json` column contains the serialized `TradeTrustScoreFactor[]` array. This includes
-evaluation outcomes and explanations. It does **not** contain raw bureau data, raw GST data, CIBIL
-scores, or admin notes. These must not be included in the snapshot.
+The `score_detail_json` column contains `{ factors: TradeTrustScoreFactor[], blockers: string[],
+next_steps: string[] }`. This includes evaluation outcomes, plain-English explanations, and advisory
+strings. It does **not** contain raw bureau data, raw GST data, CIBIL scores, admin notes, or
+requestor identity fields. These must not be included in the snapshot.
 
-The `factors_json` shape mirrors the `computeTtpScore` output `factors` array exactly — string keys,
-labels, points, status, explanation. No additional fields may be added without a schema change and
+The `score_detail_json` content mirrors the `computeTtpScore` output fields `factors`, `blockers`,
+and `next_steps` exactly — no additional fields, no raw inputs. The `disclaimer` field from
+`TradeTrustScore` is NOT stored in `score_detail_json` (it is represented by `score_disclaimer_hash`).
+The `score` and `band` fields are stored as typed columns (`score_value`, `score_band`) and are NOT
+duplicated in `score_detail_json`. No additional fields may be added without a schema change and
 Paresh approval.
 
 ---
 
 ## 9. Legal and Copy Boundaries
 
-### 9.1 Advisory disclaimer traceability
+### 9.1 Advisory disclaimer traceability (OQ-SS-02 resolved)
 
-Every snapshot row must capture `disclaimer_text_hash` — a SHA-256 hash of the `TTP_DISCLAIMER_TEXT`
-constant value (or `SCORE_DISCLAIMER` constant, TBD in implementation) that was in effect at snapshot
-time. This allows future legal review to establish exactly what disclaimer was presented when the score
-was computed.
+Every snapshot row must capture both disclaimer hashes:
 
-The `disclaimer_text_hash` is not the full disclaimer text — to avoid storing redundant string data.
-The implementation must document which text produces which hash.
+- **`score_disclaimer_hash`** — SHA-256 hex of the `SCORE_DISCLAIMER` constant from
+  `server/src/services/ttpScore.service.ts`. This is the disclaimer embedded in the
+  `TradeTrustScore` object returned by `computeTtpScore`, frozen in the snapshot itself.
+- **`route_disclaimer_hash`** — SHA-256 hex of the `TTP_DISCLAIMER_TEXT` constant from
+  `server/src/ttp/ttp.constants.ts`. This is the disclaimer presented to tenants in all TTP API
+  route responses (`advisory_disclaimer` field).
+
+These hashes allow future legal review to establish exactly what disclaimer text was in effect at
+each snapshot time — for both the score computation surface and the API response surface. The two
+constants have materially different wording and serve distinct legal purposes; storing both is
+required for complete copy traceability.
+
+Neither hash stores the full disclaimer text — to avoid storing redundant string data. The
+implementation must document which text produces which hash. Both texts are currently at
+`LEGAL_REVIEW_PENDING` status; the hashes will reflect whichever texts are in the constants at
+implementation time. Existing snapshots correctly carry hashes of the texts operative at write
+time, and are immutable thereafter.
 
 ### 9.2 Advisory-only invariant
 
@@ -333,12 +403,13 @@ no score history display, and no exported snapshot may be labelled or positioned
 
 This constraint applies to all surfaces that consume `ttp_score_snapshots` data.
 
-### 9.3 `TTP_DISCLAIMER_TEXT` final text dependency
+### 9.3 `TTP_DISCLAIMER_TEXT` and `SCORE_DISCLAIMER` final text dependency
 
-The current `TTP_DISCLAIMER_TEXT` constant value is **INTERIM**. Final text is `LEGAL_REVIEW_PENDING`
-under `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` and `TTP-LEGAL-COPY-COUNSEL-PACKET-001`. The
-implementation slice must not hard-code the disclaimer text — it must always reference the constant.
-The `disclaimer_text_hash` will reflect whichever text is in the constant at implementation time.
+Both disclaimer constants are **INTERIM**. Final text is `LEGAL_REVIEW_PENDING` under
+`TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` and `TTP-LEGAL-COPY-COUNSEL-PACKET-001`. The
+implementation slice must not hard-code either disclaimer text — both `score_disclaimer_hash` and
+`route_disclaimer_hash` must always be computed from the runtime constants at write time. The hashes
+will reflect whichever texts are in the constants at implementation time.
 
 ### 9.4 No copy changes in this design unit
 
@@ -352,22 +423,28 @@ other copy constant. All copy remains at INTERIM status until Paresh provides fo
 ### 10.1 Score snapshot service (future)
 
 A new `TtpScoreSnapshotService` (or equivalent) will be responsible for:
-- Building the `TtpScoreInput` from org readiness state.
+- Building the `TtpScoreInput` from org readiness state (shared input assembly helper).
 - Calling `computeTtpScore`.
-- Writing the `ttp_score_snapshots` row within the triggering transaction.
+- Writing the `ttp_score_snapshots` row after the triggering event completes.
 
 This service does not exist today. It is a future implementation artifact for `TTP-SCORE-SNAPSHOT-IMPL-001`.
 
-### 10.2 Service integration points
+**The triggering services (`VpcService`, `TtpEnrollmentService`, `TtpEligibilityService`) must NOT
+be modified to call the snapshot service internally.** Snapshot orchestration lives at the route
+handler level (or thin orchestration layer at the route). This preserves the triggering service
+design and avoids introducing pooler deadlock risk.
 
-| Trigger event | Integration point | Transaction boundary |
+### 10.2 Service integration points (OQ-SS-06 resolved)
+
+| Trigger event | Integration point | Write model |
 |---|---|---|
-| `VPC_ISSUED` | End of `VpcService.generateVpc`, after VPC row insert | Same `$transaction` as VPC insert |
-| `ENROLLMENT_APPROVED` | End of `TtpEnrollmentService.adminReviewEnrollment`, when `outcome === 'APPROVED'` | Same `$transaction` as enrollment log insert |
-| `ADMIN_REVIEW_COMPLETE` | End of `TtpEligibilityService.createAssessment` | Same `$transaction` as assessment insert |
+| `VPC_ISSUED` | Route handler, after `VpcService.generateVpc` returns successfully | Post-commit sequential; best-effort snapshot write |
+| `ENROLLMENT_APPROVED` | Route handler, after `TtpEnrollmentService.adminReviewEnrollment` returns with `outcome === 'APPROVED'` | Post-commit sequential; best-effort snapshot write |
+| `ADMIN_REVIEW_COMPLETE` | Route handler, after `TtpEligibilityService.createAssessment` returns successfully | Post-commit sequential; best-effort snapshot write |
 
-The calling service must not be responsible for building the snapshot — it should call the snapshot
-service with the necessary context (org_id, trade_id, vpc_id / enrollment_id / assessment_id).
+**Best-effort contract:** Snapshot write failure does NOT cause the triggering event result to be
+reverted or the route to return an error. Log the failure (Pino structured event) and return the
+triggering event result normally. Reconciliation mechanism to be defined in `TTP-SCORE-SNAPSHOT-IMPL-001`.
 
 ### 10.3 Read endpoints (future, not Wave 2)
 
@@ -399,11 +476,12 @@ When `TTP-SCORE-SNAPSHOT-IMPL-001` is authorized, the following test categories 
 | Snapshot service writes correct row on ENROLLMENT_APPROVED trigger | Unit (service) |
 | Snapshot service writes correct row on ADMIN_REVIEW_COMPLETE trigger | Unit (service) |
 | Snapshot row contains correct org_id from triggering entity | Unit (tenant isolation) |
-| Snapshot row factors_json matches computeTtpScore output | Unit (score fidelity) |
-| Snapshot write failure rolls back VPC insert | Unit (transactional) |
-| Snapshot write failure rolls back enrollment approval | Unit (transactional) |
-| Snapshot write failure rolls back eligibility assessment | Unit (transactional) |
-| disclaimer_text_hash matches SHA-256 of TTP_DISCLAIMER_TEXT | Unit (copy traceability) |
+| Snapshot row score_detail_json matches computeTtpScore output (factors, blockers, next_steps) | Unit (score fidelity) |
+| Snapshot write failure does NOT roll back VPC insert (best-effort pattern) | Unit (best-effort) |
+| Snapshot write failure does NOT roll back enrollment approval (best-effort pattern) | Unit (best-effort) |
+| Snapshot write failure does NOT roll back eligibility assessment (best-effort pattern) | Unit (best-effort) |
+| score_disclaimer_hash matches SHA-256 of SCORE_DISCLAIMER constant | Unit (copy traceability) |
+| route_disclaimer_hash matches SHA-256 of TTP_DISCLAIMER_TEXT constant | Unit (copy traceability) |
 | Two orgs cannot read each other's snapshots | Unit (tenant isolation) |
 
 ### 11.2 Integration tests
@@ -421,6 +499,8 @@ When `TTP-SCORE-SNAPSHOT-IMPL-001` is authorized, the following test categories 
 - `prisma generate` completes without error.
 - All 3 trigger integration tests pass.
 - All unit tests for tenant isolation pass.
+- Best-effort pattern unit tests pass (snapshot failure does not affect triggering event result).
+- `score_disclaimer_hash` and `route_disclaimer_hash` hash verification tests pass.
 - Existing test suite (183+ TTP unit tests) continues to pass unchanged.
 - `tsc` clean across `server/`.
 - `ttp_enabled` is still `false` after all changes.
@@ -432,33 +512,40 @@ When `TTP-SCORE-SNAPSHOT-IMPL-001` is authorized, the following test categories 
 **None of these slices are authorized or opened by this design document.** Each requires an explicit
 Paresh decision and separate implementation prompt.
 
-| Slice | Scope | Depends On |
-|---|---|---|
-| Slice 1 | `ttp_score_snapshots` table SQL + Prisma db pull + generate | Paresh approval of this design |
-| Slice 2 | `TtpScoreSnapshotService` — snapshot write logic + unit tests | Slice 1 complete |
-| Slice 3 | `VpcService.generateVpc` integration — snapshot on VPC_ISSUED | Slice 2 complete |
-| Slice 4 | `TtpEnrollmentService.adminReviewEnrollment` integration — snapshot on ENROLLMENT_APPROVED | Slice 2 complete |
-| Slice 5 | `TtpEligibilityService.createAssessment` integration — snapshot on ADMIN_REVIEW_COMPLETE | Slice 2 complete |
-| Slice 6 | Admin read endpoints (score history, snapshot detail) — OpenAPI contract update | Slices 3–5 complete; separate Paresh approval |
+| Slice | Scope | Depends On | Key Design Decisions Applied |
+|---|---|---|---|
+| Slice 1 | `ttp_score_snapshots` SQL (finalized columns: `score_detail_json`, `score_disclaimer_hash`, `route_disclaimer_hash`, `enrollment_id FK`) + RLS (5-policy pattern) + `prisma db pull` + `prisma generate` | Paresh approval of this design + decision record | OQ-SS-01, OQ-SS-02, OQ-SS-03, OQ-SS-04, OQ-SS-05, OQ-SS-07; AF-03 (immutability trigger) |
+| Slice 2 | `TtpScoreSnapshotService` — `assembleTtpScoreInput` helper + `captureSnapshot` method + unit tests for all trigger types + hash tests + best-effort failure tests | Slice 1 complete | OQ-SS-06 (post-commit sequential, best-effort); OQ-SS-01 (score_detail_json shape); OQ-SS-02 (both hashes); AF-04 (node:crypto); AF-05 (source_event_id = primary entity ID); AF-06 (ADMIN_REVIEW_COMPLETE: trade_id=NULL) |
+| Slice 3 | Route-level orchestration: `VpcService.generateVpc` route calls `snapshotService.captureSnapshot` post-commit | Slice 2 complete | OQ-SS-06 (route-level orchestration, not inside VpcService) |
+| Slice 4 | Route-level orchestration: `adminReviewEnrollment` route calls `snapshotService.captureSnapshot` with `enrollment_id` when outcome=APPROVED | Slice 2 complete | OQ-SS-03 (enrollment_id from newLog.id); OQ-SS-06 |
+| Slice 5 | Route-level orchestration: `createAssessment` route calls `snapshotService.captureSnapshot` with trade_id=NULL, enrollment_id=NULL | Slice 2 complete | AF-06 (ADMIN_REVIEW_COMPLETE trade_id=NULL); OQ-SS-06 |
+| Slice 6 | Admin read endpoints (score history, snapshot detail) — OpenAPI contract update + tenant-facing history endpoint (if legal cleared) | Slices 3–5 complete; separate Paresh approval; `LEGAL_REVIEW_PENDING` cleared for public surfaces | OQ-SS-04 (RLS select policy enables this path) |
 
 `PARTNER_TRANSMITTED` trigger (Wave 4) is not represented here. It is a Wave 4 implementation slice
-that depends on `TTP-PARTNER-WORKFLOW-DESIGN-001` and a signed partner contract.
+that depends on `TTP-PARTNER-WORKFLOW-DESIGN-001` and a signed partner contract. The CHECK constraint
+in Slice 1 forward-declares the value.
 
 ---
 
-## 13. Open Questions / Decisions Required Before Implementation
+## 13. Resolved Design Decisions
 
-The following questions must be answered by Paresh before `TTP-SCORE-SNAPSHOT-IMPL-001` is opened.
+All open questions from this design artifact have been resolved by Paresh Sharma. Full decision
+rationale, implementation consequences, and repo-truth evidence are in:
 
-| # | Question | Options | Impact |
-|---|---|---|---|
-| OQ-SS-01 | Should the snapshot include `blockers` and `next_steps` arrays from `computeTtpScore` output, or only `score`, `band`, and `factors`? | A: Include all (larger JSON). B: Include score, band, factors only (leaner). | `factors_json` schema design |
-| OQ-SS-02 | Should `disclaimer_text_hash` use the exported `TTP_DISCLAIMER_TEXT` constant or the file-scoped `SCORE_DISCLAIMER` constant from `ttpScore.service.ts`? | A: Use `TTP_DISCLAIMER_TEXT` (exported, referenced by all routes). B: Use `SCORE_DISCLAIMER` (local to score service). C: Store both. | Copy traceability design |
-| OQ-SS-03 | Should `enrollment_id` reference the `ttp_enrollment_logs.id` of the APPROVED log entry? Or the trade_id only? | A: Store `ttp_enrollment_logs.id` for point-in-time log reference. B: Store `trade_id` only. | FK design |
-| OQ-SS-04 | Should `ttp_score_snapshots` be protected by Supabase RLS policies, or by service-role-only access? | A: RLS with tenant read policy. B: Service-role-only (no tenant read). | Access control design; determines if tenant-facing read endpoints are feasible |
-| OQ-SS-05 | Is a `PARTNER_TRANSMITTED` trigger required at Wave 2 scope, or confirmed as Wave 4 only? | A: Wave 4 only (default per this design). B: Include in Wave 2 if lender requirement is advanced. | Trigger enum scope |
-| OQ-SS-06 | Should the score snapshot be computed from the live state at trigger time (calling `computeTtpScore` fresh), or should the triggering service pass the already-computed `TradeTrustScore` object? | A: Recompute fresh (authoritative, consistent). B: Accept passed-in score (avoids double computation). | Service coupling design |
-| OQ-SS-07 | What is the expected `score_version` value for the initial implementation? `'TTP_V1'` or something more granular (e.g. `'TTP_V1.0.0'`)? | A: `'TTP_V1'` simple. B: Semantic version string. | Versioning design; determines format of CHECK constraint |
+> `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001.md`
+
+| # | Question | Decision | Selected Option | Key Consequence |
+|---|---|---|---|---|
+| OQ-SS-01 | Include `blockers` and `next_steps` in snapshot? | **Include full advisory detail** | Option A | Column renamed `score_detail_json`; contains `factors`, `blockers`, `next_steps` |
+| OQ-SS-02 | Which disclaimer constant(s) to hash? | **Store both hashes** | Option C | Two columns: `score_disclaimer_hash` (SCORE_DISCLAIMER) + `route_disclaimer_hash` (TTP_DISCLAIMER_TEXT) |
+| OQ-SS-03 | `enrollment_id`: FK to `ttp_enrollment_logs.id` or `trade_id` only? | **Nullable FK to `ttp_enrollment_logs.id`** | Option A | FK constraint added; NULL for ADMIN_REVIEW_COMPLETE |
+| OQ-SS-04 | RLS: tenant-read policy or service-role-only? | **RLS with tenant-read policy** | Option A | 5-policy pattern (guard, select, insert, UPDATE block, DELETE block); no tenant INSERT/UPDATE/DELETE |
+| OQ-SS-05 | `PARTNER_TRANSMITTED` trigger: Wave 4 or Wave 2? | **Wave 4 only** | Option A | Forward-declared in CHECK constraint only; no Wave 2 write path |
+| OQ-SS-06 | Recompute fresh or accept precomputed score? | **Recompute fresh; post-commit sequential** | Option A | Route-level orchestration; best-effort snapshot write; snapshot failure does NOT roll back triggering event |
+| OQ-SS-07 | `score_version` format: `'TTP_V1'` or semantic? | **`'TTP_V1'` simple string** | Option A | CHECK(`score_version IN ('TTP_V1', 'TEXQTICSCORE_V2')`); initial write always `'TTP_V1'` |
+
+No open questions remain. This design artifact is ready for Paresh to authorize implementation
+slices via separate implementation prompts.
 
 ---
 
@@ -472,11 +559,11 @@ derived from this design.
 |---|---|
 | Never modify `computeTtpScore` | Phase 1 score contract is tested and referenced by lender evidence in governance decisions. TexQticScore v2 must be a new separate function. |
 | Never write snapshot on every API call | Snapshot semantics require trigger-based writes only. On-demand score computation is ephemeral. |
-| Never store `raw_bureau_json`, `raw_verification_json`, CIBIL data, or admin notes in `factors_json` | PII / bureau data boundary. The snapshot mirrors only the `TradeTrustScoreFactor[]` output of `computeTtpScore` — no raw inputs. |
+| Never store `raw_bureau_json`, `raw_verification_json`, CIBIL data, or admin notes in `score_detail_json` | PII / bureau data boundary. The snapshot mirrors only the `factors[]`, `blockers[]`, and `next_steps[]` outputs of `computeTtpScore` — no raw inputs. |
 | Never allow tenant INSERT or UPDATE on snapshots | Append-only, service-role-only write. Tenant manipulation of score history is a data integrity violation. |
 | Never allow UPDATE or DELETE on any snapshot row | Immutability is constitutional. Evidence records cannot be altered. |
 | Never expose snapshot data without `org_id` scoping | Tenant isolation is constitutional. Cross-tenant snapshot reads are forbidden. |
-| Never remove `disclaimer_text_hash` from snapshot row | Copy traceability must be preserved for every snapshot. |
+| Never remove `score_disclaimer_hash` or `route_disclaimer_hash` from snapshot row | Copy traceability must be preserved for every snapshot. Both hash fields are required. |
 | Never imply that snapshot scores are credit scores, financing approvals, or payment guarantees | Advisory-only invariant applies to all score surfaces. |
 | Never open `TTP-SCORE-SNAPSHOT-IMPL-001` without Paresh approval of this design | Design must be reviewed before implementation is authorized. |
 | Never open `PARTNER_TRANSMITTED` trigger in Wave 2 | Wave 4 gate applies. |
@@ -489,16 +576,18 @@ derived from this design.
 
 ```
 TTP_SCORE_SNAPSHOT_DESIGN_001_READY_FOR_PARESH_REVIEW
+TTP_SCORE_SNAPSHOT_DESIGN_001_DECISIONS_RECORDED_READY_FOR_IMPLEMENTATION_PLANNING
 ```
 
 **Authority:** Paresh Sharma — TexQtic founder / operator  
 **`ttp_enabled` state:** `false` — UNCHANGED  
-**Implementation authorized:** No  
+**Implementation authorized:** No — decisions are recorded; each implementation slice requires a separate Paresh-approved implementation prompt  
 **Schema / SQL authorized:** No  
 **`ttp_score_snapshots` table created:** No — this document is a design artifact only  
 **`computeTtpScore` modified:** No  
-**Next action:** Paresh reviews this design and resolves open questions (§13); then opens `TTP-SCORE-SNAPSHOT-IMPL-001` with an explicit implementation prompt referencing this artifact  
-**Wave 2 implementation units opened:** None — all remain at `NOT_OPENED` until Paresh approval  
+**Design decisions recorded:** Yes — all 7 open questions (OQ-SS-01 through OQ-SS-07) resolved; see `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001.md`  
+**Next candidate:** `TTP-SCORE-SNAPSHOT-SQL-RLS-001` (or equivalent Slice 1 prompt) — pending explicit Paresh authorization; NOT opened by this document  
+**Wave 2 implementation units opened:** None — all remain at `NOT_OPENED` until Paresh authorizes Slice 1  
 **Legal status:** `LEGAL_REVIEW_PENDING` throughout — no copy changes authorized
 
 ---
