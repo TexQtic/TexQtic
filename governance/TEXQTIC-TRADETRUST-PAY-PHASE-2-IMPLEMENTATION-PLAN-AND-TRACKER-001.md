@@ -188,7 +188,7 @@ No unit below may be opened as an implementation unit before the design is appro
 |---|---|---|---|---|---|---|---|
 | `TTP-SCOPED-ACTIVATION-DESIGN-001` | Scoped activation design | TQ-01, TQ-08, TQ-09, TQ-10, TQ-20 | Design | Governance docs only | None — cleared by P0 approvals | Read-only validation + Paresh review | `NEXT_RECOMMENDED_UNIT` |
 | `TTP-SCOPED-ACTIVATION-IMPL-001` | Per-org activation middleware | TQ-01 | Implementation | `server/src/middleware/ttpFeatureGate.middleware.ts`; feature-gate unit tests | Design approved by Paresh | (1) global false → all blocked; (2) global true + no override → blocked; (3) global true + org override true → allowed; (4) global true + org override false → blocked; (5) production smoke after deploy | `NOT_OPENED` |
-| `TTP-QA-SENTINEL-FLAG-IMPL-001` | QA sentinel flag on organizations | TQ-08 | Implementation + migration | `server/prisma/schema.prisma`; SQL migration; `scripts/qa-ttp-seed.sql`; Prisma generated types | Design approved + SQL verified (no ERROR / ROLLBACK) | QA orgs: `is_qa_sentinel=true`; real orgs: `is_qa_sentinel=false`; no RLS leaks; `prisma db pull` + `generate` pass; unit test for sentinel query | `NOT_OPENED` |
+| `TTP-QA-SENTINEL-FLAG-IMPL-001` | QA sentinel flag on organizations | TQ-08 | Implementation + migration | `server/prisma/schema.prisma`; SQL migration; `scripts/qa-ttp-seed.sql`; Prisma generated types | Design approved + SQL verified (no ERROR / ROLLBACK) | QA orgs: `is_qa_sentinel=true`; real orgs: `is_qa_sentinel=false`; no RLS leaks; `prisma db pull` + `generate` pass; unit test for sentinel query | `TRUTH_SYNCED` — impl `c6e24eaa`, gov `9e5f443a`, final decision `TTP_IMPL_001_QA_SENTINEL_FLAG_VERIFIED_COMPLETE` |
 | `TTP-ACTIVATION-MONITORING-IMPL-001` | Structured TTP pino log events | TQ-09 | Implementation | TTP route handlers (13 routes); `ttpFeatureGate.middleware.ts`; pino logger setup | Design approved by Paresh | Log events emitted for gate block, 5xx, VPC generation error, eligibility expiry, enrollment gate failure; server typecheck passes | `NOT_OPENED` |
 | `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` | Activation / rollback runbook | TQ-10 | Governance / runbook | `governance/` runbook doc only (no code) | Design approved by Paresh | Runbook contains: enable pilot org, disable pilot org, global emergency off, void non-terminal VPCs, post-rollback state audit checklist | `NOT_OPENED` |
 | `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` | TTP language governance baseline | TQ-20 | Implementation | `server/src/ttp/ttp.constants.ts`; all 13 TTP route handler response types; server typecheck | Design approved by Paresh; placeholder disclaimer text until legal review completes | `advisory_disclaimer` field present in all 13 TTP API responses; `TTP_DISCLAIMER_TEXT` constant referenced (not inline string); no forbidden wording introduced; server typecheck + unit test pass; production API response verified | `NOT_OPENED` |
@@ -428,7 +428,7 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 |---|---|---|---|---|
 | `TTP-SCOPED-ACTIVATION-DESIGN-001` | Wave 0 | P0 | Design | `NEXT_RECOMMENDED_UNIT` |
 | `TTP-SCOPED-ACTIVATION-IMPL-001` | Wave 0 | P0 | Implementation | `NOT_OPENED` |
-| `TTP-QA-SENTINEL-FLAG-IMPL-001` | Wave 0 | P0 | Implementation + migration | `NOT_OPENED` |
+| `TTP-QA-SENTINEL-FLAG-IMPL-001` | Wave 0 | P0 | Implementation + migration | `TRUTH_SYNCED` |
 | `TTP-ACTIVATION-MONITORING-IMPL-001` | Wave 0 | P0 | Implementation | `NOT_OPENED` |
 | `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` | Wave 0 | P0 | Governance / runbook | `NOT_OPENED` |
 | `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` | Wave 0 | P0 | Implementation | `NOT_OPENED` |
@@ -457,15 +457,17 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 
 ## 18. Recommended Immediate Action
 
-### Primary — open now
+### Primary — next implementation unit
 
-**Open:** `TTP-SCOPED-ACTIVATION-DESIGN-001`
+**Open:** `TTP-IMPL-002 — TTP Disclaimer Constant`
 
-This is the single recommended next unit. It is a **design artifact only** — no code, no schema changes,
-no implementation. It covers the P0 control and safety layer: two-layer activation gate, QA sentinel flag,
-structured pino log events, rollback runbook, and language governance baseline.
+This is the immediate next implementation unit. It adds the shared interim `TTP_DISCLAIMER_TEXT` constant
+to `server/src/ttp/ttp.constants.ts`. Constants only — no route, middleware, UI, schema, or migration changes.
 
-**Do not open implementation** until the design is complete and Paresh has approved it.
+**TTP-IMPL-001 is complete** (`TRUTH_SYNCED`): impl `c6e24eaa`, gov `9e5f443a`,
+final decision `TTP_IMPL_001_QA_SENTINEL_FLAG_VERIFIED_COMPLETE`.
+
+**Do not open TTP-IMPL-003** (two-layer middleware update) until TTP-IMPL-002 is verified complete.
 
 ### Parallel — may open now (non-code)
 

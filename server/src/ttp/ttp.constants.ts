@@ -288,3 +288,20 @@ export type TtpEnrollmentReviewOutcome =
 
 /** Prefix required in reason when ai_triggered = true (D-020-C). */
 export const TTP_AI_REASON_PREFIX = 'HUMAN_CONFIRMED:' as const;
+
+// ─── Language governance constants ───────────────────────────────────────────
+// TTP-IMPL-002: Interim advisory disclaimer for all TTP readiness signals.
+// INTERIM ONLY — final text pending TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001.
+// Do not use inline string literals elsewhere; always reference this constant.
+
+/**
+ * Interim advisory disclaimer for all TTP readiness signals.
+ *
+ * This text is informational and advisory only. It is NOT a credit score,
+ * financing approval, payment guarantee, lending decision, or partner commitment.
+ *
+ * INTERIM: Final wording pending legal review under TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001.
+ * Do not add this to route responses in this slice — that belongs to TTP-IMPL-005.
+ */
+export const TTP_DISCLAIMER_TEXT =
+  'TradeTrust Pay readiness signals are informational and advisory only. They are not a credit score, financing approval, payment guarantee, lending decision, or partner commitment.';
