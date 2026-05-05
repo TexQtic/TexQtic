@@ -25,9 +25,14 @@ import {
   type TtpScoreInput,
 } from './ttpScore.service.js';
 import {
+  computeTexQticScore,
+  type ScoreVersion,
+} from './ttpScoreV2.service.js';
+import {
   TTP_DISCLAIMER_TEXT,
   TTP_GST_REVIEW_OUTCOME,
   TTP_ELIGIBILITY_OUTCOME,
+  TEXQTICSCORE_V2_DISCLAIMER,
 } from '../ttp/ttp.constants.js';
 
 // ─── Trigger event set (Wave 2 only) ─────────────────────────────────────────
@@ -57,6 +62,12 @@ const SCORE_DISCLAIMER_HASH = createHash('sha256')
 
 const ROUTE_DISCLAIMER_HASH = createHash('sha256')
   .update(TTP_DISCLAIMER_TEXT)
+  .digest('hex');
+
+// Pre-computed v2 disclaimer hash — SHA-256(TEXQTICSCORE_V2_DISCLAIMER).
+// Used when score_version = 'TEXQTICSCORE_V2'. LEGAL_REVIEW_PENDING.
+const TEXQTICSCORE_V2_DISCLAIMER_HASH = createHash('sha256')
+  .update(TEXQTICSCORE_V2_DISCLAIMER)
   .digest('hex');
 
 // ─── Errors ───────────────────────────────────────────────────────────────────
@@ -98,6 +109,16 @@ export interface CaptureSnapshotInput {
   actorId?: string | null;
   /** Caller-provided arbitrary metadata — JSON-serialisable object only. */
   metadata?: Record<string, unknown> | null;
+  /**
+   * Score version to compute and persist.
+   * Defaults to 'TTP_V1' when omitted — existing callers are unaffected.
+   * Pass 'TEXQTICSCORE_V2' to explicitly request a v2 snapshot (admin/internal-only;
+   * do not call from existing trigger routes until separately authorized).
+   *
+   * TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001 (OQ-V2-05, OQ-V2-06).
+   * LEGAL_REVIEW_PENDING — v2 snapshots must not be surfaced to tenants.
+   */
+  scoreVersion?: ScoreVersion;
 }
 
 export interface CaptureSnapshotResult {
@@ -281,16 +302,43 @@ export class TtpScoreSnapshotService {
       input.tradeId,
     );
 
-    // Compute score (pure, deterministic)
-    const scoreResult = computeTtpScore(scoreInput);
+    // Resolve score version — default to TTP_V1 when not explicitly specified (OQ-V2-05).
+    // Existing callers do not pass scoreVersion; their behavior is unchanged.
+    const resolvedVersion: ScoreVersion = input.scoreVersion ?? 'TTP_V1';
 
-    // score_detail_json: factors + blockers + next_steps ONLY (OQ-SS-02)
-    // Excludes: score, band, disclaimer, any raw bureau/GST/CIBIL payload
-    const scoreDetailJson = {
-      factors: scoreResult.factors,
-      blockers: scoreResult.blockers,
-      next_steps: scoreResult.next_steps,
-    };
+    let scoreValue: number;
+    let scoreBand: string;
+    let scoreDisclaimerHash: string;
+    // score_detail_json: factors + blockers + next_steps ONLY (OQ-SS-02).
+    // Excludes: score, band, version, disclaimer, raw bureau/GST/CIBIL payloads.
+    let scoreDetailJson: { factors: unknown[]; blockers: string[]; next_steps: string[] };
+
+    if (resolvedVersion === 'TEXQTICSCORE_V2') {
+      // Explicit v2 path — TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001.
+      // OQ-V2-05: compute v2 side-by-side; OQ-V2-06: existing schema column sufficient.
+      // Admin/internal-only in this slice. Not called from existing trigger routes.
+      // LEGAL_REVIEW_PENDING — must not be surfaced to tenants.
+      const v2Result = computeTexQticScore(scoreInput);
+      scoreValue = v2Result.score;
+      scoreBand = v2Result.band;
+      scoreDisclaimerHash = TEXQTICSCORE_V2_DISCLAIMER_HASH;
+      scoreDetailJson = {
+        factors: v2Result.factors,
+        blockers: v2Result.blockers,
+        next_steps: v2Result.next_steps,
+      };
+    } else {
+      // Default v1 path — behavior identical to original implementation.
+      const v1Result = computeTtpScore(scoreInput);
+      scoreValue = v1Result.score;
+      scoreBand = v1Result.band;
+      scoreDisclaimerHash = SCORE_DISCLAIMER_HASH;
+      scoreDetailJson = {
+        factors: v1Result.factors,
+        blockers: v1Result.blockers,
+        next_steps: v1Result.next_steps,
+      };
+    }
 
     // Derive source_event_id from trigger context
     let sourceEventId: string | null = input.sourceEventId ?? null;
@@ -314,14 +362,14 @@ export class TtpScoreSnapshotService {
         invoice_id: input.invoiceId ?? null,
         vpc_id: input.vpcId ?? null,
         enrollment_id: input.enrollmentId ?? null,
-        score_value: scoreResult.score,
-        score_band: scoreResult.band,
-        score_version: 'TTP_V1',
+        score_value: scoreValue,
+        score_band: scoreBand,
+        score_version: resolvedVersion,
         score_detail_json: scoreDetailJson,
         trigger_event: input.triggerEvent,
         source_event_id: sourceEventId,
         actor_id: input.actorId ?? null,
-        score_disclaimer_hash: SCORE_DISCLAIMER_HASH,
+        score_disclaimer_hash: scoreDisclaimerHash,
         route_disclaimer_hash: ROUTE_DISCLAIMER_HASH,
         metadata_json: input.metadata ?? null,
       },
@@ -338,4 +386,60 @@ export class TtpScoreSnapshotService {
 
     return row as CaptureSnapshotResult;
   }
+}
+
+// ─── Dual-run comparison ─────────────────────────────────────────────────────
+// TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001 (OQ-V2-05)
+
+/**
+ * Structured result from comparing v1 and v2 advisory score computations.
+ *
+ * Per OQ-V2-01 parity invariant, score_delta should be 0 and score_match
+ * should be true for any equivalent input. This result is intended for
+ * admin/internal diagnostic use only — do not expose to tenant surfaces.
+ *
+ * Logging: callers may log safe fields only (v1_score, v2_score, score_delta,
+ * v1_band, v2_band, band_match, score_match). Do NOT log factors, blockers,
+ * next_steps, or any raw score_detail_json content.
+ * Suggested event name: ttp.texqticscore_v2.dual_run_compared
+ */
+export interface DualRunComparisonResult {
+  v1_score: number;
+  v1_band: string;
+  v2_score: number;
+  v2_band: string;
+  /** v2_score − v1_score. Expected: 0 for all inputs (OQ-V2-01 parity). */
+  score_delta: number;
+  /** true when v1 and v2 produce the same band. Expected: true (OQ-V2-02 parity). */
+  band_match: boolean;
+  /** true when v1 and v2 produce the same score. Expected: true (OQ-V2-01 parity). */
+  score_match: boolean;
+}
+
+/**
+ * Compute both TTP v1 and TexQticScore v2 advisory scores from the same input
+ * and return a structured parity comparison.
+ *
+ * Pure function — no DB calls, no side effects. Does not mutate the input object.
+ * Safe to call from tests or service-layer diagnostic logic.
+ *
+ * OQ-V2-05: dual-run v1/v2 before any API switch; compute both side by side.
+ * OQ-V2-01/02: score and band must match for all equivalent inputs.
+ *
+ * Route-level integration and logging are deferred to future separately-authorized slices.
+ */
+export function compareTtpV1AndTexQticV2(
+  input: TtpScoreInput,
+): DualRunComparisonResult {
+  const v1Result = computeTtpScore(input);
+  const v2Result = computeTexQticScore(input);
+  return {
+    v1_score: v1Result.score,
+    v1_band: v1Result.band,
+    v2_score: v2Result.score,
+    v2_band: v2Result.band,
+    score_delta: v2Result.score - v1Result.score,
+    band_match: v2Result.band === v1Result.band,
+    score_match: v2Result.score === v1Result.score,
+  };
 }

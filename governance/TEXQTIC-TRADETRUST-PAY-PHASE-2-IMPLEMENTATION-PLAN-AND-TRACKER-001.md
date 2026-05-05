@@ -155,12 +155,12 @@ Every Phase 2 unit follows this exact sequence. Steps may not be skipped or reor
 
 | Field | Value |
 |---|---|
-| **Unit ID** | `TTP-TEXQTICSCORE-V2-SERVICE-001` |
+| **Unit ID** | `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` |
 | **Status** | `IMPLEMENTATION_OPEN` |
-| **Type** | Implementation (service-only) |
-| **Purpose** | Implement `computeTexQticScore` pure function + `TexQticScoreV2Input/Output` types + `ScoreVersion` union type + `TEXQTICSCORE_V2_DISCLAIMER` constant + comprehensive unit tests. Service-only: no routes, no snapshot writes, no schema changes, no DB interaction, no tenant surface, no `ttp_enabled` change. |
-| **Gate** | `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_DECISIONS_RECORDED` (commit `66b4ac7`); all 9 OQs (OQ-V2-01 through OQ-V2-09) resolved; explicit Paresh authorization granted by this prompt |
-| **Authorized by** | Paresh Sharma — this prompt explicitly opens `TTP-TEXQTICSCORE-V2-SERVICE-001` |
+| **Type** | Implementation (snapshot integration) |
+| **Purpose** | Extend `TtpScoreSnapshotService.captureSnapshot` to support `scoreVersion: 'TEXQTICSCORE_V2'`; add pre-computed `TEXQTICSCORE_V2_DISCLAIMER_HASH`; add `scoreVersion?: ScoreVersion` to `CaptureSnapshotInput` (optional, defaults to `TTP_V1` — existing callers unaffected); add `compareTtpV1AndTexQticV2` pure exported function; add focused integration tests. No routes, no schema changes, no DB interaction beyond existing snapshot table, no tenant surface, no `ttp_enabled` change. |
+| **Gate** | `TTP-TEXQTICSCORE-V2-SERVICE-001` `TRUTH_SYNCED` (commits `3999a2c`, `2c01c38`); explicit Paresh authorization granted by this prompt |
+| **Authorized by** | Paresh Sharma — this prompt explicitly opens `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` |
 
 ### What this unit must produce
 
@@ -246,7 +246,7 @@ artifact only.
 
 ## 9. P1 Score Architecture Tracker
 
-**Current status:** `IMPLEMENTATION_IN_PROGRESS` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`) — `TtpScoreSnapshotService` + 13 tests; Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `TRUTH_SYNCED` (`b780afd`, `436fd72`); Slice 5 (`TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001`) `TRUTH_SYNCED` (`16ccbdf`, `c9a8ee6`); Slice 6 (`TTP-SCORE-SNAPSHOT-READ-ADMIN-001`) `TRUTH_SYNCED` (`e73c0b0`, `908781b`) — all 6 slices `TRUTH_SYNCED`; runtime verification (`TTP-SCORE-SNAPSHOT-RUNTIME-VERIFY-001`) `PRODUCTION_VERIFIED` — commit `9a58b0d`, final decision `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED`; `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_DECISIONS_RECORDED` (commit `66b4ac7`, OQ-V2-01 through OQ-V2-09 all resolved); `TTP-TEXQTICSCORE-V2-SERVICE-001` is the current implementation unit — `IMPLEMENTATION_OPEN` (explicit Paresh authorization granted by this prompt, 2026-05-05)
+**Current status:** `IMPLEMENTATION_IN_PROGRESS` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`) — `TtpScoreSnapshotService` + 13 tests; Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `TRUTH_SYNCED` (`b780afd`, `436fd72`); Slice 5 (`TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001`) `TRUTH_SYNCED` (`16ccbdf`, `c9a8ee6`); Slice 6 (`TTP-SCORE-SNAPSHOT-READ-ADMIN-001`) `TRUTH_SYNCED` (`e73c0b0`, `908781b`) — all 6 slices `TRUTH_SYNCED`; runtime verification (`TTP-SCORE-SNAPSHOT-RUNTIME-VERIFY-001`) `PRODUCTION_VERIFIED` — commit `9a58b0d`, final decision `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED`; `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_DECISIONS_RECORDED` (commit `66b4ac7`, OQ-V2-01 through OQ-V2-09 all resolved); `TTP-TEXQTICSCORE-V2-SERVICE-001` `TRUTH_SYNCED` — commits `3999a2c` (feat: add texqticscore v2 service) + `2c01c38` (docs: verify texqticscore v2 service); 31/31 unit tests pass; tsc clean; `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` is the current implementation unit — `IMPLEMENTATION_OPEN` (explicit Paresh authorization granted by this prompt, 2026-05-05)
 
 Do not open any P1 implementation unit before the design is reviewed and approved by Paresh.
 If Paresh explicitly reprioritizes, a P1 unit may be opened in parallel — but this requires an explicit
@@ -450,8 +450,9 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-SCORE-SNAPSHOT-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_DECISIONS_RECORDED` |
 | `TTP-SCORE-SNAPSHOT-IMPL-001` | Wave 2 | P1 | Implementation + migration | `TRUTH_SYNCED` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`); Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `TRUTH_SYNCED` (`b780afd`, `436fd72`); Slice 5 (`TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001`) `TRUTH_SYNCED` (`16ccbdf`, `c9a8ee6`); Slice 6 (`TTP-SCORE-SNAPSHOT-READ-ADMIN-001`) `TRUTH_SYNCED` (`e73c0b0`, `908781b`) |
 | `TTP-TEXQTICSCORE-V2-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_DECISIONS_RECORDED` — options audit (commit `07a7e82`); decisions in `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001`; OQ-V2-01 through OQ-V2-09 resolved |
-| `TTP-TEXQTICSCORE-V2-SERVICE-001` | Wave 2 | P1 | Implementation (slice 1) | `IMPLEMENTATION_OPEN` — service-only: `computeTexQticScore` + v2 types + `TEXQTICSCORE_V2_DISCLAIMER` + 17 unit tests; no routes, no snapshot writes, no schema changes, no DB, no tenant surface |
-| `TTP-TEXQTICSCORE-V2-IMPL-001` | Wave 2 | P1 | Implementation | `IMPLEMENTATION_IN_PROGRESS` — slice 1 (`TTP-TEXQTICSCORE-V2-SERVICE-001`) `IMPLEMENTATION_OPEN` |
+| `TTP-TEXQTICSCORE-V2-SERVICE-001` | Wave 2 | P1 | Implementation (slice 1) | `TRUTH_SYNCED` — commits `3999a2c` + `2c01c38`; 31/31 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_SERVICE_001_VERIFIED_COMPLETE` |
+| `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` | Wave 2 | P1 | Implementation (slice 2) | `IMPLEMENTATION_OPEN` — extend `captureSnapshot` for v2; add `compareTtpV1AndTexQticV2`; no routes, no schema changes, no tenant surface |
+| `TTP-TEXQTICSCORE-V2-IMPL-001` | Wave 2 | P1 | Implementation | `IMPLEMENTATION_IN_PROGRESS` — slice 1 (`TTP-TEXQTICSCORE-V2-SERVICE-001`) `TRUTH_SYNCED`; slice 2 (`TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001`) `IMPLEMENTATION_OPEN` |
 | `TTP-SCORE-VERSIONING-IMPL-001` | Wave 2 | P1 | Implementation | `NOT_OPENED` |
 | `TTP-DATA-CONSENT-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
 | `TTP-DATA-CONSENT-IMPL-001` | Wave 3 | P2 | Implementation + migration | `NOT_OPENED` |
@@ -548,15 +549,29 @@ All 6 `TTP-SCORE-SNAPSHOT-IMPL-001` slices verified in the production environmen
 at `https://app.texqtic.com`. 59/59 unit tests pass. tsc clean. Runtime verification record:
 `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-RUNTIME-VERIFIED-001.md`.
 
-### Current open unit — TTP-TEXQTICSCORE-V2-SERVICE-001
+### Completed unit — TTP-TEXQTICSCORE-V2-SERVICE-001
 
-**`TTP-TEXQTICSCORE-V2-SERVICE-001` is now `IMPLEMENTATION_OPEN`:**
-Explicitly authorized by Paresh Sharma (2026-05-05) via the prompt that opened this slice.
-Scope: `computeTexQticScore` pure function + `TexQticScoreV2Input/Output` types + `ScoreVersion` union type
-+ `TEXQTICSCORE_V2_DISCLAIMER` constant + 17 unit tests.
+**`TTP-TEXQTICSCORE-V2-SERVICE-001` is `TRUTH_SYNCED`:**
+Commit 1 `3999a2c` (feat: add texqticscore v2 service); Commit 2 `2c01c38` (docs: verify texqticscore v2 service).
+Delivered: `computeTexQticScore` pure function + `TexQticScoreV2Input/Output` types + `ScoreVersion` union type
++ `TEXQTICSCORE_V2_DISCLAIMER` constant + 31 unit tests (TC-V2-001 through TC-V2-017 + sub-cases). 31/31 pass.
 No routes, no snapshot writes, no schema changes, no DB interaction, no tenant surface.
 `ttp_enabled=false` unchanged. `LEGAL_REVIEW_PENDING` unchanged.
-OQ-V2-01 through OQ-V2-09 already resolved in `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001` (commit `66b4ac7`).
+Verification record: `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-SERVICE-VERIFIED-001.md`.
+Final decision: `TTP_TEXQTICSCORE_V2_SERVICE_001_VERIFIED_COMPLETE`.
+
+### Current open unit — TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001
+
+**`TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` is now `IMPLEMENTATION_OPEN`:**
+Explicitly authorized by Paresh Sharma (2026-05-05) via the prompt that opened this slice.
+Gate: `TTP-TEXQTICSCORE-V2-SERVICE-001` `TRUTH_SYNCED` (commits `3999a2c`, `2c01c38`).
+Scope: extend `TtpScoreSnapshotService.captureSnapshot` to support `scoreVersion: 'TEXQTICSCORE_V2'`;
+add `compareTtpV1AndTexQticV2` pure exported helper; add `TEXQTICSCORE_V2_DISCLAIMER_HASH` module-scope constant;
+add `scoreVersion?: ScoreVersion` to `CaptureSnapshotInput` (optional, defaults to `TTP_V1` — existing callers unaffected);
+add focused integration tests in new test file.
+No routes, no schema changes, no Prisma migration, no tenant surface.
+`ttp_enabled=false` unchanged. `LEGAL_REVIEW_PENDING` unchanged.
+Existing trigger routes (VPC, enrollment, admin-review) continue writing `TTP_V1` — no behavior change.
 
 ## 19. No-Change Confirmation
 
@@ -599,6 +614,8 @@ PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_DESIGN_001_OPEN
 PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_OPTIONS_AUDIT_001_COMPLETE
 PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_DESIGN_DECISIONS_001_RECORDED
 PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_SERVICE_001_IMPLEMENTATION_OPEN
+PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_SERVICE_001_TRUTH_SYNCED
+PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_SNAPSHOT_INTEGRATION_001_IMPLEMENTATION_OPEN
 ```
 
 **Authority:** Paresh Patel — TexQtic founder / operator  
