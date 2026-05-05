@@ -34,6 +34,7 @@ import {
   TtpSummaryPartyMismatchError,
   TtpSummaryTradeNotFoundError,
 } from '../services/ttpSummary.service.js';
+import { TTP_DISCLAIMER_TEXT } from '../ttp/ttp.constants.js';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -404,5 +405,13 @@ describe('TtpSummaryService.getTradeTtpSummary', () => {
     const scoreJson = JSON.stringify(result.trade_trust_score);
     expect(scoreJson).not.toContain('raw_bureau_json');
     expect(scoreJson).not.toContain('raw_verification_json');
+  });
+
+  it('TC-028: advisory_disclaimer is present and equals TTP_DISCLAIMER_TEXT', async () => {
+    db.lifecycleState.findFirst
+      .mockResolvedValueOnce({ stateKey: 'VERIFIED' })
+      .mockResolvedValueOnce({ stateKey: 'ACTIVE' });
+    const result = await svc.getTradeTtpSummary({ tradeId: TRADE_ID, actorOrgId: SELLER_ORG });
+    expect(result.advisory_disclaimer).toBe(TTP_DISCLAIMER_TEXT);
   });
 });

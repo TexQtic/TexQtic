@@ -27,6 +27,7 @@ import {
   TTP_ENROLLMENT_REVIEW_OUTCOME,
   TTP_GST_REVIEW_OUTCOME,
   TTP_ACTOR_TYPE,
+  TTP_DISCLAIMER_TEXT,
   type TtpEnrollmentReviewOutcome,
 } from '../ttp/ttp.constants.js';
 
@@ -104,6 +105,8 @@ export interface TtpEnrollmentRecord {
   last_updated_at: string | null;
   /** reason from the most recent log entry */
   last_reason: string | null;
+  /** Interim advisory disclaimer. TTP-IMPL-005. Always sourced from TTP_DISCLAIMER_TEXT constant. */
+  advisory_disclaimer: string;
 }
 
 export interface AdminEnrollmentRecord extends TtpEnrollmentRecord {
@@ -189,6 +192,7 @@ export class TtpEnrollmentService {
         ? new Date(latestLog.created_at).toISOString()
         : null,
       last_reason: latestLog?.reason ?? null,
+      advisory_disclaimer: TTP_DISCLAIMER_TEXT,
     };
   }
 

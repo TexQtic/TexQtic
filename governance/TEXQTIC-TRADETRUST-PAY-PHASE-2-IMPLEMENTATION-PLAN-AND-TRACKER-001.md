@@ -459,12 +459,15 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 
 ### Primary — current implementation unit
 
-**TTP-IMPL-004 is OPEN** (`IMPLEMENTATION_OPEN`): Structured Pino log events for TTP activation
-gate. Adds 4 structured `request.log` events (`ttp.feature_gate.global_blocked`,
-`ttp.feature_gate.org_blocked`, `ttp.feature_gate.allowed`, `ttp.feature_gate.db_error`) to
-`ttpFeatureGateMiddleware` per design `TTP-SCOPED-ACTIVATION-DESIGN-001 §9` and OQ-3 level policy.
-8 new unit tests (TC-019–TC-026) added. 26/26 tests passing. tsc clean.
-Governance record: `PRODUCT-DEC-TRADETRUST-PAY-TTP-IMPL-004-STRUCTURED-PINO-LOGS-VERIFIED-001`.
+**TTP-IMPL-005 is OPEN** (`IMPLEMENTATION_OPEN`): Advisory disclaimer to approved TTP responses.
+Adds `advisory_disclaimer: TTP_DISCLAIMER_TEXT` to `TradeTtpSummary` (ttpSummary.service.ts) and
+`TtpEnrollmentRecord` (ttpEnrollment.service.ts). TC-028 added to summary tests (28/28 passing);
+TC-018 updated (field-name checks, no substring) + TC-019 added to enrollment tests (19/19 passing).
+2 service files + 2 test files. tsc clean.
+Governance record: `PRODUCT-DEC-TRADETRUST-PAY-TTP-IMPL-005-ADVISORY-DISCLAIMER-RESPONSES-VERIFIED-001`.
+
+**TTP-IMPL-004 is complete** (`TRUTH_SYNCED`): impl `0cc305d`, gov `16c61fb`,
+final decision `TTP_IMPL_004_STRUCTURED_PINO_LOGS_VERIFIED_COMPLETE`.
 
 **TTP-IMPL-003 is complete** (`TRUTH_SYNCED`): impl `b7950b7a`, unit-gov `e237405`,
 prod-gov `PRODUCT-DEC-TRADETRUST-PAY-TTP-IMPL-003-PRODUCTION-RUNTIME-VERIFIED-001`,
@@ -478,7 +481,7 @@ Sub-slice of `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` — that unit is now `T
 **TTP-IMPL-001 is complete** (`TRUTH_SYNCED`): impl `c6e24eaa`, gov `9e5f443a`,
 final decision `TTP_IMPL_001_QA_SENTINEL_FLAG_VERIFIED_COMPLETE`.
 
-**Next unit after TTP-IMPL-004:** `TTP-IMPL-005` — NOT yet opened. Requires separate Paresh-approved prompt.
+**Next unit after TTP-IMPL-005:** `TTP-ACTIVATION-MONITORING-IMPL-001` or `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` — NOT yet opened. Requires separate Paresh-approved prompt.
 Remaining `NOT_OPENED` Wave 0 units: `TTP-ACTIVATION-MONITORING-IMPL-001`, `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001`.
 
 ### Parallel — may open now (non-code)

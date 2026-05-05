@@ -30,7 +30,7 @@ import {
   EnrollmentReviewEligibilityMissingError,
   EnrollmentReviewEligibilityExpiredError,
 } from '../services/ttpEnrollment.service.js';
-import { TTP_ENROLLMENT_REVIEW_OUTCOME } from '../ttp/ttp.constants.js';
+import { TTP_ENROLLMENT_REVIEW_OUTCOME, TTP_DISCLAIMER_TEXT } from '../ttp/ttp.constants.js';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -306,12 +306,21 @@ describe('TtpEnrollmentService', () => {
       tradeId: TRADE_ID,
       actorOrgId: SELLER_ORG,
     });
-    const serialized = JSON.stringify(result);
-    // None of the forbidden financial implication fields
-    expect(serialized).not.toContain('payment');
-    expect(serialized).not.toContain('payout');
-    expect(serialized).not.toContain('financing');
-    expect(serialized).not.toContain('escrow_balance');
-    expect(serialized).not.toContain('disbursement');
+    // Check for money-movement FIELD NAMES (not substrings) — advisory_disclaimer
+    // legitimately contains "payment" and "financing" in its text value.
+    expect(result).not.toHaveProperty('payment_amount');
+    expect(result).not.toHaveProperty('payout_id');
+    expect(result).not.toHaveProperty('payout_amount');
+    expect(result).not.toHaveProperty('financing_amount');
+    expect(result).not.toHaveProperty('escrow_balance');
+    expect(result).not.toHaveProperty('disbursement');
+  });
+
+  it('TC-019: advisory_disclaimer is present on enrollment response and equals TTP_DISCLAIMER_TEXT', async () => {
+    const result = await svc.requestEnrollment({
+      tradeId: TRADE_ID,
+      actorOrgId: SELLER_ORG,
+    });
+    expect(result.advisory_disclaimer).toBe(TTP_DISCLAIMER_TEXT);
   });
 });

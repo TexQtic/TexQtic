@@ -19,7 +19,7 @@
  */
 
 import type { PrismaClient } from '@prisma/client';
-import { TTP_GST_REVIEW_OUTCOME, TTP_ELIGIBILITY_OUTCOME } from '../ttp/ttp.constants.js';
+import { TTP_GST_REVIEW_OUTCOME, TTP_ELIGIBILITY_OUTCOME, TTP_DISCLAIMER_TEXT } from '../ttp/ttp.constants.js';
 import { computeTtpScore, type TradeTrustScore } from './ttpScore.service.js';
 
 // ─── Error classes ────────────────────────────────────────────────────────────
@@ -94,6 +94,8 @@ export interface TradeTtpSummary {
   blockers: string[];
   /** Advisory readiness score. ADVISORY ONLY — not a credit score or payment guarantee. */
   trade_trust_score: TradeTrustScore;
+  /** Interim advisory disclaimer. TTP-IMPL-005. Always sourced from TTP_DISCLAIMER_TEXT constant. */
+  advisory_disclaimer: string;
 }
 
 // ─── Service ──────────────────────────────────────────────────────────────────
@@ -346,6 +348,7 @@ export class TtpSummaryService {
       routing_readiness: routingReadiness,
       blockers,
       trade_trust_score,
+      advisory_disclaimer: TTP_DISCLAIMER_TEXT,
     };
   }
 }
