@@ -155,33 +155,41 @@ Every Phase 2 unit follows this exact sequence. Steps may not be skipped or reor
 
 | Field | Value |
 |---|---|
-| **Unit ID** | `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` |
-| **Status** | `IMPLEMENTATION_OPEN` |
-| **Type** | Implementation (admin/control-plane read extension) |
-| **Purpose** | Extend admin score snapshot read endpoints to support `score_version` filtering; ensure `score_version` is retained in admin list/detail responses; add `score_version: z.enum(['TTP_V1', 'TEXQTICSCORE_V2']).optional()` Zod validation to `snapshotListQuerySchema`; add focused unit tests. No tenant route, no `score_detail_json` exposure, no snapshot write behavior, no schema changes. Admin/control-plane only. `LEGAL_REVIEW_PENDING` unchanged. `ttp_enabled=false` unchanged. |
-| **Gate** | `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` `TRUTH_SYNCED` (commits `50fa075`, `3284f3f`); explicit Paresh authorization granted by this prompt |
-| **Authorized by** | Paresh Sharma — this prompt explicitly opens `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` |
+| **Unit ID** | `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` |
+| **Status** | `BLOCKED_LEGAL` |
+| **Type** | Implementation (tenant-visible read-only v2 score surface) |
+| **Purpose** | Implement a bounded, read-only tenant-visible TexQticScore v2 advisory surface. Requires legal clearance for tenant-facing TexQticScore v2 wording. Currently blocked — `LEGAL_REVIEW_PENDING` unresolved. No code changes may be made until legal clearance is documented. |
+| **Gate** | `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` `TRUTH_SYNCED` (commits `d7186d7`, `a218275`) — **CLEARED**; AND legal clearance for tenant-visible TexQticScore v2 surfaces — **PENDING** |
+| **Blocked by** | `LEGAL_REVIEW_PENDING` — no legal clearance artifact exists for tenant-visible or public-facing TexQticScore v2 wording or surface. Legal clearance requires: explicit Paresh-approved legal decision record OR counsel-approved wording artifact OR tracker/legal artifact changing status from `LEGAL_REVIEW_PENDING` to `LEGAL_APPROVED` for tenant-visible TexQticScore v2 surfaces. |
 
-### What this unit must produce
+### Blocking evidence
 
-| Output | Used By | Required Before |
-|---|---|---|
-| `score_version: z.enum(['TTP_V1', 'TEXQTICSCORE_V2']).optional()` added to `snapshotListQuerySchema` | Admin operator querying snapshots by version | Commit 1 |
-| `score_version` filter applied in `querySnapshotList` where clause | Admin query correctness | Commit 1 |
-| `snapshotListQuerySchema` exported for unit-test access | TC-RSA-016 validation test | Commit 1 |
-| 8 focused unit tests (TC-RSA-013 through TC-RSA-020) | Regression protection | Commit 1 |
-| Tracker truth-sync for `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` | Governance closure | Commit 1 |
-| Governance verification record | Governance closure | Commit 2 |
+Sources inspected (2026-05-05):
+- `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001.md` — `LEGAL_REVIEW_PENDING` throughout
+- `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-LEGAL-COUNSEL-REVIEW-PACKET-001.md` — `LEGAL_REVIEW_PENDING` throughout
+- `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-ADMIN-READ-VERIFIED-001.md` — confirms tenant surface NOT implemented; `LEGAL_REVIEW_PENDING` unchanged
+- `governance/TTP-TEXQTICSCORE-V2-DESIGN-001.md` — explicitly marks `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` as `LEGAL_GATED__NOT_OPENED`
 
-### Critical clarifications for this unit
+No legal clearance artifact found. Implementation is unconditionally blocked.
 
-- **Admin/control-plane only.** No tenant-facing routes. Tenant score history remains intentionally withheld (`LEGAL_REVIEW_PENDING`).
-- **`ttp_enabled` remains `false` throughout.** This unit does not authorize or request activation.
-- **`score_detail_json` remains excluded from `SNAPSHOT_SELECT`.** No exposure of raw bureau payloads.
-- **No snapshot writes.** Read-only extension only; `captureSnapshot` is not touched.
-- **No Prisma schema changes.** `score_version String` already exists on `ttp_score_snapshots`.
-- **No SQL / migrations.** DB schema is unchanged.
-- **`LEGAL_REVIEW_PENDING` unchanged.**
+### Required legal decision before this unit may open
+
+Paresh must provide one of the following:
+1. Explicit Paresh-approved legal decision record approving tenant-visible TexQticScore v2 wording and surface
+2. Counsel-approved wording artifact (written outcome from external legal counsel review of `TTP-LEGAL-COPY-COUNSEL-PACKET-001`)
+3. Tracker or legal artifact explicitly changing `LEGAL_REVIEW_PENDING` to `LEGAL_APPROVED` for tenant-visible TexQticScore v2 surfaces
+
+### No-go confirmation
+
+- No code changed — CONFIRMED
+- No route changed — CONFIRMED
+- No UI changed — CONFIRMED
+- No schema changed — CONFIRMED
+- No activation — CONFIRMED
+- No tenant-facing score exposed — CONFIRMED
+- `ttp_enabled=false` — UNCHANGED
+- `LEGAL_REVIEW_PENDING` — UNCHANGED
+- Wave 3/4/5 gates — UNCHANGED
 
 ---
 
@@ -244,7 +252,7 @@ artifact only.
 
 ## 9. P1 Score Architecture Tracker
 
-**Current status:** `IMPLEMENTATION_IN_PROGRESS` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`) — `TtpScoreSnapshotService` + 13 tests; Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `TRUTH_SYNCED` (`b780afd`, `436fd72`); Slice 5 (`TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001`) `TRUTH_SYNCED` (`16ccbdf`, `c9a8ee6`); Slice 6 (`TTP-SCORE-SNAPSHOT-READ-ADMIN-001`) `TRUTH_SYNCED` (`e73c0b0`, `908781b`) — all 6 slices `TRUTH_SYNCED`; runtime verification (`TTP-SCORE-SNAPSHOT-RUNTIME-VERIFY-001`) `PRODUCTION_VERIFIED` — commit `9a58b0d`, final decision `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED`; `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_DECISIONS_RECORDED` (commit `66b4ac7`, OQ-V2-01 through OQ-V2-09 all resolved); `TTP-TEXQTICSCORE-V2-SERVICE-001` `TRUTH_SYNCED` — commits `3999a2c` (feat: add texqticscore v2 service) + `2c01c38` (docs: verify texqticscore v2 service); 31/31 unit tests pass; tsc clean; `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` `TRUTH_SYNCED` — commits `50fa075` (feat: support texqticscore v2 snapshots) + `3284f3f` (docs: verify texqticscore v2 snapshot integration); 11/11 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_SNAPSHOT_INTEGRATION_001_VERIFIED_COMPLETE`; `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` is the current implementation unit — `IMPLEMENTATION_OPEN` (explicit Paresh authorization granted by this prompt, 2026-05-05)
+**Current status:** `IMPLEMENTATION_IN_PROGRESS` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`) — `TtpScoreSnapshotService` + 13 tests; Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `TRUTH_SYNCED` (`b780afd`, `436fd72`); Slice 5 (`TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001`) `TRUTH_SYNCED` (`16ccbdf`, `c9a8ee6`); Slice 6 (`TTP-SCORE-SNAPSHOT-READ-ADMIN-001`) `TRUTH_SYNCED` (`e73c0b0`, `908781b`) — all 6 slices `TRUTH_SYNCED`; runtime verification (`TTP-SCORE-SNAPSHOT-RUNTIME-VERIFY-001`) `PRODUCTION_VERIFIED` — commit `9a58b0d`, final decision `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED`; `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_DECISIONS_RECORDED` (commit `66b4ac7`, OQ-V2-01 through OQ-V2-09 all resolved); `TTP-TEXQTICSCORE-V2-SERVICE-001` `TRUTH_SYNCED` — commits `3999a2c` (feat: add texqticscore v2 service) + `2c01c38` (docs: verify texqticscore v2 service); 31/31 unit tests pass; tsc clean; `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` `TRUTH_SYNCED` — commits `50fa075` (feat: support texqticscore v2 snapshots) + `3284f3f` (docs: verify texqticscore v2 snapshot integration); 11/11 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_SNAPSHOT_INTEGRATION_001_VERIFIED_COMPLETE`; `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` `TRUTH_SYNCED` — commits `d7186d7` (feat: filter admin score snapshots by version) + `a218275` (docs: verify texqticscore v2 admin reads); 20/20 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_ADMIN_READ_001_VERIFIED_COMPLETE`; `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` is blocked — `BLOCKED_LEGAL` (`LEGAL_REVIEW_PENDING` unresolved; legal clearance required for tenant-visible TexQticScore v2 surfaces before implementation may proceed)
 
 Do not open any P1 implementation unit before the design is reviewed and approved by Paresh.
 If Paresh explicitly reprioritizes, a P1 unit may be opened in parallel — but this requires an explicit
@@ -255,10 +263,11 @@ new decision, not an assumption.
 | `TTP-SCORE-SNAPSHOT-DESIGN-001` | Score snapshots design | TQ-06, TQ-07 | Design | Wave 0 complete and TRUTH_SYNCED — **CLEARED** | `DESIGN_DECISIONS_RECORDED` |
 | `TTP-SCORE-SNAPSHOT-IMPL-001` | `ttp_score_snapshots` table + trigger write logic | TQ-06, TQ-07 | Implementation + migration | `TTP-SCORE-SNAPSHOT-DESIGN-001` approved by Paresh | `TRUTH_SYNCED` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`); Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `TRUTH_SYNCED` (`b780afd`, `436fd72`); Slice 5 (`TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001`) `TRUTH_SYNCED` (`16ccbdf`, `c9a8ee6`); Slice 6 (`TTP-SCORE-SNAPSHOT-READ-ADMIN-001`) `TRUTH_SYNCED` (`e73c0b0`, `908781b`) |
 | `TTP-TEXQTICSCORE-V2-DESIGN-001` | TexQticScore v2 design | TQ-11, TQ-12 | Design | Runtime verification complete — `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED` | `DESIGN_DECISIONS_RECORDED` — options audit (commit `07a7e82`); decisions in `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001`; OQ-V2-01 through OQ-V2-09 resolved |
-| `TTP-TEXQTICSCORE-V2-IMPL-001` | `computeTexQticScore` function + v2 score contract | TQ-11 | Implementation | `TTP-TEXQTICSCORE-V2-DESIGN-001` approved | `IMPLEMENTATION_IN_PROGRESS` — slice 1 `TTP-TEXQTICSCORE-V2-SERVICE-001` `TRUTH_SYNCED`; slice 2 `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` `TRUTH_SYNCED`; slice 3 `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` `IMPLEMENTATION_OPEN` |
+| `TTP-TEXQTICSCORE-V2-IMPL-001` | `computeTexQticScore` function + v2 score contract | TQ-11 | Implementation | `TTP-TEXQTICSCORE-V2-DESIGN-001` approved | `IMPLEMENTATION_IN_PROGRESS` — slice 1 (`TTP-TEXQTICSCORE-V2-SERVICE-001`) `TRUTH_SYNCED`; slice 2 (`TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001`) `TRUTH_SYNCED`; slice 3 (`TTP-TEXQTICSCORE-V2-ADMIN-READ-001`) `TRUTH_SYNCED`; slice 4 (`TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001`) `BLOCKED_LEGAL` (`LEGAL_REVIEW_PENDING`) |
 | `TTP-TEXQTICSCORE-V2-SERVICE-001` | `computeTexQticScore` function + v2 types + `TEXQTICSCORE_V2_DISCLAIMER` + unit tests | TQ-11 | Implementation (slice 1 of `TTP-TEXQTICSCORE-V2-IMPL-001`) | `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_DECISIONS_RECORDED` (commit `66b4ac7`) + explicit Paresh authorization | `TRUTH_SYNCED` — commits `3999a2c` + `2c01c38`; 31/31 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_SERVICE_001_VERIFIED_COMPLETE` |
 | `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` | `captureSnapshot` v2 extension + `compareTtpV1AndTexQticV2` + 11 integration tests | TQ-11 | Implementation (slice 2 of `TTP-TEXQTICSCORE-V2-IMPL-001`) | `TTP-TEXQTICSCORE-V2-SERVICE-001` `TRUTH_SYNCED` | `TRUTH_SYNCED` — commits `50fa075` + `3284f3f`; 11/11 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_SNAPSHOT_INTEGRATION_001_VERIFIED_COMPLETE` |
-| `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` | `score_version` filter on admin snapshot list; `snapshotListQuerySchema` exported; 8 unit tests | TQ-11 | Implementation (slice 3 of `TTP-TEXQTICSCORE-V2-IMPL-001`) | `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` `TRUTH_SYNCED` + explicit Paresh authorization | `IMPLEMENTATION_OPEN` |
+| `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` | `score_version` filter on admin snapshot list; `snapshotListQuerySchema` exported; 8 unit tests (TC-RSA-013–TC-RSA-020) | TQ-11 | Implementation (slice 3 of `TTP-TEXQTICSCORE-V2-IMPL-001`) | `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` `TRUTH_SYNCED` + explicit Paresh authorization | `TRUTH_SYNCED` — commits `d7186d7` + `a218275`; 20/20 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_ADMIN_READ_001_VERIFIED_COMPLETE` |
+| `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` | Tenant-visible v2 score surface — bounded read-only advisory surface | TQ-11, TQ-12 | Implementation (slice 4 of `TTP-TEXQTICSCORE-V2-IMPL-001`) | `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` `TRUTH_SYNCED` + legal clearance for tenant-visible TexQticScore v2 surfaces | `BLOCKED_LEGAL` — `LEGAL_REVIEW_PENDING` unresolved; no code, no routes, no schema; blocker record `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-TENANT-SURFACE-BLOCKED-LEGAL-001` |
 | `TTP-SCORE-VERSIONING-IMPL-001` | `score_version` column on `ttp_score_snapshots` | TQ-12 | Implementation | TQ-06 and TQ-11 design approved | `NOT_OPENED` |
 
 ### P1 Key constraints
@@ -452,8 +461,9 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-TEXQTICSCORE-V2-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_DECISIONS_RECORDED` — options audit (commit `07a7e82`); decisions in `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001`; OQ-V2-01 through OQ-V2-09 resolved |
 | `TTP-TEXQTICSCORE-V2-SERVICE-001` | Wave 2 | P1 | Implementation (slice 1) | `TRUTH_SYNCED` — commits `3999a2c` + `2c01c38`; 31/31 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_SERVICE_001_VERIFIED_COMPLETE` |
 | `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` | Wave 2 | P1 | Implementation (slice 2) | `TRUTH_SYNCED` — commits `50fa075` + `3284f3f`; 11/11 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_SNAPSHOT_INTEGRATION_001_VERIFIED_COMPLETE` |
-| `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` | Wave 2 | P1 | Implementation (slice 3) | `IMPLEMENTATION_OPEN` — `score_version` filter on admin snapshot list; `snapshotListQuerySchema` exported; 8 unit tests (TC-RSA-013–TC-RSA-020); no tenant route, no schema changes |
-| `TTP-TEXQTICSCORE-V2-IMPL-001` | Wave 2 | P1 | Implementation | `IMPLEMENTATION_IN_PROGRESS` — slice 1 (`TTP-TEXQTICSCORE-V2-SERVICE-001`) `TRUTH_SYNCED`; slice 2 (`TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001`) `TRUTH_SYNCED`; slice 3 (`TTP-TEXQTICSCORE-V2-ADMIN-READ-001`) `IMPLEMENTATION_OPEN` |
+| `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` | Wave 2 | P1 | Implementation (slice 3) | `TRUTH_SYNCED` — commits `d7186d7` + `a218275`; 20/20 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_ADMIN_READ_001_VERIFIED_COMPLETE` |
+| `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` | Wave 2 | P1 | Implementation (slice 4) | `BLOCKED_LEGAL` — `LEGAL_REVIEW_PENDING` unresolved; no code changes; blocker record `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-TENANT-SURFACE-BLOCKED-LEGAL-001` |
+| `TTP-TEXQTICSCORE-V2-IMPL-001` | Wave 2 | P1 | Implementation | `IMPLEMENTATION_IN_PROGRESS` — slice 1 (`TTP-TEXQTICSCORE-V2-SERVICE-001`) `TRUTH_SYNCED`; slice 2 (`TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001`) `TRUTH_SYNCED`; slice 3 (`TTP-TEXQTICSCORE-V2-ADMIN-READ-001`) `TRUTH_SYNCED`; slice 4 (`TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001`) `BLOCKED_LEGAL` |
 | `TTP-SCORE-VERSIONING-IMPL-001` | Wave 2 | P1 | Implementation | `NOT_OPENED` |
 | `TTP-DATA-CONSENT-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
 | `TTP-DATA-CONSENT-IMPL-001` | Wave 3 | P2 | Implementation + migration | `NOT_OPENED` |
@@ -573,19 +583,34 @@ No routes, no schema changes, no Prisma migration, no tenant surface.
 Verification record: `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-VERIFIED-001.md`.
 Final decision: `TTP_TEXQTICSCORE_V2_SNAPSHOT_INTEGRATION_001_VERIFIED_COMPLETE`.
 
-### Current open unit — TTP-TEXQTICSCORE-V2-ADMIN-READ-001
+### Completed unit — TTP-TEXQTICSCORE-V2-ADMIN-READ-001
 
-**`TTP-TEXQTICSCORE-V2-ADMIN-READ-001` is now `IMPLEMENTATION_OPEN`:**
-Explicitly authorized by Paresh Sharma (2026-05-05) via the prompt that opened this slice.
-Gate: `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` `TRUTH_SYNCED` (commits `50fa075`, `3284f3f`).
-Scope: extend admin score snapshot read endpoints to support `score_version` filtering;
-add `score_version: z.enum(['TTP_V1', 'TEXQTICSCORE_V2']).optional()` to `snapshotListQuerySchema`;
-export `snapshotListQuerySchema` for unit-test access;
-add `score_version` filter propagation in `querySnapshotList`;
-add 8 focused unit tests (TC-RSA-013 through TC-RSA-020).
+**`TTP-TEXQTICSCORE-V2-ADMIN-READ-001` is `TRUTH_SYNCED`:**
+Commit 1 `d7186d7` (feat: filter admin score snapshots by version); Commit 2 `a218275` (docs: verify texqticscore v2 admin reads).
+Delivered: `score_version: z.enum(['TTP_V1', 'TEXQTICSCORE_V2']).optional()` added to `snapshotListQuerySchema`;
+`snapshotListQuerySchema` exported for unit-test access; `score_version` filter applied in `querySnapshotList`;
+8 unit tests (TC-RSA-013 through TC-RSA-020). 20/20 unit tests pass (12 pre-existing + 8 new).
 `SNAPSHOT_SELECT` unchanged (`score_version: true` already present; `score_detail_json` remains excluded).
 No tenant route, no snapshot writes, no schema changes, no Prisma migration.
 `ttp_enabled=false` unchanged. `LEGAL_REVIEW_PENDING` unchanged.
+Verification record: `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-ADMIN-READ-VERIFIED-001.md`.
+Final decision: `TTP_TEXQTICSCORE_V2_ADMIN_READ_001_VERIFIED_COMPLETE`.
+
+### Blocked unit — TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001
+
+**`TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` is `BLOCKED_LEGAL`:**
+Date: 2026-05-05. Unit ID: `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001`.
+Legal pre-gate inspected: `PRODUCT-DEC-TRADETRUST-PAY-TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001`,
+`PRODUCT-DEC-TRADETRUST-PAY-TTP-LEGAL-COUNSEL-REVIEW-PACKET-001`,
+`PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-ADMIN-READ-VERIFIED-001`,
+`TTP-TEXQTICSCORE-V2-DESIGN-001`.
+Finding: `LEGAL_REVIEW_PENDING` is active throughout all governance artifacts. No legal clearance
+for tenant-visible TexQticScore v2 surfaces is documented anywhere. `TTP-TEXQTICSCORE-V2-DESIGN-001`
+explicitly marks this unit as `LEGAL_GATED__NOT_OPENED`.
+No code changed. No routes added. No UI added. No schema changed.
+Blocker record: `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-TENANT-SURFACE-BLOCKED-LEGAL-001`.
+`ttp_enabled=false` unchanged. `LEGAL_REVIEW_PENDING` unchanged. Wave 3/4/5 gates unchanged.
+Final decision: `TTP_TEXQTICSCORE_V2_TENANT_SURFACE_001_BLOCKED_LEGAL_PENDING`.
 
 ## 19. No-Change Confirmation
 
@@ -632,6 +657,8 @@ PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_SERVICE_001_TRUTH_SYNCED
 PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_SNAPSHOT_INTEGRATION_001_IMPLEMENTATION_OPEN
 PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_SNAPSHOT_INTEGRATION_001_TRUTH_SYNCED
 PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_ADMIN_READ_001_IMPLEMENTATION_OPEN
+PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_ADMIN_READ_001_TRUTH_SYNCED
+PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_TENANT_SURFACE_001_BLOCKED_LEGAL
 ```
 
 **Authority:** Paresh Patel — TexQtic founder / operator  
