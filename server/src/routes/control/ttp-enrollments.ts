@@ -47,8 +47,13 @@ import {
   EnrollmentReviewEligibilityMissingError,
   EnrollmentReviewEligibilityExpiredError,
   EnrollmentReviewOutcomeInvalidError,
+  type AdminEnrollmentRecord,
 } from '../../services/ttpEnrollment.service.js';
 import { TTP_ENROLLMENT_REVIEW_OUTCOME } from '../../ttp/ttp.constants.js';
+import {
+  TtpScoreSnapshotService,
+  TTP_SCORE_TRIGGER_EVENT,
+} from '../../services/ttpScoreSnapshot.service.js';
 
 // ─── Sentinel / context ───────────────────────────────────────────────────────
 
@@ -106,6 +111,64 @@ const reviewBodySchema = z.object({
   ]),
   notes: z.string().max(1000).optional(),
 });
+
+// ─── Score Snapshot Trigger ──────────────────────────────────────────────────
+
+/**
+ * Post-commit, best-effort score snapshot capture for ENROLLMENT_APPROVED.
+ * Exported for unit testing.
+ *
+ * MUST be called only when outcome === APPROVED.
+ * Never throws — all errors are structured-logged and swallowed.
+ */
+export async function captureEnrollmentApprovedSnapshot(params: {
+  enrollment: AdminEnrollmentRecord;
+  tradeId: string;
+  adminId: string;
+  snapshotSvc: Pick<TtpScoreSnapshotService, 'captureSnapshot'>;
+  log: { error(obj: Record<string, unknown>, msg: string): void };
+}): Promise<void> {
+  const { enrollment, tradeId, adminId, snapshotSvc, log } = params;
+  const enrollmentId = enrollment.latest_log_id;
+
+  if (!enrollmentId) {
+    log.error(
+      {
+        event: 'ttp.score_snapshot.capture_failed',
+        trigger_event: TTP_SCORE_TRIGGER_EVENT.ENROLLMENT_APPROVED,
+        trade_id: tradeId,
+        org_id: enrollment.org_id,
+        reason: 'missing_enrollment_id',
+      },
+      'ttp.score_snapshot.capture_failed',
+    );
+    return;
+  }
+
+  try {
+    await snapshotSvc.captureSnapshot({
+      orgId: enrollment.org_id,
+      triggerEvent: TTP_SCORE_TRIGGER_EVENT.ENROLLMENT_APPROVED,
+      tradeId,
+      enrollmentId,
+      sourceEventId: enrollmentId,
+      actorId: adminId,
+    });
+  } catch (snapshotErr) {
+    log.error(
+      {
+        event: 'ttp.score_snapshot.capture_failed',
+        trigger_event: TTP_SCORE_TRIGGER_EVENT.ENROLLMENT_APPROVED,
+        enrollment_id: enrollmentId,
+        trade_id: tradeId,
+        org_id: enrollment.org_id,
+        err_name: snapshotErr instanceof Error ? snapshotErr.name : 'UnknownError',
+        err_msg: snapshotErr instanceof Error ? snapshotErr.message : String(snapshotErr),
+      },
+      'ttp.score_snapshot.capture_failed',
+    );
+  }
+}
 
 // ─── Plugin ───────────────────────────────────────────────────────────────────
 
@@ -206,6 +269,33 @@ const controlTtpEnrollmentRoutes: FastifyPluginAsync = async fastify => {
           const svc = new TtpEnrollmentService(db);
           return svc.adminReviewEnrollment({ tradeId, adminId, outcome, notes });
         });
+
+        // Post-commit best-effort: ENROLLMENT_APPROVED score snapshot.
+        if (outcome === TTP_ENROLLMENT_REVIEW_OUTCOME.APPROVED) {
+          try {
+            await withAdminWriteContext(enrollment.org_id, adminId, async db => {
+              await captureEnrollmentApprovedSnapshot({
+                enrollment,
+                tradeId: enrollment.trade_id,
+                adminId,
+                snapshotSvc: new TtpScoreSnapshotService(db),
+                log: request.log,
+              });
+            });
+          } catch (snapshotCtxErr) {
+            request.log.error(
+              {
+                event: 'ttp.score_snapshot.capture_failed',
+                trigger_event: TTP_SCORE_TRIGGER_EVENT.ENROLLMENT_APPROVED,
+                trade_id: tradeId,
+                org_id: enrollment.org_id,
+                err_name: snapshotCtxErr instanceof Error ? snapshotCtxErr.name : 'UnknownError',
+                err_msg: snapshotCtxErr instanceof Error ? snapshotCtxErr.message : String(snapshotCtxErr),
+              },
+              'ttp.score_snapshot.capture_failed',
+            );
+          }
+        }
 
         return sendSuccess(reply, enrollment);
       } catch (err) {
