@@ -186,8 +186,10 @@ Every Phase 2 unit follows this exact sequence. Steps may not be skipped or reor
 
 ## 7. P0 Implementation Unit Tracker
 
-These units will be opened after `TTP-SCOPED-ACTIVATION-DESIGN-001` is approved by Paresh.
-No unit below may be opened as an implementation unit before the design is approved.
+All Wave 0 P0 implementation units below are complete and `TRUTH_SYNCED`. This table is the
+historical execution record for completed Wave 0 units. No further Wave 0 implementation is open.
+Future units require separate Paresh approval and appropriate gates before any implementation
+prompt may be opened.
 
 | Unit ID | Unit Name | TQ | Type | Likely Files Affected | Gate | Verification Required | Status |
 |---|---|---|---|---|---|---|---|
@@ -218,7 +220,7 @@ before production verification:
 
 | Unit ID | Unit Name | Type | Scope | Status | Gate |
 |---|---|---|---|---|---|
-| `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` | Legal and compliance copy review | Governance / legal (non-code) | Final disclaimer text for `TTP_DISCLAIMER_TEXT` constant; forbidden-term list (seeds pre-commit lint); VPC certificate wording; score advisory wording; consent wording (TQ-05, TQ-14); dynamic discounting wording; lender data-sharing wording; origination fee disclosure notes | `PARALLEL_RECOMMENDED_NON_CODE` | None — non-code; may proceed immediately in parallel with Wave 0 design |
+| `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` | Legal and compliance copy review | Governance / legal (non-code) | Final disclaimer text for `TTP_DISCLAIMER_TEXT` constant; forbidden-term list (seeds pre-commit lint); VPC certificate wording; score advisory wording; consent wording (TQ-05, TQ-14); dynamic discounting wording; lender data-sharing wording; origination fee disclosure notes | `TRUTH_SYNCED` — gov `1e539da`, final decision `TTP_LEGAL_COMPLIANCE_COPY_REVIEW_001_OPERATOR_REVIEW_READY` | N/A — complete |
 
 ### What `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` must produce
 
@@ -437,7 +439,7 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-ACTIVATION-MONITORING-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` — impl `63b660b`, gov `62fb7fe`, final decision `TTP_ACTIVATION_MONITORING_IMPL_001_VERIFIED_COMPLETE` |
 | `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` | Wave 0 | P0 | Governance / runbook | `TRUTH_SYNCED` — impl `0c96c7f`, gov `8f6356e`, final decision `TTP_IMPL_006_ACTIVATION_ROLLBACK_RUNBOOK_VERIFIED_COMPLETE` |
 | `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` |
-| `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` | Wave 1 | P0/P2 | Governance / legal | `PARALLEL_RECOMMENDED_NON_CODE` |
+| `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` | Wave 1 | P0/P2 | Governance / legal | `TRUTH_SYNCED` — gov `1e539da`, final decision `TTP_LEGAL_COMPLIANCE_COPY_REVIEW_001_OPERATOR_REVIEW_READY` |
 | `TTP-SCORE-SNAPSHOT-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_TARGET_ONLY__WAITING` |
 | `TTP-SCORE-SNAPSHOT-IMPL-001` | Wave 2 | P1 | Implementation + migration | `NOT_OPENED` |
 | `TTP-TEXQTICSCORE-V2-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_TARGET_ONLY__WAITING` |
@@ -497,16 +499,20 @@ Structured Pino monitoring events added to all 13 TTP route catch blocks: `ttp.r
 `fastify.log` → `request.log` corrected in ttp-eligibility routes. `adminId` excluded (PII boundary).
 Bare `throw err` in ttp-routing-stubs replaced with structured log + sendError. 10 new unit tests (TC-001–TC-010). tsc clean.
 
-**All Wave 0 implementation units are now TRUTH_SYNCED.** All P0 units complete. Recommended immediate next unit: `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001`.
+**All Wave 0 implementation units are now TRUTH_SYNCED.** All P0 units complete.
+
+**TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001 is complete** (`TRUTH_SYNCED`): gov `1e539da`,
+final decision `TTP_LEGAL_COMPLIANCE_COPY_REVIEW_001_OPERATOR_REVIEW_READY`. Legal copy inventory,
+interim disclaimer analysis, forbidden-language list, safe-language patterns, VPC/score/consent/
+partner/fee wording captured. Operator review ready.
 
 ### Immediate next — open now (non-code)
 
-**Open now:** `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001`
+**Open now:** `TTP-LEGAL-COPY-COUNSEL-PACKET-001`
 
-This is a governance/legal artifact only. No code. No schema changes. No activation. It produces the
-final disclaimer text, forbidden-term list, and wording sign-offs required before Wave 2 (score),
-Wave 3 (consent), and Wave 4 (partner marketplace) can proceed. Status transitions to
-`IMPLEMENTATION_OPEN` once Paresh opens this unit.
+This is a governance/legal counsel packet artifact only. No code. No schema changes. No activation.
+It packages `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` outputs for external legal counsel review, with
+structured counsel questions and decision options for Paresh.
 
 ### Do not open yet
 
@@ -543,7 +549,7 @@ PHASE_2_IMPLEMENTATION_PLAN_AND_TRACKER_CREATED
 **`ttp_enabled` state:** `false` — UNCHANGED  
 **Files changed by this document:** This document only  
 **Implementation authorized:** No  
-**Next unit:** `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` (governance/legal, non-code, no activation)  
+**Next unit:** `TTP-LEGAL-COPY-COUNSEL-PACKET-001` (governance/legal counsel packet, non-code, no activation)  
 **Wave 2+ status:** All Wave 2, Wave 3, Wave 4, Wave 5 units remain gated — do not open without explicit Paresh decision
 
 ---
