@@ -116,4 +116,8 @@ Total TTP unit tests: **183 passing** ✅
 
 `TTP_IMPL_005_ADVISORY_DISCLAIMER_RESPONSES_VERIFIED_COMPLETE`
 
-Date: 2026-01-14
+Date: 2026-05-05
+
+> **Date correction note:** Original record contained `Date: 2026-01-14` (incorrect placeholder).
+> Corrected to `2026-05-05` (actual implementation date). No other content changed.
+> Correction recorded in tracker §18 TRUTH_SYNCED entry.

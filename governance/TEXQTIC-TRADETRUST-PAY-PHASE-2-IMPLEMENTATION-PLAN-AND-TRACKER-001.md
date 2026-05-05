@@ -430,7 +430,7 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-SCOPED-ACTIVATION-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` |
 | `TTP-QA-SENTINEL-FLAG-IMPL-001` | Wave 0 | P0 | Implementation + migration | `TRUTH_SYNCED` |
 | `TTP-ACTIVATION-MONITORING-IMPL-001` | Wave 0 | P0 | Implementation | `NOT_OPENED` |
-| `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` | Wave 0 | P0 | Governance / runbook | `NOT_OPENED` |
+| `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` | Wave 0 | P0 | Governance / runbook | `IMPLEMENTATION_OPEN` (TTP-IMPL-006) |
 | `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` |
 | `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` | Wave 1 | P0/P2 | Governance / legal | `PARALLEL_RECOMMENDED_NON_CODE` |
 | `TTP-SCORE-SNAPSHOT-DESIGN-001` | Wave 2 | P1 | Design | `DESIGN_TARGET_ONLY__WAITING` |
@@ -459,12 +459,11 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 
 ### Primary — current implementation unit
 
-**TTP-IMPL-005 is OPEN** (`IMPLEMENTATION_OPEN`): Advisory disclaimer to approved TTP responses.
-Adds `advisory_disclaimer: TTP_DISCLAIMER_TEXT` to `TradeTtpSummary` (ttpSummary.service.ts) and
-`TtpEnrollmentRecord` (ttpEnrollment.service.ts). TC-028 added to summary tests (28/28 passing);
-TC-018 updated (field-name checks, no substring) + TC-019 added to enrollment tests (19/19 passing).
-2 service files + 2 test files. tsc clean.
-Governance record: `PRODUCT-DEC-TRADETRUST-PAY-TTP-IMPL-005-ADVISORY-DISCLAIMER-RESPONSES-VERIFIED-001`.
+**TTP-IMPL-005 is complete** (`TRUTH_SYNCED`): impl `26c8329`, gov `274a3ad`,
+final decision `TTP_IMPL_005_ADVISORY_DISCLAIMER_RESPONSES_VERIFIED_COMPLETE`.
+Advisory disclaimer (`advisory_disclaimer: TTP_DISCLAIMER_TEXT`) added to `TradeTtpSummary`
+and `TtpEnrollmentRecord`. TC-028 + TC-019 added; TC-018 updated. 183 TTP unit tests passing.
+tsc clean. Date correction applied to gov record (2026-01-14 → 2026-05-05).
 
 **TTP-IMPL-004 is complete** (`TRUTH_SYNCED`): impl `0cc305d`, gov `16c61fb`,
 final decision `TTP_IMPL_004_STRUCTURED_PINO_LOGS_VERIFIED_COMPLETE`.
@@ -481,8 +480,13 @@ Sub-slice of `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` — that unit is now `T
 **TTP-IMPL-001 is complete** (`TRUTH_SYNCED`): impl `c6e24eaa`, gov `9e5f443a`,
 final decision `TTP_IMPL_001_QA_SENTINEL_FLAG_VERIFIED_COMPLETE`.
 
-**Next unit after TTP-IMPL-005:** `TTP-ACTIVATION-MONITORING-IMPL-001` or `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` — NOT yet opened. Requires separate Paresh-approved prompt.
-Remaining `NOT_OPENED` Wave 0 units: `TTP-ACTIVATION-MONITORING-IMPL-001`, `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001`.
+**TTP-IMPL-006 is OPEN** (`IMPLEMENTATION_OPEN`): Activation / rollback runbook (TTP-ACTIVATION-ROLLBACK-RUNBOOK-001).
+Governance / runbook only — no code, no schema, no migration, no DB changes, no deployment.
+Runbook path: `governance/runbooks/TTP-ACTIVATION-ROLLBACK-RUNBOOK-001.md`.
+`ttp_enabled = false` unchanged throughout.
+
+**Next unit after TTP-IMPL-006:** `TTP-ACTIVATION-MONITORING-IMPL-001` — NOT yet opened. Requires separate Paresh-approved prompt.
+Remaining `NOT_OPENED` Wave 0 units: `TTP-ACTIVATION-MONITORING-IMPL-001`.
 
 ### Parallel — may open now (non-code)
 
