@@ -31,6 +31,7 @@ import controlInvoiceRoutes from './control/invoices.js';
 import controlVpcRoutes from './control/vpc.js';
 import controlTtpRoutingStubRoutes from './control/ttp-routing-stubs.js';
 import controlTtpEnrollmentRoutes from './control/ttp-enrollments.js';
+import controlTtpScoreSnapshotRoutes from './control/ttp-score-snapshots.js';
 
 // ── Admin context helper (G-004) ──────────────────────────────────────────────
 // Canonical replacement for withDbContextLegacy({ isAdmin: true }).
@@ -2446,6 +2447,12 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   // GET    /api/control/ttp/enrollments/:tradeId     — get enrollment detail
   // PATCH  /api/control/ttp/enrollments/:tradeId     — review (approve/reject/suspend/cancel)
   await fastify.register(controlTtpEnrollmentRoutes, { prefix: '/ttp' });
+
+  // ─── TTP Slice 6: Score Snapshot Read (Admin) ────────────────────────────────
+  // GET    /api/control/ttp/score-snapshots/:orgId   — list snapshots for org (SUPER_ADMIN)
+  // GET    /api/control/ttp/score-snapshot/:snapshotId — get snapshot detail (SUPER_ADMIN)
+  // NOTE: Tenant-facing score history NOT implemented — LEGAL_REVIEW_PENDING unresolved.
+  await fastify.register(controlTtpScoreSnapshotRoutes, { prefix: '/ttp' });
 };
 
 export default controlRoutes;
