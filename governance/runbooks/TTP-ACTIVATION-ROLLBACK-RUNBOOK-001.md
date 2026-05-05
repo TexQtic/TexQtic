@@ -117,7 +117,7 @@ This is a gate checklist — each item requires explicit written confirmation.**
 | TTP-IMPL-004: Structured Pino logs | `TRUTH_SYNCED` | ✅ (`0cc305d`) |
 | TTP-IMPL-005: Advisory disclaimer responses | `TRUTH_SYNCED` | ✅ (`26c8329`) |
 | TTP-IMPL-006: This runbook | `TRUTH_SYNCED` | ✅ (`0c96c7f` / `8f6356e`) |
-| TTP-ACTIVATION-MONITORING-IMPL-001 | `TRUTH_SYNCED` | ⬜ |
+| TTP-ACTIVATION-MONITORING-IMPL-001 | `TRUTH_SYNCED` | ✅ |
 | `TTP-SCOPED-ACTIVATION-IMPL-001` (per-org gate middleware) | `TRUTH_SYNCED` | ✅ (`b7950b7`) |
 | `TTP-QA-SENTINEL-FLAG-IMPL-001` (`is_qa_sentinel` column + QA seed) | `TRUTH_SYNCED` | ✅ (`c6e24eaa`) |
 

@@ -189,7 +189,7 @@ No unit below may be opened as an implementation unit before the design is appro
 | `TTP-SCOPED-ACTIVATION-DESIGN-001` | Scoped activation design | TQ-01, TQ-08, TQ-09, TQ-10, TQ-20 | Design | Governance docs only | None — cleared by P0 approvals | Read-only validation + Paresh review | `NEXT_RECOMMENDED_UNIT` |
 | `TTP-SCOPED-ACTIVATION-IMPL-001` | Per-org activation middleware | TQ-01 | Implementation | `server/src/middleware/ttpFeatureGate.middleware.ts`; feature-gate unit tests | Design approved by Paresh | (1) global false → all blocked; (2) global true + no override → blocked; (3) global true + org override true → allowed; (4) global true + org override false → blocked; (5) production smoke after deploy | `NOT_OPENED` |
 | `TTP-QA-SENTINEL-FLAG-IMPL-001` | QA sentinel flag on organizations | TQ-08 | Implementation + migration | `server/prisma/schema.prisma`; SQL migration; `scripts/qa-ttp-seed.sql`; Prisma generated types | Design approved + SQL verified (no ERROR / ROLLBACK) | QA orgs: `is_qa_sentinel=true`; real orgs: `is_qa_sentinel=false`; no RLS leaks; `prisma db pull` + `generate` pass; unit test for sentinel query | `TRUTH_SYNCED` — impl `c6e24eaa`, gov `9e5f443a`, final decision `TTP_IMPL_001_QA_SENTINEL_FLAG_VERIFIED_COMPLETE` |
-| `TTP-ACTIVATION-MONITORING-IMPL-001` | Structured TTP pino log events | TQ-09 | Implementation | TTP route handlers (13 routes); `ttpFeatureGate.middleware.ts`; pino logger setup | Design approved by Paresh | Log events emitted for gate block, 5xx, VPC generation error, eligibility expiry, enrollment gate failure; server typecheck passes | `NOT_OPENED` |
+| `TTP-ACTIVATION-MONITORING-IMPL-001` | Structured TTP pino log events | TQ-09 | Implementation | TTP route handlers (13 routes); `ttpFeatureGate.middleware.ts`; pino logger setup | Design approved by Paresh | Log events emitted for gate block, 5xx, VPC generation error, eligibility expiry, enrollment gate failure; server typecheck passes | `TRUTH_SYNCED` — impl `63b660b`, gov (see §18), final decision `TTP_ACTIVATION_MONITORING_IMPL_001_VERIFIED_COMPLETE` |
 | `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` | Activation / rollback runbook | TQ-10 | Governance / runbook | `governance/` runbook doc only (no code) | Design approved by Paresh | Runbook contains: enable pilot org, disable pilot org, global emergency off, void non-terminal VPCs, post-rollback state audit checklist | `NOT_OPENED` |
 | `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` | TTP language governance baseline | TQ-20 | Implementation | `server/src/ttp/ttp.constants.ts`; all 13 TTP route handler response types; server typecheck | Design approved by Paresh; placeholder disclaimer text until legal review completes | `advisory_disclaimer` field present in all 13 TTP API responses; `TTP_DISCLAIMER_TEXT` constant referenced (not inline string); no forbidden wording introduced; server typecheck + unit test pass; production API response verified | `NOT_OPENED` |
 
@@ -429,7 +429,7 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-SCOPED-ACTIVATION-DESIGN-001` | Wave 0 | P0 | Design | `DESIGN_APPROVED` |
 | `TTP-SCOPED-ACTIVATION-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` |
 | `TTP-QA-SENTINEL-FLAG-IMPL-001` | Wave 0 | P0 | Implementation + migration | `TRUTH_SYNCED` |
-| `TTP-ACTIVATION-MONITORING-IMPL-001` | Wave 0 | P0 | Implementation | `IMPLEMENTATION_OPEN` (TTP-ACTIVATION-MONITORING-IMPL-001) |
+| `TTP-ACTIVATION-MONITORING-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` — impl `63b660b`, gov (see §18), final decision `TTP_ACTIVATION_MONITORING_IMPL_001_VERIFIED_COMPLETE` |
 | `TTP-ACTIVATION-ROLLBACK-RUNBOOK-001` | Wave 0 | P0 | Governance / runbook | `TRUTH_SYNCED` — impl `0c96c7f`, gov `8f6356e`, final decision `TTP_IMPL_006_ACTIVATION_ROLLBACK_RUNBOOK_VERIFIED_COMPLETE` |
 | `TTP-LANGUAGE-GOVERNANCE-BASELINE-IMPL-001` | Wave 0 | P0 | Implementation | `TRUTH_SYNCED` |
 | `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` | Wave 1 | P0/P2 | Governance / legal | `PARALLEL_RECOMMENDED_NON_CODE` |
@@ -485,9 +485,14 @@ final decision `TTP_IMPL_006_ACTIVATION_ROLLBACK_RUNBOOK_VERIFIED_COMPLETE`.
 Activation / rollback runbook created at `governance/runbooks/TTP-ACTIVATION-ROLLBACK-RUNBOOK-001.md`.
 Runbook Section B and D.1 stale entries corrected. `ttp_enabled = false` unchanged throughout.
 
-**Current unit: TTP-ACTIVATION-MONITORING-IMPL-001** (`IMPLEMENTATION_OPEN`): Structured TTP pino log events.
-Route monitoring events for 5xx, VPC generate error, eligibility expiry, enrollment gate failure.
-Remaining `NOT_OPENED` Wave 0 units: none (all units at IMPLEMENTATION_OPEN or above).
+**TTP-ACTIVATION-MONITORING-IMPL-001 is complete** (`TRUTH_SYNCED`): impl `63b660b`, gov (commit 2 of this unit),
+final decision `TTP_ACTIVATION_MONITORING_IMPL_001_VERIFIED_COMPLETE`.
+Structured Pino monitoring events added to all 13 TTP route catch blocks: `ttp.route.error`, `ttp.vpc.generate.error`,
+`ttp.eligibility.expired`, `ttp.enrollment.gate_failed`. `invoiceSnap` hoisted for catch-block scope.
+`fastify.log` → `request.log` corrected in ttp-eligibility routes. `adminId` excluded (PII boundary).
+Bare `throw err` in ttp-routing-stubs replaced with structured log + sendError. 10 new unit tests (TC-001–TC-010). tsc clean.
+
+**All Wave 0 implementation units are now TRUTH_SYNCED.** Awaiting Paresh decision on next phase.
 
 ### Parallel — may open now (non-code)
 
