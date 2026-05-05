@@ -372,7 +372,9 @@ VALUES -- VPC 1: ACTIVE
       WHERE entity_type = 'VPC'
         AND state_key = 'ROUTING_READY'
     ),
-    now(),
+    now() + INTERVAL '1 second',
+    -- issued_at: 1 second after VPC 1 so orderBy({issued_at:'desc'}) always
+    -- selects VPC 2 as latestVpc → routing stub (§8) consistently found.
     now() + INTERVAL '90 days',
     true
   ) ON CONFLICT (id) DO NOTHING;
@@ -401,6 +403,39 @@ VALUES (
     '1.0',
     'PENDING'
   ) ON CONFLICT (id) DO NOTHING;
+-- ════════════════════════════════════════════════════════════════════════════
+-- §8a  VPC ISSUED_AT ORDERING CORRECTION (QA ROUTING READINESS ALIGNMENT)
+--      Ensures VPC 2 (ROUTING_READY, ee000000-...-000051) has a strictly
+--      later issued_at than VPC 1 (ACTIVE, ee000000-...-000050).
+--
+--      Root cause: §7 inserts both VPCs with issued_at=now() in the same
+--      VALUES clause → identical timestamps. TtpSummaryService.step-6
+--      selects the single latest VPC via orderBy({issued_at:'desc'})+take:1.
+--      With equal timestamps the selection is non-deterministic; when VPC 1
+--      (ACTIVE) is selected its routing stub does not exist →
+--      routing_readiness.found=false → Factor 7 FAIL → score=95 (not 100).
+--
+--      Fix: set VPC 2's issued_at to VPC 1's issued_at + 1 second so
+--      TtpSummaryService always selects VPC 2 (ROUTING_READY) as latestVpc,
+--      and the existing routing stub (§8) is consistently found.
+--
+--      Idempotent: the WHERE predicate is a no-op if VPC 2 already has a
+--      strictly later issued_at than VPC 1 (correction already applied).
+--
+--      Scope: QA sentinel UUIDs only — never touches production data.
+-- ════════════════════════════════════════════════════════════════════════════
+UPDATE public.verified_payable_certificates
+SET issued_at = (
+    SELECT issued_at + INTERVAL '1 second'
+    FROM public.verified_payable_certificates
+    WHERE id = 'ee000000-0000-0000-0000-000000000050'
+  )
+WHERE id = 'ee000000-0000-0000-0000-000000000051'
+  AND issued_at <= (
+    SELECT issued_at
+    FROM public.verified_payable_certificates
+    WHERE id = 'ee000000-0000-0000-0000-000000000050'
+  );
 -- ════════════════════════════════════════════════════════════════════════════
 -- §9  QA TTP ENROLLMENT LOGS
 --     Two append-only log rows simulating a complete enrollment progression:
