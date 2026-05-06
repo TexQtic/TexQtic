@@ -39,6 +39,7 @@ export default defineConfig({
       '**/node_modules/**',
       '**/dist/**',
       'dist/**',
+      '../tests/frontend/**',
     ],
   },
 });
