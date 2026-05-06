@@ -151,40 +151,43 @@ Every Phase 2 unit follows this exact sequence. Steps may not be skipped or reor
 
 ---
 
-## 6. Immediate Next Unit
+## 6. Current State / Recommended Next Unit
+
+### Recently completed units
 
 | Field | Value |
 |---|---|
-| **Unit ID** | `TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` |
-| **Status** | `PRODUCTION_VERIFIED` — implementation commit `3e2dbab` + governance commit `7514a4f` confirmed on `origin/main`; all 3 screenshots (SS-FDU-001 VpcConsole, SS-FDU-002 TtpEnrollmentAdmin, SS-FDU-003 TtpEligibilityConsole) confirmed ✓ PASS 2026-05-06 via SUPERADMIN session at `app.texqtic.com`; approved copy `"TradeTrust Pay is not currently enabled on this platform."` verified on all 3 surfaces; final token issued: `TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_PRODUCTION_VERIFY_001_PRODUCTION_VERIFIED`; verification record `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-PRODUCTION-VERIFIED-001.md` |
-| **Type** | Frontend — copy-only fix (no backend, no schema, no routes, no feature flag changes) |
-| **Purpose** | Update the `catch` block error copy in 3 TTP-gated control-plane components so that SUPER_ADMIN operators see "TradeTrust Pay is not currently enabled on this platform." instead of generic error text when `ttp_enabled=false`. |
-| **Gate** | `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` `AUDIT_COMPLETE` |
-| **Predecessor** | `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` — audit classified 3 surfaces as `UI_ERROR_COPY_MISMATCH`; this unit resolves those mismatches |
-| **Surfaces** | VPC Console (`VpcConsole`) · TTP Enrollment (`TtpEnrollmentAdmin`) · TTP Eligibility (`TtpEligibilityConsole`) |
-| **Design artifact** | `docs/TECS-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001-DESIGN-v1.md` |
-| **Files to modify** | `components/ControlPlane/VpcConsole.tsx` · `components/ControlPlane/TtpEnrollmentAdmin.tsx` · `components/ControlPlane/TtpEligibilityConsole.tsx` |
-| **Files to create** | `tests/ttp-control-plane-feature-disabled-ux.test.tsx` |
-| **Proposed copy** | `"TradeTrust Pay is not currently enabled on this platform."` (Paresh must confirm before implementation) |
+| **Last completed implementation unit** | `TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` |
+| **Status** | `PRODUCTION_VERIFIED` — implementation commit `3e2dbab` + governance commit `7514a4f` confirmed on `origin/main`; all 3 screenshots (SS-FDU-001 VpcConsole, SS-FDU-002 TtpEnrollmentAdmin, SS-FDU-003 TtpEligibilityConsole) confirmed ✓ PASS 2026-05-06 via SUPERADMIN session at `app.texqtic.com`; approved copy `"TradeTrust Pay is not currently enabled on this platform."` verified on all 3 surfaces; token `TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_PRODUCTION_VERIFY_001_PRODUCTION_VERIFIED` ISSUED; verification record `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-PRODUCTION-VERIFIED-001.md` |
+| **Frontend test harness chain** | `TTP-FRONTEND-TEST-HARNESS-CI-VERIFY-001` `TRUTH_SYNCED` — RTL/jsdom harness installed (IMPL-001), pilot test 5/5 (PILOT-001), CI gate added to `.github/workflows/test-suite.yml` (CI-VERIFY-001); verification record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-CI-VERIFIED-001.md`; final decision `TTP_FRONTEND_TEST_HARNESS_CI_VERIFY_001_VERIFIED_COMPLETE` |
 
-### Completed predecessor — TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001
+### Recommended next unit
+
+| Field | Value |
+|---|---|
+| **Unit ID** | `TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001` |
+| **Status** | `NOT_OPENED` — recommended next governance/legal unit |
+| **Type** | Governance / legal decision record |
+| **Purpose** | Record Paresh/counsel feedback on the existing legal counsel packet (`TTP-LEGAL-COPY-COUNSEL-PACKET-001` `TRUTH_SYNCED`). Resolve or classify `LEGAL_REVIEW_PENDING`. Determine whether legal approval exists for: disclaimer text; TexQticScore wording; tenant-visible score surfaces; consent wording; VPC wording; partner/finance/fee wording. |
+| **Gate** | `TTP-LEGAL-COPY-COUNSEL-PACKET-001` `TRUTH_SYNCED` — packet ready for Paresh/counsel review |
+| **Implementation authorized** | No — governance/legal record only |
+| **Activation** | `ttp_enabled=false` must remain unchanged |
+
+### Pause rule
+
+If Paresh is not ready to proceed with legal/counsel feedback:
+- No further implementation should be opened.
+- `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` remains `BLOCKED_LEGAL`.
+- Wave 3/4/5 remain gated.
+- `LEGAL_REVIEW_PENDING` remains unchanged.
+
+### Historical record — TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001
 
 `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` is `AUDIT_COMPLETE` (governance audit — no code
 change): 4 control-plane TradeTrust UI surfaces classified. 1 `DATA_EMPTY_STATE_ONLY`
 (EscrowAdminPanel). 3 `UI_ERROR_COPY_MISMATCH` (VpcConsole, TtpEnrollmentAdmin,
 TtpEligibilityConsole). Audit record:
 `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001.md`.
-
-### No-go confirmation (design unit — no code changed by this document)
-
-- No code changed — CONFIRMED (design only)
-- No route changed — CONFIRMED
-- No UI changed — CONFIRMED (design proposes changes; not yet implemented)
-- No schema changed — CONFIRMED
-- No activation — CONFIRMED
-- `ttp_enabled=false` — UNCHANGED
-- `LEGAL_REVIEW_PENDING` — UNCHANGED
-- Wave 3/4/5 gates — UNCHANGED
 
 ---
 
@@ -270,9 +273,11 @@ new decision, not an assumption.
 
 ### P1 Key constraints
 
-- **`ttp_score_snapshots` table does not exist today.** Creating it requires SQL + `prisma db pull` + `generate` — not `migrate dev` or `db push`.
-- **`computeTtpScore` (Phase 1, 7-factor, 100pt) must not be modified.** TexQticScore v2 must be a new separate function.
-- **Snapshot write logic must be trigger-based** at VPC issuance, enrollment approval, admin review, partner transmission — not a continuous background process.
+- **`ttp_score_snapshots` table exists and is `TRUTH_SYNCED`.** It was created by `TTP-SCORE-SNAPSHOT-SQL-RLS-001` (commit `5e8ac44`); all 6 implementation slices are `TRUTH_SYNCED`. Any future schema or data changes require a bounded design and explicit Paresh authorization — not `migrate dev` or `db push`.
+- **`computeTtpScore` (Phase 1, 7-factor, 100pt) must not be modified.** TexQticScore v2 (`computeTexQticScore`) is a separate function — `TTP-TEXQTICSCORE-V2-SERVICE-001` `TRUTH_SYNCED`.
+- **Snapshot write logic is trigger-based** at VPC issuance, enrollment approval, and admin review (slices 3–5 complete). Partner transmission trigger remains gated until Wave 4.
+- **TexQticScore v2 tenant-visible surfaces remain `BLOCKED_LEGAL`.** `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` is `BLOCKED_LEGAL` — `LEGAL_REVIEW_PENDING` is unresolved; no tenant-facing score history may be exposed until legal clearance.
+- **External/partner-facing score sharing remains legal/partner gated.** No partner transmission may be implemented until Wave 4 gates are cleared.
 
 ---
 
@@ -487,6 +492,7 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-FRONTEND-TEST-HARNESS-IMPL-001` | Wave 2 (post) | P1 | Implementation | `TRUTH_SYNCED` — devDeps installed: `vitest@^3.2.4`, `@testing-library/react@^16.3.2`, `@testing-library/jest-dom@^6.9.1`, `jsdom@^29.1.1`; created `vitest.frontend.config.ts` (jsdom, setupFiles, include `tests/frontend/**`); created `tests/setupTests.ts`; created `tsconfig.test.json` (optional IDE support, scoped to `tests/frontend/**`); added `test:frontend` script with `--passWithNoTests`; added `'../tests/frontend/**'` exclusion to `server/vitest.config.ts`; root uses npm (`package-lock.json`); smoke PASS; root tsc PASS; test tsc PASS; server tsc PASS; server bounded tests 20/20 PASS; no app/UI/CI/backend/Prisma/flags changed; verification record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-IMPL-VERIFIED-001.md`; final decision `TTP_FRONTEND_TEST_HARNESS_IMPL_001_VERIFIED_COMPLETE` |
 | `TTP-FRONTEND-TEST-HARNESS-PILOT-001` | Wave 2 (post) | P1 | Test pilot | `TRUTH_SYNCED` — pilot component: `TtpEnrollmentAdmin` (no props, no router, Tailwind only); test file: `tests/frontend/ttp-enrollment-admin.test.tsx`; 5 TCs (TC-FEH-001 loading state, TC-FEH-002 FEATURE_DISABLED copy, TC-FEH-003 APIError message, TC-FEH-004 plain Error fallback, TC-FEH-005 enrollment table row); mocks: `vi.mock('../../services/ttpEnrollmentService')`; `tsconfig.test.json` infra correction: added `vite-env.d.ts` to include (fixes `import.meta.env` transitively surfaced by import chain); 5/5 PASS; test tsc PASS (zero errors); root tsc PASS; server bounded tests 20/20 PASS; no app code changed; verification record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-PILOT-VERIFIED-001.md`; final decision `TTP_FRONTEND_TEST_HARNESS_PILOT_001_VERIFIED_COMPLETE` |
 | `TTP-FRONTEND-TEST-HARNESS-CI-VERIFY-001` | Wave 2 (post) | P1 | CI verification | `TRUTH_SYNCED` — CI workflow `.github/workflows/test-suite.yml` updated; `npm ci` (root) + `npm run test:frontend` steps added after server Vitest; server pnpm steps preserved unchanged; local validation: 5/5 frontend PASS, test tsc PASS, root tsc PASS, 20/20 server PASS; verification record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-CI-VERIFIED-001.md`; final decision `TTP_FRONTEND_TEST_HARNESS_CI_VERIFY_001_VERIFIED_COMPLETE` |
+| `TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001` | Wave 1 (follow-up) | P0/P2 | Governance / legal | `NEXT_RECOMMENDED_UNIT` — not opened; recommended next: record Paresh/counsel feedback on legal packet (`TTP-LEGAL-COPY-COUNSEL-PACKET-001` `TRUTH_SYNCED`); resolve or classify `LEGAL_REVIEW_PENDING`; determine legal approval status for disclaimer, TexQticScore, tenant score surfaces, consent, VPC, partner/fee wording |
 | `TTP-DATA-CONSENT-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
 | `TTP-DATA-CONSENT-IMPL-001` | Wave 3 | P2 | Implementation + migration | `NOT_OPENED` |
 | `TTP-INTERNAL-SCORE-ROUTING-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
@@ -695,6 +701,36 @@ Final decision: `TTP_FRONTEND_TEST_HARNESS_CI_VERIFY_001_VERIFIED_COMPLETE`.
 
 ---
 
+### Recommended next — `TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001`
+
+**`TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001` is `NOT_OPENED` — recommended next governance/legal unit.**
+
+The frontend test harness chain is now CI-gated and complete. The legal/counsel packet
+(`TTP-LEGAL-COPY-COUNSEL-PACKET-001` `TRUTH_SYNCED`) is ready for Paresh/counsel review.
+The current unresolved gate is `LEGAL_REVIEW_PENDING`.
+
+**Purpose of recommended unit:** Record Paresh/counsel feedback on the legal counsel packet.
+Resolve or classify `LEGAL_REVIEW_PENDING`. Determine whether legal approval exists for:
+- Disclaimer text (`TTP_DISCLAIMER_TEXT` constant wording);
+- TexQticScore advisory wording;
+- Tenant-visible score surfaces (`TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` remains `BLOCKED_LEGAL`);
+- Consent wording (Wave 3 gate);
+- VPC wording;
+- Partner/finance/fee wording (Wave 4 gate).
+
+**This unit is NOT opened by this normalization.** No implementation is authorized.
+
+**Pause rule:** If Paresh is not ready to proceed with legal/counsel feedback:
+- No further implementation should be opened.
+- `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` remains `BLOCKED_LEGAL`.
+- Wave 3 (consent/data-sharing) remains `LEGAL_GATED__WAITING`.
+- Wave 4 (partner marketplace) remains `PARTNER_GATED__WAITING`.
+- Wave 5 (future units) remains `FUTURE_DESIGN_TARGET__WAITING`.
+- `LEGAL_REVIEW_PENDING` remains unchanged.
+- `ttp_enabled=false` remains unchanged.
+
+---
+
 ### Design decisions recorded — TTP-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001
 
 **`TTP-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001` is `DESIGN_DECISIONS_RECORDED`:**
@@ -780,7 +816,7 @@ final decision `TTP_LEGAL_COMPLIANCE_COPY_REVIEW_001_OPERATOR_REVIEW_READY`. Leg
 interim disclaimer analysis, forbidden-language list, safe-language patterns, VPC/score/consent/
 partner/fee wording captured. Operator review ready.
 
-### Immediate next — open now (design only)
+### Legal/counsel packet complete — `TTP-LEGAL-COPY-COUNSEL-PACKET-001`
 
 **TTP-LEGAL-COPY-COUNSEL-PACKET-001 is complete** (`TRUTH_SYNCED`): gov `f0ead0f`,
 final decision `TTP_LEGAL_COUNSEL_REVIEW_PACKET_001_READY_FOR_PARESH`. 9-section legal counsel
@@ -927,6 +963,7 @@ PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_DESIGN_DECISIONS_001_RECORDED
 PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_IMPL_001_TRUTH_SYNCED
 PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_PILOT_001_TRUTH_SYNCED
 PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_CI_VERIFY_001_TRUTH_SYNCED
+PHASE_2_TRACKER_UPDATED__NEXT_ACTION_NORMALIZED__LEGAL_COUNSEL_FEEDBACK_RECOMMENDED
 ```
 
 **Authority:** Paresh Patel — TexQtic founder / operator  
