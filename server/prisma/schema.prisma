@@ -498,6 +498,7 @@ model LifecycleState {
   certifications                                                                       Certification[]
   escrow_accounts                                                                      escrow_accounts[]
   invoices                                                                             invoices[]
+  network_pools                                                                        NetworkPool[]
   trades                                                                               Trade[]
   verified_payable_certificates                                                        verified_payable_certificates[]
 
@@ -1101,6 +1102,8 @@ model organizations {
   traceabilityNodes                                                                        TraceabilityNode[]
   network_invoices                                                                         NetworkInvoice[]
   network_lifecycle_logs                                                                   NetworkLifecycleLog[]
+  network_pools                                                                            NetworkPool[]
+  network_pool_memberships                                                                 NetworkPoolMembership[]
   trade_lifecycle_logs                                                                     TradeLifecycleLog[]
   tradesBuyer                                                                              Trade[]                         @relation("TradeBuyer")
   tradesSeller                                                                             Trade[]                         @relation("TradeSeller")
@@ -1811,6 +1814,86 @@ model NetworkInvoice {
   @@index([networkEntityType, networkEntityId], map: "idx_network_invoices_entity")
   @@index([status], map: "idx_network_invoices_status")
   @@map("network_invoices")
+}
+
+/// TEXQTIC-NC-PHASE1-POOL-SCHEMA-001: Collective Procurement Pool entity.
+/// Pool admin org (org_id) is the RLS anchor and canonical tenant boundary.
+/// Lifecycle tracked via lifecycle_states (FK) — POOL entity type rows seeded in POOL-LIFECYCLE-SEED-001.
+/// networkEntityId on network_invoices references this table softly (no FK in invoice packet).
+/// No service layer or routes in this packet — schema foundation only.
+model NetworkPool {
+  id               String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Pool admin org. RLS anchor: current_setting('app.org_id', true)
+  orgId            String                @map("org_id") @db.Uuid
+  /// Stable external reference for the pool. Unique per org.
+  poolRef          String                @map("pool_ref") @db.VarChar(100)
+  /// Commodity category for this pool (e.g., COTTON_YARN, GREY_FABRIC).
+  commodityCategory String               @map("commodity_category") @db.VarChar(100)
+  /// Target aggregate quantity for this pool. DB CHECK: target_qty > 0.
+  targetQty        Decimal               @map("target_qty") @db.Decimal(18, 6)
+  /// Unit of measure (e.g., KG, MT, METERS). Must match member declared_qty units.
+  qtyUnit          String                @map("qty_unit") @db.VarChar(50)
+  /// Current lifecycle state. FK to lifecycle_states. POOL entity type rows seeded separately.
+  lifecycleStateId String                @map("lifecycle_state_id") @db.Uuid
+  /// Timestamp when the pool opens for member declaration.
+  openAt           DateTime?             @map("open_at") @db.Timestamptz(6)
+  /// Timestamp when the pool closes for new declarations.
+  closeAt          DateTime?             @map("close_at") @db.Timestamptz(6)
+  /// Timestamp when allocation was computed.
+  allocatedAt      DateTime?             @map("allocated_at") @db.Timestamptz(6)
+  /// Timestamp when the pool was fully settled.
+  settledAt        DateTime?             @map("settled_at") @db.Timestamptz(6)
+  metadata         Json?                 @map("metadata")
+  createdByUserId  String?               @map("created_by_user_id") @db.Uuid
+  createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime              @default(now()) @map("updated_at") @db.Timestamptz(6)
+  organizations    organizations         @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pools_org_id_fk")
+  lifecycleState   LifecycleState        @relation(fields: [lifecycleStateId], references: [id], onUpdate: NoAction, map: "network_pools_lifecycle_state_id_fk")
+  memberships      NetworkPoolMembership[]
+
+  @@unique([orgId, poolRef], map: "network_pools_org_pool_ref_unique")
+  @@index([orgId, createdAt(sort: Desc)], map: "idx_network_pools_org_created")
+  @@index([lifecycleStateId], map: "idx_network_pools_lifecycle_state")
+  @@index([commodityCategory], map: "idx_network_pools_commodity_category")
+  @@map("network_pools")
+}
+
+/// TEXQTIC-NC-PHASE1-POOL-SCHEMA-001: Membership of an organization in a NetworkPool.
+/// One membership record per (pool_id, org_id) — enforced by unique constraint.
+/// org_id is the member org (RLS anchor). Pool owner is in NetworkPool.org_id.
+/// Status transitions (PENDING→APPROVED→ALLOCATED, WITHDRAWN) handled in a later service packet.
+model NetworkPoolMembership {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Pool this membership belongs to. FK to network_pools(id) ON DELETE CASCADE.
+  poolId        String        @map("pool_id") @db.Uuid
+  /// Member organization. RLS anchor: current_setting('app.org_id', true)
+  orgId         String        @map("org_id") @db.Uuid
+  /// Quantity the member declared for this pool. DB CHECK: declared_qty > 0.
+  declaredQty   Decimal       @map("declared_qty") @db.Decimal(18, 6)
+  /// Unit of measure — must match NetworkPool.qty_unit.
+  qtyUnit       String        @map("qty_unit") @db.VarChar(50)
+  /// Allocated quantity after pool closes and allocation is computed. Null until allocated.
+  allocatedQty  Decimal?      @map("allocated_qty") @db.Decimal(18, 6)
+  /// Fractional allocation (0.0000–1.0000). Null until computed. Sum across pool ≤ 1.
+  allocationPct Decimal?      @map("allocation_pct") @db.Decimal(5, 4)
+  /// Membership status. Domain enforced by DB CHECK.
+  status        String        @default("PENDING") @map("status") @db.VarChar(50)
+  /// Timestamp when this organization joined the pool.
+  joinedAt      DateTime      @map("joined_at") @db.Timestamptz(6)
+  /// Timestamp when membership was approved. Null until approved.
+  approvedAt    DateTime?     @map("approved_at") @db.Timestamptz(6)
+  /// Timestamp when membership was withdrawn. Null unless withdrawn.
+  withdrawnAt   DateTime?     @map("withdrawn_at") @db.Timestamptz(6)
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime      @default(now()) @map("updated_at") @db.Timestamptz(6)
+  pool          NetworkPool   @relation(fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_memberships_pool_id_fk")
+  organizations organizations @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_memberships_org_id_fk")
+
+  @@unique([poolId, orgId], map: "network_pool_memberships_pool_org_unique")
+  @@index([poolId, status], map: "idx_network_pool_memberships_pool_status")
+  @@index([orgId, createdAt(sort: Desc)], map: "idx_network_pool_memberships_org_created")
+  @@index([status], map: "idx_network_pool_memberships_status")
+  @@map("network_pool_memberships")
 }
 
 enum TenantPlan {
