@@ -268,4 +268,4 @@ and fully tested. DB column, CHECK constraint, Prisma model, TypeScript type, se
 and admin reads all support both `TTP_V1` and `TEXQTICSCORE_V2` correctly.
 No SQL, no Prisma migration, and no application code changes are required at this time.
 Versioning work would reopen only if a condition listed in §5 is triggered and explicitly
-authorized by Paresh Sharma.
+authorized by Paresh PATEL
