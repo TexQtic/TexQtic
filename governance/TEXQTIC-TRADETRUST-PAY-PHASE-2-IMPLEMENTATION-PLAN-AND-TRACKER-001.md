@@ -481,8 +481,10 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` | Wave 2 | P1 | Runtime verification | `PRODUCTION_VERIFIED_LIMITED_BACKEND_AUTH_GATE` — unauthenticated probe evidence only; tsc clean; 75/75 unit tests pass (31 + 11 + 20 + 13); 9 deployment commits confirmed; admin routes 401 (unauthenticated), tenant routes 404; authenticated UI paths NOT verified — see `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001`; verification record `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-RUNTIME-VERIFIED-001` |
 | `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` | Wave 2 | P1 | Governance / audit | `AUDIT_COMPLETE` — 4 control-plane surfaces audited; 1 `DATA_EMPTY_STATE_ONLY` (EscrowAdminPanel — not TTP-gated; IDLE initial state expected); 3 `UI_ERROR_COPY_MISMATCH` (VpcConsole, TtpEnrollmentAdmin, TtpEligibilityConsole — backend 503 FEATURE_DISABLED correct; front-end copy undifferentiated); no code changed; audit record `PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` |
 | `TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` | Wave 2 | P1 | Frontend (copy-only) | `PRODUCTION_VERIFIED` — implementation commit `3e2dbab` + governance `7514a4f`; SS-FDU-001/002/003 all ✓ PASS (2026-05-06); token `TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_PRODUCTION_VERIFY_001_PRODUCTION_VERIFIED` ISSUED |
-| `TTP-FRONTEND-TEST-HARNESS-DESIGN-001` | Wave 2 (post) | P1 | Design | `DESIGN_OPEN` — design artifact at `docs/TECS-TTP-FRONTEND-TEST-HARNESS-DESIGN-001-v1.md`; no packages installed; no config changed; addresses UI test blind spot identified during UX verification; awaiting Paresh review |
+| `TTP-FRONTEND-TEST-HARNESS-DESIGN-001` | Wave 2 (post) | P1 | Design | `DESIGN_DECISIONS_RECORDED` — design artifact `docs/TECS-TTP-FRONTEND-TEST-HARNESS-DESIGN-001-v1.md`; all 8 design decisions resolved; decision record `PRODUCT-DEC-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001` |
 | `TTP-FRONTEND-TEST-HARNESS-OPTIONS-AUDIT-001` | Wave 2 (post) | P1 | Governance / audit | `OPTIONS_AUDIT_COMPLETE` — 8 design decisions answered via repo-truth inspection; AF-FTH-01 through AF-FTH-09 resolved; critical finding: vitest 4.x incompatible with root vite 5.x (version constraint required); critical finding: server vitest `../tests/**` glob picks up `tests/frontend/` (server config exclusion required); pilot component confirmed as `TtpEnrollmentAdmin` (no props, 3 catch branches, Tailwind only); audit record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-OPTIONS-AUDIT-001.md`; awaiting Paresh decision on 8 open decisions; token `TTP_FRONTEND_TEST_HARNESS_OPTIONS_AUDIT_001_READY_FOR_PARESH_DECISION` |
+| `TTP-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001` | Wave 2 (post) | P1 | Governance / decisions | `DESIGN_DECISIONS_RECORDED` — D1–D8 resolved by Paresh Patel; IMPL-001 scope and allowlist finalized; no packages installed; no configs changed; decision record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001.md`; token `TTP_FRONTEND_TEST_HARNESS_DESIGN_DECISIONS_001_RECORDED` |
+| `TTP-FRONTEND-TEST-HARNESS-IMPL-001` | Wave 2 (post) | P1 | Implementation | `NOT_OPENED` — next candidate; awaiting Paresh authorization; scope: install 4 root devDeps (`vitest@^3`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`); create `vitest.frontend.config.ts` + `tests/setupTests.ts`; add `test:frontend` script; add `'../tests/frontend/**'` exclusion to `server/vitest.config.ts` |
 | `TTP-DATA-CONSENT-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
 | `TTP-DATA-CONSENT-IMPL-001` | Wave 3 | P2 | Implementation + migration | `NOT_OPENED` |
 | `TTP-INTERNAL-SCORE-ROUTING-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
@@ -580,6 +582,39 @@ No packages installed. No configs changed. No app code changed. No tests changed
 `ttp_enabled=false` unchanged. `LEGAL_REVIEW_PENDING` unchanged.
 Implementation authorized: No. `TTP-FRONTEND-TEST-HARNESS-IMPL-001` remains `NOT_OPENED`.
 Final token: `TTP_FRONTEND_TEST_HARNESS_OPTIONS_AUDIT_001_READY_FOR_PARESH_DECISION`.
+
+---
+
+### Design decisions recorded — TTP-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001
+
+**`TTP-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001` is `DESIGN_DECISIONS_RECORDED`:**
+Date: 2026-05-06. Unit ID: `TTP-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001`.
+Decision record: `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001.md`.
+
+All 8 design decisions resolved by Paresh Patel. Audit findings from `48c3a39` adopted as
+mandatory implementation constraints.
+
+**D1:** Approve 4 deps: `vitest@^3`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`.
+`vitest@^3.x` (not `^4.x`) — vitest 4.x incompatible with root `vite ^5.3.1`.
+**D2:** DOM environment: `jsdom`.
+**D3:** Vitest at root via Option A (root devDependency `^3.x`).
+**D4:** `tests/frontend/` directory + `'../tests/frontend/**'` exclusion in `server/vitest.config.ts`.
+**D5:** Script name: `test:frontend`.
+**D6:** Pilot component: `TtpEnrollmentAdmin`.
+**D7:** Defer `@testing-library/user-event`.
+**D8:** CI integration after pilot.
+
+**IMPL-001 scope confirmed:** install 4 devDeps; create `vitest.frontend.config.ts`; create
+`tests/setupTests.ts`; add `test:frontend` to root `package.json`; add `'../tests/frontend/**'`
+exclusion to `server/vitest.config.ts` (exclusion addition only — no other change to that file).
+**IMPL-001 allowlist:** `package.json` (root), `pnpm-lock.yaml` (root, created by install),
+`vitest.frontend.config.ts` (root, new), `tests/setupTests.ts` (new),
+`server/vitest.config.ts` (exclusion addition only), `tsconfig.test.json` (root, optional IDE support).
+
+No packages installed. No configs changed. No app code changed. No tests changed.
+`ttp_enabled=false` unchanged. `LEGAL_REVIEW_PENDING` unchanged.
+Implementation authorized: No. `TTP-FRONTEND-TEST-HARNESS-IMPL-001` remains `NOT_OPENED` — next candidate.
+Final token: `TTP_FRONTEND_TEST_HARNESS_DESIGN_DECISIONS_001_RECORDED`.
 
 ---
 
@@ -777,6 +812,8 @@ PHASE_2_TRACKER_UPDATED__UI_VERIFICATION_CLASSIFICATION_GUARDRAIL_RECORDED
 PHASE_2_TRACKER_UPDATED__TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_001_TRUTH_SYNCED
 PHASE_2_TRACKER_UPDATED__TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_001_PRODUCTION_VERIFIED
 PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_DESIGN_001_DESIGN_OPEN
+PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_OPTIONS_AUDIT_001_COMPLETE
+PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_DESIGN_DECISIONS_001_RECORDED
 ```
 
 **Authority:** Paresh Patel — TexQtic founder / operator  

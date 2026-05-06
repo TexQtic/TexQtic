@@ -13,7 +13,7 @@
 | **Type** | Design-only infrastructure planning |
 | **Date** | 2026-05-06 |
 | **Author** | Paresh Patel (TexQtic founder / operator) via GitHub Copilot Safe-Write Mode |
-| **Status** | `DESIGN_OPEN` |
+| **Status** | `DESIGN_DECISIONS_RECORDED` |
 | **Implementation authorized** | No |
 | **Package installation authorized** | No |
 | **`ttp_enabled` state** | `false` — UNCHANGED |
@@ -494,16 +494,35 @@ The first test file for `TtpEnrollmentAdmin` should prove at minimum:
 
 ---
 
-## 8. Implementation Slicing (Future — Not Opened)
+## 8. Implementation Slicing
 
-The following future implementation slices are identified but **not opened**. Each requires explicit
+The following implementation slices are identified. Each future slice requires explicit
 Paresh authorization before any implementation prompt may be opened.
 
 | Slice ID | Description | Prerequisites | Status |
 |---|---|---|---|
-| `TTP-FRONTEND-TEST-HARNESS-IMPL-001` | Install dependencies; create `vitest.frontend.config.ts`; create `tests/setupTests.ts`; add root `test:frontend` script; typecheck | Paresh approves this design (`DESIGN_OPEN` → `DESIGN_APPROVED`) | `NOT_OPENED` |
-| `TTP-FRONTEND-TEST-HARNESS-PILOT-001` | Write first component rendering test for `TtpEnrollmentAdmin`; confirm all 3 harness assertions pass; confirm existing server tests unaffected | `TTP-FRONTEND-TEST-HARNESS-IMPL-001` `TRUTH_SYNCED` | `NOT_OPENED` |
+| `TTP-FRONTEND-TEST-HARNESS-OPTIONS-AUDIT-001` | Repo-truth inspection of all 8 design decisions; version conflict analysis; glob conflict analysis; pilot component analysis | Design artifact | `OPTIONS_AUDIT_COMPLETE` — commit `48c3a39` |
+| `TTP-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001` | Record Paresh's D1–D8 decisions; finalize IMPL-001 scope and allowlist | Options audit `OPTIONS_AUDIT_COMPLETE` | `DESIGN_DECISIONS_RECORDED` — decision record `PRODUCT-DEC-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001` |
+| `TTP-FRONTEND-TEST-HARNESS-IMPL-001` | Install 4 root devDeps (`vitest@^3`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`); create `vitest.frontend.config.ts` (`environment: 'jsdom'`); create `tests/setupTests.ts`; add `test:frontend` script to root `package.json`; add `'../tests/frontend/**'` exclusion to `server/vitest.config.ts`; typecheck; verify existing server tests unaffected | `TTP-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001` `DESIGN_DECISIONS_RECORDED`; explicit Paresh authorization to open | `NOT_OPENED` — next candidate |
+| `TTP-FRONTEND-TEST-HARNESS-PILOT-001` | Write `tests/frontend/ttp-enrollment-admin.test.tsx` (TC-FEH-001–TC-FEH-005); confirm all harness assertions pass; confirm existing server tests unaffected | `TTP-FRONTEND-TEST-HARNESS-IMPL-001` `TRUTH_SYNCED` | `NOT_OPENED` |
 | `TTP-FRONTEND-TEST-HARNESS-CI-VERIFY-001` | Add `test:frontend` to the PR gate CI workflow; confirm CI passes; confirm server test CI unaffected | `TTP-FRONTEND-TEST-HARNESS-PILOT-001` `TRUTH_SYNCED`; CI integration discussion with Paresh | `NOT_OPENED` |
+
+### 8.1 IMPL-001 Allowlist
+
+When `TTP-FRONTEND-TEST-HARNESS-IMPL-001` is opened, the exact allowlist is:
+
+| File | Change |
+|---|---|
+| `package.json` (root) | Add `vitest@^3`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom` to `devDependencies`; add `"test:frontend": "vitest run --config vitest.frontend.config.ts"` to `scripts` |
+| `pnpm-lock.yaml` (root) | Created or updated by root `pnpm install` |
+| `vitest.frontend.config.ts` (root) | New file — `environment: 'jsdom'`, `include: ['tests/frontend/**']`, `setupFiles: ['./tests/setupTests.ts']`, `plugins: [react()]` |
+| `tests/setupTests.ts` | New file — `import '@testing-library/jest-dom/vitest';` |
+| `server/vitest.config.ts` | **Exclusion addition only** — add `'../tests/frontend/**'` to `exclude` array; no other change to this file |
+| `tsconfig.test.json` (root) | Optional — IDE TypeScript support for `tests/frontend/**` only |
+
+**`server/vitest.config.ts` constraint:** The only permitted change to `server/vitest.config.ts`
+in IMPL-001 is adding `'../tests/frontend/**'` to its `exclude` array. No timeout changes,
+no include changes, no environment changes, no other modifications.
 
 ---
 
@@ -565,21 +584,22 @@ a separate explicit authorization:
 
 ---
 
-## 12. Open Decisions for Paresh
+## 12. Resolved Decisions (D1–D8)
 
-The following decisions are required from Paresh before `TTP-FRONTEND-TEST-HARNESS-IMPL-001`
-may be opened:
+All 8 design decisions have been recorded in
+`governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001.md`.
+Decision record unit: `TTP-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001` (`DESIGN_DECISIONS_RECORDED`).
 
-| Decision | Options | Copilot Recommendation |
-|---|---|---|
-| **Approve dependency set?** | Approve all 4 packages (`vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`) / Reduce scope / Defer | Approve all 4; they form the minimum viable harness |
-| **jsdom vs happy-dom?** | jsdom (more complete, slower) / happy-dom (faster, less complete) | **jsdom** — safer for initial harness; re-evaluate after pilot |
-| **Vitest at root — Option A (add to root devDeps) vs Option B (reuse server binary)?** | Option A: add `vitest` to root devDependencies / Option B: `pnpm --dir server exec vitest --config ../vitest.frontend.config.ts` | **Option A** — cleaner; avoids cross-package binary dependency |
-| **Dedicated `tests/frontend/` folder vs same `tests/` folder?** | Separate `tests/frontend/` (recommended) / Keep all in `tests/` with naming convention | **Separate `tests/frontend/`** — allows clean `include` pattern in frontend config |
-| **Frontend test script name?** | `test:frontend` / `test:ui` / `test:components` / other | `test:frontend` — clear, consistent with `test:server` naming convention |
-| **Pilot component?** | `TtpEnrollmentAdmin` (recommended) / `VpcConsole` / `TtpEligibilityConsole` | **`TtpEnrollmentAdmin`** — three catch branches; most informative pilot |
-| **Include `@testing-library/user-event`?** | Install now (anticipatory) / Install when needed | **Install when needed** — no concrete use case for the pilot |
-| **CI integration — immediate or after pilot?** | Add `test:frontend` to CI immediately after impl / Wait until after pilot proves harness stability | **After pilot** — let pilot establish baseline before adding to CI gate |
+| ID | Decision | Selected option | Implementation consequence |
+|---|---|---|---|
+| **D1** | Approve dependency set? | Approve all 4: `vitest@^3`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom` | `vitest@^3.x` (not `^4.x`): vitest 4.x incompatible with root `vite ^5.3.1`. No user-event in IMPL-001. |
+| **D2** | DOM environment? | `jsdom` | `vitest.frontend.config.ts` sets `environment: 'jsdom'` |
+| **D3** | Vitest at root? | Option A: add `vitest@^3.x` as root devDependency | Root `package.json` gets `vitest@^3`. Root `pnpm-lock.yaml` created by root install. |
+| **D4** | Test directory? | Separate `tests/frontend/` + add `'../tests/frontend/**'` exclusion to `server/vitest.config.ts` | `server/vitest.config.ts` is in IMPL-001 allowlist for exclusion addition only |
+| **D5** | Script name? | `test:frontend` | Root `package.json`: `"test:frontend": "vitest run --config vitest.frontend.config.ts"` |
+| **D6** | Pilot component? | `TtpEnrollmentAdmin` | PILOT-001 creates `tests/frontend/ttp-enrollment-admin.test.tsx` (TC-FEH-001–TC-FEH-005) |
+| **D7** | Include `user-event`? | Defer | `@testing-library/user-event` NOT in IMPL-001 |
+| **D8** | CI integration? | After pilot | `.github/workflows/test-suite.yml` UNCHANGED in IMPL-001 |
 
 ---
 
@@ -621,14 +641,15 @@ TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001 (AUDIT_COMPLETE)
 
 ---
 
-## 15. Final Decision Token
+## 15. Final Decision Tokens
 
 ```
 TTP_FRONTEND_TEST_HARNESS_DESIGN_001_READY_FOR_PARESH_REVIEW
+TTP_FRONTEND_TEST_HARNESS_DESIGN_001_DECISIONS_RECORDED_READY_FOR_IMPLEMENTATION_PLANNING
 ```
 
 **Authority:** Paresh Patel — TexQtic founder / operator
-**Status:** `DESIGN_OPEN` — awaiting Paresh review and approval before any implementation slice opens
+**Status:** `DESIGN_DECISIONS_RECORDED` — D1–D8 resolved; decision record `PRODUCT-DEC-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001`; `TTP-FRONTEND-TEST-HARNESS-IMPL-001` is next candidate; awaiting Paresh authorization to open IMPL-001
 **`ttp_enabled` state:** `false` — UNCHANGED
 **`LEGAL_REVIEW_PENDING` state:** Active — UNCHANGED
 **No packages installed. No configs changed. No app code changed. No tests changed.**
