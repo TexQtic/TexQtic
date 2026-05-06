@@ -156,7 +156,7 @@ Every Phase 2 unit follows this exact sequence. Steps may not be skipped or reor
 | Field | Value |
 |---|---|
 | **Unit ID** | `TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` |
-| **Status** | `TRUTH_SYNCED` — implementation complete; 3 catch blocks fixed; 9 unit tests pass (TC-FDU-001 through TC-FDU-009); tsc clean; verification record `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-VERIFIED-001.md` |
+| **Status** | `PRODUCTION_VERIFIED` — implementation commit `3e2dbab` + governance commit `7514a4f` confirmed on `origin/main`; all 3 screenshots (SS-FDU-001 VpcConsole, SS-FDU-002 TtpEnrollmentAdmin, SS-FDU-003 TtpEligibilityConsole) confirmed ✓ PASS 2026-05-06 via SUPERADMIN session at `app.texqtic.com`; approved copy `"TradeTrust Pay is not currently enabled on this platform."` verified on all 3 surfaces; final token issued: `TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_PRODUCTION_VERIFY_001_PRODUCTION_VERIFIED`; verification record `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-PRODUCTION-VERIFIED-001.md` |
 | **Type** | Frontend — copy-only fix (no backend, no schema, no routes, no feature flag changes) |
 | **Purpose** | Update the `catch` block error copy in 3 TTP-gated control-plane components so that SUPER_ADMIN operators see "TradeTrust Pay is not currently enabled on this platform." instead of generic error text when `ttp_enabled=false`. |
 | **Gate** | `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` `AUDIT_COMPLETE` |
@@ -266,7 +266,7 @@ new decision, not an assumption.
 | `TTP-SCORE-VERSIONING-IMPL-001` | `score_version` column on `ttp_score_snapshots` | TQ-12 | Implementation | TQ-06 and TQ-11 design approved | `NO_IMPLEMENTATION_REQUIRED_CURRENTLY` — readiness audit (2026-05-06) confirmed DB column, CHECK constraint (`TTP_V1`\|`TEXQTICSCORE_V2`), Prisma model, `ScoreVersion` type, snapshot service write paths, and admin read/filter all already fully implemented and tested (20/20 tests pass); audit record `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-VERSIONING-IMPL-001-READINESS-AUDIT`; final decision `TTP_SCORE_VERSIONING_IMPL_001_NO_IMPLEMENTATION_REQUIRED_CURRENTLY`; reopen conditions documented in audit §5 |
 | `TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` | TexQticScore v2 runtime verification — admin read auth-gate, tenant surface absence, production endpoint smoke | TQ-11, TQ-12 | Runtime verification / governance | All v2 slices `TRUTH_SYNCED`; score versioning `NO_IMPLEMENTATION_REQUIRED_CURRENTLY` | `PRODUCTION_VERIFIED_LIMITED_BACKEND_AUTH_GATE` — unauthenticated probe only; tsc clean; 75/75 unit tests pass (31 + 11 + 20 + 13); 9 deployment commits confirmed; admin routes 401 (unauthenticated), tenant routes 404; authenticated UI paths NOT verified in this unit — see `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001`; verification record `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-RUNTIME-VERIFIED-001` |
 | `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` | Control-plane TradeTrust UI runtime audit — 4 authenticated surfaces (TradeTrust Ledger, VPC Console, TTP Enrollment, TTP Eligibility) classified against repo truth | TQ-11, TQ-12 | Governance / audit | `TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` `PRODUCTION_VERIFIED_LIMITED_BACKEND_AUTH_GATE` | `AUDIT_COMPLETE` — 4 surfaces audited; 1 `DATA_EMPTY_STATE_ONLY` (EscrowAdminPanel — not TTP-gated; IDLE initial state expected); 2 `UI_ERROR_COPY_MISMATCH` (VpcConsole: hardcoded catch string; TtpEnrollmentAdmin: apiClient 5xx generic copy); 1 `UI_ERROR_COPY_MISMATCH` (TtpEligibilityConsole: catch swallows error entirely); backend correct on all 3 TTP-gated surfaces (503 FEATURE_DISABLED as expected); no code changed; audit record `PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` |
-| `TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` | Control-plane feature-disabled UX copy fix — 3 TTP-gated catch blocks updated to show specific disabled-state copy instead of generic error string | — | Frontend (copy-only) | `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` `AUDIT_COMPLETE` | `TRUTH_SYNCED` — 3 catch blocks fixed (VpcConsole, TtpEnrollmentAdmin, TtpEligibilityConsole); 9 unit tests TC-FDU-001–TC-FDU-009 pass; tsc clean; `ttp_enabled=false` unchanged; verification record `PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-VERIFIED-001` |
+| `TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` | Control-plane feature-disabled UX copy fix — 3 TTP-gated catch blocks updated to show specific disabled-state copy instead of generic error string | — | Frontend (copy-only) | `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` `AUDIT_COMPLETE` | `PRODUCTION_VERIFIED` — implementation `3e2dbab` + governance `7514a4f` on `origin/main`; SS-FDU-001 VpcConsole ✓, SS-FDU-002 TtpEnrollmentAdmin ✓, SS-FDU-003 TtpEligibilityConsole ✓ — all confirmed 2026-05-06 via SUPERADMIN session; token `TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_PRODUCTION_VERIFY_001_PRODUCTION_VERIFIED` ISSUED; record `PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-PRODUCTION-VERIFIED-001` |
 
 ### P1 Key constraints
 
@@ -510,16 +510,21 @@ frontend error copy does not distinguish feature-disabled from real failure).
 No implementation authorized. `ttp_enabled=false` unchanged. `LEGAL_REVIEW_PENDING` unchanged.
 Audit record: `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001.md`.
 
-### Completed — TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001 (TRUTH_SYNCED)
+### Production verified — TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001 (PRODUCTION_VERIFIED)
 
-**`TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` is `TRUTH_SYNCED`** — implementation complete.
-Design artifact: `docs/TECS-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001-DESIGN-v1.md`.
-Scope: catch-block copy-only fix on VpcConsole, TtpEnrollmentAdmin, TtpEligibilityConsole.
-Approved copy: `"TradeTrust Pay is not currently enabled on this platform."` (confirmed by Paresh).
-9 unit tests TC-FDU-001–TC-FDU-009 pass. tsc clean. No backend, no schema, no routes, no feature flag changes.
+**`TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` is `PRODUCTION_VERIFIED`.**
+Implementation commit `3e2dbab` + governance commit `7514a4f` confirmed on `origin/main` (2026-05-06).
+Visual verification completed 2026-05-06 via SUPERADMIN session (`admin@texqtic.com`) in IDE browser at `https://app.texqtic.com`.
+
+**Screenshot evidence confirmed (all 3 surfaces):**
+- `SS-FDU-001` — VPC Console — `"TradeTrust Pay is not currently enabled on this platform."` (orange/red) — ✓ PASS
+- `SS-FDU-002` — TTP Enrollment — `"TradeTrust Pay is not currently enabled on this platform."` (red) — ✓ PASS
+- `SS-FDU-003` — TTP Eligibility — `"TradeTrust Pay is not currently enabled on this platform."` (red) — ✓ PASS
+
+Network evidence: HTTP 503 confirmed on each surface from `ttpFeatureGateMiddleware`.
+Final token issued: `TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_PRODUCTION_VERIFY_001_PRODUCTION_VERIFIED`
+Verification record: `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-PRODUCTION-VERIFIED-001.md`
 `ttp_enabled=false` unchanged. `LEGAL_REVIEW_PENDING` unchanged.
-Verification record: `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-VERIFIED-001.md`.
-**Production visual verification required** (3 screenshots) after next deploy — see verification record §F.6.
 
 ### Completed runtime verification unit — TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001
 
@@ -713,6 +718,7 @@ TTP_CONTROL_PLANE_TRADETRUST_UI_RUNTIME_AUDIT_001_COMPLETE
 PHASE_2_TRACKER_UPDATED__TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_001_DESIGN_OPEN
 PHASE_2_TRACKER_UPDATED__UI_VERIFICATION_CLASSIFICATION_GUARDRAIL_RECORDED
 PHASE_2_TRACKER_UPDATED__TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_001_TRUTH_SYNCED
+PHASE_2_TRACKER_UPDATED__TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_001_PRODUCTION_VERIFIED
 ```
 
 **Authority:** Paresh Patel — TexQtic founder / operator  
