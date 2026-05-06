@@ -110,6 +110,16 @@ notes: |
   AI data contracts and boundaries defined — remaining future AI implementation units require
   explicit Paresh authorization to open. AI matching, trade workflow AI, market intelligence,
   trust scoring, and RAG benchmark hardening remain deferred.
+nc_phase1_foundation_status: GOV_CLOSED
+nc_phase1_foundation_closed_date: 2026-05-06
+nc_phase1_foundation_verification_commit: 41a5eceeff25cd50d83a54e4c376da25903c1758
+nc_phase1_foundation_verification_report: governance/TEXQTIC-NC-PHASE1-FOUNDATION-PROD-VERIFY-001.md
+nc_phase1_service_smoke_status: DEFERRED — SERVICE_RUNTIME_SMOKE_BLOCKED_NO_ROUTE_OR_SAFE_HARNESS
+nc_phase1_next_action: HOLD_FOR_PARESH_DECISION
+nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-SERVICE-INTEGRATION-HARNESS-001
+nc_phase1_next_action_note: >-
+  Disposable vitest integration smoke for NetworkPoolService; no routes; no persistent
+  production data. Do not open without explicit Paresh authorization.
 ```
 
 ---
@@ -384,4 +394,22 @@ No source files changed. No test files changed. No schema changes.
 No new implementation unit opened.
 Next delivery unit: HOLD_FOR_AUTHORIZATION — requires explicit Paresh authorization.
 ```
+
+---
+
+## 2026-05-06 — TEXQTIC-NC-PHASE1-FOUNDATION-CHAIN GOV_CLOSED
+
+Network Commerce Phase 1 Foundation chain governance-closed.
+
+Status: GOV_CLOSED
+Verification commit: `41a5eceeff25cd50d83a54e4c376da25903c1758`
+Local validation: 81/81 tests PASS; tsc CLEAN; prisma generate CLEAN
+DB: 4 NC migrations deployed; 4 tables verified; RLS verified; immutability trigger confirmed
+POOL seed: 17 states, 24 transitions; DRAFT→OPEN confirmed
+Service smoke: DEFERRED — no route or safe harness exists; not falsely passed
+Adjacent candidate (not opened): TEXQTIC-NC-PHASE1-POOL-SERVICE-INTEGRATION-HARNESS-001
+
+DPP active_delivery_unit: HOLD_FOR_AUTHORIZATION — PRESERVED, NOT MODIFIED.
+DPP dpp_launch_authorization: HOLD_FOR_PARESH_DECISION — PRESERVED, NOT MODIFIED.
+NC next action: HOLD_FOR_PARESH_DECISION
 

@@ -1970,3 +1970,62 @@ Limitation: App.tsx wiring (onNavigateToTraceability) deferred to 020H.
 - Tests: Group Q (6/6), DPP-E2E-42 (source coverage), full suite 134/134 (2 skip)
 - TypeScript: PASS (frontend + server)
 
+---
+
+## 2026-05-06 — GOV_CLOSED: TEXQTIC-NC-PHASE1-FOUNDATION-CHAIN (Network Commerce Phase 1 Foundation Governance Close)
+
+```
+Unit:          TEXQTIC-NC-PHASE1-FOUNDATION-GOC-GOV-CLOSE-001
+Type:          GOVERNANCE_CLOSURE
+Status:        GOV_CLOSED
+Date:          2026-05-06
+Commits:       governance-only (no source/schema/migration/test changes)
+
+Scope:
+  governance/control/OPEN-SET.md                                         — NC Phase 1 Foundation GOV_CLOSED section appended
+  governance/control/NEXT-ACTION.md                                      — NC YAML fields + closure section appended
+  governance/control/GOVERNANCE-CHANGELOG.md                             — this entry
+  governance/TEXQTIC-NC-PHASE1-FOUNDATION-PROD-VERIFY-001.md             — commit hash line updated (in-packet)
+
+Chain closed (7 packets):
+  TEXQTIC-NC-PHASE1-STATEMACHINE-001              2f5c52b
+  TEXQTIC-NC-PHASE1-INVOICE-FOUNDATION-001        f479ac8
+  TEXQTIC-NC-PHASE1-POOL-SCHEMA-001               70f83b2
+  TEXQTIC-NC-PHASE1-MIGRATION-DEPLOY-001          29331e1 + cf092dd
+  TEXQTIC-NC-PHASE1-POOL-LIFECYCLE-SEED-001       f4d81af
+  TEXQTIC-NC-PHASE1-POOL-SERVICE-FOUNDATION-001   481f2562b9edfd69c96fb0e15883d9819aae5fa0
+  TEXQTIC-NC-PHASE1-FOUNDATION-PROD-VERIFY-001    41a5eceeff25cd50d83a54e4c376da25903c1758
+
+Production verification evidence (TEXQTIC-NC-PHASE1-FOUNDATION-PROD-VERIFY-001):
+  Local validation:  81/81 unit and regression tests PASS; tsc clean; prisma generate clean
+  DB migrations:     4 NC migrations deployed, finished=true, rolled_back=false
+  DB tables:         4 NC tables present; RLS rowsecurity=true on all 4
+  DB policies:       20 RLS policies correct across all 4 tables
+  DB trigger:        trg_immutable_network_lifecycle_log on DELETE + UPDATE confirmed
+  DB seed:           POOL — 17 lifecycle_states, 24 allowed_transitions; DRAFT→OPEN confirmed
+  DB constraints:    6 entity-type CHECK constraints include POOL; type-entity coherence present
+
+Boundaries confirmed NOT implemented in Phase 1:
+  - No NC routes / API endpoints
+  - No RFQ, allocation, invoice-generation, settlement, escrow, Syndicate, or VCO behavior
+  - Service smoke: DEFERRED — no route or safe harness exists; not falsely passed
+
+Adjacent candidate (not opened; requires explicit Paresh authorization):
+  TEXQTIC-NC-PHASE1-POOL-SERVICE-INTEGRATION-HARNESS-001
+  Scope: disposable vitest integration smoke for NetworkPoolService; no persistent production data
+
+Posture Before (DPP track — UNCHANGED):
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION
+  dpp_passport_network_readiness: PRODUCTION_READY
+  dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
+
+Posture After (NC track added; DPP unchanged):
+  nc_phase1_foundation_status: GOV_CLOSED
+  nc_phase1_next_action: HOLD_FOR_PARESH_DECISION
+  nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-SERVICE-INTEGRATION-HARNESS-001
+  dpp active_delivery_unit: HOLD_FOR_AUTHORIZATION (PRESERVED — NOT MODIFIED)
+
+No source files changed. No test files changed. No schema changes. No migration changes.
+DPP HOLD_FOR_PARESH_DECISION posture: PRESERVED.
+```
+

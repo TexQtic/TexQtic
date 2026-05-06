@@ -1006,3 +1006,41 @@ Next unit: 020H — App.tsx wiring. NOT AUTHORIZED until Paresh opens.
 
 | 020H | App.tsx wires onNavigateToTraceability — CTA fully functional | COMPLETE | d73d864 |
 
+---
+
+## 2026-05-06 — TEXQTIC-NC-PHASE1-FOUNDATION-CHAIN GOV_CLOSED
+
+**TEXQTIC-NC-PHASE1-FOUNDATION-CHAIN** is **GOV_CLOSED** (2026-05-06).
+NC Phase 1 Foundation chain fully implemented, migrations deployed, production-verified, and governance-closed.
+
+| Packet | Commit | Scope |
+|---|---|---|
+| TEXQTIC-NC-PHASE1-STATEMACHINE-001 | `2f5c52b` | NetworkLifecycleLog table/model; StateMachine POOL/SYNDICATE/VCO_CHAIN dispatch |
+| TEXQTIC-NC-PHASE1-INVOICE-FOUNDATION-001 | `f479ac8` | NetworkInvoice model/table; NetworkInvoiceService |
+| TEXQTIC-NC-PHASE1-POOL-SCHEMA-001 | `70f83b2` | NetworkPool + NetworkPoolMembership schema and migration |
+| TEXQTIC-NC-PHASE1-MIGRATION-DEPLOY-001 | `29331e1` + `cf092dd` | NC migration SQL corrected and deployed to Supabase |
+| TEXQTIC-NC-PHASE1-POOL-LIFECYCLE-SEED-001 | `f4d81af` | 17 POOL lifecycle_states + 24 POOL allowed_transitions |
+| TEXQTIC-NC-PHASE1-POOL-SERVICE-FOUNDATION-001 | `481f2562` | NetworkPoolService — create/open/join/read foundation |
+| TEXQTIC-NC-PHASE1-FOUNDATION-PROD-VERIFY-001 | `41a5ece` | Production verification report (docs-only) |
+
+Production verification evidence (commit `41a5eceeff25cd50d83a54e4c376da25903c1758`):
+- Local validation: 81/81 unit and regression tests PASS; tsc clean; prisma generate clean
+- DB: 4 NC migrations deployed, all finished=true, rolled_back=false
+- DB: 4 NC tables present; RLS enabled (rowsecurity=true) on all 4 tables
+- DB: 20 RLS policies correct across all 4 tables
+- DB: immutability trigger on network_lifecycle_logs (DELETE + UPDATE) confirmed
+- DB: POOL lifecycle seed — 17 states, 24 transitions; DRAFT→OPEN transition confirmed
+- DB: 6 entity-type CHECK constraints include POOL; type-entity coherence constraint present
+
+Preserved boundaries — NOT implemented in Phase 1:
+- No NC routes / API endpoints exist
+- No RFQ, allocation, invoice-generation, settlement, escrow, Syndicate, or VCO feature behavior
+- Service smoke deferred: SERVICE_RUNTIME_SMOKE_BLOCKED_NO_ROUTE_OR_SAFE_HARNESS
+
+Adjacent follow-up candidate (NOT opened; requires explicit Paresh authorization):
+- TEXQTIC-NC-PHASE1-POOL-SERVICE-INTEGRATION-HARNESS-001
+  Scope: disposable vitest integration smoke for NetworkPoolService; no routes; no persistent production data
+
+Next NC action: HOLD_FOR_PARESH_DECISION
+DPP active_delivery_unit: HOLD_FOR_AUTHORIZATION — PRESERVED, NOT MODIFIED.
+
