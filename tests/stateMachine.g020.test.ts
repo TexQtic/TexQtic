@@ -1003,4 +1003,227 @@ describe('G-020 StateMachineService — core enforcement', () => {
       expect(result.code).toBe('TRANSITION_NOT_PERMITTED');
     });
   });
+
+  // ── TEXQTIC-NC-PHASE1-POOL-LIFECYCLE-SEED-001: canonical POOL lifecycle transitions ──
+  // These tests use the canonical state keys seeded by migration 20260523000000.
+  // All tests are unit/mock — no DB connection required.
+
+  describe('PASS: Canonical POOL lifecycle transitions (seed-001 states)', () => {
+    it('P-POOL-01: POOL DRAFT → OPEN for TENANT_ADMIN → APPLIED', async () => {
+      const db = makeMockDb({
+        fromState: makeState('POOL', 'DRAFT'),
+        toState: makeState('POOL', 'OPEN'),
+        allowedTransition: makeTransition('POOL', 'DRAFT', 'OPEN', ['TENANT_ADMIN', 'PLATFORM_ADMIN']),
+      });
+      const svc = new TestableStateMachineService(db);
+
+      const result = await svc.transition({
+        entityType: 'POOL',
+        entityId: VALID_UUID_1,
+        orgId: VALID_UUID_2,
+        fromStateKey: 'DRAFT',
+        toStateKey: 'OPEN',
+        actorType: 'TENANT_ADMIN',
+        actorUserId: VALID_UUID_1,
+        actorAdminId: null,
+        actorRole: 'NC_POOL_ADMIN',
+        reason: 'Pool configuration reviewed; opening for member demand registration.',
+      });
+
+      expect(result.status).toBe('APPLIED');
+      expect(result.transitionId).toBe(VALID_UUID_2);
+    });
+
+    it('P-POOL-02: POOL OPEN → AGGREGATING for TENANT_ADMIN → APPLIED', async () => {
+      const db = makeMockDb({
+        fromState: makeState('POOL', 'OPEN'),
+        toState: makeState('POOL', 'AGGREGATING'),
+        allowedTransition: makeTransition('POOL', 'OPEN', 'AGGREGATING', ['TENANT_ADMIN', 'SYSTEM_AUTOMATION']),
+      });
+      const svc = new TestableStateMachineService(db);
+
+      const result = await svc.transition({
+        entityType: 'POOL',
+        entityId: VALID_UUID_1,
+        orgId: VALID_UUID_2,
+        fromStateKey: 'OPEN',
+        toStateKey: 'AGGREGATING',
+        actorType: 'TENANT_ADMIN',
+        actorUserId: VALID_UUID_1,
+        actorAdminId: null,
+        actorRole: 'NC_POOL_ADMIN',
+        reason: 'First demand line submitted; activating aggregation window.',
+      });
+
+      expect(result.status).toBe('APPLIED');
+      expect(result.transitionId).toBe(VALID_UUID_2);
+    });
+
+    it('P-POOL-03: POOL QUOTED → ACCEPTED for TENANT_ADMIN (MC gate) → PENDING_APPROVAL', async () => {
+      const db = makeMockDb({
+        fromState: makeState('POOL', 'QUOTED'),
+        toState: makeState('POOL', 'ACCEPTED', false, false),
+        allowedTransition: makeTransition(
+          'POOL', 'QUOTED', 'ACCEPTED',
+          ['TENANT_ADMIN', 'PLATFORM_ADMIN', 'CHECKER'],
+          true // requiresMakerChecker=true per seed
+        ),
+      });
+      const svc = new TestableStateMachineService(db);
+
+      const result = await svc.transition({
+        entityType: 'POOL',
+        entityId: VALID_UUID_1,
+        orgId: VALID_UUID_2,
+        fromStateKey: 'QUOTED',
+        toStateKey: 'ACCEPTED',
+        actorType: 'TENANT_ADMIN',
+        actorUserId: VALID_UUID_1,
+        actorAdminId: null,
+        actorRole: 'NC_POOL_ADMIN',
+        reason: 'Supplier quote reviewed and within budget; initiating acceptance.',
+        makerUserId: null, // no maker yet — MC flow must start
+      });
+
+      // MakerChecker flow requires PENDING_APPROVAL before APPLIED
+      expect(result.status).toBe('PENDING_APPROVAL');
+      expect(result.requiredActors).toContain('MAKER');
+      expect(result.requiredActors).toContain('CHECKER');
+    });
+
+    it('P-POOL-04: POOL QUOTED → REJECTED for PLATFORM_ADMIN → APPLIED', async () => {
+      const db = makeMockDb({
+        fromState: makeState('POOL', 'QUOTED'),
+        toState: makeState('POOL', 'REJECTED', true, true),
+        allowedTransition: makeTransition('POOL', 'QUOTED', 'REJECTED', ['TENANT_ADMIN', 'PLATFORM_ADMIN']),
+      });
+      const svc = new TestableStateMachineService(db);
+
+      const result = await svc.transition({
+        entityType: 'POOL',
+        entityId: VALID_UUID_1,
+        orgId: VALID_UUID_2,
+        fromStateKey: 'QUOTED',
+        toStateKey: 'REJECTED',
+        actorType: 'PLATFORM_ADMIN',
+        actorUserId: null,
+        actorAdminId: VALID_UUID_3,
+        actorRole: 'NC_PLATFORM_ADMIN',
+        reason: 'All supplier quotes exceed approved budget ceiling. Pool closed.',
+      });
+
+      expect(result.status).toBe('APPLIED');
+      expect(result.transitionId).toBe(VALID_UUID_2);
+    });
+
+    it('P-POOL-05: POOL SETTLEMENT_PENDING → SETTLED for PLATFORM_ADMIN (MC completion) → APPLIED', async () => {
+      const db = makeMockDb({
+        fromState: makeState('POOL', 'SETTLEMENT_PENDING'),
+        toState: makeState('POOL', 'SETTLED', true, true),
+        allowedTransition: makeTransition(
+          'POOL', 'SETTLEMENT_PENDING', 'SETTLED',
+          ['PLATFORM_ADMIN', 'CHECKER'],
+          true // requiresMakerChecker=true per seed
+        ),
+      });
+      const svc = new TestableStateMachineService(db);
+
+      const result = await svc.transition({
+        entityType: 'POOL',
+        entityId: VALID_UUID_1,
+        orgId: VALID_UUID_2,
+        fromStateKey: 'SETTLEMENT_PENDING',
+        toStateKey: 'SETTLED',
+        actorType: 'CHECKER',
+        actorUserId: null,
+        actorAdminId: VALID_UUID_3,
+        actorRole: 'NC_PLATFORM_ADMIN',
+        reason: 'Settlement verified and disbursement confirmed. Completing MC flow.',
+        makerUserId: VALID_UUID_1, // makerUserId present = MC completion
+      });
+
+      expect(result.status).toBe('APPLIED');
+      expect(result.transitionId).toBe(VALID_UUID_2);
+    });
+  });
+
+  describe('FAIL: Invalid POOL transition (seed-001 state graph enforcement)', () => {
+    it('F-POOL-01: POOL SETTLED → DRAFT (terminal source) → TRANSITION_FROM_TERMINAL', async () => {
+      const db = makeMockDb({
+        fromState: makeState('POOL', 'SETTLED', true, true), // terminal
+        toState: makeState('POOL', 'DRAFT'),
+        allowedTransition: makeTransition('POOL', 'SETTLED', 'DRAFT', ['TENANT_ADMIN']),
+      });
+      const svc = new TestableStateMachineService(db);
+
+      const result = await svc.transition({
+        entityType: 'POOL',
+        entityId: VALID_UUID_1,
+        orgId: VALID_UUID_2,
+        fromStateKey: 'SETTLED',
+        toStateKey: 'DRAFT',
+        actorType: 'TENANT_ADMIN',
+        actorUserId: VALID_UUID_1,
+        actorAdminId: null,
+        actorRole: 'NC_POOL_ADMIN',
+        reason: 'Attempting to re-open settled pool — not permitted.',
+      });
+
+      expect(result.status).toBe('DENIED');
+      expect(result.code).toBe('TRANSITION_FROM_TERMINAL');
+    });
+
+    it('F-POOL-02: POOL OPEN → SETTLEMENT_PENDING (skip shortcut) → TRANSITION_NOT_PERMITTED', async () => {
+      const db = makeMockDb({
+        fromState: makeState('POOL', 'OPEN'),
+        toState: makeState('POOL', 'SETTLEMENT_PENDING'),
+        allowedTransition: null, // no such edge in the canonical graph
+      });
+      const svc = new TestableStateMachineService(db);
+
+      const result = await svc.transition({
+        entityType: 'POOL',
+        entityId: VALID_UUID_1,
+        orgId: VALID_UUID_2,
+        fromStateKey: 'OPEN',
+        toStateKey: 'SETTLEMENT_PENDING',
+        actorType: 'TENANT_ADMIN',
+        actorUserId: VALID_UUID_1,
+        actorAdminId: null,
+        actorRole: 'NC_POOL_ADMIN',
+        reason: 'Attempting lifecycle shortcut — must follow canonical path.',
+      });
+
+      expect(result.status).toBe('DENIED');
+      expect(result.code).toBe('TRANSITION_NOT_PERMITTED');
+    });
+
+    it('F-POOL-03: POOL ACCEPTED → CANCELLED for TENANT_ADMIN (only PLATFORM_ADMIN allowed) → ACTOR_ROLE_NOT_PERMITTED', async () => {
+      const db = makeMockDb({
+        fromState: makeState('POOL', 'ACCEPTED'),
+        toState: makeState('POOL', 'CANCELLED', true, true),
+        allowedTransition: makeTransition(
+          'POOL', 'ACCEPTED', 'CANCELLED',
+          ['PLATFORM_ADMIN'] // only platform admin per seed
+        ),
+      });
+      const svc = new TestableStateMachineService(db);
+
+      const result = await svc.transition({
+        entityType: 'POOL',
+        entityId: VALID_UUID_1,
+        orgId: VALID_UUID_2,
+        fromStateKey: 'ACCEPTED',
+        toStateKey: 'CANCELLED',
+        actorType: 'TENANT_ADMIN', // not permitted for late-stage cancel
+        actorUserId: VALID_UUID_1,
+        actorAdminId: null,
+        actorRole: 'NC_POOL_ADMIN',
+        reason: 'Attempting late-stage cancel without platform admin authority.',
+      });
+
+      expect(result.status).toBe('DENIED');
+      expect(result.code).toBe('ACTOR_ROLE_NOT_PERMITTED');
+    });
+  });
 });
