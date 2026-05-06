@@ -480,7 +480,8 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-SCORE-VERSIONING-IMPL-001` | Wave 2 | P1 | Implementation | `NO_IMPLEMENTATION_REQUIRED_CURRENTLY` — audit (2026-05-06) confirmed all versioning deliverables already implemented; audit record `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-VERSIONING-IMPL-001-READINESS-AUDIT`; final decision `TTP_SCORE_VERSIONING_IMPL_001_NO_IMPLEMENTATION_REQUIRED_CURRENTLY` |
 | `TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` | Wave 2 | P1 | Runtime verification | `PRODUCTION_VERIFIED_LIMITED_BACKEND_AUTH_GATE` — unauthenticated probe evidence only; tsc clean; 75/75 unit tests pass (31 + 11 + 20 + 13); 9 deployment commits confirmed; admin routes 401 (unauthenticated), tenant routes 404; authenticated UI paths NOT verified — see `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001`; verification record `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-RUNTIME-VERIFIED-001` |
 | `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` | Wave 2 | P1 | Governance / audit | `AUDIT_COMPLETE` — 4 control-plane surfaces audited; 1 `DATA_EMPTY_STATE_ONLY` (EscrowAdminPanel — not TTP-gated; IDLE initial state expected); 3 `UI_ERROR_COPY_MISMATCH` (VpcConsole, TtpEnrollmentAdmin, TtpEligibilityConsole — backend 503 FEATURE_DISABLED correct; front-end copy undifferentiated); no code changed; audit record `PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` |
-| `TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` | Wave 2 | P1 | Frontend (copy-only) | `TRUTH_SYNCED` — 3 catch blocks fixed; 9 unit tests TC-FDU-001–TC-FDU-009 pass; tsc clean; `ttp_enabled=false` unchanged; verification record `PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-VERIFIED-001` |
+| `TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` | Wave 2 | P1 | Frontend (copy-only) | `PRODUCTION_VERIFIED` — implementation commit `3e2dbab` + governance `7514a4f`; SS-FDU-001/002/003 all ✓ PASS (2026-05-06); token `TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_PRODUCTION_VERIFY_001_PRODUCTION_VERIFIED` ISSUED |
+| `TTP-FRONTEND-TEST-HARNESS-DESIGN-001` | Wave 2 (post) | P1 | Design | `DESIGN_OPEN` — design artifact at `docs/TECS-TTP-FRONTEND-TEST-HARNESS-DESIGN-001-v1.md`; no packages installed; no config changed; addresses UI test blind spot identified during UX verification; awaiting Paresh review |
 | `TTP-DATA-CONSENT-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
 | `TTP-DATA-CONSENT-IMPL-001` | Wave 3 | P2 | Implementation + migration | `NOT_OPENED` |
 | `TTP-INTERNAL-SCORE-ROUTING-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
@@ -525,6 +526,31 @@ Network evidence: HTTP 503 confirmed on each surface from `ttpFeatureGateMiddlew
 Final token issued: `TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_PRODUCTION_VERIFY_001_PRODUCTION_VERIFIED`
 Verification record: `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-PRODUCTION-VERIFIED-001.md`
 `ttp_enabled=false` unchanged. `LEGAL_REVIEW_PENDING` unchanged.
+
+### Design open — TTP-FRONTEND-TEST-HARNESS-DESIGN-001
+
+**`TTP-FRONTEND-TEST-HARNESS-DESIGN-001` is `DESIGN_OPEN`:**
+Date: 2026-05-06. Unit ID: `TTP-FRONTEND-TEST-HARNESS-DESIGN-001`.
+Design artifact: `docs/TECS-TTP-FRONTEND-TEST-HARNESS-DESIGN-001-v1.md`.
+
+Triggered by: `TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` production verification exposed a
+structural UI test blind spot — components with internal async state (`useEffect`/`useCallback`)
+cannot be rendering-tested with the current `renderToStaticMarkup` (SSR) pattern or pure logic
+tests. `VpcConsole`, `TtpEnrollmentAdmin`, and `TtpEligibilityConsole` catch-block correctness
+was verified via logic tests (TC-FDU-001–TC-FDU-009 pass), but rendered DOM behavior is
+unverifiable without `@testing-library/react` + jsdom environment.
+
+Design addresses: `@testing-library/react`, `@testing-library/jest-dom`, `jsdom` devDependency
+installation; dedicated root-level `vitest.frontend.config.ts` with `environment: 'jsdom'`;
+new `tests/frontend/` folder convention; `tests/setupTests.ts` setup file; pilot test candidate
+(`TtpEnrollmentAdmin`); implementation slicing plan (IMPL-001 → PILOT-001 → CI-VERIFY-001).
+
+No packages installed. No configs changed. No app code changed. No existing tests modified.
+`ttp_enabled=false` unchanged. `LEGAL_REVIEW_PENDING` unchanged. Wave 3/4/5 gates unchanged.
+Implementation authorized: No.
+Final token: `TTP_FRONTEND_TEST_HARNESS_DESIGN_001_READY_FOR_PARESH_REVIEW`.
+
+---
 
 ### Completed runtime verification unit — TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001
 
@@ -719,6 +745,7 @@ PHASE_2_TRACKER_UPDATED__TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_001_DESIGN_OPEN
 PHASE_2_TRACKER_UPDATED__UI_VERIFICATION_CLASSIFICATION_GUARDRAIL_RECORDED
 PHASE_2_TRACKER_UPDATED__TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_001_TRUTH_SYNCED
 PHASE_2_TRACKER_UPDATED__TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_001_PRODUCTION_VERIFIED
+PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_DESIGN_001_DESIGN_OPEN
 ```
 
 **Authority:** Paresh Patel — TexQtic founder / operator  
