@@ -482,6 +482,7 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` | Wave 2 | P1 | Governance / audit | `AUDIT_COMPLETE` — 4 control-plane surfaces audited; 1 `DATA_EMPTY_STATE_ONLY` (EscrowAdminPanel — not TTP-gated; IDLE initial state expected); 3 `UI_ERROR_COPY_MISMATCH` (VpcConsole, TtpEnrollmentAdmin, TtpEligibilityConsole — backend 503 FEATURE_DISABLED correct; front-end copy undifferentiated); no code changed; audit record `PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` |
 | `TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` | Wave 2 | P1 | Frontend (copy-only) | `PRODUCTION_VERIFIED` — implementation commit `3e2dbab` + governance `7514a4f`; SS-FDU-001/002/003 all ✓ PASS (2026-05-06); token `TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_PRODUCTION_VERIFY_001_PRODUCTION_VERIFIED` ISSUED |
 | `TTP-FRONTEND-TEST-HARNESS-DESIGN-001` | Wave 2 (post) | P1 | Design | `DESIGN_OPEN` — design artifact at `docs/TECS-TTP-FRONTEND-TEST-HARNESS-DESIGN-001-v1.md`; no packages installed; no config changed; addresses UI test blind spot identified during UX verification; awaiting Paresh review |
+| `TTP-FRONTEND-TEST-HARNESS-OPTIONS-AUDIT-001` | Wave 2 (post) | P1 | Governance / audit | `OPTIONS_AUDIT_COMPLETE` — 8 design decisions answered via repo-truth inspection; AF-FTH-01 through AF-FTH-09 resolved; critical finding: vitest 4.x incompatible with root vite 5.x (version constraint required); critical finding: server vitest `../tests/**` glob picks up `tests/frontend/` (server config exclusion required); pilot component confirmed as `TtpEnrollmentAdmin` (no props, 3 catch branches, Tailwind only); audit record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-OPTIONS-AUDIT-001.md`; awaiting Paresh decision on 8 open decisions; token `TTP_FRONTEND_TEST_HARNESS_OPTIONS_AUDIT_001_READY_FOR_PARESH_DECISION` |
 | `TTP-DATA-CONSENT-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
 | `TTP-DATA-CONSENT-IMPL-001` | Wave 3 | P2 | Implementation + migration | `NOT_OPENED` |
 | `TTP-INTERNAL-SCORE-ROUTING-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
@@ -549,6 +550,36 @@ No packages installed. No configs changed. No app code changed. No existing test
 `ttp_enabled=false` unchanged. `LEGAL_REVIEW_PENDING` unchanged. Wave 3/4/5 gates unchanged.
 Implementation authorized: No.
 Final token: `TTP_FRONTEND_TEST_HARNESS_DESIGN_001_READY_FOR_PARESH_REVIEW`.
+
+### Options audit complete — TTP-FRONTEND-TEST-HARNESS-OPTIONS-AUDIT-001
+
+**`TTP-FRONTEND-TEST-HARNESS-OPTIONS-AUDIT-001` is `OPTIONS_AUDIT_COMPLETE`:**
+Date: 2026-05-06. Unit ID: `TTP-FRONTEND-TEST-HARNESS-OPTIONS-AUDIT-001`.
+Audit record: `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-OPTIONS-AUDIT-001.md`.
+
+Repo-truth inspection covered: root `package.json`, `vite.config.ts`, `tsconfig.json`;
+`server/package.json`, `server/vitest.config.ts`, `server/pnpm-lock.yaml`; CI workflow
+`test-suite.yml`; `tests/` directory patterns; `TtpEnrollmentAdmin.tsx` (fully read);
+`TtpEligibilityConsole.tsx` (partially read); `VpcConsole.tsx` (header read).
+
+**Critical findings:**
+1. Vitest 4.x (server) requires `vite ^6 or ^7`; root uses `vite ^5.3.1` — vitest 4.x CANNOT be
+   added to root devDeps without vite upgrade. Recommended: vitest `^3.x` at root (compatible with vite 5.x).
+2. Server vitest config includes `../tests/**` recursive glob — `tests/frontend/` would be picked
+   up by server Vitest in `node` env, causing RTL test failures. `server/vitest.config.ts` must add
+   `../tests/frontend/**` to its exclude list — this file MUST be added to IMPL-001 allowlist.
+
+**8 design decisions answered (pending Paresh approval):**
+DECISION 1: Approve 4 deps, vitest `^3.x` | DECISION 2: jsdom | DECISION 3: Option A (root vitest ^3.x) |
+DECISION 4: `tests/frontend/` + server exclusion | DECISION 5: `test:frontend` |
+DECISION 6: TtpEnrollmentAdmin | DECISION 7: Defer user-event | DECISION 8: After pilot.
+
+**AF-FTH-01 through AF-FTH-09 resolved** — see audit record.
+
+No packages installed. No configs changed. No app code changed. No tests changed.
+`ttp_enabled=false` unchanged. `LEGAL_REVIEW_PENDING` unchanged.
+Implementation authorized: No. `TTP-FRONTEND-TEST-HARNESS-IMPL-001` remains `NOT_OPENED`.
+Final token: `TTP_FRONTEND_TEST_HARNESS_OPTIONS_AUDIT_001_READY_FOR_PARESH_DECISION`.
 
 ---
 
