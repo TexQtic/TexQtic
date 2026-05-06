@@ -269,8 +269,12 @@ export const TtpEligibilityConsole: React.FC<TtpEligibilityConsoleProps> = ({ or
       const response = await adminGetTtpEligibilityAssessments(orgId);
       setAssessments(response.assessments);
       setLatest(response.latest);
-    } catch {
-      setLoadError('Failed to load eligibility assessments.');
+    } catch (err) {
+      if (err instanceof APIError && err.code === 'FEATURE_DISABLED') {
+        setLoadError('TradeTrust Pay is not currently enabled on this platform.');
+      } else {
+        setLoadError('Failed to load eligibility assessments.');
+      }
     } finally {
       setLoading(false);
     }

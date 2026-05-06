@@ -193,7 +193,9 @@ export default function TtpEnrollmentAdmin() {
       const data = await adminListTtpEnrollments(statusFilter ? { status: statusFilter } : undefined);
       setRecords(data);
     } catch (err) {
-      if (err instanceof APIError) {
+      if (err instanceof APIError && err.code === 'FEATURE_DISABLED') {
+        setError('TradeTrust Pay is not currently enabled on this platform.');
+      } else if (err instanceof APIError) {
         setError(err.message ?? 'Failed to load enrollments.');
       } else {
         setError('Failed to load enrollments.');

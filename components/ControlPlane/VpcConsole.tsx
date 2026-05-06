@@ -270,7 +270,11 @@ export function VpcConsole(): React.ReactElement {
       const data = await adminListVpcs(filters);
       setVpcs(data);
     } catch (err) {
-      setError('Failed to load VPCs. Please try again.');
+      if (err instanceof APIError && err.code === 'FEATURE_DISABLED') {
+        setError('TradeTrust Pay is not currently enabled on this platform.');
+      } else {
+        setError('Failed to load VPCs. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
