@@ -173,13 +173,22 @@ Every Phase 2 unit follows this exact sequence. Steps may not be skipped or reor
 | **Implementation authorized** | No — governance/legal record only |
 | **Activation** | `ttp_enabled=false` must remain unchanged |
 
-### Pause rule
+### Pause rule — IMPLEMENTATION PAUSED PENDING LEGAL COUNSELLING
 
-If Paresh is not ready to proceed with legal/counsel feedback:
-- No further implementation should be opened.
+**Paresh has chosen to pause further TradeTrust Pay implementation until proper legal counselling is received.**
+
+External legal counsel packet prepared: `governance/legal/TTP-EXTERNAL-LEGAL-COUNSEL-PACKET-001.md`.
+Operator decision guide prepared: `governance/legal/TTP-LEGAL-PACKET-OPERATOR-DECISION-GUIDE-001.md`.
+Formal pause record: `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-LEGAL-COUNSEL-PAUSE-001.md`.
+
+The following remain in effect until counsel feedback is received and formally recorded:
+- No further implementation units are opened.
 - `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` remains `BLOCKED_LEGAL`.
 - Wave 3/4/5 remain gated.
 - `LEGAL_REVIEW_PENDING` remains unchanged.
+- `ttp_enabled=false` remains unchanged.
+
+`TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001` will be opened **only after counsel feedback exists** and Paresh explicitly authorizes it.
 
 ### Historical record — TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001
 
@@ -229,6 +238,9 @@ before production verification:
 |---|---|---|---|---|---|
 | `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` | Legal and compliance copy review | Governance / legal (non-code) | Final disclaimer text for `TTP_DISCLAIMER_TEXT` constant; forbidden-term list (seeds pre-commit lint); VPC certificate wording; score advisory wording; consent wording (TQ-05, TQ-14); dynamic discounting wording; lender data-sharing wording; origination fee disclosure notes | `TRUTH_SYNCED` — gov `1e539da`, final decision `TTP_LEGAL_COMPLIANCE_COPY_REVIEW_001_OPERATOR_REVIEW_READY` | N/A — complete |
 | `TTP-LEGAL-COPY-COUNSEL-PACKET-001` | Legal counsel review packet | Governance / legal (non-code) | 9-section legal counsel review packet packaging `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` outputs; structured counsel questions; Paresh decision options; disclaimer text review; VPC/score/consent/partner/fee wording analysis | `TRUTH_SYNCED` — gov `f0ead0f`, final decision `TTP_LEGAL_COUNSEL_REVIEW_PACKET_001_READY_FOR_PARESH` | N/A — complete; `LEGAL_REVIEW_PENDING` for external counsel |
+| `TTP-EXTERNAL-LEGAL-COUNSEL-PACKET-001` | External legal counsel packet | Governance / legal (non-code) | Complete corporate-lawyer-ready legal counsel packet; 11 sections; 14 counsel questions; decision grid; candidate wording for all TTP surfaces; full product boundary statement; forbidden-terms list | `READY_TO_SEND_TO_COUNSEL` — `governance/legal/TTP-EXTERNAL-LEGAL-COUNSEL-PACKET-001.md`; `LEGAL_REVIEW_PENDING` | N/A — complete |
+| `TTP-LEGAL-PACKET-OPERATOR-DECISION-GUIDE-001` | Operator legal decision guide | Governance / legal (non-code) | Operator-facing explanation of the legal counsel packet; plain-English breakdown of each decision area; 7-option decision table; implementation unit mapping; recommended safest path; what to send counsel; what NOT to do yet | `READY_FOR_PARESH_REVIEW` — `governance/legal/TTP-LEGAL-PACKET-OPERATOR-DECISION-GUIDE-001.md` | N/A — complete |
+| `TTP-LEGAL-COUNSEL-PAUSE-001` | Implementation pause record | Governance pause | Formal record of Paresh decision to pause TradeTrust Pay implementation pending receipt of external legal counsel feedback; scope of pause; resume conditions; what remains allowed; what remains forbidden | `IMPLEMENTATION_PAUSED_PENDING_COUNSEL` — `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-LEGAL-COUNSEL-PAUSE-001.md` | N/A — complete |
 
 ### What `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` must produce
 
@@ -492,6 +504,9 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-FRONTEND-TEST-HARNESS-IMPL-001` | Wave 2 (post) | P1 | Implementation | `TRUTH_SYNCED` — devDeps installed: `vitest@^3.2.4`, `@testing-library/react@^16.3.2`, `@testing-library/jest-dom@^6.9.1`, `jsdom@^29.1.1`; created `vitest.frontend.config.ts` (jsdom, setupFiles, include `tests/frontend/**`); created `tests/setupTests.ts`; created `tsconfig.test.json` (optional IDE support, scoped to `tests/frontend/**`); added `test:frontend` script with `--passWithNoTests`; added `'../tests/frontend/**'` exclusion to `server/vitest.config.ts`; root uses npm (`package-lock.json`); smoke PASS; root tsc PASS; test tsc PASS; server tsc PASS; server bounded tests 20/20 PASS; no app/UI/CI/backend/Prisma/flags changed; verification record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-IMPL-VERIFIED-001.md`; final decision `TTP_FRONTEND_TEST_HARNESS_IMPL_001_VERIFIED_COMPLETE` |
 | `TTP-FRONTEND-TEST-HARNESS-PILOT-001` | Wave 2 (post) | P1 | Test pilot | `TRUTH_SYNCED` — pilot component: `TtpEnrollmentAdmin` (no props, no router, Tailwind only); test file: `tests/frontend/ttp-enrollment-admin.test.tsx`; 5 TCs (TC-FEH-001 loading state, TC-FEH-002 FEATURE_DISABLED copy, TC-FEH-003 APIError message, TC-FEH-004 plain Error fallback, TC-FEH-005 enrollment table row); mocks: `vi.mock('../../services/ttpEnrollmentService')`; `tsconfig.test.json` infra correction: added `vite-env.d.ts` to include (fixes `import.meta.env` transitively surfaced by import chain); 5/5 PASS; test tsc PASS (zero errors); root tsc PASS; server bounded tests 20/20 PASS; no app code changed; verification record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-PILOT-VERIFIED-001.md`; final decision `TTP_FRONTEND_TEST_HARNESS_PILOT_001_VERIFIED_COMPLETE` |
 | `TTP-FRONTEND-TEST-HARNESS-CI-VERIFY-001` | Wave 2 (post) | P1 | CI verification | `TRUTH_SYNCED` — CI workflow `.github/workflows/test-suite.yml` updated; `npm ci` (root) + `npm run test:frontend` steps added after server Vitest; server pnpm steps preserved unchanged; local validation: 5/5 frontend PASS, test tsc PASS, root tsc PASS, 20/20 server PASS; verification record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-CI-VERIFIED-001.md`; final decision `TTP_FRONTEND_TEST_HARNESS_CI_VERIFY_001_VERIFIED_COMPLETE` |
+| `TTP-EXTERNAL-LEGAL-COUNSEL-PACKET-001` | Wave 1 (follow-up) | P0/P2 | Governance / legal | `READY_TO_SEND_TO_COUNSEL` — external corporate-lawyer-ready legal counsel packet complete; 11 sections; 14 counsel questions A–N; decision grid; disclaimer inventory; `governance/legal/TTP-EXTERNAL-LEGAL-COUNSEL-PACKET-001.md` |
+| `TTP-LEGAL-PACKET-OPERATOR-DECISION-GUIDE-001` | Wave 1 (follow-up) | P0/P2 | Governance / legal | `READY_FOR_PARESH_REVIEW` — operator decision guide complete; decision options A–G; implementation unit mapping; `governance/legal/TTP-LEGAL-PACKET-OPERATOR-DECISION-GUIDE-001.md` |
+| `TTP-LEGAL-COUNSEL-PAUSE-001` | Wave 1 (follow-up) | P0/P2 | Governance pause | `IMPLEMENTATION_PAUSED_PENDING_COUNSEL` — formal pause record complete; Paresh decision recorded 2026-05-06; `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-LEGAL-COUNSEL-PAUSE-001.md` |
 | `TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001` | Wave 1 (follow-up) | P0/P2 | Governance / legal | `NEXT_RECOMMENDED_UNIT` — not opened; recommended next: record Paresh/counsel feedback on legal packet (`TTP-LEGAL-COPY-COUNSEL-PACKET-001` `TRUTH_SYNCED`); resolve or classify `LEGAL_REVIEW_PENDING`; determine legal approval status for disclaimer, TexQticScore, tenant score surfaces, consent, VPC, partner/fee wording |
 | `TTP-DATA-CONSENT-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
 | `TTP-DATA-CONSENT-IMPL-001` | Wave 3 | P2 | Implementation + migration | `NOT_OPENED` |
@@ -698,6 +713,22 @@ Server pnpm install, typecheck, lint, and Vitest steps: UNCHANGED.
 no backend routes/services, no Prisma/schema/SQL, no feature flags, no package/lockfile changed.
 
 Final decision: `TTP_FRONTEND_TEST_HARNESS_CI_VERIFY_001_VERIFIED_COMPLETE`.
+
+---
+
+### Implementation paused pending legal counselling — 2026-05-06
+
+**Paresh Patel has intentionally paused further TradeTrust Pay implementation pending receipt of external legal counsel feedback.**
+
+This decision was made on 2026-05-06 and is formally recorded.
+
+- **Legal counsel packet (ready to send):** `governance/legal/TTP-EXTERNAL-LEGAL-COUNSEL-PACKET-001.md`
+- **Operator decision guide:** `governance/legal/TTP-LEGAL-PACKET-OPERATOR-DECISION-GUIDE-001.md`
+- **Formal pause record:** `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-LEGAL-COUNSEL-PAUSE-001.md`
+- **Next action outside repo:** Send `TTP-EXTERNAL-LEGAL-COUNSEL-PACKET-001.md` to corporate counsel; await written feedback.
+- **Next repo action (after counsel feedback received):** Open `TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001` and record counsel feedback.
+
+`ttp_enabled=false` UNCHANGED. `LEGAL_REVIEW_PENDING` UNCHANGED. No code changed. No schema changed.
 
 ---
 
@@ -964,6 +995,8 @@ PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_IMPL_001_TRUTH_SYNCED
 PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_PILOT_001_TRUTH_SYNCED
 PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_CI_VERIFY_001_TRUTH_SYNCED
 PHASE_2_TRACKER_UPDATED__NEXT_ACTION_NORMALIZED__LEGAL_COUNSEL_FEEDBACK_RECOMMENDED
+PHASE_2_TRACKER_UPDATED__LEGAL_COUNSEL_PACKET_READY_TO_SEND
+PHASE_2_TRACKER_UPDATED__IMPLEMENTATION_PAUSED_PENDING_LEGAL_COUNSEL
 ```
 
 **Authority:** Paresh Patel — TexQtic founder / operator  
