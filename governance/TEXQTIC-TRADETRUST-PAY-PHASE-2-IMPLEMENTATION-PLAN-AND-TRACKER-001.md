@@ -412,6 +412,18 @@ The following units **require production verification** before closure. Local pr
 `ttp_enabled` must be restored to `false` unless the unit is explicitly an activation unit authorized
 by a separate Paresh activation decision.
 
+**UI-adjacent verification classification (process guardrail — 2026-05-06):**
+This cycle exposed a TECS verification blind spot: `TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` proved
+backend/auth-gate behavior via unauthenticated HTTP probes only. Paresh's authenticated screenshots
+subsequently revealed UI copy mismatches not visible to any backend probe. To prevent recurrence:
+
+| Requirement | Rule |
+|---|---|
+| UI-adjacent verification | The verification record must explicitly list every UI surface in scope and state whether each was verified (backend probe only / authenticated visual / both) |
+| Backend-only probe | Must be labeled `PRODUCTION_VERIFIED_LIMITED_BACKEND_AUTH_GATE` — it does NOT constitute UI surface readiness |
+| UI visual verification | An authenticated browser session (or Playwright screenshot proof) is required before any UI surface can be claimed as production-verified |
+| Screenshot contradiction | If authenticated screenshots contradict a prior runtime verification claim, create an adjacent audit unit (as done for `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001`) before opening any fix prompt |
+
 ---
 
 ## 16. Tracker Status Legend
@@ -697,6 +709,7 @@ PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_RUNTIME_VERIFY_001_GATE_OPEN
 PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED_LIMITED_BACKEND_AUTH_GATE
 TTP_CONTROL_PLANE_TRADETRUST_UI_RUNTIME_AUDIT_001_COMPLETE
 PHASE_2_TRACKER_UPDATED__TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_001_DESIGN_OPEN
+PHASE_2_TRACKER_UPDATED__UI_VERIFICATION_CLASSIFICATION_GUARDRAIL_RECORDED
 ```
 
 **Authority:** Paresh Patel — TexQtic founder / operator  
