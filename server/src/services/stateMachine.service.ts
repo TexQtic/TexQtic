@@ -514,6 +514,42 @@ export class StateMachineService {
         };
       }
 
+      // ── TEXQTIC-NC-PHASE1-STATEMACHINE-001: POOL | SYNDICATE | VCO_CHAIN ──
+      // Polymorphic write: single block handles all three NC entity types.
+      // logData uses (entityType, entityId) instead of a domain-specific FK column.
+      if (['POOL', 'SYNDICATE', 'VCO_CHAIN'].includes(normalizedEntityType)) {
+        const logData = {
+          orgId: req.orgId,
+          entityType: normalizedEntityType,
+          entityId: req.entityId,
+          fromStateKey: normalizedFromState,
+          toStateKey: normalizedToState,
+          actorUserId: req.actorUserId ?? null,
+          actorAdminId: req.actorAdminId ?? null,
+          actorType: req.actorType,
+          actorRole: req.actorRole,
+          escalationLevel: req.escalationLevel ?? null,
+          makerUserId: req.makerUserId ?? null,
+          checkerUserId: req.checkerUserId ?? null,
+          aiTriggered: req.aiTriggered ?? false,
+          impersonationId: req.impersonationId ?? null,
+          reason: req.reason,
+          requestId: req.requestId ?? null,
+        };
+        const log = opts?.db
+          ? await opts.db.networkLifecycleLog.create({ data: logData })
+          : await this.db.$transaction(async tx => tx.networkLifecycleLog.create({ data: logData }));
+        return {
+          status: 'APPLIED',
+          transitionId: log.id,
+          entityType: req.entityType,
+          entityId: req.entityId,
+          fromStateKey: normalizedFromState,
+          toStateKey: normalizedToState,
+          createdAt: log.createdAt,
+        };
+      }
+
       // Guard against future entity type skeletons that skip the write branch.
       return denied(
         'TRANSITION_NOT_PERMITTED',

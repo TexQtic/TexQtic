@@ -12,8 +12,9 @@
  * Canonical domain discriminant. Matches entity_type column in lifecycle_states
  * and allowed_transitions tables.
  * GAP-ORDER-LC-001-SM-SERVICE-001: ORDER added (B3) — log table order_lifecycle_logs live.
+ * TEXQTIC-NC-PHASE1-STATEMACHINE-001: POOL | SYNDICATE | VCO_CHAIN added — network_lifecycle_logs live.
  */
-export type EntityType = 'TRADE' | 'ESCROW' | 'CERTIFICATION' | 'ORDER';
+export type EntityType = 'TRADE' | 'ESCROW' | 'CERTIFICATION' | 'ORDER' | 'POOL' | 'SYNDICATE' | 'VCO_CHAIN';
 
 /**
  * D-020-A: Actor type classification.

@@ -1099,6 +1099,7 @@ model organizations {
   sanctions                                                                                Sanction[]
   traceabilityEdges                                                                        TraceabilityEdge[]
   traceabilityNodes                                                                        TraceabilityNode[]
+  network_lifecycle_logs                                                                   NetworkLifecycleLog[]
   trade_lifecycle_logs                                                                     TradeLifecycleLog[]
   tradesBuyer                                                                              Trade[]                         @relation("TradeBuyer")
   tradesSeller                                                                             Trade[]                         @relation("TradeSeller")
@@ -1717,6 +1718,60 @@ enum TenantStatus {
   CLOSED
 
   @@map("tenant_status")
+}
+
+/// TEXQTIC-NC-PHASE1-STATEMACHINE-001: Immutable, append-only audit log for all
+/// Network Commerce entity lifecycle transitions (POOL, SYNDICATE, VCO_CHAIN).
+/// Three-layer immutability: StateMachineService (no update/delete method) +
+/// DB trigger (prevent_lifecycle_log_update_delete) + RLS (UPDATE/DELETE = USING false).
+/// Uses polymorphic (entity_type, entity_id) reference instead of a specific FK.
+/// entityId is a SOFT REFERENCE — no FK to the NC entity table; those tables land later.
+/// orgId → organizations.id is a LIVE FK (G-015 canonical pattern).
+model NetworkLifecycleLog {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Live FK → organizations.id (G-015). RLS boundary: current_setting('app.org_id', true)
+  /// For POOL transitions, org_id is the pool owner/admin org.
+  orgId           String        @map("org_id") @db.Uuid
+  /// Domain discriminant: POOL | SYNDICATE | VCO_CHAIN
+  entityType      String        @map("entity_type")
+  /// SOFT REFERENCE: UUID of the NC entity being transitioned. No FK — entity tables deferred.
+  entityId        String        @map("entity_id") @db.Uuid
+  /// Prior state key (matches lifecycle_states.state_key for the entity_type)
+  fromStateKey    String        @map("from_state_key")
+  /// New state key (matches lifecycle_states.state_key for the entity_type)
+  toStateKey      String        @map("to_state_key")
+  /// D-020-A: UUID of the user who triggered this transition (null for SYSTEM_AUTOMATION)
+  actorUserId     String?       @map("actor_user_id") @db.Uuid
+  /// D-020-A: UUID of the admin who triggered this transition (null for user/system)
+  actorAdminId    String?       @map("actor_admin_id") @db.Uuid
+  /// D-020-A: TENANT_USER | TENANT_ADMIN | PLATFORM_ADMIN | SYSTEM_AUTOMATION | MAKER | CHECKER
+  actorType       String        @map("actor_type")
+  /// Role snapshot at time of transition (not a live FK)
+  actorRole       String        @map("actor_role")
+  /// G-022: escalation severity level if triggered (1–4), null if not
+  escalationLevel Int?          @map("escalation_level")
+  /// G-021: UUID of the Maker user in a Maker-Checker flow (null if no MC)
+  makerUserId     String?       @map("maker_user_id") @db.Uuid
+  /// G-021: UUID of the Checker user in a Maker-Checker flow (null if no MC)
+  checkerUserId   String?       @map("checker_user_id") @db.Uuid
+  /// D-020-C: true if an AI recommendation preceded this human-confirmed transition.
+  aiTriggered     Boolean       @default(false) @map("ai_triggered")
+  /// UUID of the ImpersonationSession if transition occurred during platform impersonation
+  impersonationId String?       @map("impersonation_id") @db.Uuid
+  /// D-020-D: Mandatory justification. Non-empty enforced by DB CHECK.
+  reason          String
+  /// Fastify request ID for correlation (null for background job transitions)
+  requestId       String?       @map("request_id")
+  /// Wall-clock timestamp set by DB at commit time — not caller-supplied
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  organizations   organizations @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_lifecycle_logs_org_id_fk")
+
+  @@index([orgId], map: "idx_network_lifecycle_logs_org_id")
+  @@index([orgId, entityType, entityId], map: "idx_network_lifecycle_logs_org_entity")
+  @@index([orgId, entityType, entityId, createdAt(sort: Desc)], map: "idx_network_lifecycle_logs_org_entity_created")
+  @@index([toStateKey], map: "idx_network_lifecycle_logs_to_state")
+  @@index([entityType, entityId], map: "idx_network_lifecycle_logs_entity")
+  @@map("network_lifecycle_logs")
 }
 
 enum TenantPlan {

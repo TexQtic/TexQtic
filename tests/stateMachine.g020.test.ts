@@ -24,7 +24,8 @@ import { describe, it, expect, vi } from 'vitest';
 // ─── Inline Types (mirrors server/src/services/stateMachine.types.ts) ─────────
 // Inlined to avoid cross-package import complexity. Keep in sync with source.
 
-type EntityType = 'TRADE' | 'ESCROW' | 'CERTIFICATION';
+// TEXQTIC-NC-PHASE1-STATEMACHINE-001: POOL | SYNDICATE | VCO_CHAIN added.
+type EntityType = 'TRADE' | 'ESCROW' | 'CERTIFICATION' | 'ORDER' | 'POOL' | 'SYNDICATE' | 'VCO_CHAIN';
 type ActorType =
   | 'TENANT_USER'
   | 'TENANT_ADMIN'
@@ -199,6 +200,9 @@ class TestableStateMachineService {
       escrowLifecycleLog: {
         create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; createdAt: Date }>;
       };
+      networkLifecycleLog: {
+        create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; createdAt: Date }>;
+      };
       $transaction: <T>(fn: (tx: typeof this.db) => Promise<T>) => Promise<T>;
     }
   ) {}
@@ -282,6 +286,14 @@ class TestableStateMachineService {
     if (req.entityType === 'ESCROW') {
       const log = await this.db.$transaction(async tx =>
         tx.escrowLifecycleLog.create({ data: { orgId: req.orgId, escrowId: req.entityId, fromStateKey: normalizedFrom, toStateKey: normalizedTo, actorType: req.actorType, actorRole: req.actorRole, reason: req.reason } })
+      );
+      return { status: 'APPLIED', transitionId: log.id };
+    }
+
+    // TEXQTIC-NC-PHASE1-STATEMACHINE-001: polymorphic NC write branch
+    if (req.entityType === 'POOL' || req.entityType === 'SYNDICATE' || req.entityType === 'VCO_CHAIN') {
+      const log = await this.db.$transaction(async tx =>
+        tx.networkLifecycleLog.create({ data: { orgId: req.orgId, entityType: req.entityType, entityId: req.entityId, fromStateKey: normalizedFrom, toStateKey: normalizedTo, actorType: req.actorType, actorRole: req.actorRole, reason: req.reason } })
       );
       return { status: 'APPLIED', transitionId: log.id };
     }
@@ -372,6 +384,9 @@ function makeMockDb(overrides?: {
     escrowLifecycleLog: {
       create: vi.fn(() => Promise.resolve(makeLogResult())) as unknown as typeof prisma.escrowLifecycleLog.create,
     },
+    networkLifecycleLog: {
+      create: vi.fn(() => Promise.resolve(makeLogResult())) as unknown as typeof prisma.networkLifecycleLog.create,
+    },
     $transaction: vi.fn((fn: (tx: typeof prisma) => Promise<unknown>) => fn({
       lifecycleState: { findUnique: vi.fn() } as unknown as typeof prisma.lifecycleState,
       allowedTransition: { findUnique: vi.fn() } as unknown as typeof prisma.allowedTransition,
@@ -380,6 +395,9 @@ function makeMockDb(overrides?: {
       },
       escrowLifecycleLog: {
         create: vi.fn(() => Promise.resolve(makeLogResult())) as unknown as typeof prisma.escrowLifecycleLog.create,
+      },
+      networkLifecycleLog: {
+        create: vi.fn(() => Promise.resolve(makeLogResult())) as unknown as typeof prisma.networkLifecycleLog.create,
       },
       $transaction: vi.fn() as unknown as typeof prisma.$transaction,
     } as unknown as typeof prisma)) as typeof prisma.$transaction,
@@ -392,6 +410,7 @@ declare const prisma: {
   allowedTransition: { findUnique: unknown };
   tradeLifecycleLog: { create: unknown };
   escrowLifecycleLog: { create: unknown };
+  networkLifecycleLog: { create: unknown };
   $transaction: unknown;
 };
 
@@ -876,6 +895,112 @@ describe('G-020 StateMachineService — core enforcement', () => {
           true // terminal
         )
       ).not.toThrow(); // EXPIRED is in SYSTEM_AUTOMATION_ALLOWED_TERMINAL_TARGETS
+    });
+  });
+
+  // ── TEXQTIC-NC-PHASE1-STATEMACHINE-001: Network Commerce entity type coverage ──
+
+  describe('PASS: NC entity types (POOL, SYNDICATE, VCO_CHAIN) dispatch to networkLifecycleLog', () => {
+    it('P-NC-01: Valid POOL transition for TENANT_ADMIN → APPLIED', async () => {
+      const db = makeMockDb({
+        fromState: makeState('POOL', 'DRAFT'),
+        toState: makeState('POOL', 'ACTIVE'),
+        allowedTransition: makeTransition('POOL', 'DRAFT', 'ACTIVE', ['TENANT_ADMIN', 'PLATFORM_ADMIN']),
+      });
+      const svc = new TestableStateMachineService(db);
+
+      const result = await svc.transition({
+        entityType: 'POOL',
+        entityId: VALID_UUID_1,
+        orgId: VALID_UUID_2,
+        fromStateKey: 'DRAFT',
+        toStateKey: 'ACTIVE',
+        actorType: 'TENANT_ADMIN',
+        actorUserId: VALID_UUID_1,
+        actorAdminId: null,
+        actorRole: 'ADMIN',
+        reason: 'Pool configuration reviewed and approved; activating for syndication',
+      });
+
+      expect(result.status).toBe('APPLIED');
+      expect(result.transitionId).toBe(VALID_UUID_2);
+    });
+
+    it('P-NC-02: Valid SYNDICATE transition for PLATFORM_ADMIN → APPLIED', async () => {
+      const db = makeMockDb({
+        fromState: makeState('SYNDICATE', 'FORMING'),
+        toState: makeState('SYNDICATE', 'OPEN'),
+        allowedTransition: makeTransition('SYNDICATE', 'FORMING', 'OPEN', ['PLATFORM_ADMIN', 'TENANT_ADMIN']),
+      });
+      const svc = new TestableStateMachineService(db);
+
+      const result = await svc.transition({
+        entityType: 'SYNDICATE',
+        entityId: VALID_UUID_1,
+        orgId: VALID_UUID_2,
+        fromStateKey: 'FORMING',
+        toStateKey: 'OPEN',
+        actorType: 'PLATFORM_ADMIN',
+        actorUserId: null,
+        actorAdminId: VALID_UUID_3,
+        actorRole: 'SUPER_ADMIN',
+        reason: 'Minimum syndicate membership threshold reached; opening for participation',
+      });
+
+      expect(result.status).toBe('APPLIED');
+      expect(result.transitionId).toBe(VALID_UUID_2);
+    });
+
+    it('P-NC-03: Valid VCO_CHAIN transition for TENANT_ADMIN → APPLIED', async () => {
+      const db = makeMockDb({
+        fromState: makeState('VCO_CHAIN', 'PENDING'),
+        toState: makeState('VCO_CHAIN', 'ANCHORED'),
+        allowedTransition: makeTransition('VCO_CHAIN', 'PENDING', 'ANCHORED', ['TENANT_ADMIN', 'MAKER']),
+      });
+      const svc = new TestableStateMachineService(db);
+
+      const result = await svc.transition({
+        entityType: 'VCO_CHAIN',
+        entityId: VALID_UUID_1,
+        orgId: VALID_UUID_2,
+        fromStateKey: 'PENDING',
+        toStateKey: 'ANCHORED',
+        actorType: 'TENANT_ADMIN',
+        actorUserId: VALID_UUID_1,
+        actorAdminId: null,
+        actorRole: 'ADMIN',
+        reason: 'VCO chain verified and anchored to pool; committing to network',
+      });
+
+      expect(result.status).toBe('APPLIED');
+      expect(result.transitionId).toBe(VALID_UUID_2);
+    });
+  });
+
+  describe('FAIL: NC entity type with unsupported transition (F-NC-01)', () => {
+    it('F-NC-01: POOL entityType with no allowed_transition entry → TRANSITION_NOT_PERMITTED', async () => {
+      const db = makeMockDb({
+        fromState: makeState('POOL', 'ACTIVE'),
+        toState: makeState('POOL', 'DRAFT'),
+        allowedTransition: null, // No rollback allowed
+      });
+      const svc = new TestableStateMachineService(db);
+
+      const result = await svc.transition({
+        entityType: 'POOL',
+        entityId: VALID_UUID_1,
+        orgId: VALID_UUID_2,
+        fromStateKey: 'ACTIVE',
+        toStateKey: 'DRAFT',
+        actorType: 'TENANT_ADMIN',
+        actorUserId: VALID_UUID_1,
+        actorAdminId: null,
+        actorRole: 'ADMIN',
+        reason: 'Attempting rollback of pool state — not allowed',
+      });
+
+      expect(result.status).toBe('DENIED');
+      expect(result.code).toBe('TRANSITION_NOT_PERMITTED');
     });
   });
 });
