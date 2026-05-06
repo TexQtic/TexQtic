@@ -56,6 +56,8 @@ ADD CONSTRAINT lifecycle_states_entity_type_check CHECK (
       'ESCROW'::text,
       'CERTIFICATION'::text,
       'ORDER'::text,
+      'INVOICE'::text,
+      'VPC'::text,
       'POOL'::text,
       'SYNDICATE'::text,
       'VCO_CHAIN'::text
@@ -75,6 +77,8 @@ ADD CONSTRAINT allowed_transitions_entity_type_check CHECK (
       'ESCROW'::text,
       'CERTIFICATION'::text,
       'ORDER'::text,
+      'INVOICE'::text,
+      'VPC'::text,
       'POOL'::text,
       'SYNDICATE'::text,
       'VCO_CHAIN'::text
