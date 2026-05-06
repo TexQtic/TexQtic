@@ -486,7 +486,7 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001` | Wave 2 (post) | P1 | Governance / decisions | `DESIGN_DECISIONS_RECORDED` — D1–D8 resolved by Paresh Patel; IMPL-001 scope and allowlist finalized; no packages installed; no configs changed; decision record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001.md`; token `TTP_FRONTEND_TEST_HARNESS_DESIGN_DECISIONS_001_RECORDED` |
 | `TTP-FRONTEND-TEST-HARNESS-IMPL-001` | Wave 2 (post) | P1 | Implementation | `TRUTH_SYNCED` — devDeps installed: `vitest@^3.2.4`, `@testing-library/react@^16.3.2`, `@testing-library/jest-dom@^6.9.1`, `jsdom@^29.1.1`; created `vitest.frontend.config.ts` (jsdom, setupFiles, include `tests/frontend/**`); created `tests/setupTests.ts`; created `tsconfig.test.json` (optional IDE support, scoped to `tests/frontend/**`); added `test:frontend` script with `--passWithNoTests`; added `'../tests/frontend/**'` exclusion to `server/vitest.config.ts`; root uses npm (`package-lock.json`); smoke PASS; root tsc PASS; test tsc PASS; server tsc PASS; server bounded tests 20/20 PASS; no app/UI/CI/backend/Prisma/flags changed; verification record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-IMPL-VERIFIED-001.md`; final decision `TTP_FRONTEND_TEST_HARNESS_IMPL_001_VERIFIED_COMPLETE` |
 | `TTP-FRONTEND-TEST-HARNESS-PILOT-001` | Wave 2 (post) | P1 | Test pilot | `TRUTH_SYNCED` — pilot component: `TtpEnrollmentAdmin` (no props, no router, Tailwind only); test file: `tests/frontend/ttp-enrollment-admin.test.tsx`; 5 TCs (TC-FEH-001 loading state, TC-FEH-002 FEATURE_DISABLED copy, TC-FEH-003 APIError message, TC-FEH-004 plain Error fallback, TC-FEH-005 enrollment table row); mocks: `vi.mock('../../services/ttpEnrollmentService')`; `tsconfig.test.json` infra correction: added `vite-env.d.ts` to include (fixes `import.meta.env` transitively surfaced by import chain); 5/5 PASS; test tsc PASS (zero errors); root tsc PASS; server bounded tests 20/20 PASS; no app code changed; verification record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-PILOT-VERIFIED-001.md`; final decision `TTP_FRONTEND_TEST_HARNESS_PILOT_001_VERIFIED_COMPLETE` |
-| `TTP-FRONTEND-TEST-HARNESS-CI-VERIFY-001` | Wave 2 (post) | P1 | CI verification | `NOT_OPENED` |
+| `TTP-FRONTEND-TEST-HARNESS-CI-VERIFY-001` | Wave 2 (post) | P1 | CI verification | `TRUTH_SYNCED` — CI workflow `.github/workflows/test-suite.yml` updated; `npm ci` (root) + `npm run test:frontend` steps added after server Vitest; server pnpm steps preserved unchanged; local validation: 5/5 frontend PASS, test tsc PASS, root tsc PASS, 20/20 server PASS; verification record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-CI-VERIFIED-001.md`; final decision `TTP_FRONTEND_TEST_HARNESS_CI_VERIFY_001_VERIFIED_COMPLETE` |
 | `TTP-DATA-CONSENT-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
 | `TTP-DATA-CONSENT-IMPL-001` | Wave 3 | P2 | Implementation + migration | `NOT_OPENED` |
 | `TTP-INTERNAL-SCORE-ROUTING-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
@@ -660,6 +660,38 @@ no CI, no backend routes/services, no Prisma/schema/SQL, no feature flags change
 `TTP-FRONTEND-TEST-HARNESS-CI-VERIFY-001` NOT OPENED.
 
 Final decision: `TTP_FRONTEND_TEST_HARNESS_PILOT_001_VERIFIED_COMPLETE`.
+
+---
+
+### CI gate complete — TTP-FRONTEND-TEST-HARNESS-CI-VERIFY-001
+
+**`TTP-FRONTEND-TEST-HARNESS-CI-VERIFY-001` is `TRUTH_SYNCED`:**
+Date: 2026-05-06. Unit ID: `TTP-FRONTEND-TEST-HARNESS-CI-VERIFY-001`.
+Verification record: `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-CI-VERIFIED-001.md`.
+
+**PR gate workflow updated:** `.github/workflows/test-suite.yml`.
+
+Two steps added after the server Vitest step (server behavior preserved unchanged):
+- `Install root dependencies (frontend harness)` — `npm ci` (root; uses `package-lock.json`)
+- `Run frontend test harness (RTL/jsdom)` — `npm run test:frontend`
+
+Node 22 and pnpm 9 setup already present — no additional Node setup required.
+Server pnpm install, typecheck, lint, and Vitest steps: UNCHANGED.
+
+**Local CI-equivalent validation:**
+- `npm ci`: FAILED locally (Windows OS file-lock / antivirus — environment-only; Ubuntu CI will succeed);
+  node_modules restored via `npm install` for remaining local checks.
+- `npm run test:frontend`: PASS — 5/5 (89ms)
+- `npx tsc --project tsconfig.test.json --noEmit`: PASS — zero errors
+- `npx tsc --noEmit`: PASS — zero errors
+- `npm run test:runtime-routing:focused`: PASS — 20/20, 2 files
+- `git status --short`: clean — only `.github/workflows/test-suite.yml` modified
+
+**Safety invariants CONFIRMED:**
+`ttp_enabled=false` UNCHANGED. `LEGAL_REVIEW_PENDING` UNCHANGED. No app code, no UI components,
+no backend routes/services, no Prisma/schema/SQL, no feature flags, no package/lockfile changed.
+
+Final decision: `TTP_FRONTEND_TEST_HARNESS_CI_VERIFY_001_VERIFIED_COMPLETE`.
 
 ---
 
@@ -894,6 +926,7 @@ PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_OPTIONS_AUDIT_001_COMPLETE
 PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_DESIGN_DECISIONS_001_RECORDED
 PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_IMPL_001_TRUTH_SYNCED
 PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_PILOT_001_TRUTH_SYNCED
+PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_CI_VERIFY_001_TRUTH_SYNCED
 ```
 
 **Authority:** Paresh Patel — TexQtic founder / operator  

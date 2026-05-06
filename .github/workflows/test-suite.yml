@@ -65,3 +65,9 @@ jobs:
           # DB-dependent describes will SKIP, not FAIL.
           DATABASE_URL: ''
         run: pnpm run test:ci
+
+      - name: Install root dependencies (frontend harness)
+        run: npm ci
+
+      - name: Run frontend test harness (RTL/jsdom)
+        run: npm run test:frontend
