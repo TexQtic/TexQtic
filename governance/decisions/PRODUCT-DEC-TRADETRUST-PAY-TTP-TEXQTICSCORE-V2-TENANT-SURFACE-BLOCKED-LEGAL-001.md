@@ -1,4 +1,4 @@
-# PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-TENANT-SURFACE-BLOCKED-LEGAL-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-TENANT-SURFACE-BLOCKED-LEGAL-001
 
 ## Metadata
 
@@ -88,7 +88,7 @@ may be opened for implementation:
 
 | Option | Description |
 |---|---|
-| **A — Paresh legal decision record** | A new governance decision file explicitly approving tenant-visible TexQticScore v2 wording and surface, signed by Paresh Sharma |
+| **A — Paresh legal decision record** | A new governance decision file explicitly approving tenant-visible TexQticScore v2 wording and surface, signed by Paresh Patel |
 | **B — Counsel-approved wording artifact** | A recorded response from external legal counsel (from `TTP-LEGAL-COPY-COUNSEL-PACKET-001` review) approving the TexQticScore v2 disclaimer wording for tenant surfaces |
 | **C — Tracker/legal status change** | A governance artifact that explicitly changes `LEGAL_REVIEW_PENDING` to `LEGAL_APPROVED` for tenant-visible TexQticScore v2 surfaces |
 

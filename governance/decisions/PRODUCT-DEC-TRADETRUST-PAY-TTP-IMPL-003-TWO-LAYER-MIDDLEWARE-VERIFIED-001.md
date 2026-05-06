@@ -1,4 +1,4 @@
-# PRODUCT-DEC-TRADETRUST-PAY-TTP-IMPL-003-TWO-LAYER-MIDDLEWARE-VERIFIED-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-TTP-IMPL-003-TWO-LAYER-MIDDLEWARE-VERIFIED-001
 
 ## 1. Document Metadata
 
@@ -8,7 +8,7 @@
 | Implementation Unit | `TTP-IMPL-003` |
 | Tracker Unit | `TTP-SCOPED-ACTIVATION-IMPL-001` |
 | Status | `TRUTH_SYNCED` |
-| Authority | Paresh Sharma — TexQtic founder / operator |
+| Authority | Paresh Patel — TexQtic founder / operator |
 | Date | 2026-05-05 |
 | Implementation commit | `b7950b7a20657b719e1f8f977cc0ca2e0bd1850e` |
 | Governance commit | (this document — see §9) |
@@ -216,7 +216,7 @@ This implementation unit enables the *infrastructure* for per-org activation wit
 TTP_IMPL_003_TWO_LAYER_MIDDLEWARE_VERIFIED_COMPLETE
 ```
 
-**Authority:** Paresh Sharma — TexQtic founder / operator  
+**Authority:** Paresh Patel — TexQtic founder / operator  
 **`ttp_enabled` state:** `false` — UNCHANGED  
 **Implementation commit:** `b7950b7a20657b719e1f8f977cc0ca2e0bd1850e`  
 **Files changed:** 3 (see §5)  

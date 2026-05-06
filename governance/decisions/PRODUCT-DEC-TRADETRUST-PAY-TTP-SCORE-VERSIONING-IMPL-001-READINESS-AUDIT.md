@@ -1,4 +1,4 @@
-# PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-VERSIONING-IMPL-001-READINESS-AUDIT
+﻿# PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-VERSIONING-IMPL-001-READINESS-AUDIT
 
 ## §1 Metadata
 
@@ -9,7 +9,7 @@
 | **Type** | Readiness audit / implementation necessity decision |
 | **Date** | 2026-05-06 |
 | **Auditor** | GitHub Copilot (governed by TexQtic AGENTS.md + copilot-instructions.md) |
-| **Authorized by** | Paresh Sharma — audit only; no implementation authorized |
+| **Authorized by** | Paresh Patel — audit only; no implementation authorized |
 | **`ttp_enabled`** | `false` — UNCHANGED |
 | **Legal status** | `LEGAL_REVIEW_PENDING` — UNCHANGED |
 | **Implementation authorized** | NO |

@@ -1,4 +1,4 @@
-# PRODUCT-DEC-TRADETRUST-PAY-TTP-IMPL-003-PRODUCTION-RUNTIME-VERIFIED-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-TTP-IMPL-003-PRODUCTION-RUNTIME-VERIFIED-001
 
 ## 1. Document Metadata
 
@@ -9,7 +9,7 @@
 | Tracker Unit | `TTP-SCOPED-ACTIVATION-IMPL-001` |
 | Verification Type | Production runtime / E2E |
 | Status | `TTP_IMPL_003_PRODUCTION_RUNTIME_VERIFIED_COMPLETE` |
-| Authority | Paresh Sharma — TexQtic founder / operator |
+| Authority | Paresh Patel — TexQtic founder / operator |
 | Date | 2026-05-05 |
 | Implementation commit | `b7950b7a20657b719e1f8f977cc0ca2e0bd1850e` |
 | Governance commit (unit verify) | `e237405` (`PRODUCT-DEC-TRADETRUST-PAY-TTP-IMPL-003-TWO-LAYER-MIDDLEWARE-VERIFIED-001`) |

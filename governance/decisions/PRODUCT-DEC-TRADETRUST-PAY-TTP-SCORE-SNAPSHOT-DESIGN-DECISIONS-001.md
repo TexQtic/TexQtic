@@ -1,10 +1,10 @@
-# PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001
 
 **Decision ID:** PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001  
 **Type:** Design Decision Record — Open Question Resolutions  
 **Unit ID:** TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001  
 **Date:** 2026-05-05  
-**Decision Owner:** Paresh Sharma — TexQtic founder / operator  
+**Decision Owner:** Paresh Patel — TexQtic founder / operator  
 **Status:** `TTP_SCORE_SNAPSHOT_DESIGN_DECISIONS_001_RECORDED`
 
 | Invariant | Confirmed State |
@@ -22,7 +22,7 @@
 
 ## 1. Authority Basis
 
-This document records Paresh Sharma's decisions for the seven open questions (OQ-SS-01 through
+This document records Paresh Patel's decisions for the seven open questions (OQ-SS-01 through
 OQ-SS-07) identified in §13 of the score snapshot design artifact. These decisions finalize the
 design and authorize design-level updates to the governance artifacts only.
 
@@ -32,7 +32,7 @@ design and authorize design-level updates to the governance artifacts only.
 | `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-OPTIONS-AUDIT-001.md` (commit `959edc2`) | Repo-truth audit providing evidence for each option |
 | `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-PHASE-2-ARCHITECTURE-QUESTIONS-001.md` | TQ-06 Option B ⭐, TQ-07 Option B ⭐, TQ-12 Option B ⭐ — architecture direction approvals |
 | `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-LEGAL-COUNSEL-REVIEW-PACKET-001.md` | Legal review context; copy status `LEGAL_REVIEW_PENDING` |
-| Paresh Sharma | Decision owner — all decisions in this document are Paresh's |
+| Paresh Patel | Decision owner — all decisions in this document are Paresh's |
 
 ---
 
@@ -291,7 +291,7 @@ governance unit) can proceed immediately.
 TTP_SCORE_SNAPSHOT_DESIGN_DECISIONS_001_RECORDED
 ```
 
-**Authority:** Paresh Sharma — TexQtic founder / operator  
+**Authority:** Paresh Patel — TexQtic founder / operator  
 **Date:** 2026-05-05  
 **`ttp_enabled` state:** `false` — UNCHANGED  
 **Code changes:** None  

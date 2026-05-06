@@ -1,8 +1,8 @@
-# PRODUCT-DEC-TRADETRUST-PAY-PHASE-1-ACTIVATION-READINESS-SIGNOFF-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-PHASE-1-ACTIVATION-READINESS-SIGNOFF-001
 
 **Status:** `PHASE_1_TECHNICALLY_READY__AWAITING_PRODUCT_OPERATOR_ACTIVATION_DECISION`
 **Date:** 2026-05-04
-**Decision Owner:** Paresh Sharma (TexQtic founder / operator)
+**Decision Owner:** Paresh Patel (TexQtic founder / operator)
 **Document Type:** Phase 1 Activation Readiness Sign-Off
 **HEAD at sign-off:** `5c936bc` — `[TEXQTIC] governance: add ttp-summary runtime fix verified decision record (Unit 5)`
 **Production URL at sign-off:** https://app.texqtic.com

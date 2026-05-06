@@ -1,11 +1,11 @@
-# PRODUCT-DEC-TRADETRUST-PAY-TTP-IMPL-002-DISCLAIMER-CONSTANT-VERIFIED-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-TTP-IMPL-002-DISCLAIMER-CONSTANT-VERIFIED-001
 
 **Document type:** TTP Phase 2 implementation verification record  
 **Unit ID:** `TTP-IMPL-002`  
 **Unit name:** TTP Disclaimer Constant  
 **Status:** `TTP_IMPL_002_DISCLAIMER_CONSTANT_VERIFIED_COMPLETE`  
 **Date:** 2026-05-05  
-**Decision Owner:** Paresh Sharma (TexQtic founder / operator)  
+**Decision Owner:** Paresh Patel (TexQtic founder / operator)  
 **Author:** GitHub Copilot — TexQtic Safe-Write Mode  
 **`ttp_enabled` state:** `false` — UNCHANGED
 
@@ -266,7 +266,7 @@ It is a latent constant awaiting legal sign-off before route wiring is authorize
 TTP_IMPL_002_DISCLAIMER_CONSTANT_VERIFIED_COMPLETE
 ```
 
-**Authority:** Paresh Sharma — TexQtic founder / operator  
+**Authority:** Paresh Patel — TexQtic founder / operator  
 **`ttp_enabled` state:** `false` — UNCHANGED  
 **Implementation commit:** `42931f7f3d1055c758a76e9bc29ccfce380b9414`  
 **Files changed by implementation:** `server/src/ttp/ttp.constants.ts`, `governance/TEXQTIC-TRADETRUST-PAY-PHASE-2-IMPLEMENTATION-PLAN-AND-TRACKER-001.md`  

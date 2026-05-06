@@ -1,4 +1,4 @@
-# PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-SERVICE-VERIFIED-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-SERVICE-VERIFIED-001
 
 ## Metadata
 
@@ -7,7 +7,7 @@
 | **Unit ID** | `TTP-SCORE-SNAPSHOT-SERVICE-001` |
 | **Parent task** | `TTP-SCORE-SNAPSHOT-IMPL-001` (Slice 2 of Wave 2) |
 | **Date** | 2026-05-20 |
-| **Author** | Paresh Sharma — TexQtic founder / operator |
+| **Author** | Paresh Patel — TexQtic founder / operator |
 | **Prompt scope** | Slice 1.5 FK Reconciliation + Slice 2 `TtpScoreSnapshotService` implementation |
 | **Commit** | `371b739` — `feat(tradetrust-pay): add ttp score snapshot service` |
 | **Governs** | `TtpScoreSnapshotService`, `assembleTtpScoreInput`, `captureSnapshot`, `SCORE_DISCLAIMER` export |

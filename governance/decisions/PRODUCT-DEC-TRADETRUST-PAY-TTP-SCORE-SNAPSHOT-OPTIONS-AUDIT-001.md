@@ -1,11 +1,11 @@
-# PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-OPTIONS-AUDIT-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-OPTIONS-AUDIT-001
 
 **Decision ID:** PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-OPTIONS-AUDIT-001  
 **Type:** Options Audit — Repo-Truth Verification + Recommendation  
 **Status:** `TTP_SCORE_SNAPSHOT_OPTIONS_AUDIT_001_READY_FOR_PARESH_DECISION`  
 **Date produced:** 2026-06  
 **Produced by:** GitHub Copilot — governance-only, no code changes  
-**Authoritative decision:** Paresh Sharma (TexQtic founder / operator)
+**Authoritative decision:** Paresh Patel (TexQtic founder / operator)
 
 **References:**
 - `governance/TTP-SCORE-SNAPSHOT-DESIGN-001.md` — design artifact under review
@@ -707,7 +707,7 @@ The following boundaries from design doc §14 are unconditionally preserved by t
 TTP_SCORE_SNAPSHOT_OPTIONS_AUDIT_001_READY_FOR_PARESH_DECISION
 ```
 
-**Authority:** Paresh Sharma — TexQtic founder / operator  
+**Authority:** Paresh Patel — TexQtic founder / operator  
 **`ttp_enabled` state:** `false` — UNCHANGED  
 **Code changes made by this document:** None  
 **Schema changes authorized:** None  

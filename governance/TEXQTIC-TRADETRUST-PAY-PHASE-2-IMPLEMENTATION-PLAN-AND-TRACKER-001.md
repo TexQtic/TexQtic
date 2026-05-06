@@ -1,9 +1,9 @@
-# TEXQTIC-TRADETRUST-PAY-PHASE-2-IMPLEMENTATION-PLAN-AND-TRACKER-001
+﻿# TEXQTIC-TRADETRUST-PAY-PHASE-2-IMPLEMENTATION-PLAN-AND-TRACKER-001
 
 **Document type:** Phase 2 execution control artifact — implementation plan and tracker  
 **Status:** `PHASE_2_IMPLEMENTATION_PLAN_AND_TRACKER_CREATED`  
 **Date:** 2026-05-05  
-**Decision Owner:** Paresh Sharma (TexQtic founder / operator)  
+**Decision Owner:** Paresh Patel (TexQtic founder / operator)  
 **Author:** GitHub Copilot — TexQtic Safe-Write Mode  
 **`ttp_enabled` state:** `false` — UNCHANGED by this document
 
@@ -144,7 +144,7 @@ Every Phase 2 unit follows this exact sequence. Steps may not be skipped or reor
 |---|---|---|---|---|---|---|
 | **Wave 0** | Control and safety foundation | Scoped activation, QA sentinel, monitoring, rollback runbook, language governance baseline | TQ-01, TQ-08, TQ-09, TQ-10, TQ-20 | None — P0 cleared | `COMPLETE / TRUTH_SYNCED` | All P0 units complete — see §18 |
 | **Wave 1** | Legal/compliance copy review | Final disclaimer text, forbidden-term list, consent wording, DPDP notes, VPC/score language sign-off | TQ-20 (final text), TQ-05/14 wording | None (non-code) — may start in parallel | `OPERATOR_READY__LEGAL_PENDING` | `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` `TRUTH_SYNCED`; `TTP-LEGAL-COPY-COUNSEL-PACKET-001` ready for Paresh review; final legal sign-off pending |
-| **Wave 2** | Score architecture foundation | Score snapshots, hybrid live + snapshot triggers, TexQticScore v2 design, score versioning | TQ-06, TQ-07, TQ-11, TQ-12 | P0 design complete | `IMPLEMENTATION_IN_PROGRESS` | Slices 1–6 `TRUTH_SYNCED` — SQL/RLS, service, VPC trigger, enrollment trigger, admin-review trigger, admin read endpoints all complete; 59/59 unit tests; tsc clean; runtime verification (`TTP-SCORE-SNAPSHOT-RUNTIME-VERIFY-001`) `PRODUCTION_VERIFIED` (commit `9a58b0d`, final decision `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED`); `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_DECISIONS_RECORDED`; options audit complete (commit `07a7e82`); decisions recorded in `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001`; `TTP-TEXQTICSCORE-V2-SERVICE-001` `TRUTH_SYNCED` (commits `3999a2c` + `2c01c38`); `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` `TRUTH_SYNCED` (commits `50fa075` + `3284f3f`); `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` `TRUTH_SYNCED` (commits `d7186d7` + `a218275`); 62/62 unit tests pass (31 + 11 + 20); `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` `BLOCKED_LEGAL` (`LEGAL_REVIEW_PENDING`; blocker record `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-TENANT-SURFACE-BLOCKED-LEGAL-001`); `TTP-SCORE-VERSIONING-IMPL-001` `NO_IMPLEMENTATION_REQUIRED_CURRENTLY` (audit 2026-05-06); current gate: `TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` `IN_PROGRESS` — runtime verification only, no code |
+| **Wave 2** | Score architecture foundation | Score snapshots, hybrid live + snapshot triggers, TexQticScore v2 design, score versioning | TQ-06, TQ-07, TQ-11, TQ-12 | P0 design complete | `IMPLEMENTATION_IN_PROGRESS` | Slices 1–6 `TRUTH_SYNCED` — SQL/RLS, service, VPC trigger, enrollment trigger, admin-review trigger, admin read endpoints all complete; 59/59 unit tests; tsc clean; runtime verification (`TTP-SCORE-SNAPSHOT-RUNTIME-VERIFY-001`) `PRODUCTION_VERIFIED` (commit `9a58b0d`, final decision `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED`); `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_DECISIONS_RECORDED`; options audit complete (commit `07a7e82`); decisions recorded in `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001`; `TTP-TEXQTICSCORE-V2-SERVICE-001` `TRUTH_SYNCED` (commits `3999a2c` + `2c01c38`); `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` `TRUTH_SYNCED` (commits `50fa075` + `3284f3f`); `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` `TRUTH_SYNCED` (commits `d7186d7` + `a218275`); 62/62 unit tests pass (31 + 11 + 20); `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` `BLOCKED_LEGAL` (`LEGAL_REVIEW_PENDING`; blocker record `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-TENANT-SURFACE-BLOCKED-LEGAL-001`); `TTP-SCORE-VERSIONING-IMPL-001` `NO_IMPLEMENTATION_REQUIRED_CURRENTLY` (audit 2026-05-06); current gate: `TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` `PRODUCTION_VERIFIED_LIMITED_BACKEND_AUTH_GATE` — unauthenticated probe only; `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` `AUDIT_COMPLETE` — 4 UI surfaces classified; no code changed |
 | **Wave 3** | Consent and data-sharing design | Data consents table, internal-only score Phase 2 / external Phase 3, time-bounded consent | TQ-05, TQ-13, TQ-14 | Legal gate (DPDP, GSTN, CIBIL consent) | `LEGAL_GATED__WAITING` | Do not start until Wave 1 complete |
 | **Wave 4** | Partner marketplace design | Partner workflows, VPC TRANSMITTED after persisted ack, callback events, finance requests, partner offers, dynamic discounting | TQ-02, TQ-03, TQ-04, TQ-15, TQ-16, TQ-17 | Legal gate AND partner contract signed | `PARTNER_GATED__WAITING` | Do not start until Wave 1 + partner contract |
 | **Wave 5** | Future finance/legal positioning | Buyer Trust Score, fee events / fee disclosure | TQ-18, TQ-19 | TQ-11 design (TQ-18); legal fee review (TQ-19) | `FUTURE_DESIGN_TARGET__WAITING` | Phase 3 design targets; no near-term action |
@@ -155,23 +155,33 @@ Every Phase 2 unit follows this exact sequence. Steps may not be skipped or reor
 
 | Field | Value |
 |---|---|
-| **Unit ID** | `TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` |
-| **Status** | `IN_PROGRESS` — current gate |
-| **Type** | Runtime verification / governance (no code change) |
-| **Purpose** | Verify TexQticScore v2 backend/admin slices are deployed and correctly auth-gated in production. Confirm tenant-facing v2 surface is absent. Confirm score versioning requires no further implementation. No application code, routes, services, Prisma, SQL, migrations, or feature flag values are changed by this unit. |
-| **Gate** | All TexQticScore v2 slices `TRUTH_SYNCED` (`TTP-TEXQTICSCORE-V2-SERVICE-001`, `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001`, `TTP-TEXQTICSCORE-V2-ADMIN-READ-001`); `TTP-SCORE-VERSIONING-IMPL-001` `NO_IMPLEMENTATION_REQUIRED_CURRENTLY` — **ALL CLEARED** |
-| **Tenant surface** | `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` remains `BLOCKED_LEGAL` — `LEGAL_REVIEW_PENDING` unresolved; no tenant-visible v2 score surface implemented; blocker record `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-TENANT-SURFACE-BLOCKED-LEGAL-001` |
-| **Score versioning** | `TTP-SCORE-VERSIONING-IMPL-001` is `NO_IMPLEMENTATION_REQUIRED_CURRENTLY` — readiness audit (2026-05-06) confirmed all versioning deliverables already present; audit record `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-VERSIONING-IMPL-001-READINESS-AUDIT` |
-| **Verification record** | `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-RUNTIME-VERIFIED-001.md` |
+| **Unit ID** | `TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` |
+| **Status** | `DESIGN_OPEN` — awaiting Paresh approval before implementation prompt may be opened |
+| **Type** | Frontend — copy-only fix (no backend, no schema, no routes, no feature flag changes) |
+| **Purpose** | Update the `catch` block error copy in 3 TTP-gated control-plane components so that SUPER_ADMIN operators see "TradeTrust Pay is not currently enabled on this platform." instead of generic error text when `ttp_enabled=false`. |
+| **Gate** | `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` `AUDIT_COMPLETE` |
+| **Predecessor** | `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` — audit classified 3 surfaces as `UI_ERROR_COPY_MISMATCH`; this unit resolves those mismatches |
+| **Surfaces** | VPC Console (`VpcConsole`) · TTP Enrollment (`TtpEnrollmentAdmin`) · TTP Eligibility (`TtpEligibilityConsole`) |
+| **Design artifact** | `docs/TECS-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001-DESIGN-v1.md` |
+| **Files to modify** | `components/ControlPlane/VpcConsole.tsx` · `components/ControlPlane/TtpEnrollmentAdmin.tsx` · `components/ControlPlane/TtpEligibilityConsole.tsx` |
+| **Files to create** | `tests/ttp-control-plane-feature-disabled-ux.test.tsx` |
+| **Proposed copy** | `"TradeTrust Pay is not currently enabled on this platform."` (Paresh must confirm before implementation) |
 
-### No-go confirmation
+### Completed predecessor — TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001
 
-- No code changed — CONFIRMED
+`TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` is `AUDIT_COMPLETE` (governance audit — no code
+change): 4 control-plane TradeTrust UI surfaces classified. 1 `DATA_EMPTY_STATE_ONLY`
+(EscrowAdminPanel). 3 `UI_ERROR_COPY_MISMATCH` (VpcConsole, TtpEnrollmentAdmin,
+TtpEligibilityConsole). Audit record:
+`governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001.md`.
+
+### No-go confirmation (design unit — no code changed by this document)
+
+- No code changed — CONFIRMED (design only)
 - No route changed — CONFIRMED
-- No UI changed — CONFIRMED
+- No UI changed — CONFIRMED (design proposes changes; not yet implemented)
 - No schema changed — CONFIRMED
 - No activation — CONFIRMED
-- No tenant-facing score exposed — CONFIRMED
 - `ttp_enabled=false` — UNCHANGED
 - `LEGAL_REVIEW_PENDING` — UNCHANGED
 - Wave 3/4/5 gates — UNCHANGED
@@ -237,7 +247,7 @@ artifact only.
 
 ## 9. P1 Score Architecture Tracker
 
-**Current status:** `IMPLEMENTATION_IN_PROGRESS` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`) — `TtpScoreSnapshotService` + 13 tests; Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `TRUTH_SYNCED` (`b780afd`, `436fd72`); Slice 5 (`TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001`) `TRUTH_SYNCED` (`16ccbdf`, `c9a8ee6`); Slice 6 (`TTP-SCORE-SNAPSHOT-READ-ADMIN-001`) `TRUTH_SYNCED` (`e73c0b0`, `908781b`) — all 6 slices `TRUTH_SYNCED`; runtime verification (`TTP-SCORE-SNAPSHOT-RUNTIME-VERIFY-001`) `PRODUCTION_VERIFIED` — commit `9a58b0d`, final decision `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED`; `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_DECISIONS_RECORDED` (commit `66b4ac7`, OQ-V2-01 through OQ-V2-09 all resolved); `TTP-TEXQTICSCORE-V2-SERVICE-001` `TRUTH_SYNCED` — commits `3999a2c` (feat: add texqticscore v2 service) + `2c01c38` (docs: verify texqticscore v2 service); 31/31 unit tests pass; tsc clean; `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` `TRUTH_SYNCED` — commits `50fa075` (feat: support texqticscore v2 snapshots) + `3284f3f` (docs: verify texqticscore v2 snapshot integration); 11/11 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_SNAPSHOT_INTEGRATION_001_VERIFIED_COMPLETE`; `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` `TRUTH_SYNCED` — commits `d7186d7` (feat: filter admin score snapshots by version) + `a218275` (docs: verify texqticscore v2 admin reads); 20/20 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_ADMIN_READ_001_VERIFIED_COMPLETE`; `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` is blocked — `BLOCKED_LEGAL` (`LEGAL_REVIEW_PENDING` unresolved; legal clearance required for tenant-visible TexQticScore v2 surfaces before implementation may proceed); `TTP-SCORE-VERSIONING-IMPL-001` is `NO_IMPLEMENTATION_REQUIRED_CURRENTLY` (readiness audit 2026-05-06 confirmed all versioning deliverables already implemented); current gate: `TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` (`IN_PROGRESS` — runtime verification only; no code change required)
+**Current status:** `IMPLEMENTATION_IN_PROGRESS` — Slice 1 (`TTP-SCORE-SNAPSHOT-SQL-RLS-001`) `TRUTH_SYNCED` (`5e8ac44`, `f9a1ecd`); Slice 2 (`TTP-SCORE-SNAPSHOT-SERVICE-001`) `TRUTH_SYNCED` (`371b739`, `86b6373`) — `TtpScoreSnapshotService` + 13 tests; Slice 3 (`TTP-SCORE-SNAPSHOT-TRIGGER-VPC-001`) `TRUTH_SYNCED` (`a2c9d0d`, `33dd382`); Slice 4 (`TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001`) `TRUTH_SYNCED` (`b780afd`, `436fd72`); Slice 5 (`TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001`) `TRUTH_SYNCED` (`16ccbdf`, `c9a8ee6`); Slice 6 (`TTP-SCORE-SNAPSHOT-READ-ADMIN-001`) `TRUTH_SYNCED` (`e73c0b0`, `908781b`) — all 6 slices `TRUTH_SYNCED`; runtime verification (`TTP-SCORE-SNAPSHOT-RUNTIME-VERIFY-001`) `PRODUCTION_VERIFIED` — commit `9a58b0d`, final decision `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED`; `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_DECISIONS_RECORDED` (commit `66b4ac7`, OQ-V2-01 through OQ-V2-09 all resolved); `TTP-TEXQTICSCORE-V2-SERVICE-001` `TRUTH_SYNCED` — commits `3999a2c` (feat: add texqticscore v2 service) + `2c01c38` (docs: verify texqticscore v2 service); 31/31 unit tests pass; tsc clean; `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` `TRUTH_SYNCED` — commits `50fa075` (feat: support texqticscore v2 snapshots) + `3284f3f` (docs: verify texqticscore v2 snapshot integration); 11/11 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_SNAPSHOT_INTEGRATION_001_VERIFIED_COMPLETE`; `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` `TRUTH_SYNCED` — commits `d7186d7` (feat: filter admin score snapshots by version) + `a218275` (docs: verify texqticscore v2 admin reads); 20/20 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_ADMIN_READ_001_VERIFIED_COMPLETE`; `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` is blocked — `BLOCKED_LEGAL` (`LEGAL_REVIEW_PENDING` unresolved; legal clearance required for tenant-visible TexQticScore v2 surfaces before implementation may proceed); `TTP-SCORE-VERSIONING-IMPL-001` is `NO_IMPLEMENTATION_REQUIRED_CURRENTLY` (readiness audit 2026-05-06 confirmed all versioning deliverables already implemented); current gate: `TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` (`PRODUCTION_VERIFIED_LIMITED_BACKEND_AUTH_GATE` — unauthenticated probe evidence only; no code change; `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` `AUDIT_COMPLETE` — 4 UI surfaces classified against repo truth; no code changed)
 
 Do not open any P1 implementation unit before the design is reviewed and approved by Paresh.
 If Paresh explicitly reprioritizes, a P1 unit may be opened in parallel — but this requires an explicit
@@ -254,7 +264,9 @@ new decision, not an assumption.
 | `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` | `score_version` filter on admin snapshot list; `snapshotListQuerySchema` exported; 8 unit tests (TC-RSA-013–TC-RSA-020) | TQ-11 | Implementation (slice 3 of `TTP-TEXQTICSCORE-V2-IMPL-001`) | `TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001` `TRUTH_SYNCED` + explicit Paresh authorization | `TRUTH_SYNCED` — commits `d7186d7` + `a218275`; 20/20 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_ADMIN_READ_001_VERIFIED_COMPLETE` |
 | `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` | Tenant-visible v2 score surface — bounded read-only advisory surface | TQ-11, TQ-12 | Implementation (slice 4 of `TTP-TEXQTICSCORE-V2-IMPL-001`) | `TTP-TEXQTICSCORE-V2-ADMIN-READ-001` `TRUTH_SYNCED` + legal clearance for tenant-visible TexQticScore v2 surfaces | `BLOCKED_LEGAL` — `LEGAL_REVIEW_PENDING` unresolved; no code, no routes, no schema; blocker record `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-TENANT-SURFACE-BLOCKED-LEGAL-001` |
 | `TTP-SCORE-VERSIONING-IMPL-001` | `score_version` column on `ttp_score_snapshots` | TQ-12 | Implementation | TQ-06 and TQ-11 design approved | `NO_IMPLEMENTATION_REQUIRED_CURRENTLY` — readiness audit (2026-05-06) confirmed DB column, CHECK constraint (`TTP_V1`\|`TEXQTICSCORE_V2`), Prisma model, `ScoreVersion` type, snapshot service write paths, and admin read/filter all already fully implemented and tested (20/20 tests pass); audit record `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-VERSIONING-IMPL-001-READINESS-AUDIT`; final decision `TTP_SCORE_VERSIONING_IMPL_001_NO_IMPLEMENTATION_REQUIRED_CURRENTLY`; reopen conditions documented in audit §5 |
-| `TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` | TexQticScore v2 runtime verification — admin read auth-gate, tenant surface absence, production endpoint smoke | TQ-11, TQ-12 | Runtime verification / governance | All v2 slices `TRUTH_SYNCED`; score versioning `NO_IMPLEMENTATION_REQUIRED_CURRENTLY` | `IN_PROGRESS` — current gate; no code change; tsc clean; 75/75 unit tests pass (31 + 11 + 20 + 13); 9 deployment commits confirmed; production endpoints confirmed (admin routes 401, tenant routes 404); verification record `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-RUNTIME-VERIFIED-001` |
+| `TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` | TexQticScore v2 runtime verification — admin read auth-gate, tenant surface absence, production endpoint smoke | TQ-11, TQ-12 | Runtime verification / governance | All v2 slices `TRUTH_SYNCED`; score versioning `NO_IMPLEMENTATION_REQUIRED_CURRENTLY` | `PRODUCTION_VERIFIED_LIMITED_BACKEND_AUTH_GATE` — unauthenticated probe only; tsc clean; 75/75 unit tests pass (31 + 11 + 20 + 13); 9 deployment commits confirmed; admin routes 401 (unauthenticated), tenant routes 404; authenticated UI paths NOT verified in this unit — see `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001`; verification record `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-RUNTIME-VERIFIED-001` |
+| `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` | Control-plane TradeTrust UI runtime audit — 4 authenticated surfaces (TradeTrust Ledger, VPC Console, TTP Enrollment, TTP Eligibility) classified against repo truth | TQ-11, TQ-12 | Governance / audit | `TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` `PRODUCTION_VERIFIED_LIMITED_BACKEND_AUTH_GATE` | `AUDIT_COMPLETE` — 4 surfaces audited; 1 `DATA_EMPTY_STATE_ONLY` (EscrowAdminPanel — not TTP-gated; IDLE initial state expected); 2 `UI_ERROR_COPY_MISMATCH` (VpcConsole: hardcoded catch string; TtpEnrollmentAdmin: apiClient 5xx generic copy); 1 `UI_ERROR_COPY_MISMATCH` (TtpEligibilityConsole: catch swallows error entirely); backend correct on all 3 TTP-gated surfaces (503 FEATURE_DISABLED as expected); no code changed; audit record `PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` |
+| `TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` | Control-plane feature-disabled UX copy fix — 3 TTP-gated catch blocks updated to show specific disabled-state copy instead of generic error string | — | Frontend (copy-only) | `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` `AUDIT_COMPLETE` | `DESIGN_OPEN` — design artifact `docs/TECS-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001-DESIGN-v1.md`; frontend catch-block copy fix on VpcConsole, TtpEnrollmentAdmin, TtpEligibilityConsole; no backend, no schema, no feature flag change; `ttp_enabled=false` unchanged; awaiting Paresh approval before implementation |
 
 ### P1 Key constraints
 
@@ -426,6 +438,8 @@ by a separate Paresh activation decision.
 | `FUTURE_DESIGN_TARGET__WAITING` | Phase 3 or later design target; no near-term action authorized |
 | `PARALLEL_RECOMMENDED_NON_CODE` | Non-code governance/legal artifact; may run in parallel with Wave 0 |
 | `NO_IMPLEMENTATION_REQUIRED_CURRENTLY` | Readiness audit determined all deliverables are already satisfied by existing implementation; no implementation work is needed unless a documented reopen condition is triggered |
+| `PRODUCTION_VERIFIED_LIMITED_BACKEND_AUTH_GATE` | Runtime verification complete for unauthenticated backend HTTP probes (auth-gate confirmation, health check, route presence/absence); authenticated UI happy paths and visual surface correctness were NOT verified in this unit — a follow-on audit unit covers the UI surface classification |
+| `AUDIT_COMPLETE` | Governance audit artifact complete; all surfaces classified against repo truth; no implementation authorized |
 
 ---
 
@@ -452,7 +466,9 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` | Wave 2 | P1 | Implementation (slice 4) | `BLOCKED_LEGAL` — `LEGAL_REVIEW_PENDING` unresolved; no code changes; blocker record `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-TENANT-SURFACE-BLOCKED-LEGAL-001` |
 | `TTP-TEXQTICSCORE-V2-IMPL-001` | Wave 2 | P1 | Implementation | `IMPLEMENTATION_IN_PROGRESS` — slice 1 (`TTP-TEXQTICSCORE-V2-SERVICE-001`) `TRUTH_SYNCED`; slice 2 (`TTP-TEXQTICSCORE-V2-SNAPSHOT-INTEGRATION-001`) `TRUTH_SYNCED`; slice 3 (`TTP-TEXQTICSCORE-V2-ADMIN-READ-001`) `TRUTH_SYNCED`; slice 4 (`TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001`) `BLOCKED_LEGAL` |
 | `TTP-SCORE-VERSIONING-IMPL-001` | Wave 2 | P1 | Implementation | `NO_IMPLEMENTATION_REQUIRED_CURRENTLY` — audit (2026-05-06) confirmed all versioning deliverables already implemented; audit record `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-VERSIONING-IMPL-001-READINESS-AUDIT`; final decision `TTP_SCORE_VERSIONING_IMPL_001_NO_IMPLEMENTATION_REQUIRED_CURRENTLY` |
-| `TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` | Wave 2 | P1 | Runtime verification | `IN_PROGRESS` — current gate; tsc clean; 75/75 unit tests pass (31 + 11 + 20 + 13); 9 deployment commits confirmed; production admin routes 401; production tenant routes 404; verification record `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-RUNTIME-VERIFIED-001` |
+| `TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` | Wave 2 | P1 | Runtime verification | `PRODUCTION_VERIFIED_LIMITED_BACKEND_AUTH_GATE` — unauthenticated probe evidence only; tsc clean; 75/75 unit tests pass (31 + 11 + 20 + 13); 9 deployment commits confirmed; admin routes 401 (unauthenticated), tenant routes 404; authenticated UI paths NOT verified — see `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001`; verification record `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-RUNTIME-VERIFIED-001` |
+| `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` | Wave 2 | P1 | Governance / audit | `AUDIT_COMPLETE` — 4 control-plane surfaces audited; 1 `DATA_EMPTY_STATE_ONLY` (EscrowAdminPanel — not TTP-gated; IDLE initial state expected); 3 `UI_ERROR_COPY_MISMATCH` (VpcConsole, TtpEnrollmentAdmin, TtpEligibilityConsole — backend 503 FEATURE_DISABLED correct; front-end copy undifferentiated); no code changed; audit record `PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` |
+| `TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` | Wave 2 | P1 | Frontend (copy-only) | `DESIGN_OPEN` — design artifact `docs/TECS-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001-DESIGN-v1.md`; awaiting Paresh approval; `ttp_enabled=false` unchanged |
 | `TTP-DATA-CONSENT-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
 | `TTP-DATA-CONSENT-IMPL-001` | Wave 3 | P2 | Implementation + migration | `NOT_OPENED` |
 | `TTP-INTERNAL-SCORE-ROUTING-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
@@ -472,13 +488,32 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 
 ## 18. Recommended Immediate Action
 
-### Current unit — TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001
+### Completed audit unit — TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001
 
-**`TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` is the current open unit** (runtime verification — no code change):
-Verify TexQticScore v2 backend/admin slices are deployed and correctly auth-gated. Confirm tenant surface absent.
-Confirm score versioning `NO_IMPLEMENTATION_REQUIRED_CURRENTLY`. No implementation authorized.
-`ttp_enabled=false` unchanged. `LEGAL_REVIEW_PENDING` unchanged.
+**`TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` is `AUDIT_COMPLETE`** (governance audit — no code change):
+4 control-plane TradeTrust UI surfaces classified against repo truth. 1 `DATA_EMPTY_STATE_ONLY`
+(EscrowAdminPanel — not TTP-gated; IDLE state expected). 3 `UI_ERROR_COPY_MISMATCH`
+(VpcConsole, TtpEnrollmentAdmin, TtpEligibilityConsole — backend 503 FEATURE_DISABLED correct;
+frontend error copy does not distinguish feature-disabled from real failure).
+No implementation authorized. `ttp_enabled=false` unchanged. `LEGAL_REVIEW_PENDING` unchanged.
+Audit record: `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001.md`.
+
+### Immediate next — TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001 (DESIGN_OPEN)
+
+**`TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001` is `DESIGN_OPEN`** — design artifact created; awaiting Paresh approval.
+Design artifact: `docs/TECS-TTP-CONTROL-PLANE-FEATURE-DISABLED-UX-001-DESIGN-v1.md`.
+Scope: catch-block copy-only fix on VpcConsole, TtpEnrollmentAdmin, TtpEligibilityConsole.
+Proposed copy: `"TradeTrust Pay is not currently enabled on this platform."` (Paresh must confirm).
+No backend, no schema, no routes, no feature flag changes. `ttp_enabled=false` unchanged.
+**Implementation may not begin until Paresh explicitly approves this design.**
+
+### Completed runtime verification unit — TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001
+
+**`TTP-TEXQTICSCORE-V2-RUNTIME-VERIFY-001` is `PRODUCTION_VERIFIED_LIMITED_BACKEND_AUTH_GATE`** (unauthenticated probe only):
+tsc clean; 75/75 unit tests pass (31 + 11 + 20 + 13); 9 deployment commits confirmed;
+admin routes 401 (unauthenticated), tenant routes 404; authenticated UI paths NOT verified in this unit.
 Verification record: `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-RUNTIME-VERIFIED-001.md`.
+Authenticated UI surface classification covered by `TTP-CONTROL-PLANE-TRADETRUST-UI-RUNTIME-AUDIT-001` `AUDIT_COMPLETE`.
 
 ---
 
@@ -532,7 +567,7 @@ review packet created at `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-LE
 Packages `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001` outputs for external legal counsel review.
 `LEGAL_REVIEW_PENDING` throughout — awaiting Paresh legal sign-off.
 
-**Design decisions recorded:** `TTP-SCORE-SNAPSHOT-DESIGN-001` design complete. OQ-SS-01 through OQ-SS-07 resolved by Paresh Sharma. Full rationale and implementation consequences in `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001`.
+**Design decisions recorded:** `TTP-SCORE-SNAPSHOT-DESIGN-001` design complete. OQ-SS-01 through OQ-SS-07 resolved by Paresh Patel. Full rationale and implementation consequences in `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001`.
 
 **`TTP-SCORE-SNAPSHOT-SQL-RLS-001` (Slice 1) is `TRUTH_SYNCED`:** `ttp_score_snapshots` table created with 17 columns, 4 CHECK constraints, 5 FK constraints, 1 PK, 4 indexes, immutability trigger (`trg_ttp_score_snapshot_immutable`), 5-policy RLS (guard RESTRICTIVE + select/insert/update/delete PERMISSIVE), and GRANT to `texqtic_app`. Applied to Supabase via psql. `prisma db pull` introspected 65 models. `prisma generate` succeeded. `tsc --noEmit` clean. Commit 1 `5e8ac44` (feat: add ttp score snapshot table). Verification record `f9a1ecd` (docs: verify ttp score snapshot sql rls). FK reconciliation (Outcome B): `enrollment_id` FK target correctly references `ttp_enrollment_logs.id` in DB/migration/Prisma/design docs; verification record corrected (doc normalization only).
 
@@ -659,6 +694,9 @@ PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_ADMIN_READ_001_TRUTH_SYNCED
 PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_TENANT_SURFACE_001_BLOCKED_LEGAL
 PHASE_2_TRACKER_UPDATED__TTP_SCORE_VERSIONING_IMPL_001_NO_IMPLEMENTATION_REQUIRED_CURRENTLY
 PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_RUNTIME_VERIFY_001_GATE_OPEN
+PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED_LIMITED_BACKEND_AUTH_GATE
+TTP_CONTROL_PLANE_TRADETRUST_UI_RUNTIME_AUDIT_001_COMPLETE
+PHASE_2_TRACKER_UPDATED__TTP_CONTROL_PLANE_FEATURE_DISABLED_UX_001_DESIGN_OPEN
 ```
 
 **Authority:** Paresh Patel — TexQtic founder / operator  
@@ -672,7 +710,7 @@ PHASE_2_TRACKER_UPDATED__TTP_TEXQTICSCORE_V2_RUNTIME_VERIFY_001_GATE_OPEN
 **Slice 4 status:** `TTP-SCORE-SNAPSHOT-TRIGGER-ENROLLMENT-001` `TRUTH_SYNCED` — enrollment route trigger; `captureEnrollmentApprovedSnapshot` helper; 12/12 tests pass; tsc clean; commits `b780afd` + `436fd72`; verification record TRUTH_SYNCED  
 **Slice 5 status:** `TTP-SCORE-SNAPSHOT-TRIGGER-ADMIN-REVIEW-001` `TRUTH_SYNCED` — eligibility route trigger; `captureAdminReviewSnapshot` helper; 12/12 tests pass; tsc clean; commits `16ccbdf` + `c9a8ee6`; verification record `TRUTH_SYNCED`  
 **Slice 6 status:** `TTP-SCORE-SNAPSHOT-READ-ADMIN-001` `TRUTH_SYNCED` — admin read routes; `SNAPSHOT_SELECT` projection; 12/12 tests pass; 59/59 total; tsc clean; commits `e73c0b0` + `908781b`; verification record `TRUTH_SYNCED`  
-**Wave 2+ status:** `TTP-SCORE-SNAPSHOT-IMPL-001` `TRUTH_SYNCED` (all 6 slices complete); runtime verification (`TTP-SCORE-SNAPSHOT-RUNTIME-VERIFY-001`) `PRODUCTION_VERIFIED` (commit `9a58b0d`, final decision `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED`); `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_DECISIONS_RECORDED` — options audit complete (commit `07a7e82`); decisions in `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001`; OQ-V2-01 through OQ-V2-09 all resolved; `TTP-TEXQTICSCORE-V2-SERVICE-001` `IMPLEMENTATION_OPEN` (service-only: `computeTexQticScore` + v2 types + `TEXQTICSCORE_V2_DISCLAIMER` + 17 unit tests; no routes, no snapshot writes, no schema, no DB, no tenant surface; explicit Paresh authorization 2026-05-05) — all other Wave 2 implementation units, Wave 3, Wave 4, Wave 5 remain gated — do not open without explicit Paresh authorization
+**Wave 2+ status:** `TTP-SCORE-SNAPSHOT-IMPL-001` `TRUTH_SYNCED` (all 6 slices complete); runtime verification (`TTP-SCORE-SNAPSHOT-RUNTIME-VERIFY-001`) `PRODUCTION_VERIFIED` (commit `9a58b0d`, final decision `TTP_SCORE_SNAPSHOT_RUNTIME_VERIFY_001_PRODUCTION_VERIFIED`); `TTP-TEXQTICSCORE-V2-DESIGN-001` `DESIGN_DECISIONS_RECORDED` — options audit complete (commit `07a7e82`); decisions in `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001`; OQ-V2-01 through OQ-V2-09 all resolved; `TTP-TEXQTICSCORE-V2-SERVICE-001` `TRUTH_SYNCED` (commits `3999a2c` + `2c01c38`; 31/31 unit tests pass; tsc clean; final decision `TTP_TEXQTICSCORE_V2_SERVICE_001_VERIFIED_COMPLETE`) — all other Wave 2 implementation units, Wave 3, Wave 4, Wave 5 remain gated — do not open without explicit Paresh authorization
 
 ---
 

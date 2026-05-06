@@ -1,4 +1,4 @@
-# PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-SERVICE-VERIFIED-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-SERVICE-VERIFIED-001
 
 ## Governance Verification Record
 
@@ -17,7 +17,7 @@
 
 - Design decisions recorded in commit `66b4ac7` — `docs(tradetrust-pay): record texqticscore v2 design decisions`
 - Design questions OQ-V2-01 through OQ-V2-09 resolved in the prior session
-- Implementation authorized explicitly by Paresh Sharma, 2026-05-05, via TTP-TEXQTICSCORE-V2-SERVICE-001 prompt
+- Implementation authorized explicitly by Paresh Patel, 2026-05-05, via TTP-TEXQTICSCORE-V2-SERVICE-001 prompt
 - No further architectural decisions were made during this implementation unit; all choices follow the recorded design
 
 ---

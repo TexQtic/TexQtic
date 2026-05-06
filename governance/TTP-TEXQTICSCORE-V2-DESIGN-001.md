@@ -1,4 +1,4 @@
-# TTP-TEXQTICSCORE-V2-DESIGN-001 — TexQticScore v2 Design
+﻿# TTP-TEXQTICSCORE-V2-DESIGN-001 — TexQticScore v2 Design
 
 ---
 
@@ -11,7 +11,7 @@
 | **Phase** | Phase 2 — Wave 2 score architecture foundation |
 | **TQs** | TQ-11 (TexQticScore v2 factor model), TQ-12 (score versioning / coexistence) |
 | **Date** | 2026-05-05 |
-| **Decision owner** | Paresh Sharma — TexQtic founder / operator |
+| **Decision owner** | Paresh Patel — TexQtic founder / operator |
 | **Author** | GitHub Copilot — TexQtic Safe-Write Mode |
 | **`ttp_enabled` state** | `false` — UNCHANGED |
 | **Legal status** | `LEGAL_REVIEW_PENDING` — UNCHANGED |
@@ -609,7 +609,7 @@ TTP_TEXQTICSCORE_V2_DESIGN_001_READY_FOR_PARESH_REVIEW
 TTP_TEXQTICSCORE_V2_DESIGN_001_DECISIONS_RECORDED_READY_FOR_IMPLEMENTATION_PLANNING
 ```
 
-**Authority:** Paresh Sharma — TexQtic founder / operator  
+**Authority:** Paresh Patel — TexQtic founder / operator  
 **`ttp_enabled` state:** `false` — UNCHANGED  
 **Legal status:** `LEGAL_REVIEW_PENDING` — UNCHANGED  
 **Files changed by this document:** This document only  

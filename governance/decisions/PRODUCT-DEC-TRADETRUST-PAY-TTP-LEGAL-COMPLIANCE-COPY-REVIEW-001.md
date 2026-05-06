@@ -1,9 +1,9 @@
-# PRODUCT-DEC-TRADETRUST-PAY-TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001
 
 **Unit ID:** `TTP-LEGAL-COMPLIANCE-COPY-REVIEW-001`  
 **Document type:** Governance / legal copy review — non-code artifact  
 **Date:** 2026-05-05  
-**Decision Owner:** Paresh Sharma (TexQtic founder / operator)  
+**Decision Owner:** Paresh Patel (TexQtic founder / operator)  
 **Author:** GitHub Copilot — TexQtic Safe-Write Mode  
 **`ttp_enabled` state:** `false` — UNCHANGED by this document  
 **Code changes:** None — this is a governance/legal review artifact only  
@@ -549,7 +549,7 @@ not used as an input to any lending or underwriting decision.
 TTP_LEGAL_COMPLIANCE_COPY_REVIEW_001_OPERATOR_REVIEW_READY
 ```
 
-**Authority:** Paresh Sharma — TexQtic founder / operator  
+**Authority:** Paresh Patel — TexQtic founder / operator  
 **`ttp_enabled` state:** `false` — UNCHANGED  
 **Legal copy status:** `LEGAL_REVIEW_PENDING` — formal legal sign-off NOT provided in this document  
 **Operator review status:** `OPERATOR_REVIEW_READY` — copy inventory, forbidden-language list, and safe-language patterns are ready for Paresh review and submission to legal counsel  

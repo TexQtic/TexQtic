@@ -1,9 +1,9 @@
-# PRODUCT-DEC-TRADETRUST-PAY-PHASE-2-ARCHITECTURE-QUESTIONS-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-PHASE-2-ARCHITECTURE-QUESTIONS-001
 
 **Document type:** Architecture decision record — final approval  
 **Status:** `PHASE_2_ARCHITECTURE_QUESTIONS_APPROVED_FOR_DESIGN_PLANNING`  
 **Date:** 2026-05-05  
-**Decision Owner:** Paresh Sharma (TexQtic founder / operator)  
+**Decision Owner:** Paresh Patel (TexQtic founder / operator)  
 **Author:** GitHub Copilot — TexQtic Safe-Write Mode  
 **Scope:** TQ-01 through TQ-20 (Section 9, Phase 2 scoping artifact)  
 **`ttp_enabled` state:** `false` — UNCHANGED by this document
@@ -359,7 +359,7 @@ The following invariants were verified before this document was written and rema
 PHASE_2_ARCHITECTURE_QUESTIONS_APPROVED_FOR_DESIGN_PLANNING
 ```
 
-**Authority:** Paresh Sharma — TexQtic founder / operator  
+**Authority:** Paresh Patel — TexQtic founder / operator  
 **`ttp_enabled` state:** `false` — UNCHANGED  
 **Files changed by this decision record:** This document only  
 **Implementation authorized:** No  

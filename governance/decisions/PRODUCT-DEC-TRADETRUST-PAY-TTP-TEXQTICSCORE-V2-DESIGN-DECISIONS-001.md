@@ -1,7 +1,7 @@
-# PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001
 
 > **TexQtic governance decision record — Safe-Write Mode always on.**
-> This document records Paresh Sharma's design decisions on all open questions from
+> This document records Paresh Patel's design decisions on all open questions from
 > `TTP-TEXQTICSCORE-V2-DESIGN-001`. It does not authorize any implementation.
 
 ---
@@ -13,7 +13,7 @@
 | **Unit ID** | `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-DESIGN-DECISIONS-001` |
 | **Type** | Decision record (governance / non-code) |
 | **Date** | 2026-05-05 |
-| **Author** | Paresh Sharma — TexQtic founder / operator |
+| **Author** | Paresh Patel — TexQtic founder / operator |
 | **`ttp_enabled` state** | `false` — UNCHANGED |
 | **Legal status** | `LEGAL_REVIEW_PENDING` — UNCHANGED |
 | **Implementation authorized** | No |
@@ -31,7 +31,7 @@
 |---|---|
 | `TTP-TEXQTICSCORE-V2-DESIGN-001` | Primary design artifact being decided upon |
 | `PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-OPTIONS-AUDIT-001` | Options audit artifact (commit `07a7e82`) — surveyed all 9 open questions with options analysis |
-| Paresh Sharma | TexQtic founder / operator — sole decision authority for all TexQtic governance decisions |
+| Paresh Patel | TexQtic founder / operator — sole decision authority for all TexQtic governance decisions |
 
 All 9 open questions from §15 of `TTP-TEXQTICSCORE-V2-DESIGN-001` are resolved below.
 No open questions remain from this design artifact.
@@ -227,7 +227,7 @@ Based on the 9 decisions above, the authorized implementation model for TexQticS
 TTP_TEXQTICSCORE_V2_DESIGN_DECISIONS_001_RECORDED
 ```
 
-**Authority:** Paresh Sharma — TexQtic founder / operator  
+**Authority:** Paresh Patel — TexQtic founder / operator  
 **`ttp_enabled` state:** `false` — UNCHANGED  
 **Legal status:** `LEGAL_REVIEW_PENDING` — UNCHANGED  
 **Files changed by this document:** This document only  

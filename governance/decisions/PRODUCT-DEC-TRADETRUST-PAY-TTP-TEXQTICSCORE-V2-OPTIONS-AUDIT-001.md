@@ -1,9 +1,9 @@
-# PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-OPTIONS-AUDIT-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-TTP-TEXQTICSCORE-V2-OPTIONS-AUDIT-001
 
 **Unit ID:** `TTP-TEXQTICSCORE-V2-OPTIONS-AUDIT-001`
 **Document type:** Governance / Repo-Truth Audit — Options Document for Paresh
 **Date:** 2026-07-05
-**Decision Owner:** Paresh Sharma — TexQtic founder / operator
+**Decision Owner:** Paresh Patel — TexQtic founder / operator
 **Author:** GitHub Copilot — TexQtic Safe-Write Mode
 **`ttp_enabled` state:** `false` — UNCHANGED by this document
 **`LEGAL_REVIEW_PENDING`:** UNCHANGED — this document does not resolve or modify legal review status
@@ -28,7 +28,7 @@
 | **Phase** | Phase 2 — Wave 2 score architecture |
 | **TQs** | TQ-11 (TexQticScore v2 factor model), TQ-12 (score versioning / coexistence) |
 | **Date** | 2026-07-05 |
-| **Decision owner** | Paresh Sharma |
+| **Decision owner** | Paresh Patel |
 | **Preceded by** | `TTP-TEXQTICSCORE-V2-DESIGN-001` (status: `TTP_TEXQTICSCORE_V2_DESIGN_001_READY_FOR_PARESH_REVIEW`) |
 | **Follows** | `TTP-SCORE-SNAPSHOT-RUNTIME-VERIFIED-001` (`PRODUCTION_VERIFIED`, commit `9a58b0d`) |
 | **`ttp_enabled`** | `false` — UNCHANGED |

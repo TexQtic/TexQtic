@@ -1,4 +1,4 @@
-# PRODUCT-DEC-TRADETRUST-PAY-QA-SEED-SINGLE-DB-EXECUTION-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-QA-SEED-SINGLE-DB-EXECUTION-001
 
 **Decision ID:** PRODUCT-DEC-TRADETRUST-PAY-QA-SEED-SINGLE-DB-EXECUTION-001  
 **Status:** `TTP_QA_SEED_SINGLE_DB_EXECUTED_COMPLETE`  
@@ -19,7 +19,7 @@ The prior blocked execution record (`PRODUCT-DEC-TRADETRUST-PAY-QA-SEED-EXECUTED
 
 | Item | Value |
 |---|---|
-| Operator | Paresh Sharma (repo owner) |
+| Operator | Paresh Patel (repo owner) |
 | Confirmation | Explicit verbal authorization: "TexQtic has one Supabase DB. The ttp_enabled=false kill-switch is the safety boundary. Proceed with execution." |
 | Architecture | Single Supabase PostgreSQL 17 project (aws-1-ap-northeast-1.pooler.supabase.com) |
 | DB type | Remote Supabase — NOT local Postgres |

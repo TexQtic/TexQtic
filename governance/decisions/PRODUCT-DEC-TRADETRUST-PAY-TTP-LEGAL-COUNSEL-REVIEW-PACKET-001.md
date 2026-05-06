@@ -1,9 +1,9 @@
-# PRODUCT-DEC-TRADETRUST-PAY-TTP-LEGAL-COUNSEL-REVIEW-PACKET-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-TTP-LEGAL-COUNSEL-REVIEW-PACKET-001
 
 **Unit ID:** `TTP-LEGAL-COPY-COUNSEL-PACKET-001`  
 **Document type:** Governance / legal counsel review packet — non-code artifact  
 **Date:** 2026-05-05  
-**Decision Owner:** Paresh Sharma (TexQtic founder / operator)  
+**Decision Owner:** Paresh Patel (TexQtic founder / operator)  
 **Author:** GitHub Copilot — TexQtic Safe-Write Mode  
 **`ttp_enabled` state:** `false` — UNCHANGED by this document  
 **Code changes:** None — governance/legal review packet only  
@@ -459,7 +459,7 @@ document. Each requires explicit Paresh decision to open.
 TTP_LEGAL_COUNSEL_REVIEW_PACKET_001_READY_FOR_PARESH
 ```
 
-**Authority:** Paresh Sharma — TexQtic founder / operator  
+**Authority:** Paresh Patel — TexQtic founder / operator  
 **`ttp_enabled` state:** `false` — UNCHANGED  
 **Files changed by this document:** This document only (new governance artifact)  
 **Implementation authorized:** None  

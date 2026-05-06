@@ -1,4 +1,4 @@
-# PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-SQL-RLS-VERIFIED-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-SQL-RLS-VERIFIED-001
 
 ## Metadata
 
@@ -8,7 +8,7 @@
 | Task | TTP-SCORE-SNAPSHOT-SQL-RLS-001 (Slice 1) |
 | Date | 2026-05-05 |
 | Status | `IMPLEMENTED_PENDING_COMMIT_2` |
-| Authority | Paresh Sharma — TexQtic founder / operator |
+| Authority | Paresh Patel — TexQtic founder / operator |
 | `ttp_enabled` state | `false` — UNCHANGED, IMMUTABLE |
 | Commit 1 | `5e8ac44` — `feat(tradetrust-pay): add ttp score snapshot table` |
 | Precursor design record | `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001` |
@@ -22,7 +22,7 @@ This verification record covers Slice 1 of `TTP-SCORE-SNAPSHOT-IMPL-001`:
 **SQL + RLS only — no application code, no service layer, no routes.**
 
 Authority chain:
-- `TTP-SCORE-SNAPSHOT-DESIGN-001` design complete; OQ-SS-01 through OQ-SS-07 resolved by Paresh Sharma
+- `TTP-SCORE-SNAPSHOT-DESIGN-001` design complete; OQ-SS-01 through OQ-SS-07 resolved by Paresh Patel
 - Full design rationale in `PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001`
 - Slice 1 authorized scope: `ttp_score_snapshots` table DDL + RLS + Prisma sync only
 

@@ -1,4 +1,4 @@
-# PRODUCT-DEC-TRADETRUST-PAY-TTP-ACTIVATION-MONITORING-IMPL-001-VERIFIED-001
+﻿# PRODUCT-DEC-TRADETRUST-PAY-TTP-ACTIVATION-MONITORING-IMPL-001-VERIFIED-001
 ## TradeTrust Pay — TTP Activation Monitoring Events — Verification Record
 
 | Field | Value |
@@ -9,7 +9,7 @@
 | Phase | Phase 2, Wave 0 |
 | TQ reference | TQ-10 (monitoring prerequisite for activation gate) |
 | Type | Governance / verification record — **no code, no schema, no migration, no deployment** |
-| Authority | Paresh Sharma — TexQtic founder / operator |
+| Authority | Paresh Patel — TexQtic founder / operator |
 | `ttp_enabled` invariant | **`false` — UNCHANGED throughout** |
 | Date | 2026-05-05 |
 
@@ -129,7 +129,7 @@ Result: **PASS — all tests pass including 10 new TC-001 to TC-010 monitoring e
 TTP_ACTIVATION_MONITORING_IMPL_001_VERIFIED_COMPLETE
 ```
 
-**Authority:** Paresh Sharma — TexQtic founder / operator
+**Authority:** Paresh Patel — TexQtic founder / operator
 **`ttp_enabled` state:** `false` — UNCHANGED
 **Next unit:** None — all Wave 0 implementation units complete. Awaiting Paresh decision on Wave 1 gate or QA activation pilot.
 

@@ -1,4 +1,4 @@
-# TTP-SCORE-SNAPSHOT-DESIGN-001
+﻿# TTP-SCORE-SNAPSHOT-DESIGN-001
 ## TradeTrust Pay — Score Snapshot Architecture Design
 
 ---
@@ -13,7 +13,7 @@
 | **P-tier** | P1 |
 | **TQs addressed** | TQ-06 (score history versioning / snapshots), TQ-07 (score versioning across TexQticScore versions) |
 | **Design date** | 2026-05-05 |
-| **Author** | Paresh Sharma — TexQtic founder / operator |
+| **Author** | Paresh Patel — TexQtic founder / operator |
 | **`ttp_enabled` state** | `false` — UNCHANGED throughout this design unit |
 | **Implementation authorized** | **NO** — this is a design artifact only |
 | **Schema / SQL authorized** | **NO** — `ttp_score_snapshots` table does NOT exist and is NOT created by this unit |
@@ -529,7 +529,7 @@ in Slice 1 forward-declares the value.
 
 ## 13. Resolved Design Decisions
 
-All open questions from this design artifact have been resolved by Paresh Sharma. Full decision
+All open questions from this design artifact have been resolved by Paresh Patel. Full decision
 rationale, implementation consequences, and repo-truth evidence are in:
 
 > `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-TTP-SCORE-SNAPSHOT-DESIGN-DECISIONS-001.md`
@@ -579,7 +579,7 @@ TTP_SCORE_SNAPSHOT_DESIGN_001_READY_FOR_PARESH_REVIEW
 TTP_SCORE_SNAPSHOT_DESIGN_001_DECISIONS_RECORDED_READY_FOR_IMPLEMENTATION_PLANNING
 ```
 
-**Authority:** Paresh Sharma — TexQtic founder / operator  
+**Authority:** Paresh Patel — TexQtic founder / operator  
 **`ttp_enabled` state:** `false` — UNCHANGED  
 **Implementation authorized:** No — decisions are recorded; each implementation slice requires a separate Paresh-approved implementation prompt  
 **Schema / SQL authorized:** No  
