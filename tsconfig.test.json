@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "include": [
+    "vite-env.d.ts",
     "tests/frontend/**/*.ts",
     "tests/frontend/**/*.tsx",
     "tests/setupTests.ts"
