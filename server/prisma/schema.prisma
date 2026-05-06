@@ -1099,6 +1099,7 @@ model organizations {
   sanctions                                                                                Sanction[]
   traceabilityEdges                                                                        TraceabilityEdge[]
   traceabilityNodes                                                                        TraceabilityNode[]
+  network_invoices                                                                         NetworkInvoice[]
   network_lifecycle_logs                                                                   NetworkLifecycleLog[]
   trade_lifecycle_logs                                                                     TradeLifecycleLog[]
   tradesBuyer                                                                              Trade[]                         @relation("TradeBuyer")
@@ -1772,6 +1773,44 @@ model NetworkLifecycleLog {
   @@index([toStateKey], map: "idx_network_lifecycle_logs_to_state")
   @@index([entityType, entityId], map: "idx_network_lifecycle_logs_entity")
   @@map("network_lifecycle_logs")
+}
+
+/// TEXQTIC-NC-PHASE1-INVOICE-FOUNDATION-001: Standalone Network Commerce invoice table.
+/// Implements Phase 0 Validation Report Option B — separate from the existing `invoices` table.
+/// Covers invoice types: POOL_ORDER, SYNDICATE_EXECUTION, VCO_DELIVERY.
+/// No dependency on trades; uses polymorphic (network_entity_type, network_entity_id) instead.
+/// networkEntityId is a SOFT REFERENCE — no FK to NC entity tables (those land in later packets).
+/// orgId → organizations.id is a LIVE FK (canonical tenant anchor, G-015 pattern).
+/// Lifecycle transitions deferred — will flow through NetworkLifecycleLog in later packets.
+model NetworkInvoice {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId             String        @map("org_id") @db.Uuid
+  invoiceType       String        @map("invoice_type")
+  networkEntityType String        @map("network_entity_type")
+  networkEntityId   String        @map("network_entity_id") @db.Uuid
+  invoiceNumber     String        @map("invoice_number") @db.VarChar(100)
+  invoiceDate       DateTime      @map("invoice_date") @db.Timestamptz(6)
+  dueDate           DateTime?     @map("due_date") @db.Timestamptz(6)
+  currency          String        @map("currency") @db.VarChar(10)
+  grossAmount       Decimal       @map("gross_amount") @db.Decimal(18, 6)
+  issuerOrgId       String        @map("issuer_org_id") @db.Uuid
+  payerOrgId        String?       @map("payer_org_id") @db.Uuid
+  recipientOrgId    String?       @map("recipient_org_id") @db.Uuid
+  status            String        @default("DRAFT") @map("status") @db.VarChar(50)
+  documentUrl       String?       @map("document_url") @db.VarChar(1000)
+  notes             String?
+  metadata          Json?         @map("metadata")
+  createdByUserId   String?       @map("created_by_user_id") @db.Uuid
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime      @default(now()) @map("updated_at") @db.Timestamptz(6)
+  organizations     organizations @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_invoices_org_id_fk")
+
+  @@unique([orgId, invoiceType, networkEntityType, networkEntityId, invoiceNumber], map: "network_invoices_org_type_entity_number_unique")
+  @@index([orgId, createdAt(sort: Desc)], map: "idx_network_invoices_org_created")
+  @@index([issuerOrgId], map: "idx_network_invoices_issuer_org")
+  @@index([networkEntityType, networkEntityId], map: "idx_network_invoices_entity")
+  @@index([status], map: "idx_network_invoices_status")
+  @@map("network_invoices")
 }
 
 enum TenantPlan {
