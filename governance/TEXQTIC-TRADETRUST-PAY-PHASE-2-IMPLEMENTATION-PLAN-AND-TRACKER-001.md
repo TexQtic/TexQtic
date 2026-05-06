@@ -485,6 +485,8 @@ This table captures the status of every planned Phase 2 unit as of the date of t
 | `TTP-FRONTEND-TEST-HARNESS-OPTIONS-AUDIT-001` | Wave 2 (post) | P1 | Governance / audit | `OPTIONS_AUDIT_COMPLETE` — 8 design decisions answered via repo-truth inspection; AF-FTH-01 through AF-FTH-09 resolved; critical finding: vitest 4.x incompatible with root vite 5.x (version constraint required); critical finding: server vitest `../tests/**` glob picks up `tests/frontend/` (server config exclusion required); pilot component confirmed as `TtpEnrollmentAdmin` (no props, 3 catch branches, Tailwind only); audit record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-OPTIONS-AUDIT-001.md`; awaiting Paresh decision on 8 open decisions; token `TTP_FRONTEND_TEST_HARNESS_OPTIONS_AUDIT_001_READY_FOR_PARESH_DECISION` |
 | `TTP-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001` | Wave 2 (post) | P1 | Governance / decisions | `DESIGN_DECISIONS_RECORDED` — D1–D8 resolved by Paresh Patel; IMPL-001 scope and allowlist finalized; no packages installed; no configs changed; decision record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-DESIGN-DECISIONS-001.md`; token `TTP_FRONTEND_TEST_HARNESS_DESIGN_DECISIONS_001_RECORDED` |
 | `TTP-FRONTEND-TEST-HARNESS-IMPL-001` | Wave 2 (post) | P1 | Implementation | `TRUTH_SYNCED` — devDeps installed: `vitest@^3.2.4`, `@testing-library/react@^16.3.2`, `@testing-library/jest-dom@^6.9.1`, `jsdom@^29.1.1`; created `vitest.frontend.config.ts` (jsdom, setupFiles, include `tests/frontend/**`); created `tests/setupTests.ts`; created `tsconfig.test.json` (optional IDE support, scoped to `tests/frontend/**`); added `test:frontend` script with `--passWithNoTests`; added `'../tests/frontend/**'` exclusion to `server/vitest.config.ts`; root uses npm (`package-lock.json`); smoke PASS; root tsc PASS; test tsc PASS; server tsc PASS; server bounded tests 20/20 PASS; no app/UI/CI/backend/Prisma/flags changed; verification record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-IMPL-VERIFIED-001.md`; final decision `TTP_FRONTEND_TEST_HARNESS_IMPL_001_VERIFIED_COMPLETE` |
+| `TTP-FRONTEND-TEST-HARNESS-PILOT-001` | Wave 2 (post) | P1 | Test pilot | `TRUTH_SYNCED` — pilot component: `TtpEnrollmentAdmin` (no props, no router, Tailwind only); test file: `tests/frontend/ttp-enrollment-admin.test.tsx`; 5 TCs (TC-FEH-001 loading state, TC-FEH-002 FEATURE_DISABLED copy, TC-FEH-003 APIError message, TC-FEH-004 plain Error fallback, TC-FEH-005 enrollment table row); mocks: `vi.mock('../../services/ttpEnrollmentService')`; `tsconfig.test.json` infra correction: added `vite-env.d.ts` to include (fixes `import.meta.env` transitively surfaced by import chain); 5/5 PASS; test tsc PASS (zero errors); root tsc PASS; server bounded tests 20/20 PASS; no app code changed; verification record `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-PILOT-VERIFIED-001.md`; final decision `TTP_FRONTEND_TEST_HARNESS_PILOT_001_VERIFIED_COMPLETE` |
+| `TTP-FRONTEND-TEST-HARNESS-CI-VERIFY-001` | Wave 2 (post) | P1 | CI verification | `NOT_OPENED` |
 | `TTP-DATA-CONSENT-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
 | `TTP-DATA-CONSENT-IMPL-001` | Wave 3 | P2 | Implementation + migration | `NOT_OPENED` |
 | `TTP-INTERNAL-SCORE-ROUTING-DESIGN-001` | Wave 3 | P2 | Design | `LEGAL_GATED__WAITING` |
@@ -624,6 +626,40 @@ no CI, no backend routes/services, no Prisma/schema/SQL, no feature flags change
 `TTP-FRONTEND-TEST-HARNESS-PILOT-001` remains NOT OPENED.
 
 Final decision: `TTP_FRONTEND_TEST_HARNESS_IMPL_001_VERIFIED_COMPLETE`.
+
+---
+
+### Pilot test complete — TTP-FRONTEND-TEST-HARNESS-PILOT-001
+
+**`TTP-FRONTEND-TEST-HARNESS-PILOT-001` is `TRUTH_SYNCED`:**
+Date: 2026-05-06. Unit ID: `TTP-FRONTEND-TEST-HARNESS-PILOT-001`.
+Verification record: `governance/decisions/PRODUCT-DEC-FRONTEND-TEST-HARNESS-PILOT-VERIFIED-001.md`.
+
+**Pilot component:** `TtpEnrollmentAdmin` (control-plane, no props, no router, Tailwind-only, 3 catch branches).
+
+**Test file created:** `tests/frontend/ttp-enrollment-admin.test.tsx` — 5 test cases:
+- TC-FEH-001: loading state visible on mount (never-resolving mock)
+- TC-FEH-002: FEATURE_DISABLED → canonical copy `TradeTrust Pay is not currently enabled on this platform.`
+- TC-FEH-003: non-FEATURE_DISABLED APIError → `err.message` rendered directly
+- TC-FEH-004: plain Error → generic fallback `Failed to load enrollments.`
+- TC-FEH-005: resolved data → `trade_reference` row visible in table
+
+**Infrastructure correction (IMPL-001 gap):**
+`tsconfig.test.json` include updated to add `vite-env.d.ts`. Root cause: pilot test imports from `services/apiClient.ts` which uses `import.meta.env`; without `vite-env.d.ts` in the test tsconfig include, TypeScript could not resolve `ImportMeta.env`. This gap was masked during IMPL-001 (no test files existed then — typecheck trivially passed on an empty include). Correction is scoped to `tsconfig.test.json` only; no app code changed.
+
+**Validation results:**
+- Pilot tests (`npm run test:frontend`): PASS — 5/5 (107ms)
+- Test tsconfig typecheck (`npx tsc --project tsconfig.test.json --noEmit`): PASS — zero errors
+- Root typecheck (`npx tsc --noEmit`): PASS — zero errors
+- Server bounded tests (`npm run test:runtime-routing:focused`): PASS — 20/20, 2 files
+- Server vitest exclude confirmed: `tests/frontend/` not picked up by server harness
+
+**Safety invariants CONFIRMED:**
+`ttp_enabled=false` UNCHANGED. `LEGAL_REVIEW_PENDING` UNCHANGED. No app code, no UI components,
+no CI, no backend routes/services, no Prisma/schema/SQL, no feature flags changed.
+`TTP-FRONTEND-TEST-HARNESS-CI-VERIFY-001` NOT OPENED.
+
+Final decision: `TTP_FRONTEND_TEST_HARNESS_PILOT_001_VERIFIED_COMPLETE`.
 
 ---
 
@@ -857,6 +893,7 @@ PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_DESIGN_001_DESIGN_OPEN
 PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_OPTIONS_AUDIT_001_COMPLETE
 PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_DESIGN_DECISIONS_001_RECORDED
 PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_IMPL_001_TRUTH_SYNCED
+PHASE_2_TRACKER_UPDATED__TTP_FRONTEND_TEST_HARNESS_PILOT_001_TRUTH_SYNCED
 ```
 
 **Authority:** Paresh Patel — TexQtic founder / operator  
