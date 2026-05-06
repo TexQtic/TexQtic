@@ -30,7 +30,6 @@
 --   allowed_transitions.entity_type CHECK — includes POOL, SYNDICATE, VCO_CHAIN
 --   network_lifecycle_logs — created; FORCE RLS; 5-policy set; immutability trigger live
 -- ============================================================================
-BEGIN;
 -- ─────────────────────────────────────────────────────────────────────────────
 -- §1  Pre-flight guard: abort if network_lifecycle_logs already exists
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -39,7 +38,7 @@ DO $$ BEGIN IF EXISTS (
   FROM information_schema.tables
   WHERE table_schema = 'public'
     AND table_name = 'network_lifecycle_logs'
-) THEN RAISE EXCEPTION 'PREFLIGHT_ABORT: table public.network_lifecycle_logs already exists. ' 'This migration has already been applied or the table was created out-of-band. ' 'Halting to prevent double-application.';
+) THEN RAISE EXCEPTION 'PREFLIGHT_ABORT: table public.network_lifecycle_logs already exists. This migration has already been applied or the table was created out-of-band. Halting to prevent double-application.';
 END IF;
 END $$;
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -240,4 +239,3 @@ GRANT SELECT ON public.network_lifecycle_logs TO texqtic_admin;
 CREATE TRIGGER trg_immutable_network_lifecycle_log BEFORE
 UPDATE
   OR DELETE ON public.network_lifecycle_logs FOR EACH ROW EXECUTE FUNCTION public.prevent_lifecycle_log_update_delete();
-COMMIT;

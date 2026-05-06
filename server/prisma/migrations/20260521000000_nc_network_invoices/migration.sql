@@ -198,4 +198,3 @@ GRANT SELECT,
   INSERT,
   UPDATE ON public.network_invoices TO texqtic_app;
 GRANT SELECT ON public.network_invoices TO texqtic_admin;
-COMMIT;

@@ -13,7 +13,6 @@
 --              UPDATE allowed (lifecycle transitions, membership approval).
 --              Audit trail via NetworkLifecycleLog deferred to later packets.
 -- =============================================================================
-BEGIN;
 -- -----------------------------------------------------------------------------
 -- §1  Pre-flight Guard
 -- Aborts if either table already exists to prevent double-application.
@@ -24,14 +23,14 @@ DO $$ BEGIN IF EXISTS (
   FROM information_schema.tables
   WHERE table_schema = 'public'
     AND table_name = 'network_pools'
-) THEN RAISE EXCEPTION 'PREFLIGHT_ABORT: table public.network_pools already exists. ' 'This migration has already been applied or the table was created out-of-band. ' 'Halting to prevent double-application.';
+) THEN RAISE EXCEPTION 'PREFLIGHT_ABORT: table public.network_pools already exists. This migration has already been applied or the table was created out-of-band. Halting to prevent double-application.';
 END IF;
 IF EXISTS (
   SELECT 1
   FROM information_schema.tables
   WHERE table_schema = 'public'
     AND table_name = 'network_pool_memberships'
-) THEN RAISE EXCEPTION 'PREFLIGHT_ABORT: table public.network_pool_memberships already exists. ' 'This migration has already been applied or the table was created out-of-band. ' 'Halting to prevent double-application.';
+) THEN RAISE EXCEPTION 'PREFLIGHT_ABORT: table public.network_pool_memberships already exists. This migration has already been applied or the table was created out-of-band. Halting to prevent double-application.';
 END IF;
 END $$;
 -- -----------------------------------------------------------------------------
@@ -275,4 +274,3 @@ GRANT SELECT,
   INSERT,
   UPDATE ON public.network_pool_memberships TO texqtic_app;
 GRANT SELECT ON public.network_pool_memberships TO texqtic_admin;
-COMMIT;
