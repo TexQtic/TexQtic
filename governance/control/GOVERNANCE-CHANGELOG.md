@@ -2145,3 +2145,48 @@ No source files changed. No test files changed. No schema changes. No migration 
 DPP HOLD_FOR_PARESH_DECISION posture: PRESERVED.
 ```
 
+---
+
+## 2026-05-07 — VERIFIED_COMPLETE_AND_GOV_SYNCED: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SCHEMA-GOV-SYNC-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SCHEMA-GOV-SYNC-001
+Type:          GOVERNANCE_CLOSURE / GOV_SYNC
+Status:        VERIFIED_COMPLETE_AND_GOV_SYNCED
+Date:          2026-05-07
+
+Authority chain:
+  Demand-source design:          961a2c1
+  Demand-source decision record: 8878305
+  Schema foundation:             7197e23
+  Deploy/verify report:          3692a14
+
+Verification results:
+  Table deployed:           network_pool_demand_lines
+  Columns verified:         27/27
+  Constraints verified:     16 (10 CHECK + 4 FK + 1 PK + 1 UNIQUE)
+  Indexes verified:         11 (9 btree + PK + UNIQUE)
+  RLS:                      ENABLED + FORCED
+  RLS policies verified:    5
+  Grants verified:          texqtic_app (SELECT/INSERT/UPDATE); texqtic_admin (SELECT)
+  Prisma ledger:            REGISTERED (finished_at 2026-05-07 09:50:06.842509+00)
+  prisma generate:          PASS
+  tsc --noEmit:             CLEAN
+  Regression tests:         105/0
+
+Migration note:
+  Pre-flight DO block guard had CRLF string-literal syntax error on Windows psql.
+  Non-destructive: table confirmed absent in pre-deploy precheck.
+  Future migrations should avoid multi-line RAISE EXCEPTION strings in DO blocks.
+
+Scope boundary preserved:
+  Demand-line schema only. No RFQ schema. No RFQ routes. No supplier quote routes.
+  No allocation, order placement, invoice generation, settlement, escrow, UI, MakerChecker.
+  DPP HOLD_FOR_PARESH_DECISION preserved (not disturbed).
+
+Posture update:
+  NC pool RFQ demand-line schema foundation is closed and governance-synced.
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SERVICE-DESIGN-001
+  Status: HOLD_FOR_PARESH_DECISION
+```
+

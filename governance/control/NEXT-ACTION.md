@@ -148,15 +148,42 @@ nc_phase1_pool_discovery_scope_boundary: >-
   No member count, no aggregate demand, no raw metadata JSON. No RFQ/quotes/allocation/orders/invoice generation/settlement/escrow/UI.
   No control-plane/admin discovery.
 nc_phase1_next_action: HOLD_FOR_PARESH_DECISION
-nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DESIGN-001
+nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SERVICE-DESIGN-001
 nc_phase1_next_action_candidate_2: TEXQTIC-NC-PHASE1-POOL-OPEN-DISCOVERY-DESIGN-001
 nc_phase1_next_action_candidate_3: TEXQTIC-NC-PHASE1-POOL-CONTROL-DISCOVERY-DESIGN-001
 nc_phase1_next_action_candidate_4: TEXQTIC-NC-PHASE1-TENANT-FEATURE-OVERRIDE-ADMIN-API-001
 nc_phase1_next_action_note: >-
   Pool discovery implementation is IMPLEMENTED_VERIFIED_GOV_SYNCED (0d40a7a).
-  Next candidate remains HOLD_FOR_PARESH_DECISION: pool RFQ design.
+  Demand-line schema is IMPLEMENTED_DEPLOYED_VERIFIED_GOV_SYNCED (7197e23 + 3692a14).
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SERVICE-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
   Optional future candidates include open-discovery design, control-discovery design, and tenant feature override admin API.
   None is open. Do not open without explicit Paresh authorization.
+nc_phase1_pool_rfq_demand_source_design_status: GOV_SYNCED
+nc_phase1_pool_rfq_demand_source_design_commit: 961a2c1
+nc_phase1_pool_rfq_demand_source_decision_record_status: GOV_SYNCED
+nc_phase1_pool_rfq_demand_source_decision_record_commit: 8878305
+nc_phase1_pool_rfq_demand_line_schema_status: IMPLEMENTED_DEPLOYED_VERIFIED_GOV_SYNCED
+nc_phase1_pool_rfq_demand_line_schema_foundation_commit: 7197e23
+nc_phase1_pool_rfq_demand_line_schema_deploy_verify_commit: 3692a14
+nc_phase1_pool_rfq_demand_line_schema_table: network_pool_demand_lines
+nc_phase1_pool_rfq_demand_line_schema_columns_verified: 27
+nc_phase1_pool_rfq_demand_line_schema_constraints_verified: 16
+nc_phase1_pool_rfq_demand_line_schema_indexes_verified: 11
+nc_phase1_pool_rfq_demand_line_schema_rls: ENABLED_AND_FORCED
+nc_phase1_pool_rfq_demand_line_schema_rls_policies: 5
+nc_phase1_pool_rfq_demand_line_schema_grants_verified: "texqtic_app (SELECT/INSERT/UPDATE); texqtic_admin (SELECT)"
+nc_phase1_pool_rfq_demand_line_schema_prisma_ledger: REGISTERED
+nc_phase1_pool_rfq_demand_line_schema_test_result: 105/0 PASS
+nc_phase1_pool_rfq_demand_line_schema_ts_result: CLEAN
+nc_phase1_pool_rfq_demand_line_schema_verification_report: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SCHEMA-DEPLOY-VERIFY-001.md
+nc_phase1_pool_rfq_demand_line_schema_migration_note: >-
+  Future migrations should avoid multi-line RAISE EXCEPTION strings in DO blocks.
+  Windows psql + CRLF caused guard syntax error (non-destructive; table confirmed absent pre-deploy).
+nc_phase1_pool_rfq_scope_boundary: >-
+  Demand-line schema only. No RFQ schema, no RFQ routes, no supplier quote routes, no allocation,
+  no order placement, no invoice generation, no settlement, no escrow, no UI, no MakerChecker changes.
+nc_phase1_pool_rfq_demand_line_service_next_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SERVICE-DESIGN-001
+nc_phase1_pool_rfq_demand_line_service_candidate_status: HOLD_FOR_PARESH_DECISION
 ```
 
 ---

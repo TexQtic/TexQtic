@@ -1103,8 +1103,18 @@ Scope boundary preserved:
 - No member count, aggregate demand, or raw metadata JSON exposure.
 - No RFQ/quotes/allocation/orders/invoice generation/settlement/escrow/UI/control-plane discovery.
 
-Next NC candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
+Next NC candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SERVICE-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
 Optional future candidates: POOL-OPEN-DISCOVERY-DESIGN-001, POOL-CONTROL-DISCOVERY-DESIGN-001,
 TENANT-FEATURE-OVERRIDE-ADMIN-API-001.
 Do not open without explicit Paresh authorization.
+
+NC demand-line schema closure (2026-05-07):
+- TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SCHEMA-DEPLOY-VERIFY-001 VERIFIED_COMPLETE_AND_GOV_SYNCED (2026-05-07).
+  Network Commerce Pool RFQ Demand-Line schema foundation deployed and verified.
+  Table: network_pool_demand_lines. 27 columns. 16 constraints (10 CHECK, 4 FK, 1 PK, 1 UNIQUE).
+  11 indexes. RLS enabled + forced. 5 RLS policies. Grants: texqtic_app (SELECT/INSERT/UPDATE), texqtic_admin (SELECT).
+  Prisma ledger registered. Schema foundation commit: 7197e23. Deploy/verify commit: 3692a14.
+  prisma generate PASS. tsc --noEmit CLEAN. Regression tests: 105/0.
+  Scope: demand-line schema only. No RFQ schema, routes, services, UI, or financial logic.
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SERVICE-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
 
