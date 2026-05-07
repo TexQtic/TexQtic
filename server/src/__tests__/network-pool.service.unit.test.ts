@@ -52,41 +52,41 @@ const NOW             = new Date('2026-06-01T00:00:00.000Z');
 
 function makePoolRow(overrides: Record<string, unknown> = {}) {
   return {
-    id:                 POOL_ID,
-    org_id:             OWNER_ORG_ID,
-    pool_ref:           'POOL-2026-001',
-    commodity_category: 'COTTON_YARN',
-    target_qty:         '10000.000000',
-    qty_unit:           'KG',
-    lifecycle_state_id: DRAFT_STATE_ID,
-    lifecycleState:     { stateKey: 'DRAFT' },
-    open_at:            null,
-    close_at:           null,
-    allocated_at:       null,
-    settled_at:         null,
-    metadata:           null,
-    created_by_user_id: USER_ID,
-    created_at:         NOW,
-    updated_at:         NOW,
+    id:               POOL_ID,
+    orgId:            OWNER_ORG_ID,
+    poolRef:          'POOL-2026-001',
+    commodityCategory:'COTTON_YARN',
+    targetQty:        '10000.000000',
+    qtyUnit:          'KG',
+    lifecycleStateId: DRAFT_STATE_ID,
+    lifecycleState:   { stateKey: 'DRAFT' },
+    openAt:           null,
+    closeAt:          null,
+    allocatedAt:      null,
+    settledAt:        null,
+    metadata:         null,
+    createdByUserId:  USER_ID,
+    createdAt:        NOW,
+    updatedAt:        NOW,
     ...overrides,
   };
 }
 
 function makeMembershipRow(overrides: Record<string, unknown> = {}) {
   return {
-    id:             MEMBERSHIP_ID,
-    pool_id:        POOL_ID,
-    org_id:         MEMBER_ORG_ID,
-    declared_qty:   '500.000000',
-    qty_unit:       'KG',
-    allocated_qty:  null,
-    allocation_pct: null,
-    status:         'PENDING',
-    joined_at:      NOW,
-    approved_at:    null,
-    withdrawn_at:   null,
-    created_at:     NOW,
-    updated_at:     NOW,
+    id:            MEMBERSHIP_ID,
+    poolId:        POOL_ID,
+    orgId:         MEMBER_ORG_ID,
+    declaredQty:   '500.000000',
+    qtyUnit:       'KG',
+    allocatedQty:  null,
+    allocationPct: null,
+    status:        'PENDING',
+    joinedAt:      NOW,
+    approvedAt:    null,
+    withdrawnAt:   null,
+    createdAt:     NOW,
+    updatedAt:     NOW,
     ...overrides,
   };
 }
@@ -120,9 +120,9 @@ function makeOpenInput(overrides: Record<string, unknown> = {}) {
  */
 function makeMockTx(overrides: Record<string, unknown> = {}) {
   return {
-    network_pools: {
+    networkPool: {
       update: vi.fn().mockResolvedValue(
-        makePoolRow({ lifecycle_state_id: OPEN_STATE_ID, lifecycleState: { stateKey: 'OPEN' } }),
+        makePoolRow({ lifecycleStateId: OPEN_STATE_ID, lifecycleState: { stateKey: 'OPEN' } }),
       ),
     },
     ...overrides,
@@ -148,14 +148,14 @@ function makeDb(overrides: Record<string, unknown> = {}): any {
         return Promise.resolve(null);
       }),
     },
-    network_pools: {
+    networkPool: {
       create:    vi.fn().mockResolvedValue(makePoolRow()),
       findFirst: vi.fn().mockResolvedValue(makePoolRow()),
       update:    vi.fn().mockResolvedValue(
-        makePoolRow({ lifecycle_state_id: OPEN_STATE_ID, lifecycleState: { stateKey: 'OPEN' } }),
+        makePoolRow({ lifecycleStateId: OPEN_STATE_ID, lifecycleState: { stateKey: 'OPEN' } }),
       ),
     },
-    network_pool_memberships: {
+    networkPoolMembership: {
       create:    vi.fn().mockResolvedValue(makeMembershipRow()),
       findFirst: vi.fn().mockResolvedValue(null), // no duplicate by default
     },
@@ -200,7 +200,7 @@ describe('NetworkPoolService', () => {
       expect(result.org_id).toBe(OWNER_ORG_ID);
       expect(result.lifecycle_state_id).toBe(DRAFT_STATE_ID);
       expect(result.lifecycle_state_key).toBe('DRAFT');
-      expect(db.network_pools.create).toHaveBeenCalledOnce();
+      expect(db.networkPool.create).toHaveBeenCalledOnce();
       expect(sm.transition).not.toHaveBeenCalled();
     });
   });
@@ -294,7 +294,7 @@ describe('NetworkPoolService', () => {
   describe('P-NP-07: FAIL — openNetworkPool rejects non-existent pool', () => {
     it('throws NetworkPoolNotFoundError when pool is not found', async () => {
       const db = makeDb({
-        network_pools: {
+        networkPool: {
           create:    vi.fn(),
           findFirst: vi.fn().mockResolvedValue(null),
           update:    vi.fn(),
@@ -312,10 +312,10 @@ describe('NetworkPoolService', () => {
   describe('P-NP-08: FAIL — openNetworkPool rejects pool not in DRAFT state', () => {
     it('throws NetworkPoolInvalidStateError when pool is already OPEN', async () => {
       const db = makeDb({
-        network_pools: {
+        networkPool: {
           create:    vi.fn(),
           findFirst: vi.fn().mockResolvedValue(
-            makePoolRow({ lifecycle_state_id: OPEN_STATE_ID, lifecycleState: { stateKey: 'OPEN' } }),
+            makePoolRow({ lifecycleStateId: OPEN_STATE_ID, lifecycleState: { stateKey: 'OPEN' } }),
           ),
           update: vi.fn(),
         },
@@ -340,7 +340,7 @@ describe('NetworkPoolService', () => {
 
       const db = makeDb();
       db.$transaction = vi.fn().mockImplementation((fn: any) =>
-        fn({ network_pools: { update: vi.fn() } }),
+        fn({ networkPool: { update: vi.fn() } }),
       );
 
       const svc = new NetworkPoolService(db, sm);
@@ -356,10 +356,10 @@ describe('NetworkPoolService', () => {
   describe('P-NP-10: PASS — joinNetworkPool creates PENDING membership', () => {
     it('creates membership row in PENDING status without calling StateMachineService', async () => {
       const db = makeDb({
-        network_pools: {
+        networkPool: {
           create:    vi.fn(),
           findFirst: vi.fn().mockResolvedValue(
-            makePoolRow({ lifecycle_state_id: OPEN_STATE_ID, lifecycleState: { stateKey: 'OPEN' } }),
+            makePoolRow({ lifecycleStateId: OPEN_STATE_ID, lifecycleState: { stateKey: 'OPEN' } }),
           ),
           update: vi.fn(),
         },
@@ -383,7 +383,7 @@ describe('NetworkPoolService', () => {
   describe('P-NP-11: FAIL — joinNetworkPool rejects non-existent pool', () => {
     it('throws NetworkPoolNotFoundError when pool_id is not found', async () => {
       const db = makeDb({
-        network_pools: {
+        networkPool: {
           create:    vi.fn(),
           findFirst: vi.fn().mockResolvedValue(null),
           update:    vi.fn(),
@@ -417,14 +417,14 @@ describe('NetworkPoolService', () => {
   describe('P-NP-13: FAIL — joinNetworkPool rejects duplicate membership', () => {
     it('throws NetworkPoolDuplicateMembershipError when membership already exists', async () => {
       const db = makeDb({
-        network_pools: {
+        networkPool: {
           create:    vi.fn(),
           findFirst: vi.fn().mockResolvedValue(
-            makePoolRow({ lifecycle_state_id: OPEN_STATE_ID, lifecycleState: { stateKey: 'OPEN' } }),
+            makePoolRow({ lifecycleStateId: OPEN_STATE_ID, lifecycleState: { stateKey: 'OPEN' } }),
           ),
           update: vi.fn(),
         },
-        network_pool_memberships: {
+        networkPoolMembership: {
           create:    vi.fn(),
           findFirst: vi.fn().mockResolvedValue({ id: MEMBERSHIP_ID }), // duplicate
         },
@@ -443,10 +443,10 @@ describe('NetworkPoolService', () => {
   describe('P-NP-14: FAIL — joinNetworkPool rejects pool not in OPEN or AGGREGATING', () => {
     it('throws NetworkPoolInvalidStateError when pool is in DRAFT', async () => {
       const db = makeDb({
-        network_pools: {
+        networkPool: {
           create:    vi.fn(),
           findFirst: vi.fn().mockResolvedValue(
-            makePoolRow({ lifecycle_state_id: DRAFT_STATE_ID, lifecycleState: { stateKey: 'DRAFT' } }),
+            makePoolRow({ lifecycleStateId: DRAFT_STATE_ID, lifecycleState: { stateKey: 'DRAFT' } }),
           ),
           update: vi.fn(),
         },
@@ -467,7 +467,7 @@ describe('NetworkPoolService', () => {
   describe('P-NP-15: PASS — getNetworkPoolMembership returns own-org membership only', () => {
     it('queries network_pool_memberships scoped to memberOrgId + poolId', async () => {
       const db = makeDb({
-        network_pool_memberships: {
+        networkPoolMembership: {
           create:    vi.fn(),
           findFirst: vi.fn().mockResolvedValue(makeMembershipRow()),
         },
@@ -480,8 +480,8 @@ describe('NetworkPoolService', () => {
       expect(result).not.toBeNull();
       expect(result!.org_id).toBe(MEMBER_ORG_ID);
       expect(result!.pool_id).toBe(POOL_ID);
-      expect(db.network_pool_memberships.findFirst).toHaveBeenCalledWith({
-        where: { pool_id: POOL_ID, org_id: MEMBER_ORG_ID },
+      expect(db.networkPoolMembership.findFirst).toHaveBeenCalledWith({
+        where: { poolId: POOL_ID, orgId: MEMBER_ORG_ID },
       });
     });
   });

@@ -140,12 +140,12 @@ describe.skipIf(!hasDb)('NC-POOL-SERVICE-INTEGRATION — NetworkPoolService real
     expect(result.lifecycle_state_key).toBe('DRAFT');
 
     // DB-level verification — row must exist and match
-    const dbRow = await (prisma as any).network_pools.findFirst({
+    const dbRow = await prisma.networkPool.findFirst({
       where: { id: result.id },
     });
     expect(dbRow).not.toBeNull();
-    expect(dbRow.pool_ref).toBe(poolRef);
-    expect(dbRow.org_id).toBe(ownerOrgId);
+    expect(dbRow!.poolRef).toBe(poolRef);
+    expect(dbRow!.orgId).toBe(ownerOrgId);
   });
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -234,12 +234,12 @@ describe.skipIf(!hasDb)('NC-POOL-SERVICE-INTEGRATION — NetworkPoolService real
     expect(membership.qty_unit).toBe('KG');
 
     // DB-level verification — membership row must exist
-    const dbRow = await (prisma as any).network_pool_memberships.findFirst({
+    const dbRow = await prisma.networkPoolMembership.findFirst({
       where: { id: membership.id },
     });
     expect(dbRow).not.toBeNull();
-    expect(dbRow.status).toBe('PENDING');
-    expect(dbRow.org_id).toBe(memberOrgId);
+    expect(dbRow!.status).toBe('PENDING');
+    expect(dbRow!.orgId).toBe(memberOrgId);
   });
 
   // ───────────────────────────────────────────────────────────────────────────

@@ -27,7 +27,7 @@
  */
 
 import { randomUUID } from 'crypto';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, Prisma } from '@prisma/client';
 import type { StateMachineService } from './stateMachine.service.js';
 
 // ─── Error Classes ────────────────────────────────────────────────────────────
@@ -176,44 +176,44 @@ export class NetworkPoolService {
   private toPoolRecord(row: Record<string, unknown>): NetworkPoolRecord {
     return {
       id:                 String(row['id']),
-      org_id:             String(row['org_id']),
-      pool_ref:           String(row['pool_ref']),
-      commodity_category: String(row['commodity_category']),
-      target_qty:         String(row['target_qty']),
-      qty_unit:           String(row['qty_unit']),
-      lifecycle_state_id: String(row['lifecycle_state_id']),
+      org_id:             String(row['orgId']),
+      pool_ref:           String(row['poolRef']),
+      commodity_category: String(row['commodityCategory']),
+      target_qty:         String(row['targetQty']),
+      qty_unit:           String(row['qtyUnit']),
+      lifecycle_state_id: String(row['lifecycleStateId']),
       lifecycle_state_key:
         row['lifecycleState'] != null
           ? String((row['lifecycleState'] as Record<string, unknown>)['stateKey'])
           : null,
-      open_at:            row['open_at'] ? (row['open_at'] as Date).toISOString() : null,
-      close_at:           row['close_at'] ? (row['close_at'] as Date).toISOString() : null,
-      allocated_at:       row['allocated_at'] ? (row['allocated_at'] as Date).toISOString() : null,
-      settled_at:         row['settled_at'] ? (row['settled_at'] as Date).toISOString() : null,
+      open_at:            row['openAt'] ? (row['openAt'] as Date).toISOString() : null,
+      close_at:           row['closeAt'] ? (row['closeAt'] as Date).toISOString() : null,
+      allocated_at:       row['allocatedAt'] ? (row['allocatedAt'] as Date).toISOString() : null,
+      settled_at:         row['settledAt'] ? (row['settledAt'] as Date).toISOString() : null,
       metadata:           row['metadata'] != null
                             ? (row['metadata'] as Record<string, unknown>)
                             : null,
-      created_by_user_id: row['created_by_user_id'] ? String(row['created_by_user_id']) : null,
-      created_at:         (row['created_at'] as Date).toISOString(),
-      updated_at:         (row['updated_at'] as Date).toISOString(),
+      created_by_user_id: row['createdByUserId'] ? String(row['createdByUserId']) : null,
+      created_at:         (row['createdAt'] as Date).toISOString(),
+      updated_at:         (row['updatedAt'] as Date).toISOString(),
     };
   }
 
   private toMembershipRecord(row: Record<string, unknown>): NetworkPoolMembershipRecord {
     return {
       id:             String(row['id']),
-      pool_id:        String(row['pool_id']),
-      org_id:         String(row['org_id']),
-      declared_qty:   String(row['declared_qty']),
-      qty_unit:       String(row['qty_unit']),
-      allocated_qty:  row['allocated_qty'] ? String(row['allocated_qty']) : null,
-      allocation_pct: row['allocation_pct'] ? String(row['allocation_pct']) : null,
+      pool_id:        String(row['poolId']),
+      org_id:         String(row['orgId']),
+      declared_qty:   String(row['declaredQty']),
+      qty_unit:       String(row['qtyUnit']),
+      allocated_qty:  row['allocatedQty'] ? String(row['allocatedQty']) : null,
+      allocation_pct: row['allocationPct'] ? String(row['allocationPct']) : null,
       status:         String(row['status']),
-      joined_at:      (row['joined_at'] as Date).toISOString(),
-      approved_at:    row['approved_at'] ? (row['approved_at'] as Date).toISOString() : null,
-      withdrawn_at:   row['withdrawn_at'] ? (row['withdrawn_at'] as Date).toISOString() : null,
-      created_at:     (row['created_at'] as Date).toISOString(),
-      updated_at:     (row['updated_at'] as Date).toISOString(),
+      joined_at:      (row['joinedAt'] as Date).toISOString(),
+      approved_at:    row['approvedAt'] ? (row['approvedAt'] as Date).toISOString() : null,
+      withdrawn_at:   row['withdrawnAt'] ? (row['withdrawnAt'] as Date).toISOString() : null,
+      created_at:     (row['createdAt'] as Date).toISOString(),
+      updated_at:     (row['updatedAt'] as Date).toISOString(),
     };
   }
 
@@ -284,21 +284,19 @@ export class NetworkPoolService {
     }
 
     // 3. Insert DRAFT pool — no SM transition, no lifecycle log entry
-    const row = await (this.db as any).network_pools.create({
+    const row = await this.db.networkPool.create({
       data: {
-        id:                 randomUUID(),
-        org_id:             orgId,
-        pool_ref:           input.pool_ref.trim(),
-        commodity_category: input.commodity_category.trim(),
-        target_qty:         input.target_qty,
-        qty_unit:           input.qty_unit.trim(),
-        lifecycle_state_id: draftState.id,
-        open_at:            input.open_at  ? new Date(input.open_at)  : null,
-        close_at:           input.close_at ? new Date(input.close_at) : null,
-        metadata:           input.metadata ?? null,
-        created_by_user_id: userId ?? null,
-        created_at:         new Date(),
-        updated_at:         new Date(),
+        id:               randomUUID(),
+        orgId,
+        poolRef:           input.pool_ref.trim(),
+        commodityCategory: input.commodity_category.trim(),
+        targetQty:         input.target_qty,
+        qtyUnit:           input.qty_unit.trim(),
+        lifecycleStateId:  draftState.id,
+        openAt:            input.open_at  ? new Date(input.open_at)  : null,
+        closeAt:           input.close_at ? new Date(input.close_at) : null,
+        metadata:          (input.metadata ?? undefined) as Prisma.InputJsonValue | undefined,
+        createdByUserId:   userId ?? null,
       },
     });
 
@@ -323,8 +321,8 @@ export class NetworkPoolService {
     input: OpenNetworkPoolInput,
   ): Promise<NetworkPoolRecord> {
     // 1. Load pool with current lifecycle state key (owner-scoped)
-    const poolRow = await (this.db as any).network_pools.findFirst({
-      where:   { id: input.pool_id, org_id: orgId },
+    const poolRow = await this.db.networkPool.findFirst({
+      where:   { id: input.pool_id, orgId },
       include: { lifecycleState: { select: { stateKey: true } } },
     });
 
@@ -372,11 +370,11 @@ export class NetworkPoolService {
         );
       }
 
-      const updated = await (tx as any).network_pools.update({
+      const updated = await (tx as any).networkPool.update({
         where: { id: input.pool_id },
         data: {
-          lifecycle_state_id: openState.id,
-          updated_at:         new Date(),
+          lifecycleStateId: openState.id,
+          updatedAt:        new Date(),
         },
       });
 
@@ -419,7 +417,7 @@ export class NetworkPoolService {
     }
 
     // 2. Load pool (not owner-scoped — any authenticated org can read pool for joining)
-    const poolRow = await (this.db as any).network_pools.findFirst({
+    const poolRow = await this.db.networkPool.findFirst({
       where:   { id: input.pool_id },
       include: { lifecycleState: { select: { stateKey: true } } },
     });
@@ -433,24 +431,22 @@ export class NetworkPoolService {
     }
 
     // 3. Duplicate membership check
-    const existing = await (this.db as any).network_pool_memberships.findFirst({
-      where:  { pool_id: input.pool_id, org_id: memberOrgId },
+    const existing = await this.db.networkPoolMembership.findFirst({
+      where:  { poolId: input.pool_id, orgId: memberOrgId },
       select: { id: true },
     });
     if (existing) throw new NetworkPoolDuplicateMembershipError();
 
     // 4. Create membership in PENDING status
-    const membershipRow = await (this.db as any).network_pool_memberships.create({
+    const membershipRow = await this.db.networkPoolMembership.create({
       data: {
-        id:           randomUUID(),
-        pool_id:      input.pool_id,
-        org_id:       memberOrgId,
-        declared_qty: input.declared_qty,
-        qty_unit:     input.qty_unit.trim(),
-        status:       'PENDING',
-        joined_at:    new Date(),
-        created_at:   new Date(),
-        updated_at:   new Date(),
+        id:          randomUUID(),
+        poolId:      input.pool_id,
+        orgId:       memberOrgId,
+        declaredQty: input.declared_qty,
+        qtyUnit:     input.qty_unit.trim(),
+        status:      'PENDING',
+        joinedAt:    new Date(),
       },
     });
 
@@ -468,8 +464,8 @@ export class NetworkPoolService {
     orgId: string,
     id: string,
   ): Promise<NetworkPoolRecord | null> {
-    const row = await (this.db as any).network_pools.findFirst({
-      where:   { id, org_id: orgId },
+    const row = await this.db.networkPool.findFirst({
+      where:   { id, orgId },
       include: { lifecycleState: { select: { stateKey: true } } },
     });
     if (!row) return null;
@@ -487,8 +483,8 @@ export class NetworkPoolService {
     memberOrgId: string,
     poolId: string,
   ): Promise<NetworkPoolMembershipRecord | null> {
-    const row = await (this.db as any).network_pool_memberships.findFirst({
-      where: { pool_id: poolId, org_id: memberOrgId },
+    const row = await this.db.networkPoolMembership.findFirst({
+      where: { poolId, orgId: memberOrgId },
     });
     if (!row) return null;
     return this.toMembershipRecord(row);
