@@ -37,7 +37,7 @@
 ## 1. Overview
 
 This design proposes the minimum tenant-plane route surface for Network Commerce Pools,
-exposing the four verified NetworkPoolService methods through REST endpoints.
+exposing the five verified NetworkPoolService methods through REST endpoints.
 
 **Service Methods Being Exposed:**
 1. `createNetworkPool(orgId, userId, input)` → `NetworkPoolRecord` (DRAFT state)
@@ -130,20 +130,29 @@ Only pool owner/admin can open the pool.
 - poolId ← from URL path
 - orgId ← request.dbContext.orgId (authenticated org)
 - userId ← request.userId
-- input.actor_type ← from body ('TENANT_USER' | 'TENANT_ADMIN' | ...)
-- input.actor_role ← from body (membership role snapshot)
+- input.actor_type ← derived from authenticated role context
+- input.actor_role ← from request.userRole (membership role snapshot)
 - input.reason ← from body (transition justification)
 
 Permission Gate (IN HANDLER):
   await db.networkPool.findFirst({
-    where: { id: poolId, orgId }  ← Verify caller owns pool
+    where: { id: poolId, orgId }  ← Owner-scoped lookup only
   })
-  if (!poolRow) → sendForbidden or sendNotFound
+  if (!poolRow) → sendError(reply, 'POOL_NOT_FOUND', 'Network pool not found', 404)
 
-Note: If pool exists but caller is different org → sendForbidden (not 404, per RLS/visibility rules)
+Non-leak rule:
+- Do not perform broad cross-org lookup to distinguish "wrong org" vs "missing id"
+- Owner-scoped miss always returns generic 404 POOL_NOT_FOUND
 
 Scoping:
 - orgId passed to openNetworkPool MUST equal pool owner org
+- actor_user_id ← request.userId
+- actor_admin_id ← null (tenant routes)
+- actor_role ← request.userRole
+- actor_type derivation (route-owned):
+  - if request.userRole is tenant/admin-equivalent → TENANT_ADMIN
+  - otherwise → TENANT_USER
+- PLATFORM_ADMIN, SYSTEM_AUTOMATION, MAKER, CHECKER are not accepted from tenant request body
 - Service will verify pool is in DRAFT state
 - Service will call StateMachineService.transition (DRAFT → OPEN)
 - Lifecycle log entry is written in the same transaction
@@ -153,8 +162,7 @@ Success:
 - Body: NetworkPoolRecord (OPEN state, lifecycle_state_key='OPEN')
 
 Failure Responses (see Section 7)
-- 403 Forbidden (caller does not own pool)
-- 404 Not Found (pool not found)
+- 404 POOL_NOT_FOUND (generic non-leaking owner-scoped miss)
 - 422 Unprocessable Entity (pool not in DRAFT state)
 - 500 Unexpected error
 ```
@@ -200,17 +208,20 @@ Pool owner/admin can read pool metadata.
 
 Permission Gate (IN HANDLER):
   await db.networkPool.findFirst({
-    where: { id: poolId, orgId }
+    where: { id: poolId, orgId }  ← Owner-scoped lookup only
   })
-  if (!poolRow) → sendForbidden or sendNotFound
+  if (!poolRow) → sendError(reply, 'POOL_NOT_FOUND', 'Network pool not found', 404)
+
+Non-leak rule:
+- Do not perform broad cross-org lookup
+- Owner-scoped miss always returns generic 404 POOL_NOT_FOUND
 
 Success:
 - HTTP 200 OK
 - Body: NetworkPoolRecord
 
 Failure Responses (see Section 7)
-- 403 Forbidden (caller does not own pool)
-- 404 Not Found (pool not found)
+- 404 POOL_NOT_FOUND (generic non-leaking owner-scoped miss)
 - 500 Unexpected error
 ```
 
@@ -223,16 +234,16 @@ Member organization can read only its own membership for a pool.
 - memberOrgId ← request.dbContext.orgId (authenticated org)
 
 Permission Gate:
-- Service will verify membership exists AND memberOrgId matches querying org
-- If membership doesn't exist or belongs to different org → service returns error
+- Service/query MUST scope to { poolId, orgId: memberOrgId } only
+- If no row is returned → generic 404 POOL_MEMBERSHIP_NOT_FOUND
+- Route must not reveal whether another org has membership in the same pool
 
 Success:
 - HTTP 200 OK
 - Body: NetworkPoolMembershipRecord
 
 Failure Responses (see Section 7)
-- 403 Forbidden (membership does not exist or belongs to different org)
-- 404 Not Found (pool not found)
+- 404 POOL_MEMBERSHIP_NOT_FOUND (generic member-scoped non-leaking miss)
 - 500 Unexpected error
 ```
 
@@ -259,12 +270,19 @@ input: OpenNetworkPoolInput = {
 
 **Route Responsibility (POST /pools/:poolId/open):**
 1. Resolve `request.userId` → `actor_user_id`
-2. Resolve `actor_type` from body (caller submits; no enum validation in route — service validates)
+2. Set `actor_admin_id = null` (tenant routes)
 3. Resolve `actor_role` from request.userRole (already populated by tenantAuthMiddleware)
-4. Pass `reason` from request body (mandatory field, route validates)
-5. Pass `request_id = request.id` (Fastify standard)
+4. Derive `actor_type` from authenticated role context:
+  - tenant/admin-equivalent role → `TENANT_ADMIN`
+  - otherwise → `TENANT_USER`
+5. Pass `reason` from request body (mandatory field, route validates)
+6. Pass `request_id = request.id` (Fastify standard)
 
-**No route-level actor_type inference.** Caller must explicitly state their actor classification.
+**Route-level actor_type derivation is mandatory.** Caller must NOT provide actor_type.
+
+**Tenant body exclusions:**
+- `actor_type` must not be accepted from request body
+- `PLATFORM_ADMIN`, `SYSTEM_AUTOMATION`, `MAKER`, `CHECKER` are not tenant body inputs
 
 ---
 
@@ -307,23 +325,17 @@ const createPoolBodySchema = z.object({
 
 ```typescript
 const openPoolBodySchema = z.object({
-  // Transition context
-  actor_type: z.enum([
-    'TENANT_USER',
-    'TENANT_ADMIN',
-    'PLATFORM_ADMIN',
-    'SYSTEM_AUTOMATION',
-    'MAKER',
-    'CHECKER',
-  ]),
   reason: z.string().trim().min(1).max(2000, 'reason max 2000 chars'),
-});
+}).strict();
 ```
 
 **Validation Note:**
 - `actor_role` comes from JWT/middleware (not from body)
 - `actor_user_id` comes from JWT (not from body)
+- `actor_admin_id` is null for tenant routes
+- `actor_type` is derived by route from authenticated role context
 - `reason` is mandatory for audit trail
+- Strict schema should reject unexpected keys (including `actor_type`)
 
 ### 5.3 POST /pools/:poolId/join (Join Pool)
 
@@ -439,8 +451,8 @@ All errors follow existing repo convention:
 | `NetworkPoolDuplicateMembershipError` | 409 | `DUPLICATE_MEMBERSHIP` | "A membership for this organization already exists in this pool" |
 | `NetworkPoolTransitionDeniedError` | 422 | `TRANSITION_DENIED` | "Lifecycle transition denied [RULE_VIOLATION]: Pool cannot open without reaching quorum" |
 | `NetworkPoolLifecycleStateMissingError` | 500 | `INTERNAL_ERROR` | "POOL lifecycle state 'DRAFT' not found in lifecycle_states. Ensure the POOL lifecycle seed migration has been applied." |
-| Unauthorized (caller does not own pool) | 403 | `FORBIDDEN` | "You do not have permission to access this pool" |
-| Unauthorized (membership not accessible) | 403 | `FORBIDDEN` | "You do not have permission to view this membership" |
+| Owner-scoped miss (open/read pool) | 404 | `POOL_NOT_FOUND` | "Network pool not found" |
+| Member-scoped miss (read membership) | 404 | `POOL_MEMBERSHIP_NOT_FOUND` | "Pool membership not found" |
 | Any unhandled error | 500 | `INTERNAL_ERROR` | "An unexpected error occurred" |
 
 **Error Response Example (400):**
@@ -466,9 +478,9 @@ FeatureFlag.enabled = false (default; opt-in activation)
 FeatureFlag.description = 'Enable Network Commerce Collective Procurement Pools'
 ```
 
-### Gate Pattern (Optional)
+### Gate Pattern Options
 
-**Option A: Use FeatureFlag middleware (recommended)**
+**Option A: Require FeatureFlag middleware in Phase 1 implementation**
 
 Similar to TTP pattern (ttpFeatureGateMiddleware):
 - Create `ncPoolsFeatureGateMiddleware` in `server/src/middleware/`
@@ -476,23 +488,27 @@ Similar to TTP pattern (ttpFeatureGateMiddleware):
 - Returns 503 `FEATURE_DISABLED` if false or missing
 - Registered as `preHandler` after `databaseContextMiddleware`
 
-**Option B: No middleware (simplest for Phase 1)**
+**Option B: Explicitly defer route-level feature gate (selected)**
 
 - Routes are unconditionally available if endpoint exists
 - Feature flag can be read by control plane but does not gate route access
-- Deferrer: flag becomes enforced in Phase 1B or Phase 2
+- Deferrer: flag becomes enforced in a follow-up packet before broader rollout
 
 **Recommendation for TEXQTIC-NC-PHASE1-POOL-ROUTE-IMPLEMENTATION-001:**
 
-**Option B** (no middleware gate) to minimize implementation scope.
+**Option B** is selected for `TEXQTIC-NC-PHASE1-POOL-ROUTE-IMPLEMENTATION-001`.
 - Routes exist and are auth-gated (tenant routes only)
 - Control plane retains ability to read/manage feature flag via existing GET/PUT endpoints
-- Gate enforcement can be added in a follow-up focus packet if needed
+- No UI exposure for pool routes is included in this packet
+- Route-level gate enforcement is deferred to a follow-up packet
+
+**Follow-up candidate:** `TEXQTIC-NC-PHASE1-POOL-FEATURE-FLAG-GATE-001`
 
 **Rationale:**
 - Pool routes are internal tenant-only (not public)
 - Auth middleware already gates access (only authenticated tenants)
-- No need for kill-switch in Phase 1 (unlike TTP which is broader)
+- No UI exposure yet; controlled API rollout is acceptable for this phase
+- Follow-up gate packet is required before broader rollout
 
 ---
 
@@ -520,7 +536,7 @@ Routes MUST NOT rely solely on RLS. They must also validate in-application:
 const pool = await db.networkPool.findFirst({
   where: { id: poolId, orgId: request.dbContext.orgId }  ← Explicit orgId check
 });
-if (!pool) return sendForbidden(reply, 'You do not have permission...');
+if (!pool) return sendError(reply, 'POOL_NOT_FOUND', 'Network pool not found', 404);
 
 // Example: GET /pools/:poolId/membership
 const membership = await db.networkPoolMembership.findFirst({
@@ -529,7 +545,8 @@ const membership = await db.networkPoolMembership.findFirst({
     orgId: request.dbContext.orgId  ← Explicit orgId check
   }
 });
-if (!membership) return sendForbidden(reply, 'You do not have permission...');
+if (!membership)
+  return sendError(reply, 'POOL_MEMBERSHIP_NOT_FOUND', 'Pool membership not found', 404);
 ```
 
 **Defense-in-Depth Rule:**
@@ -623,15 +640,16 @@ If TexQtic adds a feature where a user can declare they're acting on behalf of a
 | CPR-05 | Unauthenticated request | HTTP 401 |
 | CPR-06 | Create two pools for same org with same pool_ref | HTTP 409 DUPLICATE (if service enforces unique pool_ref per org) |
 
-#### Section B: POST /pools/:poolId/open (Open Pool) — 5 tests
+#### Section B: POST /pools/:poolId/open (Open Pool) — 6 tests
 
 | Test ID | Scenario | Expected Result |
 |---------|----------|-----------------|
 | OPR-01 | Open pool in DRAFT state (owner org) | HTTP 200, NetworkPoolRecord (OPEN state) |
-| OPR-02 | Open pool but caller org ≠ pool owner | HTTP 403 FORBIDDEN |
+| OPR-02 | Open pool but caller org ≠ pool owner | HTTP 404 POOL_NOT_FOUND (owner-scoped non-leaking policy) |
 | OPR-03 | Open non-existent pool | HTTP 404 NOT_FOUND |
 | OPR-04 | Open pool in OPEN state (already open) | HTTP 422 INVALID_STATE |
 | OPR-05 | Open pool with missing reason field | HTTP 400 INVALID_INPUT |
+| OPR-06 | Open pool request body contains actor_type | HTTP 400 VALIDATION_ERROR (strict schema rejects unexpected key) |
 
 #### Section C: POST /pools/:poolId/join (Join Pool) — 7 tests
 
@@ -650,8 +668,8 @@ If TexQtic adds a feature where a user can declare they're acting on behalf of a
 | Test ID | Scenario | Expected Result |
 |---------|----------|-----------------|
 | RPR-01 | Read own pool | HTTP 200, NetworkPoolRecord |
-| RPR-02 | Read pool owned by different org | HTTP 403 FORBIDDEN (not 404, to avoid leaking pool existence) |
-| RPR-03 | Read non-existent pool | HTTP 404 NOT_FOUND |
+| RPR-02 | Read pool owned by different org | HTTP 404 POOL_NOT_FOUND (owner-scoped non-leaking policy) |
+| RPR-03 | Read non-existent pool | HTTP 404 POOL_NOT_FOUND |
 | RPR-04 | Unauthenticated request | HTTP 401 |
 
 #### Section E: GET /pools/:poolId/membership (Read Membership) — 5 tests
@@ -659,8 +677,8 @@ If TexQtic adds a feature where a user can declare they're acting on behalf of a
 | Test ID | Scenario | Expected Result |
 |---------|----------|-----------------|
 | MRP-01 | Read own membership | HTTP 200, NetworkPoolMembershipRecord |
-| MRP-02 | Read membership of different org | HTTP 403 FORBIDDEN |
-| MRP-03 | Read membership that doesn't exist | HTTP 404 or HTTP 403 (membership not found for this org) |
+| MRP-02 | Read membership of different org | HTTP 404 POOL_MEMBERSHIP_NOT_FOUND |
+| MRP-03 | Read membership that doesn't exist | HTTP 404 POOL_MEMBERSHIP_NOT_FOUND |
 | MRP-04 | Read for non-existent pool | HTTP 404 NOT_FOUND |
 | MRP-05 | Unauthenticated request | HTTP 401 |
 
@@ -685,6 +703,7 @@ function makeJoinPoolBody(overrides = {}) { ... }
 - All tests use **real Prisma client** (not mocks)
 - All tests run against **test database** (isolated per test via `withBypassForSeed`)
 - Cleanup via `afterEach` or transaction rollback
+- Feature-flag gate tests are excluded from this packet (Option B deferred gate)
 
 ---
 
@@ -704,7 +723,6 @@ function makeJoinPoolBody(overrides = {}) { ... }
 | File | Change | Reason |
 |------|--------|--------|
 | `server/src/routes/tenant.ts` | Import + register pools routes | Route registration (1-2 lines) |
-| `server/src/__tests__/tenant-pools.e2e.test.ts` (new) | E2E tests (if separate file needed) | Optional; integration tests may be sufficient |
 
 ### Files NOT to Touch
 
@@ -760,7 +778,7 @@ All design questions have clear answers based on existing repo patterns.
    Reason: Control-plane pools inspection can be added in a follow-up packet.
 
 4. **Feature Flag Middleware (nc.procurement_pools.enabled)**  
-   Recommended as no-gate (Option B) for Phase 1. Can be added in Phase 1B if needed.
+  Explicitly deferred by design decision (Option B). Follow-up candidate: TEXQTIC-NC-PHASE1-POOL-FEATURE-FLAG-GATE-001.
 
 5. **Per-Org Allocation Profile Customization**  
    E.g., "This org always gets 10% more allocation if they join."  
