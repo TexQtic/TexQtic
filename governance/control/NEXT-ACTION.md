@@ -128,12 +128,35 @@ nc_phase1_pool_route_gate_authenticated_smoke: COVERED_BY_INTEGRATION_SUITE (401
 nc_phase1_pool_route_scope_boundary: >-
   5 routes only: POST /pools, POST /:poolId/open, POST /:poolId/join, GET /:poolId, GET /:poolId/membership.
   No pool list/discovery, no RFQ, no allocation, no invoice, no settlement, no escrow, no UI, no control-plane admin routes.
+nc_phase1_pool_discovery_status: IMPLEMENTED_VERIFIED_GOV_SYNCED
+nc_phase1_pool_discovery_implementation_commit: 0d40a7a
+nc_phase1_pool_discovery_design_commit: 37d574ce2059fa69f372f0e6ea09d9c7b72b7894
+nc_phase1_pool_discovery_audit_commit: 8157b49
+nc_phase1_pool_discovery_decision_record_commit: a4d35aa
+nc_phase1_pool_discovery_verification_report: governance/TEXQTIC-NC-PHASE1-POOL-DISCOVERY-PROD-VERIFY-GOV-CLOSE-001.md
+nc_phase1_pool_discovery_test_result: 56/56 PASS (33 existing route/gate tests + 23 discovery tests)
+nc_phase1_pool_discovery_ts_result: CLEAN
+nc_phase1_pool_discovery_prisma_result: PASS
+nc_phase1_pool_discovery_service_integration_result: 5 skipped (pre-existing DB harness guard; no failures)
+nc_phase1_pool_discovery_runtime_smoke: HEALTH_200 + UNAUTH_DISCOVERY_401/401 (registered; auth-first)
+nc_phase1_pool_discovery_authenticated_runtime_smoke: DISCOVERY_RUNTIME_AUTH_SMOKE_BLOCKED_NO_SAFE_AUTH_HARNESS
+nc_phase1_pool_discovery_db_cleanup: pools=0 memberships=0 overrides=0
+nc_phase1_pool_discovery_feature_flag_restoration_status: RESTORED_TO_PRE_EXISTING_ENABLED_STATE
+nc_phase1_pool_discovery_scope_boundary: >-
+  Discovery closed for owner/joined lists only: GET /pools and GET /pools/joined.
+  Non-member open discovery deferred. No owner identity exposure to non-members. target_qty owner-only.
+  No member count, no aggregate demand, no raw metadata JSON. No RFQ/quotes/allocation/orders/invoice generation/settlement/escrow/UI.
+  No control-plane/admin discovery.
 nc_phase1_next_action: HOLD_FOR_PARESH_DECISION
-nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-DISCOVERY-DESIGN-001
-nc_phase1_next_action_candidate_2: TEXQTIC-NC-PHASE1-TENANT-FEATURE-OVERRIDE-ADMIN-API-001
+nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DESIGN-001
+nc_phase1_next_action_candidate_2: TEXQTIC-NC-PHASE1-POOL-OPEN-DISCOVERY-DESIGN-001
+nc_phase1_next_action_candidate_3: TEXQTIC-NC-PHASE1-POOL-CONTROL-DISCOVERY-DESIGN-001
+nc_phase1_next_action_candidate_4: TEXQTIC-NC-PHASE1-TENANT-FEATURE-OVERRIDE-ADMIN-API-001
 nc_phase1_next_action_note: >-
-  Pool route gate is IMPLEMENTED_VERIFIED_GOV_SYNCED. Next candidate: pool discovery/list design or
-  tenant feature override admin API. Neither is open. Do not open without explicit Paresh authorization.
+  Pool discovery implementation is IMPLEMENTED_VERIFIED_GOV_SYNCED (0d40a7a).
+  Next candidate remains HOLD_FOR_PARESH_DECISION: pool RFQ design.
+  Optional future candidates include open-discovery design, control-discovery design, and tenant feature override admin API.
+  None is open. Do not open without explicit Paresh authorization.
 ```
 
 ---

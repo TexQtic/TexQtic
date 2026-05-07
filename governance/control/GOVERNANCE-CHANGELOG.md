@@ -7,6 +7,57 @@
 
 ---
 
+## 2026-05-07 — VERIFIED_COMPLETE_AND_GOV_SYNCED: TEXQTIC-NC-PHASE1-POOL-DISCOVERY-PROD-VERIFY-GOV-CLOSE-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-DISCOVERY-PROD-VERIFY-GOV-CLOSE-001
+Type:          VERIFICATION + GOVERNANCE_CLOSURE
+Status:        VERIFIED_COMPLETE_AND_GOV_SYNCED
+Date:          2026-05-07
+Commits:       implementation 0d40a7a; governance closure commit pending
+
+Authority chain:
+  Discovery design: 37d574ce2059fa69f372f0e6ea09d9c7b72b7894
+  Discovery audit: 8157b49
+  Decision record: a4d35aa
+  Route foundation: e3a806492d7981cb695f1663da7780c15cec0c20
+  Gate implementation: ac3bc28
+  Gate verification: 45ae401
+
+Verification results:
+  Prisma generate: PASS
+  Server tsc --noEmit: CLEAN
+  Pool route integration: 56/56 PASS
+  network-pool.service.unit: 15/15 PASS
+  network-pool.service.integration: 5 skipped (pre-existing DB harness guard)
+  network-invoice.service.unit: 16/16 PASS
+  invoice.service.unit: 18/18 PASS
+  stateMachine.g020: 32/32 PASS
+
+Runtime smoke:
+  /health: 200
+  unauth GET /api/tenant/network-commerce/pools: 401
+  unauth GET /api/tenant/network-commerce/pools/joined: 401
+  Authenticated runtime harness status: DISCOVERY_RUNTIME_AUTH_SMOKE_BLOCKED_NO_SAFE_AUTH_HARNESS
+
+Cleanup verification:
+  {"pools":0,"memberships":0,"ncFlagPresent":true,"ncFlagEnabled":true,"ncOverridesForRouteTenants":0}
+  Feature-flag restoration status: RESTORED_TO_PRE_EXISTING_ENABLED_STATE
+
+Scope boundary preserved:
+  Discovery implemented for owner/joined lists only.
+  Non-member open discovery remains deferred.
+  No owner identity exposure to non-members.
+  target_qty owner-only.
+  No member count, aggregate demand, or raw metadata JSON.
+  No RFQ/quotes/allocation/orders/invoice generation/settlement/escrow/UI/control-plane discovery.
+
+Posture update:
+  NC pool discovery slice is closed and governance-synced.
+  Next candidate remains HOLD_FOR_PARESH_DECISION:
+    TEXQTIC-NC-PHASE1-POOL-RFQ-DESIGN-001
+```
+
 ## 2026-05-02 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (Production Readiness Closure + Launch Authorization Decision)
 
 ```

@@ -1087,6 +1087,24 @@ Scope boundary preserved:
 
 DPP posture: `active_delivery_unit: HOLD_FOR_AUTHORIZATION` — UNCHANGED (DPP stream, separate).
 
-Next NC candidate: TEXQTIC-NC-PHASE1-POOL-DISCOVERY-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
+NC pool discovery closure (2026-05-07):
+- TEXQTIC-NC-PHASE1-POOL-DISCOVERY-IMPLEMENTATION-001 verified and governance-synced.
+- Implementation commit: `0d40a7a`.
+- Verification report: `governance/TEXQTIC-NC-PHASE1-POOL-DISCOVERY-PROD-VERIFY-GOV-CLOSE-001.md`.
+- Verification evidence: Prisma PASS, tsc CLEAN, pool routes 56/56 PASS, network-pool unit 15/15 PASS,
+  network-pool integration 5 skipped (pre-existing DB guard), invoice/network-invoice/state-machine regressions PASS.
+- Runtime smoke: `/health` 200; unauthenticated discovery routes return 401/401 (not 404/500).
+- Cleanup: route-harness pools=0 memberships=0 overrides=0; global feature flag restored.
+
+Scope boundary preserved:
+- Discovery implemented for owner/joined lists only (`GET /pools`, `GET /pools/joined`).
+- Non-member open discovery deferred.
+- No owner identity exposure to non-members; target_qty remains owner-only.
+- No member count, aggregate demand, or raw metadata JSON exposure.
+- No RFQ/quotes/allocation/orders/invoice generation/settlement/escrow/UI/control-plane discovery.
+
+Next NC candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
+Optional future candidates: POOL-OPEN-DISCOVERY-DESIGN-001, POOL-CONTROL-DISCOVERY-DESIGN-001,
+TENANT-FEATURE-OVERRIDE-ADMIN-API-001.
 Do not open without explicit Paresh authorization.
 
