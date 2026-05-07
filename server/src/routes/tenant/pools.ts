@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { tenantAuthMiddleware } from '../../middleware/auth.js';
 import { databaseContextMiddleware } from '../../middleware/database-context.middleware.js';
+import { ncPoolFeatureGateMiddleware } from '../../middleware/ncPoolFeatureGate.middleware.js';
 import { prisma } from '../../db/prisma.js';
 import { sendError, sendSuccess, sendValidationError } from '../../utils/response.js';
 import { StateMachineService } from '../../services/stateMachine.service.js';
@@ -117,7 +118,10 @@ function mapPoolServiceError(
 const poolRoutes: FastifyPluginAsync = async fastify => {
   fastify.post(
     '/',
-    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: [ncPoolFeatureGateMiddleware],
+    },
     async (request, reply) => {
       const dbContext = request.dbContext;
       if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
@@ -144,7 +148,10 @@ const poolRoutes: FastifyPluginAsync = async fastify => {
 
   fastify.post(
     '/:poolId/open',
-    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: [ncPoolFeatureGateMiddleware],
+    },
     async (request, reply) => {
       const dbContext = request.dbContext;
       if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
@@ -193,7 +200,10 @@ const poolRoutes: FastifyPluginAsync = async fastify => {
 
   fastify.post(
     '/:poolId/join',
-    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: [ncPoolFeatureGateMiddleware],
+    },
     async (request, reply) => {
       const dbContext = request.dbContext;
       if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
@@ -228,7 +238,10 @@ const poolRoutes: FastifyPluginAsync = async fastify => {
 
   fastify.get(
     '/:poolId',
-    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: [ncPoolFeatureGateMiddleware],
+    },
     async (request, reply) => {
       const dbContext = request.dbContext;
       if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
@@ -268,7 +281,10 @@ const poolRoutes: FastifyPluginAsync = async fastify => {
 
   fastify.get(
     '/:poolId/membership',
-    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: [ncPoolFeatureGateMiddleware],
+    },
     async (request, reply) => {
       const dbContext = request.dbContext;
       if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);

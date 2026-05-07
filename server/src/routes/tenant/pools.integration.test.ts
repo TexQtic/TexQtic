@@ -54,6 +54,8 @@ function authHeaders(orgId: string, userId: string, userRole: string = 'MEMBER')
 }
 
 describe.skipIf(!hasDb)('Network Commerce Pool Routes Integration', () => {
+  const poolFeatureFlagKey = 'nc.procurement_pools.enabled';
+
   let app: FastifyInstance;
   let ownerOrgId: string;
   let memberOrgId: string;
@@ -62,6 +64,7 @@ describe.skipIf(!hasDb)('Network Commerce Pool Routes Integration', () => {
   let memberUserId: string;
   let otherUserId: string;
   let testRunId: string;
+  let originalPoolFeatureFlag: { enabled: boolean; description: string | null; value: string | null } | null = null;
   const createdPoolIds = new Set<string>();
 
   async function buildApp(): Promise<FastifyInstance> {
@@ -73,6 +76,48 @@ describe.skipIf(!hasDb)('Network Commerce Pool Routes Integration', () => {
 
   function makePoolRef(tag: string): string {
     return `ROUTE-HARNESS-${testRunId}-${tag}`;
+  }
+
+  async function setGlobalPoolFlag(enabled: boolean): Promise<void> {
+    await withBypassForSeed(prisma, async tx => {
+      await tx.featureFlag.upsert({
+        where: { key: poolFeatureFlagKey },
+        create: {
+          key: poolFeatureFlagKey,
+          enabled,
+          description: 'NC pool routes feature gate (integration test)',
+        },
+        update: { enabled },
+      });
+    });
+  }
+
+  async function removeGlobalPoolFlag(): Promise<void> {
+    await withBypassForSeed(prisma, async tx => {
+      await tx.featureFlag.deleteMany({ where: { key: poolFeatureFlagKey } });
+    });
+  }
+
+  async function enablePoolGateForTestTenants(): Promise<void> {
+    await withBypassForSeed(prisma, async tx => {
+      const orgIds = [ownerOrgId, memberOrgId, otherOrgId];
+      for (const orgId of orgIds) {
+        await tx.tenantFeatureOverride.upsert({
+          where: {
+            tenantId_key: {
+              tenantId: orgId,
+              key: poolFeatureFlagKey,
+            },
+          },
+          create: {
+            tenantId: orgId,
+            key: poolFeatureFlagKey,
+            enabled: true,
+          },
+          update: { enabled: true },
+        });
+      }
+    });
   }
 
   async function createPoolAsOwner(overrides?: Record<string, unknown>) {
@@ -150,21 +195,38 @@ describe.skipIf(!hasDb)('Network Commerce Pool Routes Integration', () => {
     await seedTenantForTest(ownerOrgId, 'nc-route-owner');
     await seedTenantForTest(memberOrgId, 'nc-route-member');
     await seedTenantForTest(otherOrgId, 'nc-route-other');
+
+    await withBypassForSeed(prisma, async tx => {
+      const row = await tx.featureFlag.findUnique({
+        where: { key: poolFeatureFlagKey },
+        select: { enabled: true, description: true, value: true },
+      });
+      originalPoolFeatureFlag = row;
+    });
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     testRunId = randomUUID();
+    await setGlobalPoolFlag(true);
+    await enablePoolGateForTestTenants();
   });
 
   afterEach(async () => {
-    if (createdPoolIds.size === 0) return;
-
     const ids = [...createdPoolIds];
     createdPoolIds.clear();
 
     await withBypassForSeed(prisma, async tx => {
-      await tx.networkPoolMembership.deleteMany({ where: { poolId: { in: ids } } });
-      await tx.networkPool.deleteMany({ where: { id: { in: ids } } });
+      if (ids.length > 0) {
+        await tx.networkPoolMembership.deleteMany({ where: { poolId: { in: ids } } });
+        await tx.networkPool.deleteMany({ where: { id: { in: ids } } });
+      }
+
+      await tx.tenantFeatureOverride.deleteMany({
+        where: {
+          key: poolFeatureFlagKey,
+          tenantId: { in: [ownerOrgId, memberOrgId, otherOrgId] },
+        },
+      });
     }).catch(() => {
       // Best-effort cleanup for route tests.
     });
@@ -186,9 +248,106 @@ describe.skipIf(!hasDb)('Network Commerce Pool Routes Integration', () => {
           ],
         },
       });
+
+      await tx.tenantFeatureOverride.deleteMany({
+        where: {
+          key: poolFeatureFlagKey,
+          tenantId: { in: [ownerOrgId, memberOrgId, otherOrgId] },
+        },
+      });
+
+      if (originalPoolFeatureFlag) {
+        await tx.featureFlag.upsert({
+          where: { key: poolFeatureFlagKey },
+          create: {
+            key: poolFeatureFlagKey,
+            enabled: originalPoolFeatureFlag.enabled,
+            description: originalPoolFeatureFlag.description,
+            value: originalPoolFeatureFlag.value,
+          },
+          update: {
+            enabled: originalPoolFeatureFlag.enabled,
+            description: originalPoolFeatureFlag.description,
+            value: originalPoolFeatureFlag.value,
+          },
+        });
+      } else {
+        await tx.featureFlag.deleteMany({ where: { key: poolFeatureFlagKey } });
+      }
     }).catch(() => {
       // Lifecycle logs are immutable and may prevent full tenant cleanup.
     });
+  });
+
+  // Feature gate (FGR-01..FGR-05)
+
+  it('FGR-01 missing flag create -> 503 FEATURE_DISABLED and no row created', async () => {
+    await removeGlobalPoolFlag();
+
+    const poolRef = makePoolRef('MISSING-FLAG');
+    const create = await createPoolAsOwner({ pool_ref: poolRef });
+
+    expect(create.res.statusCode).toBe(503);
+    expect((create.res.json() as any).error.code).toBe('FEATURE_DISABLED');
+
+    const count = await withBypassForSeed(prisma, tx =>
+      tx.networkPool.count({ where: { orgId: ownerOrgId, poolRef } }),
+    );
+    expect(count).toBe(0);
+  });
+
+  it('FGR-02 disabled flag open -> 503 FEATURE_DISABLED', async () => {
+    await setGlobalPoolFlag(false);
+
+    const open = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${randomUUID()}/open`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: { reason: 'flag disabled' },
+    });
+
+    expect(open.statusCode).toBe(503);
+    expect((open.json() as any).error.code).toBe('FEATURE_DISABLED');
+  });
+
+  it('FGR-03 disabled flag join -> 503 FEATURE_DISABLED', async () => {
+    await setGlobalPoolFlag(false);
+
+    const join = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${randomUUID()}/join`,
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+      payload: { declared_qty: 100, qty_unit: 'KG' },
+    });
+
+    expect(join.statusCode).toBe(503);
+    expect((join.json() as any).error.code).toBe('FEATURE_DISABLED');
+  });
+
+  it('FGR-04 disabled flag read pool -> 503 FEATURE_DISABLED', async () => {
+    await setGlobalPoolFlag(false);
+
+    const read = await app.inject({
+      method: 'GET',
+      url: `/api/tenant/network-commerce/pools/${randomUUID()}`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(read.statusCode).toBe(503);
+    expect((read.json() as any).error.code).toBe('FEATURE_DISABLED');
+  });
+
+  it('FGR-05 disabled flag read membership -> 503 FEATURE_DISABLED', async () => {
+    await setGlobalPoolFlag(false);
+
+    const read = await app.inject({
+      method: 'GET',
+      url: `/api/tenant/network-commerce/pools/${randomUUID()}/membership`,
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+    });
+
+    expect(read.statusCode).toBe(503);
+    expect((read.json() as any).error.code).toBe('FEATURE_DISABLED');
   });
 
   // Create pool (CPR-01..CPR-06)
