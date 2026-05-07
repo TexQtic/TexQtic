@@ -248,6 +248,9 @@ describe.skipIf(!hasDb)('Network Commerce Pool Routes Integration', () => {
     }).catch(() => {
       // Best-effort cleanup for route tests.
     });
+
+    // Restore global feature flag so concurrent test suites are not disrupted.
+    await ensurePoolGateEnabled();
   });
 
   afterAll(async () => {
