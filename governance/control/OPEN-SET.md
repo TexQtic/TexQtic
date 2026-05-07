@@ -1118,3 +1118,14 @@ NC demand-line schema closure (2026-05-07):
   Scope: demand-line schema only. No RFQ schema, routes, services, UI, or financial logic.
   Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SERVICE-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
 
+NC demand-line route closure (2026-05-08):
+- TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-ROUTE-001 VERIFIED_COMPLETE_AND_GOV_SYNCED (2026-05-08).
+  Demand-line service + route (create/list/update/cancel): IMPLEMENTED, VERIFIED, GOV_SYNCED.
+  Service commit: 8241991. Fixture stability commit: f5b655e. Route commit: 1bc1b09.
+  Evidence: 37/37 DLT (DLT-01..DLT-37), 30/30 service unit, 93/93 combined concurrent, tsc CLEAN, prisma PASS.
+  Runtime smoke: /health 200; all 4 routes 401 (unauth); lock-for-rfq 404 (not registered).
+  DB cleanup: 0 demand-line rows (DL-ROUTE-*), 0 pool rows (DL-POOL-*) after test run.
+  lockDemandLinesForRfq: BLOCKED — prerequisite: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001.
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001 — HOLD_FOR_PARESH_DECISION.
+  Do not open without explicit Paresh authorization.
+

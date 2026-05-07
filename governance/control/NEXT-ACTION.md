@@ -184,6 +184,24 @@ nc_phase1_pool_rfq_scope_boundary: >-
   no order placement, no invoice generation, no settlement, no escrow, no UI, no MakerChecker changes.
 nc_phase1_pool_rfq_demand_line_service_next_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SERVICE-DESIGN-001
 nc_phase1_pool_rfq_demand_line_service_candidate_status: HOLD_FOR_PARESH_DECISION
+nc_phase1_pool_rfq_demand_line_route_status: VERIFIED_COMPLETE_AND_GOV_SYNCED
+nc_phase1_pool_rfq_demand_line_service_commit: 8241991
+nc_phase1_pool_rfq_demand_line_fixture_stability_commit: f5b655e
+nc_phase1_pool_rfq_demand_line_route_commit: 1bc1b09
+nc_phase1_pool_rfq_demand_line_route_test_result: "37/37 DLT PASS; 30/30 service unit; 93/93 combined concurrent"
+nc_phase1_pool_rfq_demand_line_route_ts_result: CLEAN
+nc_phase1_pool_rfq_demand_line_route_prisma_result: PASS
+nc_phase1_pool_rfq_demand_line_route_runtime_smoke: "HEALTH_200 + UNAUTH_4_ROUTES_401 + LOCK_FOR_RFQ_404"
+nc_phase1_pool_rfq_demand_line_route_db_cleanup: "demand-lines=0 (DL-ROUTE-*); pools=0 (DL-POOL-*)"
+nc_phase1_pool_rfq_demand_line_lock_status: BLOCKED
+nc_phase1_pool_rfq_demand_line_lock_prerequisite: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001
+nc_phase1_pool_rfq_demand_line_route_scope_boundary: >-
+  4 routes: GET /demand-lines, POST /demand-lines, PATCH /demand-lines/:lineId, POST /demand-lines/:lineId/cancel.
+  lockDemandLinesForRfq NOT implemented (blocked). No RFQ schema, no supplier quote routes, no allocation,
+  no order, no invoice, no settlement, no escrow, no UI, no MakerChecker changes.
+nc_phase1_pool_rfq_demand_line_next_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001
+nc_phase1_pool_rfq_demand_line_next_candidate_status: HOLD_FOR_PARESH_DECISION
+nc_phase1_pool_rfq_demand_line_verification_report: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-ROUTE-PROD-VERIFY-GOV-CLOSE-001.md
 ```
 
 ---

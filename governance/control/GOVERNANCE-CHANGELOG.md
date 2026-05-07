@@ -2190,3 +2190,64 @@ Posture update:
   Status: HOLD_FOR_PARESH_DECISION
 ```
 
+---
+
+## 2026-05-08 — VERIFIED_COMPLETE_AND_GOV_SYNCED: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-ROUTE-PROD-VERIFY-GOV-CLOSE-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-ROUTE-PROD-VERIFY-GOV-CLOSE-001
+Type:          VERIFICATION + GOVERNANCE_CLOSURE
+Status:        VERIFIED_COMPLETE_AND_GOV_SYNCED
+Date:          2026-05-08
+Commits:       service-foundation 8241991; fixture-stability f5b655e; route-impl 1bc1b09
+
+Closes:
+  TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SERVICE-FOUNDATION-001 (8241991) — IMPLEMENTED + VERIFIED
+  TEXQTIC-NC-PHASE1-POOL-ROUTE-REGRESSION-FIXTURE-STABILITY-001 (f5b655e) — IMPLEMENTED + VERIFIED
+  TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-ROUTE-001              (1bc1b09) — IMPLEMENTED + VERIFIED
+
+Verification results:
+  networkPoolDemandLine.service.unit:        30/30 PASS
+  pools.demandLines.integration (DLT-01..37): 37/37 PASS
+  pools.integration:                          56/56 PASS
+  Combined concurrent (93 tests):             93/93 PASS (P2028 retry working — expected)
+  stateMachine.g020:                          32/32 PASS
+  network-pool.service.integration:          5 skipped (pre-existing DB harness guard)
+  Three-file unit batch total:               64/64 PASS
+  prisma generate:                           PASS
+  tsc --noEmit:                              CLEAN
+
+Runtime smoke:
+  /health:                                   200
+  GET /demand-lines (unauth):                401
+  POST /demand-lines (unauth):               401
+  PATCH /demand-lines/:lineId (unauth):      401
+  POST /demand-lines/:lineId/cancel (unauth): 401
+  POST /demand-lines/:lineId/lock-for-rfq:   404 (not registered — correct)
+  Authenticated runtime smoke:               DEMAND_LINE_RUNTIME_AUTH_SMOKE_COVERED_BY_INTEGRATION_SUITE
+
+DB cleanup:
+  network_pool_demand_lines (DL-ROUTE-* prefix): 0 rows (psql -t verified)
+  network_pools (DL-POOL-* prefix):              0 rows (psql -t verified)
+
+Implementation scope verified:
+  Service methods:    createDemandLine, updateDemandLine, listDemandLines, cancelDemandLine
+  lockDemandLinesForRfq: NOT IMPLEMENTED — DemandLineSnapshotBlockedError defined; method absent
+  Routes:             4 active + lock-for-rfq unregistered (404 confirmed)
+  D-017-A (orgId from dbContext): VERIFIED on all 4 routes
+  metadata_internal_json: NOT exposed in DemandLineRecord or route responses
+  Forbidden body fields (pool_id, owner_org_id): rejected via z.never()
+  Feature gate (ncPoolFeatureGateMiddleware): all 4 routes gated
+  Concurrent fixture stability: Fix A (afterEach ensureGateEnabled) + Fix B (poolRef inside withBypassForSeed)
+
+Scope boundary preserved:
+  Demand-line service + routes (create/list/update/cancel) only.
+  lockDemandLinesForRfq BLOCKED — prerequisite: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001.
+  No RFQ schema, no supplier quote routes, no allocation, no order, no invoice, no settlement, no escrow, no UI.
+  DPP HOLD_FOR_PARESH_DECISION posture: PRESERVED. NOT MODIFIED.
+
+Posture update:
+  NC pool demand-line service + route slice is closed and governance-synced.
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001 — HOLD_FOR_PARESH_DECISION.
+```
+
