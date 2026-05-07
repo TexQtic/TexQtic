@@ -114,12 +114,26 @@ nc_phase1_foundation_status: GOV_CLOSED
 nc_phase1_foundation_closed_date: 2026-05-06
 nc_phase1_foundation_verification_commit: 41a5eceeff25cd50d83a54e4c376da25903c1758
 nc_phase1_foundation_verification_report: governance/TEXQTIC-NC-PHASE1-FOUNDATION-PROD-VERIFY-001.md
-nc_phase1_service_smoke_status: DEFERRED — SERVICE_RUNTIME_SMOKE_BLOCKED_NO_ROUTE_OR_SAFE_HARNESS
+nc_phase1_service_smoke_status: COVERED_BY_UNIT_TESTS — service-level unit tests implemented (b9ab12a + 0b9949b); runtime integration smoke dependent on safe auth harness
+nc_phase1_pool_route_foundation_status: IMPLEMENTED_VERIFIED_GOV_SYNCED
+nc_phase1_pool_route_foundation_route_commit: e3a806492d7981cb695f1663da7780c15cec0c20
+nc_phase1_pool_route_feature_gate_commit: ac3bc28
+nc_phase1_pool_route_gate_verification_commit: 45ae401
+nc_phase1_pool_route_gate_verification_report: docs/TEXQTIC-NC-PHASE1-POOL-FEATURE-FLAG-PROD-VERIFY-001.md
+nc_phase1_pool_route_gate_test_result: 33/33 PASS (FGR-01..FGR-05 + 28 route tests)
+nc_phase1_pool_route_gate_ts_result: CLEAN
+nc_phase1_pool_route_gate_prisma_result: PASS
+nc_phase1_pool_route_gate_db_cleanup: pools=0 memberships=0 flagAbsent overrides=0
+nc_phase1_pool_route_gate_authenticated_smoke: COVERED_BY_INTEGRATION_SUITE (401 probes on all 5 routes PASS; full authenticated smoke dependent on safe auth harness)
+nc_phase1_pool_route_scope_boundary: >-
+  5 routes only: POST /pools, POST /:poolId/open, POST /:poolId/join, GET /:poolId, GET /:poolId/membership.
+  No pool list/discovery, no RFQ, no allocation, no invoice, no settlement, no escrow, no UI, no control-plane admin routes.
 nc_phase1_next_action: HOLD_FOR_PARESH_DECISION
-nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-SERVICE-INTEGRATION-HARNESS-001
+nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-DISCOVERY-DESIGN-001
+nc_phase1_next_action_candidate_2: TEXQTIC-NC-PHASE1-TENANT-FEATURE-OVERRIDE-ADMIN-API-001
 nc_phase1_next_action_note: >-
-  Disposable vitest integration smoke for NetworkPoolService; no routes; no persistent
-  production data. Do not open without explicit Paresh authorization.
+  Pool route gate is IMPLEMENTED_VERIFIED_GOV_SYNCED. Next candidate: pool discovery/list design or
+  tenant feature override admin API. Neither is open. Do not open without explicit Paresh authorization.
 ```
 
 ---

@@ -2029,3 +2029,68 @@ No source files changed. No test files changed. No schema changes. No migration 
 DPP HOLD_FOR_PARESH_DECISION posture: PRESERVED.
 ```
 
+---
+
+## 2026-05-22 — VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-ROUTE-GATE-GOV-SYNC-001 (NC Pool Route Foundation + Feature Gate Governance Sync)
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-ROUTE-GATE-GOV-SYNC-001
+Type:          GOVERNANCE_SYNC (docs/governance only — no source changes)
+Status:        VERIFIED_COMPLETE
+Date:          2026-05-22
+Commits:       governance-only (this sync commit)
+
+Background units synced:
+  TEXQTIC-NC-PHASE1-POOL-ROUTE-DESIGN-001         — commits e0b4533, b9d760f
+  TEXQTIC-NC-PHASE1-POOL-ROUTE-IMPLEMENTATION-001 — commit e3a8064
+  TEXQTIC-NC-PHASE1-POOL-FEATURE-FLAG-GATE-001    — commit ac3bc28
+  TEXQTIC-NC-PHASE1-POOL-FEATURE-FLAG-PROD-VERIFY-001 — commit 45ae401
+
+Scope:
+  governance/control/NEXT-ACTION.md           — NC pool route/gate keys appended; nc_phase1_next_action_candidate updated
+  governance/control/OPEN-SET.md              — NC pool route/gate operating note added
+  governance/control/GOVERNANCE-CHANGELOG.md  — this entry
+
+Implementation Summary:
+  5 tenant routes implemented and gated:
+    POST   /api/tenant/network-commerce/pools
+    POST   /api/tenant/network-commerce/pools/:poolId/open
+    POST   /api/tenant/network-commerce/pools/:poolId/join
+    GET    /api/tenant/network-commerce/pools/:poolId
+    GET    /api/tenant/network-commerce/pools/:poolId/membership
+  Feature flag: nc.procurement_pools.enabled
+  Gate: two-layer (global FeatureFlag + per-org TenantFeatureOverride); fail-closed
+    → 503 FEATURE_DISABLED on missing/disabled/DB error
+
+Verification Evidence:
+  Pool route integration tests:    33/33 PASS (FGR-01..FGR-05 + 28 route tests)
+  network-pool.service.unit:       15/15 PASS
+  network-invoice.service.unit:    16/16 PASS
+  invoice.service.unit:            18/18 PASS
+  stateMachine.g020:               32/32 PASS
+  Prisma generate:                 PASS
+  TypeScript tsc --noEmit:         CLEAN (zero errors)
+  DB cleanup:                      pools=0 memberships=0 flagAbsent overrides=0
+  Authenticated runtime smoke:     COVERED_BY_INTEGRATION_SUITE
+                                   (401 probes on all 5 routes PASS; full authenticated smoke
+                                    dependent on safe auth harness — not run)
+
+Scope Boundaries:
+  No pool list/discovery endpoint. No RFQ. No supplier quote flow. No allocation.
+  No order placement. No invoice generation. No settlement. No escrow. No UI.
+  No control-plane/admin pool routes.
+
+DPP Posture:
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION — UNCHANGED (DPP stream)
+  dpp_launch_authorization: HOLD_FOR_PARESH_DECISION — UNCHANGED
+
+NC Posture After:
+  nc_phase1_pool_route_foundation_status: IMPLEMENTED_VERIFIED_GOV_SYNCED
+  nc_phase1_next_action: HOLD_FOR_PARESH_DECISION
+  nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-DISCOVERY-DESIGN-001
+  nc_phase1_next_action_candidate_2: TEXQTIC-NC-PHASE1-TENANT-FEATURE-OVERRIDE-ADMIN-API-001
+
+No source files changed. No test files changed. No schema changes. No migration changes.
+DPP HOLD_FOR_PARESH_DECISION posture: PRESERVED.
+```
+

@@ -1040,7 +1040,53 @@ Preserved boundaries — NOT implemented in Phase 1:
 Adjacent follow-up candidate (NOT opened; requires explicit Paresh authorization):
 - TEXQTIC-NC-PHASE1-POOL-SERVICE-INTEGRATION-HARNESS-001
   Scope: disposable vitest integration smoke for NetworkPoolService; no routes; no persistent production data
+  Status: SUPERSEDED — NetworkPoolService unit tests implemented (b9ab12a + 0b9949b); pool routes + feature gate subsequently built and verified.
 
 Next NC action: HOLD_FOR_PARESH_DECISION
 DPP active_delivery_unit: HOLD_FOR_AUTHORIZATION — PRESERVED, NOT MODIFIED.
+
+---
+
+## 2026-05-22 — TEXQTIC-NC-PHASE1-POOL-ROUTE-GATE IMPLEMENTED_VERIFIED_GOV_SYNCED
+
+**TEXQTIC-NC-PHASE1-POOL-ROUTE-GATE-001** is **IMPLEMENTED_VERIFIED_GOV_SYNCED** (2026-05-22).
+NC Phase 1 Pool route foundation + two-layer feature flag gate: COMPLETE.
+
+5 tenant routes implemented and gated:
+- `POST /api/tenant/network-commerce/pools` — create pool
+- `POST /api/tenant/network-commerce/pools/:poolId/open` — open pool
+- `POST /api/tenant/network-commerce/pools/:poolId/join` — join pool
+- `GET /api/tenant/network-commerce/pools/:poolId` — get pool
+- `GET /api/tenant/network-commerce/pools/:poolId/membership` — get membership
+
+Feature flag key: `nc.procurement_pools.enabled`
+Gate: two-layer (global `FeatureFlag` + per-org `TenantFeatureOverride`); fail-closed → 503 FEATURE_DISABLED on missing/disabled/DB error.
+
+| Packet | Commit | Scope |
+|---|---|---|
+| TEXQTIC-NC-PHASE1-POOL-ROUTE-DESIGN-001 | `e0b4533` + `b9d760f` | Design artifact + hardenining |
+| TEXQTIC-NC-PHASE1-POOL-ROUTE-IMPLEMENTATION-001 | `e3a8064` | 5 pool routes registered + 28 integration tests |
+| TEXQTIC-NC-PHASE1-POOL-FEATURE-FLAG-GATE-001 | `ac3bc28` | Two-layer feature gate + 5 gate tests |
+| TEXQTIC-NC-PHASE1-POOL-FEATURE-FLAG-PROD-VERIFY-001 | `45ae401` | Verification report (docs-only) |
+
+Verification evidence:
+- Pool route integration tests: 33/33 PASS (FGR-01..FGR-05 gate tests + 28 route tests)
+- network-pool.service.unit: 15/15 PASS
+- network-invoice.service.unit: 16/16 PASS
+- invoice.service.unit: 18/18 PASS
+- stateMachine.g020: 32/32 PASS
+- Prisma generate: PASS
+- TypeScript tsc --noEmit: CLEAN (zero errors)
+- DB cleanup: pools=0 memberships=0 flagAbsent overrides=0
+- Authenticated runtime smoke: COVERED_BY_INTEGRATION_SUITE (401 probes on all 5 routes PASS; full authenticated smoke dependent on safe auth harness — not run)
+
+Scope boundary preserved:
+- No pool list/discovery endpoint. No RFQ. No supplier quote flow. No allocation.
+- No order placement. No invoice generation. No settlement. No escrow. No UI.
+- No control-plane/admin pool routes.
+
+DPP posture: `active_delivery_unit: HOLD_FOR_AUTHORIZATION` — UNCHANGED (DPP stream, separate).
+
+Next NC candidate: TEXQTIC-NC-PHASE1-POOL-DISCOVERY-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
+Do not open without explicit Paresh authorization.
 
