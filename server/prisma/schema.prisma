@@ -1104,6 +1104,7 @@ model organizations {
   network_lifecycle_logs                                                                   NetworkLifecycleLog[]
   network_pools                                                                            NetworkPool[]
   network_pool_memberships                                                                 NetworkPoolMembership[]
+  network_pool_demand_lines                                                                NetworkPoolDemandLine[] @relation("NetworkPoolDemandLineOwnerOrg")
   trade_lifecycle_logs                                                                     TradeLifecycleLog[]
   tradesBuyer                                                                              Trade[]                         @relation("TradeBuyer")
   tradesSeller                                                                             Trade[]                         @relation("TradeSeller")
@@ -1850,6 +1851,7 @@ model NetworkPool {
   organizations    organizations         @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pools_org_id_fk")
   lifecycleState   LifecycleState        @relation(fields: [lifecycleStateId], references: [id], onUpdate: NoAction, map: "network_pools_lifecycle_state_id_fk")
   memberships      NetworkPoolMembership[]
+  demandLines      NetworkPoolDemandLine[]
 
   @@unique([orgId, poolRef], map: "network_pools_org_pool_ref_unique")
   @@index([orgId, createdAt(sort: Desc)], map: "idx_network_pools_org_created")
@@ -1886,14 +1888,102 @@ model NetworkPoolMembership {
   withdrawnAt   DateTime?     @map("withdrawn_at") @db.Timestamptz(6)
   createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime      @default(now()) @map("updated_at") @db.Timestamptz(6)
-  pool          NetworkPool   @relation(fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_memberships_pool_id_fk")
-  organizations organizations @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_memberships_org_id_fk")
+  pool          NetworkPool          @relation(fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_memberships_pool_id_fk")
+  organizations organizations        @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_memberships_org_id_fk")
+  demandLines   NetworkPoolDemandLine[]
 
   @@unique([poolId, orgId], map: "network_pool_memberships_pool_org_unique")
   @@index([poolId, status], map: "idx_network_pool_memberships_pool_status")
   @@index([orgId, createdAt(sort: Desc)], map: "idx_network_pool_memberships_org_created")
   @@index([status], map: "idx_network_pool_memberships_status")
   @@map("network_pool_memberships")
+}
+
+/// TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SCHEMA-FOUNDATION-001: Demand line for a Collective Procurement Pool.
+/// Implements the canonical demand-line-first schema contract defined in
+/// TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SOURCE-DESIGN-001 (commit 961a2c1) and authorized by
+/// TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SOURCE-DECISION-RECORD-001 (commit 8878305).
+/// ownerOrgId → organizations.id is the canonical RLS anchor (tenant isolation boundary).
+/// poolId → network_pools.id is the owning pool reference (hard FK).
+/// sourceMembershipId → network_pool_memberships.id is nullable lineage (MEMBERSHIP_DERIVED/OWNER_NORMALIZED).
+/// supersedesLineId → self: self-referential revision chain (NULL for original, non-null for revisions).
+/// Snapshot/immutability deferred to TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001.
+/// No service layer, routes, or RFQ tables in this packet.
+model NetworkPoolDemandLine {
+  id                          String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Canonical RLS anchor. Live FK → organizations.id.
+  ownerOrgId                  String                 @map("owner_org_id") @db.Uuid
+  /// FK to network_pools(id). Demand lines belong to one pool.
+  poolId                      String                 @map("pool_id") @db.Uuid
+  /// Stable external line reference per pool. Non-empty enforced by DB CHECK.
+  lineRef                     String                 @map("line_ref") @db.VarChar(100)
+  /// Top-level commodity category (e.g., COTTON_YARN, GREY_FABRIC). Non-empty enforced by DB CHECK.
+  commodityCategory           String                 @map("commodity_category") @db.VarChar(100)
+  /// Optional product sub-category (e.g., RING_SPUN, OPEN_END).
+  productCategory             String?                @map("product_category") @db.VarChar(100)
+  /// Free-form human-readable product specification summary.
+  productSpecSummary          String?                @map("product_spec_summary")
+  /// Quantity demanded for this line. DB CHECK: qty > 0.
+  qty                         Decimal                @map("qty") @db.Decimal(18, 6)
+  /// Unit of measure (e.g., KG, MT, METERS). Non-empty enforced by DB CHECK.
+  qtyUnit                     String                 @map("qty_unit") @db.VarChar(50)
+  /// Quality requirements JSONB (grade, count, twist, etc.). Null at DRAFT stage.
+  qualityRequirementsJson     Json?                  @map("quality_requirements_json")
+  /// Certification requirements JSONB (BCI, GOTS, OEKO-TEX, etc.). Null at DRAFT stage.
+  certificationRequirementsJson Json?                @map("certification_requirements_json")
+  /// Packaging requirements JSONB (bale type, labeling, etc.). Null at DRAFT stage.
+  packagingRequirementsJson   Json?                  @map("packaging_requirements_json")
+  /// Delivery destination (city/port/region). Null at DRAFT stage.
+  deliveryLocation            String?                @map("delivery_location") @db.VarChar(500)
+  /// Earliest acceptable delivery date. Null at DRAFT stage.
+  deliveryWindowStart         DateTime?              @map("delivery_window_start") @db.Timestamptz(6)
+  /// Latest acceptable delivery date. DB CHECK: end >= start when both set.
+  deliveryWindowEnd           DateTime?              @map("delivery_window_end") @db.Timestamptz(6)
+  /// Quantity tolerance percentage (0–100). Null means no tolerance configured.
+  tolerancePct                Decimal?               @map("tolerance_pct") @db.Decimal(5, 2)
+  /// Optional priority rank within pool (lower = higher priority). Null = unranked.
+  priority                    Int?                   @map("priority")
+  /// Demand line lifecycle status. Domain enforced by DB CHECK.
+  /// Values: DRAFT | ACTIVE | LOCKED_FOR_RFQ | SUPERSEDED | CANCELLED
+  status                      String                 @default("DRAFT") @map("status") @db.VarChar(50)
+  /// Demand source type. Enforced by DB CHECK.
+  /// OWNER_DIRECT | MEMBERSHIP_DERIVED | OWNER_NORMALIZED
+  sourceType                  String                 @map("source_type") @db.VarChar(50)
+  /// Nullable FK to the membership that triggered this demand line.
+  /// NULL when sourceType = OWNER_DIRECT.
+  sourceMembershipId          String?                @map("source_membership_id") @db.Uuid
+  /// True when this line was produced by normalizing a raw member input.
+  normalizedFromMemberInput   Boolean                @default(false) @map("normalized_from_member_input")
+  /// Revision number within (pool_id, line_ref) sequence. DB CHECK: >= 1.
+  revisionNo                  Int                    @default(1) @map("revision_no")
+  /// Nullable self-FK: points to the prior line version this supersedes.
+  /// NULL for revision_no = 1 (original line).
+  supersedesLineId            String?                @map("supersedes_line_id") @db.Uuid
+  /// Internal operational metadata. Never exposed to suppliers.
+  metadataInternalJson        Json?                  @map("metadata_internal_json")
+  createdAt                   DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                   DateTime               @default(now()) @map("updated_at") @db.Timestamptz(6)
+  /// Set when status transitions to LOCKED_FOR_RFQ. DB CHECK: NOT NULL when LOCKED_FOR_RFQ.
+  lockedAt                    DateTime?              @map("locked_at") @db.Timestamptz(6)
+
+  /// Relations
+  ownerOrg          organizations          @relation("NetworkPoolDemandLineOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_demand_lines_owner_org_id_fk")
+  pool              NetworkPool            @relation(fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_demand_lines_pool_id_fk")
+  sourceMembership  NetworkPoolMembership? @relation(fields: [sourceMembershipId], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "network_pool_demand_lines_source_membership_id_fk")
+  supersedesLine    NetworkPoolDemandLine? @relation("DemandLineRevision", fields: [supersedesLineId], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "network_pool_demand_lines_supersedes_line_id_fk")
+  supersededByLines NetworkPoolDemandLine[] @relation("DemandLineRevision")
+
+  @@unique([poolId, lineRef, revisionNo], map: "network_pool_demand_lines_pool_line_ref_revision_unique")
+  @@index([poolId], map: "idx_nc_pool_demand_lines_pool_id")
+  @@index([ownerOrgId], map: "idx_nc_pool_demand_lines_owner_org_id")
+  @@index([status], map: "idx_nc_pool_demand_lines_status")
+  @@index([commodityCategory], map: "idx_nc_pool_demand_lines_commodity_category")
+  @@index([qtyUnit], map: "idx_nc_pool_demand_lines_qty_unit")
+  @@index([sourceMembershipId], map: "idx_nc_pool_demand_lines_source_membership_id")
+  @@index([supersedesLineId], map: "idx_nc_pool_demand_lines_supersedes_line_id")
+  @@index([poolId, createdAt(sort: Desc)], map: "idx_nc_pool_demand_lines_pool_created")
+  @@index([updatedAt(sort: Desc)], map: "idx_nc_pool_demand_lines_updated_at")
+  @@map("network_pool_demand_lines")
 }
 
 enum TenantPlan {
