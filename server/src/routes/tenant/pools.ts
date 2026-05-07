@@ -52,6 +52,44 @@ const joinPoolBodySchema = z
   })
   .strict();
 
+const listPoolsQuerySchema = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+    offset: z.coerce.number().int().min(0).optional().default(0),
+    commodity_category: z.string().trim().min(1).max(100).optional(),
+    lifecycle_state_key: z.string().trim().min(1).max(100).optional(),
+    qty_unit: z.string().trim().min(1).max(50).optional(),
+    open_from: z.string().datetime({ offset: true }).optional(),
+    open_to: z.string().datetime({ offset: true }).optional(),
+    close_from: z.string().datetime({ offset: true }).optional(),
+    close_to: z.string().datetime({ offset: true }).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.open_from && value.open_to) {
+      const fromTs = new Date(value.open_from).getTime();
+      const toTs = new Date(value.open_to).getTime();
+      if (fromTs > toTs) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'open_from must be less than or equal to open_to',
+          path: ['open_from'],
+        });
+      }
+    }
+
+    if (value.close_from && value.close_to) {
+      const fromTs = new Date(value.close_from).getTime();
+      const toTs = new Date(value.close_to).getTime();
+      if (fromTs > toTs) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'close_from must be less than or equal to close_to',
+          path: ['close_from'],
+        });
+      }
+    }
+  });
+
 type BodyParseResult<T> = z.SafeParseReturnType<unknown, T>;
 
 function handleBodyValidation<T>(
@@ -67,6 +105,17 @@ function handleBodyValidation<T>(
   }
 
   const firstMessage = parsed.error.errors[0]?.message ?? 'Invalid input';
+  sendError(reply, 'INVALID_INPUT', firstMessage, 400, parsed.error.errors);
+  return false;
+}
+
+function handleQueryValidation<T>(
+  reply: Parameters<typeof sendError>[0],
+  parsed: BodyParseResult<T>,
+): parsed is z.SafeParseSuccess<T> {
+  if (parsed.success) return true;
+
+  const firstMessage = parsed.error.errors[0]?.message ?? 'Invalid query parameters';
   sendError(reply, 'INVALID_INPUT', firstMessage, 400, parsed.error.errors);
   return false;
 }
@@ -232,6 +281,66 @@ const poolRoutes: FastifyPluginAsync = async fastify => {
         if (mapPoolServiceError(reply, err)) return;
         request.log.error(err, 'network-commerce.pools.join');
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to join pool', 500);
+      }
+    },
+  );
+
+  fastify.get(
+    '/',
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: [ncPoolFeatureGateMiddleware],
+    },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+
+      const queryResult = listPoolsQuerySchema.safeParse(request.query);
+      if (!handleQueryValidation(reply, queryResult)) return;
+
+      try {
+        const stateMachine = new StateMachineService(prisma, null, null);
+        const svc = new NetworkPoolService(prisma, stateMachine);
+        const result = await svc.listOwnedPools(dbContext.orgId, queryResult.data);
+
+        return sendSuccess(reply, {
+          data: result.items,
+          pagination: result.pagination,
+        });
+      } catch (err) {
+        if (mapPoolServiceError(reply, err)) return;
+        request.log.error(err, 'network-commerce.pools.list-owned');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to list owned pools', 500);
+      }
+    },
+  );
+
+  fastify.get(
+    '/joined',
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: [ncPoolFeatureGateMiddleware],
+    },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+
+      const queryResult = listPoolsQuerySchema.safeParse(request.query);
+      if (!handleQueryValidation(reply, queryResult)) return;
+
+      try {
+        const stateMachine = new StateMachineService(prisma, null, null);
+        const svc = new NetworkPoolService(prisma, stateMachine);
+        const result = await svc.listJoinedPools(dbContext.orgId, queryResult.data);
+
+        return sendSuccess(reply, {
+          data: result.items,
+          pagination: result.pagination,
+        });
+      } catch (err) {
+        if (mapPoolServiceError(reply, err)) return;
+        request.log.error(err, 'network-commerce.pools.list-joined');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to list joined pools', 500);
       }
     },
   );

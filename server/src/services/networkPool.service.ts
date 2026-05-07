@@ -125,6 +125,18 @@ export interface JoinNetworkPoolInput {
   qty_unit: string;
 }
 
+export interface NetworkPoolListQuery {
+  limit?: number;
+  offset?: number;
+  commodity_category?: string;
+  lifecycle_state_key?: string;
+  qty_unit?: string;
+  open_from?: string;
+  open_to?: string;
+  close_from?: string;
+  close_to?: string;
+}
+
 // ─── Record Types ─────────────────────────────────────────────────────────────
 
 export interface NetworkPoolRecord {
@@ -161,6 +173,57 @@ export interface NetworkPoolMembershipRecord {
   withdrawn_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface OwnedPoolListItem {
+  id: string;
+  pool_ref: string;
+  commodity_category: string;
+  target_qty: string;
+  qty_unit: string;
+  lifecycle_state_id: string;
+  lifecycle_state_key: string | null;
+  open_at: string | null;
+  close_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface JoinedPoolListItem {
+  id: string;
+  pool_ref: string;
+  commodity_category: string;
+  qty_unit: string;
+  lifecycle_state_id: string;
+  lifecycle_state_key: string | null;
+  open_at: string | null;
+  close_at: string | null;
+  created_at: string;
+  updated_at: string;
+  membership_id: string;
+  membership_status: string;
+  declared_qty: string;
+  membership_qty_unit: string;
+  joined_at: string;
+  approved_at: string | null;
+  withdrawn_at: string | null;
+}
+
+export interface NetworkPoolListPagination {
+  limit: number;
+  offset: number;
+  count: number;
+  total: number;
+}
+
+export interface OwnedPoolListResult {
+  items: OwnedPoolListItem[];
+  pagination: NetworkPoolListPagination;
+}
+
+export interface JoinedPoolListResult {
+  items: JoinedPoolListItem[];
+  pagination: NetworkPoolListPagination;
 }
 
 // ─── Service ─────────────────────────────────────────────────────────────────
@@ -214,6 +277,53 @@ export class NetworkPoolService {
       withdrawn_at:   row['withdrawnAt'] ? (row['withdrawnAt'] as Date).toISOString() : null,
       created_at:     (row['createdAt'] as Date).toISOString(),
       updated_at:     (row['updatedAt'] as Date).toISOString(),
+    };
+  }
+
+  private normalizeListQuery(query: NetworkPoolListQuery): Required<
+    Pick<NetworkPoolListQuery, 'limit' | 'offset'>
+  > & Omit<NetworkPoolListQuery, 'limit' | 'offset'> {
+    const limit = query.limit ?? 20;
+    const offset = query.offset ?? 0;
+
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      throw new NetworkPoolInvalidInputError('limit must be an integer between 1 and 100');
+    }
+    if (!Number.isInteger(offset) || offset < 0) {
+      throw new NetworkPoolInvalidInputError('offset must be an integer greater than or equal to 0');
+    }
+
+    const openFromTs = query.open_from ? new Date(query.open_from).getTime() : null;
+    const openToTs = query.open_to ? new Date(query.open_to).getTime() : null;
+    const closeFromTs = query.close_from ? new Date(query.close_from).getTime() : null;
+    const closeToTs = query.close_to ? new Date(query.close_to).getTime() : null;
+
+    if (query.open_from && !Number.isFinite(openFromTs)) {
+      throw new NetworkPoolInvalidInputError('open_from is not a valid date');
+    }
+    if (query.open_to && !Number.isFinite(openToTs)) {
+      throw new NetworkPoolInvalidInputError('open_to is not a valid date');
+    }
+    if (query.close_from && !Number.isFinite(closeFromTs)) {
+      throw new NetworkPoolInvalidInputError('close_from is not a valid date');
+    }
+    if (query.close_to && !Number.isFinite(closeToTs)) {
+      throw new NetworkPoolInvalidInputError('close_to is not a valid date');
+    }
+    if (openFromTs != null && openToTs != null && openFromTs > openToTs) {
+      throw new NetworkPoolInvalidInputError('open_from must be less than or equal to open_to');
+    }
+    if (closeFromTs != null && closeToTs != null && closeFromTs > closeToTs) {
+      throw new NetworkPoolInvalidInputError('close_from must be less than or equal to close_to');
+    }
+
+    return {
+      ...query,
+      limit,
+      offset,
+      commodity_category: query.commodity_category?.trim() || undefined,
+      lifecycle_state_key: query.lifecycle_state_key?.trim() || undefined,
+      qty_unit: query.qty_unit?.trim() || undefined,
     };
   }
 
@@ -488,5 +598,185 @@ export class NetworkPoolService {
     });
     if (!row) return null;
     return this.toMembershipRecord(row);
+  }
+
+  async listOwnedPools(orgId: string, query: NetworkPoolListQuery): Promise<OwnedPoolListResult> {
+    const normalized = this.normalizeListQuery(query);
+
+    const where: Prisma.NetworkPoolWhereInput = {
+      orgId,
+      ...(normalized.commodity_category
+        ? { commodityCategory: normalized.commodity_category }
+        : {}),
+      ...(normalized.lifecycle_state_key
+        ? { lifecycleState: { stateKey: normalized.lifecycle_state_key } }
+        : {}),
+      ...(normalized.qty_unit ? { qtyUnit: normalized.qty_unit } : {}),
+      ...(normalized.open_from || normalized.open_to
+        ? {
+            openAt: {
+              ...(normalized.open_from ? { gte: new Date(normalized.open_from) } : {}),
+              ...(normalized.open_to ? { lte: new Date(normalized.open_to) } : {}),
+            },
+          }
+        : {}),
+      ...(normalized.close_from || normalized.close_to
+        ? {
+            closeAt: {
+              ...(normalized.close_from ? { gte: new Date(normalized.close_from) } : {}),
+              ...(normalized.close_to ? { lte: new Date(normalized.close_to) } : {}),
+            },
+          }
+        : {}),
+    };
+
+    const [rows, total] = await Promise.all([
+      this.db.networkPool.findMany({
+        where,
+        select: {
+          id: true,
+          poolRef: true,
+          commodityCategory: true,
+          targetQty: true,
+          qtyUnit: true,
+          lifecycleStateId: true,
+          openAt: true,
+          closeAt: true,
+          createdAt: true,
+          updatedAt: true,
+          lifecycleState: { select: { stateKey: true } },
+        },
+        orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+        take: normalized.limit,
+        skip: normalized.offset,
+      }),
+      this.db.networkPool.count({ where }),
+    ]);
+
+    const items: OwnedPoolListItem[] = rows.map(row => ({
+      id: row.id,
+      pool_ref: row.poolRef,
+      commodity_category: row.commodityCategory,
+      target_qty: String(row.targetQty),
+      qty_unit: row.qtyUnit,
+      lifecycle_state_id: row.lifecycleStateId,
+      lifecycle_state_key: row.lifecycleState?.stateKey ?? null,
+      open_at: row.openAt ? row.openAt.toISOString() : null,
+      close_at: row.closeAt ? row.closeAt.toISOString() : null,
+      created_at: row.createdAt.toISOString(),
+      updated_at: row.updatedAt.toISOString(),
+    }));
+
+    return {
+      items,
+      pagination: {
+        limit: normalized.limit,
+        offset: normalized.offset,
+        count: items.length,
+        total,
+      },
+    };
+  }
+
+  async listJoinedPools(memberOrgId: string, query: NetworkPoolListQuery): Promise<JoinedPoolListResult> {
+    const normalized = this.normalizeListQuery(query);
+
+    const where: Prisma.NetworkPoolWhereInput = {
+      memberships: { some: { orgId: memberOrgId } },
+      ...(normalized.commodity_category
+        ? { commodityCategory: normalized.commodity_category }
+        : {}),
+      ...(normalized.lifecycle_state_key
+        ? { lifecycleState: { stateKey: normalized.lifecycle_state_key } }
+        : {}),
+      ...(normalized.qty_unit ? { qtyUnit: normalized.qty_unit } : {}),
+      ...(normalized.open_from || normalized.open_to
+        ? {
+            openAt: {
+              ...(normalized.open_from ? { gte: new Date(normalized.open_from) } : {}),
+              ...(normalized.open_to ? { lte: new Date(normalized.open_to) } : {}),
+            },
+          }
+        : {}),
+      ...(normalized.close_from || normalized.close_to
+        ? {
+            closeAt: {
+              ...(normalized.close_from ? { gte: new Date(normalized.close_from) } : {}),
+              ...(normalized.close_to ? { lte: new Date(normalized.close_to) } : {}),
+            },
+          }
+        : {}),
+    };
+
+    const [rows, total] = await Promise.all([
+      this.db.networkPool.findMany({
+        where,
+        select: {
+          id: true,
+          poolRef: true,
+          commodityCategory: true,
+          qtyUnit: true,
+          lifecycleStateId: true,
+          openAt: true,
+          closeAt: true,
+          createdAt: true,
+          updatedAt: true,
+          lifecycleState: { select: { stateKey: true } },
+          memberships: {
+            where: { orgId: memberOrgId },
+            select: {
+              id: true,
+              status: true,
+              declaredQty: true,
+              qtyUnit: true,
+              joinedAt: true,
+              approvedAt: true,
+              withdrawnAt: true,
+            },
+            take: 1,
+          },
+        },
+        orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+        take: normalized.limit,
+        skip: normalized.offset,
+      }),
+      this.db.networkPool.count({ where }),
+    ]);
+
+    const items: JoinedPoolListItem[] = [];
+    for (const row of rows) {
+      const membership = row.memberships[0];
+      if (!membership) continue;
+
+      items.push({
+        id: row.id,
+        pool_ref: row.poolRef,
+        commodity_category: row.commodityCategory,
+        qty_unit: row.qtyUnit,
+        lifecycle_state_id: row.lifecycleStateId,
+        lifecycle_state_key: row.lifecycleState?.stateKey ?? null,
+        open_at: row.openAt ? row.openAt.toISOString() : null,
+        close_at: row.closeAt ? row.closeAt.toISOString() : null,
+        created_at: row.createdAt.toISOString(),
+        updated_at: row.updatedAt.toISOString(),
+        membership_id: membership.id,
+        membership_status: membership.status,
+        declared_qty: String(membership.declaredQty),
+        membership_qty_unit: membership.qtyUnit,
+        joined_at: membership.joinedAt.toISOString(),
+        approved_at: membership.approvedAt ? membership.approvedAt.toISOString() : null,
+        withdrawn_at: membership.withdrawnAt ? membership.withdrawnAt.toISOString() : null,
+      });
+    }
+
+    return {
+      items,
+      pagination: {
+        limit: normalized.limit,
+        offset: normalized.offset,
+        count: items.length,
+        total,
+      },
+    };
   }
 }

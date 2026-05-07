@@ -120,7 +120,17 @@ describe.skipIf(!hasDb)('Network Commerce Pool Routes Integration', () => {
     });
   }
 
-  async function createPoolAsOwner(overrides?: Record<string, unknown>) {
+  async function ensurePoolGateEnabled(): Promise<void> {
+    await setGlobalPoolFlag(true);
+    await enablePoolGateForTestTenants();
+  }
+
+  async function createPoolAs(
+    orgId: string,
+    userId: string,
+    userRole: string,
+    overrides?: Record<string, unknown>,
+  ) {
     const payload = {
       pool_ref: makePoolRef(randomUUID().slice(0, 8)),
       commodity_category: 'COTTON_YARN',
@@ -132,11 +142,19 @@ describe.skipIf(!hasDb)('Network Commerce Pool Routes Integration', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/tenant/network-commerce/pools',
-      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      headers: authHeaders(orgId, userId, userRole),
       payload,
     });
 
     return { res, payload };
+  }
+
+  async function createPoolAsOwner(overrides?: Record<string, unknown>) {
+    return createPoolAs(ownerOrgId, ownerUserId, 'OWNER', overrides);
+  }
+
+  async function createPoolAsOtherOrg(overrides?: Record<string, unknown>) {
+    return createPoolAs(otherOrgId, otherUserId, 'OWNER', overrides);
   }
 
   async function openPoolAsOwner(poolId: string, reason: string = 'open for route integration') {
@@ -714,6 +732,8 @@ describe.skipIf(!hasDb)('Network Commerce Pool Routes Integration', () => {
   });
 
   it('MRP-04 pool missing -> 404 route-consistent not-found', async () => {
+    await ensurePoolGateEnabled();
+
     const read = await app.inject({
       method: 'GET',
       url: `/api/tenant/network-commerce/pools/${randomUUID()}/membership`,
@@ -732,5 +752,567 @@ describe.skipIf(!hasDb)('Network Commerce Pool Routes Integration', () => {
     });
 
     expect(read.statusCode).toBe(401);
+  });
+
+  // Discovery owner/joined list (DLR-01..DLR-23)
+
+  it('DLR-01 owner list returns only caller-owned pools', async () => {
+    await ensurePoolGateEnabled();
+
+    const owned = await createPoolAsOwner({ commodity_category: 'COTTON_YARN' });
+    expect(owned.res.statusCode).toBe(201);
+    const ownedId = (owned.res.json() as any).data.id as string;
+    createdPoolIds.add(ownedId);
+
+    const other = await createPoolAsOtherOrg({ commodity_category: 'COTTON_YARN' });
+    expect(other.res.statusCode).toBe(201);
+    const otherId = (other.res.json() as any).data.id as string;
+    createdPoolIds.add(otherId);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools',
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const items = ((list.json() as any).data.data ?? []) as Array<any>;
+    expect(items.some(i => i.id === ownedId)).toBe(true);
+    expect(items.some(i => i.id === otherId)).toBe(false);
+  });
+
+  it('DLR-02 owner list excludes pools owned by other orgs', async () => {
+    await ensurePoolGateEnabled();
+
+    const other = await createPoolAsOtherOrg({ commodity_category: 'WOOL' });
+    expect(other.res.statusCode).toBe(201);
+    const otherId = (other.res.json() as any).data.id as string;
+    createdPoolIds.add(otherId);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools',
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const items = ((list.json() as any).data.data ?? []) as Array<any>;
+    expect(items.find(i => i.id === otherId)).toBeUndefined();
+  });
+
+  it('DLR-03 owner list includes target_qty', async () => {
+    const created = await createPoolAsOwner({ target_qty: 4321.123456 });
+    expect(created.res.statusCode).toBe(201);
+    const poolId = (created.res.json() as any).data.id as string;
+    createdPoolIds.add(poolId);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools',
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const item = (((list.json() as any).data.data ?? []) as Array<any>).find(i => i.id === poolId);
+    expect(item).toBeTruthy();
+    expect(item.target_qty).toBeTruthy();
+  });
+
+  it('DLR-04 owner list does not expose metadata/member_count/aggregate demand', async () => {
+    await ensurePoolGateEnabled();
+
+    const created = await createPoolAsOwner({ metadata: { confidential: true } });
+    expect(created.res.statusCode).toBe(201);
+    const poolId = (created.res.json() as any).data.id as string;
+    createdPoolIds.add(poolId);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools',
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const item = (((list.json() as any).data.data ?? []) as Array<any>).find(i => i.id === poolId);
+    expect(item).toBeTruthy();
+    expect(item.metadata).toBeUndefined();
+    expect(item.member_count).toBeUndefined();
+    expect(item.aggregate_declared_qty).toBeUndefined();
+  });
+
+  it('DLR-05 owner list pagination limit/offset works', async () => {
+    for (let i = 0; i < 3; i += 1) {
+      const created = await createPoolAsOwner({ pool_ref: makePoolRef(`OWN-PAGE-${i}-${randomUUID().slice(0, 4)}`) });
+      expect(created.res.statusCode).toBe(201);
+      createdPoolIds.add((created.res.json() as any).data.id as string);
+    }
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools?limit=1&offset=1',
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const payload = (list.json() as any).data;
+    expect(payload.data.length).toBeLessThanOrEqual(1);
+    expect(payload.pagination.limit).toBe(1);
+    expect(payload.pagination.offset).toBe(1);
+  });
+
+  it('DLR-06 owner list filters by commodity_category', async () => {
+    const cotton = await createPoolAsOwner({ commodity_category: 'COTTON_YARN' });
+    expect(cotton.res.statusCode).toBe(201);
+    createdPoolIds.add((cotton.res.json() as any).data.id as string);
+
+    const wool = await createPoolAsOwner({ commodity_category: 'WOOL_YARN' });
+    expect(wool.res.statusCode).toBe(201);
+    createdPoolIds.add((wool.res.json() as any).data.id as string);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools?commodity_category=WOOL_YARN',
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const items = ((list.json() as any).data.data ?? []) as Array<any>;
+    expect(items.length).toBeGreaterThanOrEqual(1);
+    expect(items.every(i => i.commodity_category === 'WOOL_YARN')).toBe(true);
+  });
+
+  it('DLR-07 owner list filters by lifecycle_state_key', async () => {
+    const opened = await createPoolAsOwner();
+    expect(opened.res.statusCode).toBe(201);
+    const openedId = (opened.res.json() as any).data.id as string;
+    createdPoolIds.add(openedId);
+    const openRes = await openPoolAsOwner(openedId, 'open for owner list filter');
+    expect(openRes.statusCode).toBe(200);
+
+    const draft = await createPoolAsOwner();
+    expect(draft.res.statusCode).toBe(201);
+    createdPoolIds.add((draft.res.json() as any).data.id as string);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools?lifecycle_state_key=OPEN',
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const items = ((list.json() as any).data.data ?? []) as Array<any>;
+    expect(items.length).toBeGreaterThanOrEqual(1);
+    expect(items.every(i => i.lifecycle_state_key === 'OPEN')).toBe(true);
+  });
+
+  it('DLR-08 owner list filters by qty_unit', async () => {
+    const kg = await createPoolAsOwner({ qty_unit: 'KG' });
+    expect(kg.res.statusCode).toBe(201);
+    createdPoolIds.add((kg.res.json() as any).data.id as string);
+
+    const mt = await createPoolAsOwner({ qty_unit: 'MT' });
+    expect(mt.res.statusCode).toBe(201);
+    createdPoolIds.add((mt.res.json() as any).data.id as string);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools?qty_unit=MT',
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const items = ((list.json() as any).data.data ?? []) as Array<any>;
+    expect(items.length).toBeGreaterThanOrEqual(1);
+    expect(items.every(i => i.qty_unit === 'MT')).toBe(true);
+  });
+
+  it('DLR-09 owner list invalid query returns 400 INVALID_INPUT', async () => {
+    const invalidLimit = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools?limit=0',
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+    expect(invalidLimit.statusCode).toBe(400);
+    expect((invalidLimit.json() as any).error.code).toBe('INVALID_INPUT');
+
+    const invalidRange = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools?open_from=2026-01-02T00:00:00.000Z&open_to=2026-01-01T00:00:00.000Z',
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+    expect(invalidRange.statusCode).toBe(400);
+    expect((invalidRange.json() as any).error.code).toBe('INVALID_INPUT');
+  });
+
+  it('DLR-10 owner list blocked by disabled/missing feature flag -> 503 FEATURE_DISABLED', async () => {
+    await setGlobalPoolFlag(false);
+    const disabled = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools',
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+    expect(disabled.statusCode).toBe(503);
+    expect((disabled.json() as any).error.code).toBe('FEATURE_DISABLED');
+
+    await removeGlobalPoolFlag();
+    const missing = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools',
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+    expect(missing.statusCode).toBe(503);
+    expect((missing.json() as any).error.code).toBe('FEATURE_DISABLED');
+  });
+
+  it('DLR-11 unauthenticated owner list returns 401', async () => {
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools',
+    });
+    expect(list.statusCode).toBe(401);
+  });
+
+  it('DLR-12 joined list returns only pools where caller has membership', async () => {
+    const poolA = await createOpenPoolForJoinTests();
+    const joinA = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolA}/join`,
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+      payload: { declared_qty: 100, qty_unit: 'KG' },
+    });
+    expect(joinA.statusCode).toBe(201);
+
+    const poolBCreate = await createPoolAsOwner();
+    expect(poolBCreate.res.statusCode).toBe(201);
+    const poolB = (poolBCreate.res.json() as any).data.id as string;
+    createdPoolIds.add(poolB);
+    const poolBOpen = await openPoolAsOwner(poolB, 'open for non-joined control');
+    expect(poolBOpen.statusCode).toBe(200);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools/joined',
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const items = ((list.json() as any).data.data ?? []) as Array<any>;
+    expect(items.some(i => i.id === poolA)).toBe(true);
+    expect(items.some(i => i.id === poolB)).toBe(false);
+  });
+
+  it('DLR-13 joined list excludes pools where caller has no membership', async () => {
+    const poolCreate = await createPoolAsOwner();
+    expect(poolCreate.res.statusCode).toBe(201);
+    const poolId = (poolCreate.res.json() as any).data.id as string;
+    createdPoolIds.add(poolId);
+    const open = await openPoolAsOwner(poolId, 'open for exclusion check');
+    expect(open.statusCode).toBe(200);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools/joined',
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const items = ((list.json() as any).data.data ?? []) as Array<any>;
+    expect(items.find(i => i.id === poolId)).toBeUndefined();
+  });
+
+  it('DLR-14 joined list includes caller own membership fields only', async () => {
+    const poolId = await createOpenPoolForJoinTests();
+
+    const memberJoin = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/join`,
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+      payload: { declared_qty: 210, qty_unit: 'KG' },
+    });
+    expect(memberJoin.statusCode).toBe(201);
+
+    const otherJoin = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/join`,
+      headers: authHeaders(otherOrgId, otherUserId, 'MEMBER'),
+      payload: { declared_qty: 999, qty_unit: 'KG' },
+    });
+    expect(otherJoin.statusCode).toBe(201);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools/joined',
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const item = (((list.json() as any).data.data ?? []) as Array<any>).find(i => i.id === poolId);
+    expect(item).toBeTruthy();
+    expect(item.membership_id).toBeTruthy();
+    expect(item.membership_status).toBe('PENDING');
+    expect(item.declared_qty).toBe('210');
+    expect(item.membership_qty_unit).toBe('KG');
+    expect(item.joined_at).toBeTruthy();
+  });
+
+  it('DLR-15 joined list does not expose target_qty', async () => {
+    const poolId = await createOpenPoolForJoinTests();
+    const join = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/join`,
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+      payload: { declared_qty: 200, qty_unit: 'KG' },
+    });
+    expect(join.statusCode).toBe(201);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools/joined',
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const item = (((list.json() as any).data.data ?? []) as Array<any>).find(i => i.id === poolId);
+    expect(item).toBeTruthy();
+    expect(item.target_qty).toBeUndefined();
+  });
+
+  it('DLR-16 joined list does not expose owner identity', async () => {
+    const poolId = await createOpenPoolForJoinTests();
+    const join = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/join`,
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+      payload: { declared_qty: 200, qty_unit: 'KG' },
+    });
+    expect(join.statusCode).toBe(201);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools/joined',
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const item = (((list.json() as any).data.data ?? []) as Array<any>).find(i => i.id === poolId);
+    expect(item).toBeTruthy();
+    expect(item.org_id).toBeUndefined();
+    expect(item.owner_org_id).toBeUndefined();
+    expect(item.owner_org_name).toBeUndefined();
+  });
+
+  it('DLR-17 joined list does not expose other member details', async () => {
+    const poolId = await createOpenPoolForJoinTests();
+    const memberJoin = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/join`,
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+      payload: { declared_qty: 120, qty_unit: 'KG' },
+    });
+    expect(memberJoin.statusCode).toBe(201);
+
+    const otherJoin = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/join`,
+      headers: authHeaders(otherOrgId, otherUserId, 'MEMBER'),
+      payload: { declared_qty: 875, qty_unit: 'KG' },
+    });
+    expect(otherJoin.statusCode).toBe(201);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools/joined',
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const item = (((list.json() as any).data.data ?? []) as Array<any>).find(i => i.id === poolId);
+    expect(item).toBeTruthy();
+    expect(item.member_list).toBeUndefined();
+    expect(item.other_members).toBeUndefined();
+    expect(item.other_member_details).toBeUndefined();
+  });
+
+  it('DLR-18 joined list does not expose member count / aggregate demand / metadata', async () => {
+    const created = await createPoolAsOwner({ metadata: { shouldHide: true } });
+    expect(created.res.statusCode).toBe(201);
+    const poolId = (created.res.json() as any).data.id as string;
+    createdPoolIds.add(poolId);
+    const opened = await openPoolAsOwner(poolId, 'open for joined denylist checks');
+    expect(opened.statusCode).toBe(200);
+
+    const join = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/join`,
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+      payload: { declared_qty: 50, qty_unit: 'KG' },
+    });
+    expect(join.statusCode).toBe(201);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools/joined',
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const item = (((list.json() as any).data.data ?? []) as Array<any>).find(i => i.id === poolId);
+    expect(item).toBeTruthy();
+    expect(item.member_count).toBeUndefined();
+    expect(item.aggregate_declared_qty).toBeUndefined();
+    expect(item.metadata).toBeUndefined();
+    expect(item.allocation_pct).toBeUndefined();
+    expect(item.allocated_qty).toBeUndefined();
+  });
+
+  it('DLR-19 joined list pagination works', async () => {
+    for (let i = 0; i < 2; i += 1) {
+      const created = await createPoolAsOwner({ pool_ref: makePoolRef(`JOIN-PAGE-${i}-${randomUUID().slice(0, 4)}`) });
+      expect(created.res.statusCode).toBe(201);
+      const poolId = (created.res.json() as any).data.id as string;
+      createdPoolIds.add(poolId);
+      const opened = await openPoolAsOwner(poolId, 'open for joined pagination');
+      expect(opened.statusCode).toBe(200);
+      const join = await app.inject({
+        method: 'POST',
+        url: `/api/tenant/network-commerce/pools/${poolId}/join`,
+        headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+        payload: { declared_qty: 10 + i, qty_unit: 'KG' },
+      });
+      expect(join.statusCode).toBe(201);
+    }
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools/joined?limit=1&offset=1',
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const payload = (list.json() as any).data;
+    expect(payload.data.length).toBeLessThanOrEqual(1);
+    expect(payload.pagination.limit).toBe(1);
+    expect(payload.pagination.offset).toBe(1);
+  });
+
+  it('DLR-20 joined list filters by commodity_category', async () => {
+    const wool = await createPoolAsOwner({ commodity_category: 'WOOL_JOIN' });
+    expect(wool.res.statusCode).toBe(201);
+    const woolId = (wool.res.json() as any).data.id as string;
+    createdPoolIds.add(woolId);
+    expect((await openPoolAsOwner(woolId, 'open wool')).statusCode).toBe(200);
+
+    const cotton = await createPoolAsOwner({ commodity_category: 'COTTON_JOIN' });
+    expect(cotton.res.statusCode).toBe(201);
+    const cottonId = (cotton.res.json() as any).data.id as string;
+    createdPoolIds.add(cottonId);
+    expect((await openPoolAsOwner(cottonId, 'open cotton')).statusCode).toBe(200);
+
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: `/api/tenant/network-commerce/pools/${woolId}/join`,
+          headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+          payload: { declared_qty: 10, qty_unit: 'KG' },
+        })
+      ).statusCode,
+    ).toBe(201);
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: `/api/tenant/network-commerce/pools/${cottonId}/join`,
+          headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+          payload: { declared_qty: 20, qty_unit: 'KG' },
+        })
+      ).statusCode,
+    ).toBe(201);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools/joined?commodity_category=WOOL_JOIN',
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const items = ((list.json() as any).data.data ?? []) as Array<any>;
+    expect(items.length).toBeGreaterThanOrEqual(1);
+    expect(items.every(i => i.commodity_category === 'WOOL_JOIN')).toBe(true);
+  });
+
+  it('DLR-21 joined list filters by lifecycle_state_key', async () => {
+    const openPool = await createPoolAsOwner();
+    expect(openPool.res.statusCode).toBe(201);
+    const openId = (openPool.res.json() as any).data.id as string;
+    createdPoolIds.add(openId);
+    expect((await openPoolAsOwner(openId, 'open for lifecycle filter')).statusCode).toBe(200);
+
+    const aggPool = await createPoolAsOwner();
+    expect(aggPool.res.statusCode).toBe(201);
+    const aggId = (aggPool.res.json() as any).data.id as string;
+    createdPoolIds.add(aggId);
+    expect((await openPoolAsOwner(aggId, 'open before aggregating')).statusCode).toBe(200);
+    await setPoolState(aggId, 'AGGREGATING');
+
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: `/api/tenant/network-commerce/pools/${openId}/join`,
+          headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+          payload: { declared_qty: 11, qty_unit: 'KG' },
+        })
+      ).statusCode,
+    ).toBe(201);
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: `/api/tenant/network-commerce/pools/${aggId}/join`,
+          headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+          payload: { declared_qty: 22, qty_unit: 'KG' },
+        })
+      ).statusCode,
+    ).toBe(201);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools/joined?lifecycle_state_key=AGGREGATING',
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+    });
+
+    expect(list.statusCode).toBe(200);
+    const items = ((list.json() as any).data.data ?? []) as Array<any>;
+    expect(items.length).toBeGreaterThanOrEqual(1);
+    expect(items.every(i => i.lifecycle_state_key === 'AGGREGATING')).toBe(true);
+  });
+
+  it('DLR-22 joined list blocked by disabled/missing feature flag -> 503 FEATURE_DISABLED', async () => {
+    await setGlobalPoolFlag(false);
+    const disabled = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools/joined',
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+    });
+    expect(disabled.statusCode).toBe(503);
+    expect((disabled.json() as any).error.code).toBe('FEATURE_DISABLED');
+
+    await removeGlobalPoolFlag();
+    const missing = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools/joined',
+      headers: authHeaders(memberOrgId, memberUserId, 'MEMBER'),
+    });
+    expect(missing.statusCode).toBe(503);
+    expect((missing.json() as any).error.code).toBe('FEATURE_DISABLED');
+  });
+
+  it('DLR-23 unauthenticated joined list returns 401', async () => {
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/network-commerce/pools/joined',
+    });
+    expect(list.statusCode).toBe(401);
   });
 });
