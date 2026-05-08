@@ -1107,6 +1107,8 @@ model organizations {
   network_pool_demand_lines                                                                NetworkPoolDemandLine[] @relation("NetworkPoolDemandLineOwnerOrg")
   network_pool_demand_snapshots                                                            NetworkPoolDemandSnapshot[] @relation("NetworkPoolDemandSnapshotOwnerOrg")
   network_pool_demand_snapshot_lines                                                       NetworkPoolDemandSnapshotLine[] @relation("NetworkPoolDemandSnapshotLineOwnerOrg")
+  network_pool_rfqs                                                                         NetworkPoolRfq[] @relation("NetworkPoolRfqOwnerOrg")
+  network_pool_rfq_lines                                                                    NetworkPoolRfqLine[] @relation("NetworkPoolRfqLineOwnerOrg")
   trade_lifecycle_logs                                                                     TradeLifecycleLog[]
   tradesBuyer                                                                              Trade[]                         @relation("TradeBuyer")
   tradesSeller                                                                             Trade[]                         @relation("TradeSeller")
@@ -1856,6 +1858,8 @@ model NetworkPool {
   demandLines         NetworkPoolDemandLine[]
   demandSnapshots     NetworkPoolDemandSnapshot[]     @relation("NetworkPoolDemandSnapshots")
   demandSnapshotLines NetworkPoolDemandSnapshotLine[] @relation("NetworkPoolDemandSnapshotLines")
+  rfqs                NetworkPoolRfq[]                @relation("NetworkPoolRfqs")
+  rfqLines            NetworkPoolRfqLine[]            @relation("NetworkPoolRfqLines")
 
   @@unique([orgId, poolRef], map: "network_pools_org_pool_ref_unique")
   @@index([orgId, createdAt(sort: Desc)], map: "idx_network_pools_org_created")
@@ -2020,6 +2024,7 @@ model NetworkPoolDemandSnapshot {
   ownerOrg organizations @relation("NetworkPoolDemandSnapshotOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_demand_snapshots_owner_org_id_fk")
   pool     NetworkPool   @relation("NetworkPoolDemandSnapshots", fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_demand_snapshots_pool_id_fk")
   lines    NetworkPoolDemandSnapshotLine[]
+  rfqs     NetworkPoolRfq[]               @relation("NetworkPoolRfqSnapshots")
 
   @@unique([poolId, snapshotVersion], map: "nc_pool_demand_snapshots_pool_version_unique")
   @@unique([poolId, snapshotRef], map: "nc_pool_demand_snapshots_pool_ref_unique")
@@ -2072,6 +2077,7 @@ model NetworkPoolDemandSnapshotLine {
   pool             NetworkPool               @relation("NetworkPoolDemandSnapshotLines", fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_demand_snapshot_lines_pool_id_fk")
   demandLine       NetworkPoolDemandLine     @relation("DemandLineSnapshotLines", fields: [demandLineId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "nc_pool_demand_snapshot_lines_demand_line_id_fk")
   sourceMembership NetworkPoolMembership?    @relation("NetworkPoolMembershipSnapshotLines", fields: [sourceMembershipId], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "nc_pool_demand_snapshot_lines_source_membership_id_fk")
+  rfqLines         NetworkPoolRfqLine[]      @relation("NetworkPoolRfqLineSnapshotLines")
 
   @@unique([snapshotId, demandLineId], map: "nc_pool_demand_snapshot_lines_snapshot_demand_line_unique")
   @@unique([snapshotId, sourceLineRef, sourceRevisionNo], map: "nc_pool_demand_snapshot_lines_snapshot_lineref_rev_unique")
@@ -2084,6 +2090,137 @@ model NetworkPoolDemandSnapshotLine {
   @@index([sourceMembershipId], map: "idx_nc_pool_demand_snapshot_lines_source_membership_id")
   @@index([createdAt(sort: Desc)], map: "idx_nc_pool_demand_snapshot_lines_created_at")
   @@map("network_pool_demand_snapshot_lines")
+}
+
+/// TEXQTIC-NC-PHASE1-POOL-RFQ-SCHEMA-FOUNDATION-001: Immutable RFQ header issued to suppliers from a pool.
+/// Captures the demand snapshot at issue time. Fully immutable after issue in v1.
+/// ownerOrgId → organizations.id is the canonical RLS anchor (tenant isolation boundary).
+/// poolId → network_pools.id is the owning pool reference (hard FK ON DELETE CASCADE).
+/// snapshotId → network_pool_demand_snapshots.id — snapshot must be CAPTURED at issue time. ON DELETE RESTRICT.
+/// rfqRef: service-generated UUID-derived stable reference. unique(pool_id, rfq_ref).
+/// rfqVersion: sequential per pool. unique(pool_id, rfq_version). DB CHECK: >= 1.
+/// status: ISSUED|QUOTED|ACCEPTED|REJECTED|EXPIRED|CANCELLED. Enforced by DB CHECK.
+/// issueBasis: SNAPSHOT_LOCK (v1 only). Enforced by DB CHECK.
+/// supplierInviteMode: INVITE_ONLY (v1 only). Enforced by DB CHECK.
+/// No UPDATE/DELETE via app role in v1. Fully immutable after insert.
+model NetworkPoolRfq {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Canonical RLS anchor. Live FK → organizations.id.
+  ownerOrgId           String    @map("owner_org_id") @db.Uuid
+  /// FK to network_pools(id). RFQ belongs to one pool.
+  poolId               String    @map("pool_id") @db.Uuid
+  /// FK to network_pool_demand_snapshots(id). ON DELETE RESTRICT.
+  snapshotId           String    @map("snapshot_id") @db.Uuid
+  /// Service-generated stable external reference. UUID-derived. Non-empty enforced by DB CHECK.
+  rfqRef               String    @map("rfq_ref") @db.VarChar(100)
+  /// Sequential per pool. DB CHECK: >= 1.
+  rfqVersion           Int       @map("rfq_version")
+  /// RFQ lifecycle status. Enforced by DB CHECK. Values: ISSUED|QUOTED|ACCEPTED|REJECTED|EXPIRED|CANCELLED.
+  status               String    @default("ISSUED") @map("status") @db.VarChar(50)
+  /// Basis for this RFQ issue. Enforced by DB CHECK. Values: SNAPSHOT_LOCK (v1 only).
+  issueBasis           String    @map("issue_basis") @db.VarChar(50)
+  /// Timestamp when the RFQ was issued.
+  issuedAt             DateTime  @map("issued_at") @db.Timestamptz(6)
+  /// User who triggered the RFQ issue. Nullable for system-initiated.
+  issuedByUserId       String?   @map("issued_by_user_id") @db.Uuid
+  /// Optional human-readable issue reason.
+  issueReason          String?   @map("issue_reason")
+  /// Optional deadline for supplier responses. Nullable and not enforced in v1.
+  responseDeadlineAt   DateTime? @map("response_deadline_at") @db.Timestamptz(6)
+  /// Supplier invite mode. Enforced by DB CHECK. Values: INVITE_ONLY (v1 only).
+  supplierInviteMode   String    @map("supplier_invite_mode") @db.VarChar(50)
+  /// Count of RFQ lines at issue time. DB CHECK: > 0.
+  lineCount            Int       @map("line_count")
+  /// Aggregate quantity across all lines at issue time.
+  totalQty             Decimal?  @map("total_qty") @db.Decimal(18, 6)
+  /// Unit of measure for totalQty.
+  qtyUnit              String?   @map("qty_unit") @db.VarChar(50)
+  /// Internal operational metadata. Never exposed to suppliers.
+  metadataInternalJson Json?     @map("metadata_internal_json")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  ownerOrg  organizations             @relation("NetworkPoolRfqOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfqs_owner_org_id_fk")
+  pool      NetworkPool               @relation("NetworkPoolRfqs", fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfqs_pool_id_fk")
+  snapshot  NetworkPoolDemandSnapshot @relation("NetworkPoolRfqSnapshots", fields: [snapshotId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "nc_pool_rfqs_snapshot_id_fk")
+  lines     NetworkPoolRfqLine[]
+
+  @@unique([poolId, rfqVersion], map: "nc_pool_rfqs_pool_version_unique")
+  @@unique([poolId, rfqRef], map: "nc_pool_rfqs_pool_rfq_ref_unique")
+  @@index([poolId], map: "idx_nc_pool_rfqs_pool_id")
+  @@index([ownerOrgId], map: "idx_nc_pool_rfqs_owner_org_id")
+  @@index([snapshotId], map: "idx_nc_pool_rfqs_snapshot_id")
+  @@index([status], map: "idx_nc_pool_rfqs_status")
+  @@index([issuedAt], map: "idx_nc_pool_rfqs_issued_at")
+  @@index([createdAt(sort: Desc)], map: "idx_nc_pool_rfqs_created_at")
+  @@index([updatedAt(sort: Desc)], map: "idx_nc_pool_rfqs_updated_at")
+  @@map("network_pool_rfqs")
+}
+
+/// TEXQTIC-NC-PHASE1-POOL-RFQ-SCHEMA-FOUNDATION-001: Immutable per-line payload copied from NetworkPoolDemandSnapshotLine at RFQ issue time.
+/// Rows are fully immutable once inserted (no UPDATE or DELETE). Belt-and-suspenders: RLS policy + immutability trigger.
+/// rfqId → network_pool_rfqs(id) ON DELETE CASCADE.
+/// snapshotLineId → network_pool_demand_snapshot_lines(id) ON DELETE RESTRICT (preserves audit record).
+/// demandLineId: nullable plain UUID column — audit lineage to original demand line. No FK (preserves audit regardless of demand-line lifecycle).
+/// unique(rfq_id, snapshot_line_id) enforced at DB level.
+model NetworkPoolRfqLine {
+  id                            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// FK to network_pool_rfqs(id) ON DELETE CASCADE.
+  rfqId                         String    @map("rfq_id") @db.Uuid
+  /// Canonical RLS anchor. Live FK → organizations.id.
+  ownerOrgId                    String    @map("owner_org_id") @db.Uuid
+  /// FK to network_pools(id). RFQ line belongs to one pool.
+  poolId                        String    @map("pool_id") @db.Uuid
+  /// FK to network_pool_demand_snapshot_lines(id). ON DELETE RESTRICT.
+  snapshotLineId                String    @map("snapshot_line_id") @db.Uuid
+  /// Nullable UUID — audit lineage to original demand line. No FK: preserves audit record regardless of demand-line lifecycle.
+  demandLineId                  String?   @map("demand_line_id") @db.Uuid
+  /// Stable external line reference copied from snapshot line.
+  sourceLineRef                 String    @map("source_line_ref") @db.VarChar(100)
+  /// Revision number copied from snapshot line. DB CHECK: >= 1.
+  sourceRevisionNo              Int       @map("source_revision_no")
+  /// Commodity category copied from snapshot line.
+  commodityCategory             String    @map("commodity_category") @db.VarChar(100)
+  /// Optional product sub-category copied from snapshot line.
+  productCategory               String?   @map("product_category") @db.VarChar(100)
+  /// Free-form product specification summary copied from snapshot line.
+  productSpecSummary            String?   @map("product_spec_summary")
+  /// Quantity demanded. DB CHECK: qty > 0.
+  qty                           Decimal   @map("qty") @db.Decimal(18, 6)
+  /// Unit of measure. Non-empty enforced by DB CHECK.
+  qtyUnit                       String    @map("qty_unit") @db.VarChar(50)
+  /// Quality requirements JSONB copied from snapshot line.
+  qualityRequirementsJson       Json?     @map("quality_requirements_json")
+  /// Certification requirements JSONB copied from snapshot line.
+  certificationRequirementsJson Json?     @map("certification_requirements_json")
+  /// Packaging requirements JSONB copied from snapshot line.
+  packagingRequirementsJson     Json?     @map("packaging_requirements_json")
+  /// Delivery destination copied from snapshot line.
+  deliveryLocation              String?   @map("delivery_location") @db.VarChar(500)
+  /// Earliest acceptable delivery date.
+  deliveryWindowStart           DateTime? @map("delivery_window_start") @db.Timestamptz(6)
+  /// Latest acceptable delivery date. DB CHECK: end >= start when both set.
+  deliveryWindowEnd             DateTime? @map("delivery_window_end") @db.Timestamptz(6)
+  /// Quantity tolerance percentage (0–100).
+  tolerancePct                  Decimal?  @map("tolerance_pct") @db.Decimal(5, 2)
+  /// Optional priority rank within pool.
+  priority                      Int?      @map("priority")
+  createdAt                     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  rfq          NetworkPoolRfq                @relation(fields: [rfqId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_lines_rfq_id_fk")
+  ownerOrg     organizations                 @relation("NetworkPoolRfqLineOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_lines_owner_org_id_fk")
+  pool         NetworkPool                   @relation("NetworkPoolRfqLines", fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_lines_pool_id_fk")
+  snapshotLine NetworkPoolDemandSnapshotLine @relation("NetworkPoolRfqLineSnapshotLines", fields: [snapshotLineId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "nc_pool_rfq_lines_snapshot_line_id_fk")
+
+  @@unique([rfqId, snapshotLineId], map: "nc_pool_rfq_lines_rfq_snapshot_line_unique")
+  @@index([rfqId], map: "idx_nc_pool_rfq_lines_rfq_id")
+  @@index([poolId], map: "idx_nc_pool_rfq_lines_pool_id")
+  @@index([ownerOrgId], map: "idx_nc_pool_rfq_lines_owner_org_id")
+  @@index([snapshotLineId], map: "idx_nc_pool_rfq_lines_snapshot_line_id")
+  @@index([demandLineId], map: "idx_nc_pool_rfq_lines_demand_line_id")
+  @@index([commodityCategory], map: "idx_nc_pool_rfq_lines_commodity_category")
+  @@index([createdAt(sort: Desc)], map: "idx_nc_pool_rfq_lines_created_at")
+  @@map("network_pool_rfq_lines")
 }
 
 enum TenantPlan {
