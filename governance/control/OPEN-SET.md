@@ -1160,3 +1160,47 @@ NC demand snapshot schema closure (2026-05-08):
   Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
   Do not open without explicit Paresh authorization.
 
+---
+
+## 2026-05-08 — TEXQTIC-NC-PHASE1-POOL-RFQ-SCHEMA-GOV-SYNC-001 GOV_SYNCED
+
+NC pool RFQ issue design chain (2026-05-08):
+- TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-DESIGN-001 is GOV_SYNCED (2026-05-08). Design commit: 08c7971.
+  RFQ issue service workflow designed: create RFQ from locked demand lines, StateMachine transition,
+  carry-forward constraints established.
+- TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-DECISION-AUDIT-001 is GOV_SYNCED (2026-05-08). Audit commit: 3252e37.
+  Decision audit: demand_line_id as plain UUID (no FK, decision Q-2), transaction isolation model,
+  422 TRANSITION_DENIED denial code, rfqRef generation approach.
+- TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-DECISION-RECORD-001 is GOV_SYNCED (2026-05-08). Decision commit: caac5a0.
+  Decision record: latest CAPTURED snapshot only (findFirst by snapshotVersion desc), rfqRef=randomUUID()
+  service-generated, response_deadline_at optional/nullable/unenforced in v1, supplier invite DEFERRED.
+
+NC pool RFQ schema foundation closure (2026-05-08):
+- TEXQTIC-NC-PHASE1-POOL-RFQ-SCHEMA-DEPLOY-VERIFY-001 is DB_RUNTIME_LIVE + VERIFIED + GOV_SYNCED (2026-05-08).
+  Network Commerce Pool RFQ schema foundation deployed and verified.
+  Schema foundation commit: c9806c8. Deploy/verify governance artifact commit: 198f92b.
+  Migration: 20260528000000_nc_pool_rfq_schema.
+  Tables: network_pool_rfqs (19 columns), network_pool_rfq_lines (22 columns).
+  8 RFQ domain CHECK constraints. 7 RFQ line domain CHECK constraints.
+  3 FKs on rfqs (owner_org CASCADE, pool CASCADE, snapshot RESTRICT).
+  4 FKs on rfq_lines (rfq CASCADE, owner_org CASCADE, pool CASCADE, snapshot_line RESTRICT).
+  demand_line_id: plain UUID, no FK (by design — decision Q-2).
+  2 UNIQUE on rfqs + 1 UNIQUE on rfq_lines. 14 data indexes (7 per table).
+  RLS ENABLED + FORCED on both tables. 10 RLS policies (5 per table: tenant_select, tenant_insert,
+  no_update, no_delete, admin_select).
+  RFQ line immutability: prevent_rfq_line_mutation() + trg_immutable_nc_pool_rfq_lines (BEFORE UPDATE/DELETE).
+  Grants: texqtic_app SELECT+INSERT; texqtic_admin SELECT.
+  Prisma ledger: finished_at 2026-05-08 05:44:54.443529+00, rolled_back_at NULL.
+  prisma generate PASS. tsc --noEmit CLEAN. Unit regressions: 93/93 PASS.
+  Carry-forward constraints (from DECISION-RECORD-001 caac5a0):
+    Issue service: latest CAPTURED snapshot only (findFirst by snapshotVersion desc).
+    Transaction: StateMachineService.transition with opts.db = tx + NetworkPool.lifecycleStateId update in shared tx.
+    Transition denial: 422 TRANSITION_DENIED (not 409). rfqRef: randomUUID() service-generated.
+    response_deadline_at: optional, nullable, unenforced in v1. Supplier invite: DEFERRED.
+  Verification report: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SCHEMA-DEPLOY-VERIFY-001.md.
+  Scope: RFQ schema only. No RFQ issue service, no RFQ issue route, no supplier invite, no quote schema,
+  no allocation, no order, no invoice, no settlement, no escrow, no UI, no MakerChecker, no lifecycle
+  transition code, no NetworkLifecycleLog writes.
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-SERVICE-001 — HOLD_FOR_PARESH_DECISION.
+  Do not open without explicit Paresh authorization.
+

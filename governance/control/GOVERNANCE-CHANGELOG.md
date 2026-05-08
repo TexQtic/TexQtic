@@ -2360,3 +2360,63 @@ Posture update:
   Next candidate remains HOLD_FOR_PARESH_DECISION:
     TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-DESIGN-001
 ```
+
+---
+
+## 2026-05-08 — GOV_SYNCED: TEXQTIC-NC-PHASE1-POOL-RFQ-SCHEMA-GOV-SYNC-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SCHEMA-GOV-SYNC-001
+Type:          GOVERNANCE_CLOSURE
+Status:        GOV_SYNCED
+Date:          2026-05-08
+Commits:       design 08c7971; decision-audit 3252e37; decision-record caac5a0;
+               schema c9806c8; deploy-verify 198f92b; governance closure this commit
+
+Authority chain:
+  RFQ issue design:           08c7971
+  RFQ issue decision audit:   3252e37
+  RFQ issue decision record:  caac5a0
+  RFQ schema foundation:      c9806c8
+  RFQ schema deploy/verify:   198f92b
+
+Verification results:
+  prisma generate:    PASS
+  Server tsc --noEmit: CLEAN
+  Unit regressions:  93/93 PASS
+  Migration ledger:  finished_at 2026-05-08 05:44:54.443529+00, rolled_back_at NULL
+
+Schema evidence:
+  Tables:     network_pool_rfqs (19 cols), network_pool_rfq_lines (22 cols)
+  RFQ CHECKs: 8; RFQ line CHECKs: 7
+  FKs:        3 on rfqs (owner_org CASCADE, pool CASCADE, snapshot RESTRICT);
+              4 on rfq_lines (rfq CASCADE, owner_org CASCADE, pool CASCADE, snapshot_line RESTRICT)
+  demand_line_id: plain UUID, no FK (by design — decision Q-2)
+  UNIQUEs:    2 on rfqs, 1 on rfq_lines
+  Indexes:    14 data indexes (7 per table)
+  RLS:        ENABLED + FORCED on both tables; 10 policies (5 per table:
+              tenant_select, tenant_insert, no_update, no_delete, admin_select)
+  Grants:     texqtic_app SELECT+INSERT; texqtic_admin SELECT
+  Immutability: prevent_rfq_line_mutation() + trg_immutable_nc_pool_rfq_lines (BEFORE UPDATE/DELETE)
+
+Verification report: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SCHEMA-DEPLOY-VERIFY-001.md
+
+Carry-forward constraints (from DECISION-RECORD-001 caac5a0):
+  Issue service: latest CAPTURED snapshot only (findFirst by snapshotVersion desc)
+  Transaction: StateMachineService.transition opts.db = tx + pool.lifecycleStateId update in shared tx
+  Transition denial: 422 TRANSITION_DENIED (not 409)
+  rfqRef: randomUUID() service-generated
+  response_deadline_at: optional, nullable, unenforced in v1
+  Supplier invite: DEFERRED
+
+Scope boundary preserved:
+  RFQ schema only. No RFQ issue service, no RFQ issue route, no supplier invite, no quote schema,
+  no allocation, no order, no invoice, no settlement, no escrow, no UI, no MakerChecker,
+  no lifecycle transition code, no NetworkLifecycleLog writes.
+
+DPP active_delivery_unit: HOLD_FOR_AUTHORIZATION — PRESERVED, NOT MODIFIED.
+DPP dpp_launch_authorization: HOLD_FOR_PARESH_DECISION — PRESERVED, NOT MODIFIED.
+NC next action: HOLD_FOR_PARESH_DECISION
+NC next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-SERVICE-001 — HOLD_FOR_PARESH_DECISION.
+Do not open without explicit Paresh authorization.
+```

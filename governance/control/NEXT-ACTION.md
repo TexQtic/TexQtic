@@ -148,16 +148,19 @@ nc_phase1_pool_discovery_scope_boundary: >-
   No member count, no aggregate demand, no raw metadata JSON. No RFQ/quotes/allocation/orders/invoice generation/settlement/escrow/UI.
   No control-plane/admin discovery.
 nc_phase1_next_action: HOLD_FOR_PARESH_DECISION
-nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-DESIGN-001
+nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-SERVICE-001
 nc_phase1_next_action_candidate_2: TEXQTIC-NC-PHASE1-POOL-OPEN-DISCOVERY-DESIGN-001
 nc_phase1_next_action_candidate_3: TEXQTIC-NC-PHASE1-POOL-CONTROL-DISCOVERY-DESIGN-001
 nc_phase1_next_action_candidate_4: TEXQTIC-NC-PHASE1-TENANT-FEATURE-OVERRIDE-ADMIN-API-001
 nc_phase1_next_action_note: >-
-  Pool discovery implementation is IMPLEMENTED_VERIFIED_GOV_SYNCED (0d40a7a).
-  Demand-line schema is IMPLEMENTED_DEPLOYED_VERIFIED_GOV_SYNCED (7197e23 + 3692a14).
-  Demand-line service + route is VERIFIED_COMPLETE_AND_GOV_SYNCED (8241991 + f5b655e + 1bc1b09).
-  Demand snapshot schema is IMPLEMENTED_DEPLOYED_VERIFIED_GOV_SYNCED (a4dcabe + 6174d31).
-  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
+  Pool discovery: IMPLEMENTED_VERIFIED_GOV_SYNCED (0d40a7a).
+  Demand-line schema: IMPLEMENTED_DEPLOYED_VERIFIED_GOV_SYNCED (7197e23 + 3692a14).
+  Demand-line service + route: VERIFIED_COMPLETE_AND_GOV_SYNCED (8241991 + f5b655e + 1bc1b09).
+  Demand snapshot schema: IMPLEMENTED_DEPLOYED_VERIFIED_GOV_SYNCED (a4dcabe + 6174d31).
+  Demand-line lock: IMPLEMENTED_VERIFIED_GOV_SYNCED (d279e2e + e046ccd + a06631d + 120408d).
+  RFQ issue design chain: GOV_SYNCED (design 08c7971; audit 3252e37; record caac5a0).
+  Pool RFQ schema: IMPLEMENTED_DEPLOYED_VERIFIED_GOV_SYNCED (c9806c8 + 198f92b).
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-SERVICE-001 — HOLD_FOR_PARESH_DECISION.
   Optional future candidates include open-discovery design, control-discovery design, and tenant feature override admin API.
   None is open. Do not open without explicit Paresh authorization.
 nc_phase1_pool_rfq_demand_source_design_status: GOV_SYNCED
@@ -243,6 +246,40 @@ nc_phase1_pool_rfq_demand_snapshot_schema_verification_report: governance/TEXQTI
 nc_phase1_pool_rfq_demand_snapshot_scope_boundary: >-
   Snapshot schema only. No lock-for-RFQ implemented. No RFQ schema, no RFQ routes, no supplier quote routes,
   no allocation, no order placement, no invoice generation, no settlement, no escrow, no UI, no MakerChecker changes.
+nc_phase1_pool_rfq_issue_design_status: GOV_SYNCED
+nc_phase1_pool_rfq_issue_design_commit: 08c7971
+nc_phase1_pool_rfq_issue_decision_audit_status: GOV_SYNCED
+nc_phase1_pool_rfq_issue_decision_audit_commit: 3252e37
+nc_phase1_pool_rfq_issue_decision_record_status: GOV_SYNCED
+nc_phase1_pool_rfq_issue_decision_record_commit: caac5a0
+nc_phase1_pool_rfq_schema_status: IMPLEMENTED_DEPLOYED_VERIFIED_GOV_SYNCED
+nc_phase1_pool_rfq_schema_foundation_commit: c9806c8
+nc_phase1_pool_rfq_schema_deploy_verify_commit: 198f92b
+nc_phase1_pool_rfq_schema_tables:
+  - network_pool_rfqs
+  - network_pool_rfq_lines
+nc_phase1_pool_rfq_schema_rfq_columns_verified: 19
+nc_phase1_pool_rfq_schema_rfq_line_columns_verified: 22
+nc_phase1_pool_rfq_schema_rfq_checks_verified: 8
+nc_phase1_pool_rfq_schema_rfq_line_checks_verified: 7
+nc_phase1_pool_rfq_schema_indexes_verified: 14
+nc_phase1_pool_rfq_schema_rls: ENABLED_AND_FORCED_BOTH_TABLES
+nc_phase1_pool_rfq_schema_rls_policies: 10
+nc_phase1_pool_rfq_schema_grants_verified: "texqtic_app (SELECT/INSERT on both tables); texqtic_admin (SELECT on both tables)"
+nc_phase1_pool_rfq_schema_immutability: "prevent_rfq_line_mutation() + trg_immutable_nc_pool_rfq_lines"
+nc_phase1_pool_rfq_schema_prisma_ledger: REGISTERED
+nc_phase1_pool_rfq_schema_test_result: 93/93 PASS
+nc_phase1_pool_rfq_schema_ts_result: CLEAN
+nc_phase1_pool_rfq_schema_verification_report: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SCHEMA-DEPLOY-VERIFY-001.md
+nc_phase1_pool_rfq_schema_carry_forward: >-
+  Issue service: latest CAPTURED snapshot only (findFirst by snapshotVersion desc).
+  Transaction: StateMachineService.transition opts.db = tx + pool.lifecycleStateId update in shared tx.
+  Transition denial: 422 TRANSITION_DENIED (not 409). rfqRef: randomUUID() service-generated.
+  response_deadline_at: optional, nullable, unenforced in v1. Supplier invite: DEFERRED.
+nc_phase1_pool_rfq_schema_scope_boundary: >-
+  RFQ schema only. No RFQ issue service, no RFQ issue route, no supplier invite, no quote schema,
+  no allocation, no order, no invoice, no settlement, no escrow, no UI, no MakerChecker,
+  no lifecycle transition code, no NetworkLifecycleLog writes.
 ```
 
 ---
