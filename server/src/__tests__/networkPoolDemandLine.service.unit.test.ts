@@ -23,6 +23,9 @@ import {
   DemandLineDuplicateRefError,
   DemandLinePoolNotFoundError,
   DemandLinePoolStateError,
+  DemandLineNoActiveLinesError,
+  DemandLineSetChangedError,
+  DemandLineSnapshotConflictError,
 } from '../services/networkPoolDemandLine.service.js';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
@@ -634,6 +637,546 @@ describe('NetworkPoolDemandLineService — cancelDemandLine', () => {
         svc.cancelDemandLine(OWNER_ORG_ID, LINE_ID),
       ).rejects.toBeInstanceOf(DemandLinePoolStateError);
       expect(db.networkPoolDemandLine.update).not.toHaveBeenCalled();
+    });
+  });
+
+});
+
+// ─── lockDemandLinesForRfq helpers ────────────────────────────────────────────
+
+const SNAP_ID  = 'eeee0001-0000-0000-0000-000000000001';
+const LINE_ID2 = 'cccc0002-0000-0000-0000-000000000002';
+
+function makeActiveLineRow(overrides: Record<string, unknown> = {}) {
+  return makeLineRow({ status: 'ACTIVE', ...overrides });
+}
+
+function makeSnapshotRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id:                  SNAP_ID,
+    ownerOrgId:          OWNER_ORG_ID,
+    poolId:              POOL_ID,
+    snapshotRef:         'snap-ref-uuid',
+    snapshotVersion:     1,
+    basis:               'RFQ_ISSUE',
+    status:              'CAPTURED',
+    capturedAt:          NOW,
+    capturedByUserId:    USER_ID,
+    capturedReason:      null,
+    lineCount:           1,
+    totalQty:            '1000.000000',
+    qtyUnit:             'KG',
+    metadataInternalJson: null,
+    createdAt:           NOW,
+    updatedAt:           NOW,
+    ...overrides,
+  };
+}
+
+function makeLockInput(overrides: Record<string, unknown> = {}) {
+  return {
+    pool_id: POOL_ID,
+    ...overrides,
+  };
+}
+
+/**
+ * Build a db mock wired for lockDemandLinesForRfq.
+ * The $transaction mock calls the callback with `tx` (same shape as db).
+ * All sub-mocks can be overridden per-test.
+ */
+function makeLockDb(overrides: {
+  poolFindFirst?:       ReturnType<typeof vi.fn>;
+  lineFindMany?:        ReturnType<typeof vi.fn>;
+  snapAggregate?:       ReturnType<typeof vi.fn>;
+  snapCreate?:          ReturnType<typeof vi.fn>;
+  snapLineCreateMany?:  ReturnType<typeof vi.fn>;
+  lineUpdateMany?:      ReturnType<typeof vi.fn>;
+} = {}): any {
+  const tx: any = {
+    networkPool: {
+      findFirst: overrides.poolFindFirst ?? vi.fn().mockResolvedValue(makePoolRow('AGGREGATING')),
+    },
+    networkPoolDemandLine: {
+      findMany:    overrides.lineFindMany    ?? vi.fn().mockResolvedValue([makeActiveLineRow()]),
+      updateMany:  overrides.lineUpdateMany  ?? vi.fn().mockResolvedValue({ count: 1 }),
+    },
+    networkPoolDemandSnapshot: {
+      aggregate: overrides.snapAggregate   ?? vi.fn().mockResolvedValue({ _max: { snapshotVersion: 0 } }),
+      create:    overrides.snapCreate      ?? vi.fn().mockResolvedValue(makeSnapshotRow()),
+    },
+    networkPoolDemandSnapshotLine: {
+      createMany: overrides.snapLineCreateMany ?? vi.fn().mockResolvedValue({ count: 1 }),
+    },
+  };
+  return {
+    ...tx,
+    $transaction: vi.fn().mockImplementation(async (cb: (tx: any) => Promise<unknown>) => cb(tx)),
+  };
+}
+
+// ─── lockDemandLinesForRfq ────────────────────────────────────────────────────
+
+describe('NetworkPoolDemandLineService — lockDemandLinesForRfq', () => {
+
+  describe('P-DL-31: PASS — locks ACTIVE lines, creates snapshot, returns DemandSnapshotRecord', () => {
+    it('returns snapshot header with correct fields; does not include lines or metadataInternalJson', async () => {
+      const db  = makeLockDb();
+      const svc = new NetworkPoolDemandLineService(db);
+
+      const result = await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      expect(result.id).toBe(SNAP_ID);
+      expect(result.owner_org_id).toBe(OWNER_ORG_ID);
+      expect(result.pool_id).toBe(POOL_ID);
+      expect(result.basis).toBe('RFQ_ISSUE');
+      expect(result.status).toBe('CAPTURED');
+      expect(result.line_count).toBe(1);
+      expect(result.snapshot_version).toBe(1);
+      expect('lines' in result).toBe(false);
+      expect('metadata_internal_json' in result).toBe(false);
+    });
+  });
+
+  describe('P-DL-32: PASS — snapshotVersion increments by 1 over max existing version', () => {
+    it('passes snapshotVersion=3 to create when max existing is 2', async () => {
+      const snapCreate = vi.fn().mockResolvedValue(makeSnapshotRow({ snapshotVersion: 3 }));
+      const db = makeLockDb({
+        snapAggregate: vi.fn().mockResolvedValue({ _max: { snapshotVersion: 2 } }),
+        snapCreate,
+      });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      const result = await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      const createArg = snapCreate.mock.calls[0][0];
+      expect(createArg.data.snapshotVersion).toBe(3);
+      expect(result.snapshot_version).toBe(3);
+    });
+  });
+
+  describe('P-DL-33: PASS — first snapshot gets snapshotVersion=1 when no prior snapshots exist', () => {
+    it('passes snapshotVersion=1 to create when aggregate max is null', async () => {
+      const snapCreate = vi.fn().mockResolvedValue(makeSnapshotRow({ snapshotVersion: 1 }));
+      const db = makeLockDb({
+        snapAggregate: vi.fn().mockResolvedValue({ _max: { snapshotVersion: null } }),
+        snapCreate,
+      });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      const createArg = snapCreate.mock.calls[0][0];
+      expect(createArg.data.snapshotVersion).toBe(1);
+    });
+  });
+
+  describe('P-DL-34: PASS — qty summary set when all active lines share the same qtyUnit', () => {
+    it('totalQty is sum of all line qty values; qtyUnit is the common unit', async () => {
+      const line1 = makeActiveLineRow({ qty: '500.000000', qtyUnit: 'KG' });
+      const line2 = makeActiveLineRow({ id: LINE_ID2, lineRef: 'LINE-002', qty: '300.000000', qtyUnit: 'KG' });
+      const snapCreate = vi.fn().mockResolvedValue(makeSnapshotRow({ totalQty: '800.000000', qtyUnit: 'KG', lineCount: 2 }));
+      const db = makeLockDb({
+        lineFindMany:   vi.fn().mockResolvedValue([line1, line2]),
+        snapCreate,
+        snapLineCreateMany: vi.fn().mockResolvedValue({ count: 2 }),
+        lineUpdateMany:     vi.fn().mockResolvedValue({ count: 2 }),
+      });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      const createArg = snapCreate.mock.calls[0][0];
+      expect(parseFloat(createArg.data.totalQty)).toBeCloseTo(800, 3);
+      expect(createArg.data.qtyUnit).toBe('KG');
+    });
+  });
+
+  describe('P-DL-35: PASS — qty summary is null when active lines have mixed qtyUnit', () => {
+    it('totalQty and qtyUnit are null when units differ', async () => {
+      const line1 = makeActiveLineRow({ qty: '500.000000', qtyUnit: 'KG' });
+      const line2 = makeActiveLineRow({ id: LINE_ID2, lineRef: 'LINE-002', qty: '300.000000', qtyUnit: 'MT' });
+      const snapCreate = vi.fn().mockResolvedValue(makeSnapshotRow({ totalQty: null, qtyUnit: null, lineCount: 2 }));
+      const db = makeLockDb({
+        lineFindMany:       vi.fn().mockResolvedValue([line1, line2]),
+        snapCreate,
+        snapLineCreateMany: vi.fn().mockResolvedValue({ count: 2 }),
+        lineUpdateMany:     vi.fn().mockResolvedValue({ count: 2 }),
+      });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      const createArg = snapCreate.mock.calls[0][0];
+      expect(createArg.data.totalQty).toBeNull();
+      expect(createArg.data.qtyUnit).toBeNull();
+    });
+  });
+
+  describe('P-DL-36: PASS — createMany called with one snapshot line per active demand line', () => {
+    it('createMany receives correct demandLineId and sourceLineRef', async () => {
+      const snapLineCreateMany = vi.fn().mockResolvedValue({ count: 1 });
+      const db = makeLockDb({ snapLineCreateMany });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      const createManyArg = snapLineCreateMany.mock.calls[0][0];
+      expect(createManyArg.data).toHaveLength(1);
+      expect(createManyArg.data[0].demandLineId).toBe(LINE_ID);
+      expect(createManyArg.data[0].sourceLineRef).toBe('LINE-001');
+      expect(createManyArg.data[0].snapshotId).toBe(SNAP_ID);
+    });
+  });
+
+  describe('P-DL-37: PASS — updateMany called with LOCKED_FOR_RFQ and lockedAt', () => {
+    it('updateMany data has status=LOCKED_FOR_RFQ and lockedAt is a Date', async () => {
+      const lineUpdateMany = vi.fn().mockResolvedValue({ count: 1 });
+      const db = makeLockDb({ lineUpdateMany });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      const updateArg = lineUpdateMany.mock.calls[0][0];
+      expect(updateArg.data.status).toBe('LOCKED_FOR_RFQ');
+      expect(updateArg.data.lockedAt).toBeInstanceOf(Date);
+      expect(updateArg.where.id.in).toContain(LINE_ID);
+    });
+  });
+
+  describe('P-DL-38: PASS — optional expected_line_ids matches current ACTIVE set → succeeds', () => {
+    it('does not throw when expected_line_ids exactly matches current ACTIVE line ids', async () => {
+      const db  = makeLockDb();
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await expect(
+        svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput({ expected_line_ids: [LINE_ID] })),
+      ).resolves.toBeDefined();
+    });
+  });
+
+  describe('P-DL-39: FAIL — expected_line_ids set mismatch throws DemandLineSetChangedError', () => {
+    it('throws when expected_line_ids contains an id not in ACTIVE set', async () => {
+      const db  = makeLockDb();
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await expect(
+        svc.lockDemandLinesForRfq(
+          OWNER_ORG_ID,
+          USER_ID,
+          makeLockInput({ expected_line_ids: [LINE_ID, LINE_ID2] }),
+        ),
+      ).rejects.toBeInstanceOf(DemandLineSetChangedError);
+    });
+  });
+
+  describe('P-DL-40: FAIL — pool not found throws DemandLinePoolNotFoundError', () => {
+    it('throws when networkPool.findFirst returns null', async () => {
+      const db = makeLockDb({
+        poolFindFirst: vi.fn().mockResolvedValue(null),
+      });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await expect(
+        svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput()),
+      ).rejects.toBeInstanceOf(DemandLinePoolNotFoundError);
+    });
+  });
+
+  describe('P-DL-41: FAIL — pool state is not AGGREGATING throws DemandLinePoolStateError', () => {
+    it('throws when pool stateKey=OPEN (only AGGREGATING is allowed)', async () => {
+      const db = makeLockDb({
+        poolFindFirst: vi.fn().mockResolvedValue(makePoolRow('OPEN')),
+      });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await expect(
+        svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput()),
+      ).rejects.toBeInstanceOf(DemandLinePoolStateError);
+    });
+  });
+
+  describe('P-DL-42: FAIL — zero ACTIVE lines throws DemandLineNoActiveLinesError', () => {
+    it('throws and does not call create when findMany returns empty array', async () => {
+      const snapCreate = vi.fn();
+      const db = makeLockDb({
+        lineFindMany: vi.fn().mockResolvedValue([]),
+        snapCreate,
+      });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await expect(
+        svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput()),
+      ).rejects.toBeInstanceOf(DemandLineNoActiveLinesError);
+      expect(snapCreate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('P-DL-43: FAIL — updateMany count < expected throws DemandLineSetChangedError (concurrent race)', () => {
+    it('throws when updateMany.count is less than active lines length', async () => {
+      const db = makeLockDb({
+        lineUpdateMany: vi.fn().mockResolvedValue({ count: 0 }),
+      });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await expect(
+        svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput()),
+      ).rejects.toBeInstanceOf(DemandLineSetChangedError);
+    });
+  });
+
+  describe('P-DL-44: FAIL — blank pool_id throws DemandLineInvalidInputError', () => {
+    it('rejects before entering transaction when pool_id is empty', async () => {
+      const db = makeLockDb();
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await expect(
+        svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput({ pool_id: '  ' })),
+      ).rejects.toBeInstanceOf(DemandLineInvalidInputError);
+      expect(db.$transaction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('P-DL-45: FAIL — captured_reason over 1000 chars throws DemandLineInvalidInputError', () => {
+    it('rejects before entering transaction when captured_reason exceeds 1000 chars', async () => {
+      const db = makeLockDb();
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await expect(
+        svc.lockDemandLinesForRfq(
+          OWNER_ORG_ID,
+          USER_ID,
+          makeLockInput({ captured_reason: 'x'.repeat(1001) }),
+        ),
+      ).rejects.toBeInstanceOf(DemandLineInvalidInputError);
+      expect(db.$transaction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('P-DL-46: FAIL — P2002 Prisma error wraps to DemandLineSnapshotConflictError', () => {
+    it('catches P2002 from transaction and throws DemandLineSnapshotConflictError', async () => {
+      const p2002 = Object.assign(new Error('Unique constraint'), {
+        code: 'P2002',
+        name: 'PrismaClientKnownRequestError',
+        clientVersion: '6.0.0',
+        meta: {},
+        batchRequestIdx: undefined,
+      });
+      // Override constructor name so instanceof check works
+      Object.setPrototypeOf(p2002, (await import('@prisma/client')).Prisma.PrismaClientKnownRequestError.prototype);
+
+      const db = makeLockDb({
+        snapCreate: vi.fn().mockRejectedValue(p2002),
+      });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await expect(
+        svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput()),
+      ).rejects.toBeInstanceOf(DemandLineSnapshotConflictError);
+    });
+  });
+
+  describe('P-DL-47: PASS — snapshot basis is always RFQ_ISSUE', () => {
+    it('snapshot create call carries basis=RFQ_ISSUE', async () => {
+      const snapCreate = vi.fn().mockResolvedValue(makeSnapshotRow());
+      const db = makeLockDb({ snapCreate });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      expect(snapCreate.mock.calls[0][0].data.basis).toBe('RFQ_ISSUE');
+    });
+  });
+
+  describe('P-DL-48: PASS — snapshot status is CAPTURED on insert', () => {
+    it('snapshot create call carries status=CAPTURED', async () => {
+      const snapCreate = vi.fn().mockResolvedValue(makeSnapshotRow());
+      const db = makeLockDb({ snapCreate });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      expect(snapCreate.mock.calls[0][0].data.status).toBe('CAPTURED');
+    });
+  });
+
+  describe('P-DL-49: PASS — capturedByUserId is set from userId arg', () => {
+    it('snapshot create receives capturedByUserId matching the userId arg', async () => {
+      const snapCreate = vi.fn().mockResolvedValue(makeSnapshotRow());
+      const db = makeLockDb({ snapCreate });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      expect(snapCreate.mock.calls[0][0].data.capturedByUserId).toBe(USER_ID);
+    });
+  });
+
+  describe('P-DL-50: PASS — capturedReason null when not supplied', () => {
+    it('snapshot create receives capturedReason=null when input.captured_reason is omitted', async () => {
+      const snapCreate = vi.fn().mockResolvedValue(makeSnapshotRow());
+      const db = makeLockDb({ snapCreate });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      expect(snapCreate.mock.calls[0][0].data.capturedReason).toBeNull();
+    });
+  });
+
+  describe('P-DL-51: PASS — capturedReason forwarded when supplied', () => {
+    it('snapshot create receives capturedReason from input', async () => {
+      const snapCreate = vi.fn().mockResolvedValue(makeSnapshotRow({ capturedReason: 'Q3 RFQ batch' }));
+      const db = makeLockDb({ snapCreate });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput({ captured_reason: 'Q3 RFQ batch' }));
+
+      expect(snapCreate.mock.calls[0][0].data.capturedReason).toBe('Q3 RFQ batch');
+    });
+  });
+
+  describe('P-DL-52: PASS — metadataInternalJson is not present in returned DemandSnapshotRecord', () => {
+    it('result object has no metadataInternalJson key', async () => {
+      const db  = makeLockDb();
+      const svc = new NetworkPoolDemandLineService(db);
+
+      const result = await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      expect(Object.keys(result)).not.toContain('metadata_internal_json');
+    });
+  });
+
+  describe('P-DL-53: PASS — metadataInternalJson from source line is copied to snapshot line', () => {
+    it('createMany data carries metadataInternalJson from the source demand line', async () => {
+      const meta = { foo: 'bar' };
+      const lineWithMeta = makeActiveLineRow({ metadataInternalJson: meta });
+      const snapLineCreateMany = vi.fn().mockResolvedValue({ count: 1 });
+      const db = makeLockDb({
+        lineFindMany: vi.fn().mockResolvedValue([lineWithMeta]),
+        snapLineCreateMany,
+      });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      expect(snapLineCreateMany.mock.calls[0][0].data[0].metadataInternalJson).toEqual(meta);
+    });
+  });
+
+  describe('P-DL-54: FAIL — empty string ownerOrgId throws DemandLineInvalidInputError', () => {
+    it('rejects before transaction when ownerOrgId is blank', async () => {
+      const db  = makeLockDb();
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await expect(
+        svc.lockDemandLinesForRfq('', USER_ID, makeLockInput()),
+      ).rejects.toBeInstanceOf(DemandLineInvalidInputError);
+      expect(db.$transaction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('P-DL-55: PASS — expected_line_ids omitted → locks all ACTIVE lines without set comparison', () => {
+    it('succeeds and calls updateMany when expected_line_ids is not supplied', async () => {
+      const lineUpdateMany = vi.fn().mockResolvedValue({ count: 1 });
+      const db = makeLockDb({ lineUpdateMany });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await expect(
+        svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, { pool_id: POOL_ID }),
+      ).resolves.toBeDefined();
+      expect(lineUpdateMany).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('P-DL-56: PASS — expected_line_ids null → same as omitted (locks all ACTIVE lines)', () => {
+    it('succeeds when expected_line_ids is explicitly null', async () => {
+      const db  = makeLockDb();
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await expect(
+        svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput({ expected_line_ids: null })),
+      ).resolves.toBeDefined();
+    });
+  });
+
+  describe('P-DL-57: FAIL — non-AGGREGATING pool state CLOSED throws DemandLinePoolStateError', () => {
+    it('throws when pool stateKey=CLOSED_FOR_BIDS', async () => {
+      const db = makeLockDb({
+        poolFindFirst: vi.fn().mockResolvedValue(makePoolRow('CLOSED_FOR_BIDS')),
+      });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await expect(
+        svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput()),
+      ).rejects.toBeInstanceOf(DemandLinePoolStateError);
+    });
+  });
+
+  describe('P-DL-58: PASS — lineCount in snapshot header matches number of active lines', () => {
+    it('snapshot header line_count equals the number of active lines fetched', async () => {
+      const line2 = makeActiveLineRow({ id: LINE_ID2, lineRef: 'LINE-002', qty: '500.000000' });
+      const snapCreate = vi.fn().mockResolvedValue(makeSnapshotRow({ lineCount: 2 }));
+      const db = makeLockDb({
+        lineFindMany:       vi.fn().mockResolvedValue([makeActiveLineRow(), line2]),
+        snapCreate,
+        snapLineCreateMany: vi.fn().mockResolvedValue({ count: 2 }),
+        lineUpdateMany:     vi.fn().mockResolvedValue({ count: 2 }),
+      });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      const result = await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      expect(snapCreate.mock.calls[0][0].data.lineCount).toBe(2);
+      expect(result.line_count).toBe(2);
+    });
+  });
+
+  describe('P-DL-59: PASS — userId null is forwarded as capturedByUserId null', () => {
+    it('snapshot create receives capturedByUserId=null when userId arg is null', async () => {
+      const snapCreate = vi.fn().mockResolvedValue(makeSnapshotRow({ capturedByUserId: null }));
+      const db = makeLockDb({ snapCreate });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await svc.lockDemandLinesForRfq(OWNER_ORG_ID, null, makeLockInput());
+
+      expect(snapCreate.mock.calls[0][0].data.capturedByUserId).toBeNull();
+    });
+  });
+
+  describe('P-DL-60: FAIL — expected_line_ids empty array throws DemandLineSetChangedError', () => {
+    it('empty expected_line_ids does not match non-empty ACTIVE set', async () => {
+      const db  = makeLockDb();
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await expect(
+        svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput({ expected_line_ids: [] })),
+      ).rejects.toBeInstanceOf(DemandLineSetChangedError);
+    });
+  });
+
+  describe('P-DL-61: PASS — ownerOrgId is passed to all write operations (tenant isolation)', () => {
+    it('snapshot create and updateMany carry the correct ownerOrgId', async () => {
+      const snapCreate    = vi.fn().mockResolvedValue(makeSnapshotRow());
+      const lineUpdateMany = vi.fn().mockResolvedValue({ count: 1 });
+      const db = makeLockDb({ snapCreate, lineUpdateMany });
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      expect(snapCreate.mock.calls[0][0].data.ownerOrgId).toBe(OWNER_ORG_ID);
+      expect(lineUpdateMany.mock.calls[0][0].where.ownerOrgId).toBe(OWNER_ORG_ID);
+    });
+  });
+
+  describe('P-DL-62: PASS — $transaction is called exactly once', () => {
+    it('wraps entire operation in a single transaction', async () => {
+      const db  = makeLockDb();
+      const svc = new NetworkPoolDemandLineService(db);
+
+      await svc.lockDemandLinesForRfq(OWNER_ORG_ID, USER_ID, makeLockInput());
+
+      expect(db.$transaction).toHaveBeenCalledOnce();
     });
   });
 

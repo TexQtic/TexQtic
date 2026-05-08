@@ -4,27 +4,20 @@
  *
  * Service foundation for Network Commerce Pool RFQ demand lines.
  *
- * D-017-A: ownerOrgId is ALWAYS sourced from the JWT/dbContext — never from caller body.
+ * D-017-A: ownerOrgId and userId are ALWAYS sourced from the JWT/dbContext — never from caller body.
  *
  * Authorized methods:
- *   createDemandLine  — create a DRAFT demand line on an owner-scoped pool
- *   updateDemandLine  — partially update an editable (DRAFT/ACTIVE) demand line
- *   listDemandLines   — paginated list of demand lines for an owner-scoped pool
- *   cancelDemandLine  — cancel a DRAFT/ACTIVE demand line
+ *   createDemandLine        — create a DRAFT demand line on an owner-scoped pool
+ *   updateDemandLine        — partially update an editable (DRAFT/ACTIVE) demand line
+ *   listDemandLines         — paginated list of demand lines for an owner-scoped pool
+ *   cancelDemandLine        — cancel a DRAFT/ACTIVE demand line
+ *   lockDemandLinesForRfq   — lock all ACTIVE lines and capture a demand snapshot for RFQ issuance
  *
- * NOT implemented (blocked):
- *   lockDemandLinesForRfq — BLOCKED: NetworkPoolDemandSnapshot schema not yet deployed.
- *                           Open TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001 first.
- *
- * Design decisions: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SERVICE-DECISION-RECORD-001 (1022879)
- *   1. Demand lines default to DRAFT.
- *   2. Service-only packet; routes are a separate packet.
- *   3. metadata_internal_json is omitted from DemandLineRecord.
- *   4. lockDemandLinesForRfq is BLOCKED (no snapshot schema).
- *   5. Demand-line writes allowed only when pool is in DRAFT/OPEN/AGGREGATING.
- *   6. Lock-for-RFQ will be a standalone action (not coupled to lifecycle transition).
- *   7. Route file will be poolDemandLines.ts (future packet).
- *   8. listDemandLines explicitly checks pool existence — no silent empty list for unknown pool.
+ * Design decisions:
+ *   createDemandLine / updateDemandLine / listDemandLines / cancelDemandLine:
+ *     TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SERVICE-DECISION-RECORD-001
+ *   lockDemandLinesForRfq:
+ *     TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-DECISION-RECORD-001
  */
 
 import { randomUUID } from 'crypto';
@@ -93,6 +86,11 @@ export class DemandLinePoolStateError extends Error {
   }
 }
 
+/**
+ * @deprecated No longer thrown by lockDemandLinesForRfq (schema is now deployed).
+ * Retained because poolDemandLines route imports and maps this class to HTTP 422.
+ * Remove in a future route-cleanup packet.
+ */
 export class DemandLineSnapshotBlockedError extends Error {
   constructor() {
     super(
@@ -100,6 +98,30 @@ export class DemandLineSnapshotBlockedError extends Error {
         'Open TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001 first.',
     );
     this.name = 'DemandLineSnapshotBlockedError';
+  }
+}
+
+export class DemandLineNoActiveLinesError extends Error {
+  constructor(poolId: string) {
+    super(`No ACTIVE demand lines found for pool: ${poolId}`);
+    this.name = 'DemandLineNoActiveLinesError';
+  }
+}
+
+export class DemandLineSetChangedError extends Error {
+  constructor() {
+    super(
+      'expected_line_ids did not match the current ACTIVE demand line set. ' +
+        'The set changed between read and lock.',
+    );
+    this.name = 'DemandLineSetChangedError';
+  }
+}
+
+export class DemandLineSnapshotConflictError extends Error {
+  constructor() {
+    super('Snapshot version or ref conflict — likely a concurrent lock attempt. Retry.');
+    this.name = 'DemandLineSnapshotConflictError';
   }
 }
 
@@ -208,6 +230,31 @@ export interface DemandLineListPagination {
 export interface DemandLineListResult {
   items:      DemandLineRecord[];
   pagination: DemandLineListPagination;
+}
+
+export interface LockDemandLinesForRfqInput {
+  pool_id:           string;
+  captured_reason?:  string | null;
+  expected_line_ids?: string[] | null;
+}
+
+/** Snapshot header returned by lockDemandLinesForRfq. Excludes metadata_internal_json and lines array. */
+export interface DemandSnapshotRecord {
+  id:                  string;
+  owner_org_id:        string;
+  pool_id:             string;
+  snapshot_ref:        string;
+  snapshot_version:    number;
+  basis:               string;
+  status:              string;
+  captured_at:         string | null;
+  captured_by_user_id: string | null;
+  captured_reason:     string | null;
+  line_count:          number;
+  total_qty:           string | null;
+  qty_unit:            string | null;
+  created_at:          string;
+  updated_at:          string;
 }
 
 // ─── Service ──────────────────────────────────────────────────────────────────
@@ -630,5 +677,213 @@ export class NetworkPoolDemandLineService {
     });
 
     return this.toRecord(cancelled as unknown as Record<string, unknown>);
+  }
+
+  // ── lockDemandLinesForRfq ───────────────────────────────────────────────────
+
+  /**
+   * Lock all ACTIVE demand lines for RFQ issuance.
+   *
+   * TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-DECISION-RECORD-001 §4.
+   *
+   * Authorised scope:
+   *   - Pool must be AGGREGATING (D-2).
+   *   - Lines must be ACTIVE; zero ACTIVE → DemandLineNoActiveLinesError (D-3).
+   *   - Optional expected_line_ids: set-mismatch → DemandLineSetChangedError (D-4).
+   *   - Creates NetworkPoolDemandSnapshot (status=CAPTURED, basis=RFQ_ISSUE) (D-5).
+   *   - Creates NetworkPoolDemandSnapshotLine rows (fully immutable copies) (D-7).
+   *   - Updates demand lines to LOCKED_FOR_RFQ with lockedAt timestamp.
+   *   - P2002 unique-constraint conflict → DemandLineSnapshotConflictError (race backstop).
+   *   - Does NOT transition pool lifecycle state (D-12).
+   *   - Does NOT write NetworkLifecycleLog (D-13).
+   *
+   * D-017-A: ownerOrgId and userId are always sourced from the JWT/dbContext.
+   */
+  async lockDemandLinesForRfq(
+    ownerOrgId: string,
+    userId: string | null,
+    input: LockDemandLinesForRfqInput,
+  ): Promise<DemandSnapshotRecord> {
+    // ── Input validation ──────────────────────────────────────────────────────
+    if (!ownerOrgId || ownerOrgId.trim() === '') {
+      throw new DemandLineInvalidInputError('ownerOrgId is required');
+    }
+    if (!input.pool_id || input.pool_id.trim() === '') {
+      throw new DemandLineInvalidInputError('pool_id is required');
+    }
+    if (
+      input.captured_reason != null &&
+      input.captured_reason.length > 1000
+    ) {
+      throw new DemandLineInvalidInputError('captured_reason must not exceed 1000 characters');
+    }
+    if (input.expected_line_ids != null) {
+      if (!Array.isArray(input.expected_line_ids)) {
+        throw new DemandLineInvalidInputError('expected_line_ids must be an array');
+      }
+      for (const id of input.expected_line_ids) {
+        if (typeof id !== 'string' || id.trim() === '') {
+          throw new DemandLineInvalidInputError('expected_line_ids must contain non-empty string UUIDs');
+        }
+      }
+    }
+
+    try {
+      return await this.db.$transaction(async (tx) => {
+        // ── Fetch and guard pool ────────────────────────────────────────────
+        const pool = await tx.networkPool.findFirst({
+          where:   { id: input.pool_id, orgId: ownerOrgId },
+          include: { lifecycleState: { select: { stateKey: true } } },
+        });
+        if (!pool) {
+          throw new DemandLinePoolNotFoundError(input.pool_id);
+        }
+        const poolStateKey = pool.lifecycleState?.stateKey ?? '';
+        if (poolStateKey !== 'AGGREGATING') {
+          throw new DemandLinePoolStateError(poolStateKey, ['AGGREGATING']);
+        }
+
+        // ── Fetch ACTIVE lines (stable order for deterministic processing) ──
+        const activeLines = await tx.networkPoolDemandLine.findMany({
+          where:   { poolId: input.pool_id, ownerOrgId, status: DEMAND_LINE_STATUS.ACTIVE },
+          orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        });
+        if (activeLines.length === 0) {
+          throw new DemandLineNoActiveLinesError(input.pool_id);
+        }
+
+        // ── Optional set-match guard (D-4) ──────────────────────────────────
+        if (input.expected_line_ids != null) {
+          const expectedSet  = new Set(input.expected_line_ids);
+          const currentSet   = new Set(activeLines.map((l) => String(l.id)));
+          const setsMatch    =
+            expectedSet.size === currentSet.size &&
+            [...expectedSet].every((id) => currentSet.has(id));
+          if (!setsMatch) {
+            throw new DemandLineSetChangedError();
+          }
+        }
+
+        // ── Compute next snapshotVersion ────────────────────────────────────
+        const agg = await tx.networkPoolDemandSnapshot.aggregate({
+          where: { poolId: input.pool_id },
+          _max:  { snapshotVersion: true },
+        });
+        const nextVersion = (agg._max.snapshotVersion ?? 0) + 1;
+
+        // ── Compute qty summary (D-9: common unit only) ──────────────────────
+        const units = new Set(activeLines.map((l) => String(l.qtyUnit)));
+        let totalQty: string | null = null;
+        let commonUnit: string | null = null;
+        if (units.size === 1) {
+          commonUnit = [...units][0]!;
+          const sum = activeLines.reduce((acc, l) => acc + parseFloat(String(l.qty)), 0);
+          totalQty = sum.toFixed(6);
+        }
+
+        // ── Create snapshot header ───────────────────────────────────────────
+        const now          = new Date();
+        const snapshotId   = randomUUID();
+        const snapshotRef  = randomUUID();
+        const snapshot = await tx.networkPoolDemandSnapshot.create({
+          data: {
+            id:                  snapshotId,
+            ownerOrgId,
+            poolId:              input.pool_id,
+            snapshotRef,
+            snapshotVersion:     nextVersion,
+            basis:               'RFQ_ISSUE',
+            status:              'CAPTURED',
+            capturedAt:          now,
+            capturedByUserId:    userId ?? null,
+            capturedReason:      input.captured_reason ?? null,
+            lineCount:           activeLines.length,
+            totalQty:            totalQty ?? null,
+            qtyUnit:             commonUnit ?? null,
+            metadataInternalJson: Prisma.DbNull,
+            createdAt:           now,
+            updatedAt:           now,
+          },
+        });
+
+        // ── Create snapshot lines (immutable copies) ─────────────────────────
+        await tx.networkPoolDemandSnapshotLine.createMany({
+          data: activeLines.map((line) => ({
+            id:                            randomUUID(),
+            snapshotId:                    snapshot.id,
+            ownerOrgId,
+            poolId:                        input.pool_id,
+            demandLineId:                  String(line.id),
+            sourceLineRef:                 String(line.lineRef),
+            sourceRevisionNo:              Number(line.revisionNo),
+            commodityCategory:             String(line.commodityCategory),
+            productCategory:               line.productCategory != null ? String(line.productCategory) : null,
+            productSpecSummary:            line.productSpecSummary != null ? String(line.productSpecSummary) : null,
+            qty:                           line.qty,
+            qtyUnit:                       String(line.qtyUnit),
+            qualityRequirementsJson:       line.qualityRequirementsJson == null
+              ? Prisma.DbNull
+              : (line.qualityRequirementsJson as Prisma.InputJsonValue),
+            certificationRequirementsJson: line.certificationRequirementsJson == null
+              ? Prisma.DbNull
+              : (line.certificationRequirementsJson as Prisma.InputJsonValue),
+            packagingRequirementsJson:     line.packagingRequirementsJson == null
+              ? Prisma.DbNull
+              : (line.packagingRequirementsJson as Prisma.InputJsonValue),
+            deliveryLocation:              line.deliveryLocation != null ? String(line.deliveryLocation) : null,
+            deliveryWindowStart:           line.deliveryWindowStart ?? null,
+            deliveryWindowEnd:             line.deliveryWindowEnd ?? null,
+            tolerancePct:                  line.tolerancePct ?? null,
+            priority:                      line.priority != null ? Number(line.priority) : null,
+            sourceType:                    String(line.sourceType),
+            normalizedFromMemberInput:     Boolean(line.normalizedFromMemberInput),
+            sourceMembershipId:            line.sourceMembershipId != null ? String(line.sourceMembershipId) : null,
+            supersedesLineId:              line.supersedesLineId != null ? String(line.supersedesLineId) : null,
+            metadataInternalJson:          line.metadataInternalJson == null
+              ? Prisma.DbNull
+              : (line.metadataInternalJson as Prisma.InputJsonValue),
+            createdAt:                     now,
+          })),
+        });
+
+        // ── Lock demand lines ────────────────────────────────────────────────
+        const activeLineIds = activeLines.map((l) => String(l.id));
+        const updateResult = await tx.networkPoolDemandLine.updateMany({
+          where: { id: { in: activeLineIds }, ownerOrgId, status: DEMAND_LINE_STATUS.ACTIVE },
+          data:  { status: DEMAND_LINE_STATUS.LOCKED_FOR_RFQ, lockedAt: now, updatedAt: now },
+        });
+        if (updateResult.count !== activeLines.length) {
+          // Concurrent modification: fewer rows updated than expected — abort transaction
+          throw new DemandLineSetChangedError();
+        }
+
+        // ── Return snapshot header DTO (no metadataInternalJson, no lines) ──
+        return {
+          id:                  String(snapshot.id),
+          owner_org_id:        String(snapshot.ownerOrgId),
+          pool_id:             String(snapshot.poolId),
+          snapshot_ref:        String(snapshot.snapshotRef),
+          snapshot_version:    Number(snapshot.snapshotVersion),
+          basis:               String(snapshot.basis),
+          status:              String(snapshot.status),
+          captured_at:         snapshot.capturedAt != null ? (snapshot.capturedAt as Date).toISOString() : null,
+          captured_by_user_id: snapshot.capturedByUserId != null ? String(snapshot.capturedByUserId) : null,
+          captured_reason:     snapshot.capturedReason != null ? String(snapshot.capturedReason) : null,
+          line_count:          Number(snapshot.lineCount),
+          total_qty:           snapshot.totalQty != null ? String(snapshot.totalQty) : null,
+          qty_unit:            snapshot.qtyUnit != null ? String(snapshot.qtyUnit) : null,
+          created_at:          (snapshot.createdAt as Date).toISOString(),
+          updated_at:          (snapshot.updatedAt as Date).toISOString(),
+        } satisfies DemandSnapshotRecord;
+      });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new DemandLineSnapshotConflictError();
+      }
+      throw err;
+    }
   }
 }
