@@ -148,14 +148,16 @@ nc_phase1_pool_discovery_scope_boundary: >-
   No member count, no aggregate demand, no raw metadata JSON. No RFQ/quotes/allocation/orders/invoice generation/settlement/escrow/UI.
   No control-plane/admin discovery.
 nc_phase1_next_action: HOLD_FOR_PARESH_DECISION
-nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SERVICE-DESIGN-001
+nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-DESIGN-001
 nc_phase1_next_action_candidate_2: TEXQTIC-NC-PHASE1-POOL-OPEN-DISCOVERY-DESIGN-001
 nc_phase1_next_action_candidate_3: TEXQTIC-NC-PHASE1-POOL-CONTROL-DISCOVERY-DESIGN-001
 nc_phase1_next_action_candidate_4: TEXQTIC-NC-PHASE1-TENANT-FEATURE-OVERRIDE-ADMIN-API-001
 nc_phase1_next_action_note: >-
   Pool discovery implementation is IMPLEMENTED_VERIFIED_GOV_SYNCED (0d40a7a).
   Demand-line schema is IMPLEMENTED_DEPLOYED_VERIFIED_GOV_SYNCED (7197e23 + 3692a14).
-  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SERVICE-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
+  Demand-line service + route is VERIFIED_COMPLETE_AND_GOV_SYNCED (8241991 + f5b655e + 1bc1b09).
+  Demand snapshot schema is IMPLEMENTED_DEPLOYED_VERIFIED_GOV_SYNCED (a4dcabe + 6174d31).
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
   Optional future candidates include open-discovery design, control-discovery design, and tenant feature override admin API.
   None is open. Do not open without explicit Paresh authorization.
 nc_phase1_pool_rfq_demand_source_design_status: GOV_SYNCED
@@ -193,15 +195,39 @@ nc_phase1_pool_rfq_demand_line_route_ts_result: CLEAN
 nc_phase1_pool_rfq_demand_line_route_prisma_result: PASS
 nc_phase1_pool_rfq_demand_line_route_runtime_smoke: "HEALTH_200 + UNAUTH_4_ROUTES_401 + LOCK_FOR_RFQ_404"
 nc_phase1_pool_rfq_demand_line_route_db_cleanup: "demand-lines=0 (DL-ROUTE-*); pools=0 (DL-POOL-*)"
-nc_phase1_pool_rfq_demand_line_lock_status: BLOCKED
+nc_phase1_pool_rfq_demand_line_lock_status: SCHEMA_PREREQUISITE_RESOLVED
 nc_phase1_pool_rfq_demand_line_lock_prerequisite: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001
+nc_phase1_pool_rfq_demand_line_lock_prerequisite_status: SATISFIED — deployed a4dcabe + 6174d31
 nc_phase1_pool_rfq_demand_line_route_scope_boundary: >-
   4 routes: GET /demand-lines, POST /demand-lines, PATCH /demand-lines/:lineId, POST /demand-lines/:lineId/cancel.
   lockDemandLinesForRfq NOT implemented (blocked). No RFQ schema, no supplier quote routes, no allocation,
   no order, no invoice, no settlement, no escrow, no UI, no MakerChecker changes.
-nc_phase1_pool_rfq_demand_line_next_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001
+nc_phase1_pool_rfq_demand_line_next_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-DESIGN-001
 nc_phase1_pool_rfq_demand_line_next_candidate_status: HOLD_FOR_PARESH_DECISION
 nc_phase1_pool_rfq_demand_line_verification_report: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-ROUTE-PROD-VERIFY-GOV-CLOSE-001.md
+nc_phase1_pool_rfq_demand_snapshot_schema_status: IMPLEMENTED_DEPLOYED_VERIFIED_GOV_SYNCED
+nc_phase1_pool_rfq_demand_snapshot_schema_foundation_commit: a4dcabe
+nc_phase1_pool_rfq_demand_snapshot_schema_deploy_verify_commit: 6174d31
+nc_phase1_pool_rfq_demand_snapshot_schema_tables:
+  - network_pool_demand_snapshots
+  - network_pool_demand_snapshot_lines
+nc_phase1_pool_rfq_demand_snapshot_schema_snapshot_columns_verified: 16
+nc_phase1_pool_rfq_demand_snapshot_schema_snapshot_line_columns_verified: 26
+nc_phase1_pool_rfq_demand_snapshot_schema_constraints_verified: 29
+nc_phase1_pool_rfq_demand_snapshot_schema_indexes_verified: 15
+nc_phase1_pool_rfq_demand_snapshot_schema_rls: ENABLED_AND_FORCED_BOTH_TABLES
+nc_phase1_pool_rfq_demand_snapshot_schema_rls_policies: 10
+nc_phase1_pool_rfq_demand_snapshot_schema_grants_verified: "texqtic_app (SELECT/INSERT on both tables); texqtic_admin (SELECT on both tables)"
+nc_phase1_pool_rfq_demand_snapshot_schema_immutability: "prevent_snapshot_line_mutation() + trg_immutable_nc_pool_demand_snapshot_lines"
+nc_phase1_pool_rfq_demand_snapshot_schema_prisma_ledger: REGISTERED
+nc_phase1_pool_rfq_demand_snapshot_schema_test_result: 204/204 PASS
+nc_phase1_pool_rfq_demand_snapshot_schema_ts_result: CLEAN
+nc_phase1_pool_rfq_demand_snapshot_schema_verification_report: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-DEPLOY-VERIFY-001.md
+nc_phase1_pool_rfq_demand_snapshot_scope_boundary: >-
+  Snapshot schema only. No lock-for-RFQ implemented. No RFQ schema, no RFQ routes, no supplier quote routes,
+  no allocation, no order placement, no invoice generation, no settlement, no escrow, no UI, no MakerChecker changes.
+nc_phase1_pool_rfq_demand_line_lock_next_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-DESIGN-001
+nc_phase1_pool_rfq_demand_line_lock_next_candidate_status: HOLD_FOR_PARESH_DECISION
 ```
 
 ---
@@ -494,4 +520,34 @@ Adjacent candidate (not opened): TEXQTIC-NC-PHASE1-POOL-SERVICE-INTEGRATION-HARN
 DPP active_delivery_unit: HOLD_FOR_AUTHORIZATION — PRESERVED, NOT MODIFIED.
 DPP dpp_launch_authorization: HOLD_FOR_PARESH_DECISION — PRESERVED, NOT MODIFIED.
 NC next action: HOLD_FOR_PARESH_DECISION
+
+---
+
+## 2026-05-08 — TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA GOV_SYNCED
+
+Network Commerce Pool RFQ Demand Snapshot schema governance-synced.
+
+Status: GOV_SYNCED
+Foundation commit: `a4dcabe` — feat(network-commerce): add pool demand snapshot schema foundation
+Deploy/verify commit: `6174d31` — docs(network-commerce): verify pool demand snapshot schema deployment
+
+DB: 2 new tables deployed to remote Supabase. RLS enabled + forced on both. Prisma ledger registered.
+  network_pool_demand_snapshots: 16 columns, 7 non-PK indexes, 5 RLS policies
+  network_pool_demand_snapshot_lines: 26 columns (immutable), 8 non-PK indexes, 5 RLS policies
+  Constraints total: 29. Immutability trigger: prevent_snapshot_line_mutation() confirmed.
+
+Validation: 204/204 regression tests PASS. tsc CLEAN. prisma generate PASS.
+
+lockDemandLinesForRfq: schema-blocker resolved (prerequisite TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001 satisfied).
+  Implementation remains HOLD_FOR_PARESH_DECISION — requires explicit lock-for-RFQ design packet.
+
+Scope boundary: snapshot schema only. No lock-for-RFQ implemented. No RFQ schema, no RFQ routes,
+  no supplier quote routes, no allocation, no order placement, no invoice, no settlement, no escrow, no UI.
+
+DPP active_delivery_unit: HOLD_FOR_AUTHORIZATION — PRESERVED, NOT MODIFIED.
+DPP dpp_launch_authorization: HOLD_FOR_PARESH_DECISION — PRESERVED, NOT MODIFIED.
+NC next action: HOLD_FOR_PARESH_DECISION
+NC next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
+Do not open without explicit Paresh authorization.
+
 

@@ -2251,3 +2251,53 @@ Posture update:
   Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001 — HOLD_FOR_PARESH_DECISION.
 ```
 
+---
+
+## 2026-05-08 — VERIFIED_COMPLETE_AND_GOV_SYNCED: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-GOV-SYNC-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-GOV-SYNC-001
+Type:          GOVERNANCE_SYNC
+Status:        VERIFIED_COMPLETE_AND_GOV_SYNCED
+Date:          2026-05-08
+
+Closes:
+  TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001       (a4dcabe) — IMPLEMENTED + VERIFIED
+  TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-DEPLOY-VERIFY-001 (6174d31) — DB_RUNTIME_LIVE + VERIFIED
+
+Authority chain:
+  Schema foundation commit: a4dcabe
+  Deploy/verify governance artifact: 6174d31
+  Governance artifact: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-DEPLOY-VERIFY-001.md
+
+Verification results:
+  Tables deployed:          network_pool_demand_snapshots + network_pool_demand_snapshot_lines
+  Snapshot columns:         16/16 verified
+  Snapshot-line columns:    26/26 verified (immutable — no updatedAt)
+  Constraints total:        29 (13 snapshots + 16 snapshot_lines)
+  Non-PK indexes:           15 (7 + 8)
+  RLS:                      ENABLED + FORCED on both tables
+  RLS policies:             10 (5 per table)
+  Grants:                   texqtic_app (SELECT/INSERT on both); texqtic_admin (SELECT on both)
+  Immutability:             prevent_snapshot_line_mutation() + trg_immutable_nc_pool_demand_snapshot_lines (BEFORE UPDATE/DELETE)
+  Prisma ledger:            REGISTERED (finished_at 2026-05-08 01:34:53.789870+00)
+  prisma generate:          PASS
+  tsc --noEmit:             CLEAN
+  Regression tests:         204/204 PASS
+
+lockDemandLinesForRfq status change:
+  Previous: BLOCKED (prerequisite TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001 absent)
+  Now: SCHEMA_PREREQUISITE_RESOLVED — schema blocker satisfied
+  Implementation remains HOLD_FOR_PARESH_DECISION — requires explicit lock-for-RFQ design packet
+
+Scope boundary preserved:
+  Snapshot schema only. No lock-for-RFQ implemented. No RFQ schema, no RFQ routes,
+  no supplier quote routes, no allocation, no order placement, no invoice generation,
+  no settlement, no escrow, no UI, no MakerChecker changes.
+  DPP HOLD_FOR_PARESH_DECISION posture: PRESERVED. NOT MODIFIED.
+
+Posture update:
+  NC pool RFQ demand snapshot schema foundation is closed and governance-synced.
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-DESIGN-001
+  Status: HOLD_FOR_PARESH_DECISION
+```

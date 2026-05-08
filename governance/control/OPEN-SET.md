@@ -1129,3 +1129,19 @@ NC demand-line route closure (2026-05-08):
   Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001 — HOLD_FOR_PARESH_DECISION.
   Do not open without explicit Paresh authorization.
 
+NC demand snapshot schema closure (2026-05-08):
+- TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001 VERIFIED_COMPLETE_AND_GOV_SYNCED (2026-05-08).
+  Network Commerce Pool RFQ Demand Snapshot schema foundation deployed and verified.
+  Tables: network_pool_demand_snapshots (16 columns), network_pool_demand_snapshot_lines (26 columns, immutable).
+  29 constraints (13 snapshots + 16 snapshot_lines). 15 non-PK indexes (7 + 8).
+  RLS enabled + forced on both tables. 10 RLS policies (5 per table).
+  Grants: texqtic_app (SELECT/INSERT on both tables); texqtic_admin (SELECT on both tables).
+  Snapshot-line immutability: prevent_snapshot_line_mutation() + trg_immutable_nc_pool_demand_snapshot_lines (BEFORE UPDATE/DELETE).
+  Schema foundation commit: a4dcabe. Deploy/verify governance artifact commit: 6174d31.
+  Prisma ledger registered. prisma generate PASS. tsc --noEmit CLEAN. Regression tests: 204/204 PASS.
+  lockDemandLinesForRfq: schema-blocker resolved. Remains implementation-blocked pending design packet.
+  Scope: snapshot schema only. No lock-for-RFQ implemented. No RFQ schema, no RFQ routes, no supplier quote
+  routes, no allocation, no order placement, no invoice, no settlement, no escrow, no UI, no MakerChecker changes.
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
+  Do not open without explicit Paresh authorization.
+
