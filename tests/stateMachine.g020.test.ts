@@ -1145,6 +1145,31 @@ describe('G-020 StateMachineService — core enforcement', () => {
       expect(result.status).toBe('APPLIED');
       expect(result.transitionId).toBe(VALID_UUID_2);
     });
+
+    it('P-POOL-06: POOL AGGREGATING → CLOSED_FOR_BIDS for TENANT_ADMIN → APPLIED', async () => {
+      const db = makeMockDb({
+        fromState: makeState('POOL', 'AGGREGATING'),
+        toState: makeState('POOL', 'CLOSED_FOR_BIDS'),
+        allowedTransition: makeTransition('POOL', 'AGGREGATING', 'CLOSED_FOR_BIDS', ['TENANT_ADMIN', 'PLATFORM_ADMIN']),
+      });
+      const svc = new TestableStateMachineService(db);
+
+      const result = await svc.transition({
+        entityType: 'POOL',
+        entityId: VALID_UUID_1,
+        orgId: VALID_UUID_2,
+        fromStateKey: 'AGGREGATING',
+        toStateKey: 'CLOSED_FOR_BIDS',
+        actorType: 'TENANT_ADMIN',
+        actorUserId: VALID_UUID_1,
+        actorAdminId: null,
+        actorRole: 'NC_POOL_ADMIN',
+        reason: 'RFQ issued for pool — closing demand window for new bids.',
+      });
+
+      expect(result.status).toBe('APPLIED');
+      expect(result.transitionId).toBe(VALID_UUID_2);
+    });
   });
 
   describe('FAIL: Invalid POOL transition (seed-001 state graph enforcement)', () => {
