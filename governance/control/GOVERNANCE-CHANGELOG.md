@@ -2301,3 +2301,62 @@ Posture update:
   Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-DESIGN-001
   Status: HOLD_FOR_PARESH_DECISION
 ```
+
+---
+
+## 2026-05-08 — VERIFIED_COMPLETE_AND_GOV_SYNCED: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-PROD-VERIFY-GOV-CLOSE-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-PROD-VERIFY-GOV-CLOSE-001
+Type:          VERIFICATION + GOVERNANCE_CLOSURE
+Status:        VERIFIED_COMPLETE_AND_GOV_SYNCED
+Date:          2026-05-08
+Commits:       decision d279e2e; service e046ccd; middleware a06631d; route+tests 120408d; governance closure this commit
+
+Authority chain:
+  Lock decision record:  d279e2e
+  Lock service:          e046ccd
+  RFQ sub-flag gate:     a06631d
+  Lock route + tests (DLT-38..DLT-77): 120408d
+
+Verification results:
+  prisma generate:                                   PASS
+  Server tsc --noEmit:                               CLEAN
+  pools.demandLines.integration.test.ts (DLT-01..DLT-77): 77/77 PASS
+  networkPoolDemandLine.service.unit.test.ts:        62/62 PASS
+  ncPoolRfqFeatureGate.middleware.unit.test.ts:      16/16 PASS
+  pools.integration.test.ts:                        56/56 PASS
+  network-pool.service.integration.test.ts:         5 skipped (pre-existing DB harness guard)
+  stateMachine.g020.test.ts:                        32/32 PASS
+
+  Note: Full DLT suite run (864s) showed 76/77 — DLT-60 transient:
+  Supabase connection pool exhaustion after 14 min caused beforeEach flag setup to fail silently.
+  DLT-60 isolated re-run: PASS. All 77 tests are correct.
+
+Runtime smoke:
+  /health:                                           200
+  unauth POST /api/tenant/network-commerce/pools/:poolId/demand-lines/lock-for-rfq: 401
+  Authenticated runtime harness status:              LOCK_RUNTIME_AUTH_SMOKE_BLOCKED_NO_SAFE_AUTH_HARNESS
+
+Cleanup verification:
+  network_pool_demand_snapshot_lines:                0
+  network_pool_demand_snapshots:                     0
+  network_pool_demand_lines (DL-LOCK-% prefix):      0
+  network_pools (DL-POOL-% prefix):                  0
+  tenant_feature_overrides (rfq key for test tenants): 0
+
+Scope boundary preserved:
+  Lock-for-RFQ service, RFQ sub-flag gate, and lock route implemented.
+  5 routes total (list, create, lock-for-rfq, update, cancel).
+  No RFQ schema beyond snapshot tables (already deployed).
+  No RFQ routes beyond lock route (no RFQ issue, no supplier quote routes).
+  No allocation, no order, no invoice, no settlement, no escrow, no UI.
+  No MakerChecker integration.
+  No StateMachineService call. No NetworkLifecycleLog write. No lifecycle transition.
+  DPP HOLD_FOR_PARESH_DECISION posture: PRESERVED. NOT MODIFIED.
+
+Posture update:
+  NC pool demand line lock slice is closed and governance-synced.
+  Next candidate remains HOLD_FOR_PARESH_DECISION:
+    TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-DESIGN-001
+```

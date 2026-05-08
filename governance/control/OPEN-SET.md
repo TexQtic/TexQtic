@@ -1062,6 +1062,21 @@ NC Phase 1 Pool route foundation + two-layer feature flag gate: COMPLETE.
 Feature flag key: `nc.procurement_pools.enabled`
 Gate: two-layer (global `FeatureFlag` + per-org `TenantFeatureOverride`); fail-closed → 503 FEATURE_DISABLED on missing/disabled/DB error.
 
+---
+
+## 2026-05-08 — TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE
+
+- TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-PROD-VERIFY-GOV-CLOSE-001 is VERIFIED_COMPLETE (2026-05-08).
+  Lock-for-RFQ service (e046ccd), RFQ sub-flag gate (a06631d), and lock route (120408d) implemented and verified.
+  Decision record: d279e2e. Tests: 77/77 DLT (DLT-01..DLT-77); 62/62 service unit; 16/16 middleware unit;
+  56/56 pool route regression; 32/32 stateMachine. TypeScript CLEAN. Prisma CLEAN.
+  Scope: lock-for-RFQ service + gate + route only. No RFQ schema/routes beyond lock route, no supplier quote
+  routes, no allocation, no order, no invoice, no settlement, no escrow, no lifecycle transition,
+  no NetworkLifecycleLog write.
+  Verification report: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-LOCK-PROD-VERIFY-GOV-CLOSE-001.md.
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
+  Do not open without explicit Paresh authorization.
+
 | Packet | Commit | Scope |
 |---|---|---|
 | TEXQTIC-NC-PHASE1-POOL-ROUTE-DESIGN-001 | `e0b4533` + `b9d760f` | Design artifact + hardenining |
