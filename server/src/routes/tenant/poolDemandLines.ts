@@ -7,13 +7,11 @@
  * D-017-A: orgId is ALWAYS sourced from request.dbContext.orgId — never from params/query/body.
  *
  * Routes:
- *   GET    /:poolId/demand-lines              — list demand lines (paginated)
- *   POST   /:poolId/demand-lines              — create a demand line
- *   PATCH  /:poolId/demand-lines/:lineId      — update a demand line (partial)
- *   POST   /:poolId/demand-lines/:lineId/cancel — cancel a demand line
- *
- * NOT implemented (blocked):
- *   POST   /:poolId/demand-lines/:lineId/lock-for-rfq — BLOCKED (no snapshot schema).
+ *   GET    /:poolId/demand-lines                      — list demand lines (paginated)
+ *   POST   /:poolId/demand-lines                      — create a demand line
+ *   POST   /:poolId/demand-lines/lock-for-rfq         — lock ACTIVE lines for RFQ issuance
+ *   PATCH  /:poolId/demand-lines/:lineId              — update a demand line (partial)
+ *   POST   /:poolId/demand-lines/:lineId/cancel       — cancel a demand line
  *
  * Design: TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-LINE-SERVICE-DECISION-RECORD-001 (1022879)
  */
@@ -24,6 +22,7 @@ import { z } from 'zod';
 import { tenantAuthMiddleware } from '../../middleware/auth.js';
 import { databaseContextMiddleware } from '../../middleware/database-context.middleware.js';
 import { ncPoolFeatureGateMiddleware } from '../../middleware/ncPoolFeatureGate.middleware.js';
+import { ncPoolRfqFeatureGateMiddleware } from '../../middleware/ncPoolRfqFeatureGate.middleware.js';
 import { prisma } from '../../db/prisma.js';
 import { sendError, sendSuccess, sendValidationError } from '../../utils/response.js';
 import {
@@ -35,6 +34,9 @@ import {
   DemandLinePoolStateError,
   DemandLineDuplicateRefError,
   DemandLineSnapshotBlockedError,
+  DemandLineNoActiveLinesError,
+  DemandLineSetChangedError,
+  DemandLineSnapshotConflictError,
 } from '../../services/networkPoolDemandLine.service.js';
 
 // ─── Param / Query / Body Schemas ────────────────────────────────────────────
@@ -126,6 +128,16 @@ const listDemandLinesQuerySchema = z.object({
   source_type: z.string().trim().min(1).max(50).optional(),
 });
 
+const lockDemandLinesBodySchema = z
+  .object({
+    captured_reason: z.string().max(1000, 'captured_reason max 1000 chars').nullable().optional(),
+    expected_line_ids: z
+      .array(z.string().uuid('expected_line_ids must contain valid UUIDs'))
+      .min(1, 'expected_line_ids must not be empty if provided')
+      .optional(),
+  })
+  .strict();
+
 // ─── Validation Helpers ───────────────────────────────────────────────────────
 
 type ParseResult<T> = z.SafeParseReturnType<unknown, T>;
@@ -190,6 +202,18 @@ function mapDemandLineServiceError(
   }
   if (err instanceof DemandLineSnapshotBlockedError) {
     sendError(reply, 'DEMAND_SNAPSHOT_NOT_READY', err.message, 422);
+    return true;
+  }
+  if (err instanceof DemandLineNoActiveLinesError) {
+    sendError(reply, 'NO_ACTIVE_DEMAND_LINES', err.message, 422);
+    return true;
+  }
+  if (err instanceof DemandLineSetChangedError) {
+    sendError(reply, 'DEMAND_LINE_SET_CHANGED', err.message, 409);
+    return true;
+  }
+  if (err instanceof DemandLineSnapshotConflictError) {
+    sendError(reply, 'SNAPSHOT_CONFLICT', err.message, 409);
     return true;
   }
   if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
@@ -267,6 +291,54 @@ const poolDemandLineRoutes: FastifyPluginAsync = async fastify => {
         if (mapDemandLineServiceError(reply, err)) return;
         request.log.error(err, 'network-commerce.demand-lines.create');
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to create demand line', 500);
+      }
+    },
+  );
+
+  // POST /:poolId/demand-lines/lock-for-rfq — lock active demand lines for RFQ issuance
+  //
+  // IMPORTANT: Registered BEFORE /:poolId/demand-lines/:lineId routes so the static
+  // segment 'lock-for-rfq' is never shadowed by the dynamic :lineId param.
+  // D-017-A: orgId and userId always from request.dbContext — never from body or params.
+  // Role gate: OWNER + ADMIN only; MEMBER → 403.
+  fastify.post(
+    '/:poolId/demand-lines/lock-for-rfq',
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: [ncPoolFeatureGateMiddleware, ncPoolRfqFeatureGateMiddleware],
+    },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+
+      // Role gate: OWNER + ADMIN only; MEMBER → 403
+      const userRole = (request.userRole ?? '').trim().toUpperCase();
+      if (!userRole.includes('ADMIN') && userRole !== 'OWNER') {
+        return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may lock demand lines for RFQ', 403);
+      }
+
+      const paramResult = poolParamSchema.safeParse(request.params);
+      if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
+
+      const bodyResult = lockDemandLinesBodySchema.safeParse(request.body);
+      if (!handleBodyValidation(reply, bodyResult)) return;
+
+      const { poolId } = paramResult.data;
+      const orgId = dbContext.orgId;
+      const userId = request.userId ?? null;
+
+      try {
+        const svc = new NetworkPoolDemandLineService(prisma);
+        const result = await svc.lockDemandLinesForRfq(orgId, userId, {
+          pool_id: poolId,
+          captured_reason: bodyResult.data.captured_reason,
+          expected_line_ids: bodyResult.data.expected_line_ids,
+        });
+        return sendSuccess(reply, result, 201);
+      } catch (err) {
+        if (mapDemandLineServiceError(reply, err)) return;
+        request.log.error(err, 'network-commerce.demand-lines.lock-for-rfq');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to lock demand lines for RFQ', 500);
       }
     },
   );
