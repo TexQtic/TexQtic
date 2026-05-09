@@ -1052,72 +1052,74 @@ model BuyerSupplierRelationship {
 }
 
 model organizations {
-  id                                                                                       String                          @id @db.Uuid
-  slug                                                                                     String                          @unique @db.VarChar(100)
-  legal_name                                                                               String                          @db.VarChar(500)
-  jurisdiction                                                                             String                          @default("UNKNOWN") @db.VarChar(100)
-  registration_no                                                                          String?                         @db.VarChar(200)
-  org_type                                                                                 String                          @default("B2B") @db.VarChar(50)
-  risk_score                                                                               Int                             @default(0) @db.SmallInt
+  id                                                                                                 String                              @id @db.Uuid
+  slug                                                                                               String                              @unique @db.VarChar(100)
+  legal_name                                                                                         String                              @db.VarChar(500)
+  jurisdiction                                                                                       String                              @default("UNKNOWN") @db.VarChar(100)
+  registration_no                                                                                    String?                             @db.VarChar(200)
+  org_type                                                                                           String                              @default("B2B") @db.VarChar(50)
+  risk_score                                                                                         Int                                 @default(0) @db.SmallInt
   /// Canonical organization lifecycle + onboarding state.
   /// Enforced by SQL check constraint and migration history, not a native Prisma enum.
   /// Legal values: ACTIVE | SUSPENDED | CLOSED | PENDING_VERIFICATION |
   /// VERIFICATION_APPROVED | VERIFICATION_REJECTED | VERIFICATION_NEEDS_MORE_INFO
-  status                                                                                   String                          @default("ACTIVE") @db.VarChar(30)
-  plan                                                                                     String                          @default("FREE") @db.VarChar(30)
-  effective_at                                                                             DateTime                        @default(now()) @db.Timestamptz(6)
-  superseded_at                                                                            DateTime?                       @db.Timestamptz(6)
-  created_at                                                                               DateTime                        @default(now()) @db.Timestamptz(6)
-  updated_at                                                                               DateTime                        @default(now()) @db.Timestamptz(6)
-  is_white_label                                                                           Boolean                         @default(false)
-  external_orchestration_ref                                                               String?                         @unique @db.VarChar(255)
-  primary_segment_key                                                                      String?                         @db.VarChar(100)
-  publication_posture                                                                      String                          @default("PRIVATE_OR_AUTH_ONLY") @db.VarChar(30)
-  price_disclosure_policy_mode                                                             String?                         @db.VarChar(30)
-  is_qa_sentinel                                                                           Boolean                         @default(false)
-  buyerRelationships                                                                       BuyerSupplierRelationship[]     @relation("BuyerSupplierRelationshipBuyer")
-  supplierRelationships                                                                    BuyerSupplierRelationship[]     @relation("BuyerSupplierRelationshipSupplier")
-  certification_lifecycle_logs                                                             CertificationLifecycleLog[]
-  certifications                                                                           Certification[]
-  documentEmbeddings                                                                       DocumentEmbedding[]
-  dppEvidenceClaims                                                                        DppEvidenceClaim[]
-  dpp_evidence_items                                                                       dpp_evidence_items[]
-  dpp_passport_states                                                                      dpp_passport_states[]
-  dpp_product_details                                                                      dpp_product_details[]
-  dpp_trade_links                                                                          dpp_trade_links[]
-  escalation_events                                                                        EscalationEvent[]
-  escrow_lifecycle_logs                                                                    EscrowLifecycleLog[]
-  gst_verifications                                                                        gst_verifications?
-  invoice_lifecycle_logs                                                                   invoice_lifecycle_logs[]
-  invoices_invoices_buyer_org_idToorganizations                                            invoices[]                      @relation("invoices_buyer_org_idToorganizations")
-  invoices_invoices_org_idToorganizations                                                  invoices[]                      @relation("invoices_org_idToorganizations")
-  node_certifications                                                                      node_certifications[]
-  role_positions                                                                           OrganizationRolePosition[]
-  secondary_segments                                                                       OrganizationSecondarySegment[]
-  tenants                                                                                  Tenant                          @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  partner_routing_stubs                                                                    partner_routing_stubs[]
-  pending_approvals                                                                        PendingApproval[]
-  sanctions                                                                                Sanction[]
-  traceabilityEdges                                                                        TraceabilityEdge[]
-  traceabilityNodes                                                                        TraceabilityNode[]
-  network_invoices                                                                         NetworkInvoice[]
-  network_lifecycle_logs                                                                   NetworkLifecycleLog[]
-  network_pools                                                                            NetworkPool[]
-  network_pool_memberships                                                                 NetworkPoolMembership[]
-  network_pool_demand_lines                                                                NetworkPoolDemandLine[] @relation("NetworkPoolDemandLineOwnerOrg")
-  network_pool_demand_snapshots                                                            NetworkPoolDemandSnapshot[] @relation("NetworkPoolDemandSnapshotOwnerOrg")
-  network_pool_demand_snapshot_lines                                                       NetworkPoolDemandSnapshotLine[] @relation("NetworkPoolDemandSnapshotLineOwnerOrg")
-  network_pool_rfqs                                                                         NetworkPoolRfq[] @relation("NetworkPoolRfqOwnerOrg")
-  network_pool_rfq_lines                                                                    NetworkPoolRfqLine[] @relation("NetworkPoolRfqLineOwnerOrg")
-  trade_lifecycle_logs                                                                     TradeLifecycleLog[]
-  tradesBuyer                                                                              Trade[]                         @relation("TradeBuyer")
-  tradesSeller                                                                             Trade[]                         @relation("TradeSeller")
-  ttp_eligibility_assessments                                                              ttp_eligibility_assessments[]
-  ttp_enrollment_logs                                                                      ttp_enrollment_logs[]
-  ttp_score_snapshots                                                                      ttp_score_snapshots[]
-  verified_payable_certificates_verified_payable_certificates_buyer_org_idToorganizations  verified_payable_certificates[] @relation("verified_payable_certificates_buyer_org_idToorganizations")
-  verified_payable_certificates_verified_payable_certificates_org_idToorganizations        verified_payable_certificates[] @relation("verified_payable_certificates_org_idToorganizations")
-  verified_payable_certificates_verified_payable_certificates_seller_org_idToorganizations verified_payable_certificates[] @relation("verified_payable_certificates_seller_org_idToorganizations")
+  status                                                                                             String                              @default("ACTIVE") @db.VarChar(30)
+  plan                                                                                               String                              @default("FREE") @db.VarChar(30)
+  effective_at                                                                                       DateTime                            @default(now()) @db.Timestamptz(6)
+  superseded_at                                                                                      DateTime?                           @db.Timestamptz(6)
+  created_at                                                                                         DateTime                            @default(now()) @db.Timestamptz(6)
+  updated_at                                                                                         DateTime                            @default(now()) @db.Timestamptz(6)
+  is_white_label                                                                                     Boolean                             @default(false)
+  external_orchestration_ref                                                                         String?                             @unique @db.VarChar(255)
+  primary_segment_key                                                                                String?                             @db.VarChar(100)
+  publication_posture                                                                                String                              @default("PRIVATE_OR_AUTH_ONLY") @db.VarChar(30)
+  price_disclosure_policy_mode                                                                       String?                             @db.VarChar(30)
+  is_qa_sentinel                                                                                     Boolean                             @default(false)
+  buyerRelationships                                                                                 BuyerSupplierRelationship[]         @relation("BuyerSupplierRelationshipBuyer")
+  supplierRelationships                                                                              BuyerSupplierRelationship[]         @relation("BuyerSupplierRelationshipSupplier")
+  certification_lifecycle_logs                                                                       CertificationLifecycleLog[]
+  certifications                                                                                     Certification[]
+  documentEmbeddings                                                                                 DocumentEmbedding[]
+  dppEvidenceClaims                                                                                  DppEvidenceClaim[]
+  dpp_evidence_items                                                                                 dpp_evidence_items[]
+  dpp_passport_states                                                                                dpp_passport_states[]
+  dpp_product_details                                                                                dpp_product_details[]
+  dpp_trade_links                                                                                    dpp_trade_links[]
+  escalation_events                                                                                  EscalationEvent[]
+  escrow_lifecycle_logs                                                                              EscrowLifecycleLog[]
+  gst_verifications                                                                                  gst_verifications?
+  invoice_lifecycle_logs                                                                             invoice_lifecycle_logs[]
+  invoices_invoices_buyer_org_idToorganizations                                                      invoices[]                          @relation("invoices_buyer_org_idToorganizations")
+  invoices_invoices_org_idToorganizations                                                            invoices[]                          @relation("invoices_org_idToorganizations")
+  network_invoices                                                                                   NetworkInvoice[]
+  network_lifecycle_logs                                                                             NetworkLifecycleLog[]
+  network_pool_demand_lines                                                                          NetworkPoolDemandLine[]             @relation("NetworkPoolDemandLineOwnerOrg")
+  network_pool_demand_snapshot_lines                                                                 NetworkPoolDemandSnapshotLine[]     @relation("NetworkPoolDemandSnapshotLineOwnerOrg")
+  network_pool_demand_snapshots                                                                      NetworkPoolDemandSnapshot[]         @relation("NetworkPoolDemandSnapshotOwnerOrg")
+  network_pool_memberships                                                                           NetworkPoolMembership[]
+  network_pool_rfq_lines                                                                             NetworkPoolRfqLine[]                @relation("NetworkPoolRfqLineOwnerOrg")
+  supplierInvitesAsOwner                                                                             NetworkPoolRfqSupplierInvite[]      @relation("NetworkPoolRfqSupplierInviteOwnerOrg")
+  supplierInvitesAsSupplier                                                                          NetworkPoolRfqSupplierInvite[]      @relation("NetworkPoolRfqSupplierInviteSupplierOrg")
+  network_pool_rfqs                                                                                  NetworkPoolRfq[]                    @relation("NetworkPoolRfqOwnerOrg")
+  network_pools                                                                                      NetworkPool[]
+  node_certifications                                                                                node_certifications[]
+  role_positions                                                                                     OrganizationRolePosition[]
+  secondary_segments                                                                                 OrganizationSecondarySegment[]
+  tenants                                                                                            Tenant                              @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  partner_routing_stubs                                                                              partner_routing_stubs[]
+  pending_approvals                                                                                  PendingApproval[]
+  sanctions                                                                                          Sanction[]
+  traceabilityEdges                                                                                  TraceabilityEdge[]
+  traceabilityNodes                                                                                  TraceabilityNode[]
+  trade_lifecycle_logs                                                                               TradeLifecycleLog[]
+  tradesBuyer                                                                                        Trade[]                             @relation("TradeBuyer")
+  tradesSeller                                                                                       Trade[]                             @relation("TradeSeller")
+  ttp_eligibility_assessments                                                                        ttp_eligibility_assessments[]
+  ttp_enrollment_logs                                                                                ttp_enrollment_logs[]
+  ttp_score_snapshots                                                                                ttp_score_snapshots[]
+  verified_payable_certificates_verified_payable_certificates_buyer_org_idToorganizations            verified_payable_certificates[]     @relation("verified_payable_certificates_buyer_org_idToorganizations")
+  verified_payable_certificates_verified_payable_certificates_org_idToorganizations                  verified_payable_certificates[]     @relation("verified_payable_certificates_org_idToorganizations")
+  verified_payable_certificates_verified_payable_certificates_seller_org_idToorganizations           verified_payable_certificates[]     @relation("verified_payable_certificates_seller_org_idToorganizations")
 
   @@index([effective_at(sort: Desc)], map: "idx_organizations_effective_at")
   @@index([jurisdiction], map: "idx_organizations_jurisdiction")
@@ -1712,23 +1714,6 @@ model ttp_score_snapshots {
   @@index([trigger_event, source_event_id], map: "idx_ttp_score_snapshots_trigger_source")
 }
 
-enum TenantType {
-  B2B
-  B2C
-  INTERNAL
-  AGGREGATOR
-
-  @@map("tenant_type")
-}
-
-enum TenantStatus {
-  ACTIVE
-  SUSPENDED
-  CLOSED
-
-  @@map("tenant_status")
-}
-
 /// TEXQTIC-NC-PHASE1-STATEMACHINE-001: Immutable, append-only audit log for all
 /// Network Commerce entity lifecycle transitions (POOL, SYNDICATE, VCO_CHAIN).
 /// Three-layer immutability: StateMachineService (no update/delete method) +
@@ -1758,7 +1743,7 @@ model NetworkLifecycleLog {
   /// Role snapshot at time of transition (not a live FK)
   actorRole       String        @map("actor_role")
   /// G-022: escalation severity level if triggered (1–4), null if not
-  escalationLevel Int?          @map("escalation_level")
+  escalationLevel Int?          @map("escalation_level") @db.SmallInt
   /// G-021: UUID of the Maker user in a Maker-Checker flow (null if no MC)
   makerUserId     String?       @map("maker_user_id") @db.Uuid
   /// G-021: UUID of the Checker user in a Maker-Checker flow (null if no MC)
@@ -1793,8 +1778,8 @@ model NetworkLifecycleLog {
 model NetworkInvoice {
   id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   orgId             String        @map("org_id") @db.Uuid
-  invoiceType       String        @map("invoice_type")
-  networkEntityType String        @map("network_entity_type")
+  invoiceType       String        @map("invoice_type") @db.VarChar(50)
+  networkEntityType String        @map("network_entity_type") @db.VarChar(50)
   networkEntityId   String        @map("network_entity_id") @db.Uuid
   invoiceNumber     String        @map("invoice_number") @db.VarChar(100)
   invoiceDate       DateTime      @map("invoice_date") @db.Timestamptz(6)
@@ -1827,39 +1812,40 @@ model NetworkInvoice {
 /// networkEntityId on network_invoices references this table softly (no FK in invoice packet).
 /// No service layer or routes in this packet — schema foundation only.
 model NetworkPool {
-  id               String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                                String                              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// Pool admin org. RLS anchor: current_setting('app.org_id', true)
-  orgId            String                @map("org_id") @db.Uuid
+  orgId                             String                              @map("org_id") @db.Uuid
   /// Stable external reference for the pool. Unique per org.
-  poolRef          String                @map("pool_ref") @db.VarChar(100)
+  poolRef                           String                              @map("pool_ref") @db.VarChar(100)
   /// Commodity category for this pool (e.g., COTTON_YARN, GREY_FABRIC).
-  commodityCategory String               @map("commodity_category") @db.VarChar(100)
+  commodityCategory                 String                              @map("commodity_category") @db.VarChar(100)
   /// Target aggregate quantity for this pool. DB CHECK: target_qty > 0.
-  targetQty        Decimal               @map("target_qty") @db.Decimal(18, 6)
+  targetQty                         Decimal                             @map("target_qty") @db.Decimal(18, 6)
   /// Unit of measure (e.g., KG, MT, METERS). Must match member declared_qty units.
-  qtyUnit          String                @map("qty_unit") @db.VarChar(50)
+  qtyUnit                           String                              @map("qty_unit") @db.VarChar(50)
   /// Current lifecycle state. FK to lifecycle_states. POOL entity type rows seeded separately.
-  lifecycleStateId String                @map("lifecycle_state_id") @db.Uuid
+  lifecycleStateId                  String                              @map("lifecycle_state_id") @db.Uuid
   /// Timestamp when the pool opens for member declaration.
-  openAt           DateTime?             @map("open_at") @db.Timestamptz(6)
+  openAt                            DateTime?                           @map("open_at") @db.Timestamptz(6)
   /// Timestamp when the pool closes for new declarations.
-  closeAt          DateTime?             @map("close_at") @db.Timestamptz(6)
+  closeAt                           DateTime?                           @map("close_at") @db.Timestamptz(6)
   /// Timestamp when allocation was computed.
-  allocatedAt      DateTime?             @map("allocated_at") @db.Timestamptz(6)
+  allocatedAt                       DateTime?                           @map("allocated_at") @db.Timestamptz(6)
   /// Timestamp when the pool was fully settled.
-  settledAt        DateTime?             @map("settled_at") @db.Timestamptz(6)
-  metadata         Json?                 @map("metadata")
-  createdByUserId  String?               @map("created_by_user_id") @db.Uuid
-  createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime              @default(now()) @map("updated_at") @db.Timestamptz(6)
-  organizations    organizations         @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pools_org_id_fk")
-  lifecycleState   LifecycleState        @relation(fields: [lifecycleStateId], references: [id], onUpdate: NoAction, map: "network_pools_lifecycle_state_id_fk")
-  memberships         NetworkPoolMembership[]
-  demandLines         NetworkPoolDemandLine[]
-  demandSnapshots     NetworkPoolDemandSnapshot[]     @relation("NetworkPoolDemandSnapshots")
-  demandSnapshotLines NetworkPoolDemandSnapshotLine[] @relation("NetworkPoolDemandSnapshotLines")
-  rfqs                NetworkPoolRfq[]                @relation("NetworkPoolRfqs")
-  rfqLines            NetworkPoolRfqLine[]            @relation("NetworkPoolRfqLines")
+  settledAt                         DateTime?                           @map("settled_at") @db.Timestamptz(6)
+  metadata                          Json?                               @map("metadata")
+  createdByUserId                   String?                             @map("created_by_user_id") @db.Uuid
+  createdAt                         DateTime                            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                         DateTime                            @default(now()) @map("updated_at") @db.Timestamptz(6)
+  demandLines                       NetworkPoolDemandLine[]
+  demandSnapshotLines               NetworkPoolDemandSnapshotLine[]     @relation("NetworkPoolDemandSnapshotLines")
+  demandSnapshots                   NetworkPoolDemandSnapshot[]         @relation("NetworkPoolDemandSnapshots")
+  memberships                       NetworkPoolMembership[]
+  rfqLines                          NetworkPoolRfqLine[]                @relation("NetworkPoolRfqLines")
+  supplierInvites                   NetworkPoolRfqSupplierInvite[]
+  rfqs                              NetworkPoolRfq[]                    @relation("NetworkPoolRfqs")
+  lifecycleState                    LifecycleState                      @relation(fields: [lifecycleStateId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "network_pools_lifecycle_state_id_fk")
+  organizations                     organizations                       @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pools_org_id_fk")
 
   @@unique([orgId, poolRef], map: "network_pools_org_pool_ref_unique")
   @@index([orgId, createdAt(sort: Desc)], map: "idx_network_pools_org_created")
@@ -1873,33 +1859,33 @@ model NetworkPool {
 /// org_id is the member org (RLS anchor). Pool owner is in NetworkPool.org_id.
 /// Status transitions (PENDING→APPROVED→ALLOCATED, WITHDRAWN) handled in a later service packet.
 model NetworkPoolMembership {
-  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// Pool this membership belongs to. FK to network_pools(id) ON DELETE CASCADE.
-  poolId        String        @map("pool_id") @db.Uuid
+  poolId              String                          @map("pool_id") @db.Uuid
   /// Member organization. RLS anchor: current_setting('app.org_id', true)
-  orgId         String        @map("org_id") @db.Uuid
+  orgId               String                          @map("org_id") @db.Uuid
   /// Quantity the member declared for this pool. DB CHECK: declared_qty > 0.
-  declaredQty   Decimal       @map("declared_qty") @db.Decimal(18, 6)
+  declaredQty         Decimal                         @map("declared_qty") @db.Decimal(18, 6)
   /// Unit of measure — must match NetworkPool.qty_unit.
-  qtyUnit       String        @map("qty_unit") @db.VarChar(50)
+  qtyUnit             String                          @map("qty_unit") @db.VarChar(50)
   /// Allocated quantity after pool closes and allocation is computed. Null until allocated.
-  allocatedQty  Decimal?      @map("allocated_qty") @db.Decimal(18, 6)
+  allocatedQty        Decimal?                        @map("allocated_qty") @db.Decimal(18, 6)
   /// Fractional allocation (0.0000–1.0000). Null until computed. Sum across pool ≤ 1.
-  allocationPct Decimal?      @map("allocation_pct") @db.Decimal(5, 4)
+  allocationPct       Decimal?                        @map("allocation_pct") @db.Decimal(5, 4)
   /// Membership status. Domain enforced by DB CHECK.
-  status        String        @default("PENDING") @map("status") @db.VarChar(50)
+  status              String                          @default("PENDING") @map("status") @db.VarChar(50)
   /// Timestamp when this organization joined the pool.
-  joinedAt      DateTime      @map("joined_at") @db.Timestamptz(6)
+  joinedAt            DateTime                        @map("joined_at") @db.Timestamptz(6)
   /// Timestamp when membership was approved. Null until approved.
-  approvedAt    DateTime?     @map("approved_at") @db.Timestamptz(6)
+  approvedAt          DateTime?                       @map("approved_at") @db.Timestamptz(6)
   /// Timestamp when membership was withdrawn. Null unless withdrawn.
-  withdrawnAt   DateTime?     @map("withdrawn_at") @db.Timestamptz(6)
-  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime      @default(now()) @map("updated_at") @db.Timestamptz(6)
-  pool          NetworkPool          @relation(fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_memberships_pool_id_fk")
-  organizations organizations        @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_memberships_org_id_fk")
+  withdrawnAt         DateTime?                       @map("withdrawn_at") @db.Timestamptz(6)
+  createdAt           DateTime                        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime                        @default(now()) @map("updated_at") @db.Timestamptz(6)
   demandLines         NetworkPoolDemandLine[]
   demandSnapshotLines NetworkPoolDemandSnapshotLine[] @relation("NetworkPoolMembershipSnapshotLines")
+  organizations       organizations                   @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_memberships_org_id_fk")
+  pool                NetworkPool                     @relation(fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_memberships_pool_id_fk")
 
   @@unique([poolId, orgId], map: "network_pool_memberships_pool_org_unique")
   @@index([poolId, status], map: "idx_network_pool_memberships_pool_status")
@@ -1919,69 +1905,67 @@ model NetworkPoolMembership {
 /// Snapshot/immutability deferred to TEXQTIC-NC-PHASE1-POOL-RFQ-DEMAND-SNAPSHOT-SCHEMA-001.
 /// No service layer, routes, or RFQ tables in this packet.
 model NetworkPoolDemandLine {
-  id                          String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                            String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// Canonical RLS anchor. Live FK → organizations.id.
-  ownerOrgId                  String                 @map("owner_org_id") @db.Uuid
+  ownerOrgId                    String                          @map("owner_org_id") @db.Uuid
   /// FK to network_pools(id). Demand lines belong to one pool.
-  poolId                      String                 @map("pool_id") @db.Uuid
+  poolId                        String                          @map("pool_id") @db.Uuid
   /// Stable external line reference per pool. Non-empty enforced by DB CHECK.
-  lineRef                     String                 @map("line_ref") @db.VarChar(100)
+  lineRef                       String                          @map("line_ref") @db.VarChar(100)
   /// Top-level commodity category (e.g., COTTON_YARN, GREY_FABRIC). Non-empty enforced by DB CHECK.
-  commodityCategory           String                 @map("commodity_category") @db.VarChar(100)
+  commodityCategory             String                          @map("commodity_category") @db.VarChar(100)
   /// Optional product sub-category (e.g., RING_SPUN, OPEN_END).
-  productCategory             String?                @map("product_category") @db.VarChar(100)
+  productCategory               String?                         @map("product_category") @db.VarChar(100)
   /// Free-form human-readable product specification summary.
-  productSpecSummary          String?                @map("product_spec_summary")
+  productSpecSummary            String?                         @map("product_spec_summary")
   /// Quantity demanded for this line. DB CHECK: qty > 0.
-  qty                         Decimal                @map("qty") @db.Decimal(18, 6)
+  qty                           Decimal                         @map("qty") @db.Decimal(18, 6)
   /// Unit of measure (e.g., KG, MT, METERS). Non-empty enforced by DB CHECK.
-  qtyUnit                     String                 @map("qty_unit") @db.VarChar(50)
+  qtyUnit                       String                          @map("qty_unit") @db.VarChar(50)
   /// Quality requirements JSONB (grade, count, twist, etc.). Null at DRAFT stage.
-  qualityRequirementsJson     Json?                  @map("quality_requirements_json")
+  qualityRequirementsJson       Json?                           @map("quality_requirements_json")
   /// Certification requirements JSONB (BCI, GOTS, OEKO-TEX, etc.). Null at DRAFT stage.
-  certificationRequirementsJson Json?                @map("certification_requirements_json")
+  certificationRequirementsJson Json?                           @map("certification_requirements_json")
   /// Packaging requirements JSONB (bale type, labeling, etc.). Null at DRAFT stage.
-  packagingRequirementsJson   Json?                  @map("packaging_requirements_json")
+  packagingRequirementsJson     Json?                           @map("packaging_requirements_json")
   /// Delivery destination (city/port/region). Null at DRAFT stage.
-  deliveryLocation            String?                @map("delivery_location") @db.VarChar(500)
+  deliveryLocation              String?                         @map("delivery_location") @db.VarChar(500)
   /// Earliest acceptable delivery date. Null at DRAFT stage.
-  deliveryWindowStart         DateTime?              @map("delivery_window_start") @db.Timestamptz(6)
+  deliveryWindowStart           DateTime?                       @map("delivery_window_start") @db.Timestamptz(6)
   /// Latest acceptable delivery date. DB CHECK: end >= start when both set.
-  deliveryWindowEnd           DateTime?              @map("delivery_window_end") @db.Timestamptz(6)
+  deliveryWindowEnd             DateTime?                       @map("delivery_window_end") @db.Timestamptz(6)
   /// Quantity tolerance percentage (0–100). Null means no tolerance configured.
-  tolerancePct                Decimal?               @map("tolerance_pct") @db.Decimal(5, 2)
+  tolerancePct                  Decimal?                        @map("tolerance_pct") @db.Decimal(5, 2)
   /// Optional priority rank within pool (lower = higher priority). Null = unranked.
-  priority                    Int?                   @map("priority")
+  priority                      Int?                            @map("priority")
   /// Demand line lifecycle status. Domain enforced by DB CHECK.
   /// Values: DRAFT | ACTIVE | LOCKED_FOR_RFQ | SUPERSEDED | CANCELLED
-  status                      String                 @default("DRAFT") @map("status") @db.VarChar(50)
+  status                        String                          @default("DRAFT") @map("status") @db.VarChar(50)
   /// Demand source type. Enforced by DB CHECK.
   /// OWNER_DIRECT | MEMBERSHIP_DERIVED | OWNER_NORMALIZED
-  sourceType                  String                 @map("source_type") @db.VarChar(50)
+  sourceType                    String                          @map("source_type") @db.VarChar(50)
   /// Nullable FK to the membership that triggered this demand line.
   /// NULL when sourceType = OWNER_DIRECT.
-  sourceMembershipId          String?                @map("source_membership_id") @db.Uuid
+  sourceMembershipId            String?                         @map("source_membership_id") @db.Uuid
   /// True when this line was produced by normalizing a raw member input.
-  normalizedFromMemberInput   Boolean                @default(false) @map("normalized_from_member_input")
+  normalizedFromMemberInput     Boolean                         @default(false) @map("normalized_from_member_input")
   /// Revision number within (pool_id, line_ref) sequence. DB CHECK: >= 1.
-  revisionNo                  Int                    @default(1) @map("revision_no")
+  revisionNo                    Int                             @default(1) @map("revision_no")
   /// Nullable self-FK: points to the prior line version this supersedes.
   /// NULL for revision_no = 1 (original line).
-  supersedesLineId            String?                @map("supersedes_line_id") @db.Uuid
+  supersedesLineId              String?                         @map("supersedes_line_id") @db.Uuid
   /// Internal operational metadata. Never exposed to suppliers.
-  metadataInternalJson        Json?                  @map("metadata_internal_json")
-  createdAt                   DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt                   DateTime               @default(now()) @map("updated_at") @db.Timestamptz(6)
+  metadataInternalJson          Json?                           @map("metadata_internal_json")
+  createdAt                     DateTime                        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                     DateTime                        @default(now()) @map("updated_at") @db.Timestamptz(6)
   /// Set when status transitions to LOCKED_FOR_RFQ. DB CHECK: NOT NULL when LOCKED_FOR_RFQ.
-  lockedAt                    DateTime?              @map("locked_at") @db.Timestamptz(6)
-
-  /// Relations
-  ownerOrg          organizations          @relation("NetworkPoolDemandLineOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_demand_lines_owner_org_id_fk")
-  pool              NetworkPool            @relation(fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_demand_lines_pool_id_fk")
-  sourceMembership  NetworkPoolMembership? @relation(fields: [sourceMembershipId], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "network_pool_demand_lines_source_membership_id_fk")
-  supersedesLine    NetworkPoolDemandLine? @relation("DemandLineRevision", fields: [supersedesLineId], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "network_pool_demand_lines_supersedes_line_id_fk")
-  supersededByLines   NetworkPoolDemandLine[]        @relation("DemandLineRevision")
-  demandSnapshotLines NetworkPoolDemandSnapshotLine[] @relation("DemandLineSnapshotLines")
+  lockedAt                      DateTime?                       @map("locked_at") @db.Timestamptz(6)
+  ownerOrg                      organizations                   @relation("NetworkPoolDemandLineOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_demand_lines_owner_org_id_fk")
+  pool                          NetworkPool                     @relation(fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pool_demand_lines_pool_id_fk")
+  sourceMembership              NetworkPoolMembership?          @relation(fields: [sourceMembershipId], references: [id], onUpdate: NoAction, map: "network_pool_demand_lines_source_membership_id_fk")
+  supersedesLine                NetworkPoolDemandLine?          @relation("DemandLineRevision", fields: [supersedesLineId], references: [id], onUpdate: NoAction, map: "network_pool_demand_lines_supersedes_line_id_fk")
+  supersededByLines             NetworkPoolDemandLine[]         @relation("DemandLineRevision")
+  demandSnapshotLines           NetworkPoolDemandSnapshotLine[] @relation("DemandLineSnapshotLines")
 
   @@unique([poolId, lineRef, revisionNo], map: "network_pool_demand_lines_pool_line_ref_revision_unique")
   @@index([poolId], map: "idx_nc_pool_demand_lines_pool_id")
@@ -2004,27 +1988,26 @@ model NetworkPoolDemandLine {
 /// unique(pool_id, snapshot_version) and unique(pool_id, snapshot_ref) enforced by DB.
 /// No service layer, routes, or lockDemandLinesForRfq in this packet.
 model NetworkPoolDemandSnapshot {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  ownerOrgId           String    @map("owner_org_id") @db.Uuid
-  poolId               String    @map("pool_id") @db.Uuid
-  snapshotRef          String    @map("snapshot_ref") @db.VarChar(100)
-  snapshotVersion      Int       @map("snapshot_version")
-  basis                String    @map("basis") @db.VarChar(50)
-  status               String    @default("DRAFT") @map("status") @db.VarChar(50)
-  capturedAt           DateTime? @map("captured_at") @db.Timestamptz(6)
-  capturedByUserId     String?   @map("captured_by_user_id") @db.Uuid
-  capturedReason       String?   @map("captured_reason")
-  lineCount            Int       @default(0) @map("line_count")
-  totalQty             Decimal?  @map("total_qty") @db.Decimal(18, 6)
-  qtyUnit              String?   @map("qty_unit") @db.VarChar(50)
-  metadataInternalJson Json?     @map("metadata_internal_json")
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt            DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
-
-  ownerOrg organizations @relation("NetworkPoolDemandSnapshotOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_demand_snapshots_owner_org_id_fk")
-  pool     NetworkPool   @relation("NetworkPoolDemandSnapshots", fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_demand_snapshots_pool_id_fk")
-  lines    NetworkPoolDemandSnapshotLine[]
-  rfqs     NetworkPoolRfq[]               @relation("NetworkPoolRfqSnapshots")
+  id                   String                          @id(map: "nc_pool_demand_snapshots_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ownerOrgId           String                          @map("owner_org_id") @db.Uuid
+  poolId               String                          @map("pool_id") @db.Uuid
+  snapshotRef          String                          @map("snapshot_ref") @db.VarChar(100)
+  snapshotVersion      Int                             @map("snapshot_version")
+  basis                String                          @map("basis") @db.VarChar(50)
+  status               String                          @default("DRAFT") @map("status") @db.VarChar(50)
+  capturedAt           DateTime?                       @map("captured_at") @db.Timestamptz(6)
+  capturedByUserId     String?                         @map("captured_by_user_id") @db.Uuid
+  capturedReason       String?                         @map("captured_reason")
+  lineCount            Int                             @default(0) @map("line_count")
+  totalQty             Decimal?                        @map("total_qty") @db.Decimal(18, 6)
+  qtyUnit              String?                         @map("qty_unit") @db.VarChar(50)
+  metadataInternalJson Json?                           @map("metadata_internal_json")
+  createdAt            DateTime                        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime                        @default(now()) @map("updated_at") @db.Timestamptz(6)
+  lines                NetworkPoolDemandSnapshotLine[]
+  ownerOrg             organizations                   @relation("NetworkPoolDemandSnapshotOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_demand_snapshots_owner_org_id_fk")
+  pool                 NetworkPool                     @relation("NetworkPoolDemandSnapshots", fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_demand_snapshots_pool_id_fk")
+  rfqs                 NetworkPoolRfq[]                @relation("NetworkPoolRfqSnapshots")
 
   @@unique([poolId, snapshotVersion], map: "nc_pool_demand_snapshots_pool_version_unique")
   @@unique([poolId, snapshotRef], map: "nc_pool_demand_snapshots_pool_ref_unique")
@@ -2045,39 +2028,38 @@ model NetworkPoolDemandSnapshot {
 /// sourceMembershipId → network_pool_memberships(id) ON DELETE SET NULL (nullable lineage).
 /// supersedesLineId is a plain UUID column (no FK — audit lineage; safe regardless of demand-line lifecycle).
 model NetworkPoolDemandSnapshotLine {
-  id                            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  snapshotId                    String    @map("snapshot_id") @db.Uuid
-  ownerOrgId                    String    @map("owner_org_id") @db.Uuid
-  poolId                        String    @map("pool_id") @db.Uuid
-  demandLineId                  String    @map("demand_line_id") @db.Uuid
-  sourceLineRef                 String    @map("source_line_ref") @db.VarChar(100)
-  sourceRevisionNo              Int       @map("source_revision_no")
-  commodityCategory             String    @map("commodity_category") @db.VarChar(100)
-  productCategory               String?   @map("product_category") @db.VarChar(100)
-  productSpecSummary            String?   @map("product_spec_summary")
-  qty                           Decimal   @map("qty") @db.Decimal(18, 6)
-  qtyUnit                       String    @map("qty_unit") @db.VarChar(50)
-  qualityRequirementsJson       Json?     @map("quality_requirements_json")
-  certificationRequirementsJson Json?     @map("certification_requirements_json")
-  packagingRequirementsJson     Json?     @map("packaging_requirements_json")
-  deliveryLocation              String?   @map("delivery_location") @db.VarChar(500)
-  deliveryWindowStart           DateTime? @map("delivery_window_start") @db.Timestamptz(6)
-  deliveryWindowEnd             DateTime? @map("delivery_window_end") @db.Timestamptz(6)
-  tolerancePct                  Decimal?  @map("tolerance_pct") @db.Decimal(5, 2)
-  priority                      Int?      @map("priority")
-  sourceType                    String    @map("source_type") @db.VarChar(50)
-  normalizedFromMemberInput     Boolean   @default(false) @map("normalized_from_member_input")
-  sourceMembershipId            String?   @map("source_membership_id") @db.Uuid
-  supersedesLineId              String?   @map("supersedes_line_id") @db.Uuid
-  metadataInternalJson          Json?     @map("metadata_internal_json")
-  createdAt                     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  snapshot         NetworkPoolDemandSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_demand_snapshot_lines_snapshot_id_fk")
-  ownerOrg         organizations             @relation("NetworkPoolDemandSnapshotLineOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_demand_snapshot_lines_owner_org_id_fk")
-  pool             NetworkPool               @relation("NetworkPoolDemandSnapshotLines", fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_demand_snapshot_lines_pool_id_fk")
-  demandLine       NetworkPoolDemandLine     @relation("DemandLineSnapshotLines", fields: [demandLineId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "nc_pool_demand_snapshot_lines_demand_line_id_fk")
-  sourceMembership NetworkPoolMembership?    @relation("NetworkPoolMembershipSnapshotLines", fields: [sourceMembershipId], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "nc_pool_demand_snapshot_lines_source_membership_id_fk")
-  rfqLines         NetworkPoolRfqLine[]      @relation("NetworkPoolRfqLineSnapshotLines")
+  id                            String                    @id(map: "nc_pool_demand_snapshot_lines_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  snapshotId                    String                    @map("snapshot_id") @db.Uuid
+  ownerOrgId                    String                    @map("owner_org_id") @db.Uuid
+  poolId                        String                    @map("pool_id") @db.Uuid
+  demandLineId                  String                    @map("demand_line_id") @db.Uuid
+  sourceLineRef                 String                    @map("source_line_ref") @db.VarChar(100)
+  sourceRevisionNo              Int                       @map("source_revision_no")
+  commodityCategory             String                    @map("commodity_category") @db.VarChar(100)
+  productCategory               String?                   @map("product_category") @db.VarChar(100)
+  productSpecSummary            String?                   @map("product_spec_summary")
+  qty                           Decimal                   @map("qty") @db.Decimal(18, 6)
+  qtyUnit                       String                    @map("qty_unit") @db.VarChar(50)
+  qualityRequirementsJson       Json?                     @map("quality_requirements_json")
+  certificationRequirementsJson Json?                     @map("certification_requirements_json")
+  packagingRequirementsJson     Json?                     @map("packaging_requirements_json")
+  deliveryLocation              String?                   @map("delivery_location") @db.VarChar(500)
+  deliveryWindowStart           DateTime?                 @map("delivery_window_start") @db.Timestamptz(6)
+  deliveryWindowEnd             DateTime?                 @map("delivery_window_end") @db.Timestamptz(6)
+  tolerancePct                  Decimal?                  @map("tolerance_pct") @db.Decimal(5, 2)
+  priority                      Int?                      @map("priority")
+  sourceType                    String                    @map("source_type") @db.VarChar(50)
+  normalizedFromMemberInput     Boolean                   @default(false) @map("normalized_from_member_input")
+  sourceMembershipId            String?                   @map("source_membership_id") @db.Uuid
+  supersedesLineId              String?                   @map("supersedes_line_id") @db.Uuid
+  metadataInternalJson          Json?                     @map("metadata_internal_json")
+  createdAt                     DateTime                  @default(now()) @map("created_at") @db.Timestamptz(6)
+  demandLine                    NetworkPoolDemandLine     @relation("DemandLineSnapshotLines", fields: [demandLineId], references: [id], onUpdate: NoAction, map: "nc_pool_demand_snapshot_lines_demand_line_id_fk")
+  ownerOrg                      organizations             @relation("NetworkPoolDemandSnapshotLineOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_demand_snapshot_lines_owner_org_id_fk")
+  pool                          NetworkPool               @relation("NetworkPoolDemandSnapshotLines", fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_demand_snapshot_lines_pool_id_fk")
+  snapshot                      NetworkPoolDemandSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_demand_snapshot_lines_snapshot_id_fk")
+  sourceMembership              NetworkPoolMembership?    @relation("NetworkPoolMembershipSnapshotLines", fields: [sourceMembershipId], references: [id], onUpdate: NoAction, map: "nc_pool_demand_snapshot_lines_source_membership_id_fk")
+  rfqLines                      NetworkPoolRfqLine[]      @relation("NetworkPoolRfqLineSnapshotLines")
 
   @@unique([snapshotId, demandLineId], map: "nc_pool_demand_snapshot_lines_snapshot_demand_line_unique")
   @@unique([snapshotId, sourceLineRef, sourceRevisionNo], map: "nc_pool_demand_snapshot_lines_snapshot_lineref_rev_unique")
@@ -2104,46 +2086,46 @@ model NetworkPoolDemandSnapshotLine {
 /// supplierInviteMode: INVITE_ONLY (v1 only). Enforced by DB CHECK.
 /// No UPDATE/DELETE via app role in v1. Fully immutable after insert.
 model NetworkPoolRfq {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                                String                              @id(map: "nc_pool_rfqs_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// Canonical RLS anchor. Live FK → organizations.id.
-  ownerOrgId           String    @map("owner_org_id") @db.Uuid
+  ownerOrgId                        String                              @map("owner_org_id") @db.Uuid
   /// FK to network_pools(id). RFQ belongs to one pool.
-  poolId               String    @map("pool_id") @db.Uuid
+  poolId                            String                              @map("pool_id") @db.Uuid
   /// FK to network_pool_demand_snapshots(id). ON DELETE RESTRICT.
-  snapshotId           String    @map("snapshot_id") @db.Uuid
+  snapshotId                        String                              @map("snapshot_id") @db.Uuid
   /// Service-generated stable external reference. UUID-derived. Non-empty enforced by DB CHECK.
-  rfqRef               String    @map("rfq_ref") @db.VarChar(100)
+  rfqRef                            String                              @map("rfq_ref") @db.VarChar(100)
   /// Sequential per pool. DB CHECK: >= 1.
-  rfqVersion           Int       @map("rfq_version")
+  rfqVersion                        Int                                 @map("rfq_version")
   /// RFQ lifecycle status. Enforced by DB CHECK. Values: ISSUED|QUOTED|ACCEPTED|REJECTED|EXPIRED|CANCELLED.
-  status               String    @default("ISSUED") @map("status") @db.VarChar(50)
+  status                            String                              @default("ISSUED") @map("status") @db.VarChar(50)
   /// Basis for this RFQ issue. Enforced by DB CHECK. Values: SNAPSHOT_LOCK (v1 only).
-  issueBasis           String    @map("issue_basis") @db.VarChar(50)
+  issueBasis                        String                              @map("issue_basis") @db.VarChar(50)
   /// Timestamp when the RFQ was issued.
-  issuedAt             DateTime  @map("issued_at") @db.Timestamptz(6)
+  issuedAt                          DateTime                            @map("issued_at") @db.Timestamptz(6)
   /// User who triggered the RFQ issue. Nullable for system-initiated.
-  issuedByUserId       String?   @map("issued_by_user_id") @db.Uuid
+  issuedByUserId                    String?                             @map("issued_by_user_id") @db.Uuid
   /// Optional human-readable issue reason.
-  issueReason          String?   @map("issue_reason")
+  issueReason                       String?                             @map("issue_reason")
   /// Optional deadline for supplier responses. Nullable and not enforced in v1.
-  responseDeadlineAt   DateTime? @map("response_deadline_at") @db.Timestamptz(6)
+  responseDeadlineAt                DateTime?                           @map("response_deadline_at") @db.Timestamptz(6)
   /// Supplier invite mode. Enforced by DB CHECK. Values: INVITE_ONLY (v1 only).
-  supplierInviteMode   String    @map("supplier_invite_mode") @db.VarChar(50)
+  supplierInviteMode                String                              @map("supplier_invite_mode") @db.VarChar(50)
   /// Count of RFQ lines at issue time. DB CHECK: > 0.
-  lineCount            Int       @map("line_count")
+  lineCount                         Int                                 @map("line_count")
   /// Aggregate quantity across all lines at issue time.
-  totalQty             Decimal?  @map("total_qty") @db.Decimal(18, 6)
+  totalQty                          Decimal?                            @map("total_qty") @db.Decimal(18, 6)
   /// Unit of measure for totalQty.
-  qtyUnit              String?   @map("qty_unit") @db.VarChar(50)
+  qtyUnit                           String?                             @map("qty_unit") @db.VarChar(50)
   /// Internal operational metadata. Never exposed to suppliers.
-  metadataInternalJson Json?     @map("metadata_internal_json")
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt            DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
-
-  ownerOrg  organizations             @relation("NetworkPoolRfqOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfqs_owner_org_id_fk")
-  pool      NetworkPool               @relation("NetworkPoolRfqs", fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfqs_pool_id_fk")
-  snapshot  NetworkPoolDemandSnapshot @relation("NetworkPoolRfqSnapshots", fields: [snapshotId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "nc_pool_rfqs_snapshot_id_fk")
-  lines     NetworkPoolRfqLine[]
+  metadataInternalJson              Json?                               @map("metadata_internal_json")
+  createdAt                         DateTime                            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                         DateTime                            @default(now()) @map("updated_at") @db.Timestamptz(6)
+  lines                             NetworkPoolRfqLine[]
+  supplierInvites                   NetworkPoolRfqSupplierInvite[]
+  ownerOrg                          organizations                       @relation("NetworkPoolRfqOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfqs_owner_org_id_fk")
+  pool                              NetworkPool                         @relation("NetworkPoolRfqs", fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfqs_pool_id_fk")
+  snapshot                          NetworkPoolDemandSnapshot           @relation("NetworkPoolRfqSnapshots", fields: [snapshotId], references: [id], onUpdate: NoAction, map: "nc_pool_rfqs_snapshot_id_fk")
 
   @@unique([poolId, rfqVersion], map: "nc_pool_rfqs_pool_version_unique")
   @@unique([poolId, rfqRef], map: "nc_pool_rfqs_pool_rfq_ref_unique")
@@ -2164,53 +2146,52 @@ model NetworkPoolRfq {
 /// demandLineId: nullable plain UUID column — audit lineage to original demand line. No FK (preserves audit regardless of demand-line lifecycle).
 /// unique(rfq_id, snapshot_line_id) enforced at DB level.
 model NetworkPoolRfqLine {
-  id                            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                            String                        @id(map: "nc_pool_rfq_lines_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// FK to network_pool_rfqs(id) ON DELETE CASCADE.
-  rfqId                         String    @map("rfq_id") @db.Uuid
+  rfqId                         String                        @map("rfq_id") @db.Uuid
   /// Canonical RLS anchor. Live FK → organizations.id.
-  ownerOrgId                    String    @map("owner_org_id") @db.Uuid
+  ownerOrgId                    String                        @map("owner_org_id") @db.Uuid
   /// FK to network_pools(id). RFQ line belongs to one pool.
-  poolId                        String    @map("pool_id") @db.Uuid
+  poolId                        String                        @map("pool_id") @db.Uuid
   /// FK to network_pool_demand_snapshot_lines(id). ON DELETE RESTRICT.
-  snapshotLineId                String    @map("snapshot_line_id") @db.Uuid
+  snapshotLineId                String                        @map("snapshot_line_id") @db.Uuid
   /// Nullable UUID — audit lineage to original demand line. No FK: preserves audit record regardless of demand-line lifecycle.
-  demandLineId                  String?   @map("demand_line_id") @db.Uuid
+  demandLineId                  String?                       @map("demand_line_id") @db.Uuid
   /// Stable external line reference copied from snapshot line.
-  sourceLineRef                 String    @map("source_line_ref") @db.VarChar(100)
+  sourceLineRef                 String                        @map("source_line_ref") @db.VarChar(100)
   /// Revision number copied from snapshot line. DB CHECK: >= 1.
-  sourceRevisionNo              Int       @map("source_revision_no")
+  sourceRevisionNo              Int                           @map("source_revision_no")
   /// Commodity category copied from snapshot line.
-  commodityCategory             String    @map("commodity_category") @db.VarChar(100)
+  commodityCategory             String                        @map("commodity_category") @db.VarChar(100)
   /// Optional product sub-category copied from snapshot line.
-  productCategory               String?   @map("product_category") @db.VarChar(100)
+  productCategory               String?                       @map("product_category") @db.VarChar(100)
   /// Free-form product specification summary copied from snapshot line.
-  productSpecSummary            String?   @map("product_spec_summary")
+  productSpecSummary            String?                       @map("product_spec_summary")
   /// Quantity demanded. DB CHECK: qty > 0.
-  qty                           Decimal   @map("qty") @db.Decimal(18, 6)
+  qty                           Decimal                       @map("qty") @db.Decimal(18, 6)
   /// Unit of measure. Non-empty enforced by DB CHECK.
-  qtyUnit                       String    @map("qty_unit") @db.VarChar(50)
+  qtyUnit                       String                        @map("qty_unit") @db.VarChar(50)
   /// Quality requirements JSONB copied from snapshot line.
-  qualityRequirementsJson       Json?     @map("quality_requirements_json")
+  qualityRequirementsJson       Json?                         @map("quality_requirements_json")
   /// Certification requirements JSONB copied from snapshot line.
-  certificationRequirementsJson Json?     @map("certification_requirements_json")
+  certificationRequirementsJson Json?                         @map("certification_requirements_json")
   /// Packaging requirements JSONB copied from snapshot line.
-  packagingRequirementsJson     Json?     @map("packaging_requirements_json")
+  packagingRequirementsJson     Json?                         @map("packaging_requirements_json")
   /// Delivery destination copied from snapshot line.
-  deliveryLocation              String?   @map("delivery_location") @db.VarChar(500)
+  deliveryLocation              String?                       @map("delivery_location") @db.VarChar(500)
   /// Earliest acceptable delivery date.
-  deliveryWindowStart           DateTime? @map("delivery_window_start") @db.Timestamptz(6)
+  deliveryWindowStart           DateTime?                     @map("delivery_window_start") @db.Timestamptz(6)
   /// Latest acceptable delivery date. DB CHECK: end >= start when both set.
-  deliveryWindowEnd             DateTime? @map("delivery_window_end") @db.Timestamptz(6)
+  deliveryWindowEnd             DateTime?                     @map("delivery_window_end") @db.Timestamptz(6)
   /// Quantity tolerance percentage (0–100).
-  tolerancePct                  Decimal?  @map("tolerance_pct") @db.Decimal(5, 2)
+  tolerancePct                  Decimal?                      @map("tolerance_pct") @db.Decimal(5, 2)
   /// Optional priority rank within pool.
-  priority                      Int?      @map("priority")
-  createdAt                     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  rfq          NetworkPoolRfq                @relation(fields: [rfqId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_lines_rfq_id_fk")
-  ownerOrg     organizations                 @relation("NetworkPoolRfqLineOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_lines_owner_org_id_fk")
-  pool         NetworkPool                   @relation("NetworkPoolRfqLines", fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_lines_pool_id_fk")
-  snapshotLine NetworkPoolDemandSnapshotLine @relation("NetworkPoolRfqLineSnapshotLines", fields: [snapshotLineId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "nc_pool_rfq_lines_snapshot_line_id_fk")
+  priority                      Int?                          @map("priority")
+  createdAt                     DateTime                      @default(now()) @map("created_at") @db.Timestamptz(6)
+  ownerOrg                      organizations                 @relation("NetworkPoolRfqLineOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_lines_owner_org_id_fk")
+  pool                          NetworkPool                   @relation("NetworkPoolRfqLines", fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_lines_pool_id_fk")
+  rfq                           NetworkPoolRfq                @relation(fields: [rfqId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_lines_rfq_id_fk")
+  snapshotLine                  NetworkPoolDemandSnapshotLine @relation("NetworkPoolRfqLineSnapshotLines", fields: [snapshotLineId], references: [id], onUpdate: NoAction, map: "nc_pool_rfq_lines_snapshot_line_id_fk")
 
   @@unique([rfqId, snapshotLineId], map: "nc_pool_rfq_lines_rfq_snapshot_line_unique")
   @@index([rfqId], map: "idx_nc_pool_rfq_lines_rfq_id")
@@ -2221,6 +2202,80 @@ model NetworkPoolRfqLine {
   @@index([commodityCategory], map: "idx_nc_pool_rfq_lines_commodity_category")
   @@index([createdAt(sort: Desc)], map: "idx_nc_pool_rfq_lines_created_at")
   @@map("network_pool_rfq_lines")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SCHEMA-001: Invite from pool owner (buyer) to a supplier to respond to a network pool RFQ.
+/// Dual RLS anchor: ownerOrgId (pool owner) and supplierOrgId (invited supplier).
+/// Status transitions: PENDING → ACCEPTED | DECLINED | CANCELLED.
+/// OD-2: EXPIRED is NOT stored in DB — lazy-computed at service layer from expiresAt.
+model NetworkPoolRfqSupplierInvite {
+  id                   String    @id(map: "nc_pool_rfq_supplier_invites_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Primary RLS anchor — pool owner (buyer org).
+  ownerOrgId           String    @map("owner_org_id") @db.Uuid
+  /// Secondary RLS anchor — invited supplier org.
+  supplierOrgId        String    @map("supplier_org_id") @db.Uuid
+  /// FK → network_pool_rfqs(id) ON DELETE CASCADE.
+  rfqId                String    @map("rfq_id") @db.Uuid
+  /// Denormalized FK → network_pools(id) ON DELETE CASCADE.
+  poolId               String    @map("pool_id") @db.Uuid
+  /// Service-generated UUID-derived ref. Non-empty enforced by DB CHECK.
+  inviteRef            String    @unique(map: "nc_pool_rfq_supplier_invites_invite_ref_unique") @map("invite_ref") @db.VarChar(100)
+  /// Lifecycle status. Values: PENDING | ACCEPTED | DECLINED | CANCELLED. OD-2: EXPIRED never stored.
+  status               String    @default("PENDING") @map("status") @db.VarChar(50)
+  /// Timestamp when invite was issued.
+  invitedAt            DateTime  @default(now()) @map("invited_at") @db.Timestamptz(6)
+  /// User who triggered the invite. Nullable for system-generated invites. No FK (OD-4 validated at service layer).
+  invitedByUserId      String?   @map("invited_by_user_id") @db.Uuid
+  /// Set when supplier accepts.
+  acceptedAt           DateTime? @map("accepted_at") @db.Timestamptz(6)
+  /// Set when supplier declines.
+  declinedAt           DateTime? @map("declined_at") @db.Timestamptz(6)
+  /// Set when owner cancels.
+  cancelledAt          DateTime? @map("cancelled_at") @db.Timestamptz(6)
+  /// OD-3: no DB default — service inherits rfq.responseDeadlineAt when present.
+  expiresAt            DateTime? @map("expires_at") @db.Timestamptz(6)
+  /// Optional message from owner to supplier included with the invite.
+  messageToSupplier    String?   @map("message_to_supplier")
+  /// Optional supplier-provided reason (decline only).
+  declineReason        String?   @map("decline_reason")
+  /// Optional owner-provided reason (cancel only).
+  cancelReason         String?   @map("cancel_reason")
+  /// Internal ops metadata. Never exposed to suppliers.
+  metadataInternalJson Json?     @map("metadata_internal_json")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  ownerOrg             organizations  @relation("NetworkPoolRfqSupplierInviteOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_supplier_invites_owner_org_id_fk")
+  supplierOrg          organizations  @relation("NetworkPoolRfqSupplierInviteSupplierOrg", fields: [supplierOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_supplier_invites_supplier_org_id_fk")
+  pool                 NetworkPool    @relation(fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_supplier_invites_pool_id_fk")
+  rfq                  NetworkPoolRfq @relation(fields: [rfqId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_supplier_invites_rfq_id_fk")
+
+  @@unique([rfqId, supplierOrgId], map: "nc_pool_rfq_supplier_invites_rfq_supplier_unique")
+  @@index([invitedAt(sort: Desc)], map: "idx_nc_pool_rfq_supplier_invites_invited_at")
+  @@index([ownerOrgId, createdAt(sort: Desc)], map: "idx_nc_pool_rfq_supplier_invites_owner_org_id_created_at")
+  @@index([poolId], map: "idx_nc_pool_rfq_supplier_invites_pool_id")
+  @@index([rfqId], map: "idx_nc_pool_rfq_supplier_invites_rfq_id")
+  @@index([status], map: "idx_nc_pool_rfq_supplier_invites_status")
+  @@index([supplierOrgId, createdAt(sort: Desc)], map: "idx_nc_pool_rfq_supplier_invites_supplier_org_id_created_at")
+  @@map("network_pool_rfq_supplier_invites")
+}
+
+enum TenantType {
+  B2B
+  B2C
+  INTERNAL
+  AGGREGATOR
+
+  @@map("tenant_type")
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+
+  @@map("tenant_status")
 }
 
 enum TenantPlan {

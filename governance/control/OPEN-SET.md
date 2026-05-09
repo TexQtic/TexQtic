@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-30 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DECISION-AUDIT-001 — DECISIONS_LOCKED; OD-1 through OD-7 resolved. Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SCHEMA-001 HOLD_FOR_PARESH_DECISION.)
+**Last Updated:** 2026-05-30 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SCHEMA-001 — SCHEMA_APPLIED; table `network_pool_rfq_supplier_invites` created, Prisma model `NetworkPoolRfqSupplierInvite` generated, tsc clean, migration resolved. Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-FEATURE-GATE-001 HOLD_FOR_PARESH_DECISION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,15 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SCHEMA-001 SCHEMA_APPLIED (2026-05-30).
+  Table `network_pool_rfq_supplier_invites` created in Supabase Postgres. 19 columns, 9 constraints,
+  6 indexes, 7 RLS policies, dual anchor (owner_org_id + supplier_org_id), FORCE ROW SECURITY.
+  Prisma model `NetworkPoolRfqSupplierInvite` added to schema.prisma. Prisma Client generated (v6.1.0).
+  tsc --noEmit: 0 errors. `prisma migrate resolve --applied` recorded in _prisma_migrations.
+  OD-1 through OD-7 all reflected in schema. No routes/services/middleware/tests in this packet.
+  Basis commit: f8152aa (decisions). Artifact: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SCHEMA-001.md.
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged). dpp_launch: HOLD_FOR_PARESH_DECISION (unchanged).
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-FEATURE-GATE-001 HOLD_FOR_PARESH_DECISION.
 - TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DECISION-AUDIT-001 DECISIONS_LOCKED (2026-05-30).
   Basis commit: 8a36a2f. OD-1 through OD-7 formally resolved.
   OD-1: No re-invite in Phase 1B — UNIQUE(rfq_id, supplier_org_id) hard block forever.

@@ -7,6 +7,42 @@
 
 ---
 
+## 2026-05-30 — SCHEMA_APPLIED: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SCHEMA-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SCHEMA-001
+Type:          SCHEMA
+Status:        SCHEMA_APPLIED
+Date:          2026-05-30
+Basis commit:  f8152aa (decisions locked — TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DECISION-AUDIT-001)
+
+Scope:
+  server/prisma/migrations/20260529000000_nc_pool_rfq_supplier_invite_schema/migration.sql — NEW migration
+  server/prisma/schema.prisma                                                               — model NetworkPoolRfqSupplierInvite added
+  governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SCHEMA-001.md                      — NEW governance doc
+  governance/control/OPEN-SET.md                                                            — operating note + Last Updated
+  governance/control/GOVERNANCE-CHANGELOG.md                                               — this entry
+
+DB Changes:
+  Table: public.network_pool_rfq_supplier_invites (19 columns)
+  Constraints: 9 (PK, 4 FK, 2 UNIQUE, 2 CHECK)
+  Indexes: 6 explicit + 1 PK + 2 UNIQUE = 9 index objects
+  RLS: ENABLED + FORCE; 7 policies; roles texqtic_app + texqtic_admin
+  Grants: texqtic_app SELECT/INSERT/UPDATE; texqtic_admin SELECT
+
+Prisma:
+  prisma db pull: 75 models (was 74)
+  prisma generate: v6.1.0 Prisma Client generated
+  tsc --noEmit: 0 errors
+  prisma migrate resolve --applied: migration recorded in _prisma_migrations
+
+OD compliance: OD-1 through OD-7 all reflected in schema (see §4 of governance doc)
+Posture keys unchanged: active_delivery_unit HOLD_FOR_AUTHORIZATION; dpp_launch HOLD_FOR_PARESH_DECISION
+Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-FEATURE-GATE-001 HOLD_FOR_PARESH_DECISION
+```
+
+---
+
 ## 2026-05-30 — DECISION_AUDIT: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DECISION-AUDIT-001
 
 ```
