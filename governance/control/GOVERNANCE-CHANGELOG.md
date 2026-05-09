@@ -5,6 +5,42 @@
 
 ---
 
+## 2026-05-30 — OWNER_SERVICE_IMPLEMENTED: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-SERVICE-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-SERVICE-001
+Type:          OWNER_SERVICE_IMPLEMENTED
+Status:        OWNER_SERVICE_IMPLEMENTED
+Date:          2026-05-30
+Basis commit:  86cb135 (feat(network-commerce): add supplier invite feature gate)
+
+Scope:
+  server/src/services/networkPoolRfq.service.ts             — 5 error classes, 2 interfaces, 3 private helpers, 4 public methods
+  server/src/__tests__/networkPoolRfq.service.unit.test.ts  — 34 new unit tests (77 total)
+
+OD decisions implemented:
+  OD-1: No re-invite — rfqId_supplierOrgId compound unique check before INSERT; P2002 catch
+  OD-2: Lazy EXPIRED — never written to DB; computeEffectiveInviteStatus on every read
+  OD-3: expiresAt default — caller → rfq.responseDeadlineAt → null
+  OD-4: Supplier org ACTIVE validation — (tx as any).organizations.findUnique
+  OD-5: No metadataInternalJson in owner DTO — toInviteOwnerRecord maps 18 fields only
+  OD-6: Feature gate — unchanged from 86cb135
+  OD-7: Direct lifecycle log — writeInviteLifecycleLog writes tx.networkLifecycleLog.create directly; SM.transition never called
+
+Validation:
+  tsc --noEmit: 0 errors
+  vitest: 77/77 unit tests pass; 27/27 feature gate regression tests pass
+  poolRfq integration: 43/43 passed on first complete run (second run had 1 flaky DB-setup failure unrelated to this packet)
+
+Notes:
+  No routes, middleware, schema, migrations, or RLS policies changed.
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged).
+  dpp_launch_authorization: HOLD_FOR_PARESH_DECISION (unchanged).
+  Next: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-SERVICE-001 HOLD_FOR_PARESH_DECISION.
+```
+
+---
+
 ---
 
 ## 2026-05-30 — FEATURE_GATE_IMPLEMENTED: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-FEATURE-GATE-001

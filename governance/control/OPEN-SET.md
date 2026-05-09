@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-30 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-FEATURE-GATE-001 — FEATURE_GATE_IMPLEMENTED; middleware ncPoolSupplierInviteFeatureGate.middleware.ts created, feature flag seed migration created, 11 unit tests pass, tsc clean. Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-SERVICE-001 HOLD_FOR_PARESH_DECISION.)
+**Last Updated:** 2026-05-30 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-SERVICE-001 — OWNER_SERVICE_IMPLEMENTED; sendInvite/listInvites/getInvite/cancelInvite added to NetworkPoolRfqService, 34 unit tests pass (77 total), tsc clean. OD-1 through OD-7 all implemented. Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-SERVICE-001 HOLD_FOR_PARESH_DECISION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,15 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-SERVICE-001 OWNER_SERVICE_IMPLEMENTED (2026-05-30).
+  Methods sendInvite, listInvites, getInvite, cancelInvite added to NetworkPoolRfqService.
+  OD-1 (no re-invite), OD-2 (lazy EXPIRED), OD-3 (expiresAt default), OD-4 (supplier ACTIVE),
+  OD-5 (no metadataInternalJson in DTO), OD-7 (direct lifecycle log, SM.transition never called) — all implemented.
+  34 new unit tests; 77 total in service test file. tsc --noEmit: 0 errors.
+  Predecessor: 86cb135 (FEATURE-GATE-001). No routes/middleware/schema/migrations changed.
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged). dpp_launch: HOLD_FOR_PARESH_DECISION (unchanged).
+  Artifact: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-SERVICE-001.md.
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-SERVICE-001 HOLD_FOR_PARESH_DECISION.
 - TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-FEATURE-GATE-001 FEATURE_GATE_IMPLEMENTED (2026-05-30).
   Middleware `ncPoolSupplierInviteFeatureGateMiddleware` created in server/src/middleware/.
   Two-layer gate: Layer 1 global FeatureFlag, Layer 2 per-tenant TenantFeatureOverride.
