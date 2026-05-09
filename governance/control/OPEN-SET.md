@@ -63,6 +63,15 @@
   Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
   DPP launch authorization: HOLD_FOR_PARESH_DECISION (unchanged).
   active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged).
+- TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-001 PLANNING_TRACKER_CREATED (2026-05-30).
+  Authoritative 18-section forward NC implementation map. Basis commits: 29319f9 + 5cebe8b.
+  Synthesizes design foundation (full read) + audit (full read) + current governance posture.
+  30 packets registered. 17 entities tracked. 7 validation bands. 12 drift prevention rules.
+  Reconciliation: audit §21 self-description inaccurate; git truth (3 files at 29319f9) recorded.
+  Governance posture: active_delivery_unit HOLD_FOR_AUTHORIZATION (unchanged).
+  DPP launch: HOLD_FOR_PARESH_DECISION (unchanged).
+  NC next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001 HOLD_FOR_PARESH_DECISION.
+  Artifact: governance/TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-001.md.
 - TEXQTIC-NC-REPO-TRUTH-IMPLEMENTATION-AUDIT-001 AUDIT_COMPLETE (2026-05-30).
   Read-only repo-truth audit of NC Phase 1 implementation at HEAD 5cebe8b.
   Findings: CPP pool core IMPLEMENTED; Demand Line IMPLEMENTED; Pool RFQ Issue IMPLEMENTED;
