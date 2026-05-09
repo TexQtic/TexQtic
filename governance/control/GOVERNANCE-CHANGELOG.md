@@ -7,6 +7,62 @@
 
 ---
 
+## 2026-05-09 — VERIFIED_COMPLETE_AND_GOV_SYNCED: TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-PROD-VERIFY-GOV-CLOSE-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-PROD-VERIFY-GOV-CLOSE-001
+Type:          VERIFICATION + GOVERNANCE_CLOSURE
+Status:        VERIFIED_COMPLETE_AND_GOV_SYNCED
+Date:          2026-05-09
+Commits:       service f8128b5; route 898bdcb; governance closure pending
+
+Scope:
+  governance/TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-PROD-VERIFY-GOV-CLOSE-001.md — NEW artifact
+  governance/control/OPEN-SET.md                                             — operating note added
+  governance/control/NEXT-ACTION.md                                          — nc_phase1_pool_rfq_issue_service/route fields added; next candidate updated
+  governance/control/GOVERNANCE-CHANGELOG.md                                 — this entry
+
+Verification results:
+  prisma generate:                                PASS
+  server tsc --noEmit:                            CLEAN
+  poolRfq.integration.test.ts (PRQ-01..PRQ-43):  43/43 PASS (507.56s)
+  networkPoolRfq.service.unit.test.ts:           43/43 PASS
+  ncPoolRfqFeatureGate.middleware.unit.test.ts:  16/16 PASS
+  pools.demandLines.integration.test.ts:         77/77 PASS (regression — 853.79s)
+  pools.integration.test.ts:                    56/56 PASS (regression)
+  networkPoolDemandLine.service.unit.test.ts:    62/62 PASS (regression)
+  network-pool.service.unit.test.ts:             15/15 PASS (regression)
+  network-invoice.service.unit.test.ts:          16/16 PASS (regression)
+  invoice.service.unit.test.ts:                  18/18 PASS (regression)
+  stateMachine.g020.test.ts:                     33/33 PASS (regression)
+
+Runtime smoke:
+  GET /health:                                    200
+  POST /api/tenant/network-commerce/pools/:poolId/rfq/issue (unauth): 401
+  Authenticated runtime:                          RFQ_ISSUE_RUNTIME_AUTH_SMOKE_COVERED_BY_INTEGRATION_SUITE
+
+Key design decisions confirmed:
+  TRANSITION_DENIED: 422 (not 409) — Q-5 correction from DECISION-RECORD-001 §3
+  D-017-A: orgId always from dbContext.orgId (never body/params)
+  Body: z.strict() — 2 allowed fields + 12 z.never() forbidden fields
+  Role gate: OWNER + ADMIN only; MEMBER → 403
+  Immutability trigger: trg_immutable_nc_pool_rfq_lines blocks DELETE (PRQ-43 verifies)
+
+Scope boundary preserved:
+  1 route delivered: POST /:poolId/rfq/issue (AGGREGATING → CLOSED_FOR_BIDS).
+  No supplier invite, no RFQ list/get, no quote routes, no allocation, no order,
+  no invoice, no settlement, no escrow, no UI, no MakerChecker.
+
+Posture update:
+  nc_phase1_pool_rfq_issue_service_status: IMPLEMENTED_VERIFIED_GOV_SYNCED (f8128b5)
+  nc_phase1_pool_rfq_issue_route_status: IMPLEMENTED_VERIFIED_GOV_SYNCED (898bdcb)
+  nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001
+  DPP launch authorization: HOLD_FOR_PARESH_DECISION (unchanged)
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged)
+```
+
+---
+
 ## 2026-05-07 — VERIFIED_COMPLETE_AND_GOV_SYNCED: TEXQTIC-NC-PHASE1-POOL-DISCOVERY-PROD-VERIFY-GOV-CLOSE-001
 
 ```

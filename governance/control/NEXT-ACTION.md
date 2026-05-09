@@ -148,7 +148,7 @@ nc_phase1_pool_discovery_scope_boundary: >-
   No member count, no aggregate demand, no raw metadata JSON. No RFQ/quotes/allocation/orders/invoice generation/settlement/escrow/UI.
   No control-plane/admin discovery.
 nc_phase1_next_action: HOLD_FOR_PARESH_DECISION
-nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-SERVICE-001
+nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001
 nc_phase1_next_action_candidate_2: TEXQTIC-NC-PHASE1-POOL-OPEN-DISCOVERY-DESIGN-001
 nc_phase1_next_action_candidate_3: TEXQTIC-NC-PHASE1-POOL-CONTROL-DISCOVERY-DESIGN-001
 nc_phase1_next_action_candidate_4: TEXQTIC-NC-PHASE1-TENANT-FEATURE-OVERRIDE-ADMIN-API-001
@@ -160,7 +160,9 @@ nc_phase1_next_action_note: >-
   Demand-line lock: IMPLEMENTED_VERIFIED_GOV_SYNCED (d279e2e + e046ccd + a06631d + 120408d).
   RFQ issue design chain: GOV_SYNCED (design 08c7971; audit 3252e37; record caac5a0).
   Pool RFQ schema: IMPLEMENTED_DEPLOYED_VERIFIED_GOV_SYNCED (c9806c8 + 198f92b).
-  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-SERVICE-001 — HOLD_FOR_PARESH_DECISION.
+  RFQ issue service: IMPLEMENTED_VERIFIED_GOV_SYNCED (f8128b5).
+  RFQ issue route: IMPLEMENTED_VERIFIED_GOV_SYNCED (898bdcb).
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
   Optional future candidates include open-discovery design, control-discovery design, and tenant feature override admin API.
   None is open. Do not open without explicit Paresh authorization.
 nc_phase1_pool_rfq_demand_source_design_status: GOV_SYNCED
@@ -280,6 +282,29 @@ nc_phase1_pool_rfq_schema_scope_boundary: >-
   RFQ schema only. No RFQ issue service, no RFQ issue route, no supplier invite, no quote schema,
   no allocation, no order, no invoice, no settlement, no escrow, no UI, no MakerChecker,
   no lifecycle transition code, no NetworkLifecycleLog writes.
+nc_phase1_pool_rfq_issue_service_status: IMPLEMENTED_VERIFIED_GOV_SYNCED
+nc_phase1_pool_rfq_issue_service_commit: f8128b5
+nc_phase1_pool_rfq_issue_service_test_result: >-
+  43/43 PRQ integration PASS; 43/43 service unit PASS; 16/16 middleware unit PASS;
+  77/77 DLT regression PASS; 56/56 pool route regression PASS; 33/33 g020 state machine PASS
+nc_phase1_pool_rfq_issue_service_ts_result: CLEAN
+nc_phase1_pool_rfq_issue_service_prisma_result: PASS
+nc_phase1_pool_rfq_issue_route_status: IMPLEMENTED_VERIFIED_GOV_SYNCED
+nc_phase1_pool_rfq_issue_route_commit: 898bdcb
+nc_phase1_pool_rfq_issue_route_test_result: 43/43 PASS (PRQ-01..PRQ-43)
+nc_phase1_pool_rfq_issue_route_ts_result: CLEAN
+nc_phase1_pool_rfq_issue_route_prisma_result: PASS
+nc_phase1_pool_rfq_issue_route_runtime_smoke: HEALTH_200 + UNAUTH_RFQ_ISSUE_401
+nc_phase1_pool_rfq_issue_route_authenticated_runtime_smoke: RFQ_ISSUE_RUNTIME_AUTH_SMOKE_COVERED_BY_INTEGRATION_SUITE
+nc_phase1_pool_rfq_issue_route_scope_boundary: >-
+  1 route: POST /:poolId/rfq/issue (AGGREGATING → CLOSED_FOR_BIDS via StateMachineService).
+  Role gate: OWNER + ADMIN only. Body: issue_reason + response_deadline_at allowed; 12 fields z.never() forbidden.
+  TRANSITION_DENIED: 422 (Q-5 correction). D-017-A: orgId from dbContext.orgId only.
+  No supplier invite, no RFQ list/get, no quote routes, no allocation, no order, no invoice,
+  no settlement, no escrow, no UI, no MakerChecker, no NetworkLifecycleLog writes beyond StateMachineService.
+nc_phase1_pool_rfq_issue_route_verification_report: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-PROD-VERIFY-GOV-CLOSE-001.md
+nc_phase1_pool_rfq_issue_route_next_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001
+nc_phase1_pool_rfq_issue_route_next_candidate_status: HOLD_FOR_PARESH_DECISION
 ```
 
 ---

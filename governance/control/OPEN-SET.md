@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-02 (TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 — VERIFIED_COMPLETE; DPP Passport Network PRODUCTION_READY; launch authorization HOLD_FOR_PARESH_DECISION; v3 OPTIONAL_POLISH; PROD-AUDIT-002 authority commit 17c252c)
+**Last Updated:** 2026-05-09 (TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-PROD-VERIFY-GOV-CLOSE-001 — VERIFIED_COMPLETE_AND_GOV_SYNCED; Pool RFQ issue service + route implemented, 43/43 PRQ integration + 59/59 service/middleware unit tests PASS; commit 898bdcb)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,16 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-ROUTE-001 VERIFIED_COMPLETE_AND_GOV_SYNCED (2026-05-09).
+  Pool RFQ issue service (`issueRfq`) + route (`POST /:poolId/rfq/issue`) implemented and verified.
+  43/43 PRQ integration PASS; 59/59 service + middleware unit PASS; 77/77 DLT regression PASS;
+  167/167 combined regression PASS; 33/33 g020 state machine PASS. tsc CLEAN. Prisma generate PASS.
+  Runtime: /health 200; unauth POST /rfq/issue 401.
+  TRANSITION_DENIED: 422 (Q-5 correction confirmed). D-017-A: orgId from dbContext.orgId only.
+  Commits: service f8128b5, route 898bdcb. Governance: TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-PROD-VERIFY-GOV-CLOSE-001.md.
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001 — HOLD_FOR_PARESH_DECISION.
+  DPP launch authorization: HOLD_FOR_PARESH_DECISION (unchanged).
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged).
 - TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 VERIFIED_COMPLETE (2026-05-02).
   DPP Passport Network technical readiness: PRODUCTION_READY.
   Authority: PROD-AUDIT-002 (commit 17c252c). All 5 PROD-AUDIT-001 limitations resolved (slices 021–025).
