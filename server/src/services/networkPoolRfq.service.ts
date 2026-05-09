@@ -192,6 +192,31 @@ export interface NetworkPoolRfqSupplierInviteRecord {
   updated_at:          string;
 }
 
+/** Supplier-safe invite record. OD-5: metadataInternalJson, cancelReason, ownerOrgId excluded. */
+export interface NetworkPoolRfqSupplierInviteSupplierRecord {
+  id:                   string;
+  invite_ref:           string;
+  /** OD-2: Effective status — may be EXPIRED even if DB is PENDING */
+  status:               string;
+  invited_at:           string;
+  accepted_at:          string | null;
+  declined_at:          string | null;
+  expires_at:           string | null;
+  supplier_message:     string | null;
+  /** RFQ aggregate header fields — null when RFQ not joined (listSupplierInvites) */
+  rfq_ref:              string | null;
+  rfq_version:          number | null;
+  rfq_status:           string | null;
+  issued_at:            string | null;
+  response_deadline_at: string | null;
+  issue_basis:          string | null;
+  line_count:           number | null;
+  total_qty:            string | null;
+  qty_unit:             string | null;
+  created_at:           string;
+  updated_at:           string;
+}
+
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export class NetworkPoolRfqService {
@@ -806,5 +831,274 @@ export class NetworkPoolRfqService {
     });
 
     return this.toInviteOwnerRecord(updatedRow as Record<string, unknown>);
+  }
+
+  // ── Private helpers (supplier-side) ────────────────────────────────────────
+
+  /**
+   * OD-5: Map DB row (optionally with rfq join) to supplier-safe invite DTO.
+   * Excluded: metadataInternalJson, cancelReason, ownerOrgId.
+   */
+  private toInviteSupplierRecord(
+    row: Record<string, unknown>,
+    rfqRow?: Record<string, unknown> | null,
+  ): NetworkPoolRfqSupplierInviteSupplierRecord {
+    const expiresAt = row['expiresAt'] != null ? (row['expiresAt'] as Date) : null;
+    const rfq = rfqRow !== undefined
+      ? rfqRow
+      : (row['rfq'] as Record<string, unknown> | null | undefined) ?? null;
+    return {
+      id:                   String(row['id']),
+      invite_ref:           String(row['inviteRef']),
+      status:               this.computeEffectiveInviteStatus(String(row['status']), expiresAt),
+      invited_at:           (row['invitedAt'] as Date).toISOString(),
+      accepted_at:          row['acceptedAt'] != null ? (row['acceptedAt'] as Date).toISOString() : null,
+      declined_at:          row['declinedAt'] != null ? (row['declinedAt'] as Date).toISOString() : null,
+      expires_at:           expiresAt != null ? expiresAt.toISOString() : null,
+      supplier_message:     row['messageToSupplier'] != null ? String(row['messageToSupplier']) : null,
+      rfq_ref:              rfq != null && rfq['rfqRef'] != null ? String(rfq['rfqRef']) : null,
+      rfq_version:          rfq != null && rfq['rfqVersion'] != null ? Number(rfq['rfqVersion']) : null,
+      rfq_status:           rfq != null && rfq['status'] != null ? String(rfq['status']) : null,
+      issued_at:            rfq != null && rfq['issuedAt'] != null
+        ? (rfq['issuedAt'] as Date).toISOString()
+        : null,
+      response_deadline_at: rfq != null && rfq['responseDeadlineAt'] != null
+        ? (rfq['responseDeadlineAt'] as Date).toISOString()
+        : null,
+      issue_basis:          rfq != null && rfq['issueBasis'] != null ? String(rfq['issueBasis']) : null,
+      line_count:           rfq != null && rfq['lineCount'] != null ? Number(rfq['lineCount']) : null,
+      total_qty:            rfq != null && rfq['totalQty'] != null ? String(rfq['totalQty']) : null,
+      qty_unit:             rfq != null && rfq['qtyUnit'] != null ? String(rfq['qtyUnit']) : null,
+      created_at:           (row['createdAt'] as Date).toISOString(),
+      updated_at:           (row['updatedAt'] as Date).toISOString(),
+    };
+  }
+
+  /**
+   * OD-7: Write a direct lifecycle log for supplier accept/decline actions.
+   * actorType = TENANT_USER, actorRole = NC_SUPPLIER.
+   * Distinct from writeInviteLifecycleLog which uses TENANT_ADMIN / NC_POOL_ADMIN.
+   */
+  private async writeSupplierLifecycleLog(
+    tx: any,
+    params: {
+      orgId:       string;   // pool owner org (NOT supplier)
+      entityId:    string;   // poolId (POOL entity)
+      actorUserId: string | null;
+      reason:      string;
+      requestId?:  string | null;
+    },
+  ): Promise<void> {
+    await tx.networkLifecycleLog.create({
+      data: {
+        orgId:           params.orgId,
+        entityType:      'POOL',
+        entityId:        params.entityId,
+        fromStateKey:    'CLOSED_FOR_BIDS',
+        toStateKey:      'CLOSED_FOR_BIDS',
+        actorUserId:     params.actorUserId ?? null,
+        actorAdminId:    null,
+        actorType:       'TENANT_USER',
+        actorRole:       'NC_SUPPLIER',
+        escalationLevel: null,
+        makerUserId:     null,
+        checkerUserId:   null,
+        aiTriggered:     false,
+        impersonationId: null,
+        reason:          params.reason,
+        requestId:       params.requestId ?? null,
+      },
+    });
+  }
+
+  // ── listSupplierInvites ───────────────────────────────────────────────────
+
+  /**
+   * Supplier lists all their invites (across all RFQs/pools).
+   *
+   * OD-2: Returns effective status (EXPIRED computed lazily; never written to DB).
+   * OD-4: Scope is supplierOrgId only — no pool membership check.
+   * OD-5: Supplier-safe DTO — no metadataInternalJson, cancelReason, ownerOrgId.
+   */
+  async listSupplierInvites(
+    supplierOrgId: string,
+  ): Promise<NetworkPoolRfqSupplierInviteSupplierRecord[]> {
+    const rows = await (this.db as any).networkPoolRfqSupplierInvite.findMany({
+      where:   { supplierOrgId },
+      orderBy: { invitedAt: 'desc' },
+    });
+
+    return (rows as Record<string, unknown>[]).map((row) => this.toInviteSupplierRecord(row, null));
+  }
+
+  // ── viewInvite ────────────────────────────────────────────────────────────
+
+  /**
+   * Supplier views a single invite with RFQ aggregate header.
+   *
+   * OD-2: Returns effective status.
+   * OD-4: Scope is supplierOrgId + inviteId — no pool membership check.
+   * OD-5: Supplier-safe DTO — includes aggregate RFQ header only; no lines, no member data.
+   *
+   * @throws NetworkPoolRfqSupplierInviteNotFoundError if not found or wrong supplier.
+   */
+  async viewInvite(
+    supplierOrgId: string,
+    inviteId: string,
+  ): Promise<NetworkPoolRfqSupplierInviteSupplierRecord> {
+    const row = await (this.db as any).networkPoolRfqSupplierInvite.findFirst({
+      where:   { id: inviteId, supplierOrgId },
+      include: {
+        rfq: {
+          select: {
+            rfqRef:             true,
+            rfqVersion:         true,
+            status:             true,
+            issuedAt:           true,
+            responseDeadlineAt: true,
+            issueBasis:         true,
+            lineCount:          true,
+            totalQty:           true,
+            qtyUnit:            true,
+          },
+        },
+      },
+    });
+
+    if (!row) {
+      throw new NetworkPoolRfqSupplierInviteNotFoundError();
+    }
+
+    return this.toInviteSupplierRecord(row as Record<string, unknown>);
+  }
+
+  // ── acceptInvite ──────────────────────────────────────────────────────────
+
+  /**
+   * Supplier accepts a PENDING invite.
+   *
+   * OD-2: Checks effective status — lazy EXPIRED is terminal, cannot accept.
+   * OD-7: Writes direct tx.networkLifecycleLog.create — MUST NOT call stateMachine.transition.
+   * Pool and RFQ state are NOT mutated — only the invite row is updated.
+   *
+   * @throws NetworkPoolRfqSupplierInviteNotFoundError if invite not found or wrong supplier.
+   * @throws NetworkPoolRfqSupplierInviteInvalidTransitionError if invite is not PENDING.
+   */
+  async acceptInvite(
+    supplierOrgId: string,
+    userId: string | null,
+    inviteId: string,
+    note?: string | null,
+  ): Promise<NetworkPoolRfqSupplierInviteSupplierRecord> {
+    const updatedRow = await this.db.$transaction(async (tx) => {
+      // 1. Load invite scoped to supplier (non-leaking not-found on wrong ownership)
+      const inviteRow = await (tx as any).networkPoolRfqSupplierInvite.findFirst({
+        where: { id: inviteId, supplierOrgId },
+      });
+
+      if (!inviteRow) {
+        throw new NetworkPoolRfqSupplierInviteNotFoundError();
+      }
+
+      // 2. OD-2: Compute effective status — lazy EXPIRED is terminal
+      const effectiveStatus = this.computeEffectiveInviteStatus(
+        String(inviteRow.status),
+        inviteRow.expiresAt ?? null,
+      );
+
+      if (effectiveStatus !== 'PENDING') {
+        throw new NetworkPoolRfqSupplierInviteInvalidTransitionError(effectiveStatus);
+      }
+
+      const now = new Date();
+
+      // 3. Update to ACCEPTED
+      const updated = await (tx as any).networkPoolRfqSupplierInvite.update({
+        where: { id: inviteId },
+        data:  {
+          status:     'ACCEPTED',
+          acceptedAt: now,
+          updatedAt:  now,
+        },
+      });
+
+      // 4. OD-7: Direct lifecycle log — MUST NOT call StateMachineService.transition
+      await this.writeSupplierLifecycleLog(tx, {
+        orgId:       String(inviteRow.ownerOrgId),
+        entityId:    String(inviteRow.poolId),
+        actorUserId: userId,
+        reason:      `Supplier invite ACCEPTED: rfq=${String(inviteRow.rfqId)}, invite=${inviteId}`,
+        requestId:   note ?? null,
+      });
+
+      return updated;
+    });
+
+    return this.toInviteSupplierRecord(updatedRow as Record<string, unknown>, null);
+  }
+
+  // ── declineInvite ─────────────────────────────────────────────────────────
+
+  /**
+   * Supplier declines a PENDING invite.
+   *
+   * OD-2: Checks effective status — lazy EXPIRED is terminal, cannot decline.
+   * OD-7: Writes direct tx.networkLifecycleLog.create — MUST NOT call stateMachine.transition.
+   * Pool and RFQ state are NOT mutated — only the invite row is updated.
+   *
+   * @throws NetworkPoolRfqSupplierInviteNotFoundError if invite not found or wrong supplier.
+   * @throws NetworkPoolRfqSupplierInviteInvalidTransitionError if invite is not PENDING.
+   */
+  async declineInvite(
+    supplierOrgId: string,
+    userId: string | null,
+    inviteId: string,
+    declineReason?: string | null,
+  ): Promise<NetworkPoolRfqSupplierInviteSupplierRecord> {
+    const updatedRow = await this.db.$transaction(async (tx) => {
+      // 1. Load invite scoped to supplier
+      const inviteRow = await (tx as any).networkPoolRfqSupplierInvite.findFirst({
+        where: { id: inviteId, supplierOrgId },
+      });
+
+      if (!inviteRow) {
+        throw new NetworkPoolRfqSupplierInviteNotFoundError();
+      }
+
+      // 2. OD-2: Compute effective status — lazy EXPIRED is terminal
+      const effectiveStatus = this.computeEffectiveInviteStatus(
+        String(inviteRow.status),
+        inviteRow.expiresAt ?? null,
+      );
+
+      if (effectiveStatus !== 'PENDING') {
+        throw new NetworkPoolRfqSupplierInviteInvalidTransitionError(effectiveStatus);
+      }
+
+      const now = new Date();
+
+      // 3. Update to DECLINED
+      const updated = await (tx as any).networkPoolRfqSupplierInvite.update({
+        where: { id: inviteId },
+        data:  {
+          status:        'DECLINED',
+          declinedAt:    now,
+          declineReason: declineReason ?? null,
+          updatedAt:     now,
+        },
+      });
+
+      // 4. OD-7: Direct lifecycle log — MUST NOT call StateMachineService.transition
+      await this.writeSupplierLifecycleLog(tx, {
+        orgId:       String(inviteRow.ownerOrgId),
+        entityId:    String(inviteRow.poolId),
+        actorUserId: userId,
+        reason:      `Supplier invite DECLINED: rfq=${String(inviteRow.rfqId)}, invite=${inviteId}`,
+      });
+
+      return updated;
+    });
+
+    return this.toInviteSupplierRecord(updatedRow as Record<string, unknown>, null);
   }
 }

@@ -5,6 +5,44 @@
 
 ---
 
+## 2026-05-30 — SUPPLIER_SERVICE_IMPLEMENTED: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-SERVICE-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-SERVICE-001
+Type:          SUPPLIER_SERVICE_IMPLEMENTED
+Status:        SUPPLIER_SERVICE_IMPLEMENTED
+Date:          2026-05-30
+Basis commit:  7f82d0e (feat(network-commerce): add supplier invite owner service)
+
+Scope:
+  server/src/services/networkPoolRfq.service.ts             — interface + 2 private helpers + 4 public methods added
+  server/src/__tests__/networkPoolRfq.service.unit.test.ts  — 40 new unit tests (117 total)
+
+OD decisions implemented:
+  OD-1: N/A for supplier service (supplier cannot create invites)
+  OD-2: Lazy EXPIRED — never written to DB; computeEffectiveInviteStatus on every read including accept/decline guard
+  OD-3: expiresAt — supplier service MUST NOT alter it; no expiresAt in any supplier update payload
+  OD-4: Supplier scope = supplierOrgId only; no NetworkPoolMembership check in any supplier method
+  OD-5: Supplier DTO excludes metadataInternalJson, cancelReason, ownerOrgId, line detail, snapshot, member data
+  OD-6: Feature gate unchanged from 86cb135
+  OD-7: Direct lifecycle log — writeSupplierLifecycleLog writes tx.networkLifecycleLog.create; SM.transition never called
+
+Validation:
+  tsc --noEmit: 0 errors
+  vitest: 117/117 unit tests pass; 27/27 feature gate regression tests pass
+  poolRfq integration: 43/43 passed
+  stateMachine.g020: 33/33 passed (confirmed from 7f82d0e predecessor session)
+  pools.demandLines: (in progress — remote Supabase integration)
+
+Notes:
+  No routes, middleware, schema, migrations, or RLS policies changed.
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged).
+  dpp_launch_authorization: HOLD_FOR_PARESH_DECISION (unchanged).
+  Next: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-ROUTE-001 HOLD_FOR_PARESH_DECISION.
+```
+
+---
+
 ## 2026-05-30 — OWNER_SERVICE_IMPLEMENTED: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-SERVICE-001
 
 ```

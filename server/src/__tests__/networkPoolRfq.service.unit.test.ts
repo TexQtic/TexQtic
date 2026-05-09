@@ -5,7 +5,7 @@
  * Pure unit tests with mocked PrismaClient and mocked StateMachineService.
  * No DB access. No lifecycle seed dependency.
  *
- * COVERAGE (77 tests):
+ * COVERAGE (117 tests):
  *   Input validation:          P-RFQ-01 → P-RFQ-04
  *   Pool and state:            P-RFQ-05 → P-RFQ-08
  *   Snapshot resolution:       P-RFQ-09 → P-RFQ-13
@@ -20,6 +20,11 @@
  *   getInvite:                 P-INV-GET-01 → P-INV-GET-04
  *   cancelInvite:              P-INV-CANCEL-01 → P-INV-CANCEL-08
  *   General invite:            P-INV-GEN-01 → P-INV-GEN-02
+ *   listSupplierInvites:       P-SUP-LIST-01 → P-SUP-LIST-07
+ *   viewInvite:                P-SUP-VIEW-01 → P-SUP-VIEW-07
+ *   acceptInvite:              P-SUP-ACCEPT-01 → P-SUP-ACCEPT-10
+ *   declineInvite:             P-SUP-DECLINE-01 → P-SUP-DECLINE-11
+ *   General supplier:          P-SUP-GEN-01 → P-SUP-GEN-05
  *
  * Run (from server/ directory):
  *   pnpm exec vitest run src/__tests__/networkPoolRfq.service.unit.test.ts
@@ -1656,3 +1661,701 @@ describe('P-INV-GEN-02: PASS — no invite DTO exposes metadataInternalJson (OD-
     expect(list[0]).not.toHaveProperty('metadataInternalJson');
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Supplier-side invite tests — P-SUP-LIST-01 → P-SUP-GEN-05
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Supplier mock factories ──────────────────────────────────────────────────
+
+function makeRfqJoinRow(overrides: Record<string, unknown> = {}) {
+  return {
+    rfqRef:             'rfq-ref-from-join',
+    rfqVersion:         1,
+    status:             'ISSUED',
+    issuedAt:           NOW,
+    responseDeadlineAt: null,
+    issueBasis:         'SNAPSHOT_LOCK',
+    lineCount:          2,
+    totalQty:           '2000.000000',
+    qtyUnit:            'KG',
+    ...overrides,
+  };
+}
+
+function makeInviteRowWithRfq(overrides: Record<string, unknown> = {}) {
+  return {
+    ...makeInviteRow(),
+    rfq: makeRfqJoinRow(),
+    ...overrides,
+  };
+}
+
+function makeDbForSupplierList(rows: any[] = [makeInviteRow()]): any {
+  return {
+    networkPoolRfqSupplierInvite: {
+      findMany: vi.fn().mockResolvedValue(rows),
+    },
+  };
+}
+
+function makeDbForSupplierView(row: any = makeInviteRowWithRfq()): any {
+  return {
+    networkPoolRfqSupplierInvite: {
+      findFirst: vi.fn().mockResolvedValue(row),
+    },
+  };
+}
+
+function makeTxForAccept(overrides: {
+  networkPoolRfqSupplierInvite?: Record<string, unknown>;
+  networkLifecycleLog?:         Record<string, unknown>;
+} = {}): any {
+  return {
+    networkPoolRfqSupplierInvite: {
+      findFirst: vi.fn().mockResolvedValue(makeInviteRow()),
+      update:    vi.fn().mockResolvedValue(makeInviteRow({ status: 'ACCEPTED', acceptedAt: NOW })),
+      ...(overrides.networkPoolRfqSupplierInvite ?? {}),
+    },
+    networkLifecycleLog: {
+      create: vi.fn().mockResolvedValue({ id: LOG_ID }),
+      ...(overrides.networkLifecycleLog ?? {}),
+    },
+  };
+}
+
+function makeDbForAccept(txOverrides?: Parameters<typeof makeTxForAccept>[0]): any {
+  const tx = makeTxForAccept(txOverrides ?? {});
+  return {
+    $transaction: vi.fn().mockImplementation((fn: (tx: any) => any) => fn(tx)),
+    _mockTx: tx,
+  };
+}
+
+function makeTxForDecline(overrides: {
+  networkPoolRfqSupplierInvite?: Record<string, unknown>;
+  networkLifecycleLog?:         Record<string, unknown>;
+} = {}): any {
+  return {
+    networkPoolRfqSupplierInvite: {
+      findFirst: vi.fn().mockResolvedValue(makeInviteRow()),
+      update:    vi.fn().mockResolvedValue(
+        makeInviteRow({ status: 'DECLINED', declinedAt: NOW, declineReason: null }),
+      ),
+      ...(overrides.networkPoolRfqSupplierInvite ?? {}),
+    },
+    networkLifecycleLog: {
+      create: vi.fn().mockResolvedValue({ id: LOG_ID }),
+      ...(overrides.networkLifecycleLog ?? {}),
+    },
+  };
+}
+
+function makeDbForDecline(txOverrides?: Parameters<typeof makeTxForDecline>[0]): any {
+  const tx = makeTxForDecline(txOverrides ?? {});
+  return {
+    $transaction: vi.fn().mockImplementation((fn: (tx: any) => any) => fn(tx)),
+    _mockTx: tx,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// listSupplierInvites — P-SUP-LIST-01 → P-SUP-LIST-07
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('P-SUP-LIST-01: PASS — listSupplierInvites scopes by supplierOrgId', () => {
+  it('calls findMany with where.supplierOrgId = caller org', async () => {
+    const db  = makeDbForSupplierList();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.listSupplierInvites(SUPPLIER_ORG_ID);
+
+    const call = db.networkPoolRfqSupplierInvite.findMany.mock.calls[0][0];
+    expect(call.where.supplierOrgId).toBe(SUPPLIER_ORG_ID);
+  });
+});
+
+describe('P-SUP-LIST-02: PASS — listSupplierInvites returns empty array when none found', () => {
+  it('returns [] when findMany resolves with empty array', async () => {
+    const db  = makeDbForSupplierList([]);
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.listSupplierInvites(SUPPLIER_ORG_ID);
+
+    expect(result).toEqual([]);
+  });
+});
+
+describe('P-SUP-LIST-03: PASS — listSupplierInvites computes EXPIRED for PENDING + past expiresAt (OD-2)', () => {
+  it('returns effective status EXPIRED when DB status=PENDING and expiresAt is in the past', async () => {
+    const db  = makeDbForSupplierList([makeInviteRow({ expiresAt: PAST_EXPIRES_AT })]);
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const [result] = await svc.listSupplierInvites(SUPPLIER_ORG_ID);
+
+    expect(result.status).toBe('EXPIRED');
+  });
+});
+
+describe('P-SUP-LIST-04: PASS — listSupplierInvites does NOT write EXPIRED to DB (OD-2 lazy)', () => {
+  it('only findMany is called — no update call made for expired rows', async () => {
+    const db  = makeDbForSupplierList([makeInviteRow({ expiresAt: PAST_EXPIRES_AT })]);
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.listSupplierInvites(SUPPLIER_ORG_ID);
+
+    // db mock has no update function on networkPoolRfqSupplierInvite — call would throw TypeError
+    expect(db.networkPoolRfqSupplierInvite.findMany).toHaveBeenCalledOnce();
+  });
+});
+
+describe('P-SUP-LIST-05: PASS — listSupplierInvites DTO omits metadataInternalJson (OD-5)', () => {
+  it('returned records do not expose metadataInternalJson', async () => {
+    const db  = makeDbForSupplierList([makeInviteRow()]);
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const [result] = await svc.listSupplierInvites(SUPPLIER_ORG_ID);
+
+    expect(result).not.toHaveProperty('metadataInternalJson');
+    expect(result).not.toHaveProperty('metadata_internal_json');
+  });
+});
+
+describe('P-SUP-LIST-06: PASS — listSupplierInvites DTO omits cancelReason and ownerOrgId (OD-5)', () => {
+  it('returned records do not expose cancel_reason or owner_org_id', async () => {
+    const db  = makeDbForSupplierList([makeInviteRow({ cancelReason: 'internal-reason' })]);
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const [result] = await svc.listSupplierInvites(SUPPLIER_ORG_ID);
+
+    expect(result).not.toHaveProperty('cancel_reason');
+    expect(result).not.toHaveProperty('cancelReason');
+    expect(result).not.toHaveProperty('owner_org_id');
+  });
+});
+
+describe('P-SUP-LIST-07: PASS — listSupplierInvites DTO omits RFQ lines, snapshot lines, member quantities (OD-5)', () => {
+  it('returned records do not include any line-level, snapshot, or member data keys', async () => {
+    const db  = makeDbForSupplierList([makeInviteRow()]);
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const [result] = await svc.listSupplierInvites(SUPPLIER_ORG_ID);
+
+    expect(result).not.toHaveProperty('lines');
+    expect(result).not.toHaveProperty('rfqLines');
+    expect(result).not.toHaveProperty('snapshotLines');
+    expect(result).not.toHaveProperty('memberQuantities');
+    expect(result).not.toHaveProperty('members');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// viewInvite — P-SUP-VIEW-01 → P-SUP-VIEW-07
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('P-SUP-VIEW-01: PASS — viewInvite returns invite for correct supplier', () => {
+  it('returns a record with id=INVITE_ID and invite_ref=INVITE_REF', async () => {
+    const db  = makeDbForSupplierView();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.viewInvite(SUPPLIER_ORG_ID, INVITE_ID);
+
+    expect(result.id).toBe(INVITE_ID);
+    expect(result.invite_ref).toBe(INVITE_REF);
+  });
+});
+
+describe('P-SUP-VIEW-02: FAIL — viewInvite throws NotFoundError for wrong supplierOrgId', () => {
+  it('throws NetworkPoolRfqSupplierInviteNotFoundError when findFirst returns null', async () => {
+    const db  = makeDbForSupplierView(null as any);
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.viewInvite('wrong-supplier-id', INVITE_ID),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqSupplierInviteNotFoundError);
+  });
+});
+
+describe('P-SUP-VIEW-03: FAIL — viewInvite throws NotFoundError for missing invite', () => {
+  it('throws NetworkPoolRfqSupplierInviteNotFoundError when invite does not exist', async () => {
+    const db  = makeDbForSupplierView(null as any);
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.viewInvite(SUPPLIER_ORG_ID, 'non-existent-invite-id'),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqSupplierInviteNotFoundError);
+  });
+});
+
+describe('P-SUP-VIEW-04: PASS — viewInvite computes EXPIRED for PENDING + past expiresAt (OD-2)', () => {
+  it('returns effective status EXPIRED when DB status=PENDING and expiresAt is in the past', async () => {
+    const db  = makeDbForSupplierView(makeInviteRowWithRfq({ expiresAt: PAST_EXPIRES_AT }));
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.viewInvite(SUPPLIER_ORG_ID, INVITE_ID);
+
+    expect(result.status).toBe('EXPIRED');
+  });
+});
+
+describe('P-SUP-VIEW-05: PASS — viewInvite includes aggregate RFQ header fields from join (OD-5)', () => {
+  it('returned record contains rfq_ref, rfq_version, issue_basis, line_count, total_qty from joined rfq', async () => {
+    const db  = makeDbForSupplierView(makeInviteRowWithRfq());
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.viewInvite(SUPPLIER_ORG_ID, INVITE_ID);
+
+    expect(result.rfq_ref).toBe('rfq-ref-from-join');
+    expect(result.rfq_version).toBe(1);
+    expect(result.issue_basis).toBe('SNAPSHOT_LOCK');
+    expect(result.line_count).toBe(2);
+    expect(result.total_qty).toBe('2000.000000');
+  });
+});
+
+describe('P-SUP-VIEW-06: PASS — viewInvite DTO omits RFQ lines, snapshot lines, and member data (OD-5)', () => {
+  it('returned record does not include lines, snapshotLines, rfqLines, or member identities', async () => {
+    const db  = makeDbForSupplierView();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.viewInvite(SUPPLIER_ORG_ID, INVITE_ID);
+
+    expect(result).not.toHaveProperty('lines');
+    expect(result).not.toHaveProperty('rfqLines');
+    expect(result).not.toHaveProperty('snapshotLines');
+    expect(result).not.toHaveProperty('members');
+    expect(result).not.toHaveProperty('memberQuantities');
+  });
+});
+
+describe('P-SUP-VIEW-07: PASS — viewInvite does not check NetworkPoolMembership (OD-4)', () => {
+  it('completes without querying networkPoolMembership', async () => {
+    // If viewInvite accessed tx.networkPoolMembership the mock db would throw TypeError
+    const db  = makeDbForSupplierView();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(svc.viewInvite(SUPPLIER_ORG_ID, INVITE_ID)).resolves.not.toThrow();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// acceptInvite — P-SUP-ACCEPT-01 → P-SUP-ACCEPT-10
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('P-SUP-ACCEPT-01: PASS — acceptInvite transitions PENDING invite to ACCEPTED', () => {
+  it('returns record with status=ACCEPTED', async () => {
+    const db  = makeDbForAccept();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.acceptInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID);
+
+    expect(result.status).toBe('ACCEPTED');
+  });
+});
+
+describe('P-SUP-ACCEPT-02: PASS — acceptInvite sets acceptedAt in the update data', () => {
+  it('update call includes status=ACCEPTED and acceptedAt is a Date', async () => {
+    const db  = makeDbForAccept();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.acceptInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID);
+
+    const updateCall = db._mockTx.networkPoolRfqSupplierInvite.update.mock.calls[0][0];
+    expect(updateCall.data.status).toBe('ACCEPTED');
+    expect(updateCall.data.acceptedAt).toBeInstanceOf(Date);
+  });
+});
+
+describe('P-SUP-ACCEPT-03: FAIL — acceptInvite throws InvalidTransitionError for ACCEPTED invite', () => {
+  it('throws when effective status is ACCEPTED', async () => {
+    const db  = makeDbForAccept({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(makeInviteRow({ status: 'ACCEPTED', acceptedAt: NOW })),
+        update:    vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.acceptInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqSupplierInviteInvalidTransitionError);
+  });
+});
+
+describe('P-SUP-ACCEPT-04: FAIL — acceptInvite throws InvalidTransitionError for DECLINED invite', () => {
+  it('throws when effective status is DECLINED', async () => {
+    const db  = makeDbForAccept({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(makeInviteRow({ status: 'DECLINED', declinedAt: NOW })),
+        update:    vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.acceptInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqSupplierInviteInvalidTransitionError);
+  });
+});
+
+describe('P-SUP-ACCEPT-05: FAIL — acceptInvite throws InvalidTransitionError for CANCELLED invite', () => {
+  it('throws when effective status is CANCELLED', async () => {
+    const db  = makeDbForAccept({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(makeInviteRow({ status: 'CANCELLED', cancelledAt: NOW })),
+        update:    vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.acceptInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqSupplierInviteInvalidTransitionError);
+  });
+});
+
+describe('P-SUP-ACCEPT-06: FAIL — acceptInvite throws InvalidTransitionError for lazy-EXPIRED invite (OD-2)', () => {
+  it('throws when DB status=PENDING but expiresAt is in the past', async () => {
+    const db  = makeDbForAccept({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(makeInviteRow({ expiresAt: PAST_EXPIRES_AT })),
+        update:    vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.acceptInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqSupplierInviteInvalidTransitionError);
+  });
+});
+
+describe('P-SUP-ACCEPT-07: PASS — acceptInvite writes direct lifecycle log (OD-7)', () => {
+  it('networkLifecycleLog.create is called once inside the transaction', async () => {
+    const db  = makeDbForAccept();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.acceptInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID);
+
+    expect(db._mockTx.networkLifecycleLog.create).toHaveBeenCalledOnce();
+  });
+});
+
+describe('P-SUP-ACCEPT-08: PASS — acceptInvite does NOT call StateMachineService.transition (OD-7)', () => {
+  it('sm.transition is never called during acceptInvite', async () => {
+    const db  = makeDbForAccept();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.acceptInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID);
+
+    expect(sm.transition).not.toHaveBeenCalled();
+  });
+});
+
+describe('P-SUP-ACCEPT-09: FAIL — acceptInvite throws NotFoundError for wrong supplierOrgId', () => {
+  it('throws NotFoundError when findFirst returns null (wrong supplier scoping)', async () => {
+    const db  = makeDbForAccept({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(null),
+        update:    vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.acceptInvite('wrong-supplier-id', USER_ID, INVITE_ID),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqSupplierInviteNotFoundError);
+  });
+});
+
+describe('P-SUP-ACCEPT-10: PASS — acceptInvite does NOT mutate pool or RFQ state', () => {
+  it('only networkPoolRfqSupplierInvite.update is called — no pool or rfq mutation', async () => {
+    const db  = makeDbForAccept();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.acceptInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID);
+
+    // tx mock has no networkPool or networkPoolRfq properties — access would throw TypeError
+    // Passing here confirms invite update was the only write
+    expect(db._mockTx.networkPoolRfqSupplierInvite.update).toHaveBeenCalledOnce();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// declineInvite — P-SUP-DECLINE-01 → P-SUP-DECLINE-11
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('P-SUP-DECLINE-01: PASS — declineInvite transitions PENDING invite to DECLINED', () => {
+  it('returns record with status=DECLINED', async () => {
+    const db  = makeDbForDecline();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.declineInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID);
+
+    expect(result.status).toBe('DECLINED');
+  });
+});
+
+describe('P-SUP-DECLINE-02: PASS — declineInvite sets declinedAt in the update data', () => {
+  it('update call includes status=DECLINED and declinedAt is a Date', async () => {
+    const db  = makeDbForDecline();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.declineInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID);
+
+    const updateCall = db._mockTx.networkPoolRfqSupplierInvite.update.mock.calls[0][0];
+    expect(updateCall.data.status).toBe('DECLINED');
+    expect(updateCall.data.declinedAt).toBeInstanceOf(Date);
+  });
+});
+
+describe('P-SUP-DECLINE-03: PASS — declineInvite stores declineReason in update data', () => {
+  it('update call includes the supplied declineReason string', async () => {
+    const db  = makeDbForDecline();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.declineInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID, 'Price too high');
+
+    const updateCall = db._mockTx.networkPoolRfqSupplierInvite.update.mock.calls[0][0];
+    expect(updateCall.data.declineReason).toBe('Price too high');
+  });
+});
+
+describe('P-SUP-DECLINE-04: FAIL — declineInvite throws InvalidTransitionError for ACCEPTED invite', () => {
+  it('throws when effective status is ACCEPTED', async () => {
+    const db  = makeDbForDecline({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(makeInviteRow({ status: 'ACCEPTED', acceptedAt: NOW })),
+        update:    vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.declineInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqSupplierInviteInvalidTransitionError);
+  });
+});
+
+describe('P-SUP-DECLINE-05: FAIL — declineInvite throws InvalidTransitionError for DECLINED invite', () => {
+  it('throws when effective status is DECLINED', async () => {
+    const db  = makeDbForDecline({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(makeInviteRow({ status: 'DECLINED', declinedAt: NOW })),
+        update:    vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.declineInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqSupplierInviteInvalidTransitionError);
+  });
+});
+
+describe('P-SUP-DECLINE-06: FAIL — declineInvite throws InvalidTransitionError for CANCELLED invite', () => {
+  it('throws when effective status is CANCELLED', async () => {
+    const db  = makeDbForDecline({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(makeInviteRow({ status: 'CANCELLED', cancelledAt: NOW })),
+        update:    vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.declineInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqSupplierInviteInvalidTransitionError);
+  });
+});
+
+describe('P-SUP-DECLINE-07: FAIL — declineInvite throws InvalidTransitionError for lazy-EXPIRED invite (OD-2)', () => {
+  it('throws when DB status=PENDING but expiresAt is in the past', async () => {
+    const db  = makeDbForDecline({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(makeInviteRow({ expiresAt: PAST_EXPIRES_AT })),
+        update:    vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.declineInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqSupplierInviteInvalidTransitionError);
+  });
+});
+
+describe('P-SUP-DECLINE-08: PASS — declineInvite writes direct lifecycle log (OD-7)', () => {
+  it('networkLifecycleLog.create is called once inside the transaction', async () => {
+    const db  = makeDbForDecline();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.declineInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID);
+
+    expect(db._mockTx.networkLifecycleLog.create).toHaveBeenCalledOnce();
+  });
+});
+
+describe('P-SUP-DECLINE-09: PASS — declineInvite does NOT call StateMachineService.transition (OD-7)', () => {
+  it('sm.transition is never called during declineInvite', async () => {
+    const db  = makeDbForDecline();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.declineInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID);
+
+    expect(sm.transition).not.toHaveBeenCalled();
+  });
+});
+
+describe('P-SUP-DECLINE-10: FAIL — declineInvite throws NotFoundError for wrong supplierOrgId', () => {
+  it('throws NotFoundError when findFirst returns null', async () => {
+    const db  = makeDbForDecline({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(null),
+        update:    vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.declineInvite('wrong-supplier-id', USER_ID, INVITE_ID),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqSupplierInviteNotFoundError);
+  });
+});
+
+describe('P-SUP-DECLINE-11: PASS — declineInvite does NOT mutate pool or RFQ state', () => {
+  it('only networkPoolRfqSupplierInvite.update is called — no pool or rfq mutation', async () => {
+    const db  = makeDbForDecline();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.declineInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID);
+
+    // tx mock has no networkPool or networkPoolRfq — access would throw TypeError
+    expect(db._mockTx.networkPoolRfqSupplierInvite.update).toHaveBeenCalledOnce();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// General supplier tests — P-SUP-GEN-01 → P-SUP-GEN-05
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('P-SUP-GEN-01: PASS — no supplier method checks NetworkPoolMembership (OD-4)', () => {
+  it('listSupplierInvites and viewInvite complete without networkPoolMembership query', async () => {
+    const sm = makeSm();
+
+    const svcList = new NetworkPoolRfqService(makeDbForSupplierList(), sm);
+    await expect(svcList.listSupplierInvites(SUPPLIER_ORG_ID)).resolves.not.toThrow();
+
+    const svcView = new NetworkPoolRfqService(makeDbForSupplierView(), sm);
+    await expect(svcView.viewInvite(SUPPLIER_ORG_ID, INVITE_ID)).resolves.not.toThrow();
+  });
+});
+
+describe('P-SUP-GEN-02: PASS — no supplier method exposes metadataInternalJson (OD-5)', () => {
+  it('listSupplierInvites, viewInvite, acceptInvite, declineInvite all omit metadataInternalJson', async () => {
+    const sm = makeSm();
+
+    const svcList = new NetworkPoolRfqService(makeDbForSupplierList([makeInviteRow()]), sm);
+    const [listResult] = await svcList.listSupplierInvites(SUPPLIER_ORG_ID);
+    expect(listResult).not.toHaveProperty('metadataInternalJson');
+    expect(listResult).not.toHaveProperty('metadata_internal_json');
+
+    const svcView = new NetworkPoolRfqService(makeDbForSupplierView(), sm);
+    const viewResult = await svcView.viewInvite(SUPPLIER_ORG_ID, INVITE_ID);
+    expect(viewResult).not.toHaveProperty('metadataInternalJson');
+
+    const svcAccept = new NetworkPoolRfqService(makeDbForAccept(), sm);
+    const acceptResult = await svcAccept.acceptInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID);
+    expect(acceptResult).not.toHaveProperty('metadataInternalJson');
+
+    const svcDecline = new NetworkPoolRfqService(makeDbForDecline(), sm);
+    const declineResult = await svcDecline.declineInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID);
+    expect(declineResult).not.toHaveProperty('metadataInternalJson');
+  });
+});
+
+describe('P-SUP-GEN-03: PASS — no supplier method includes RFQ lines (OD-5)', () => {
+  it('supplier DTOs from list, view, accept, decline do not have rfqLines or lines property', async () => {
+    const sm = makeSm();
+
+    const svcList = new NetworkPoolRfqService(makeDbForSupplierList([makeInviteRow()]), sm);
+    const [listResult] = await svcList.listSupplierInvites(SUPPLIER_ORG_ID);
+    expect(listResult).not.toHaveProperty('rfqLines');
+    expect(listResult).not.toHaveProperty('lines');
+
+    const svcView = new NetworkPoolRfqService(makeDbForSupplierView(), sm);
+    const viewResult = await svcView.viewInvite(SUPPLIER_ORG_ID, INVITE_ID);
+    expect(viewResult).not.toHaveProperty('rfqLines');
+
+    const svcAccept = new NetworkPoolRfqService(makeDbForAccept(), sm);
+    const acceptResult = await svcAccept.acceptInvite(SUPPLIER_ORG_ID, USER_ID, INVITE_ID);
+    expect(acceptResult).not.toHaveProperty('rfqLines');
+  });
+});
+
+describe('P-SUP-GEN-04: PASS — no supplier method writes EXPIRED to DB (OD-2)', () => {
+  it('listSupplierInvites and viewInvite do not call update to persist EXPIRED status', async () => {
+    const sm = makeSm();
+
+    const dbList = makeDbForSupplierList([makeInviteRow({ expiresAt: PAST_EXPIRES_AT })]);
+    await new NetworkPoolRfqService(dbList, sm).listSupplierInvites(SUPPLIER_ORG_ID);
+    // db mock has no update property — call would throw TypeError; passing = no update called
+    expect(dbList.networkPoolRfqSupplierInvite.findMany).toHaveBeenCalledOnce();
+
+    const dbView = makeDbForSupplierView(makeInviteRowWithRfq({ expiresAt: PAST_EXPIRES_AT }));
+    await new NetworkPoolRfqService(dbView, sm).viewInvite(SUPPLIER_ORG_ID, INVITE_ID);
+    expect(dbView.networkPoolRfqSupplierInvite.findFirst).toHaveBeenCalledOnce();
+  });
+});
+
+describe('P-SUP-GEN-05: PASS — owner invite methods still pass after adding supplier methods', () => {
+  it('sendInvite, listInvites, getInvite and cancelInvite all still resolve without error', async () => {
+    const sm = makeSm();
+
+    const svcSend   = new NetworkPoolRfqService(makeDbForSend(), sm);
+    const svcList   = new NetworkPoolRfqService(makeDbForList(), sm);
+    const svcGet    = new NetworkPoolRfqService(makeDbForGet(), sm);
+    const svcCancel = new NetworkPoolRfqService(makeDbForCancel(), sm);
+
+    await expect(svcSend.sendInvite(OWNER_ORG_ID, USER_ID, makeSendInviteInput())).resolves.not.toThrow();
+    await expect(svcList.listInvites(OWNER_ORG_ID, POOL_ID, RFQ_ID)).resolves.not.toThrow();
+    await expect(svcGet.getInvite(OWNER_ORG_ID, POOL_ID, RFQ_ID, INVITE_ID)).resolves.not.toThrow();
+    await expect(svcCancel.cancelInvite(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, INVITE_ID)).resolves.not.toThrow();
+  });
+});
+
