@@ -7,6 +7,55 @@
 
 ---
 
+## 2026-05-30 — DECISION_AUDIT: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DECISION-AUDIT-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DECISION-AUDIT-001
+Type:          DECISION_AUDIT
+Status:        DECISIONS_LOCKED
+Date:          2026-05-30
+Basis commit:  8a36a2f (design packet — docs(network-commerce): design pool RFQ supplier invite)
+
+Scope:
+  governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DECISION-AUDIT-001.md — NEW artifact
+  governance/control/OPEN-SET.md                                               — operating note + Last Updated
+  governance/control/GOVERNANCE-CHANGELOG.md                                   — this entry
+
+Decisions locked (OD-1 through OD-7):
+  OD-1: Option A — No re-invite in Phase 1B.
+        UNIQUE(rfq_id, supplier_org_id) hard block; all row statuses covered (non-partial).
+        Re-invite deferred to Phase 1C+ with separate design decision.
+  OD-2: Option A (clarified) — Lazy EXPIRED enforcement.
+        DB status column stays PENDING; service computes effectiveStatus on read (expiresAt < now()).
+        API returns status:'EXPIRED' as computed value. No DB mutation on read. No background job.
+        Terminal-state guards (cancelInvite, acceptInvite, declineInvite) check effective status.
+  OD-3: Option B — expiresAt inherits from rfq.responseDeadlineAt when non-null; else NULL.
+        Caller-provided expires_at overrides inherited value if provided and valid (not in past).
+  OD-4: Option A — Validate supplier_org_id exists with organizations.status='ACTIVE'.
+        Repo-truth: legal status values: ACTIVE|SUSPENDED|CLOSED|PENDING_VERIFICATION|
+        VERIFICATION_APPROVED|VERIFICATION_REJECTED|VERIFICATION_NEEDS_MORE_INFO.
+        Clean 422 INVALID_INPUT if org missing or not 'ACTIVE'.
+  OD-5: Option A — Aggregate header only (§10 fields) in Phase 1B.
+        No NetworkPoolRfqLine rows exposed to supplier. Deferred to Phase 1C.
+  OD-6: Option B — Supplier routes: nc.procurement_pools.supplier_invites.enabled only.
+        Owner routes: full 3-gate chain (pools.enabled + rfq.enabled + supplier_invites.enabled).
+        Provisioning consequence: invited supplier orgs require TenantFeatureOverride for supplier_invites flag.
+  OD-7: Option A (MODIFIED by repo-truth) — Mandatory direct networkLifecycleLog.create() in
+        same $transaction as invite mutation (NOT via stateMachine.transition()).
+        Repo-truth finding: SM.transition() validates allowedTransitions; CLOSED_FOR_BIDS→CLOSED_FOR_BIDS
+        self-transition not declared → would be denied. Direct Prisma write is the correct pattern.
+        entity_type=POOL, fromStateKey=toStateKey=CLOSED_FOR_BIDS, orgId=ownerOrgId.
+
+Governance posture (unchanged):
+  active_delivery_unit:        HOLD_FOR_AUTHORIZATION
+  dpp_launch_authorization:    HOLD_FOR_PARESH_DECISION
+
+Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SCHEMA-001 — HOLD_FOR_PARESH_DECISION.
+No implementation files modified. No schema, migration, service, route, test, or middleware changes.
+```
+
+---
+
 ## 2026-05-30 — DESIGN_AUTHORED: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001
 
 ```

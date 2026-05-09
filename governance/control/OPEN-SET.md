@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-30 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001 — DESIGN_AUTHORED; 21-section design packet created. Tracker correction 5231cf4 also applied this session.)
+**Last Updated:** 2026-05-30 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DECISION-AUDIT-001 — DECISIONS_LOCKED; OD-1 through OD-7 resolved. Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SCHEMA-001 HOLD_FOR_PARESH_DECISION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,18 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DECISION-AUDIT-001 DECISIONS_LOCKED (2026-05-30).
+  Basis commit: 8a36a2f. OD-1 through OD-7 formally resolved.
+  OD-1: No re-invite in Phase 1B — UNIQUE(rfq_id, supplier_org_id) hard block forever.
+  OD-2: Lazy EXPIRED — DB status stays PENDING; service computes effectiveStatus on read.
+  OD-3: expiresAt inherits from rfq.responseDeadlineAt when non-null; else NULL.
+  OD-4: Validate supplier org status='ACTIVE' before invite creation.
+  OD-5: Aggregate header only (§10 fields) — no RFQ line detail in Phase 1B.
+  OD-6: Supplier routes gated on nc.procurement_pools.supplier_invites.enabled only.
+  OD-7: Mandatory direct networkLifecycleLog.create() in same $transaction (NOT via SM — self-transition would be denied).
+  Repo-truth finding: SM.transition() validates allowedTransitions; CLOSED_FOR_BIDS self-transition not declared.
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged). dpp_launch: HOLD_FOR_PARESH_DECISION (unchanged).
+  nc_phase1_next_action_status: DECISIONS_LOCKED. Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SCHEMA-001 HOLD_FOR_PARESH_DECISION.
 - TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001 DESIGN_AUTHORED (2026-05-30).
   21-section design packet for Phase 1B Supplier Invite workflow. Basis commit: 5231cf4.
   Scope: design only — entity model, status model, route topology, feature gate, RLS posture,
