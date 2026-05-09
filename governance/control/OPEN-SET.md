@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-09 (TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-PROD-VERIFY-GOV-CLOSE-001 — VERIFIED_COMPLETE_AND_GOV_SYNCED; Pool RFQ issue service + route implemented, 43/43 PRQ integration + 59/59 service/middleware unit tests PASS; commit 898bdcb)
+**Last Updated:** 2026-05-30 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001 — DESIGN_AUTHORED; 21-section design packet created. Tracker correction 5231cf4 also applied this session.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,23 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001 DESIGN_AUTHORED (2026-05-30).
+  21-section design packet for Phase 1B Supplier Invite workflow. Basis commit: 5231cf4.
+  Scope: design only — entity model, status model, route topology, feature gate, RLS posture,
+  privacy contract, error taxonomy, test strategy, 9-packet governance chain, 7 open decisions.
+  Recommended entity: NetworkSupplierInvite table (Option A). Status: PENDING/ACCEPTED/DECLINED/CANCELLED/EXPIRED.
+  Feature gate: nc.procurement_pools.supplier_invites.enabled (new sub-flag, 2-layer pattern).
+  Route namespaces: owner (pools prefix) + supplier (standalone /supplier-rfq-invites).
+  Implementation: HOLD_FOR_PARESH_DECISION (unchanged). DPP launch: HOLD_FOR_PARESH_DECISION (unchanged).
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged).
+  Artifact: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001.md.
+- TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CORRECTION-001 CORRECTION_COMMITTED (2026-05-30).
+  12 inaccuracies corrected in governance/TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-001.md.
+  Corrections: route prefix (→ /api/tenant/network-commerce/pools), 2026 migration IDs,
+  entity names (NetworkPoolRfqLine, demand snapshots), removed NetworkPoolRfqIssue phantom entity,
+  service method names, DPR-8, §18D tracker self-reference. Commit: 5231cf4.
+  No governance posture keys changed. No implementation files modified.
+  Artifact: governance/TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-001.md (updated to v1.1).
 - TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-ROUTE-001 VERIFIED_COMPLETE_AND_GOV_SYNCED (2026-05-09).
   Pool RFQ issue service (`issueRfq`) + route (`POST /:poolId/rfq/issue`) implemented and verified.
   43/43 PRQ integration PASS; 59/59 service + middleware unit PASS; 77/77 DLT regression PASS;

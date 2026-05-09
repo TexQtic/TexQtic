@@ -7,6 +7,102 @@
 
 ---
 
+## 2026-05-30 — DESIGN_AUTHORED: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001
+Type:          DESIGN
+Status:        DESIGN_AUTHORED
+Date:          2026-05-30
+Basis commit:  5231cf4 (tracker correction)
+
+Scope:
+  governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001.md — NEW artifact
+  governance/control/OPEN-SET.md                                        — operating notes added
+  governance/control/GOVERNANCE-CHANGELOG.md                            — this entry
+
+Contents:
+  §1  Packet metadata (basis commits; governed posture)
+  §2  Executive summary (scope and non-scope)
+  §3  Repo-truth baseline (10 NC entities; 7 migrations; 13 routes; 2 feature gates)
+  §4  Current implemented upstream flow (Phase 1A — AGGREGATING → CLOSED_FOR_BIDS)
+  §5  Scope and non-scope of Phase 1B supplier invite
+  §6  Entity strategy options (Option A/B/C analysis; Option A recommended)
+  §7  Recommended entity model (NetworkSupplierInvite — network_pool_rfq_supplier_invites)
+  §8  Status model (PENDING/ACCEPTED/DECLINED/CANCELLED/EXPIRED; VIEWED deferred)
+  §9  Lifecycle interaction (pool stays CLOSED_FOR_BIDS; NetworkLifecycleLog recommended)
+  §10 Supplier-visible RFQ projection (safe fields only; member data excluded)
+  §11 Cross-org access and RLS posture (dual anchor: owner_org_id + supplier_org_id)
+  §12 Role model (owner: OWNER+ADMIN; supplier: any authenticated org; non-leak 404)
+  §13 Feature gate strategy (Option C: nc.procurement_pools.supplier_invites.enabled)
+  §14 API surface proposal (8 routes across 2 namespaces)
+  §15 Body validation and error mapping (9 error classes; forbidden field pattern)
+  §16 Privacy and non-leak contract (8 rules; metadataInternalJson always excluded)
+  §17 Test strategy (unit + integration; 7 validation bands)
+  §18 Governance chain recommendation (9 implementation packets in order)
+  §19 Open decisions for decision audit (OD-1 through OD-7)
+  §20 Recommended design posture (summary)
+  §21 Explicit non-authorization statement
+
+Key design decisions:
+  Entity:        Option A — new NetworkSupplierInvite table (not embedded)
+  Dual RLS:      owner_org_id + supplier_org_id co-primary anchors
+  Status model:  PENDING → ACCEPTED | DECLINED | CANCELLED | EXPIRED (lazy TTL)
+  Feature gate:  nc.procurement_pools.supplier_invites.enabled (new sub-flag, 2-layer)
+  Routes:        owner namespace (pools prefix) + supplier namespace (standalone)
+  Projection:    Aggregate header only (§10); line detail deferred to Phase 1C
+  Privacy:       Non-leaking 404; member identity excluded; metadataInternalJson excluded
+  Lifecycle log: Mandatory NetworkLifecycleLog write (entity_type=POOL, OD-7 recommendation)
+  Open decisions: 7 (OD-1 through OD-7) — deferred to Decision Audit packet
+
+Governance posture (unchanged):
+  active_delivery_unit:               HOLD_FOR_AUTHORIZATION
+  dpp_launch_authorization:           HOLD_FOR_PARESH_DECISION
+  nc_phase1_next_action_candidate:    TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001
+  nc_phase1_next_action_status:       DESIGN_AUTHORED
+
+No implementation changes made. No schema. No migration. No service. No route. No tests.
+```
+
+---
+
+## 2026-05-30 — CORRECTION_COMMITTED: TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CORRECTION-001
+
+```
+Unit:          TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CORRECTION-001
+Type:          GOVERNANCE_CORRECTION
+Status:        CORRECTION_COMMITTED
+Date:          2026-05-30
+Commit:        5231cf4
+
+Scope:
+  governance/TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-001.md — 12 corrections applied
+
+Corrections applied:
+  1.  Route prefix corrected: /api/tenant/network-commerce/pools (was /tenant/nc/pools)
+  2.  Migration IDs corrected to 2026 format: 20260520–20260528 (were 20250601+)
+  3.  Entity name corrected: NetworkPoolDemandSnapshot (was NetworkPoolSnapshot)
+  4.  Entity name corrected: NetworkPoolDemandSnapshotLine (was NetworkPoolSnapshotLine)
+  5.  Phantom entity removed: NetworkPoolRfqIssue (never existed; was audit artifact)
+  6.  Entity added: NetworkPoolRfqLine (real entity; was missing from tracker)
+  7.  Entity added: demand snapshot entity pair (was missing from entity tracker)
+  8.  Service method name corrected: issueRfq (was issueNetworkPoolRfq)
+  9.  DPR-8 corrected: /api/tenant/network-commerce/pools prefix (was wrong)
+  10. §18D self-reference updated: tracker v1.1 reconciled (was v1.0 unreconciled)
+  11. Tracker version bumped: v1.0 → v1.1 RECONCILED
+  12. §2 executive summary updated: reconciliation note added
+
+Governance posture keys preserved (not changed by correction):
+  active_delivery_unit:               HOLD_FOR_AUTHORIZATION
+  dpp_launch_authorization:           HOLD_FOR_PARESH_DECISION
+  nc_phase1_next_action_candidate:    TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001
+  nc_phase1_next_action_status:       HOLD_FOR_PARESH_DECISION
+
+No implementation changes. No schema. No migration. No service. No route.
+```
+
+---
+
 ## 2026-05-30 — PLANNING_TRACKER_CREATED: TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-001
 
 ```
