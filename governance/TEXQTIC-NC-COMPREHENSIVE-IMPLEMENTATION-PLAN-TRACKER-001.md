@@ -6,9 +6,10 @@
 |---|---|
 | **Document ID** | TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-001 |
 | **Document Type** | PLANNING_TRACKER |
-| **Status** | PLANNING_TRACKER_CREATED |
-| **Version** | 1.0 |
+| **Status** | RECONCILED |
+| **Version** | 1.1 |
 | **Created** | 2026-05-30 |
+| **Reconciled** | 2026-05-30 — correction packet TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CORRECTION-001 |
 | **Author** | Governance agent |
 | **Authorized by** | Paresh Patel |
 | **Primary basis commit** | `29319f9` — audit: TEXQTIC-NC-REPO-TRUTH-IMPLEMENTATION-AUDIT-001 |
@@ -57,7 +58,7 @@ The audit (`TEXQTIC-NC-REPO-TRUTH-IMPLEMENTATION-AUDIT-001`, commit `29319f9`) e
 |---|---|
 | CPP — Pool core + Membership + DemandLine | IMPLEMENTED |
 | CPP — Pool RFQ Issue | IMPLEMENTED |
-| CPP — NetworkInvoice | PARTIAL (stub; no route) |
+| CPP — NetworkInvoice | PARTIAL (`createNetworkInvoice`, `getNetworkInvoiceById` implemented; no route) |
 | CPP — Supplier Invite | NOT_STARTED (HOLD_FOR_PARESH_DECISION) |
 | OES (Module B — Syndicates) | NOT_STARTED |
 | VCO (Module C — Chains) | NOT_STARTED |
@@ -103,17 +104,19 @@ The rows below represent the implementation tracks as verified at HEAD `29319f9`
 
 | Track | Current Status | Evidence | Governance State | Next Required Action |
 |---|---|---|---|---|
-| **Schema: `network_pools`** | IMPLEMENTED | Audit §3; migration 20250430000005 | VERIFIED | No schema action needed for pool core |
-| **Schema: `network_pool_memberships`** | IMPLEMENTED | Audit §3; migration 20250430000005 | VERIFIED | No schema action needed for membership |
-| **Schema: `network_pool_demand_lines`** | IMPLEMENTED | Audit §3; migration 20250430000005 | VERIFIED | No schema action needed for demand lines |
-| **Schema: `network_pool_rfqs`** | IMPLEMENTED | Audit §3; migration 20250430000006 | VERIFIED | No schema action needed for pool RFQ |
-| **Schema: `network_pool_rfq_issues`** | IMPLEMENTED | Audit §3; migration 20250501000001 | VERIFIED | No schema action needed for RFQ issue |
-| **Schema: `network_invoices`** | PARTIAL — stub | Audit §3; migration 20250430000008 | PARTIAL | Route + service completion required |
-| **Schema: `network_lifecycle_logs`** | IMPLEMENTED | Audit §3; migration 20250430000007 | VERIFIED | Extend to SYNDICATE/VCO entity types in future phases |
+| **Schema: `network_lifecycle_logs`** | IMPLEMENTED | migration `20260520000000_nc_network_lifecycle_logs` | VERIFIED | Extend to SYNDICATE/VCO entity types in future phases |
+| **Schema: `network_invoices`** | PARTIAL | migration `20260521000000_nc_network_invoices` | PARTIAL | Route layer missing; service has `createNetworkInvoice`, `getNetworkInvoiceById` (Phase 1G) |
+| **Schema: `network_pools`** | IMPLEMENTED | migration `20260522000000_nc_network_pools` | VERIFIED | No schema action needed for pool core |
+| **Schema: `network_pool_memberships`** | IMPLEMENTED | migration `20260522000000_nc_network_pools` | VERIFIED | No schema action needed for membership |
+| **Schema: `network_pool_demand_lines`** | IMPLEMENTED | migration `20260524000000_nc_pool_demand_line_schema` | VERIFIED | No schema action needed for demand lines |
+| **Schema: `network_pool_demand_snapshots`** | IMPLEMENTED | migration `20260525000000_nc_pool_demand_snapshot_schema` | VERIFIED | Created via `lockDemandLinesForRfq`; no direct read route yet |
+| **Schema: `network_pool_demand_snapshot_lines`** | IMPLEMENTED | migration `20260525000000_nc_pool_demand_snapshot_schema` | VERIFIED | Created as part of snapshot capture; immutable once inserted |
+| **Schema: `network_pool_rfqs`** | IMPLEMENTED | migration `20260528000000_nc_pool_rfq_schema` | VERIFIED | No schema action needed for RFQ header |
+| **Schema: `network_pool_rfq_lines`** | IMPLEMENTED | migration `20260528000000_nc_pool_rfq_schema` | VERIFIED | Created as part of `issueRfq`; immutable once inserted; no direct read route yet |
 | **Service: `networkPool.service.ts`** | IMPLEMENTED | Audit §5 | VERIFIED | Add ALLOCATING/ALLOCATED transitions in future packet |
 | **Service: `networkPoolDemandLine.service.ts`** | IMPLEMENTED | Audit §5 | VERIFIED | No action needed at current phase |
 | **Service: `networkPoolRfq.service.ts`** | IMPLEMENTED | Audit §5; D-017-A: orgId from dbContext.orgId | VERIFIED | Supplier invite extension: HOLD |
-| **Service: `networkInvoice.service.ts`** | PARTIAL — stub | Audit §5 | PARTIAL | Complete invoice service in Phase 1G packet |
+| **Service: `networkInvoice.service.ts`** | PARTIAL | Audit §5 | PARTIAL | Route layer; `listNetworkInvoices` (Phase 1G) |
 | **Service: `settlement.service.ts`** | PARTIAL — no NC pool split | Audit §5 | PARTIAL | Add NC pool settlement split in Phase 1H packet |
 | **Routes: `pools.ts` (7 routes)** | IMPLEMENTED | Audit §6 | VERIFIED | Add ALLOCATING transitions in future packet |
 | **Routes: `poolDemandLines.ts` (5 routes)** | IMPLEMENTED | Audit §6 | VERIFIED | No action needed at current phase |
@@ -130,13 +133,15 @@ Based on the foundation design §6 (13 entity models) plus the 9 schema entities
 
 | Entity | Module | Schema Status | Migration Status | Service Status | Route Status | Test Status | Governance Status | Next Packet Needed |
 |---|---|---|---|---|---|---|---|---|
-| **NetworkPool** | A/CPP | IMPLEMENTED | 20250430000005 DEPLOYED | IMPLEMENTED (`networkPool.service.ts`) | IMPLEMENTED (7 routes in `pools.ts`) | PASS | VERIFIED | Phase 1C (Quote/Allocation extensions) |
-| **NetworkPoolMembership** | A/CPP | IMPLEMENTED | 20250430000005 DEPLOYED | IMPLEMENTED (`networkPool.service.ts`) | IMPLEMENTED (in `pools.ts`) | PASS | VERIFIED | Phase 1C (Allocation tracking) |
-| **NetworkPoolDemandLine** | A/CPP | IMPLEMENTED | 20250430000005 DEPLOYED | IMPLEMENTED (`networkPoolDemandLine.service.ts`) | IMPLEMENTED (5 routes in `poolDemandLines.ts`) | PASS | VERIFIED | Phase 1F (Order integration) |
-| **NetworkPoolRfq** | A/CPP | IMPLEMENTED | 20250430000006 DEPLOYED | IMPLEMENTED (`networkPoolRfq.service.ts`) | PARTIAL — issue route only | PASS | VERIFIED | Phase 1B (Supplier Invite: HOLD) |
-| **NetworkPoolRfqIssue** | A/CPP | IMPLEMENTED | 20250501000001 DEPLOYED | IMPLEMENTED (issueRfq in `networkPoolRfq.service.ts`) | IMPLEMENTED (POST /:poolId/rfq/issue) | PASS | VERIFIED | Phase 1B (Supplier Invite: HOLD) |
-| **NetworkInvoice** | A/CPP | PARTIAL — stub | 20250430000008 DEPLOYED | PARTIAL (`networkInvoice.service.ts` stub) | NOT_STARTED | PARTIAL | PARTIAL | Phase 1G — NC Invoice completion |
-| **NetworkLifecycleLog** | A/B/C (shared) | IMPLEMENTED | 20250430000007 DEPLOYED | PARTIAL — used in pool only | PARTIAL — no read route | PARTIAL | PARTIAL | Phase 1H (extend to Syndicate/VCO); read routes deferred |
+| **NetworkLifecycleLog** | A/B/C (shared) | IMPLEMENTED | `20260520000000_nc_network_lifecycle_logs` DEPLOYED | PARTIAL — pool entity type only; no SYNDICATE/VCO | PARTIAL — no read route | PARTIAL | PARTIAL | Phase 1H (extend to Syndicate/VCO); read routes deferred |
+| **NetworkInvoice** | A/CPP | PARTIAL | `20260521000000_nc_network_invoices` DEPLOYED | PARTIAL — `createNetworkInvoice`, `getNetworkInvoiceById` implemented; Prisma client uses `as any` cast (unregenerated); no route | NOT_STARTED | PARTIAL | PARTIAL | Phase 1G — NC Invoice route + `listNetworkInvoices` |
+| **NetworkPool** | A/CPP | IMPLEMENTED | `20260522000000_nc_network_pools` DEPLOYED | IMPLEMENTED (`networkPool.service.ts`) | IMPLEMENTED (7 routes in `pools.ts`) | PASS | VERIFIED | Phase 1C (Quote/Allocation extensions) |
+| **NetworkPoolMembership** | A/CPP | IMPLEMENTED | `20260522000000_nc_network_pools` DEPLOYED | IMPLEMENTED (`networkPool.service.ts`) | IMPLEMENTED (in `pools.ts`) | PASS | VERIFIED | Phase 1C (Allocation tracking) |
+| **NetworkPoolDemandLine** | A/CPP | IMPLEMENTED | `20260524000000_nc_pool_demand_line_schema` DEPLOYED | IMPLEMENTED (`networkPoolDemandLine.service.ts`) | IMPLEMENTED (5 routes in `poolDemandLines.ts`) | PASS | VERIFIED | Phase 1F (Order integration) |
+| **NetworkPoolDemandSnapshot** | A/CPP | IMPLEMENTED | `20260525000000_nc_pool_demand_snapshot_schema` DEPLOYED | IMPLEMENTED (via `lockDemandLinesForRfq` in `networkPoolDemandLine.service.ts`) | PARTIAL — created by lock-for-rfq route; no direct read route | PASS | VERIFIED | Phase 1E (RFQ read surfaces) |
+| **NetworkPoolDemandSnapshotLine** | A/CPP | IMPLEMENTED | `20260525000000_nc_pool_demand_snapshot_schema` DEPLOYED | IMPLEMENTED (via `lockDemandLinesForRfq`) | PARTIAL — no direct route; immutable once inserted | PASS | VERIFIED | Phase 1E (RFQ read surfaces) |
+| **NetworkPoolRfq** | A/CPP | IMPLEMENTED | `20260528000000_nc_pool_rfq_schema` DEPLOYED | IMPLEMENTED (`networkPoolRfq.service.ts`) | PARTIAL — issue route only | PASS | VERIFIED | Phase 1B (Supplier Invite: HOLD) |
+| **NetworkPoolRfqLine** | A/CPP | IMPLEMENTED | `20260528000000_nc_pool_rfq_schema` DEPLOYED | IMPLEMENTED (created as part of `issueRfq` in `networkPoolRfq.service.ts`; immutable) | PARTIAL — no direct route; accessible via RFQ header | PASS | VERIFIED | Phase 1E (RFQ read surfaces) |
 | **NetworkSupplierInvite** | A/CPP | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | HOLD_FOR_PARESH_DECISION | Phase 1B — HOLD_FOR_PARESH_DECISION |
 | **NetworkSyndicate** | B/OES | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | Phase 2 — OES packet series |
 | **NetworkSyndicateLot** | B/OES | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | Phase 2 — OES packet series |
@@ -164,19 +169,19 @@ Based on the foundation design §6 (13 entity models) plus the 9 schema entities
 
 | # | Method | Path | File | Auth | Status | Test Coverage |
 |---|---|---|---|---|---|---|
-| 1 | GET | `/api/tenant/pools` | `routes/tenant/pools.ts` | Required | IMPLEMENTED | PASS |
-| 2 | POST | `/api/tenant/pools` | `routes/tenant/pools.ts` | Required | IMPLEMENTED | PASS |
-| 3 | GET | `/api/tenant/pools/:poolId` | `routes/tenant/pools.ts` | Required | IMPLEMENTED | PASS |
-| 4 | PATCH | `/api/tenant/pools/:poolId` | `routes/tenant/pools.ts` | Required | IMPLEMENTED | PASS |
-| 5 | DELETE | `/api/tenant/pools/:poolId` | `routes/tenant/pools.ts` | Required | IMPLEMENTED | PASS |
-| 6 | POST | `/api/tenant/pools/:poolId/members` | `routes/tenant/pools.ts` | Required | IMPLEMENTED | PASS |
-| 7 | GET | `/api/tenant/pools/:poolId/members` | `routes/tenant/pools.ts` | Required | IMPLEMENTED | PASS |
-| 8 | GET | `/api/tenant/pools/:poolId/demand-lines` | `routes/tenant/poolDemandLines.ts` | Required | IMPLEMENTED | PASS |
-| 9 | POST | `/api/tenant/pools/:poolId/demand-lines` | `routes/tenant/poolDemandLines.ts` | Required | IMPLEMENTED | PASS |
-| 10 | GET | `/api/tenant/pools/:poolId/demand-lines/:lineId` | `routes/tenant/poolDemandLines.ts` | Required | IMPLEMENTED | PASS |
-| 11 | PATCH | `/api/tenant/pools/:poolId/demand-lines/:lineId` | `routes/tenant/poolDemandLines.ts` | Required | IMPLEMENTED | PASS |
-| 12 | DELETE | `/api/tenant/pools/:poolId/demand-lines/:lineId` | `routes/tenant/poolDemandLines.ts` | Required | IMPLEMENTED | PASS |
-| 13 | POST | `/api/tenant/pools/:poolId/rfq/issue` | `routes/tenant/poolRfq.ts` | Required | IMPLEMENTED | PASS (43/43 PRQ) |
+| 1 | POST | `/api/tenant/network-commerce/pools` | `routes/tenant/pools.ts` | Required | IMPLEMENTED | PASS |
+| 2 | POST | `/api/tenant/network-commerce/pools/:poolId/open` | `routes/tenant/pools.ts` | Required | IMPLEMENTED | PASS |
+| 3 | POST | `/api/tenant/network-commerce/pools/:poolId/join` | `routes/tenant/pools.ts` | Required | IMPLEMENTED | PASS |
+| 4 | GET | `/api/tenant/network-commerce/pools` | `routes/tenant/pools.ts` | Required | IMPLEMENTED | PASS |
+| 5 | GET | `/api/tenant/network-commerce/pools/joined` | `routes/tenant/pools.ts` | Required | IMPLEMENTED | PASS |
+| 6 | GET | `/api/tenant/network-commerce/pools/:poolId` | `routes/tenant/pools.ts` | Required | IMPLEMENTED | PASS |
+| 7 | GET | `/api/tenant/network-commerce/pools/:poolId/membership` | `routes/tenant/pools.ts` | Required | IMPLEMENTED | PASS |
+| 8 | GET | `/api/tenant/network-commerce/pools/:poolId/demand-lines` | `routes/tenant/poolDemandLines.ts` | Required | IMPLEMENTED | PASS |
+| 9 | POST | `/api/tenant/network-commerce/pools/:poolId/demand-lines` | `routes/tenant/poolDemandLines.ts` | Required | IMPLEMENTED | PASS |
+| 10 | POST | `/api/tenant/network-commerce/pools/:poolId/demand-lines/lock-for-rfq` | `routes/tenant/poolDemandLines.ts` | Required | IMPLEMENTED | PASS |
+| 11 | PATCH | `/api/tenant/network-commerce/pools/:poolId/demand-lines/:lineId` | `routes/tenant/poolDemandLines.ts` | Required | IMPLEMENTED | PASS |
+| 12 | POST | `/api/tenant/network-commerce/pools/:poolId/demand-lines/:lineId/cancel` | `routes/tenant/poolDemandLines.ts` | Required | IMPLEMENTED | PASS |
+| 13 | POST | `/api/tenant/network-commerce/pools/:poolId/rfq/issue` | `routes/tenant/poolRfq.ts` | Required | IMPLEMENTED | PASS (43/43 PRQ) |
 
 ### Planned Route Groups (not yet implemented)
 
@@ -209,10 +214,10 @@ Based on the foundation design §6 (13 entity models) plus the 9 schema entities
 
 | Service File | Current Methods | Status | Missing / Incomplete | Required Next Packet |
 |---|---|---|---|---|
-| `networkPool.service.ts` | createPool, getPool, listPools, updatePool, deletePool, joinPool, listMembers | IMPLEMENTED | ALLOCATING/ALLOCATED transition logic; settlement trigger | Phase 1D (Allocation), Phase 1H (Settlement) |
-| `networkPoolDemandLine.service.ts` | listDemandLines, createDemandLine, getDemandLine, updateDemandLine, deleteDemandLine | IMPLEMENTED | Aggregation computation logic | Phase 1F (Order trigger) |
+| `networkPool.service.ts` | `createNetworkPool`, `openNetworkPool`, `joinNetworkPool`, `getNetworkPoolById`, `getNetworkPoolMembership`, `listOwnedPools`, `listJoinedPools` | IMPLEMENTED | ALLOCATING/ALLOCATED transition logic; settlement trigger | Phase 1D (Allocation), Phase 1H (Settlement) |
+| `networkPoolDemandLine.service.ts` | `createDemandLine`, `updateDemandLine`, `listDemandLines`, `cancelDemandLine`, `lockDemandLinesForRfq` | IMPLEMENTED | Aggregation computation logic | Phase 1F (Order trigger) |
 | `networkPoolRfq.service.ts` | issueRfq | IMPLEMENTED | inviteSupplier, submitQuote, acceptQuote, rejectQuote | Phase 1B (HOLD), 1C, 1D |
-| `networkInvoice.service.ts` | (stub only) | PARTIAL | createNetworkInvoice, getNetworkInvoice, listNetworkInvoices | Phase 1G — NC Invoice completion |
+| `networkInvoice.service.ts` | `createNetworkInvoice`, `getNetworkInvoiceById` | PARTIAL | Route layer; `listNetworkInvoices` | Phase 1G — NC Invoice completion |
 | `settlement.service.ts` | (non-NC settle logic) | PARTIAL — NC split missing | computePoolSettlementSplit, triggerPoolSettlement | Phase 1H — Pool Settlement |
 | `networkSyndicate.service.ts` | — | NOT_STARTED | All syndicate methods | Phase 2 — OES packet series |
 | `networkSyndicateLot.service.ts` | — | NOT_STARTED | All lot methods | Phase 2 — OES packet series |
@@ -497,7 +502,7 @@ The following 12 rules govern all future NC implementation work. Every packet op
 | **DPR-5** | `HOLD_FOR_PARESH_DECISION` posture on Supplier Invite MUST NOT be changed by any implementation packet. Only a Paresh-authorized decision packet may change it. | Governance gate |
 | **DPR-6** | This tracker is updated only via explicit governance-sync packets. No implementation packet may update this tracker as a side effect. | Governance gate |
 | **DPR-7** | The `nc.procurement_pools.enabled` and `nc.procurement_pools.rfq.enabled` flags are already in production. Do not recreate or migrate them. | Schema gate |
-| **DPR-8** | The 7 existing NC migrations (20250430000005–20250501000001) are deployed and immutable. Do not reference them in new SQL. Treat them as history. | Migration gate |
+| **DPR-8** | The 7 existing NC migrations are deployed and immutable. Do not reference them in new SQL. Treat them as history. IDs: `20260520000000_nc_network_lifecycle_logs`, `20260521000000_nc_network_invoices`, `20260522000000_nc_network_pools`, `20260523000000_nc_pool_lifecycle_seed`, `20260524000000_nc_pool_demand_line_schema`, `20260525000000_nc_pool_demand_snapshot_schema`, `20260528000000_nc_pool_rfq_schema`. | Migration gate |
 | **DPR-9** | Test baseline is 379 PASS / 0 FAIL at HEAD 29319f9. No new packet may land with fewer passing tests. Every packet must report final test count. | Test gate |
 | **DPR-10** | Prisma is repo-pinned. Use `pnpm -C server exec prisma` only. Never `npx prisma`. Never `prisma migrate dev` or `prisma db push`. | Command gate |
 | **DPR-11** | No packet may touch OES or VCO entities until Phase 1 audit (packet #22) is VERIFIED_COMPLETE. | Phase gate |
@@ -629,8 +634,8 @@ docs(network-commerce): audit implementation repo truth
 
 | Count | Type | Notes |
 |---|---|---|
-| 9 | NC schema entities (tables) | `network_pools`, `network_pool_memberships`, `network_pool_demand_lines`, `network_pool_rfqs`, `network_pool_rfq_issues`, `network_invoices`, `network_lifecycle_logs`, + 2 feature gates as data |
-| 7 | NC migrations deployed | 20250430000005–20250501000001 |
+| 9 | NC schema entities (tables) | `network_lifecycle_logs`, `network_invoices`, `network_pools`, `network_pool_memberships`, `network_pool_demand_lines`, `network_pool_demand_snapshots`, `network_pool_demand_snapshot_lines`, `network_pool_rfqs`, `network_pool_rfq_lines` — note: feature flags are data rows in the shared `feature_flags` table, NOT schema entities |
+| 7 | NC migrations deployed | `20260520000000_nc_network_lifecycle_logs`, `20260521000000_nc_network_invoices`, `20260522000000_nc_network_pools`, `20260523000000_nc_pool_lifecycle_seed`, `20260524000000_nc_pool_demand_line_schema`, `20260525000000_nc_pool_demand_snapshot_schema`, `20260528000000_nc_pool_rfq_schema` |
 | 13 | NC tenant routes | pools.ts (7), poolDemandLines.ts (5), poolRfq.ts (1) |
 | 2 | Feature flags active | `nc.procurement_pools.enabled`, `nc.procurement_pools.rfq.enabled` |
 | 27 | Governance artifacts | Across `governance/` directory |
@@ -669,4 +674,4 @@ The schema at prisma\schema.prisma is valid 🚀
 *Document created: 2026-05-30 — TexQtic governance corpus, main branch.*
 *Authorized by: Paresh Patel.*
 *This document does not authorize any implementation. Each packet requires explicit Paresh authorization and a fresh TECS opening.*
-*Last updated: 2026-05-30 (creation — status PLANNING_TRACKER_CREATED).*
+*Last updated: 2026-05-30 (v1.1 — reconciled with repo truth via correction packet TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CORRECTION-001).*
