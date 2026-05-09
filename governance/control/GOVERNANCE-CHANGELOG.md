@@ -7,6 +7,35 @@
 
 ---
 
+## 2026-05-30 — FEATURE_GATE_IMPLEMENTED: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-FEATURE-GATE-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-FEATURE-GATE-001
+Type:          FEATURE_GATE
+Status:        FEATURE_GATE_IMPLEMENTED
+Date:          2026-05-30
+Basis commit:  a50152b (feat(network-commerce): add supplier invite schema foundation)
+
+Scope:
+  server/src/middleware/ncPoolSupplierInviteFeatureGate.middleware.ts      — NEW middleware
+  server/prisma/migrations/20260530000000_.../migration.sql                — NEW seed migration
+  server/src/__tests__/ncPoolSupplierInviteFeatureGate.middleware.unit.test.ts — NEW 11 unit tests
+  governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-FEATURE-GATE-001.md — NEW governance doc
+
+Validation:
+  tsc --noEmit: 0 errors
+  vitest: 11/11 new tests pass, 16/16 RFQ regression tests pass
+
+Notes:
+  OD-6 binding: supplier routes use gate standalone; owner routes chain all 3 gates.
+  Flag key: nc.procurement_pools.supplier_invites.enabled — seeded enabled=false.
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged).
+  dpp_launch_authorization: HOLD_FOR_PARESH_DECISION (unchanged).
+  Next: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-SERVICE-001 HOLD_FOR_PARESH_DECISION.
+```
+
+---
+
 ## 2026-05-30 — SCHEMA_APPLIED: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SCHEMA-001
 
 ```

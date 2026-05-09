@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-30 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SCHEMA-001 — SCHEMA_APPLIED; table `network_pool_rfq_supplier_invites` created, Prisma model `NetworkPoolRfqSupplierInvite` generated, tsc clean, migration resolved. Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-FEATURE-GATE-001 HOLD_FOR_PARESH_DECISION.)
+**Last Updated:** 2026-05-30 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-FEATURE-GATE-001 — FEATURE_GATE_IMPLEMENTED; middleware ncPoolSupplierInviteFeatureGate.middleware.ts created, feature flag seed migration created, 11 unit tests pass, tsc clean. Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-SERVICE-001 HOLD_FOR_PARESH_DECISION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,15 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-FEATURE-GATE-001 FEATURE_GATE_IMPLEMENTED (2026-05-30).
+  Middleware `ncPoolSupplierInviteFeatureGateMiddleware` created in server/src/middleware/.
+  Two-layer gate: Layer 1 global FeatureFlag, Layer 2 per-tenant TenantFeatureOverride.
+  Flag key: `nc.procurement_pools.supplier_invites.enabled`. Seeded enabled=false (SQL migration).
+  OD-6 binding: supplier routes use this gate standalone; owner routes chain all 3 gates.
+  tsc --noEmit: 0 errors. Vitest: 11/11 new tests pass, 16/16 RFQ regression tests pass.
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged). dpp_launch: HOLD_FOR_PARESH_DECISION (unchanged).
+  Artifact: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-FEATURE-GATE-001.md.
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-SERVICE-001 HOLD_FOR_PARESH_DECISION.
 - TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SCHEMA-001 SCHEMA_APPLIED (2026-05-30).
   Table `network_pool_rfq_supplier_invites` created in Supabase Postgres. 19 columns, 9 constraints,
   6 indexes, 7 RLS policies, dual anchor (owner_org_id + supplier_org_id), FORCE ROW SECURITY.
