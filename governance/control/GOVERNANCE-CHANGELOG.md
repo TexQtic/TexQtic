@@ -5,6 +5,46 @@
 
 ---
 
+## 2026-05-31 — OWNER_ROUTE_IMPLEMENTED: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-ROUTE-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-ROUTE-001
+Type:          OWNER_ROUTE_IMPLEMENTED
+Status:        OWNER_ROUTE_IMPLEMENTED
+Date:          2026-05-31
+Basis commit:  3a0e285 (feat(network-commerce): add supplier invite supplier service)
+
+Scope:
+  server/src/routes/tenant/poolRfq.ts                                       — 4 owner invite routes + schemas + error mapper
+  server/src/routes/tenant/poolRfqInvites.integration.test.ts               — NEW 50 integration tests (ORI-01..ORI-50)
+  governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-ROUTE-001.md — NEW governance doc
+
+OD decisions implemented:
+  OD-1: SUPPLIER_INVITE_ALREADY_SENT → 409
+  OD-2: Effective status from service DTO; no status mutation at route layer
+  OD-3: expires_at optional; passed as-is to service
+  OD-4: supplier_org_id UUID validated at route; ACTIVE check delegated to service
+  OD-5: metadataInternalJson excluded at service layer; routes do not remap DTO
+  OD-6: 3-gate chain (ncPool + ncPoolRfq + ncPoolSupplierInvite) on all 4 routes
+  OD-7: SM.transition never called from any route handler
+
+Validation:
+  tsc --noEmit: 0 errors
+  vitest (integration): 50/50 passed (ORI-01..ORI-50)
+  Regression: 187/187 passed (poolRfq + service units + middleware units)
+             77/77 passed (pools.demandLines integration)
+             33/33 passed (stateMachine.g020)
+
+Notes:
+  server/src/routes/tenant.ts NOT modified — routes added to existing plugin.
+  No schema, migrations, middleware, or RLS policies changed.
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged).
+  dpp_launch_authorization: HOLD_FOR_PARESH_DECISION (unchanged).
+  Next: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001 HOLD_FOR_PARESH_DECISION.
+```
+
+---
+
 ## 2026-05-30 — SUPPLIER_SERVICE_IMPLEMENTED: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-SERVICE-001
 
 ```

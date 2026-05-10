@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-30 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-SERVICE-001 — SUPPLIER_SERVICE_IMPLEMENTED; listSupplierInvites/viewInvite/acceptInvite/declineInvite added to NetworkPoolRfqService, 40 new unit tests (117 total), tsc clean. OD-2/OD-4/OD-5/OD-7 all implemented. Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-ROUTE-001 HOLD_FOR_PARESH_DECISION.)
+**Last Updated:** 2026-05-31 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-ROUTE-001 — OWNER_ROUTE_IMPLEMENTED; 4 owner invite routes added to poolRfqRoutes plugin. 50 integration tests (ORI-01..ORI-50). Regression: 187/187 + 77/77 + 33/33. tsc clean. Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001 HOLD_FOR_PARESH_DECISION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,17 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-ROUTE-001 OWNER_ROUTE_IMPLEMENTED (2026-05-31).
+  4 owner invite routes added to poolRfqRoutes plugin in server/src/routes/tenant/poolRfq.ts.
+  Routes: POST/GET /:poolId/rfq/:rfqId/invites; GET/POST /:poolId/rfq/:rfqId/invites/:inviteId/cancel.
+  OD-6 binding: 3-gate chain (ncPool + ncPoolRfq + ncPoolSupplierInvite) on all 4 routes.
+  OD-5: metadataInternalJson excluded at service layer; routes pass DTO directly to sendSuccess.
+  OD-7: SM.transition never called; lifecycle log in service via writeInviteLifecycleLog.
+  50 integration tests (ORI-01..ORI-50); regression: 187/187 + 77/77 + 33/33; tsc --noEmit: 0 errors.
+  server/src/routes/tenant.ts NOT modified.
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged). dpp_launch: HOLD_FOR_PARESH_DECISION (unchanged).
+  Artifact: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-ROUTE-001.md.
+  Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001 HOLD_FOR_PARESH_DECISION.
 - TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-SERVICE-001 SUPPLIER_SERVICE_IMPLEMENTED (2026-05-30).
   Methods listSupplierInvites, viewInvite, acceptInvite, declineInvite added to NetworkPoolRfqService.
   OD-2 (lazy EXPIRED — including accept/decline guard), OD-4 (no membership check), OD-5 (no metadataInternalJson/cancelReason/ownerOrgId in DTO),
