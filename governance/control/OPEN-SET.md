@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-31 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-ROUTE-001 — OWNER_ROUTE_IMPLEMENTED; 4 owner invite routes added to poolRfqRoutes plugin. 50 integration tests (ORI-01..ORI-50). Regression: 187/187 + 77/77 + 33/33. tsc clean. Next candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001 HOLD_FOR_PARESH_DECISION.)
+**Last Updated:** 2026-05-31 (TEXQTIC-NC-UIUX-REPO-TRUTH-AUDIT-001 — UIUX_AUDIT_COMPLETE; frontend NC gap confirmed: 0 NC surfaces vs 17 backend routes. Recommended: authorize TEXQTIC-NC-UIUX-FOUNDATION-DESIGN-001 before further backend or frontend NC work. Next: TEXQTIC-NC-UIUX-FOUNDATION-DESIGN-001 HOLD_FOR_PARESH_DECISION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,15 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-UIUX-REPO-TRUTH-AUDIT-001 UIUX_AUDIT_COMPLETE (2026-05-31).
+  Audit-only packet. Zero NC frontend surfaces confirmed vs 17 implemented backend routes.
+  Frontend gap spans: Pool Owner (8 surfaces), Pool Member (6 surfaces), Supplier Invite Owner UI (4 surfaces), Supplier Inbox (4 surfaces — needs backend).
+  Existing architecture: Vite + React SPA; B2BShell + RuntimeLocalRouteKey manifest; tenantApiClient pattern; no client-side NC feature gates.
+  Recommended sequence: authorize TEXQTIC-NC-UIUX-FOUNDATION-DESIGN-001 → TRACKER-FRONTEND-ADDENDUM-001 → SHELL-NAV-001 → POOL-OWNER-001.
+  Backend supplier route HOLD_FOR_PARESH_DECISION (unchanged). DPP: HOLD_FOR_PARESH_DECISION (unchanged).
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged). dpp_launch: HOLD_FOR_PARESH_DECISION (unchanged).
+  Artifact: governance/TEXQTIC-NC-UIUX-REPO-TRUTH-AUDIT-001.md. HEAD at audit: a2699b2.
+  Next candidate: TEXQTIC-NC-UIUX-FOUNDATION-DESIGN-001 HOLD_FOR_PARESH_DECISION.
 - TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-OWNER-ROUTE-001 OWNER_ROUTE_IMPLEMENTED (2026-05-31).
   4 owner invite routes added to poolRfqRoutes plugin in server/src/routes/tenant/poolRfq.ts.
   Routes: POST/GET /:poolId/rfq/:rfqId/invites; GET/POST /:poolId/rfq/:rfqId/invites/:inviteId/cancel.
