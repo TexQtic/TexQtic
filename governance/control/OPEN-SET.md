@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-31 (TEXQTIC-NC-UIUX-REPO-TRUTH-AUDIT-001 — UIUX_AUDIT_COMPLETE; frontend NC gap confirmed: 0 NC surfaces vs 17 backend routes. Recommended: authorize TEXQTIC-NC-UIUX-FOUNDATION-DESIGN-001 before further backend or frontend NC work. Next: TEXQTIC-NC-UIUX-FOUNDATION-DESIGN-001 HOLD_FOR_PARESH_DECISION.)
+**Last Updated:** 2026-05-10 (TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-FRONTEND-ADDENDUM-001 — FRONTEND_TRACKER_ADDENDUM_CREATED; tracker v1.1 → v1.2; frontend implementation plan (FE-1..FE-12) integrated; FE-1 design recommended as immediate next candidate. Next: TEXQTIC-NC-UIUX-FOUNDATION-DESIGN-001 HOLD_FOR_PARESH_DECISION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or

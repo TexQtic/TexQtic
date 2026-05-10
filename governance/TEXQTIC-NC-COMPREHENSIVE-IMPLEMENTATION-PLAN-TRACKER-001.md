@@ -6,16 +6,19 @@
 |---|---|
 | **Document ID** | TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-001 |
 | **Document Type** | PLANNING_TRACKER |
-| **Status** | RECONCILED |
-| **Version** | 1.1 |
+| **Status** | RECONCILED — FRONTEND_ADDENDUM_ADDED |
+| **Version** | 1.2 |
 | **Created** | 2026-05-30 |
 | **Reconciled** | 2026-05-30 — correction packet TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CORRECTION-001 |
+| **Frontend addendum added** | 2026-05-10 — TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-FRONTEND-ADDENDUM-001 |
 | **Author** | Governance agent |
 | **Authorized by** | Paresh Patel |
 | **Primary basis commit** | `29319f9` — audit: TEXQTIC-NC-REPO-TRUTH-IMPLEMENTATION-AUDIT-001 |
 | **Secondary basis commit** | `5cebe8b` — close: Pool RFQ Issue governance |
+| **Frontend addendum basis commit** | `fda8139` — docs(network-commerce): audit frontend uiux planning gap |
 | **Foundation design authority** | `governance/TEXQTIC-NETWORK-COMMERCE-DESIGN-FOUNDATION-001.md` |
 | **Audit authority** | `governance/TEXQTIC-NC-REPO-TRUTH-IMPLEMENTATION-AUDIT-001.md` |
+| **Frontend audit authority** | `governance/TEXQTIC-NC-UIUX-REPO-TRUTH-AUDIT-001.md` |
 | **Active delivery unit** | HOLD_FOR_AUTHORIZATION |
 | **DPP launch authorization** | HOLD_FOR_PARESH_DECISION |
 | **NC next action candidate** | TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001 — HOLD_FOR_PARESH_DECISION |
@@ -25,8 +28,10 @@
 ```yaml
 active_delivery_unit: HOLD_FOR_AUTHORIZATION
 dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
-nc_phase1_next_action_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001
-nc_phase1_next_action_status: HOLD_FOR_PARESH_DECISION
+nc_phase1_backend_next_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001
+nc_phase1_backend_status: HOLD_FOR_PARESH_DECISION
+nc_phase1_frontend_next_candidate: TEXQTIC-NC-UIUX-FOUNDATION-DESIGN-001
+nc_phase1_frontend_status: HOLD_FOR_PARESH_DECISION
 ```
 
 ### What This Document Is (and Is Not)
@@ -65,6 +70,8 @@ The audit (`TEXQTIC-NC-REPO-TRUTH-IMPLEMENTATION-AUDIT-001`, commit `29319f9`) e
 
 9 NC schema entities, 7 NC migrations, 13 NC routes, 2 feature gates active, 379 tests PASS, 27 governance artifacts recorded.
 
+**FRONTEND_ADDENDUM_ADDED (2026-05-10):** The UI/UX audit (`TEXQTIC-NC-UIUX-REPO-TRUTH-AUDIT-001`, commit `fda8139`) confirmed a critical gap — zero Network Commerce frontend UI/UX surfaces exist at HEAD `a2699b2` despite 17 implemented backend routes. This tracker has been updated with a comprehensive frontend implementation plan via addendum document `TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-FRONTEND-ADDENDUM-001.md`. Frontend track (FE-1 through FE-12) is now part of this tracker's Phase 1 plan. All frontend packets are HOLD_FOR_PARESH_DECISION.
+
 ### Critical Reconciliation Note
 
 The audit document §21 states "Files changed: `governance/TEXQTIC-NC-REPO-TRUTH-IMPLEMENTATION-AUDIT-001.md` (this file only)." However, `git show --stat 29319f9` confirms **3 files changed**: the audit document, `governance/control/GOVERNANCE-CHANGELOG.md` (+46 lines), and `governance/control/OPEN-SET.md` (+7 lines). The git record is authoritative. The audit §21 self-description is inaccurate. History is not rewritten; this tracker records the git truth.
@@ -81,7 +88,10 @@ This tracker serves as the single forward reference map for all NC implementatio
 |---|---|---|---|
 | `governance/TEXQTIC-NETWORK-COMMERCE-DESIGN-FOUNDATION-001.md` | Primary NC design authority — entities, lifecycle, routing intent, phases, risks | ACTIVE | Created 2026-05-06; read in full for this tracker |
 | `governance/TEXQTIC-NC-REPO-TRUTH-IMPLEMENTATION-AUDIT-001.md` | Repo-truth audit baseline at HEAD 5cebe8b→29319f9 | ACTIVE | 719 lines; commit 29319f9 (3 files) |
-| `governance/control/OPEN-SET.md` | Layer 0 current posture, last closed unit, operating notes | ACTIVE | Last updated 2026-05-09; audit note added 2026-05-30 |
+| `governance/TEXQTIC-NC-UIUX-REPO-TRUTH-AUDIT-001.md` | Frontend UI/UX repo-truth audit at HEAD a2699b2; confirms 0 NC frontend surfaces vs 17 backend routes | ACTIVE | 445 lines; commit fda8139 (3 files); basis for frontend addendum |
+| `governance/TEXQTIC-NC-UIUX-REPO-TRUTH-AUDIT-001.md` | Frontend UI/UX audit | ACTIVE | 445 lines; commit fda8139 (3 files) |
+| `governance/TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-FRONTEND-ADDENDUM-001.md` | Frontend implementation track addendum — resolves tracker frontend gap; FE-1 through FE-12 packets | ACTIVE | 17 sections; basis: UI/UX audit + tracker; frontend track now integrated into this tracker |
+| `governance/control/OPEN-SET.md` | Layer 0 current posture, last closed unit, operating notes | ACTIVE | Last updated 2026-05-10; audit note added 2026-05-31 |
 | `governance/control/NEXT-ACTION.md` | Layer 0 governance pointer and guardrail surface | ACTIVE | Updated 2026-05-02; HOLD_FOR_AUTHORIZATION |
 | `governance/control/BLOCKED.md` | Layer 0 blocked/hold register | ACTIVE — READ ON NEED | Read when a unit is blocked |
 | `governance/control/SNAPSHOT.md` | Layer 0 historical snapshot | ACTIVE — READ ON NEED | Read when restoring context |
@@ -124,6 +134,19 @@ The rows below represent the implementation tracks as verified at HEAD `29319f9`
 | **Feature gate: `nc.procurement_pools.enabled`** | IMPLEMENTED | Audit §8 | VERIFIED | No action needed |
 | **Feature gate: `nc.procurement_pools.rfq.enabled`** | IMPLEMENTED | Audit §8 | VERIFIED | No action needed |
 | **Test baseline** | 379 PASS / 0 FAIL | Audit §9 | VERIFIED | Maintain on each future packet |
+
+### Frontend Track (Phase 1; Added via Addendum)
+
+| Track | Current Status | Evidence | Governance State | Next Required Action |
+|---|---|---|---|---|
+| **Frontend: NC Shell Navigation** | NOT_STARTED | UIUX Audit §7 (zero NC route keys in manifest) | HOLD_FOR_PARESH_DECISION | FE-2 — Shell Nav Feature Gate (after FE-1 design) |
+| **Frontend: NC API Service** | NOT_STARTED | UIUX Audit §7 (zero NC service files) | HOLD_FOR_PARESH_DECISION | FE-3 — Pool Owner UI (after FE-2 shell) |
+| **Frontend: Pool Owner UI** | NOT_STARTED | UIUX Audit §7 (zero pool owner components) | HOLD_FOR_PARESH_DECISION | FE-3 — Pool Owner List/Detail |
+| **Frontend: Pool Member UI** | NOT_STARTED | UIUX Audit §7 (zero pool member components) | HOLD_FOR_PARESH_DECISION | FE-4 — Pool Member Demand Lines |
+| **Frontend: RFQ Issue UI** | NOT_STARTED | UIUX Audit §7 (zero RFQ issue components) | HOLD_FOR_PARESH_DECISION | FE-5 — RFQ Issue Panel |
+| **Frontend: Supplier Invite Owner UI** | NOT_STARTED | UIUX Audit §7 (zero invite owner components); backend owner routes IMPLEMENTED | HOLD_FOR_PARESH_DECISION | FE-6 — Supplier Invite Owner UI |
+| **Frontend: Supplier Invite Supplier UI** | NOT_STARTED | UIUX Audit §7 (zero invite supplier components); backend supplier routes NOT_STARTED | HOLD_FOR_PARESH_DECISION | FE-7 — Supplier Invite Supplier Inbox (needs backend) |
+| **Frontend: Admin NC Oversight** | NOT_STARTED | UIUX Audit §7 (zero admin NC components) | HOLD_FOR_PARESH_DECISION | FE-11 — Admin Provisioning Oversight |
 
 ---
 
@@ -463,6 +486,25 @@ The following table is the forward map of all NC implementation packets. Status 
 | 29 | **TEXQTIC-NC-PHASE3-VCO-SCHEMA-FOUNDATION-001** | C/VCO | Schema | `network_vco_chains`, `network_vco_stages` schema | Packet 28 COMPLETE | Schema + migration | Schema + migration | NOT_STARTED |
 | 30 | **TEXQTIC-NC-PHASE4-DISPUTES-DESIGN-001** | Shared | Design | `NetworkDisputeCase` design: lifecycle, adjudication, escalation | Phase 3 audit COMPLETE | Governance doc | PLANNING_ONLY | NOT_STARTED |
 
+### Frontend Packet Track (Phase 1; Added via Addendum 2026-05-10)
+
+**All frontend packets are HOLD_FOR_PARESH_DECISION. See TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-FRONTEND-ADDENDUM-001.md for full details, UI privacy rules, feature-gating rules, and recommended architecture.**
+
+| # | Packet ID | Type | Purpose | Prerequisites | Surfaces | Implementation? | Status |
+|---|---|---|---|---|---|---|
+| FE-1 | **TEXQTIC-NC-UIUX-FOUNDATION-DESIGN-001** | Design | NC frontend architecture: route manifest design, component architecture, API service design, role guard patterns, shell assignment, feature gating strategy | This addendum COMPLETE | Governance doc | PLANNING_ONLY | **HOLD_FOR_PARESH_DECISION** |
+| FE-2 | **TEXQTIC-NC-FRONTEND-SHELL-NAV-FEATURE-GATE-001** | Implementation | Add NC route keys to `sessionRuntimeDescriptor.ts`; add NC nav items to B2BShell; implement feature-gate hook or backend-driven 403 pattern | FE-1 design COMPLETE | `runtime/sessionRuntimeDescriptor.ts`, `components/shells/`, nav updates | Frontend code | HOLD_FOR_PARESH_DECISION |
+| FE-3 | **TEXQTIC-NC-FRONTEND-POOL-OWNER-LIST-DETAIL-001** | Implementation | Pool list + pool detail surfaces (owner view); `PoolListSurface.tsx`, `PoolDetailSurface.tsx`; NC service functions: createPool, openPool, getPoolDetail, listOwnedPools | FE-2 complete | `components/Tenant/NetworkCommerce/PoolListSurface.tsx`, `PoolDetailSurface.tsx`; `services/networkCommerceService.ts` | Frontend code | HOLD_FOR_PARESH_DECISION |
+| FE-4 | **TEXQTIC-NC-FRONTEND-POOL-MEMBER-DEMAND-LINES-001** | Implementation | Pool member join + demand line surfaces; member view of pool detail; `DemandLineSurface.tsx`; service: joinPool, listJoinedPools, createDemandLine, updateDemandLine, cancelDemandLine, lockDemandLinesForRfq | FE-3 complete (can parallel) | `components/Tenant/NetworkCommerce/DemandLineSurface.tsx` | Frontend code | HOLD_FOR_PARESH_DECISION |
+| FE-5 | **TEXQTIC-NC-FRONTEND-RFQ-ISSUE-PANEL-001** | Implementation | RFQ issue panel; `PoolRfqSurface.tsx` (partial); service: issueRfq, listDemandLines (owner view pre-lock) | FE-4 complete | `components/Tenant/NetworkCommerce/PoolRfqSurface.tsx` (partial) | Frontend code | HOLD_FOR_PARESH_DECISION |
+| FE-6 | **TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001** | Implementation | Supplier invite owner UI: send invite form, invite list, invite detail, cancel invite; `PoolRfqSurface.tsx` (extend); service: sendSupplierInvite, listSupplierInvites, getSupplierInvite, cancelSupplierInvite | FE-5 complete; backend owner routes IMPLEMENTED ✅ | `components/Tenant/NetworkCommerce/PoolRfqSurface.tsx` (extend) | Frontend code | HOLD_FOR_PARESH_DECISION |
+| FE-7 | **TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001** | Implementation | Supplier invite inbox; `SupplierInviteInbox.tsx`; service: listIncomingInvites, viewIncomingInvite | FE-6 complete; backend supplier list/view routes REQUIRED (Phase 1B supplier route, HOLD_FOR_PARESH_DECISION) | `components/Tenant/NetworkCommerce/SupplierInviteInbox.tsx` | Frontend code | HOLD_FOR_PARESH_DECISION |
+| FE-8 | **TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001** | Implementation | Supplier quote submission UI; quote form; service: submitQuote | FE-7 complete; backend quote route REQUIRED (Phase 1C, NOT_STARTED) | `components/Tenant/NetworkCommerce/SupplierQuoteForm.tsx` | Frontend code | HOLD_FOR_PARESH_DECISION |
+| FE-9 | **TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001** | Implementation | Pool owner quote review + accept/reject; allocation display; service: acceptQuote, rejectQuote | FE-8 complete; backend award routes REQUIRED (Phase 1D, NOT_STARTED) | `components/Tenant/NetworkCommerce/QuoteReviewPanel.tsx` | Frontend code | HOLD_FOR_PARESH_DECISION |
+| FE-10 | **TEXQTIC-NC-FRONTEND-ORDER-INVOICE-SETTLEMENT-UI-001** | Implementation | Pool order trigger; NC invoice view; settlement preview (read-only); finance doctrine enforced | FE-9 complete; backend order/invoice/settle routes REQUIRED (Phase 1F/1G/1H, NOT_STARTED) | `components/Tenant/NetworkCommerce/OrderSettlementPanel.tsx` | Frontend code | HOLD_FOR_PARESH_DECISION |
+| FE-11 | **TEXQTIC-NC-FRONTEND-ADMIN-PROVISIONING-OVERSIGHT-001** | Implementation | ControlPlane NC oversight panel; `NetworkCommerceOversight.tsx`; cross-tenant pool visibility; admin service functions | FE-2 complete (can parallel after shell NAV foundation) | `components/ControlPlane/NetworkCommerceOversight.tsx` | Frontend code | HOLD_FOR_PARESH_DECISION |
+| FE-12 | **TEXQTIC-NC-FRONTEND-PROD-VERIFY-GOV-CLOSE-001** | Verify+Close | Full NC Phase 1 end-to-end Playwright test suite; governance close; OPEN-SET + GOVERNANCE-CHANGELOG sync | FE-10 + FE-11 complete | Playwright tests, governance docs | Verify+Close | HOLD_FOR_PARESH_DECISION |
+
 ---
 
 ## 13. Status Vocabulary
@@ -507,6 +549,11 @@ The following 12 rules govern all future NC implementation work. Every packet op
 | **DPR-10** | Prisma is repo-pinned. Use `pnpm -C server exec prisma` only. Never `npx prisma`. Never `prisma migrate dev` or `prisma db push`. | Command gate |
 | **DPR-11** | No packet may touch OES or VCO entities until Phase 1 audit (packet #22) is VERIFIED_COMPLETE. | Phase gate |
 | **DPR-12** | The `NetworkSettlementSplit` design must be scoped to avoid implying platform-held funds or money movement. It is a computation record only. Finance surfaces are read-only audit/reporting. | Product policy gate |
+| **DPR-13** | No frontend NC implementation packet may be opened without FE-1 (design packet) being VERIFIED_COMPLETE. Design decisions are non-negotiable gate for all downstream FE work. | Frontend gate |
+| **DPR-14** | Frontend route architecture must align with existing `sessionRuntimeDescriptor.ts` pattern. No new routing system. All NC routes must be added to `RuntimeLocalRouteKey` union and route groups. | Frontend architecture gate |
+| **DPR-15** | No client-side feature gate OR backend-driven 403 pattern may be implemented without explicit design decision in FE-1. Feature gating strategy is a blocking decision. | Frontend design gate |
+| **DPR-16** | Frontend service (`networkCommerceService.ts`) must use `tenantGet`, `tenantPost`, `tenantPatch` from `tenantApiClient.ts` for all tenant-scoped API calls. Direct `apiClient.ts` use is forbidden for NC routes. | Frontend API client gate |
+| **DPR-17** | No supplier inbox UI may expose RFQ line details, individual member demand data, or pool-consolidated data to suppliers in Phase 1B. Supplier sees only: invite, RFQ summary, quote form. No member breakdown. | Privacy/product gate |
 
 ---
 
@@ -523,6 +570,18 @@ The following 12 rules govern all future NC implementation work. Every packet op
 | **V5 — Unit tests** | `pnpm --filter server test` (or specific test file) | All unit tests PASS | Every service/route packet |
 | **V6 — Runtime health** | `curl -i http://localhost:3001/health` → HTTP 200 | Server up; no crash | Every route packet |
 | **V7 — Feature gate** | `curl -i -X <method> <route>` without flag → 403 or 404; with flag → expected response | Feature gating correct | Every feature-gated route |
+
+### Frontend Validation Bands (added via Addendum; required for all FE packets)
+
+| Band | Command | Scope | When Required |
+|---|---|---|---|
+| **FV-1 — TypeScript (frontend)** | `pnpm --filter frontend tsc --noEmit` | Frontend type correctness | Every NC frontend packet |
+| **FV-2 — ESLint (frontend)** | `pnpm --filter frontend lint` | Frontend lint correctness | Every NC frontend packet |
+| **FV-3 — Unit tests (frontend)** | `pnpm --filter frontend test` (if applicable) | Frontend unit tests PASS | Any FE packet with tests |
+| **FV-4 — Runtime render check** | Browser smoke test: navigate to NC surface; confirm render without crash | No runtime errors | Every NC route/component packet |
+| **FV-5 — Feature gate verification** | With flag OFF: NC nav absent or 403 handled; with flag ON: NC surface renders | Feature gating works correctly | Every feature-gated NC frontend surface |
+| **FV-6 — Role guard verification** | With OWNER role: owner actions present; with MEMBER role: owner actions absent | Role guards enforced | Every role-sensitive NC surface |
+| **FV-7 — Backend health** | `curl -i http://localhost:3001/health` → 200; NC route smoke test | Backend running; routes accessible | Every NC frontend packet (server must be running) |
 
 ### Regression Baseline
 
@@ -566,29 +625,56 @@ This tracker is not a living document in the same way as the control files. It i
 
 ## 17. Immediate Next Decision
 
-### Status: HOLD_FOR_PARESH_DECISION
+### Status: HOLD_FOR_PARESH_DECISION (Both Backend and Frontend)
 
-The next candidate for implementation is:
+**FRONTEND TRACK ADDED (2026-05-10):** This tracker now includes a complete frontend implementation plan via addendum `TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-FRONTEND-ADDENDUM-001.md`. The frontend track (FE-1 through FE-12) is documented and ready for authorization.
 
-**`TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001`**
+### Recommended Next Candidates (Both Tracks)
 
-This is a **design packet only** (PLANNING_ONLY — no schema, no service, no route, no migration). It would produce a governance document describing:
+#### Frontend Track (Recommended Priority)
+
+The recommended **immediate next candidate** is:
+
+**`TEXQTIC-NC-UIUX-FOUNDATION-DESIGN-001` (FE-1)**
+
+This is a **design packet only** (PLANNING_ONLY — no frontend code, no backend code, no schema, no migration). It would produce a governance document describing:
+- Final frontend route architecture (route keys, manifest assignment, shell assignment)
+- Component architecture (file structure, naming patterns, shell families)
+- API service design (`networkCommerceService.ts` methods and pattern)
+- Feature gating strategy (client-side vs. backend-driven 403 decision)
+- Role guard implementation patterns
+- Validation and test strategy for NC frontend work
+
+**Rationale:** 17 backend routes are already implemented but have zero user-visible surface. The frontend is a blocker for any end-to-end NC transaction to complete. Frontend design must precede any frontend implementation. This produces the earliest visible NC surface.
+
+**This tracker does NOT open FE-1.**
+**No frontend implementation is permitted until FE-1 design is VERIFIED_COMPLETE and Paresh explicitly authorizes FE-2.**
+
+#### Backend Track (Alternative / Parallel)
+
+The alternative candidate for backend continuation is:
+
+**`TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001` (Packet 1, Phase 1B)**
+
+This is a **design packet only** (PLANNING_ONLY — no schema, no service, no route, no migration). It would describe:
 - Cross-org read surface design for supplier invite
-- `NetworkSupplierInvite` data model (or alternative: embedded invite state on `NetworkPoolRfq`)
+- `NetworkSupplierInvite` data model
 - RLS policy intent for supplier-visible data surfaces
 - API contract for invite routes
 
-**This tracker does NOT open this packet.**
-**No action is taken on this packet until Paresh explicitly authorizes.**
+**Status:** HOLD_FOR_PARESH_DECISION (unchanged from tracker v1.1)
+
+**Backend may proceed in parallel with frontend if explicitly authorized, but the frontend addendum recommends frontend design precede further backend route work.**
 
 ### Other Decisions Pending Paresh
 
 | Decision | Impact | Current Status |
 |---|---|---|
-| Authorize TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001 | Unblocks Phase 1B (Supplier Invite) | HOLD_FOR_PARESH_DECISION |
+| Authorize TEXQTIC-NC-UIUX-FOUNDATION-DESIGN-001 (FE-1) | Unblocks all Phase 1 frontend work (FE-2..FE-12) | **HOLD_FOR_PARESH_DECISION** (NEW PRIORITY) |
+| Authorize TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001 | Unblocks Phase 1B (Supplier Invite backend) | HOLD_FOR_PARESH_DECISION (unchanged) |
+| Frontend + Backend in parallel | Can both proceed simultaneously after FE-1? | DEFERRED — requires Paresh decision |
 | DPP Passport Network launch | External product launch | HOLD_FOR_PARESH_DECISION |
 | DPP v3 design | Optional polish; no implementation blocked | OPTIONAL_POLISH |
-| Phase 1C (Quote) timing relative to 1B | Can 1C proceed if 1B is deferred? | DEFERRED — requires Paresh decision |
 | NetworkSupplierInvite vs embedded invite on NetworkPoolRfq | Schema shape decision | Awaiting design packet |
 
 ---
