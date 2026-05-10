@@ -72,6 +72,7 @@ import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
 import { PoolListSurface } from './components/Tenant/NetworkCommerce/PoolListSurface';
 import { PoolDetailSurface } from './components/Tenant/NetworkCommerce/PoolDetailSurface';
 import { DemandLineSurface } from './components/Tenant/NetworkCommerce/DemandLineSurface';
+import { PoolRfqSurface } from './components/Tenant/NetworkCommerce/PoolRfqSurface';
 import { EventStream } from './components/ControlPlane/EventStream';
 import { B2BDiscoveryPage } from './components/Public/B2BDiscovery';
 import { B2CBrowsePage } from './components/Public/B2CBrowse';
@@ -5190,6 +5191,7 @@ const App: React.FC = () => {
               navigateTenantManifestRoute('nc_pools');
             }}
             onNavigateToDemandLines={() => navigateTenantManifestRoute('nc_pool_demand_lines')}
+            onNavigateToRfqIssue={() => navigateTenantManifestRoute('nc_pool_rfq')}
           />
         ) : (
           <NetworkCommercePlaceholderSurface
@@ -5214,10 +5216,15 @@ const App: React.FC = () => {
           />
         );
       case 'nc_pool_rfq':
-        return (
+        return selectedPoolId ? (
+          <PoolRfqSurface
+            poolId={selectedPoolId}
+            onBack={() => navigateTenantManifestRoute('nc_pool_detail')}
+          />
+        ) : (
           <NetworkCommercePlaceholderSurface
             title="RFQ Issue & Management"
-            description="Owner-initiated RFQ creation over aggregated pool demand. Supplier invite workflows supported by backend."
+            description="Select a pool from NC Pools to issue an RFQ."
             status="coming-soon"
             onBack={() => navigateTenantManifestRoute('nc_pools')}
           />

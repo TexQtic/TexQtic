@@ -17,7 +17,8 @@
  *
  * FE-3 scope: Pool owner surfaces.
  * FE-4 scope: Pool member surfaces + demand-line management.
- * Deferred: RFQ issuance, supplier invites, supplier inbox
+ * FE-5 scope: RFQ issue panel and RFQ issue API call.
+ * Deferred: supplier invites, supplier inbox
  */
 
 import { tenantGet, tenantPost, tenantPatch } from './tenantApiClient';
@@ -316,6 +317,32 @@ export interface DemandSnapshotRecord {
   updated_at: string;
 }
 
+export interface NetworkPoolRfq {
+  id: string;
+  owner_org_id: string;
+  pool_id: string;
+  snapshot_id: string;
+  rfq_ref: string;
+  rfq_version: number;
+  status: string;
+  issue_basis: string;
+  issued_at: string;
+  issued_by_user_id: string | null;
+  issue_reason: string | null;
+  response_deadline_at: string | null;
+  supplier_invite_mode: string;
+  line_count: number;
+  total_qty: string | null;
+  qty_unit: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IssueRfqInput {
+  issue_reason?: string | null;
+  response_deadline_at?: string | null;
+}
+
 // ─── Demand Line API Methods ──────────────────────────────────────────────────
 
 /**
@@ -412,4 +439,14 @@ export function lockDemandLinesForRfq(
     `/api/tenant/network-commerce/pools/${poolId}/demand-lines/lock-for-rfq`,
     input || {},
   );
+}
+
+/**
+ * Issue an RFQ for a pool after the demand lines have been locked.
+ */
+export function issueRfq(
+  poolId: string,
+  input?: IssueRfqInput,
+): Promise<NetworkPoolRfq> {
+  return tenantPost<NetworkPoolRfq>(`/api/tenant/network-commerce/pools/${poolId}/rfq/issue`, input || {});
 }

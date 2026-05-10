@@ -12,6 +12,7 @@ type PoolDetailSurfaceProps = Readonly<{
   poolId: string;
   onBack: () => void;
   onNavigateToDemandLines?: () => void;
+  onNavigateToRfqIssue?: () => void;
 }>;
 
 type UIState = 'loading' | 'ready' | 'error' | 'feature-disabled';
@@ -116,6 +117,7 @@ export function PoolDetailSurface({
   poolId,
   onBack,
   onNavigateToDemandLines,
+  onNavigateToRfqIssue,
 }: PoolDetailSurfaceProps) {
   const [state, setState] = useState<UIState>('loading');
   const [pool, setPool] = useState<NetworkPool | null>(null);
@@ -379,10 +381,21 @@ export function PoolDetailSurface({
             </div>
           )}
 
-          <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 opacity-50">
-            <h3 className="text-base font-bold text-slate-900">Issue RFQ</h3>
-            <p className="mt-2 text-sm text-slate-600">FE-5: Create procurement requests and manage supplier responses.</p>
-          </div>
+          {onNavigateToRfqIssue ? (
+            <button
+              onClick={onNavigateToRfqIssue}
+              type="button"
+              className="rounded-2xl border border-slate-200 bg-white px-5 py-5 text-left hover:border-blue-300 hover:bg-blue-50 transition"
+            >
+              <h3 className="text-base font-bold text-slate-900">Issue RFQ</h3>
+              <p className="mt-2 text-sm text-slate-600">FE-5: Create procurement requests and manage supplier responses.</p>
+            </button>
+          ) : (
+            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 opacity-50">
+              <h3 className="text-base font-bold text-slate-900">Issue RFQ</h3>
+              <p className="mt-2 text-sm text-slate-600">FE-5: Create procurement requests and manage supplier responses.</p>
+            </div>
+          )}
 
           <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 opacity-50">
             <h3 className="text-base font-bold text-slate-900">Supplier Invites</h3>

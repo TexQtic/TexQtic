@@ -5,6 +5,50 @@
 
 ---
 
+## 2026-05-10 — FRONTEND_RFQ_ISSUE_PANEL_IMPLEMENTED: TEXQTIC-NC-FRONTEND-RFQ-ISSUE-PANEL-001
+
+```
+Unit:          TEXQTIC-NC-FRONTEND-RFQ-ISSUE-PANEL-001
+Type:          FRONTEND_IMPLEMENTATION
+Status:        VERIFIED_COMPLETE_WITH_LIMITATIONS
+Date:          2026-05-10
+Starting HEAD: a4cc6a4 (feat(network-commerce): add pool member demand line frontend)
+
+Scope:
+  services/networkCommerceService.ts                                   — FE-5 RFQ issue method and types added
+  components/Tenant/NetworkCommerce/PoolRfqSurface.tsx                — NEW RFQ issue panel surface
+  components/Tenant/NetworkCommerce/PoolDetailSurface.tsx             — optional RFQ navigation callback
+  App.tsx                                                              — FE-5 route wiring (`nc_pool_rfq`)
+  tests/frontend/network-commerce-rfq-issue-panel.test.tsx            — NEW FE-5 frontend tests
+  governance/TEXQTIC-NC-FRONTEND-RFQ-ISSUE-PANEL-001.md              — NEW governance packet
+  governance/control/OPEN-SET.md                                       — Last Updated + Operating Note
+  governance/control/GOVERNANCE-CHANGELOG.md                           — this entry
+
+Implementation summary:
+  ✅ Added RFQ issue frontend API method (`issueRfq`) with FE-5-safe payload
+  ✅ Added PoolRfqSurface with readiness summary, lock status, issue action, and success card
+  ✅ Added strict feature-disabled / forbidden / invalid-state / error handling
+  ✅ Wired PoolDetailSurface → FE-5 route handoff
+  ✅ Replaced App `nc_pool_rfq` placeholder with selected-pool guarded surface render
+  ✅ Preserved FE-6+ placeholders (invite inbox and oversight)
+
+Validation:
+  pnpm run typecheck: PASS
+  pnpm run test:frontend: PASS (2 files, 11 tests)
+  pnpm run test:runtime-routing:focused: FAIL (1 test)
+    - ../tests/session-runtime-descriptor.test.ts
+    - case: maps non-white-label B2B tenants to workspace routing
+    - mismatch references runtime descriptor expectations; FE-5 packet did not modify runtime descriptor files
+  git diff --name-only -- server: (no output, backend untouched)
+
+Governance posture preserved:
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION
+  dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
+  Next frontend candidate: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001 HOLD_FOR_PARESH_DECISION
+```
+
+---
+
 ## 2026-05-10 — FRONTEND_MEMBER_DEMAND_LINES_IMPLEMENTED: TEXQTIC-NC-FRONTEND-POOL-MEMBER-DEMAND-LINES-001
 
 ```

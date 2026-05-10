@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-10 (TEXQTIC-NC-FRONTEND-POOL-MEMBER-DEMAND-LINES-001 — VERIFIED_COMPLETE; FE-4 member demand-line frontend delivered and integrated. Next frontend: TEXQTIC-NC-FRONTEND-RFQ-ISSUE-PANEL-001 HOLD_FOR_PARESH_DECISION. Backend alternative unchanged: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001 HOLD_FOR_PARESH_DECISION.)
+**Last Updated:** 2026-05-10 (TEXQTIC-NC-FRONTEND-RFQ-ISSUE-PANEL-001 — VERIFIED_COMPLETE_WITH_LIMITATIONS; FE-5 RFQ issue frontend panel delivered and integrated. Next frontend: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001 HOLD_FOR_PARESH_DECISION. Backend alternative unchanged: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001 HOLD_FOR_PARESH_DECISION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,14 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-FRONTEND-RFQ-ISSUE-PANEL-001 VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-10).
+  FE-5 frontend packet complete: RFQ issue service method added (`issueRfq`), `PoolRfqSurface` created, `PoolDetailSurface` RFQ navigation callback added, and App route `nc_pool_rfq` wired to real RFQ issue surface behind selected-pool guard.
+  Validation: `pnpm run typecheck` PASS; `pnpm run test:frontend` PASS (11/11 tests).
+  Required command `pnpm run test:runtime-routing:focused` reports 1 failing test in `tests/session-runtime-descriptor.test.ts` (`maps non-white-label B2B tenants to workspace routing`) with expectation drift unrelated to FE-5 edited files.
+  Backend untouched: `git diff --name-only -- server` empty.
+  FE-6+ placeholders preserved in `App.tsx`: `nc_pool_invite_inbox`, `nc_pool_oversight`.
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged). dpp_launch_authorization: HOLD_FOR_PARESH_DECISION (unchanged).
+  Next frontend: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001 HOLD_FOR_PARESH_DECISION.
 - TEXQTIC-NC-FRONTEND-POOL-MEMBER-DEMAND-LINES-001 VERIFIED_COMPLETE (2026-05-10).
   FE-4 frontend packet complete: tenant NC service expanded for member + demand-line operations; DemandLineSurface added; PoolDetailSurface demand-line navigation callback added; App.tsx route `nc_pool_demand_lines` wired to real surface with selected-pool guard.
   Validation: `pnpm run typecheck` PASS; `pnpm run test:frontend` PASS (5/5); `git diff --name-only -- server` empty (no backend edits).
