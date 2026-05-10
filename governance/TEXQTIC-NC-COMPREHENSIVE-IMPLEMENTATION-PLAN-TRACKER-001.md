@@ -6,12 +6,12 @@
 |---|---|
 | **Document ID** | TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-001 |
 | **Document Type** | PLANNING_TRACKER |
-| **Status** | RECONCILED — CURRENT_STATE_SYNCED |
-| **Version** | 1.3 |
+| **Status** | RECONCILED — FRONTEND_FE6_SYNCED |
+| **Version** | 1.4 |
 | **Created** | 2026-05-30 |
 | **Reconciled** | 2026-05-30 — correction packet TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CORRECTION-001 |
 | **Frontend addendum added** | 2026-05-10 — TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-FRONTEND-ADDENDUM-001 |
-| **Current state synced** | 2026-05-10 — TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CURRENT-STATE-SYNC-001 |
+| **Current state synced** | 2026-05-10 — TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CURRENT-STATE-SYNC-002 |
 | **Author** | Governance agent |
 | **Authorized by** | Paresh Patel |
 | **Primary basis commit** | `29319f9` — audit: TEXQTIC-NC-REPO-TRUTH-IMPLEMENTATION-AUDIT-001 |
@@ -19,15 +19,19 @@
 | **Frontend addendum basis commit** | `fda8139` — docs(network-commerce): audit frontend uiux planning gap |
 | **FE-1 basis commit** | `7579b65` — docs(network-commerce): design frontend uiux foundation |
 | **FE-2 basis commit** | `16c395c` — feat(network-commerce): add frontend shell navigation foundation |
-| **Latest frontend implementation commit** | `2ed09bd` — [TEXQTIC] frontend: add network commerce pool owner surfaces |
+| **Latest frontend implementation commit** | `fd9327e` — feat(network-commerce): add supplier invite owner frontend |
 | **FE-3 completion reference** | `TEXQTIC-NC-FRONTEND-POOL-OWNER-LIST-DETAIL-001` |
-| **Sync packet reference** | `TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CURRENT-STATE-SYNC-001` |
+| **FE-4 completion commit** | `a4cc6a4` — feat(network-commerce): add pool member demand line frontend |
+| **FE-5 completion commit** | `8546fc6` — feat(network-commerce): add rfq issue frontend panel |
+| **Runtime test-sync commit** | `7a0848b` — [TEXQTIC] frontend: sync nc runtime routing test expectations |
+| **FE-6 completion reference** | `TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001` |
+| **Sync packet reference** | `TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CURRENT-STATE-SYNC-002` |
 | **Foundation design authority** | `governance/TEXQTIC-NETWORK-COMMERCE-DESIGN-FOUNDATION-001.md` |
 | **Audit authority** | `governance/TEXQTIC-NC-REPO-TRUTH-IMPLEMENTATION-AUDIT-001.md` |
 | **Frontend audit authority** | `governance/TEXQTIC-NC-UIUX-REPO-TRUTH-AUDIT-001.md` |
 | **Active delivery unit** | HOLD_FOR_AUTHORIZATION |
 | **DPP launch authorization** | HOLD_FOR_PARESH_DECISION |
-| **NC next action candidate** | TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-DESIGN-001 — HOLD_FOR_PARESH_DECISION |
+| **NC next action candidate** | TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001 — HOLD_FOR_PARESH_DECISION |
 
 ### Governance Posture (DO NOT ALTER)
 
@@ -36,7 +40,7 @@ active_delivery_unit: HOLD_FOR_AUTHORIZATION
 dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
 nc_phase1_backend_next_candidate: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001
 nc_phase1_backend_status: HOLD_FOR_PARESH_DECISION
-nc_phase1_frontend_next_candidate: TEXQTIC-NC-UIUX-FOUNDATION-DESIGN-001
+nc_phase1_frontend_next_candidate: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001
 nc_phase1_frontend_status: HOLD_FOR_PARESH_DECISION
 ```
 
@@ -61,7 +65,7 @@ Network Commerce (NC) is a three-module extension of the TexQtic platform enabli
 - **Module B — Order Execution Syndicates (OES):** Syndicated lot-based order execution with quality gates, performance bonds, and settlement waterfall
 - **Module C — Value Chain Orchestration (VCO):** Stage-by-stage traceability across multi-org supply chains with incremental DPP and VCO-scoped settlement
 
-### Current State (repo truth at HEAD `2ed09bd`)
+### Current State (repo truth at HEAD `fd9327e`)
 
 The audit (`TEXQTIC-NC-REPO-TRUTH-IMPLEMENTATION-AUDIT-001`, commit `29319f9`) remains the authoritative backend baseline, but current repo truth has advanced materially since that audit.
 
@@ -72,25 +76,25 @@ The audit (`TEXQTIC-NC-REPO-TRUTH-IMPLEMENTATION-AUDIT-001`, commit `29319f9`) r
 | CPP — Supplier Invite owner path (schema, feature gate, owner/supplier services, owner routes) | IMPLEMENTED |
 | CPP — Supplier Invite supplier routes | NOT_STARTED (`HOLD_FOR_PARESH_DECISION`) |
 | CPP — NetworkInvoice | PARTIAL (`createNetworkInvoice`, `getNetworkInvoiceById` implemented; no route) |
-| Frontend — FE-1 design, FE-2 shell/nav foundation, FE-3 pool owner list/detail | IMPLEMENTED |
+| Frontend — FE-1 design, FE-2 shell/nav foundation, FE-3 pool owner list/detail, FE-4 demand lines, FE-5 RFQ issue, FE-6 owner supplier invites | IMPLEMENTED |
 | OES (Module B — Syndicates) | NOT_STARTED |
 | VCO (Module C — Chains) | NOT_STARTED |
 
-Current repo truth now includes 10 NC schema entities, 9 NC migration/data-migration packets, 17 NC tenant routes, 3 active NC feature flags, FE-1 design authority, FE-2 shell/navigation foundation, and FE-3 pool owner list/detail surfaces.
+Current repo truth now includes 10 NC schema entities, 9 NC migration/data-migration packets, 17 NC tenant routes, 3 active NC feature flags, FE-1 design authority, FE-2 shell/navigation foundation, FE-3 pool owner list/detail, FE-4 demand lines, FE-5 RFQ issue panel, runtime routing expectation sync, and FE-6 owner supplier-invite UI.
 
-**Frontend baseline reconciliation:** The UI/UX audit (`TEXQTIC-NC-UIUX-REPO-TRUTH-AUDIT-001`, commit `fda8139`) correctly found zero Network Commerce frontend surfaces at its audit baseline. Since then, FE-1 design, FE-2 shell/nav foundation, and FE-3 pool owner list/detail have completed.
+**Frontend baseline reconciliation:** The UI/UX audit (`TEXQTIC-NC-UIUX-REPO-TRUTH-AUDIT-001`, commit `fda8139`) correctly found zero Network Commerce frontend surfaces at its audit baseline. Since then, FE-1 through FE-6 and runtime routing sync have completed.
 
 **Currently implemented frontend surfaces:**
 - NC route keys and shell navigation foundation
-- Network Commerce placeholder continuity surface
 - Pool owner list
 - Pool detail
-- Pool owner API service methods in `services/networkCommerceService.ts`
+- Pool member demand lines
+- RFQ issue panel
+- Supplier invite owner/admin panel (inside RFQ context)
+- Network Commerce placeholder continuity for blocked/deferred route keys
+- FE-6 owner API service methods in `services/networkCommerceService.ts`
 
 **Frontend still pending:**
-- Pool member demand lines
-- RFQ issue UI
-- Supplier invite owner UI
 - Supplier invite supplier inbox
 - Quote / award / order / invoice / settlement / admin oversight
 
@@ -132,7 +136,7 @@ This tracker serves as the single forward reference map for all NC implementatio
 
 ## 4. Current Implementation Baseline
 
-The rows below represent implementation tracks reconciled through current repo truth at HEAD `2ed09bd`, using the backend audit baseline, Supplier Invite governance chain, FE-1 design, FE-2 shell foundation, FE-3 governance, and direct file verification.
+The rows below represent implementation tracks reconciled through current repo truth at HEAD `fd9327e`, using the backend audit baseline, Supplier Invite governance chain, FE-1 design, FE-2 shell foundation, FE-3/FE-4/FE-5/FE-6 governance, runtime sync governance, and direct file verification.
 
 | Track | Current Status | Evidence | Governance State | Next Required Action |
 |---|---|---|---|---|
@@ -165,11 +169,11 @@ The rows below represent implementation tracks reconciled through current repo t
 | Track | Current Status | Evidence | Governance State | Next Required Action |
 |---|---|---|---|---|
 | **Frontend: NC Shell Navigation** | IMPLEMENTED | FE-2 governance; `sessionRuntimeDescriptor.ts`; `layouts/Shells.tsx`; `layouts/SuperAdminShell.tsx` | VERIFIED | FE-4 may build on existing shell foundation |
-| **Frontend: NC API Service** | PARTIAL | `services/networkCommerceService.ts` implements FE-3 pool-owner methods only | VERIFIED | Expand for FE-4 demand lines, FE-5 RFQ, FE-6 invite owner UI |
+| **Frontend: NC API Service** | PARTIAL | `services/networkCommerceService.ts` implements FE-3 through FE-6 owner/member/RFQ/invite-owner methods | VERIFIED | FE-7 supplier inbox methods remain pending and backend-blocked |
 | **Frontend: Pool Owner UI** | IMPLEMENTED | FE-3 governance; `PoolListSurface.tsx`; `PoolDetailSurface.tsx`; `App.tsx` route wiring | VERIFIED | Extend into FE-5 and FE-6 from current owner context |
-| **Frontend: Pool Member UI** | NOT_STARTED | No FE-4 demand-line/member surfaces exist yet | HOLD_FOR_PARESH_DECISION | FE-4 — Pool Member Demand Lines |
-| **Frontend: RFQ Issue UI** | NOT_STARTED | FE-2 placeholder only; no owner RFQ implementation surface yet | HOLD_FOR_PARESH_DECISION | FE-5 — RFQ Issue Panel |
-| **Frontend: Supplier Invite Owner UI** | NOT_STARTED | Backend owner routes implemented; FE surface still absent | HOLD_FOR_PARESH_DECISION | FE-6 — Supplier Invite Owner UI |
+| **Frontend: Pool Member UI** | IMPLEMENTED | FE-4 governance; `DemandLineSurface.tsx`; FE-4 `App.tsx` route wiring | VERIFIED | No immediate FE action required |
+| **Frontend: RFQ Issue UI** | IMPLEMENTED | FE-5 governance; `PoolRfqSurface.tsx`; FE-5 `App.tsx` route wiring | VERIFIED | Runtime expectation sync completed by test-sync packet |
+| **Frontend: Supplier Invite Owner UI** | IMPLEMENTED | FE-6 governance; `SupplierInviteOwnerSurface.tsx`; FE-6 bounded handoff in `PoolRfqSurface.tsx` | VERIFIED | No immediate FE action required |
 | **Frontend: Supplier Invite Supplier UI** | NOT_STARTED | Backend supplier routes absent; FE-7 remains blocked by backend route layer | HOLD_FOR_PARESH_DECISION | FE-7 — Supplier Invite Supplier Inbox |
 | **Frontend: Admin NC Oversight** | NOT_STARTED | FE-2 added admin route key and shell entry only; no oversight surface exists | HOLD_FOR_PARESH_DECISION | FE-11 — Admin Provisioning Oversight |
 
@@ -285,7 +289,7 @@ Based on the foundation design §6 plus the 10 NC schema entities now present in
 
 | Service File | Current Methods | Status | Missing / Incomplete | Required Next Packet |
 |---|---|---|---|---|
-| `services/networkCommerceService.ts` | `listOwnedPools`, `createPool`, `getPoolDetail`, `openPool`, `getPoolMembership` | PARTIAL | No FE-4 demand-line methods; no FE-5 RFQ methods; no FE-6 owner invite methods; no FE-7 supplier inbox methods | FE-4, FE-5, FE-6, FE-7 |
+| `services/networkCommerceService.ts` | `listOwnedPools`, `createPool`, `getPoolDetail`, `openPool`, `getPoolMembership`, `listJoinedPools`, `joinPool`, `listDemandLines`, `createDemandLine`, `updateDemandLine`, `cancelDemandLine`, `lockDemandLinesForRfq`, `issueRfq`, `sendSupplierInvite`, `listSupplierInvitesForRfq`, `getSupplierInvite`, `cancelSupplierInvite` | PARTIAL | No FE-7 supplier inbox methods; no FE-8+ quote/award/order/settlement/admin methods | FE-7 onward |
 
 ### Service Extension Points (existing services)
 
@@ -487,7 +491,7 @@ Pool full lifecycle DRAFT→SETTLED; Syndicate full lifecycle FORMING→SETTLED 
 
 The following table is the forward map of all NC implementation packets. Status `HOLD_FOR_PARESH_DECISION` means the packet cannot be opened until Paresh explicitly authorizes. Status `NOT_STARTED` means the packet is planned but has no prerequisites met. Each packet must be authorized as a fresh TECS opening.
 
-**Implementation note:** Packets marked `PLANNING_ONLY` are governance/design packets only (no schema, route, service, or migration changes). Rows below are reconciled to actual repo truth through FE-3 and the completed Supplier Invite owner-path chain.
+**Implementation note:** Packets marked `PLANNING_ONLY` are governance/design packets only (no schema, route, service, or migration changes). Rows below are reconciled to actual repo truth through FE-6 and runtime routing test-sync, with backend supplier-route HOLD preserved.
 
 | # | Packet ID | Module | Type | Purpose | Prerequisites | Surfaces | Implementation? | Status |
 |---|---|---|---|---|---|---|---|---|
@@ -524,16 +528,16 @@ The following table is the forward map of all NC implementation packets. Status 
 
 ### Frontend Packet Track (Phase 1; Added via Addendum 2026-05-10)
 
-All frontend packets remain under Layer 0 hold posture. FE-1 through FE-3 are completed in repo truth; FE-4 is now the recommended next frontend candidate but remains HOLD_FOR_PARESH_DECISION.
+All frontend packets remain under Layer 0 hold posture. FE-1 through FE-6 are completed in repo truth; FE-7 remains the next frontend candidate but is backend-blocked until supplier-facing invite routes exist.
 
 | # | Packet ID | Type | Purpose | Prerequisites | Surfaces | Implementation? | Status |
 |---|---|---|---|---|---|---|
 | FE-1 | **TEXQTIC-NC-UIUX-FOUNDATION-DESIGN-001** | Design | NC frontend architecture: route manifest design, component architecture, API service design, role guard patterns, shell assignment, feature gating strategy | This addendum COMPLETE | Governance doc | PLANNING_ONLY | VERIFIED_COMPLETE |
 | FE-2 | **TEXQTIC-NC-FRONTEND-SHELL-NAV-FEATURE-GATE-001** | Implementation | Add NC route keys to `sessionRuntimeDescriptor.ts`; add NC nav items to B2BShell; wire placeholder continuity surfaces | FE-1 design COMPLETE | runtime + shell + App continuity wiring | Frontend code | VERIFIED_COMPLETE |
 | FE-3 | **TEXQTIC-NC-FRONTEND-POOL-OWNER-LIST-DETAIL-001** | Implementation | Pool list + pool detail surfaces (owner view); FE-3 pool-owner API service methods | FE-2 complete | `PoolListSurface.tsx`, `PoolDetailSurface.tsx`, `networkCommerceService.ts`, `App.tsx` | Frontend code | VERIFIED_COMPLETE |
-| FE-4 | **TEXQTIC-NC-FRONTEND-POOL-MEMBER-DEMAND-LINES-001** | Implementation | Pool member join + demand line surfaces; member view of pool detail | FE-3 complete | `DemandLineSurface.tsx` + FE service expansion | Frontend code | HOLD_FOR_PARESH_DECISION |
-| FE-5 | **TEXQTIC-NC-FRONTEND-RFQ-ISSUE-PANEL-001** | Implementation | RFQ issue panel; owner RFQ issue workflow | FE-4 complete | `PoolRfqSurface.tsx` (partial) | Frontend code | HOLD_FOR_PARESH_DECISION |
-| FE-6 | **TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001** | Implementation | Supplier invite owner UI: send invite form, invite list, invite detail, cancel invite | FE-5 complete; backend owner routes IMPLEMENTED | `PoolRfqSurface.tsx` (extend) | Frontend code | HOLD_FOR_PARESH_DECISION |
+| FE-4 | **TEXQTIC-NC-FRONTEND-POOL-MEMBER-DEMAND-LINES-001** | Implementation | Pool member join + demand line surfaces; member view of pool detail | FE-3 complete | `DemandLineSurface.tsx` + FE service expansion | Frontend code | VERIFIED_COMPLETE |
+| FE-5 | **TEXQTIC-NC-FRONTEND-RFQ-ISSUE-PANEL-001** | Implementation | RFQ issue panel; owner RFQ issue workflow | FE-4 complete | `PoolRfqSurface.tsx` (partial) | Frontend code | VERIFIED_COMPLETE |
+| FE-6 | **TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001** | Implementation | Supplier invite owner UI: send invite form, invite list, invite detail, cancel invite | FE-5 complete; backend owner routes IMPLEMENTED | `SupplierInviteOwnerSurface.tsx` + `PoolRfqSurface.tsx` handoff | Frontend code | VERIFIED_COMPLETE |
 | FE-7 | **TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001** | Implementation | Supplier invite inbox; supplier detail view; accept/decline wiring | FE-6 complete; backend supplier routes REQUIRED | `SupplierInviteInbox.tsx` | Frontend code | HOLD_FOR_PARESH_DECISION |
 | FE-8 | **TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001** | Implementation | Supplier quote submission UI; quote form | FE-7 complete; backend quote route REQUIRED | `SupplierQuoteForm.tsx` | Frontend code | HOLD_FOR_PARESH_DECISION |
 | FE-9 | **TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001** | Implementation | Pool owner quote review + accept/reject; allocation display | FE-8 complete; backend award routes REQUIRED | `QuoteReviewPanel.tsx` | Frontend code | HOLD_FOR_PARESH_DECISION |
@@ -671,6 +675,10 @@ Current repo truth now includes:
 - FE-1 design authority complete
 - FE-2 shell/navigation foundation complete
 - FE-3 pool owner list/detail complete
+- FE-4 pool member demand lines complete
+- FE-5 RFQ issue UI complete
+- Runtime routing test-sync complete
+- FE-6 supplier invite owner UI complete
 - Supplier Invite backend owner-path complete through owner routes
 
 No further packet is opened by this sync. DPP posture and Layer 0 hold posture remain unchanged.
@@ -681,20 +689,19 @@ No further packet is opened by this sync. DPP posture and Layer 0 hold posture r
 
 The recommended immediate next frontend candidate is:
 
-**`TEXQTIC-NC-FRONTEND-POOL-MEMBER-DEMAND-LINES-001` (FE-4)**
+**`TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001` (FE-7)**
 
 Status: **HOLD_FOR_PARESH_DECISION**
 
-Why FE-4 is next:
-- FE-2 shell/nav foundation already exists
-- FE-3 owner list/detail already exists
-- FE-4 is the next bounded frontend slice and does not require new backend implementation
-- FE-4 can proceed now if Paresh prioritizes frontend continuation
+Why FE-7 is next but blocked:
+- FE-6 owner invite UI is complete in frontend repo truth
+- FE-7 depends on backend supplier-facing invite route layer that is still absent
+- Existing `nc_pool_invite_inbox` route key remains placeholder and should stay blocked until backend supplier routes are authorized and implemented
 
 Scope reminder:
-- Pool member join + demand line surfaces
-- Member view of pool detail
-- FE service expansion for joined pools and demand-line CRUD
+- Supplier invite inbox view
+- Supplier invite detail view
+- Supplier accept/decline wiring (only after backend supplier routes exist)
 
 #### Backend Track (Alternative / Parallel)
 
@@ -713,10 +720,10 @@ Why this remains important:
 
 | Decision | Impact | Current Status |
 |---|---|---|
-| Authorize `TEXQTIC-NC-FRONTEND-POOL-MEMBER-DEMAND-LINES-001` | Unblocks FE-4 member demand-line surfaces | HOLD_FOR_PARESH_DECISION |
+| Authorize `TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001` | Opens FE-7 supplier inbox implementation after backend dependency is met | HOLD_FOR_PARESH_DECISION |
 | Authorize `TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001` | Unblocks supplier invite inbox/detail/accept/decline route layer | HOLD_FOR_PARESH_DECISION |
-| Prioritize frontend after FE-3 | Enables visible NC continuation without new backend changes | HOLD_FOR_PARESH_DECISION |
-| Run frontend and backend in parallel after authorization | Allows FE-4 and supplier-route work to advance independently | DEFERRED — requires Paresh decision |
+| Prioritize frontend FE-7 after backend supplier route completion | Enables supplier-side continuation of Phase 1 invite workflow | HOLD_FOR_PARESH_DECISION |
+| Run frontend FE-7 and backend supplier-route packet in coordinated sequence | Keeps owner/supplier invite split explicit and auditable | DEFERRED — requires Paresh decision |
 | DPP Passport Network launch | External product launch | HOLD_FOR_PARESH_DECISION |
 | DPP v3 design | Optional polish; no implementation blocked | OPTIONAL_POLISH |
 | NetworkSupplierInvite vs embedded invite on NetworkPoolRfq | Schema shape decision | Awaiting design packet |
@@ -743,6 +750,10 @@ Why this remains important:
 | `7579b65` | docs(network-commerce): design frontend uiux foundation | Governance doc |
 | `16c395c` | feat(network-commerce): add frontend shell navigation foundation | runtime + shells + App placeholder continuity |
 | `2ed09bd` | [TEXQTIC] frontend: add network commerce pool owner surfaces | App + FE-3 components + frontend service + governance doc |
+| `a4cc6a4` | feat(network-commerce): add pool member demand line frontend | FE-4 demand-line surface + service expansion + governance doc |
+| `8546fc6` | feat(network-commerce): add rfq issue frontend panel | FE-5 RFQ surface + service expansion + governance doc |
+| `7a0848b` | [TEXQTIC] frontend: sync nc runtime routing test expectations | Runtime-focused test sync + governance docs |
+| `fd9327e` | feat(network-commerce): add supplier invite owner frontend | FE-6 owner invite UI + service expansion + tests + governance doc |
 
 ### B. Audit Metadata (git show --stat 29319f9 — authoritative)
 
@@ -769,7 +780,7 @@ docs(network-commerce): audit implementation repo truth
 | Combined regression | PASS | 167/167 |
 | Total at close | **PASS** | **379/379** |
 
-### D. Schema Baseline (current repo truth through `2ed09bd`)
+### D. Schema Baseline (current repo truth through `fd9327e`)
 
 | Count | Type | Notes |
 |---|---|---|
@@ -777,7 +788,7 @@ docs(network-commerce): audit implementation repo truth
 | 9 | NC migration / data-migration packets applied | `20260520000000_nc_network_lifecycle_logs`, `20260521000000_nc_network_invoices`, `20260522000000_nc_network_pools`, `20260523000000_nc_pool_lifecycle_seed`, `20260524000000_nc_pool_demand_line_schema`, `20260525000000_nc_pool_demand_snapshot_schema`, `20260528000000_nc_pool_rfq_schema`, `20260529000000_nc_pool_rfq_supplier_invite_schema`, `20260530000000_nc_pool_supplier_invite_feature_flag_seed` |
 | 17 | NC tenant routes | pools.ts (7), poolDemandLines.ts (5), poolRfq.ts (5) |
 | 3 | Active NC feature flags | `nc.procurement_pools.enabled`, `nc.procurement_pools.rfq.enabled`, `nc.procurement_pools.supplier_invites.enabled` |
-| 3 | Completed frontend NC packets | FE-1 design, FE-2 shell/nav foundation, FE-3 pool owner list/detail |
+| 6 | Completed frontend NC packets | FE-1 design, FE-2 shell/nav foundation, FE-3 pool owner list/detail, FE-4 demand lines, FE-5 RFQ issue, FE-6 supplier invite owner UI |
 
 ### E. Prisma Validate Baseline (2026-05-30 — this tracker creation)
 
@@ -813,4 +824,4 @@ The schema at prisma\schema.prisma is valid 🚀
 *Document created: 2026-05-30 — TexQtic governance corpus, main branch.*
 *Authorized by: Paresh Patel.*
 *This document does not authorize any implementation. Each packet requires explicit Paresh authorization and a fresh TECS opening.*
-*Last updated: 2026-05-30 (v1.1 — reconciled with repo truth via correction packet TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CORRECTION-001).*
+*Last updated: 2026-05-10 (v1.4 — reconciled with FE-4/FE-5/runtime-test-sync/FE-6 via TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CURRENT-STATE-SYNC-002).*
