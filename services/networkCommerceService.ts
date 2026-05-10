@@ -1,21 +1,26 @@
 /**
- * networkCommerceService.ts — Tenant-plane Network Commerce pool service (FE-3)
+ * networkCommerceService.ts — Tenant-plane Network Commerce pool service (FE-3, extended FE-4)
  *
- * Provides pool owner/admin-facing methods for:
- * - Listing owned pools
+ * Provides pool owner/admin-facing and member-facing methods for:
+ * - Listing owned pools (owner view)
+ * - Listing joined pools (member view)
  * - Creating new pools
  * - Viewing pool detail
  * - Opening/publishing pools
+ * - Joining a pool as a member
  * - Viewing pool membership status
+ * - Managing demand lines (create, update, cancel, list)
+ * - Locking demand lines for RFQ (owner/admin only)
  *
  * All endpoints enforce TENANT realm via tenantApiClient.
  * orgId is never sent by the client; backend derives it from JWT.
  *
- * FE-3 scope: Pool owner surfaces only.
- * Deferred: demand-line aggregation, RFQ issuance, supplier invites, supplier inbox
+ * FE-3 scope: Pool owner surfaces.
+ * FE-4 scope: Pool member surfaces + demand-line management.
+ * Deferred: RFQ issuance, supplier invites, supplier inbox
  */
 
-import { tenantGet, tenantPost } from './tenantApiClient';
+import { tenantGet, tenantPost, tenantPatch } from './tenantApiClient';
 
 // ─── Response Types ───────────────────────────────────────────────────────────
 
@@ -177,5 +182,234 @@ export function openPool(poolId: string, input: OpenNetworkPoolInput): Promise<N
 export function getPoolMembership(poolId: string): Promise<NetworkPoolMembership> {
   return tenantGet<NetworkPoolMembership>(
     `/api/tenant/network-commerce/pools/${poolId}/membership`,
+  );
+}
+
+// ─── FE-4 Member/Demand Line Methods ──────────────────────────────────────────
+
+/**
+ * List pools the current tenant has joined (member view)
+ */
+export async function listJoinedPools(
+  params?: NetworkPoolListParams,
+): Promise<NetworkPoolListResponse> {
+  const qs = buildQueryString(params);
+  const endpoint = `/api/tenant/network-commerce/pools/joined${qs}`;
+  return tenantGet<NetworkPoolListResponse>(endpoint);
+}
+
+/**
+ * Join an existing pool (current tenant becomes a member)
+ * Requires pool to be in OPEN state
+ */
+export interface JoinPoolInput {
+  declared_qty: number;
+  qty_unit: string;
+}
+
+export function joinPool(poolId: string, input: JoinPoolInput): Promise<NetworkPoolMembership> {
+  return tenantPost<NetworkPoolMembership>(
+    `/api/tenant/network-commerce/pools/${poolId}/join`,
+    input,
+  );
+}
+
+// ─── Demand Line Types ────────────────────────────────────────────────────────
+
+/**
+ * Demand line record returned by backend
+ */
+export interface NetworkPoolDemandLine {
+  id: string;
+  owner_org_id: string;
+  pool_id: string;
+  line_ref: string;
+  commodity_category: string;
+  product_category: string | null;
+  product_spec_summary: string | null;
+  qty: string;
+  qty_unit: string;
+  quality_requirements_json: Record<string, unknown> | null;
+  certification_requirements_json: Record<string, unknown> | null;
+  packaging_requirements_json: Record<string, unknown> | null;
+  delivery_location: string | null;
+  delivery_window_start: string | null;
+  delivery_window_end: string | null;
+  tolerance_pct: string | null;
+  priority: number | null;
+  status: string;
+  source_type: string;
+  source_membership_id: string | null;
+  normalized_from_member_input: boolean;
+  revision_no: number;
+  supersedes_line_id: string | null;
+  created_at: string;
+  updated_at: string;
+  locked_at: string | null;
+}
+
+export interface DemandLineListPagination {
+  limit: number;
+  offset: number;
+  count: number;
+  total: number;
+}
+
+export interface NetworkPoolDemandLineListResponse {
+  items: NetworkPoolDemandLine[];
+  pagination: DemandLineListPagination;
+}
+
+export interface CreateDemandLineInput {
+  line_ref: string;
+  commodity_category: string;
+  product_category?: string | null;
+  product_spec_summary?: string | null;
+  qty: number;
+  qty_unit: string;
+  quality_requirements_json?: Record<string, unknown> | null;
+  certification_requirements_json?: Record<string, unknown> | null;
+  packaging_requirements_json?: Record<string, unknown> | null;
+  delivery_location?: string | null;
+  delivery_window_start?: string | null;
+  delivery_window_end?: string | null;
+  tolerance_pct?: number | null;
+  priority?: number | null;
+  source_type?: string;
+}
+
+export interface UpdateDemandLineInput {
+  commodity_category?: string;
+  product_category?: string | null;
+  product_spec_summary?: string | null;
+  qty?: number;
+  qty_unit?: string;
+  quality_requirements_json?: Record<string, unknown> | null;
+  certification_requirements_json?: Record<string, unknown> | null;
+  packaging_requirements_json?: Record<string, unknown> | null;
+  delivery_location?: string | null;
+  delivery_window_start?: string | null;
+  delivery_window_end?: string | null;
+  tolerance_pct?: number | null;
+  priority?: number | null;
+}
+
+export interface CancelDemandLineInput {
+  reason?: string;
+}
+
+export interface DemandSnapshotRecord {
+  id: string;
+  owner_org_id: string;
+  pool_id: string;
+  snapshot_ref: string;
+  snapshot_version: number;
+  basis: string;
+  status: string;
+  captured_at: string | null;
+  captured_by_user_id: string | null;
+  captured_reason: string | null;
+  line_count: number;
+  total_qty: string | null;
+  qty_unit: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── Demand Line API Methods ──────────────────────────────────────────────────
+
+/**
+ * List demand lines for a specific pool
+ */
+export interface ListDemandLinesParams {
+  limit?: number;
+  offset?: number;
+  status?: string;
+  commodity_category?: string;
+  product_category?: string;
+  source_type?: string;
+}
+
+function buildDemandLineQueryString(params?: ListDemandLinesParams): string {
+  if (!params) return '';
+
+  const searchParams = new URLSearchParams();
+  if (params.limit != null) searchParams.set('limit', String(params.limit));
+  if (params.offset != null) searchParams.set('offset', String(params.offset));
+  if (params.status) searchParams.set('status', params.status);
+  if (params.commodity_category) searchParams.set('commodity_category', params.commodity_category);
+  if (params.product_category) searchParams.set('product_category', params.product_category);
+  if (params.source_type) searchParams.set('source_type', params.source_type);
+
+  const qs = searchParams.toString();
+  return qs ? `?${qs}` : '';
+}
+
+export async function listDemandLines(
+  poolId: string,
+  params?: ListDemandLinesParams,
+): Promise<NetworkPoolDemandLineListResponse> {
+  const qs = buildDemandLineQueryString(params);
+  const endpoint = `/api/tenant/network-commerce/pools/${poolId}/demand-lines${qs}`;
+  return tenantGet<NetworkPoolDemandLineListResponse>(endpoint);
+}
+
+/**
+ * Create a new demand line in a pool
+ */
+export function createDemandLine(
+  poolId: string,
+  input: CreateDemandLineInput,
+): Promise<NetworkPoolDemandLine> {
+  return tenantPost<NetworkPoolDemandLine>(
+    `/api/tenant/network-commerce/pools/${poolId}/demand-lines`,
+    input,
+  );
+}
+
+/**
+ * Update an existing demand line (partial update)
+ */
+export function updateDemandLine(
+  poolId: string,
+  lineId: string,
+  input: UpdateDemandLineInput,
+): Promise<NetworkPoolDemandLine> {
+  return tenantPatch<NetworkPoolDemandLine>(
+    `/api/tenant/network-commerce/pools/${poolId}/demand-lines/${lineId}`,
+    input,
+  );
+}
+
+/**
+ * Cancel a demand line
+ */
+export function cancelDemandLine(
+  poolId: string,
+  lineId: string,
+  input?: CancelDemandLineInput,
+): Promise<NetworkPoolDemandLine> {
+  return tenantPost<NetworkPoolDemandLine>(
+    `/api/tenant/network-commerce/pools/${poolId}/demand-lines/${lineId}/cancel`,
+    input || {},
+  );
+}
+
+/**
+ * Lock all active demand lines for RFQ issuance (owner/admin only)
+ * Returns a demand snapshot record
+ */
+export interface LockDemandLinesForRfqInput {
+  captured_reason?: string | null;
+  expected_line_ids?: string[] | null;
+}
+
+export function lockDemandLinesForRfq(
+  poolId: string,
+  input?: LockDemandLinesForRfqInput,
+): Promise<DemandSnapshotRecord> {
+  return tenantPost<DemandSnapshotRecord>(
+    `/api/tenant/network-commerce/pools/${poolId}/demand-lines/lock-for-rfq`,
+    input || {},
   );
 }

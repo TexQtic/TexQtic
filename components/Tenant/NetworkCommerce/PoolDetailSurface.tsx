@@ -11,6 +11,7 @@ import {
 type PoolDetailSurfaceProps = Readonly<{
   poolId: string;
   onBack: () => void;
+  onNavigateToDemandLines?: () => void;
 }>;
 
 type UIState = 'loading' | 'ready' | 'error' | 'feature-disabled';
@@ -114,6 +115,7 @@ function OpenPoolForm({
 export function PoolDetailSurface({
   poolId,
   onBack,
+  onNavigateToDemandLines,
 }: PoolDetailSurfaceProps) {
   const [state, setState] = useState<UIState>('loading');
   const [pool, setPool] = useState<NetworkPool | null>(null);
@@ -361,10 +363,21 @@ export function PoolDetailSurface({
         <h2 className="text-lg font-bold text-slate-900">Next Steps</h2>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 opacity-50">
-            <h3 className="text-base font-bold text-slate-900">Demand Lines</h3>
-            <p className="mt-2 text-sm text-slate-600">FE-4: Aggregated member demand visibility and analysis.</p>
-          </div>
+          {onNavigateToDemandLines ? (
+            <button
+              onClick={onNavigateToDemandLines}
+              type="button"
+              className="rounded-2xl border border-slate-200 bg-white px-5 py-5 text-left hover:border-emerald-300 hover:bg-emerald-50 transition"
+            >
+              <h3 className="text-base font-bold text-slate-900">Demand Lines</h3>
+              <p className="mt-2 text-sm text-slate-600">FE-4: Manage member demand visibility and aggregation.</p>
+            </button>
+          ) : (
+            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 opacity-50">
+              <h3 className="text-base font-bold text-slate-900">Demand Lines</h3>
+              <p className="mt-2 text-sm text-slate-600">FE-4: Manage member demand visibility and aggregation.</p>
+            </div>
+          )}
 
           <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 opacity-50">
             <h3 className="text-base font-bold text-slate-900">Issue RFQ</h3>

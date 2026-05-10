@@ -5,6 +5,45 @@
 
 ---
 
+## 2026-05-10 — FRONTEND_MEMBER_DEMAND_LINES_IMPLEMENTED: TEXQTIC-NC-FRONTEND-POOL-MEMBER-DEMAND-LINES-001
+
+```
+Unit:          TEXQTIC-NC-FRONTEND-POOL-MEMBER-DEMAND-LINES-001
+Type:          FRONTEND_IMPLEMENTATION
+Status:        VERIFIED_COMPLETE
+Date:          2026-05-10
+Starting HEAD: ee5aaa1 ([TEXQTIC] governance: sync nc tracker to v1.3 reconciled current state)
+
+Scope:
+  services/networkCommerceService.ts                                      — FE-4 service methods/types added
+  components/Tenant/NetworkCommerce/DemandLineSurface.tsx                — NEW demand-line surface
+  components/Tenant/NetworkCommerce/PoolDetailSurface.tsx                — demand-line navigation callback (optional)
+  App.tsx                                                                 — FE-4 route wiring (import + detail callback + nc_pool_demand_lines)
+  governance/TEXQTIC-NC-FRONTEND-POOL-MEMBER-DEMAND-LINES-001.md         — NEW governance packet
+  governance/control/OPEN-SET.md                                          — Last Updated + Operating Note
+  governance/control/GOVERNANCE-CHANGELOG.md                              — this entry
+
+Implementation summary:
+  ✅ Added FE-4 NC service operations for joined pools and demand-line lifecycle
+  ✅ Added DemandLineSurface with loading/empty/error/feature-disabled/ready states
+  ✅ Added demand-line create/update/cancel workflows and lock-for-RFQ action wiring
+  ✅ Wired PoolDetailSurface → demand-line navigation path
+  ✅ Replaced nc_pool_demand_lines placeholder with real surface behind selected-pool guard
+  ✅ Preserved FE-5+ placeholders (RFQ/invite inbox/oversight) and strict FE-4 scope
+
+Validation:
+  pnpm run typecheck: PASS
+  pnpm run test:frontend: PASS (1 file, 5 tests)
+  git diff --name-only -- server: (no output, backend untouched)
+
+Governance posture preserved:
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION
+  dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
+  Next frontend candidate: TEXQTIC-NC-FRONTEND-RFQ-ISSUE-PANEL-001 HOLD_FOR_PARESH_DECISION
+```
+
+---
+
 ## 2026-05-10 — CURRENT_STATE_SYNCED: TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CURRENT-STATE-SYNC-001
 
 ```

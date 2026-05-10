@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-10 (TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CURRENT-STATE-SYNC-001 — VERIFIED_COMPLETE; tracker v1.2 → v1.3; Supplier Invite backend owner-path and FE-1/FE-2/FE-3 frontend completion synced to current repo truth. Next frontend: TEXQTIC-NC-FRONTEND-POOL-MEMBER-DEMAND-LINES-001 HOLD_FOR_PARESH_DECISION. Backend alternative: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001 HOLD_FOR_PARESH_DECISION.)
+**Last Updated:** 2026-05-10 (TEXQTIC-NC-FRONTEND-POOL-MEMBER-DEMAND-LINES-001 — VERIFIED_COMPLETE; FE-4 member demand-line frontend delivered and integrated. Next frontend: TEXQTIC-NC-FRONTEND-RFQ-ISSUE-PANEL-001 HOLD_FOR_PARESH_DECISION. Backend alternative unchanged: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001 HOLD_FOR_PARESH_DECISION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,12 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-FRONTEND-POOL-MEMBER-DEMAND-LINES-001 VERIFIED_COMPLETE (2026-05-10).
+  FE-4 frontend packet complete: tenant NC service expanded for member + demand-line operations; DemandLineSurface added; PoolDetailSurface demand-line navigation callback added; App.tsx route `nc_pool_demand_lines` wired to real surface with selected-pool guard.
+  Validation: `pnpm run typecheck` PASS; `pnpm run test:frontend` PASS (5/5); `git diff --name-only -- server` empty (no backend edits).
+  FE-5+ placeholders preserved: `nc_pool_rfq`, `nc_pool_invite_inbox`, `nc_pool_oversight`.
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged). dpp_launch_authorization: HOLD_FOR_PARESH_DECISION (unchanged).
+  Next frontend: TEXQTIC-NC-FRONTEND-RFQ-ISSUE-PANEL-001 HOLD_FOR_PARESH_DECISION.
 - TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CURRENT-STATE-SYNC-001 VERIFIED_COMPLETE (2026-05-10).
   Main tracker updated v1.2 → v1.3 (RECONCILED — CURRENT_STATE_SYNCED).
   Repo truth now records Supplier Invite backend owner-path implemented: schema + feature gate + owner service + supplier service + owner routes.

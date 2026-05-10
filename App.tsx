@@ -71,6 +71,7 @@ import { NetworkCommercePlaceholderSurface } from './components/Tenant/NetworkCo
 import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
 import { PoolListSurface } from './components/Tenant/NetworkCommerce/PoolListSurface';
 import { PoolDetailSurface } from './components/Tenant/NetworkCommerce/PoolDetailSurface';
+import { DemandLineSurface } from './components/Tenant/NetworkCommerce/DemandLineSurface';
 import { EventStream } from './components/ControlPlane/EventStream';
 import { B2BDiscoveryPage } from './components/Public/B2BDiscovery';
 import { B2CBrowsePage } from './components/Public/B2CBrowse';
@@ -5188,6 +5189,7 @@ const App: React.FC = () => {
               setSelectedPoolId(null);
               navigateTenantManifestRoute('nc_pools');
             }}
+            onNavigateToDemandLines={() => navigateTenantManifestRoute('nc_pool_demand_lines')}
           />
         ) : (
           <NetworkCommercePlaceholderSurface
@@ -5198,10 +5200,15 @@ const App: React.FC = () => {
           />
         );
       case 'nc_pool_demand_lines':
-        return (
+        return selectedPoolId ? (
+          <DemandLineSurface
+            poolId={selectedPoolId}
+            onBack={() => navigateTenantManifestRoute('nc_pool_detail')}
+          />
+        ) : (
           <NetworkCommercePlaceholderSurface
-            title="Demand Line Aggregation"
-            description="Member demand volumes and consolidated line-item visibility. Pool-scoped member filtering applied."
+            title="Demand Lines"
+            description="Select a pool from the registry to view and manage demand lines."
             status="coming-soon"
             onBack={() => navigateTenantManifestRoute('nc_pools')}
           />
