@@ -5,6 +5,48 @@
 
 ---
 
+## 2026-05-10 — FRONTEND_SUPPLIER_INVITE_OWNER_UI_IMPLEMENTED: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001
+
+```
+Unit:          TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001
+Type:          FRONTEND_IMPLEMENTATION
+Status:        VERIFIED_COMPLETE
+Date:          2026-05-10
+Starting HEAD: 7a0848b ([TEXQTIC] frontend: sync nc runtime routing test expectations)
+
+Scope:
+  services/networkCommerceService.ts                                  — FE-6 owner invite methods and DTOs
+  components/Tenant/NetworkCommerce/SupplierInviteOwnerSurface.tsx    — NEW owner/admin invite panel
+  components/Tenant/NetworkCommerce/PoolRfqSurface.tsx                — FE-5→FE-6 handoff within nc_pool_rfq context
+  tests/frontend/network-commerce-supplier-invite-owner.test.tsx      — NEW FE-6 frontend tests
+  governance/TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001.md      — NEW governance packet
+  governance/control/OPEN-SET.md                                      — Last Updated + Operating Note
+  governance/control/GOVERNANCE-CHANGELOG.md                          — this entry
+
+Implementation summary:
+  ✅ Added FE-6 owner-only supplier invite methods (`sendSupplierInvite`, `listSupplierInvitesForRfq`, `getSupplierInvite`, `cancelSupplierInvite`)
+  ✅ Added SupplierInviteOwnerSurface with context-required/loading/empty/error states and owner-safe list/detail/status render
+  ✅ Added send-invite form (allowed fields only) and cancel action (cancel_reason only)
+  ✅ Added explicit feature-disabled/forbidden/invalid-state/duplicate/not-found UX mappings
+  ✅ Added bounded handoff from RFQ success to owner invite panel inside existing `nc_pool_rfq` route
+  ✅ Preserved FE-7 boundary (`nc_pool_invite_inbox` placeholder unchanged)
+
+Validation:
+  pnpm run test:runtime-routing:focused: PASS (2 files, 20 tests)
+  pnpm run typecheck: PASS
+  pnpm run test:frontend: PASS (3 files, 19 tests)
+  git diff -- App.tsx: (no output, unchanged)
+  git diff --name-only -- server: (no output, backend untouched)
+  git diff -- runtime/sessionRuntimeDescriptor.ts: (no output)
+
+Governance posture preserved:
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION
+  dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
+  Next recommended packet: TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CURRENT-STATE-SYNC-002 HOLD_FOR_PARESH_DECISION
+```
+
+---
+
 ## 2026-05-10 — FRONTEND_RUNTIME_ROUTING_TEST_SYNC: TEXQTIC-NC-FRONTEND-RUNTIME-ROUTING-TEST-SYNC-001
 
 ```

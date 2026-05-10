@@ -18,7 +18,8 @@
  * FE-3 scope: Pool owner surfaces.
  * FE-4 scope: Pool member surfaces + demand-line management.
  * FE-5 scope: RFQ issue panel and RFQ issue API call.
- * Deferred: supplier invites, supplier inbox
+ * FE-6 scope: owner supplier-invite APIs (send/list/get/cancel).
+ * Deferred: supplier inbox
  */
 
 import { tenantGet, tenantPost, tenantPatch } from './tenantApiClient';
@@ -343,6 +344,41 @@ export interface IssueRfqInput {
   response_deadline_at?: string | null;
 }
 
+export type SupplierInviteStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'CANCELLED' | 'EXPIRED';
+
+export interface SendSupplierInviteInput {
+  supplier_org_id: string;
+  expires_at?: string | null;
+  supplier_message?: string | null;
+}
+
+export interface CancelSupplierInviteInput {
+  cancel_reason?: string | null;
+}
+
+export interface NetworkPoolRfqSupplierInvite {
+  id: string;
+  owner_org_id: string;
+  supplier_org_id: string;
+  rfq_id: string;
+  pool_id: string;
+  invite_ref: string;
+  status: SupplierInviteStatus | string;
+  invited_at: string;
+  invited_by_user_id: string | null;
+  accepted_at: string | null;
+  declined_at: string | null;
+  cancelled_at: string | null;
+  expires_at: string | null;
+  supplier_message: string | null;
+  decline_reason: string | null;
+  cancel_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type SupplierInviteListResponse = NetworkPoolRfqSupplierInvite[];
+
 // ─── Demand Line API Methods ──────────────────────────────────────────────────
 
 /**
@@ -449,4 +485,64 @@ export function issueRfq(
   input?: IssueRfqInput,
 ): Promise<NetworkPoolRfq> {
   return tenantPost<NetworkPoolRfq>(`/api/tenant/network-commerce/pools/${poolId}/rfq/issue`, input || {});
+}
+
+/**
+ * Send a supplier invite for a pool RFQ (owner/admin route).
+ */
+export function sendSupplierInvite(
+  poolId: string,
+  rfqId: string,
+  input: SendSupplierInviteInput,
+): Promise<NetworkPoolRfqSupplierInvite> {
+  return tenantPost<NetworkPoolRfqSupplierInvite>(
+    `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/invites`,
+    {
+      supplier_org_id: input.supplier_org_id,
+      expires_at: input.expires_at ?? null,
+      supplier_message: input.supplier_message ?? null,
+    },
+  );
+}
+
+/**
+ * List supplier invites for a specific pool RFQ (owner/admin route).
+ */
+export function listSupplierInvitesForRfq(
+  poolId: string,
+  rfqId: string,
+): Promise<SupplierInviteListResponse> {
+  return tenantGet<SupplierInviteListResponse>(
+    `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/invites`,
+  );
+}
+
+/**
+ * Get one supplier invite by id for a specific pool RFQ (owner/admin route).
+ */
+export function getSupplierInvite(
+  poolId: string,
+  rfqId: string,
+  inviteId: string,
+): Promise<NetworkPoolRfqSupplierInvite> {
+  return tenantGet<NetworkPoolRfqSupplierInvite>(
+    `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/invites/${inviteId}`,
+  );
+}
+
+/**
+ * Cancel a supplier invite for a pool RFQ (owner/admin route).
+ */
+export function cancelSupplierInvite(
+  poolId: string,
+  rfqId: string,
+  inviteId: string,
+  input?: CancelSupplierInviteInput,
+): Promise<NetworkPoolRfqSupplierInvite> {
+  return tenantPost<NetworkPoolRfqSupplierInvite>(
+    `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/invites/${inviteId}/cancel`,
+    {
+      cancel_reason: input?.cancel_reason ?? null,
+    },
+  );
 }

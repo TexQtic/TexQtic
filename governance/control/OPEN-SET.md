@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-10 (TEXQTIC-NC-FRONTEND-RUNTIME-ROUTING-TEST-SYNC-001 — VERIFIED_COMPLETE; stale runtime routing test expectation corrected for FE-2 route-group truth. FE-5 limitation removed. Next frontend: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001 HOLD_FOR_PARESH_DECISION. Backend alternative unchanged: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001 HOLD_FOR_PARESH_DECISION.)
+**Last Updated:** 2026-05-10 (TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001 — VERIFIED_COMPLETE; FE-6 owner/admin supplier invite UI delivered under existing RFQ route context with FE-7 inbox placeholder preserved. Next recommended packet: TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CURRENT-STATE-SYNC-002 HOLD_FOR_PARESH_DECISION. Backend alternative unchanged: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001 HOLD_FOR_PARESH_DECISION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,13 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001 VERIFIED_COMPLETE (2026-05-10).
+  FE-6 frontend packet complete: owner supplier-invite service methods added (`sendSupplierInvite`, `listSupplierInvitesForRfq`, `getSupplierInvite`, `cancelSupplierInvite`), `SupplierInviteOwnerSurface` created, and `PoolRfqSurface` extended with bounded FE-5→FE-6 handoff under `nc_pool_rfq`.
+  Validation: `pnpm run test:runtime-routing:focused` PASS (20/20), `pnpm run typecheck` PASS, `pnpm run test:frontend` PASS (19/19).
+  FE-7 boundary preserved: `nc_pool_invite_inbox` remains supplier inbox placeholder; no supplier accept/decline UI implemented.
+  Backend untouched: `git diff --name-only -- server` empty. Runtime descriptor untouched: `git diff -- runtime/sessionRuntimeDescriptor.ts` empty. App unchanged: `git diff -- App.tsx` empty.
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged). dpp_launch_authorization: HOLD_FOR_PARESH_DECISION (unchanged).
+  Next recommended packet: TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CURRENT-STATE-SYNC-002 HOLD_FOR_PARESH_DECISION.
 - TEXQTIC-NC-FRONTEND-RUNTIME-ROUTING-TEST-SYNC-001 VERIFIED_COMPLETE (2026-05-10).
   Runtime-focused test drift resolved by syncing `tests/session-runtime-descriptor.test.ts` B2B expectation to FE-2-authorized route-group truth (`network_commerce_pools`).
   Added strict NC route assertions and preserved leakage guard (`nc_pool_oversight` remains absent from B2B experience entry).

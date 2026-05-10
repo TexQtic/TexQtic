@@ -12,6 +12,7 @@ import {
   type NetworkPoolRfq,
 } from '../../../services/networkCommerceService';
 import { LoadingState } from '../../shared/LoadingState';
+import { SupplierInviteOwnerSurface } from './SupplierInviteOwnerSurface';
 
 type PoolRfqSurfaceProps = Readonly<{
   poolId: string;
@@ -140,6 +141,7 @@ export function PoolRfqSurface({ poolId, onBack }: PoolRfqSurfaceProps): ReactEl
   const [demandLines, setDemandLines] = useState<NetworkPoolDemandLine[]>([]);
   const [snapshot, setSnapshot] = useState<DemandSnapshotRecord | null>(null);
   const [issuedRfq, setIssuedRfq] = useState<NetworkPoolRfq | null>(null);
+  const [showInviteOwnerPanel, setShowInviteOwnerPanel] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [formState, setFormState] = useState<IssueFormState>(DEFAULT_FORM_STATE);
 
@@ -171,6 +173,7 @@ export function PoolRfqSurface({ poolId, onBack }: PoolRfqSurfaceProps): ReactEl
       setPool(poolDetail);
       setDemandLines(demandResponse.items);
       setIssuedRfq(null);
+      setShowInviteOwnerPanel(false);
       setSnapshot(null);
 
       if (demandResponse.items.length === 0) {
@@ -191,6 +194,7 @@ export function PoolRfqSurface({ poolId, onBack }: PoolRfqSurfaceProps): ReactEl
       setDemandLines([]);
       setSnapshot(null);
       setIssuedRfq(null);
+      setShowInviteOwnerPanel(false);
       setUiState(resolution.state);
       setErrorMessage(resolution.message);
     }
@@ -261,6 +265,7 @@ export function PoolRfqSurface({ poolId, onBack }: PoolRfqSurfaceProps): ReactEl
 
         const record = await issueRfq(poolId, payload);
         setIssuedRfq(record);
+        setShowInviteOwnerPanel(false);
         setUiState('success');
       } catch (err) {
         const resolution = classifyError(err);
@@ -270,6 +275,17 @@ export function PoolRfqSurface({ poolId, onBack }: PoolRfqSurfaceProps): ReactEl
     },
     [formState, issueReady, poolId],
   );
+
+  if (showInviteOwnerPanel) {
+    return (
+      <SupplierInviteOwnerSurface
+        poolId={poolId}
+        rfqId={issuedRfq?.id ?? null}
+        rfqRef={issuedRfq?.rfq_ref ?? null}
+        onBack={() => setShowInviteOwnerPanel(false)}
+      />
+    );
+  }
 
   if (uiState === 'loading') {
     return (
@@ -517,6 +533,19 @@ export function PoolRfqSurface({ poolId, onBack }: PoolRfqSurfaceProps): ReactEl
               <p className="mt-2">
                 <span className="font-semibold">Aggregate quantity:</span>{' '}
                 {issuedRfq.total_qty ? `${issuedRfq.total_qty} ${issuedRfq.qty_unit ?? ''}`.trim() : 'Unavailable'}
+              </p>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setShowInviteOwnerPanel(true)}
+                className="inline-flex items-center justify-center rounded-xl border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-900 hover:bg-emerald-100 transition"
+              >
+                Manage Supplier Invites
+              </button>
+              <p className="self-center text-xs text-emerald-900/80">
+                Owner/admin flow only. Supplier inbox remains a separate later packet.
               </p>
             </div>
           </section>
