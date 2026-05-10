@@ -69,6 +69,8 @@ import { DisputeCases, type DisputeEscalationBridgeTarget } from './components/C
 import { TradeOversight } from './components/ControlPlane/TradeOversight';
 import { NetworkCommercePlaceholderSurface } from './components/Tenant/NetworkCommerce/NetworkCommercePlaceholderSurface';
 import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
+import { PoolListSurface } from './components/Tenant/NetworkCommerce/PoolListSurface';
+import { PoolDetailSurface } from './components/Tenant/NetworkCommerce/PoolDetailSurface';
 import { EventStream } from './components/ControlPlane/EventStream';
 import { B2BDiscoveryPage } from './components/Public/B2BDiscovery';
 import { B2CBrowsePage } from './components/Public/B2CBrowse';
@@ -2123,6 +2125,7 @@ const App: React.FC = () => {
   const [supplierRfqDetailView, setSupplierRfqDetailView] = useState<SupplierRfqDetailViewState>(createInitialSupplierRfqDetailViewState);
   const [buyerRfqTradeBridge, setBuyerRfqTradeBridge] = useState<BuyerRfqTradeBridgeState>(createInitialBuyerRfqTradeBridgeState);
   const lastTenantViewScopeKeyRef = useRef<string | null>(null);
+  const [selectedPoolId, setSelectedPoolId] = useState<string | null>(null);
 
   const resetTenantScopedRouteState = () => {
     setExpView('HOME');
@@ -5169,18 +5172,27 @@ const App: React.FC = () => {
         );
       case 'nc_pools':
         return (
-          <NetworkCommercePlaceholderSurface
-            title="NC Pool Registry"
-            description="Aggregated procurement pools with supplier networks and RFQ workflows. Foundation established for pool owner operations."
-            status="ready"
+          <PoolListSurface
+            onSelectPool={(poolId) => {
+              setSelectedPoolId(poolId);
+              navigateTenantManifestRoute('nc_pool_detail');
+            }}
             onBack={() => navigateTenantDefaultManifestRoute()}
           />
         );
       case 'nc_pool_detail':
-        return (
+        return selectedPoolId ? (
+          <PoolDetailSurface
+            poolId={selectedPoolId}
+            onBack={() => {
+              setSelectedPoolId(null);
+              navigateTenantManifestRoute('nc_pools');
+            }}
+          />
+        ) : (
           <NetworkCommercePlaceholderSurface
-            title="Pool Detail & Configuration"
-            description="Pool members, settings, and operational parameters. Continue placeholder state pending FE-3 implementation."
+            title="Pool Not Selected"
+            description="Please select a pool from the registry."
             status="coming-soon"
             onBack={() => navigateTenantManifestRoute('nc_pools')}
           />
