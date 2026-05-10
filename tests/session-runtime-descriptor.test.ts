@@ -306,7 +306,7 @@ describe('session runtime descriptor', () => {
         key: 'b2b_workspace',
         shellFamily: 'B2BShell',
         defaultLocalRouteKey: 'catalog',
-        allowedRouteGroups: ['catalog_browse', 'orders_operations', 'rfq_sourcing', 'operational_workspace'],
+        allowedRouteGroups: ['catalog_browse', 'orders_operations', 'rfq_sourcing', 'operational_workspace', 'network_commerce_pools'],
       }),
     );
     expect(getRuntimeLocalRouteRegistration(entry ?? null, 'catalog')).toEqual(
@@ -325,6 +325,13 @@ describe('session runtime descriptor', () => {
         viewKey: 'RFQS',
       }),
     );
+    expect(resolveRuntimeLocalRouteSelection(entry ?? null, { expView: 'NC_POOLS' })).toEqual(
+      expect.objectContaining({
+        routeKey: 'nc_pools',
+        routeGroupKey: 'network_commerce_pools',
+        viewKey: 'NC_POOLS',
+      }),
+    );
     expect(
       resolveRuntimeRouteGroupSelection(
         entry,
@@ -337,6 +344,13 @@ describe('session runtime descriptor', () => {
         { expView: 'RFQS' },
       ),
     ).toEqual(expect.objectContaining({ routeGroupKey: 'rfq_sourcing', viewKey: 'RFQS' }));
+    expect(
+      resolveRuntimeRouteGroupSelection(
+        entry,
+        { expView: 'NC_POOL_RFQ' },
+      ),
+    ).toEqual(expect.objectContaining({ routeGroupKey: 'network_commerce_pools', viewKey: 'NC_POOL_RFQ' }));
+    expect(getRuntimeLocalRouteRegistration(entry ?? null, 'nc_pool_oversight')).toBeNull();
     expect(resolveRuntimeContentFamilyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('b2b_workspace');
     expect(resolveRuntimeShellFamilyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('B2BShell');
   });

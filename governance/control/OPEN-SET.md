@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-10 (TEXQTIC-NC-FRONTEND-RFQ-ISSUE-PANEL-001 — VERIFIED_COMPLETE_WITH_LIMITATIONS; FE-5 RFQ issue frontend panel delivered and integrated. Next frontend: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001 HOLD_FOR_PARESH_DECISION. Backend alternative unchanged: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001 HOLD_FOR_PARESH_DECISION.)
+**Last Updated:** 2026-05-10 (TEXQTIC-NC-FRONTEND-RUNTIME-ROUTING-TEST-SYNC-001 — VERIFIED_COMPLETE; stale runtime routing test expectation corrected for FE-2 route-group truth. FE-5 limitation removed. Next frontend: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001 HOLD_FOR_PARESH_DECISION. Backend alternative unchanged: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001 HOLD_FOR_PARESH_DECISION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,13 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-FRONTEND-RUNTIME-ROUTING-TEST-SYNC-001 VERIFIED_COMPLETE (2026-05-10).
+  Runtime-focused test drift resolved by syncing `tests/session-runtime-descriptor.test.ts` B2B expectation to FE-2-authorized route-group truth (`network_commerce_pools`).
+  Added strict NC route assertions and preserved leakage guard (`nc_pool_oversight` remains absent from B2B experience entry).
+  Validation: `pnpm run test:runtime-routing:focused` PASS; `pnpm run typecheck` PASS; `pnpm run test:frontend` PASS.
+  Runtime/product/backend unchanged: `git diff --name-only -- server` empty; no edits to `runtime/sessionRuntimeDescriptor.ts` or `App.tsx`.
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged). dpp_launch_authorization: HOLD_FOR_PARESH_DECISION (unchanged).
+  Next frontend: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001 HOLD_FOR_PARESH_DECISION.
 - TEXQTIC-NC-FRONTEND-RFQ-ISSUE-PANEL-001 VERIFIED_COMPLETE_WITH_LIMITATIONS (2026-05-10).
   FE-5 frontend packet complete: RFQ issue service method added (`issueRfq`), `PoolRfqSurface` created, `PoolDetailSurface` RFQ navigation callback added, and App route `nc_pool_rfq` wired to real RFQ issue surface behind selected-pool guard.
   Validation: `pnpm run typecheck` PASS; `pnpm run test:frontend` PASS (11/11 tests).

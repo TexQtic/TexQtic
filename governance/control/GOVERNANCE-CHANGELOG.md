@@ -5,6 +5,43 @@
 
 ---
 
+## 2026-05-10 — FRONTEND_RUNTIME_ROUTING_TEST_SYNC: TEXQTIC-NC-FRONTEND-RUNTIME-ROUTING-TEST-SYNC-001
+
+```
+Unit:          TEXQTIC-NC-FRONTEND-RUNTIME-ROUTING-TEST-SYNC-001
+Type:          FRONTEND_TEST_SYNC
+Status:        VERIFIED_COMPLETE
+Date:          2026-05-10
+Starting HEAD: 8546fc6 (feat(network-commerce): add rfq issue frontend panel)
+
+Scope:
+  tests/session-runtime-descriptor.test.ts                             — stale B2B route-group expectation sync
+  governance/TEXQTIC-NC-FRONTEND-RUNTIME-ROUTING-TEST-SYNC-001.md     — NEW governance packet
+  governance/control/OPEN-SET.md                                       — Last Updated + Operating Note
+  governance/control/GOVERNANCE-CHANGELOG.md                           — this entry
+
+Implementation summary:
+  ✅ Synced B2B runtime expectation to FE-2 route truth by including `network_commerce_pools`
+  ✅ Added strict NC mapping assertions (`NC_POOLS`, `NC_POOL_RFQ`) in B2B workspace routing case
+  ✅ Preserved non-leak guard (`nc_pool_oversight` remains absent in B2B experience entry)
+  ✅ Kept scope test-only: no runtime implementation, UI, service, backend, or schema edits
+
+Validation:
+  pnpm run test:runtime-routing:focused: PASS
+  pnpm run typecheck: PASS
+  pnpm run test:frontend: PASS (2 files, 11 tests)
+  git diff --name-only -- server: (no output, backend untouched)
+  git diff -- runtime/sessionRuntimeDescriptor.ts: (no output)
+  git diff -- App.tsx: (no output)
+
+Governance posture preserved:
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION
+  dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
+  Next frontend candidate: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-OWNER-UI-001 HOLD_FOR_PARESH_DECISION
+```
+
+---
+
 ## 2026-05-10 — FRONTEND_RFQ_ISSUE_PANEL_IMPLEMENTED: TEXQTIC-NC-FRONTEND-RFQ-ISSUE-PANEL-001
 
 ```
