@@ -67,6 +67,7 @@ import { FeatureFlags } from './components/ControlPlane/FeatureFlags';
 import { ComplianceQueue } from './components/ControlPlane/ComplianceQueue';
 import { DisputeCases, type DisputeEscalationBridgeTarget } from './components/ControlPlane/DisputeCases';
 import { TradeOversight } from './components/ControlPlane/TradeOversight';
+import { NetworkCommercePlaceholderSurface } from './components/Tenant/NetworkCommerce/NetworkCommercePlaceholderSurface';
 import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
 import { EventStream } from './components/ControlPlane/EventStream';
 import { B2BDiscoveryPage } from './components/Public/B2BDiscovery';
@@ -1157,6 +1158,11 @@ const EXPERIENCE_VIEWS = [
   'GST_VERIFICATION',
   'INVOICES',
   'INVOICE_APPROVAL',
+  'NC_POOLS',
+  'NC_POOL_DETAIL',
+  'NC_POOL_DEMAND_LINES',
+  'NC_POOL_RFQ',
+  'NC_POOL_INVITE_INBOX',
 ] as const;
 type ExperienceView = (typeof EXPERIENCE_VIEWS)[number];
 
@@ -5161,6 +5167,52 @@ const App: React.FC = () => {
             }}
           />
         );
+      case 'nc_pools':
+        return (
+          <NetworkCommercePlaceholderSurface
+            title="NC Pool Registry"
+            description="Aggregated procurement pools with supplier networks and RFQ workflows. Foundation established for pool owner operations."
+            status="ready"
+            onBack={() => navigateTenantDefaultManifestRoute()}
+          />
+        );
+      case 'nc_pool_detail':
+        return (
+          <NetworkCommercePlaceholderSurface
+            title="Pool Detail & Configuration"
+            description="Pool members, settings, and operational parameters. Continue placeholder state pending FE-3 implementation."
+            status="coming-soon"
+            onBack={() => navigateTenantManifestRoute('nc_pools')}
+          />
+        );
+      case 'nc_pool_demand_lines':
+        return (
+          <NetworkCommercePlaceholderSurface
+            title="Demand Line Aggregation"
+            description="Member demand volumes and consolidated line-item visibility. Pool-scoped member filtering applied."
+            status="coming-soon"
+            onBack={() => navigateTenantManifestRoute('nc_pools')}
+          />
+        );
+      case 'nc_pool_rfq':
+        return (
+          <NetworkCommercePlaceholderSurface
+            title="RFQ Issue & Management"
+            description="Owner-initiated RFQ creation over aggregated pool demand. Supplier invite workflows supported by backend."
+            status="coming-soon"
+            onBack={() => navigateTenantManifestRoute('nc_pools')}
+          />
+        );
+      case 'nc_pool_invite_inbox':
+        return (
+          <NetworkCommercePlaceholderSurface
+            title="Supplier Invite Inbox"
+            description="Supplier-side invite receipt and acceptance workflows. Blocked: backend supplier invite route handlers not yet implemented."
+            status="blocked"
+            blockedReason="Supplier route layer is planned for backend implementation post FE-2. Frontend wiring complete; waiting for backend supplier routes and service integration."
+            onBack={() => navigateTenantDefaultManifestRoute()}
+          />
+        );
       case 'catalog':
       case 'home':
       case 'cart':
@@ -5806,6 +5858,16 @@ const App: React.FC = () => {
       // TTP Slice 7: enrollment admin console (SuperAdmin only)
       case 'ttp_enrollment_admin':
         return <TtpEnrollmentAdmin />;
+      // FE-2: Network Commerce pool oversight (control-plane)
+      case 'nc_pool_oversight':
+        return (
+          <NetworkCommercePlaceholderSurface
+            title="NC Pool Oversight"
+            description="Control-plane aggregated view of all tenant Network Commerce pools, demand aggregation, and RFQ performance. Admin read-only visibility."
+            status="ready"
+            onBack={() => navigateTenantDefaultManifestRoute()}
+          />
+        );
       default:
         return null;
     }

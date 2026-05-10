@@ -56,7 +56,8 @@ export type AdminView =
   | 'LOGS'
   | 'HEALTH'
   | 'RBAC'
-  | 'EVENTS';
+  | 'EVENTS'
+  | 'NC_POOL_OVERSIGHT';
 
 interface SuperAdminShellProps {
   children: React.ReactNode;
@@ -100,6 +101,7 @@ const CONTROL_PLANE_NAV = [
   { routeKey: 'logs', icon: '📜', label: 'Audit Logs' },
   { routeKey: 'rbac', icon: '⚙️', label: 'Access Control' },
   { routeKey: 'health', icon: '❤️', label: 'Health Status' },
+  { routeKey: 'nc_pool_oversight', icon: '💼', label: 'NC Pool Oversight' },
 ] as const;
 
 export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({

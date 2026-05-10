@@ -107,7 +107,8 @@ export type RouteGroupKey =
   | 'orders_operations'
   | 'operational_workspace'
   | 'admin_branding_domains'
-  | 'control_plane_operations';
+  | 'control_plane_operations'
+  | 'network_commerce_pools';
 
 export type RuntimeLocalRouteKey =
   | 'home'
@@ -158,7 +159,13 @@ export type RuntimeLocalRouteKey =
   | 'ttp_eligibility'
   | 'invoice_oversight'
   | 'vpc_console'
-  | 'ttp_enrollment_admin';
+  | 'ttp_enrollment_admin'
+  | 'nc_pools'
+  | 'nc_pool_detail'
+  | 'nc_pool_demand_lines'
+  | 'nc_pool_rfq'
+  | 'nc_pool_invite_inbox'
+  | 'nc_pool_oversight';
 
 export interface RuntimeLocalRouteStateBinding {
   expView?: string;
@@ -274,6 +281,7 @@ const ROUTE_GROUP_CLASSIFICATIONS: Record<RouteGroupKey, RouteGroupClassificatio
   operational_workspace: 'feature-gated',
   admin_branding_domains: 'overlay-only',
   control_plane_operations: 'family-core',
+  network_commerce_pools: 'feature-gated',
 };
 
 const defineRuntimeRoute = (
@@ -346,6 +354,7 @@ const CONTROL_PLANE_ROUTE_GROUP = defineRuntimeRouteGroup('control_plane_operati
   defineRuntimeRoute('logs', 'Audit Logs', 'LOGS', { adminView: 'LOGS' }),
   defineRuntimeRoute('rbac', 'Access Control', 'RBAC', { adminView: 'RBAC' }),
   defineRuntimeRoute('health', 'Health Status', 'HEALTH', { adminView: 'HEALTH' }),
+  defineRuntimeRoute('nc_pool_oversight', 'NC Pool Oversight', 'NC_POOL_OVERSIGHT', { adminView: 'NC_POOL_OVERSIGHT' }),
 ]);
 
 const WORKSPACE_ORDERS_ROUTE_GROUP = defineRuntimeRouteGroup('orders_operations', [
@@ -395,6 +404,14 @@ const WL_ADMIN_ORDERS_ROUTE_GROUP = defineRuntimeRouteGroup('orders_operations',
   defineRuntimeRoute('orders', 'Orders', 'ORDERS', { wlAdminView: 'ORDERS' }, { defaultForGroup: true }),
 ]);
 
+const NETWORK_COMMERCE_ROUTE_GROUP = defineRuntimeRouteGroup('network_commerce_pools', [
+  defineRuntimeRoute('nc_pools', 'NC Pools', 'NC_POOLS', { expView: 'NC_POOLS' }, { defaultForGroup: true }),
+  defineRuntimeRoute('nc_pool_detail', 'Pool Detail', 'NC_POOL_DETAIL', { expView: 'NC_POOL_DETAIL' }),
+  defineRuntimeRoute('nc_pool_demand_lines', 'Demand Lines', 'NC_POOL_DEMAND_LINES', { expView: 'NC_POOL_DEMAND_LINES' }),
+  defineRuntimeRoute('nc_pool_rfq', 'Pool RFQ', 'NC_POOL_RFQ', { expView: 'NC_POOL_RFQ' }),
+  defineRuntimeRoute('nc_pool_invite_inbox', 'Supplier Invite Inbox', 'NC_POOL_INVITE_INBOX', { expView: 'NC_POOL_INVITE_INBOX' }),
+]);
+
 const AGGREGATOR_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
   'home',
   'orders',
@@ -426,6 +443,11 @@ const B2B_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
   'gst_verification',
   'invoices',
   'invoice_approval',
+  'nc_pools',
+  'nc_pool_detail',
+  'nc_pool_demand_lines',
+  'nc_pool_rfq',
+  'nc_pool_invite_inbox',
 ];
 
 const B2C_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
@@ -494,6 +516,7 @@ const CONTROL_PLANE_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
   'invoice_oversight',
   'vpc_console',
   'ttp_enrollment_admin',
+  'nc_pool_oversight',
   'logs',
   'rbac',
   'health',
@@ -544,7 +567,7 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
     shellFamily: 'B2BShell',
     defaultAppState: 'EXPERIENCE',
     defaultLocalRouteKey: 'catalog',
-    allowedRouteGroups: ['catalog_browse', 'orders_operations', 'rfq_sourcing', 'operational_workspace'],
+    allowedRouteGroups: ['catalog_browse', 'orders_operations', 'rfq_sourcing', 'operational_workspace', 'network_commerce_pools'],
     routeGroups: [
       defineRuntimeRouteGroup('catalog_browse', [
         defineRuntimeRoute('catalog', 'Catalog', 'HOME', { expView: 'HOME' }, { defaultForGroup: true }),
@@ -553,6 +576,7 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
       WORKSPACE_ORDERS_ROUTE_GROUP,
       RFQ_ROUTE_GROUP,
       OPERATIONAL_WORKSPACE_ROUTE_GROUP,
+      NETWORK_COMMERCE_ROUTE_GROUP,
     ],
     shellNavigation: {
       routeKeys: B2B_SHELL_ROUTE_KEYS,
