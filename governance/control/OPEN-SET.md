@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-11 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001 — READY_FOR_PARESH_DECISION. PLANNING_ONLY. Q-1 through Q-8 audited. Authorization checklist in §17: Q-2+Q-5+Q-6+Q-7 gate Packet 11; Q-1+Q-3+Q-4+Q-8 gate Packet 13. FE-8 BLOCKED unchanged. DPP posture: HOLD_FOR_AUTHORIZATION / HOLD_FOR_PARESH_DECISION.)
+**Last Updated:** 2026-05-11 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001 — PARESH_AUTHORIZED. Q-1 through Q-8 all authorized; no amendments. Packet 11 (Schema) AUTHORIZED to begin. FE-8 BLOCKED unchanged. DPP posture: HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or

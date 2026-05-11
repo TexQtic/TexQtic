@@ -5,6 +5,33 @@
 
 ---
 
+## 2026-05-11 — PARESH_AUTHORIZED: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001
+Type:          PLANNING_ONLY — DECISION_AUDIT — AUTHORIZATION RECORD
+Status:        PARESH_AUTHORIZED
+Date:          2026-05-11
+
+Authorization: Paresh Patel authorized all 8 open decisions (Q-1 through Q-8).
+               Q-1: Invite-anchored route path ✓
+               Q-2: Dedicated NetworkPoolRfqSupplierQuote table ✓ (CRITICAL)
+               Q-3: withdrawQuote deferred to Phase 1D; WITHDRAWN columns in Phase 1C schema ✓
+               Q-4: Owner read deferred to Phase 1D ✓
+               Q-5: Non-partial UNIQUE(invite_id) ✓
+               Q-6: DECIMAL(18,2) ✓
+               Q-7: Free-form VARCHAR(10) ✓
+               Q-8: GET /quote included in Phase 1C ✓
+               QD-1 through QD-8 confirmed unchanged ✓
+               PRQ-28 + SRI-11 test guards acknowledged ✓
+
+No code changed:  PLANNING_ONLY — authorization record only
+Next:             Packet 11 (Schema) AUTHORIZED to begin
+DPP posture:      UNCHANGED — dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
+```
+
+---
+
 ## 2026-05-11 — READY_FOR_PARESH_DECISION: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001
 
 ```

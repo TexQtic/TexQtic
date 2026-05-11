@@ -8,14 +8,14 @@
 |---|---|
 | **Packet ID** | `TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001` |
 | **Type** | `PLANNING_ONLY` — `DECISION_AUDIT` |
-| **Status** | `READY_FOR_PARESH_DECISION` |
+| **Status** | `PARESH_AUTHORIZED` |
 | **Domain** | Network Commerce — Phase 1C |
 | **Date** | 2026-05-11 |
 | **Basis commit** | `fd3b694` — HEAD at audit time |
 | **Parent design packet** | `TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001` (DESIGN_COMPLETE, `900ea66`) |
 | **Mode** | `GOVERNANCE / DECISION ONLY` |
-| **Governed posture** | `active_delivery_unit: HOLD_FOR_AUTHORIZATION` (UNCHANGED by this packet) |
-| **DPP launch** | `dpp_launch_authorization: HOLD_FOR_PARESH_DECISION` (UNCHANGED by this packet) |
+| **Governed posture** | `active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001` (Packet 11 authorized) |
+| **DPP launch** | `dpp_launch_authorization: HOLD_FOR_PARESH_DECISION` (UNCHANGED — separate DPP decision) |
 | **Author** | Paresh Patel |
 | **Doctrine** | TexQtic Doctrine v1.4 |
 | **Safe-Write Mode** | ALWAYS ON |
@@ -689,22 +689,22 @@ begin. No implementation work is authorized without these decisions.
 
 **For Packet 11 (Schema) to begin — authorize all of the following:**
 
-- [ ] **Q-2 AUTHORIZED:** Dedicated `NetworkPoolRfqSupplierQuote` table (not quote fields on `network_pool_rfqs`)
-- [ ] **Q-5 AUTHORIZED:** Non-partial `UNIQUE(invite_id)` constraint (one quote per invite in Phase 1C)
-- [ ] **Q-6 AUTHORIZED:** `quote_amount DECIMAL(18,2)` — standard 2-decimal-place money precision
-- [ ] **Q-7 AUTHORIZED:** Free-form `VARCHAR(10)` currency representation (ISO 4217; no currencies table)
+- [x] **Q-2 AUTHORIZED:** Dedicated `NetworkPoolRfqSupplierQuote` table (not quote fields on `network_pool_rfqs`)
+- [x] **Q-5 AUTHORIZED:** Non-partial `UNIQUE(invite_id)` constraint (one quote per invite in Phase 1C)
+- [x] **Q-6 AUTHORIZED:** `quote_amount DECIMAL(18,2)` — standard 2-decimal-place money precision
+- [x] **Q-7 AUTHORIZED:** Free-form `VARCHAR(10)` currency representation (ISO 4217; no currencies table)
 
 **For Packet 13 (Route) to begin — authorize all of the following:**
 
-- [ ] **Q-1 AUTHORIZED:** Invite-anchored route path `/supplier-rfq-invites/:inviteId/quote` (deviates from tracker placeholder)
-- [ ] **Q-3 AUTHORIZED:** `withdrawQuote` deferred to Phase 1D (WITHDRAWN columns still in Phase 1C schema)
-- [ ] **Q-4 AUTHORIZED:** Owner read route deferred to Phase 1D (FE-9 will remain blocked until Phase 1D)
-- [ ] **Q-8 AUTHORIZED:** GET `/supplier-rfq-invites/:inviteId/quote` read route included in Phase 1C (required for FE-8 functional unblock)
+- [x] **Q-1 AUTHORIZED:** Invite-anchored route path `/supplier-rfq-invites/:inviteId/quote` (deviates from tracker placeholder)
+- [x] **Q-3 AUTHORIZED:** `withdrawQuote` deferred to Phase 1D (WITHDRAWN columns still in Phase 1C schema)
+- [x] **Q-4 AUTHORIZED:** Owner read route deferred to Phase 1D (FE-9 will remain blocked until Phase 1D)
+- [x] **Q-8 AUTHORIZED:** GET `/supplier-rfq-invites/:inviteId/quote` read route included in Phase 1C (required for FE-8 functional unblock)
 
 **Additional confirmation (no change required — just acknowledge):**
 
-- [ ] **QD-1 through QD-8 CONFIRMED:** All Phase 1C locked decisions in §6.2 of DESIGN-001 remain unchanged (no amendments)
-- [ ] **PRQ-28 + SRI-11 ACKNOWLEDGED:** These guards must not regress through Packets 11–13
+- [x] **QD-1 through QD-8 CONFIRMED:** All Phase 1C locked decisions in §6.2 of DESIGN-001 remain unchanged (no amendments)
+- [x] **PRQ-28 + SRI-11 ACKNOWLEDGED:** These guards must not regress through Packets 11–13
 
 **Once all items in the Packet 11 set are checked, Packet 11 is authorized to begin.**
 **Once all items in the Packet 13 set are checked, Packet 13 is authorized to begin.**
@@ -718,14 +718,17 @@ and must remain unchanged through all subsequent Phase 1C implementation packets
 
 | Key | Value | Status |
 |---|---|---|
-| `active_delivery_unit` | `HOLD_FOR_AUTHORIZATION` | PRESERVED — UNCHANGED |
+| `active_delivery_unit` | `TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001` | ADVANCED — Packet 11 authorized 2026-05-11 |
 | `dpp_launch_authorization` | `HOLD_FOR_PARESH_DECISION` | PRESERVED — UNCHANGED |
 | `dpp_passport_network_readiness` | `PRODUCTION_READY` | PRESERVED — UNCHANGED |
 | `dpp_readiness_authority` | `TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002` | PRESERVED — UNCHANGED |
 | `dpp_readiness_commit` | `17c252c` | PRESERVED — UNCHANGED |
 | `dpp_v3_design_status` | `OPTIONAL_POLISH` | PRESERVED — UNCHANGED |
 
-No Phase 1C packet (11, 12, 13) is authorized to modify any of these keys.
+`active_delivery_unit` was advanced by the Paresh authorization event (2026-05-11) from
+`HOLD_FOR_AUTHORIZATION` to `TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001`.
+All DPP hold keys (`dpp_launch_authorization`, `dpp_passport_network_readiness`,
+`dpp_readiness_authority`, `dpp_readiness_commit`, `dpp_v3_design_status`) remain UNCHANGED.
 DPP Passport Network launch requires a separate, independent Paresh authorization event.
 
 ---
@@ -733,21 +736,58 @@ DPP Passport Network launch requires a separate, independent Paresh authorizatio
 ## §19 — Final Status
 
 ```
-TEXQTIC_NC_PHASE1_POOL_RFQ_SUPPLIER_QUOTE_DECISION_AUDIT_001_READY_FOR_PARESH_DECISION
+TEXQTIC_NC_PHASE1_POOL_RFQ_SUPPLIER_QUOTE_DECISION_AUDIT_001_PARESH_AUTHORIZED
 ```
 
-All 8 open decisions (Q-1 through Q-8) have been analyzed with options, risks, reversibility,
-and downstream impact. Recommendations are stated for each. No implementation may begin until
-Paresh explicitly authorizes the decisions gating each packet.
+All 8 open decisions (Q-1 through Q-8) have been analyzed, recommendations stated, and
+Paresh's explicit authorization received on 2026-05-11. All Q decisions match the design
+recommendations; no amendments. Packet 11 (Schema) is now authorized to begin.
 
 This packet is `PLANNING_ONLY`. No schema, service, route, middleware, test, or frontend file
 was modified by this packet.
 
-**Next steps:**
-1. Paresh reviews this document.
-2. Paresh explicitly authorizes Q-2, Q-5, Q-6, Q-7 (or any amendments) → Packet 11 may begin.
-3. Paresh explicitly authorizes Q-1, Q-3, Q-4, Q-8 (or any amendments) → Packet 13 may begin.
-4. FE-8 unblock requires separate authorization after Packet 13 is verified complete.
+---
+
+## §20 — Formal Authorization Record
+
+**Date:** 2026-05-11  
+**Authorizer:** Paresh Patel (Founder)  
+**Authorization basis:** Explicit Paresh response to DECISION-AUDIT-001 §17 checklist
+
+### Packet 11 (Schema) gate — all AUTHORIZED ✓
+
+| Decision | Authorized option |
+|---|---|
+| **Q-2** | Dedicated `NetworkPoolRfqSupplierQuote` table (`network_pool_rfq_supplier_quotes`). Do not add quote fields to `network_pool_rfqs`. |
+| **Q-5** | Non-partial `UNIQUE(invite_id)` constraint. One quote per invite in Phase 1C. Quote re-submission deferred. |
+| **Q-6** | `quote_amount DECIMAL(18,2)`. |
+| **Q-7** | Free-form `currency VARCHAR(10)`, ISO-style currency text. Validated at service/route layer. No currencies table in Phase 1C. |
+
+### Packet 13 (Route) gate — all AUTHORIZED ✓
+
+| Decision | Authorized option |
+|---|---|
+| **Q-1** | Invite-anchored routes: `POST /api/tenant/network-commerce/supplier-rfq-invites/:inviteId/quote` and `GET /api/tenant/network-commerce/supplier-rfq-invites/:inviteId/quote`. |
+| **Q-3** | `withdrawQuote` route deferred to Phase 1D. Packet 11 schema must still include `WITHDRAWN` status in CHECK constraint, `withdrawn_at`, and `withdraw_reason` columns. |
+| **Q-4** | Owner read-only quote list route deferred to Phase 1D. Owner DTO design documented; no owner route in Phase 1C. |
+| **Q-8** | `GET /supplier-rfq-invites/:inviteId/quote` included in Phase 1C. Required for FE-8 to detect existing submitted quote state. |
+
+### Confirmations
+
+| Item | Status |
+|---|---|
+| **QD-1 through QD-8** | CONFIRMED — no amendments to locked Phase 1C design decisions |
+| **PRQ-28** | ACKNOWLEDGED — `expect(data).not.toHaveProperty('quotes')` must not regress through Packets 11–13 |
+| **SRI-11** | ACKNOWLEDGED — `expect(record['quote_amount']).toBeUndefined()` must not regress through Packets 11–13 |
+
+### Effective authorization state after this record
+
+| Packet | Authorization state |
+|---|---|
+| Packet 11 (Schema) | **AUTHORIZED — may begin** |
+| Packet 12 (Service) | BLOCKED on Packet 11 COMPLETE |
+| Packet 13 (Route) | BLOCKED on Packet 12 COMPLETE |
+| FE-8 unblock | BLOCKED on Packet 13 VERIFIED_COMPLETE + separate Paresh authorization |
 
 ---
 
