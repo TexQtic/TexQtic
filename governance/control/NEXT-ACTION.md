@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-11 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001 — Packet 10 DESIGN_COMPLETE; DPP posture unchanged)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-11 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001 — READY_FOR_PARESH_DECISION; Q-1 through Q-8 audited; DPP posture unchanged)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -27,31 +27,31 @@ active_delivery_unit_note: >
   v3 design: OPTIONAL_POLISH — no v3 implementation unit is opened by this closure.
   Do NOT open next slice without Paresh authorization.
   Full external/product launch: HOLD_FOR_PARESH_DECISION. Not authorized without explicit Paresh instruction.
-last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001
-last_closed_unit_status: DESIGN_COMPLETE
+last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001
+last_closed_unit_status: READY_FOR_PARESH_DECISION
 last_closed_unit_runtime_verdict: >-
-  Phase 1C Packet 10 DESIGN_COMPLETE. No code changed — PLANNING_ONLY.
-  Design: NetworkPoolRfqSupplierQuote dedicated table; nc.procurement_pools.supplier_quotes.enabled
-  gate; invite-anchored route POST /supplier-rfq-invites/:inviteId/quote; submitQuote service method
-  with ISSUED→QUOTED RFQ transition; QD-1 through QD-8 locked; 8 open decisions requiring Paresh
-  authorization before Packet 11 (Schema) may begin.
-  FE-8 remains BLOCKED until Packets 11–13 delivered and Paresh authorizes FE-8.
-  DPP posture unchanged: HOLD_FOR_AUTHORIZATION / HOLD_FOR_PARESH_DECISION.
-last_closed_unit_commits: docs(network-commerce): design supplier quote backend contract
+  Phase 1C DECISION_AUDIT complete. No code changed — PLANNING_ONLY.
+  Q-1 through Q-8 fully analyzed with options, risks, reversibility, and downstream impact.
+  Recommendations: Q-1 invite-anchored; Q-2 dedicated table (CRITICAL — must lock before Packet 11);
+  Q-3 defer withdraw route (WITHDRAWN columns still in schema); Q-4 defer owner read;
+  Q-5 non-partial UNIQUE(invite_id); Q-6 DECIMAL(18,2); Q-7 VARCHAR(10); Q-8 include GET Phase 1C.
+  QD-1 through QD-8 hidden risks reviewed; TOCTOU race documented; RLS policy gap flagged.
+  FE-8 remains BLOCKED. DPP posture unchanged.
+last_closed_unit_commits: docs(network-commerce): audit supplier quote design decisions
 last_closed_unit_closure_basis: >-
-  DESIGN_COMPLETE. PLANNING_ONLY packet. No backend or frontend code written.
-  Full Phase 1C design: dedicated quote model, feature gate, service method, invite-anchored route,
-  RFQ status transition ISSUED→QUOTED. 8 open decisions require Paresh authorization before Packet 11.
+  READY_FOR_PARESH_DECISION. PLANNING_ONLY packet. No backend or frontend code written.
+  Decision audit of Q-1 through Q-8 from DESIGN-001 §20. Authorization checklist in §17.
+  Packet 11 gate: Q-2 + Q-5 + Q-6 + Q-7 authorized. Packet 13 gate: Q-1 + Q-3 + Q-4 + Q-8 authorized.
 note_on_pending_verification: >-
-  TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001 DESIGN_COMPLETE (2026-05-11).
-  Phase 1C Packet 10 complete. PLANNING_ONLY — no code changes.
-  Next required: Paresh authorization on 8 open decisions (Q-1 through Q-8),
-  then Packet 11 (Schema), Packet 12 (Service), Packet 13 (Route) before FE-8 unblock.
+  TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001 READY_FOR_PARESH_DECISION (2026-05-11).
+  PLANNING_ONLY — no code changes. Q-1 through Q-8 audited and ready for Paresh authorization.
+  Next required: Paresh authorizes Q-2+Q-5+Q-6+Q-7 → Packet 11 (Schema) may begin.
+  Then: Paresh authorizes Q-1+Q-3+Q-4+Q-8 → Packet 13 (Route) may begin.
   FE-8 BLOCKED status unchanged.
   Active delivery unit: HOLD_FOR_AUTHORIZATION (UNCHANGED).
   DPP launch authorization: HOLD_FOR_PARESH_DECISION (UNCHANGED).
-  Prior: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 BLOCKED (82ba96e, 2026-05-11).
-  Pre-prior: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001 VERIFIED_COMPLETE (FE-7, 037eeb9).
+  Prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001 DESIGN_COMPLETE (900ea66, 2026-05-11).
+  Pre-prior: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 BLOCKED (82ba96e, 2026-05-11).
 dpp_passport_network_readiness: PRODUCTION_READY
 dpp_readiness_authority: TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002
 dpp_readiness_commit: 17c252c

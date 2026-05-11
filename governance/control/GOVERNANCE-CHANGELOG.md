@@ -5,6 +5,38 @@
 
 ---
 
+## 2026-05-11 — READY_FOR_PARESH_DECISION: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001
+Type:          PLANNING_ONLY — DECISION_AUDIT
+Status:        READY_FOR_PARESH_DECISION
+Date:          2026-05-11
+Basis commit:  fd3b694
+Parent design: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001 (DESIGN_COMPLETE, 900ea66)
+
+Decision audit: Q-1 through Q-8 open decisions from parent design §20 fully analyzed.
+               Q-1: Route path — invite-anchored /supplier-rfq-invites/:inviteId/quote (recommended)
+               Q-2: Schema — dedicated NetworkPoolRfqSupplierQuote table (recommended; MOST CRITICAL)
+               Q-3: withdrawQuote — defer to Phase 1D; WITHDRAWN columns in Phase 1C schema
+               Q-4: Owner read — defer to Phase 1D; OwnerRecord DTO designed
+               Q-5: UNIQUE constraint — non-partial UNIQUE(invite_id) Phase 1C
+               Q-6: Amount precision — DECIMAL(18,2)
+               Q-7: Currency — free-form VARCHAR(10) ISO 4217
+               Q-8: GET /quote — include in Phase 1C (prerequisite for FE-8 functional unblock)
+               QD-1 through QD-8 locked decisions reviewed for hidden implementation risks
+               TOCTOU analysis for concurrent first-quote submission documented
+               RLS policy gap identified for Packet 11 author
+
+No code changed:  PLANNING_ONLY — governance doc + control files only
+Next required:    Paresh authorization on Q-2+Q-5+Q-6+Q-7 → Packet 11 (Schema) may begin
+                  Paresh authorization on Q-1+Q-3+Q-4+Q-8 → Packet 13 (Route) may begin
+DPP posture:      UNCHANGED — active_delivery_unit: HOLD_FOR_AUTHORIZATION
+                  dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
+```
+
+---
+
 ## 2026-05-11 — DESIGN_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001
 
 ```
