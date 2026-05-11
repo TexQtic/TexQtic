@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-11 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001 — PARESH_AUTHORIZED; Q-1 through Q-8 all authorized; Packet 11 now active; DPP posture unchanged)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-11 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001 — VERIFIED_COMPLETE; schema + Prisma validated; 93/93 regression tests pass; Packet 12 (Service) HOLD_FOR_PARESH_DECISION; DPP posture unchanged)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,40 +15,39 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001
-active_delivery_unit_status: AUTHORIZED_PENDING_EXECUTION
+active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001
+active_delivery_unit_status: HOLD_FOR_PARESH_DECISION
 active_delivery_unit_note: >
-  NC Phase 1C Packet 11 (Schema) authorized by Paresh (2026-05-11).
-  Q-1 through Q-8 all AUTHORIZED — see DECISION-AUDIT-001 §20 formal authorization record.
-  Dedicated NetworkPoolRfqSupplierQuote table; DECIMAL(18,2); VARCHAR(10); non-partial UNIQUE(invite_id).
+  NC Phase 1C Packet 12 (Service) is next but HOLD_FOR_PARESH_DECISION.
+  Packet 11 (Schema) VERIFIED_COMPLETE (2026-05-11). Schema + Prisma validated; 93/93 tests pass.
+  Packet 12 requires separate Paresh authorization before execution.
   DPP LAUNCH GATE (independent of NC Phase 1C):
   TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 VERIFIED_COMPLETE (2026-05-02).
   DPP Passport Network is technically production-ready based on PROD-AUDIT-002.
   DPP launch authorization: HOLD_FOR_PARESH_DECISION — separate decision; not unlocked by NC authorization.
   Do NOT open DPP next slice without separate explicit Paresh DPP authorization.
-last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001
-last_closed_unit_status: PARESH_AUTHORIZED
+last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001
+last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  Phase 1C DECISION_AUDIT PARESH_AUTHORIZED (2026-05-11). No code changed — PLANNING_ONLY.
-  All Q-1 through Q-8 authorized by Paresh; all match design recommendations; no amendments.
-  Q-1 invite-anchored ✓; Q-2 dedicated table ✓; Q-3 withdraw deferred ✓; Q-4 owner read deferred ✓;
-  Q-5 non-partial UNIQUE ✓; Q-6 DECIMAL(18,2) ✓; Q-7 VARCHAR(10) ✓; Q-8 GET Phase 1C ✓.
-  QD-1 through QD-8 confirmed unchanged. PRQ-28 + SRI-11 acknowledged.
-  Packet 11 (Schema) now AUTHORIZED to begin.
-last_closed_unit_commits: docs(network-commerce): authorize supplier quote design decisions (Q-1 through Q-8)
+  NC Phase 1C Packet 11 (Schema) VERIFIED_COMPLETE (2026-05-11). BACKEND_SCHEMA_FOUNDATION only.
+  NetworkPoolRfqSupplierQuote model + 5 back-relations; 2 migration SQL files; feature flag seed.
+  prisma validate ✓; prisma generate ✓; tsc --noEmit ✓ (zero errors).
+  SRI suite 11/11 PASS; PRQ+ORI suite 93/93 PASS (authoritative run).
+  PRQ-28 preserved; SRI-11 preserved; DPP hold keys unchanged; no service/route code written.
+last_closed_unit_commits: feat(network-commerce): add supplier quote schema foundation
 last_closed_unit_closure_basis: >-
-  PARESH_AUTHORIZED. PLANNING_ONLY authorization record. No backend or frontend code written.
-  Formal authorization for Q-1 through Q-8 recorded in DECISION-AUDIT-001 §20.
-  Packet 11 gate: Q-2+Q-5+Q-6+Q-7 ALL AUTHORIZED. Packet 13 gate: Q-1+Q-3+Q-4+Q-8 ALL AUTHORIZED.
+  VERIFIED_COMPLETE. Schema + Prisma validated. 93/93 regression tests pass.
+  NetworkPoolRfqSupplierQuote table, RLS, grants, and feature flag seed created.
+  PRQ-28 + SRI-11 regression guards confirmed passing. No service/route/FE code written.
+  Packet 12 (Service) gate: Q-1+Q-2+Q-3+Q-5+Q-6+Q-7+Q-8 ALL in schema foundation.
 note_on_pending_verification: >-
-  TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001 PARESH_AUTHORIZED (2026-05-11).
-  PLANNING_ONLY — no code changes. Q-1 through Q-8 authorized; no amendments.
-  Next: Packet 11 (Schema) AUTHORIZED to begin. Packet 12 (Service) blocked on Packet 11 COMPLETE.
+  TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001 VERIFIED_COMPLETE (2026-05-11).
+  Packet 11 complete. Packet 12 (Service) HOLD_FOR_PARESH_DECISION.
   Packet 13 (Route) blocked on Packet 12 COMPLETE. FE-8 blocked on Packet 13 VERIFIED_COMPLETE.
   FE-8 BLOCKED status unchanged until Packet 13 complete + separate Paresh FE-8 authorization.
-  Active delivery unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001.
+  Active delivery unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 (HOLD).
   DPP launch authorization: HOLD_FOR_PARESH_DECISION (UNCHANGED — separate decision).
-  Prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001 READY_FOR_PARESH_DECISION (52b91a6).
+  Prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001 PARESH_AUTHORIZED (2596862).
   Pre-prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001 DESIGN_COMPLETE (900ea66).
 dpp_passport_network_readiness: PRODUCTION_READY
 dpp_readiness_authority: TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002

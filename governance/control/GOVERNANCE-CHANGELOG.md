@@ -5,6 +5,44 @@
 
 ---
 
+## 2026-05-11 — VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001
+Type:          BACKEND_SCHEMA_FOUNDATION — Schema + Prisma Only
+Status:        VERIFIED_COMPLETE
+Date:          2026-05-11
+
+Deliverables:
+  - server/prisma/migrations/20260531000000_nc_pool_supplier_quote_schema/migration.sql
+  - server/prisma/migrations/20260532000000_nc_pool_supplier_quote_feature_flag_seed/migration.sql
+  - server/prisma/schema.prisma (NetworkPoolRfqSupplierQuote model + 5 back-relations)
+
+Validation:
+  - prisma validate: PASS
+  - prisma generate: PASS (v6.1.0)
+  - tsc --noEmit: PASS (zero errors)
+  - SRI suite (11 tests): ALL PASS
+  - PRQ + ORI suites (93 tests): ALL PASS (authoritative run terminal ef3875b8)
+
+Authorized decisions implemented:
+  Q-2: Dedicated NetworkPoolRfqSupplierQuote table ✓
+  Q-3 carry-forward: WITHDRAWN status + withdrawn_at + withdraw_reason columns ✓
+  Q-5: Non-partial UNIQUE(invite_id) ✓
+  Q-6: DECIMAL(18,2) ✓
+  Q-7: VARCHAR(10) free-form ✓
+
+Invariants preserved:
+  PRQ-28: no 'quotes' on RFQ response ✓ (schema-only; no route changes)
+  SRI-11: quote_amount not on invite records ✓
+  QD-7: StateMachineService.transition() not used ✓
+  DPP hold keys: UNCHANGED ✓
+
+Next packet: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 (HOLD_FOR_PARESH_DECISION)
+```
+
+---
+
 ## 2026-05-11 — PARESH_AUTHORIZED: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001
 
 ```

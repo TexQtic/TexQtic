@@ -1100,6 +1100,8 @@ model organizations {
   network_pool_rfq_lines                                                                             NetworkPoolRfqLine[]                @relation("NetworkPoolRfqLineOwnerOrg")
   supplierInvitesAsOwner                                                                             NetworkPoolRfqSupplierInvite[]      @relation("NetworkPoolRfqSupplierInviteOwnerOrg")
   supplierInvitesAsSupplier                                                                          NetworkPoolRfqSupplierInvite[]      @relation("NetworkPoolRfqSupplierInviteSupplierOrg")
+  supplierQuotesAsOwner                                                                              NetworkPoolRfqSupplierQuote[]       @relation("NetworkPoolRfqSupplierQuoteOwnerOrg")
+  supplierQuotesAsSupplier                                                                           NetworkPoolRfqSupplierQuote[]       @relation("NetworkPoolRfqSupplierQuoteSupplierOrg")
   network_pool_rfqs                                                                                  NetworkPoolRfq[]                    @relation("NetworkPoolRfqOwnerOrg")
   network_pools                                                                                      NetworkPool[]
   node_certifications                                                                                node_certifications[]
@@ -1843,6 +1845,7 @@ model NetworkPool {
   memberships                       NetworkPoolMembership[]
   rfqLines                          NetworkPoolRfqLine[]                @relation("NetworkPoolRfqLines")
   supplierInvites                   NetworkPoolRfqSupplierInvite[]
+  supplierQuotes                    NetworkPoolRfqSupplierQuote[]
   rfqs                              NetworkPoolRfq[]                    @relation("NetworkPoolRfqs")
   lifecycleState                    LifecycleState                      @relation(fields: [lifecycleStateId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "network_pools_lifecycle_state_id_fk")
   organizations                     organizations                       @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "network_pools_org_id_fk")
@@ -2123,6 +2126,7 @@ model NetworkPoolRfq {
   updatedAt                         DateTime                            @default(now()) @map("updated_at") @db.Timestamptz(6)
   lines                             NetworkPoolRfqLine[]
   supplierInvites                   NetworkPoolRfqSupplierInvite[]
+  supplierQuotes                    NetworkPoolRfqSupplierQuote[]
   ownerOrg                          organizations                       @relation("NetworkPoolRfqOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfqs_owner_org_id_fk")
   pool                              NetworkPool                         @relation("NetworkPoolRfqs", fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfqs_pool_id_fk")
   snapshot                          NetworkPoolDemandSnapshot           @relation("NetworkPoolRfqSnapshots", fields: [snapshotId], references: [id], onUpdate: NoAction, map: "nc_pool_rfqs_snapshot_id_fk")
@@ -2250,6 +2254,7 @@ model NetworkPoolRfqSupplierInvite {
   supplierOrg          organizations  @relation("NetworkPoolRfqSupplierInviteSupplierOrg", fields: [supplierOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_supplier_invites_supplier_org_id_fk")
   pool                 NetworkPool    @relation(fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_supplier_invites_pool_id_fk")
   rfq                  NetworkPoolRfq @relation(fields: [rfqId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_supplier_invites_rfq_id_fk")
+  quote                NetworkPoolRfqSupplierQuote?
 
   @@unique([rfqId, supplierOrgId], map: "nc_pool_rfq_supplier_invites_rfq_supplier_unique")
   @@index([invitedAt(sort: Desc)], map: "idx_nc_pool_rfq_supplier_invites_invited_at")
@@ -2259,6 +2264,66 @@ model NetworkPoolRfqSupplierInvite {
   @@index([status], map: "idx_nc_pool_rfq_supplier_invites_status")
   @@index([supplierOrgId, createdAt(sort: Desc)], map: "idx_nc_pool_rfq_supplier_invites_supplier_org_id_created_at")
   @@map("network_pool_rfq_supplier_invites")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001: Supplier quote submitted against an accepted invite for a network pool RFQ.
+/// Dual RLS anchor: ownerOrgId (pool owner / buyer) and supplierOrgId (quoting supplier).
+/// QD-2: UNIQUE(invite_id) — one quote per invite (non-partial, Phase 1C).
+/// QD-3: WITHDRAWN in status enum; withdrawQuote deferred to Phase 1C.1/1D.
+/// QD-7: Direct lifecycle log only. StateMachineService.transition() is never called for quote lifecycle.
+model NetworkPoolRfqSupplierQuote {
+  id                   String    @id(map: "nc_pool_rfq_supplier_quotes_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Primary RLS anchor — pool owner (buyer org). Denormalized from invite.
+  ownerOrgId           String    @map("owner_org_id") @db.Uuid
+  /// Secondary RLS anchor — quoting supplier org. Denormalized from invite.
+  supplierOrgId        String    @map("supplier_org_id") @db.Uuid
+  /// FK → network_pool_rfqs(id) ON DELETE CASCADE. Denormalized from invite.
+  rfqId                String    @map("rfq_id") @db.Uuid
+  /// Denormalized FK → network_pools(id) ON DELETE CASCADE. Mirrors invite.
+  poolId               String    @map("pool_id") @db.Uuid
+  /// FK → network_pool_rfq_supplier_invites(id) ON DELETE CASCADE. Primary anchor. QD-2: one quote per invite.
+  inviteId             String    @unique(map: "nc_pool_rfq_supplier_quotes_invite_unique") @map("invite_id") @db.Uuid
+  /// Service-generated UUID-derived ref. Unique. Non-empty enforced by DB CHECK.
+  quoteRef             String    @unique(map: "nc_pool_rfq_supplier_quotes_quote_ref_unique") @map("quote_ref") @db.VarChar(100)
+  /// Lifecycle status. Values: SUBMITTED | WITHDRAWN. DB CHECK. Default: SUBMITTED. QD-3: WITHDRAWN carried forward.
+  status               String    @default("SUBMITTED") @map("status") @db.VarChar(50)
+  /// Aggregate quote value. DB CHECK: > 0. DECIMAL(18,2). Serialized as string in supplier DTOs.
+  quoteAmount          Decimal   @map("quote_amount") @db.Decimal(18, 2)
+  /// ISO 4217 currency code. Non-empty enforced by DB CHECK.
+  currency             String    @map("currency") @db.VarChar(10)
+  /// Optional quote validity window. Tracked but not enforced in Phase 1C (QD-3).
+  validityUntil        DateTime? @map("validity_until") @db.Timestamptz(6)
+  /// Optional note from supplier to owner.
+  supplierNote         String?   @map("supplier_note")
+  /// Timestamp of quote submission. Set by service at insert time.
+  submittedAt          DateTime  @map("submitted_at") @db.Timestamptz(6)
+  /// User who submitted the quote. Nullable (QD-4: no FK; validated at service layer only).
+  submittedByUserId    String?   @map("submitted_by_user_id") @db.Uuid
+  /// Set when status transitions to WITHDRAWN (Phase 1C.1+).
+  withdrawnAt          DateTime? @map("withdrawn_at") @db.Timestamptz(6)
+  /// Optional supplier-provided reason on withdrawal.
+  withdrawReason       String?   @map("withdraw_reason")
+  /// Internal ops metadata. Never exposed to suppliers (QD-5).
+  metadataInternalJson Json?     @map("metadata_internal_json")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  ownerOrg             organizations             @relation("NetworkPoolRfqSupplierQuoteOwnerOrg", fields: [ownerOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_supplier_quotes_owner_org_id_fk")
+  supplierOrg          organizations             @relation("NetworkPoolRfqSupplierQuoteSupplierOrg", fields: [supplierOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_supplier_quotes_supplier_org_id_fk")
+  pool                 NetworkPool               @relation(fields: [poolId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_supplier_quotes_pool_id_fk")
+  rfq                  NetworkPoolRfq            @relation(fields: [rfqId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_supplier_quotes_rfq_id_fk")
+  invite               NetworkPoolRfqSupplierInvite @relation(fields: [inviteId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_pool_rfq_supplier_quotes_invite_id_fk")
+
+  @@index([inviteId], map: "idx_nc_pool_rfq_supplier_quotes_invite_id")
+  @@index([rfqId], map: "idx_nc_pool_rfq_supplier_quotes_rfq_id")
+  @@index([poolId], map: "idx_nc_pool_rfq_supplier_quotes_pool_id")
+  @@index([ownerOrgId, createdAt(sort: Desc)], map: "idx_nc_pool_rfq_supplier_quotes_owner_org_id")
+  @@index([supplierOrgId, createdAt(sort: Desc)], map: "idx_nc_pool_rfq_supplier_quotes_supplier_org_id")
+  @@index([status], map: "idx_nc_pool_rfq_supplier_quotes_status")
+  @@index([submittedAt(sort: Desc)], map: "idx_nc_pool_rfq_supplier_quotes_submitted_at")
+  @@index([createdAt(sort: Desc)], map: "idx_nc_pool_rfq_supplier_quotes_created_at")
+  @@map("network_pool_rfq_supplier_quotes")
 }
 
 enum TenantType {
