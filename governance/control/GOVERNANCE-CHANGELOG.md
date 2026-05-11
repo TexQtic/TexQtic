@@ -5,6 +5,18 @@
 
 ---
 
+## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001
+
+Option A executed (Paresh authorized): prisma migrate resolve --applied 20260530000000_nc_pool_supplier_invite_feature_flag_seed + prisma migrate deploy.
+Migrations applied: 20260531000000_nc_pool_supplier_quote_schema (applied_steps_count=1), 20260532000000_nc_pool_supplier_quote_feature_flag_seed (applied_steps_count=1).
+network_pool_rfq_supplier_quotes: live on remote Supabase with RLS (6 policies) + grants.
+nc.procurement_pools.supplier_quotes.enabled: seeded enabled=false.
+nc.procurement_pools.supplier_invites.enabled: enabled=true PRESERVED (updated_at unchanged).
+Prisma: Database schema is up to date!. 104/104 regression tests pass (SRI 11, ORI 50, PRQ 43).
+DEPLOYMENT-001 + LEDGER-RECONCILIATION-001 both RESOLVED. Packet 12 HOLD_FOR_PARESH_DECISION unchanged.
+Governance doc: governance/TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001.md
+
+
 ## 2026-05-12 -- INVESTIGATION_COMPLETE: TEXQTIC-NC-REMOTE-DB-MIGRATION-FLAG-COLLISION-INVESTIGATION-001
 
 SELECT-only investigation of migration 20260530000000 flag collision.

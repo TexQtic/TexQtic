@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (INVESTIGATION-001 COMPLETE: flag was manually activated 2026-05-11 ~13:58 UTC during ORI production testing; zero tenant overrides exist; supplier_quotes flag absent — no collision on 20260532000000; Option A recommended: resolve --applied + redeploy; awaiting Paresh authorization)
+**Last Updated:** 2026-05-12 (DEPLOYMENT-RESOLUTION-001 VERIFIED_COMPLETE: 3 migrations resolved/deployed; network_pool_rfq_supplier_quotes live; supplier_quotes flag enabled=false; supplier_invite flag enabled=true preserved; DEPLOYMENT-001 + LEDGER-RECONCILIATION-001 resolved)
 
 > Read this file after `NEXT-ACTION.md`. It records only current blockers, holds, and governance
 > exceptions relevant to live Layer 0 posture. It does not originate ordinary product delivery
@@ -15,8 +15,8 @@
 | Item | Status | Posture |
 | --- | --- | --- |
 | `TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001` | `BLOCKED_BACKEND_QUOTE_CONTRACT_MISSING` | FE-8 supplier quote UI blocked. Backend Phase 1C (Packets 11–13) not yet delivered. Unblocked when Packets 11 (Schema) + 12 (Service) + 13 (Route) complete and Paresh authorizes FE-8. Design authority: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001 DESIGN_COMPLETE. |
-| `TEXQTIC-NC-REMOTE-DB-PRISMA-LEDGER-RECONCILIATION-001` | `BLOCKED_MIGRATION_DEPLOYMENT_ATTEMPTED` | Subsumed by DEPLOYMENT-001. Deployment was authorized and attempted; see row below. |
-| `TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-001` | `BLOCKED_MIGRATION_FAILED_FEATURE_FLAG_COLLISION` | Migration `20260530000000_nc_pool_supplier_invite_feature_flag_seed` FAILED on remote DB. Root cause: `nc.procurement_pools.supplier_invites.enabled` pre-exists in `public.feature_flags` with `enabled=true` (manually activated 2026-05-11 ~13:58 UTC during ORI production testing). INSERT...ON CONFLICT DO NOTHING was a no-op; post-flight assertion raised P0001. Prisma ledger: 20260530000000 FAILED (applied_steps_count=0, finished_at=null). Migrations `20260531000000` + `20260532000000` not in ledger (pending/blocked). INVESTIGATION-001 COMPLETE: zero tenant overrides exist; supplier_quotes flag absent (no collision on 20260532000000); global enabled=true confirmed as allow-all (production returns 200 with no overrides). **RECOMMENDED: Option A** — `prisma migrate resolve --applied 20260530000000_nc_pool_supplier_invite_feature_flag_seed` then redeploy. Requires explicit Paresh authorization. See `governance/TEXQTIC-NC-REMOTE-DB-MIGRATION-FLAG-COLLISION-INVESTIGATION-001.md §12`. |
+| `TEXQTIC-NC-REMOTE-DB-PRISMA-LEDGER-RECONCILIATION-001` | `RESOLVED` | Subsumed and resolved by DEPLOYMENT-RESOLUTION-001. All 3 migrations now applied to remote Supabase DB. See `governance/TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001.md`. |
+| `TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-001` | `RESOLVED` | **RESOLVED by TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001 (2026-05-12).** Option A executed: `prisma migrate resolve --applied 20260530000000_nc_pool_supplier_invite_feature_flag_seed` + `prisma migrate deploy`. 20260531000000 + 20260532000000 applied. `network_pool_rfq_supplier_quotes` live. `nc.procurement_pools.supplier_quotes.enabled` seeded false. `nc.procurement_pools.supplier_invites.enabled` remains true (preserved). Prisma: "Database schema is up to date!". 104/104 regression tests pass. See `governance/TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001.md`. |
 
 ## Section 2 — HOLDS / REVIEW-UNKNOWN
 

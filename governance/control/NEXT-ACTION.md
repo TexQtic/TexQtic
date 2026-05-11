@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-12 (TEXQTIC-NC-REMOTE-DB-MIGRATION-FLAG-COLLISION-INVESTIGATION-001 — INVESTIGATION_COMPLETE; flag created 2026-05-11 ~13:58 UTC during ORI production testing; zero tenant overrides; supplier_quotes flag absent; Option A recommended: resolve --applied + redeploy; awaiting Paresh authorization; Packet 12 HOLD_FOR_PARESH_DECISION; DPP posture unchanged)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-12 (TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001 — VERIFIED_COMPLETE; 3 migrations resolved/deployed; network_pool_rfq_supplier_quotes table live; supplier_quotes flag enabled=false seeded; supplier_invite flag enabled=true preserved; Packet 12 HOLD_FOR_PARESH_DECISION unchanged)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
