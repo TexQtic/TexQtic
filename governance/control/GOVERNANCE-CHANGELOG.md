@@ -5,6 +5,30 @@
 
 ---
 
+## 2026-05-11 — BLOCKED: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001
+
+```
+Unit:          TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001
+Type:          FRONTEND_IMPLEMENTATION_CONDITIONAL — BLOCKED
+Status:        BLOCKED_BACKEND_QUOTE_CONTRACT_MISSING
+Date:          2026-05-11
+Prerequisite:  FE-7 commit 037eeb9 (VERIFIED_COMPLETE)
+
+Blocker:       Backend supplier quote contract does not exist.
+               No poolRfqQuote* route file in server/src/routes/tenant/
+               No NetworkPoolQuote / NetworkPoolRfqQuote Prisma model
+               No submitQuote / getQuote / listQuotes service methods
+               PRQ-28: expect(data).not.toHaveProperty('quotes') — explicit no-quote guard
+               SRI-11: expect(record['quote_amount']).toBeUndefined() — explicit no-quote guard
+               Governance tracker: Phase 1C (Design/Schema/Service/Route) all NOT_STARTED
+
+No code changed:  No frontend service methods, no component, no App.tsx changes
+Backend required: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-BACKEND-001 (HOLD_FOR_PARESH_DECISION)
+DPP posture:      UNCHANGED — active_delivery_unit: HOLD_FOR_AUTHORIZATION; dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
+```
+
+---
+
 ## 2026-05-11 — VERIFIED_COMPLETE: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001
 
 ```

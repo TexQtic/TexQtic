@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-11 (TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001 — FE-7 VERIFIED_COMPLETE; supplier inbox service methods added (listIncomingSupplierInvites, viewIncomingSupplierInvite, acceptIncomingSupplierInvite, declineIncomingSupplierInvite), SupplierInviteInbox.tsx created, App.tsx nc_pool_invite_inbox route wired. typecheck PASS; 31/31 frontend tests PASS. DPP posture unchanged: HOLD_FOR_AUTHORIZATION / HOLD_FOR_PARESH_DECISION.)
+**Last Updated:** 2026-05-11 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 — FE-8 BLOCKED: backend supplier quote contract does not exist. No frontend code added. Governance doc only. Backend prerequisite: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-BACKEND-001. DPP posture unchanged: HOLD_FOR_AUTHORIZATION / HOLD_FOR_PARESH_DECISION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or

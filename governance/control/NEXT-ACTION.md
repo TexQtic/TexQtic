@@ -27,29 +27,28 @@ active_delivery_unit_note: >
   v3 design: OPTIONAL_POLISH — no v3 implementation unit is opened by this closure.
   Do NOT open next slice without Paresh authorization.
   Full external/product launch: HOLD_FOR_PARESH_DECISION. Not authorized without explicit Paresh instruction.
-last_closed_unit: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001
-last_closed_unit_status: VERIFIED_COMPLETE
+last_closed_unit: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001
+last_closed_unit_status: BLOCKED_BACKEND_QUOTE_CONTRACT_MISSING
 last_closed_unit_runtime_verdict: >-
-  FE-7 supplier invite inbox frontend. Service methods: listIncomingSupplierInvites,
-  viewIncomingSupplierInvite, acceptIncomingSupplierInvite, declineIncomingSupplierInvite.
-  SupplierInviteInbox.tsx created. App.tsx nc_pool_invite_inbox route wired.
-  typecheck PASS; 31/31 frontend tests PASS (11 new FE-7 tests).
-  E2E: C3 non-gate per Paresh. Prerequisite: GOV-CLOSE-002 (2ae2bbb).
+  FE-8 supplier quote UI blocked. Backend supplier quote contract does not exist.
+  No route, no Prisma model, no service methods. Governance tracker Phase 1C all NOT_STARTED.
+  Integration tests (PRQ-28, SRI-11) explicitly assert no quote data exists.
+  Prerequisite: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-BACKEND-001.
+  No frontend code added. Governance doc only.
   DPP posture unchanged: HOLD_FOR_AUTHORIZATION / HOLD_FOR_PARESH_DECISION.
-  FE-8 (supplier quote UI): HOLD_FOR_PARESH_DECISION.
-last_closed_unit_commits: feat(network-commerce): add supplier invite inbox frontend
+last_closed_unit_commits: docs(network-commerce): block supplier quote frontend on backend contract
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE. 4 service methods, new component, App.tsx patch, 11 new tests.
-  typecheck PASS; 31/31 frontend tests PASS. Privacy guard (OD-5) verified.
-  E2E C3 non-gate per Paresh ruling. DPP posture unchanged.
+  BLOCKED_BACKEND_QUOTE_CONTRACT_MISSING. Repo-truth validation: no backend quote route,
+  no Prisma quote model, no quote service methods. Phase 1C (Design/Schema/Service/Route) NOT_STARTED.
+  No frontend implementation performed. Governance + control files only.
 note_on_pending_verification: >-
-  TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001 VERIFIED_COMPLETE (2026-05-11).
-  FE-7 supplier invite inbox frontend complete. 4 service functions, SupplierInviteInbox.tsx,
-  App.tsx route wired. typecheck PASS; 31/31 frontend tests PASS.
-  E2E: C3 non-gate per Paresh ruling. Backend prerequisite: GOV-CLOSE-002 (2ae2bbb).
+  TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 BLOCKED (2026-05-11).
+  FE-8 supplier quote UI blocked: backend quote contract absent.
+  No code changes. Governance doc created. Backend prerequisite: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-BACKEND-001.
   Active delivery unit: HOLD_FOR_AUTHORIZATION (UNCHANGED).
   DPP launch authorization: HOLD_FOR_PARESH_DECISION (UNCHANGED).
-  FE-8 supplier quote UI: HOLD_FOR_PARESH_DECISION. Not authorized without explicit Paresh instruction.
+  FE-8 remains BLOCKED until backend quote prerequisite is authorized and delivered.
+  Prior: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001 VERIFIED_COMPLETE (FE-7, 037eeb9).
 dpp_passport_network_readiness: PRODUCTION_READY
 dpp_readiness_authority: TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002
 dpp_readiness_commit: 17c252c
