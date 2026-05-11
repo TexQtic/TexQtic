@@ -1,9 +1,41 @@
-﻿# GOVERNANCE-CHANGELOG.md â€” Layer 0 Closure Record
+﻿# GOVERNANCE-CHANGELOG.md — Layer 0 Closure Record
 
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md
 **Purpose:** Immutable ordered log of all governance closure events. Append-only. Do not edit prior entries.
 
 ---
+
+## 2026-05-12 -- BLOCKER_EMITTED: TEXQTIC-NC-REMOTE-DB-PRISMA-LEDGER-RECONCILIATION-001
+
+```
+Unit:          TEXQTIC-NC-REMOTE-DB-PRISMA-LEDGER-RECONCILIATION-001
+Type:          AUDIT -- Remote DB + Prisma Migration Ledger Reconciliation
+Status:        BLOCKED
+Date:          2026-05-12
+
+Audit conducted: prisma migrate status run; stop condition hit.
+
+Blocker:
+  3 migrations on disk but NOT deployed to remote Supabase DB:
+    - 20260530000000_nc_pool_supplier_invite_feature_flag_seed
+    - 20260531000000_nc_pool_supplier_quote_schema
+    - 20260532000000_nc_pool_supplier_quote_feature_flag_seed
+
+Impact:
+  - table network_pool_rfq_supplier_quotes missing from production
+  - feature flag seeds for supplier invites + quotes missing from production feature_flags
+  - Packet 12 (Service) + Packet 13 (Route) cannot be activated without migration deployment
+  - Tests still pass (self-seeding fixtures; not dependent on migration seeds)
+
+Required Action:
+  Paresh to authorize psql deployment of 3 pending migrations via DATABASE_URL
+  Recommended: authorize alongside Packet 12 (Service) activation
+
+Governance posture: UNCHANGED (all dpp_* keys and active_delivery_unit HOLD_FOR_PARESH_DECISION)
+```
+
+---
+
 ## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-TEST-INFRA-DB-INTEGRATION-PERFORMANCE-AUDIT-001
 
 ```

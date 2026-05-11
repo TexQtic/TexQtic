@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (TEXQTIC-NC-TEST-INFRA-DB-INTEGRATION-PERFORMANCE-AUDIT-001 — VERIFIED_COMPLETE. 181/181 tests PASS. 354 DB round-trips eliminated. PRQ 43/43 timeouts resolved. Packet 12 (Service) HOLD_FOR_PARESH_DECISION. LEDGER-RECONCILIATION-001 BLOCKED pending migration deployment authorization.)
+**Last Updated:** 2026-05-12 (TEXQTIC-NC-REMOTE-DB-PRISMA-LEDGER-RECONCILIATION-001 — BLOCKED. 3 migrations undeployed to remote Supabase DB. Migration deployment authorization required from Paresh. Packet 12 (Service) HOLD_FOR_PARESH_DECISION. DPP posture: HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,13 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-REMOTE-DB-PRISMA-LEDGER-RECONCILIATION-001 BLOCKED (2026-05-12).
+  Audit-only pass: verify all NC SQL migrations deployed to remote Supabase DB. Stop condition hit.
+  3 migrations on disk but NOT deployed: 20260530000000_nc_pool_supplier_invite_feature_flag_seed,
+  20260531000000_nc_pool_supplier_quote_schema, 20260532000000_nc_pool_supplier_quote_feature_flag_seed.
+  table `network_pool_rfq_supplier_quotes` missing from production. Feature flag seeds missing.
+  No product code changed. Tests still pass (self-seeding fixtures). Blocker emitted.
+  Unblocked when: Paresh authorizes psql deployment of 3 migrations (recommended alongside Packet 12).
 - TEXQTIC-NC-TEST-INFRA-DB-INTEGRATION-PERFORMANCE-AUDIT-001 VERIFIED_COMPLETE (2026-05-12).
   NC DB integration test suite performance audit and optimization. SRI 11/11 (109s); ORI 50/50 (282s); DLT 77/77 (407s); PRQ 43/43 (baseline had 10 timeouts; all resolved).
   354 DB round-trips eliminated. Fixes: batch ensureDefaultFlagsEnabled/ensureGatesEnabled (SRI, PRQ); remove redundant afterEach gates (ORI, DLT, PRQ); { timeout: 15000 } for multi-step fixture tests (DLT x5, PRQ x10).

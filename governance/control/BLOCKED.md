@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-11 (FE-8 carry-forward: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 BLOCKED; Phase 1C design complete; backend Packets 11–13 pending authorization)
+**Last Updated:** 2026-05-12 (LEDGER-RECONCILIATION-001 BLOCKED added: 3 migrations undeployed; Packet 12 authorization required)
 
 > Read this file after `NEXT-ACTION.md`. It records only current blockers, holds, and governance
 > exceptions relevant to live Layer 0 posture. It does not originate ordinary product delivery
@@ -15,6 +15,7 @@
 | Item | Status | Posture |
 | --- | --- | --- |
 | `TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001` | `BLOCKED_BACKEND_QUOTE_CONTRACT_MISSING` | FE-8 supplier quote UI blocked. Backend Phase 1C (Packets 11–13) not yet delivered. Unblocked when Packets 11 (Schema) + 12 (Service) + 13 (Route) complete and Paresh authorizes FE-8. Design authority: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001 DESIGN_COMPLETE. |
+| `TEXQTIC-NC-REMOTE-DB-PRISMA-LEDGER-RECONCILIATION-001` | `BLOCKED_MIGRATION_DEPLOYMENT_REQUIRED` | 3 migrations not yet deployed to remote Supabase DB: `20260530000000_nc_pool_supplier_invite_feature_flag_seed`, `20260531000000_nc_pool_supplier_quote_schema`, `20260532000000_nc_pool_supplier_quote_feature_flag_seed`. Migration deployment authorization required from Paresh before ledger reconciliation audit can complete. Recommended: authorize alongside Packet 12 (Service) activation. |
 
 ## Section 2 — HOLDS / REVIEW-UNKNOWN
 
