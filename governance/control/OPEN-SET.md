@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-11 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 — FE-8 BLOCKED: backend supplier quote contract does not exist. No frontend code added. Governance doc only. Backend prerequisite: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-BACKEND-001. DPP posture unchanged: HOLD_FOR_AUTHORIZATION / HOLD_FOR_PARESH_DECISION.)
+**Last Updated:** 2026-05-11 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001 — Packet 10 Phase 1C DESIGN_COMPLETE. PLANNING_ONLY. No code. Design: NetworkPoolRfqSupplierQuote table, nc.procurement_pools.supplier_quotes.enabled gate, submitQuote service, invite-anchored route. 8 open decisions require Paresh authorization before Packet 11 Schema begins. FE-8 BLOCKED status unchanged. DPP posture: HOLD_FOR_AUTHORIZATION / HOLD_FOR_PARESH_DECISION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or

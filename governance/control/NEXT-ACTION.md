@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-11 (TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001 — FE-7 VERIFIED_COMPLETE; DPP posture unchanged)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-11 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001 — Packet 10 DESIGN_COMPLETE; DPP posture unchanged)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -27,28 +27,31 @@ active_delivery_unit_note: >
   v3 design: OPTIONAL_POLISH — no v3 implementation unit is opened by this closure.
   Do NOT open next slice without Paresh authorization.
   Full external/product launch: HOLD_FOR_PARESH_DECISION. Not authorized without explicit Paresh instruction.
-last_closed_unit: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001
-last_closed_unit_status: BLOCKED_BACKEND_QUOTE_CONTRACT_MISSING
+last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001
+last_closed_unit_status: DESIGN_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  FE-8 supplier quote UI blocked. Backend supplier quote contract does not exist.
-  No route, no Prisma model, no service methods. Governance tracker Phase 1C all NOT_STARTED.
-  Integration tests (PRQ-28, SRI-11) explicitly assert no quote data exists.
-  Prerequisite: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-BACKEND-001.
-  No frontend code added. Governance doc only.
+  Phase 1C Packet 10 DESIGN_COMPLETE. No code changed — PLANNING_ONLY.
+  Design: NetworkPoolRfqSupplierQuote dedicated table; nc.procurement_pools.supplier_quotes.enabled
+  gate; invite-anchored route POST /supplier-rfq-invites/:inviteId/quote; submitQuote service method
+  with ISSUED→QUOTED RFQ transition; QD-1 through QD-8 locked; 8 open decisions requiring Paresh
+  authorization before Packet 11 (Schema) may begin.
+  FE-8 remains BLOCKED until Packets 11–13 delivered and Paresh authorizes FE-8.
   DPP posture unchanged: HOLD_FOR_AUTHORIZATION / HOLD_FOR_PARESH_DECISION.
-last_closed_unit_commits: docs(network-commerce): block supplier quote frontend on backend contract
+last_closed_unit_commits: docs(network-commerce): design supplier quote backend contract
 last_closed_unit_closure_basis: >-
-  BLOCKED_BACKEND_QUOTE_CONTRACT_MISSING. Repo-truth validation: no backend quote route,
-  no Prisma quote model, no quote service methods. Phase 1C (Design/Schema/Service/Route) NOT_STARTED.
-  No frontend implementation performed. Governance + control files only.
+  DESIGN_COMPLETE. PLANNING_ONLY packet. No backend or frontend code written.
+  Full Phase 1C design: dedicated quote model, feature gate, service method, invite-anchored route,
+  RFQ status transition ISSUED→QUOTED. 8 open decisions require Paresh authorization before Packet 11.
 note_on_pending_verification: >-
-  TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 BLOCKED (2026-05-11).
-  FE-8 supplier quote UI blocked: backend quote contract absent.
-  No code changes. Governance doc created. Backend prerequisite: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-BACKEND-001.
+  TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001 DESIGN_COMPLETE (2026-05-11).
+  Phase 1C Packet 10 complete. PLANNING_ONLY — no code changes.
+  Next required: Paresh authorization on 8 open decisions (Q-1 through Q-8),
+  then Packet 11 (Schema), Packet 12 (Service), Packet 13 (Route) before FE-8 unblock.
+  FE-8 BLOCKED status unchanged.
   Active delivery unit: HOLD_FOR_AUTHORIZATION (UNCHANGED).
   DPP launch authorization: HOLD_FOR_PARESH_DECISION (UNCHANGED).
-  FE-8 remains BLOCKED until backend quote prerequisite is authorized and delivered.
-  Prior: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001 VERIFIED_COMPLETE (FE-7, 037eeb9).
+  Prior: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 BLOCKED (82ba96e, 2026-05-11).
+  Pre-prior: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001 VERIFIED_COMPLETE (FE-7, 037eeb9).
 dpp_passport_network_readiness: PRODUCTION_READY
 dpp_readiness_authority: TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002
 dpp_readiness_commit: 17c252c

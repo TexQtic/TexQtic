@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-22 (B2C browse governance close — VERIFIED_COMPLETE)
+**Last Updated:** 2026-05-11 (FE-8 carry-forward: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 BLOCKED; Phase 1C design complete; backend Packets 11–13 pending authorization)
 
 > Read this file after `NEXT-ACTION.md`. It records only current blockers, holds, and governance
 > exceptions relevant to live Layer 0 posture. It does not originate ordinary product delivery
@@ -14,7 +14,7 @@
 
 | Item | Status | Posture |
 | --- | --- | --- |
-| `None` | `CLEAR` | No current live product blocker is recorded in this closeout pass. |
+| `TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001` | `BLOCKED_BACKEND_QUOTE_CONTRACT_MISSING` | FE-8 supplier quote UI blocked. Backend Phase 1C (Packets 11–13) not yet delivered. Unblocked when Packets 11 (Schema) + 12 (Service) + 13 (Route) complete and Paresh authorizes FE-8. Design authority: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001 DESIGN_COMPLETE. |
 
 ## Section 2 — HOLDS / REVIEW-UNKNOWN
 

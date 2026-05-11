@@ -5,6 +5,35 @@
 
 ---
 
+## 2026-05-11 — DESIGN_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001
+Type:          PLANNING_ONLY — DESIGN_COMPLETE
+Status:        DESIGN_COMPLETE
+Date:          2026-05-11
+Tracker:       Packet 10 (Phase 1C)
+Predecessor:   TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 (BLOCKED, 82ba96e)
+
+Design output: Backend supplier quote contract for Phase 1C.
+               New model: NetworkPoolRfqSupplierQuote (dedicated table — Open Decision Q-2)
+               New table: network_pool_rfq_supplier_quotes
+               New feature gate: nc.procurement_pools.supplier_quotes.enabled
+               New middleware: ncPoolSupplierQuoteFeatureGate.middleware.ts
+               Route path: POST /supplier-rfq-invites/:inviteId/quote (invite-anchored — Open Decision Q-1)
+               Service methods: submitQuote (Phase 1C); withdrawQuote deferred (Q-3)
+               RFQ transition: ISSUED → QUOTED on first SUBMITTED quote (direct tx, QD-7)
+               QD-1 through QD-8 locked Phase 1C decisions recorded
+               8 open decisions flagged — require Paresh authorization before Packet 11
+
+No code changed:  PLANNING_ONLY — governance doc + control files only
+Next packets:     11 (Schema), 12 (Service), 13 (Route)
+DPP posture:      UNCHANGED — active_delivery_unit: HOLD_FOR_AUTHORIZATION
+                  dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
+```
+
+---
+
 ## 2026-05-11 — BLOCKED: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001
 
 ```
