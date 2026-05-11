@@ -5,6 +5,34 @@
 
 ---
 
+## 2026-05-12 -- BLOCKED: TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-001
+
+`
+Unit:          TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-001
+Type:          REMOTE_DB_MIGRATION_DEPLOYMENT
+Status:        BLOCKED
+Date:          2026-05-12
+
+Deployment attempted: pnpm exec prisma migrate deploy (authorized by Paresh)
+
+Failure:
+  Migration 20260530000000_nc_pool_supplier_invite_feature_flag_seed FAILED with P3018.
+  Root cause: nc.procurement_pools.supplier_invites.enabled pre-exists in remote
+    public.feature_flags with enabled=true.
+  INSERT...ON CONFLICT DO NOTHING was a no-op; post-flight RAISE EXCEPTION aborted.
+  Prisma ledger: 20260530000000 recorded as FAILED in _prisma_migrations.
+  Migrations 20260531000000 + 20260532000000 remain pending/blocked.
+
+Resolution options (require explicit Paresh authorization):
+  Option A: prisma migrate resolve --applied 20260530000000... (flag stays enabled=true)
+  Option B: reset flag to enabled=false + resolve --rolled-back + retry deploy
+  Option C: investigate flag origin first, then choose A or B
+
+Governance posture: UNCHANGED (all dpp_* keys and active_delivery_unit HOLD_FOR_PARESH_DECISION)
+`
+
+---
+
 ## 2026-05-12 -- BLOCKER_EMITTED: TEXQTIC-NC-REMOTE-DB-PRISMA-LEDGER-RECONCILIATION-001
 
 ```

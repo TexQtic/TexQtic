@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (TEXQTIC-NC-REMOTE-DB-PRISMA-LEDGER-RECONCILIATION-001 — BLOCKED. 3 migrations undeployed to remote Supabase DB. Migration deployment authorization required from Paresh. Packet 12 (Service) HOLD_FOR_PARESH_DECISION. DPP posture: HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-05-12 (TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-001 — BLOCKED. Migration 20260530000000 FAILED on deploy: nc.procurement_pools.supplier_invites.enabled pre-exists in remote DB with enabled=true. Prisma ledger: failed record. Options A/B/C require Paresh decision. Packet 12 HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,13 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-001 BLOCKED (2026-05-12).
+  Deployment authorized and attempted. Migration 20260530000000_nc_pool_supplier_invite_feature_flag_seed FAILED with P3018.
+  Root cause: nc.procurement_pools.supplier_invites.enabled pre-exists in remote public.feature_flags with enabled=true.
+  INSERT...ON CONFLICT DO NOTHING was no-op; post-flight assertion raised P0001. Prisma ledger: 20260530000000 FAILED.
+  Migrations 20260531000000 + 20260532000000 remain blocked/pending.
+  Resolution: Option A (resolve --applied) / Option B (reset flag + retry) / Option C (investigate first) — all require explicit Paresh authorization.
+  See governance/TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-001.md §5.
 - TEXQTIC-NC-REMOTE-DB-PRISMA-LEDGER-RECONCILIATION-001 BLOCKED (2026-05-12).
   Audit-only pass: verify all NC SQL migrations deployed to remote Supabase DB. Stop condition hit.
   3 migrations on disk but NOT deployed: 20260530000000_nc_pool_supplier_invite_feature_flag_seed,
