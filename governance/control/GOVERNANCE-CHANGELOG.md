@@ -5,6 +5,41 @@
 
 ---
 
+## 2026-05-11 — VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-GOV-CLOSE-002
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-GOV-CLOSE-002
+Type:          PROD_VERIFY_GOVERNANCE_CLOSE
+Status:        VERIFIED_COMPLETE — ALL GATES PASSED
+Date:          2026-05-11
+Supersedes:    GOV-CLOSE-001 (PROD_VERIFICATION_PARTIAL_BLOCKED)
+Paresh E2E decision: E2E supplier-invite coverage is NOT a gate for backend close.
+                     Recorded as future FE-7 / runtime QA requirement.
+
+Implementation commit: 4cd7c0a feat(network-commerce): add supplier invite supplier routes
+Recovery commit:       824ca20 test(network-commerce): recover supplier invite production verification tests
+
+Static checks: prisma validate PASS | prisma generate PASS | server tsc PASS | typecheck PASS
+
+SRI (supplier invite integration):  11/11 PASS (146.57s, EXIT:0) — commit 4cd7c0a (unmodified)
+ORI (owner invite integration):     50/50 PASS (419.24s, EXIT:0) — commit 824ca20 (batched flag setup)
+DLT (pool demand lines integration): 77/77 PASS (510.73s, EXIT:0) — commit 824ca20 (removed immutable teardown)
+
+Production probes (carry-forward from GOV-CLOSE-001; code unchanged at origin/main = 4cd7c0a):
+  All 4 routes → 401 unauthenticated PASS
+  Authenticated → 200 + 3 OPEN invites + OD-5 (metadataInternalJson absent) PASS
+  Feature gate OD-6 active in production PASS
+
+ORI failure note: Two earlier runs (46/50, 49/50) failed when run immediately after SRI due to
+  Supabase pooler connection reclaim latency (SRI issues 66+ separate DB transactions).
+  Run 3 executed after ~19 min cooldown → 50/50 PASS. Environmental constraint, not a regression.
+
+Governance posture: UNCHANGED — active_delivery_unit HOLD_FOR_AUTHORIZATION;
+  dpp_launch_authorization HOLD_FOR_PARESH_DECISION.
+
+Commit: docs(network-commerce): close supplier invite production verification
+```
+
 ## 2026-05-11 — VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-002
 
 ```

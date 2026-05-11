@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-11 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-002 — VERIFIED_COMPLETE; ORI 50/50 PASS, DLT 77/77 PASS, SRI 11/11 PASS; committed; active_delivery_unit and dpp_launch_authorization unchanged.)
+**Last Updated:** 2026-05-11 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-GOV-CLOSE-002 — VERIFIED_COMPLETE; SRI 11/11, ORI 50/50, DLT 77/77 PASS; production probes confirmed; governance close authorized; active_delivery_unit and dpp_launch_authorization unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,13 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-GOV-CLOSE-002 VERIFIED_COMPLETE (2026-05-11).
+  Supplier invite production verification closed. SRI 11/11 (147s); ORI 50/50 (419s); DLT 77/77 (511s).
+  prisma validate/generate PASS; server tsc PASS; typecheck PASS.
+  Production probes: all 4 routes → 401 unauth; authenticated → 200 + real data; OD-5 preserved.
+  E2E: C3 — not a gate per Paresh decision; recorded as future FE-7 / runtime QA requirement.
+  Governance posture unchanged: active_delivery_unit HOLD_FOR_AUTHORIZATION; dpp_launch_authorization HOLD_FOR_PARESH_DECISION.
+  Commit: docs(network-commerce): close supplier invite production verification
 - TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-002 VERIFIED_COMPLETE (2026-05-11).
   All test-infra recovery gates passed. ORI 50/50 PASS (550s); DLT 77/77 PASS (558s); SRI 11/11 PASS (155s).
   prisma validate/generate PASS; server tsc PASS; typecheck PASS. No product behavior changed.
