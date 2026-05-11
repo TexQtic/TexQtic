@@ -115,41 +115,35 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Supplier Invite Owner Route I
 
   // ─── Feature Flag Helpers ─────────────────────────────────────────────────────
 
-  async function setGlobalFlag(key: string, enabled: boolean): Promise<void> {
-    await withBypassForSeed(prisma, async tx => {
-      await tx.featureFlag.upsert({
-        where:  { key },
-        create: { key, enabled, description: `ORI test — ${key}` },
-        update: { enabled },
-      });
-    });
-  }
-
   async function removeGlobalFlag(key: string): Promise<void> {
     await withBypassForSeed(prisma, async tx => {
       await tx.featureFlag.deleteMany({ where: { key } });
     });
   }
 
-  async function enableFlagForTestTenants(key: string): Promise<void> {
+  async function ensureAllGatesEnabled(): Promise<void> {
+    // Batch all 9 flag upserts into one withBypassForSeed transaction to reduce
+    // Supabase pooler round-trips. Previously 6 separate transactions; batching
+    // prevents hookTimeout under Supabase load at 50-test depth.
+    // (recovery packet: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-001)
     await withBypassForSeed(prisma, async tx => {
-      for (const orgId of [ownerOrgId, otherOrgId, supplierOrgId]) {
-        await tx.tenantFeatureOverride.upsert({
-          where:  { tenantId_key: { tenantId: orgId, key } },
-          create: { tenantId: orgId, key, enabled: true },
+      for (const key of [poolFeatureFlagKey, rfqFeatureFlagKey, inviteFeatureFlagKey]) {
+        await tx.featureFlag.upsert({
+          where:  { key },
+          create: { key, enabled: true, description: `ORI test — ${key}` },
           update: { enabled: true },
         });
       }
+      for (const key of [poolFeatureFlagKey, rfqFeatureFlagKey, inviteFeatureFlagKey]) {
+        for (const orgId of [ownerOrgId, otherOrgId, supplierOrgId]) {
+          await tx.tenantFeatureOverride.upsert({
+            where:  { tenantId_key: { tenantId: orgId, key } },
+            create: { tenantId: orgId, key, enabled: true },
+            update: { enabled: true },
+          });
+        }
+      }
     });
-  }
-
-  async function ensureAllGatesEnabled(): Promise<void> {
-    await setGlobalFlag(poolFeatureFlagKey,   true);
-    await setGlobalFlag(rfqFeatureFlagKey,    true);
-    await setGlobalFlag(inviteFeatureFlagKey, true);
-    await enableFlagForTestTenants(poolFeatureFlagKey);
-    await enableFlagForTestTenants(rfqFeatureFlagKey);
-    await enableFlagForTestTenants(inviteFeatureFlagKey);
   }
 
   // ─── Fixture Helpers ──────────────────────────────────────────────────────────
@@ -373,15 +367,25 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Supplier Invite Owner Route I
 
     await withBypassForSeed(prisma, async tx => {
       if (poolIds.length > 0) {
-        // FK order: invites → rfq_lines → rfqs → snapshot_lines → snapshots → demand_lines → memberships → pools
+        // Test-harness cleanup alignment with immutable DB semantics (recovery packet:
+        // TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-001):
+        //
+        // network_pool_demand_snapshot_lines is immutable after insert — trigger
+        // prevent_snapshot_line_mutation raises P0001 on any UPDATE or DELETE.
+        // Attempting deleteMany on this table, or on any parent table whose FK has
+        // onDelete:Cascade to it (network_pool_demand_snapshots, network_pool_demand_lines,
+        // network_pools), causes the entire withBypassForSeed transaction to abort. Over 50
+        // tests this accumulates un-returned connections and exhausts the Supabase pooler.
+        //
+        // Only delete rows not bound by the immutability constraint. Snapshot-scoped rows
+        // (snapshot_lines, snapshots, demand_lines, pools) are left in DB — they are scoped
+        // to test-run UUIDs and do not affect subsequent test correctness.
         await tx.networkPoolRfqSupplierInvite.deleteMany({ where: { poolId: { in: poolIds } } });
         await tx.networkPoolRfqLine.deleteMany({ where: { poolId: { in: poolIds } } });
         await tx.networkPoolRfq.deleteMany({ where: { poolId: { in: poolIds } } });
-        await tx.networkPoolDemandSnapshotLine.deleteMany({ where: { poolId: { in: poolIds } } });
-        await tx.networkPoolDemandSnapshot.deleteMany({ where: { poolId: { in: poolIds } } });
-        await tx.networkPoolDemandLine.deleteMany({ where: { poolId: { in: poolIds } } });
         await tx.networkPoolMembership.deleteMany({ where: { poolId: { in: poolIds } } });
-        await tx.networkPool.deleteMany({ where: { id: { in: poolIds } } });
+        // networkPoolDemandSnapshotLine, networkPoolDemandSnapshot, networkPoolDemandLine,
+        // and networkPool intentionally omitted — immutable trigger prevents cleanup.
       }
 
       await tx.tenantFeatureOverride.deleteMany({
@@ -413,14 +417,14 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Supplier Invite Owner Route I
       const allPoolIds = pools.map((p: { id: string }) => p.id);
 
       if (allPoolIds.length > 0) {
+        // Immutable snapshot-line guard: same constraint as afterEach.
+        // Only delete rows not bound by the prevent_snapshot_line_mutation trigger.
         await tx.networkPoolRfqSupplierInvite.deleteMany({ where: { poolId: { in: allPoolIds } } });
         await tx.networkPoolRfqLine.deleteMany({ where: { poolId: { in: allPoolIds } } });
         await tx.networkPoolRfq.deleteMany({ where: { poolId: { in: allPoolIds } } });
-        await tx.networkPoolDemandSnapshotLine.deleteMany({ where: { poolId: { in: allPoolIds } } });
-        await tx.networkPoolDemandSnapshot.deleteMany({ where: { poolId: { in: allPoolIds } } });
-        await tx.networkPoolDemandLine.deleteMany({ where: { poolId: { in: allPoolIds } } });
         await tx.networkPoolMembership.deleteMany({ where: { poolId: { in: allPoolIds } } });
-        await tx.networkPool.deleteMany({ where: { id: { in: allPoolIds } } });
+        // networkPoolDemandSnapshotLine, networkPoolDemandSnapshot, networkPoolDemandLine,
+        // and networkPool intentionally omitted — immutable trigger prevents cleanup.
       }
 
       // Restore feature flag states

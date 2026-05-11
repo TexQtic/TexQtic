@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-10 (TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CURRENT-STATE-SYNC-002 — VERIFIED_COMPLETE; main NC tracker reconciled to v1.4 FE-6-synced truth. FE-7 remains backend-blocked. Next recommended backend packet: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-SUPPLIER-ROUTE-001 HOLD_FOR_PARESH_DECISION.)
+**Last Updated:** 2026-05-11 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-002 — VERIFIED_COMPLETE; ORI 50/50 PASS, DLT 77/77 PASS, SRI 11/11 PASS; committed; active_delivery_unit and dpp_launch_authorization unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,32 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-002 VERIFIED_COMPLETE (2026-05-11).
+  All test-infra recovery gates passed. ORI 50/50 PASS (550s); DLT 77/77 PASS (558s); SRI 11/11 PASS (155s).
+  prisma validate/generate PASS; server tsc PASS; typecheck PASS. No product behavior changed.
+  E2E: C3 — not a gate per Paresh decision; recorded as future FE-7 / runtime QA requirement.
+  Commit: test(network-commerce): recover supplier invite production verification tests.
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged). dpp_launch_authorization: HOLD_FOR_PARESH_DECISION (unchanged).
+  Original production close packet (PROD-VERIFY-GOV-CLOSE-001) remains NOT closed until re-run.
+- TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-001 PARTIAL_BLOCKED (2026-05-11).
+  Scope A (ORI): poolRfqInvites.integration.test.ts 50/50 PASS achieved. Root cause: immutable `prevent_snapshot_line_mutation`
+  trigger blocking afterEach deleteMany + multi-txn ensureAllGatesEnabled causing hookTimeout. Fix applied: removed 4 blocked
+  deleteMany calls; batched gate-enable from 6 txns to 1. Verified 479.91s EXIT:0. NOT committed (Scope B still failing).
+  Scope B (DLT): pools.demandLines.integration.test.ts 74/77 FAIL. Same root cause; fix documented and ready.
+  Blocker: file not in current allowlist. Allowlist expansion required.
+  Scope C (E2E): No Playwright spec covers supplier invite / pool RFQ domain (C3 gap). Paresh decision required.
+  NO COMMIT MADE. active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged). dpp_launch_authorization: HOLD_FOR_PARESH_DECISION (unchanged).
+  Recovery packet required: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-002.
+- TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-GOV-CLOSE-001 PROD_VERIFICATION_PARTIAL_BLOCKED_ON_TEST_INFRA_AND_E2E (2026-05-11).
+  Governance close attempted for supplier invite backend chain (commit 4cd7c0a). NOT AUTHORIZED.
+  Blockers: (1) poolRfqInvites.integration.test.ts 48/50 and 49/50 across two runs — 50/50 clean pass not achieved;
+  (2) pools.demandLines.integration.test.ts terminated without test summary (DLT-29 of 77); (3) Playwright/E2E production
+  runtime validation not completed (no test:e2e script, no auth credentials).
+  Partial evidence preserved: 4 routes confirmed live in production (401 unauth, 200 authenticated with real data);
+  SRI 11/11 PASS; middleware/service/state-machine unit tests all PASS; TypeScript clean.
+  Recovery packet required: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-001.
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged). dpp_launch_authorization: HOLD_FOR_PARESH_DECISION (unchanged).
+  FE-7 status: NOT updated — backend supplier routes exist in production but governance close not authorized.
 - TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CURRENT-STATE-SYNC-002 VERIFIED_COMPLETE (2026-05-10).
   Main tracker updated v1.3 → v1.4: RECONCILED — FRONTEND_FE6_SYNCED.
   Reconciliation now records FE-4, FE-5, runtime routing test-sync, and FE-6 as completed in repo truth.

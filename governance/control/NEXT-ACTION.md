@@ -39,6 +39,14 @@ last_closed_unit_closure_basis: >-
   VERIFIED_COMPLETE. Governance closure records technical production-readiness based on PROD-AUDIT-002.
   All 5 PROD-AUDIT-001 limitations resolved. 43 E2E / ~639 unit tests / TS CLEAN.
   Launch authorization explicitly held for Paresh decision.
+note_on_pending_verification: >-
+  TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-GOV-CLOSE-001 attempted 2026-05-11.
+  Status: PROD_VERIFICATION_PARTIAL_BLOCKED_ON_TEST_INFRA_AND_E2E. NOT closed.
+  Recovery-001: PARTIAL_BLOCKED (ORI fixed, DLT blocked).
+  Recovery-002: VERIFIED_COMPLETE (2026-05-11). ORI 50/50 + DLT 77/77 + SRI 11/11 PASS.
+  Committed: test(network-commerce): recover supplier invite production verification tests.
+  E2E: C3 — not a gate per Paresh. Recorded as future FE-7 / runtime QA requirement.
+  Original production close packet remains NOT closed until re-run after this recovery.
 dpp_passport_network_readiness: PRODUCTION_READY
 dpp_readiness_authority: TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002
 dpp_readiness_commit: 17c252c

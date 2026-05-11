@@ -5,6 +5,101 @@
 
 ---
 
+## 2026-05-11 — VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-002
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-002
+Type:          TEST_INFRA_RECOVERY
+Status:        VERIFIED_COMPLETE — ALL GATES PASSED
+Date:          2026-05-11
+Paresh E2E decision: E2E supplier-invite coverage is NOT a gate for backend close.
+                     Recorded as future FE-7 / runtime QA requirement.
+
+Scope A — poolRfqInvites.integration.test.ts: 50/50 PASS (550.14s, EXIT:0)
+Scope B — pools.demandLines.integration.test.ts: 77/77 PASS (557.90s, EXIT:0)
+  Fix: removed 4 blocked deleteMany (snapshotLine/snapshot/demandLine/pool cascade chain);
+       batched ensureLockGatesEnabled from 4 txns to 1; removed 4 dead helpers
+       (setGlobalPoolFlag(bool) kept — still called from DLT-02/03/04).
+Scope C — E2E: C3 — not a gate per Paresh decision.
+
+SRI: 11/11 PASS (155.23s, EXIT:0)
+prisma validate: PASS | prisma generate: PASS | server tsc: PASS | typecheck: PASS
+
+Commit: test(network-commerce): recover supplier invite production verification tests
+Files changed: pools.demandLines.integration.test.ts + poolRfqInvites.integration.test.ts
+               (carried from RECOVERY-001) + governance docs.
+```
+
+## 2026-05-11 — RECOVERY_PARTIAL_BLOCKED: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-001
+Type:          TEST_INFRA_RECOVERY (PARTIAL)
+Status:        SCOPE_A_RESOLVED_SCOPE_B_NEEDS_ALLOWLIST_EXPANSION
+Date:          2026-05-11
+Implementation commit: NONE (stop condition 2 triggered — DLT 74/77)
+
+Scope A — poolRfqInvites.integration.test.ts: RESOLVED
+  Root cause: prevent_snapshot_line_mutation / prevent_rfq_line_mutation DB triggers raise
+  P0001 unconditionally on UPDATE/DELETE, aborting the withBypassForSeed tx in afterEach/afterAll.
+  Secondary: ensureAllGatesEnabled made 6 txns per afterEach call, causing hookTimeout exhaustion.
+  Fix: (1) Removed 4 blocked deleteMany calls (snapshotLine, snapshot, demandLine, pool) from
+       afterEach and afterAll. (2) Batched ensureAllGatesEnabled from 6 txns to 1 withBypassForSeed.
+       (3) Deleted now-unused setGlobalFlag and enableFlagForTestTenants helpers.
+  Result: 50/50 PASS, 479.91s (EXIT:0)
+  File modified: server/src/routes/tenant/poolRfqInvites.integration.test.ts (NOT committed)
+
+Scope B — pools.demandLines.integration.test.ts: BLOCKED
+  Identical root cause confirmed. DLT run: 74/77 FAIL — DLT-26, DLT-45, DLT-67 hookTimeout.
+  Fix documented and ready. File NOT in current allowlist.
+  Required: Allowlist expansion for pools.demandLines.integration.test.ts in next packet.
+
+Scope C — Playwright/E2E: C3 — no supplier invite / pool RFQ spec exists
+  Decision required: Is E2E coverage a gate for VERIFIED_COMPLETE?
+
+NO COMMIT MADE.
+```
+
+## 2026-05-11 — PROD_VERIFY_PARTIAL_BLOCKED: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-GOV-CLOSE-001
+
+```
+Unit:          TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-GOV-CLOSE-001
+Type:          PROD_VERIFY_GOVERNANCE_CLOSE (ATTEMPTED — NOT AUTHORIZED)
+Status:        PROD_VERIFICATION_PARTIAL_BLOCKED_ON_TEST_INFRA_AND_E2E
+Date:          2026-05-11
+Implementation commit: 4cd7c0a feat(network-commerce): add supplier invite supplier routes
+
+Blockers (governance close not authorized):
+  1. poolRfqInvites.integration.test.ts — 48/50 (run 1) and 49/50 (run 1b). 50/50 clean pass
+     not achieved. Failures caused by Supabase pooler exhaustion at ~810s from immutable-table
+     (network_pool_demand_snapshot_lines) teardown errors. Individual test isolation proof exists
+     (ORI-21 PASS alone) but does not substitute for a full clean suite pass.
+  2. pools.demandLines.integration.test.ts — process terminated at DLT-29 of 77 without a
+     test summary. No confirmed 77/77 result in current session.
+  3. Playwright/E2E production runtime validation not completed — no test:e2e script, no
+     .auth credentials for automated Playwright auth.
+
+Partial evidence preserved (useful for recovery packet):
+  Production probes: all 4 routes 401 unauthenticated; GET /supplier-rfq-invites 200 with
+    3 OPEN real invites; GET /supplier-rfq-invites/:id 200 with detail + accept/decline surface
+  SRI integration: 11/11 PASS (~145s)
+  Service unit: 117/117 PASS; middleware unit: 11/11 + 16/16 PASS
+  pools.integration: 56/56 PASS; stateMachine: 33/33 PASS
+  prisma validate + generate: PASS; pnpm run typecheck: PASS (zero errors)
+
+Recovery packet required:
+  TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-001
+  Purpose: fix teardown guard, achieve 50/50 + 77/77 in fresh sessions, resolve E2E path
+
+Governance posture preserved:
+  active_delivery_unit: HOLD_FOR_AUTHORIZATION (unchanged)
+  dpp_launch_authorization: HOLD_FOR_PARESH_DECISION (unchanged)
+  FE-7 status: NOT updated (governance close not authorized)
+  Commit: NO COMMIT MADE for this packet
+```
+
+---
+
 ## 2026-05-10 — TRACKER_FRONTEND_FE6_SYNCED: TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CURRENT-STATE-SYNC-002
 
 ```

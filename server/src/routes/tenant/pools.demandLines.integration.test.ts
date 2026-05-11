@@ -120,69 +120,40 @@ describe.skipIf(!hasDb)('Network Commerce Demand Line Routes Integration', () =>
     });
   }
 
-  async function enablePoolGateForTestTenants(): Promise<void> {
-    await withBypassForSeed(prisma, async tx => {
-      const orgIds = [ownerOrgId, otherOrgId];
-      for (const orgId of orgIds) {
-        await tx.tenantFeatureOverride.upsert({
-          where: {
-            tenantId_key: {
-              tenantId: orgId,
-              key: poolFeatureFlagKey,
-            },
-          },
-          create: {
-            tenantId: orgId,
-            key: poolFeatureFlagKey,
-            enabled: true,
-          },
-          update: { enabled: true },
-        });
-      }
-    });
-  }
-
-  async function ensureGateEnabled(): Promise<void> {
-    await setGlobalPoolFlag(true);
-    await enablePoolGateForTestTenants();
-  }
-
-  async function setGlobalRfqFlag(enabled: boolean): Promise<void> {
-    await withBypassForSeed(prisma, async tx => {
-      await tx.featureFlag.upsert({
-        where: { key: rfqFeatureFlagKey },
-        create: {
-          key: rfqFeatureFlagKey,
-          enabled,
-          description: 'NC pool RFQ sub-flag (integration test)',
-        },
-        update: { enabled },
-      });
-    });
-  }
-
   async function removeGlobalRfqFlag(): Promise<void> {
     await withBypassForSeed(prisma, async tx => {
       await tx.featureFlag.deleteMany({ where: { key: rfqFeatureFlagKey } });
     });
   }
 
-  async function enableRfqGateForTestTenants(): Promise<void> {
+  /**
+   * Batch all 6 gate upserts into a single withBypassForSeed transaction.
+   * RECOVERY-002 fix: replaced 4 separate transactions (ensureGateEnabled ×2 +
+   * setGlobalRfqFlag + enableRfqGateForTestTenants) with 1 combined transaction
+   * to prevent hookTimeout under Supabase network latency.
+   * Ref: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-001 §4
+   */
+  async function ensureLockGatesEnabled(): Promise<void> {
     await withBypassForSeed(prisma, async tx => {
-      for (const orgId of [ownerOrgId, otherOrgId]) {
-        await tx.tenantFeatureOverride.upsert({
-          where: { tenantId_key: { tenantId: orgId, key: rfqFeatureFlagKey } },
-          create: { tenantId: orgId, key: rfqFeatureFlagKey, enabled: true },
+      // Global feature flags
+      for (const key of [poolFeatureFlagKey, rfqFeatureFlagKey]) {
+        await tx.featureFlag.upsert({
+          where: { key },
+          create: { key, enabled: true, description: `NC DLT gate (${key})` },
           update: { enabled: true },
         });
       }
+      // Tenant overrides for ownerOrgId and otherOrgId (no supplierOrgId in DLT)
+      for (const key of [poolFeatureFlagKey, rfqFeatureFlagKey]) {
+        for (const orgId of [ownerOrgId, otherOrgId]) {
+          await tx.tenantFeatureOverride.upsert({
+            where: { tenantId_key: { tenantId: orgId, key } },
+            create: { tenantId: orgId, key, enabled: true },
+            update: { enabled: true },
+          });
+        }
+      }
     });
-  }
-
-  async function ensureLockGatesEnabled(): Promise<void> {
-    await ensureGateEnabled();
-    await setGlobalRfqFlag(true);
-    await enableRfqGateForTestTenants();
   }
 
   /** Create a pool row directly via bypass for use as a test fixture. */
@@ -308,12 +279,14 @@ describe.skipIf(!hasDb)('Network Commerce Demand Line Routes Integration', () =>
     createdPoolIds.clear();
 
     await withBypassForSeed(prisma, async tx => {
+      // networkPoolDemandSnapshotLine, networkPoolDemandSnapshot, networkPoolDemandLine,
+      // and networkPool are intentionally NOT deleted here. The prevent_snapshot_line_mutation
+      // trigger raises P0001 unconditionally on UPDATE/DELETE against
+      // network_pool_demand_snapshot_lines, aborting the tx. Records are keyed by per-test-run
+      // random UUIDs and do not affect subsequent runs.
+      // Ref: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-001 §2
       if (poolIds.length > 0) {
-        await tx.networkPoolDemandSnapshotLine.deleteMany({ where: { poolId: { in: poolIds } } });
-        await tx.networkPoolDemandSnapshot.deleteMany({ where: { poolId: { in: poolIds } } });
-        await tx.networkPoolDemandLine.deleteMany({ where: { poolId: { in: poolIds } } });
         await tx.networkPoolMembership.deleteMany({ where: { poolId: { in: poolIds } } });
-        await tx.networkPool.deleteMany({ where: { id: { in: poolIds } } });
       }
 
       await tx.tenantFeatureOverride.deleteMany({
@@ -346,12 +319,14 @@ describe.skipIf(!hasDb)('Network Commerce Demand Line Routes Integration', () =>
       });
       const allPoolIds = pools.map((p: { id: string }) => p.id);
 
+      // networkPoolDemandSnapshotLine, networkPoolDemandSnapshot, networkPoolDemandLine,
+      // and networkPool are intentionally NOT deleted here. The prevent_snapshot_line_mutation
+      // trigger raises P0001 unconditionally on UPDATE/DELETE against
+      // network_pool_demand_snapshot_lines, aborting the tx. Records are keyed by per-test-run
+      // random UUIDs and do not affect subsequent runs.
+      // Ref: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-TEST-INFRA-RECOVERY-001 §2
       if (allPoolIds.length > 0) {
-        await tx.networkPoolDemandSnapshotLine.deleteMany({ where: { poolId: { in: allPoolIds } } });
-        await tx.networkPoolDemandSnapshot.deleteMany({ where: { poolId: { in: allPoolIds } } });
-        await tx.networkPoolDemandLine.deleteMany({ where: { poolId: { in: allPoolIds } } });
         await tx.networkPoolMembership.deleteMany({ where: { poolId: { in: allPoolIds } } });
-        await tx.networkPool.deleteMany({ where: { id: { in: allPoolIds } } });
       }
 
       await tx.tenantFeatureOverride.deleteMany({
