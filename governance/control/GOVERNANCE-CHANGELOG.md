@@ -5,6 +5,16 @@
 
 ---
 
+## 2026-05-12 -- INVESTIGATION_COMPLETE: TEXQTIC-NC-REMOTE-DB-MIGRATION-FLAG-COLLISION-INVESTIGATION-001
+
+SELECT-only investigation of migration 20260530000000 flag collision.
+Evidence: nc.procurement_pools.supplier_invites.enabled EXISTS, enabled=true, created 2026-05-11 ~13:58 UTC (ORI production testing).
+Zero tenant_feature_overrides. nc.procurement_pools.supplier_quotes.enabled ABSENT (no collision on 20260532000000).
+Prisma ledger: 20260530000000 FAILED (applied_steps_count=0, finished_at=null); 20260531000000 + 20260532000000 not in ledger.
+Middleware confirmed: global enabled=true = allow-all (production 200 probe with zero overrides).
+Recommendation: Option A -- resolve --applied + redeploy. Awaiting Paresh authorization.
+Governance doc: governance/TEXQTIC-NC-REMOTE-DB-MIGRATION-FLAG-COLLISION-INVESTIGATION-001.md
+
 ## 2026-05-12 -- BLOCKED: TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-001
 
 `

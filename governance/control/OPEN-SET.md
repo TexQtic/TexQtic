@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-001 — BLOCKED. Migration 20260530000000 FAILED on deploy: nc.procurement_pools.supplier_invites.enabled pre-exists in remote DB with enabled=true. Prisma ledger: failed record. Options A/B/C require Paresh decision. Packet 12 HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-05-12 (TEXQTIC-NC-REMOTE-DB-MIGRATION-FLAG-COLLISION-INVESTIGATION-001 — INVESTIGATION_COMPLETE. Flag manually activated 2026-05-11 ~13:58 UTC during ORI production testing; enabled=true; zero tenant overrides; supplier_quotes flag absent — no collision on 20260532000000. Option A recommended: resolve --applied + redeploy. Awaiting Paresh authorization. Packet 12 HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,8 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-REMOTE-DB-MIGRATION-FLAG-COLLISION-INVESTIGATION-001 INVESTIGATION_COMPLETE (2026-05-12).
+  SELECT-only investigation of flag collision on migration 20260530000000. Evidence: flag nc.procurement_pools.supplier_invites.enabled created 2026-05-11 ~13:58 UTC (ORI production testing); enabled=true; zero tenant_feature_overrides; middleware treats global enabled=true as allow-all (production 200 probe confirmed with no overrides). Supplier quotes flag absent — no collision on 20260532000000. Prisma ledger: 20260530000000 FAILED (applied_steps_count=0); 20260531000000 + 20260532000000 not in ledger. RECOMMENDED: Option A — resolve --applied + redeploy. See governance/TEXQTIC-NC-REMOTE-DB-MIGRATION-FLAG-COLLISION-INVESTIGATION-001.md §12.
 - TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-001 BLOCKED (2026-05-12).
   Deployment authorized and attempted. Migration 20260530000000_nc_pool_supplier_invite_feature_flag_seed FAILED with P3018.
   Root cause: nc.procurement_pools.supplier_invites.enabled pre-exists in remote public.feature_flags with enabled=true.
