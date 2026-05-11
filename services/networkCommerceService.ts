@@ -546,3 +546,85 @@ export function cancelSupplierInvite(
     },
   );
 }
+
+// ─── FE-7 Supplier Invite Inbox Methods ──────────────────────────────────────
+
+/**
+ * Supplier-safe invite record returned by supplier inbox routes.
+ * OD-5: owner_org_id, cancel_reason, invited_by_user_id, metadataInternalJson excluded by backend.
+ */
+export interface SupplierInviteInboxItem {
+  id: string;
+  invite_ref: string;
+  /** OD-2: Effective status — may be EXPIRED even if DB status is PENDING. */
+  status: string;
+  invited_at: string;
+  accepted_at: string | null;
+  declined_at: string | null;
+  expires_at: string | null;
+  supplier_message: string | null;
+  /** RFQ aggregate header — null on list responses; populated on detail view. */
+  rfq_ref: string | null;
+  rfq_version: number | null;
+  rfq_status: string | null;
+  issued_at: string | null;
+  response_deadline_at: string | null;
+  issue_basis: string | null;
+  line_count: number | null;
+  total_qty: string | null;
+  qty_unit: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AcceptInviteInput {
+  note?: string | null;
+}
+
+export interface DeclineInviteInput {
+  declineReason?: string | null;
+}
+
+/**
+ * List all incoming supplier RFQ invites for the current supplier tenant.
+ */
+export function listIncomingSupplierInvites(): Promise<SupplierInviteInboxItem[]> {
+  return tenantGet<SupplierInviteInboxItem[]>(
+    '/api/tenant/network-commerce/supplier-rfq-invites',
+  );
+}
+
+/**
+ * View detail for a single incoming invite (includes RFQ aggregate header).
+ */
+export function viewIncomingSupplierInvite(inviteId: string): Promise<SupplierInviteInboxItem> {
+  return tenantGet<SupplierInviteInboxItem>(
+    `/api/tenant/network-commerce/supplier-rfq-invites/${inviteId}`,
+  );
+}
+
+/**
+ * Accept an incoming PENDING invite.
+ */
+export function acceptIncomingSupplierInvite(
+  inviteId: string,
+  input?: AcceptInviteInput,
+): Promise<SupplierInviteInboxItem> {
+  return tenantPost<SupplierInviteInboxItem>(
+    `/api/tenant/network-commerce/supplier-rfq-invites/${inviteId}/accept`,
+    { note: input?.note ?? null },
+  );
+}
+
+/**
+ * Decline an incoming PENDING invite.
+ */
+export function declineIncomingSupplierInvite(
+  inviteId: string,
+  input?: DeclineInviteInput,
+): Promise<SupplierInviteInboxItem> {
+  return tenantPost<SupplierInviteInboxItem>(
+    `/api/tenant/network-commerce/supplier-rfq-invites/${inviteId}/decline`,
+    { declineReason: input?.declineReason ?? null },
+  );
+}

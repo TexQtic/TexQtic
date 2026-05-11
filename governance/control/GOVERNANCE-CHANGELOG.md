@@ -5,6 +5,32 @@
 
 ---
 
+## 2026-05-11 — VERIFIED_COMPLETE: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001
+
+```
+Unit:          TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001
+Type:          FRONTEND_IMPLEMENTATION
+Status:        VERIFIED_COMPLETE
+Date:          2026-05-11
+Prerequisite:  GOV-CLOSE-002 (2ae2bbb) — backend supplier invite routes verified live
+
+Files changed:
+  services/networkCommerceService.ts         — 4 FE-7 service methods + 2 interfaces appended
+  components/Tenant/NetworkCommerce/SupplierInviteInbox.tsx  — NEW: supplier inbox component
+  App.tsx                                    — narrow patch: import + nc_pool_invite_inbox route wired
+  tests/frontend/network-commerce-supplier-invite-inbox.test.tsx  — NEW: 12 Vitest tests
+
+Typecheck:        PASS (0 errors)
+Frontend tests:   31/31 PASS (12 new FE-7 tests, all PASS)
+App.tsx diff:     2 hunks only (import + case replacement) — no corruption
+Privacy guard:    OD-5 verified (owner_org_id, cancel_reason, invited_by_user_id, metadataInternalJson absent)
+E2E:              C3 non-gate per Paresh ruling (established GOV-CLOSE-002)
+DPP posture:      UNCHANGED — active_delivery_unit: HOLD_FOR_AUTHORIZATION; dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
+FE-8:             HOLD_FOR_PARESH_DECISION
+```
+
+---
+
 ## 2026-05-11 — VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-GOV-CLOSE-002
 
 ```

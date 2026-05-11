@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-02 (TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 — VERIFIED_COMPLETE; DPP Passport Network PRODUCTION_READY; launch authorization HOLD_FOR_PARESH_DECISION)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-11 (TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001 — FE-7 VERIFIED_COMPLETE; DPP posture unchanged)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -27,26 +27,29 @@ active_delivery_unit_note: >
   v3 design: OPTIONAL_POLISH — no v3 implementation unit is opened by this closure.
   Do NOT open next slice without Paresh authorization.
   Full external/product launch: HOLD_FOR_PARESH_DECISION. Not authorized without explicit Paresh instruction.
-last_closed_unit: TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001
+last_closed_unit: TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  Read-only governance closure. No source changes. No test changes.
-  Authority: PROD-AUDIT-002 (commit 17c252c). All runtime evidence confirmed in that audit.
-  DPP Passport Network: PRODUCTION_READY. Launch Authorization: HOLD_FOR_PARESH_DECISION.
-  v3 Design: OPTIONAL_POLISH. Next unit: HOLD_FOR_AUTHORIZATION.
-last_closed_unit_commits: governance-only (launch-gate artifact + control file updates)
+  FE-7 supplier invite inbox frontend. Service methods: listIncomingSupplierInvites,
+  viewIncomingSupplierInvite, acceptIncomingSupplierInvite, declineIncomingSupplierInvite.
+  SupplierInviteInbox.tsx created. App.tsx nc_pool_invite_inbox route wired.
+  typecheck PASS; 31/31 frontend tests PASS (11 new FE-7 tests).
+  E2E: C3 non-gate per Paresh. Prerequisite: GOV-CLOSE-002 (2ae2bbb).
+  DPP posture unchanged: HOLD_FOR_AUTHORIZATION / HOLD_FOR_PARESH_DECISION.
+  FE-8 (supplier quote UI): HOLD_FOR_PARESH_DECISION.
+last_closed_unit_commits: feat(network-commerce): add supplier invite inbox frontend
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE. Governance closure records technical production-readiness based on PROD-AUDIT-002.
-  All 5 PROD-AUDIT-001 limitations resolved. 43 E2E / ~639 unit tests / TS CLEAN.
-  Launch authorization explicitly held for Paresh decision.
+  VERIFIED_COMPLETE. 4 service methods, new component, App.tsx patch, 11 new tests.
+  typecheck PASS; 31/31 frontend tests PASS. Privacy guard (OD-5) verified.
+  E2E C3 non-gate per Paresh ruling. DPP posture unchanged.
 note_on_pending_verification: >-
-  TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-GOV-CLOSE-002 VERIFIED_COMPLETE (2026-05-11).
-  Supersedes GOV-CLOSE-001 (PARTIAL_BLOCKED). Recovery-002: VERIFIED_COMPLETE.
-  SRI 11/11 PASS (147s); ORI 50/50 PASS (419s); DLT 77/77 PASS (511s).
-  Production probes confirmed (carry-forward from GOV-CLOSE-001: code unchanged at 4cd7c0a).
-  E2E: C3 — not a gate per Paresh. Recorded as future FE-7 / runtime QA requirement.
-  Governance close authorized. Posture unchanged: active_delivery_unit HOLD_FOR_AUTHORIZATION.
-  Commit: docs(network-commerce): close supplier invite production verification
+  TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001 VERIFIED_COMPLETE (2026-05-11).
+  FE-7 supplier invite inbox frontend complete. 4 service functions, SupplierInviteInbox.tsx,
+  App.tsx route wired. typecheck PASS; 31/31 frontend tests PASS.
+  E2E: C3 non-gate per Paresh ruling. Backend prerequisite: GOV-CLOSE-002 (2ae2bbb).
+  Active delivery unit: HOLD_FOR_AUTHORIZATION (UNCHANGED).
+  DPP launch authorization: HOLD_FOR_PARESH_DECISION (UNCHANGED).
+  FE-8 supplier quote UI: HOLD_FOR_PARESH_DECISION. Not authorized without explicit Paresh instruction.
 dpp_passport_network_readiness: PRODUCTION_READY
 dpp_readiness_authority: TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002
 dpp_readiness_commit: 17c252c

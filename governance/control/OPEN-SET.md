@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-11 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-GOV-CLOSE-002 — VERIFIED_COMPLETE; SRI 11/11, ORI 50/50, DLT 77/77 PASS; production probes confirmed; governance close authorized; active_delivery_unit and dpp_launch_authorization unchanged.)
+**Last Updated:** 2026-05-11 (TEXQTIC-NC-FRONTEND-SUPPLIER-INVITE-SUPPLIER-INBOX-001 — FE-7 VERIFIED_COMPLETE; supplier inbox service methods added (listIncomingSupplierInvites, viewIncomingSupplierInvite, acceptIncomingSupplierInvite, declineIncomingSupplierInvite), SupplierInviteInbox.tsx created, App.tsx nc_pool_invite_inbox route wired. typecheck PASS; 31/31 frontend tests PASS. DPP posture unchanged: HOLD_FOR_AUTHORIZATION / HOLD_FOR_PARESH_DECISION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or

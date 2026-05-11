@@ -73,6 +73,7 @@ import { PoolListSurface } from './components/Tenant/NetworkCommerce/PoolListSur
 import { PoolDetailSurface } from './components/Tenant/NetworkCommerce/PoolDetailSurface';
 import { DemandLineSurface } from './components/Tenant/NetworkCommerce/DemandLineSurface';
 import { PoolRfqSurface } from './components/Tenant/NetworkCommerce/PoolRfqSurface';
+import { SupplierInviteInbox } from './components/Tenant/NetworkCommerce/SupplierInviteInbox';
 import { EventStream } from './components/ControlPlane/EventStream';
 import { B2BDiscoveryPage } from './components/Public/B2BDiscovery';
 import { B2CBrowsePage } from './components/Public/B2CBrowse';
@@ -5231,11 +5232,7 @@ const App: React.FC = () => {
         );
       case 'nc_pool_invite_inbox':
         return (
-          <NetworkCommercePlaceholderSurface
-            title="Supplier Invite Inbox"
-            description="Supplier-side invite receipt and acceptance workflows. Blocked: backend supplier invite route handlers not yet implemented."
-            status="blocked"
-            blockedReason="Supplier route layer is planned for backend implementation post FE-2. Frontend wiring complete; waiting for backend supplier routes and service integration."
+          <SupplierInviteInbox
             onBack={() => navigateTenantDefaultManifestRoute()}
           />
         );
