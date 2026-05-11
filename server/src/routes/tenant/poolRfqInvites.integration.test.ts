@@ -397,8 +397,10 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Supplier Invite Owner Route I
     }).catch(() => {
       // Best-effort cleanup.
     });
-
-    await ensureAllGatesEnabled();
+    // ensureAllGatesEnabled() intentionally omitted here — beforeEach already
+    // calls it before every test, so a trailing restore in afterEach is redundant.
+    // Removing it saves one batched transaction per test (50 round-trips across this suite).
+    // Ref: TEXQTIC-NC-TEST-INFRA-DB-INTEGRATION-PERFORMANCE-AUDIT-001
   });
 
   afterAll(async () => {

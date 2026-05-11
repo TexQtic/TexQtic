@@ -104,37 +104,9 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Issue Route Integration', () 
 
   // ─── Feature Flag Helpers ─────────────────────────────────────────────────
 
-  async function setGlobalPoolFlag(enabled: boolean): Promise<void> {
-    await withBypassForSeed(prisma, async tx => {
-      await tx.featureFlag.upsert({
-        where: { key: poolFeatureFlagKey },
-        create: {
-          key: poolFeatureFlagKey,
-          enabled,
-          description: 'NC pool RFQ route integration test — pool gate',
-        },
-        update: { enabled },
-      });
-    });
-  }
-
   async function removeGlobalPoolFlag(): Promise<void> {
     await withBypassForSeed(prisma, async tx => {
       await tx.featureFlag.deleteMany({ where: { key: poolFeatureFlagKey } });
-    });
-  }
-
-  async function setGlobalRfqFlag(enabled: boolean): Promise<void> {
-    await withBypassForSeed(prisma, async tx => {
-      await tx.featureFlag.upsert({
-        where: { key: rfqFeatureFlagKey },
-        create: {
-          key: rfqFeatureFlagKey,
-          enabled,
-          description: 'NC pool RFQ route integration test — rfq gate',
-        },
-        update: { enabled },
-      });
     });
   }
 
@@ -144,35 +116,29 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Issue Route Integration', () 
     });
   }
 
-  async function enablePoolGateForTestTenants(): Promise<void> {
-    await withBypassForSeed(prisma, async tx => {
-      for (const orgId of [ownerOrgId, otherOrgId]) {
-        await tx.tenantFeatureOverride.upsert({
-          where: { tenantId_key: { tenantId: orgId, key: poolFeatureFlagKey } },
-          create: { tenantId: orgId, key: poolFeatureFlagKey, enabled: true },
-          update: { enabled: true },
-        });
-      }
-    });
-  }
-
-  async function enableRfqGateForTestTenants(): Promise<void> {
-    await withBypassForSeed(prisma, async tx => {
-      for (const orgId of [ownerOrgId, otherOrgId]) {
-        await tx.tenantFeatureOverride.upsert({
-          where: { tenantId_key: { tenantId: orgId, key: rfqFeatureFlagKey } },
-          create: { tenantId: orgId, key: rfqFeatureFlagKey, enabled: true },
-          update: { enabled: true },
-        });
-      }
-    });
-  }
-
   async function ensureGatesEnabled(): Promise<void> {
-    await setGlobalPoolFlag(true);
-    await enablePoolGateForTestTenants();
-    await setGlobalRfqFlag(true);
-    await enableRfqGateForTestTenants();
+    // Batch all 6 flag upserts into one withBypassForSeed transaction to reduce
+    // Supabase pooler round-trips. Previously 4 separate transactions; batching
+    // prevents hookTimeout under Supabase network latency.
+    // Ref: TEXQTIC-NC-TEST-INFRA-DB-INTEGRATION-PERFORMANCE-AUDIT-001
+    await withBypassForSeed(prisma, async tx => {
+      for (const key of [poolFeatureFlagKey, rfqFeatureFlagKey]) {
+        await tx.featureFlag.upsert({
+          where:  { key },
+          create: { key, enabled: true, description: `NC pool RFQ route integration test — ${key}` },
+          update: { enabled: true },
+        });
+      }
+      for (const key of [poolFeatureFlagKey, rfqFeatureFlagKey]) {
+        for (const orgId of [ownerOrgId, otherOrgId]) {
+          await tx.tenantFeatureOverride.upsert({
+            where:  { tenantId_key: { tenantId: orgId, key } },
+            create: { tenantId: orgId, key, enabled: true },
+            update: { enabled: true },
+          });
+        }
+      }
+    });
   }
 
   // ─── Fixture Helpers ──────────────────────────────────────────────────────
@@ -395,8 +361,10 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Issue Route Integration', () 
     }).catch(() => {
       // Best-effort cleanup.
     });
-
-    await ensureGatesEnabled();
+    // ensureGatesEnabled() intentionally omitted here — beforeEach already
+    // calls it before every test, so a trailing restore in afterEach is redundant.
+    // Removing it saves one batched transaction per test across this suite.
+    // Ref: TEXQTIC-NC-TEST-INFRA-DB-INTEGRATION-PERFORMANCE-AUDIT-001
   });
 
   afterAll(async () => {
@@ -688,7 +656,7 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Issue Route Integration', () 
 
   // ─── Success Behavior (PRQ-16..PRQ-28) ───────────────────────────────────
 
-  it('PRQ-16 issue RFQ success -> 201', async () => {
+  it('PRQ-16 issue RFQ success -> 201', { timeout: 15000 }, async () => {
     const { poolId } = await createFullRfqFixture(ownerOrgId);
 
     const res = await app.inject({
@@ -705,7 +673,7 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Issue Route Integration', () 
     expect(body.data.owner_org_id).toBe(ownerOrgId);
   });
 
-  it('PRQ-17 response is header-only — no metadata_internal_json', async () => {
+  it('PRQ-17 response is header-only — no metadata_internal_json', { timeout: 15000 }, async () => {
     const { poolId } = await createFullRfqFixture(ownerOrgId);
 
     const res = await app.inject({
@@ -724,7 +692,7 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Issue Route Integration', () 
     expect(data).toHaveProperty('issued_at');
   });
 
-  it('PRQ-18 response includes status ISSUED', async () => {
+  it('PRQ-18 response includes status ISSUED', { timeout: 15000 }, async () => {
     const { poolId } = await createFullRfqFixture(ownerOrgId);
 
     const res = await app.inject({
@@ -798,7 +766,7 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Issue Route Integration', () 
     expect((res.json() as any).data.response_deadline_at).toBeNull();
   });
 
-  it('PRQ-23 RFQ header row created in database', async () => {
+  it('PRQ-23 RFQ header row created in database', { timeout: 15000 }, async () => {
     const { poolId } = await createFullRfqFixture(ownerOrgId);
 
     const res = await app.inject({
@@ -823,7 +791,7 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Issue Route Integration', () 
     });
   });
 
-  it('PRQ-24 RFQ line rows created from snapshot lines', async () => {
+  it('PRQ-24 RFQ line rows created from snapshot lines', { timeout: 15000 }, async () => {
     const { poolId } = await createFullRfqFixture(ownerOrgId);
 
     const res = await app.inject({
@@ -848,7 +816,7 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Issue Route Integration', () 
     });
   });
 
-  it('PRQ-25 pool lifecycleStateId becomes CLOSED_FOR_BIDS after issue', async () => {
+  it('PRQ-25 pool lifecycleStateId becomes CLOSED_FOR_BIDS after issue', { timeout: 15000 }, async () => {
     const { poolId } = await createFullRfqFixture(ownerOrgId);
 
     const res = await app.inject({
@@ -869,7 +837,7 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Issue Route Integration', () 
     });
   });
 
-  it('PRQ-26 NetworkLifecycleLog entry created for AGGREGATING->CLOSED_FOR_BIDS transition', async () => {
+  it('PRQ-26 NetworkLifecycleLog entry created for AGGREGATING->CLOSED_FOR_BIDS transition', { timeout: 15000 }, async () => {
     const { poolId } = await createFullRfqFixture(ownerOrgId);
 
     const res = await app.inject({
@@ -984,7 +952,7 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Issue Route Integration', () 
     expect((res.json() as any).error.code).toBe('SNAPSHOT_NOT_FOUND');
   });
 
-  it('PRQ-32 existing RFQ for pool -> 409 RFQ_ALREADY_ISSUED', async () => {
+  it('PRQ-32 existing RFQ for pool -> 409 RFQ_ALREADY_ISSUED', { timeout: 15000 }, async () => {
     const { poolId } = await createFullRfqFixture(ownerOrgId);
 
     // First issue succeeds
@@ -1138,7 +1106,7 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Issue Route Integration', () 
     expect(res.statusCode).not.toBe(503);
   });
 
-  it('PRQ-41 afterEach leaves no route-test RFQ rows for next test run', async () => {
+  it('PRQ-41 afterEach leaves no route-test RFQ rows for next test run', { timeout: 15000 }, async () => {
     // Issue an RFQ, verify row exists, then confirm cleanup will remove it.
     const { poolId } = await createFullRfqFixture(ownerOrgId);
 
@@ -1173,7 +1141,7 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Issue Route Integration', () 
     expect(true).toBe(true);
   });
 
-  it('PRQ-43 rfq_lines immutability trigger blocks deletion (§8 schema migration)', async () => {
+  it('PRQ-43 rfq_lines immutability trigger blocks deletion (§8 schema migration)', { timeout: 15000 }, async () => {
     // §8 of the schema migration: network_pool_rfq_lines rows are fully immutable
     // after insert. The BEFORE DELETE trigger unconditionally raises an exception,
     // including in bypass-mode transactions. This is belt-and-suspenders beyond RLS.

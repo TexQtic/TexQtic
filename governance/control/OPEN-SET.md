@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-11 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001 — VERIFIED_COMPLETE. Packet 11 (Schema) complete. Packet 12 (Service) HOLD_FOR_PARESH_DECISION. DPP posture: HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-05-12 (TEXQTIC-NC-TEST-INFRA-DB-INTEGRATION-PERFORMANCE-AUDIT-001 — VERIFIED_COMPLETE. 181/181 tests PASS. 354 DB round-trips eliminated. PRQ 43/43 timeouts resolved. Packet 12 (Service) HOLD_FOR_PARESH_DECISION. LEDGER-RECONCILIATION-001 BLOCKED pending migration deployment authorization.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,11 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-TEST-INFRA-DB-INTEGRATION-PERFORMANCE-AUDIT-001 VERIFIED_COMPLETE (2026-05-12).
+  NC DB integration test suite performance audit and optimization. SRI 11/11 (109s); ORI 50/50 (282s); DLT 77/77 (407s); PRQ 43/43 (baseline had 10 timeouts; all resolved).
+  354 DB round-trips eliminated. Fixes: batch ensureDefaultFlagsEnabled/ensureGatesEnabled (SRI, PRQ); remove redundant afterEach gates (ORI, DLT, PRQ); { timeout: 15000 } for multi-step fixture tests (DLT x5, PRQ x10).
+  No product behavior changed. active_delivery_unit: HOLD_FOR_PARESH_DECISION (unchanged). dpp_launch_authorization: HOLD_FOR_PARESH_DECISION (unchanged).
+  LEDGER-RECONCILIATION-001 BLOCKED: 3 migrations undeployed to remote DB; migration deployment authorization required from Paresh.
 - TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-INVITE-PROD-VERIFY-GOV-CLOSE-002 VERIFIED_COMPLETE (2026-05-11).
   Supplier invite production verification closed. SRI 11/11 (147s); ORI 50/50 (419s); DLT 77/77 (511s).
   prisma validate/generate PASS; server tsc PASS; typecheck PASS.

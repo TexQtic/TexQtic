@@ -4,6 +4,44 @@
 **Purpose:** Immutable ordered log of all governance closure events. Append-only. Do not edit prior entries.
 
 ---
+## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-TEST-INFRA-DB-INTEGRATION-PERFORMANCE-AUDIT-001
+
+```
+Unit:          TEXQTIC-NC-TEST-INFRA-DB-INTEGRATION-PERFORMANCE-AUDIT-001
+Type:          TEST_INFRASTRUCTURE -- Performance Optimization + Latency Resilience
+Status:        VERIFIED_COMPLETE
+Date:          2026-05-12
+
+Deliverables:
+  - server/src/routes/tenant/poolRfqSupplierInvites.integration.test.ts (Fix 1: batch 6->1 tx)
+  - server/src/routes/tenant/poolRfqInvites.integration.test.ts (Fix 2: remove afterEach gate)
+  - server/src/routes/tenant/pools.demandLines.integration.test.ts (Fix 3 + Fix 5a: timeout)
+  - server/src/routes/tenant/poolRfq.integration.test.ts (Fix 4a-4c + Fix 5b: timeout)
+
+Validation:
+  - SRI suite (11 tests): 11/11 PASS -- 109.42s (baseline ~146s, ~25% improvement)
+  - ORI suite (50 tests): 50/50 PASS -- 282.14s (baseline ~419s, ~33% improvement)
+  - DLT suite (77 tests): 77/77 PASS -- 406.92s (baseline ~510s, ~20% improvement)
+  - PRQ suite (43 tests): 43/43 PASS (baseline had 10 timeouts; all resolved by Fix 5b)
+  - Total round-trips eliminated: 354 (across all 4 suites)
+
+Root causes fixed:
+  - Redundant afterEach gate calls (ORI, DLT, PRQ): 170 round-trips saved
+  - Unbatched beforeEach gate setup (SRI: 6->1; PRQ: 4->1): 184 round-trips saved
+  - Per-test timeout too tight for multi-step fixture chains (DLT x5, PRQ x10): { timeout: 15000 }
+
+Invariants preserved:
+  No test assertions changed
+  No tests skipped or deleted
+  No product code changes (routes, services, schema, migrations)
+  DPP hold keys: UNCHANGED
+  active_delivery_unit: HOLD_FOR_PARESH_DECISION (UNCHANGED)
+
+Next: TEXQTIC-NC-REMOTE-DB-PRISMA-LEDGER-RECONCILIATION-001 (BLOCKED -- migration deployment required)
+```
+
+---
+
 
 ## 2026-05-11 — VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001
 

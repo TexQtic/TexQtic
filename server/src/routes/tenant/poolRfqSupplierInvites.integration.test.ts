@@ -137,12 +137,28 @@ describe.skipIf(!hasDb)(
     }
 
     async function ensureDefaultFlagsEnabled(): Promise<void> {
-      await setGlobalFlag(poolFeatureFlagKey, true);
-      await setGlobalFlag(rfqFeatureFlagKey, true);
-      await setGlobalFlag(inviteFeatureFlagKey, true);
-      await enableFlagForTenants(poolFeatureFlagKey, true);
-      await enableFlagForTenants(rfqFeatureFlagKey, true);
-      await enableFlagForTenants(inviteFeatureFlagKey, true);
+      // Batch all 15 upserts into one withBypassForSeed transaction to reduce
+      // Supabase pooler round-trips. Previously 6 separate transactions; batching
+      // prevents hookTimeout under Supabase network latency.
+      // Ref: TEXQTIC-NC-TEST-INFRA-DB-INTEGRATION-PERFORMANCE-AUDIT-001
+      await withBypassForSeed(prisma, async tx => {
+        for (const key of [poolFeatureFlagKey, rfqFeatureFlagKey, inviteFeatureFlagKey]) {
+          await tx.featureFlag.upsert({
+            where: { key },
+            create: { key, enabled: true, description: `SRI test - ${key}` },
+            update: { enabled: true },
+          });
+        }
+        for (const key of [poolFeatureFlagKey, rfqFeatureFlagKey, inviteFeatureFlagKey]) {
+          for (const orgId of [ownerOrgId, supplierOrgId, supplierOrg2Id, otherOrgId]) {
+            await tx.tenantFeatureOverride.upsert({
+              where: { tenantId_key: { tenantId: orgId, key } },
+              create: { tenantId: orgId, key, enabled: true },
+              update: { enabled: true },
+            });
+          }
+        }
+      });
     }
 
     async function createIssuedRfqFixture(orgId: string): Promise<{ poolId: string; rfqId: string }> {

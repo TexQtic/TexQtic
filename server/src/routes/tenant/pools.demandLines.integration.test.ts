@@ -298,9 +298,10 @@ describe.skipIf(!hasDb)('Network Commerce Demand Line Routes Integration', () =>
     }).catch(() => {
       // Best-effort cleanup for route tests.
     });
-
-    // Restore both gates so concurrent test suites are not disrupted.
-    await ensureLockGatesEnabled();
+    // ensureLockGatesEnabled() intentionally omitted here — beforeEach already
+    // calls it before every test, so a trailing restore in afterEach is redundant.
+    // Removing it saves one batched transaction per test (77 round-trips across this suite).
+    // Ref: TEXQTIC-NC-TEST-INFRA-DB-INTEGRATION-PERFORMANCE-AUDIT-001
   });
 
   afterAll(async () => {
@@ -1282,7 +1283,7 @@ describe.skipIf(!hasDb)('Network Commerce Demand Line Routes Integration', () =>
     });
   });
 
-  it('DLT-56 DRAFT/CANCELLED lines excluded from snapshot (only ACTIVE locked)', async () => {
+  it('DLT-56 DRAFT/CANCELLED lines excluded from snapshot (only ACTIVE locked)', { timeout: 15000 }, async () => {
     const poolId = await createPoolFixture(ownerOrgId, { lifecycleStateKey: 'AGGREGATING' });
 
     // Create one ACTIVE line
@@ -1312,7 +1313,7 @@ describe.skipIf(!hasDb)('Network Commerce Demand Line Routes Integration', () =>
     });
   });
 
-  it('DLT-57 uniform qty_unit: total_qty sums all ACTIVE lines', async () => {
+  it('DLT-57 uniform qty_unit: total_qty sums all ACTIVE lines', { timeout: 15000 }, async () => {
     const poolId = await createPoolFixture(ownerOrgId, { lifecycleStateKey: 'AGGREGATING' });
     await createActiveDemandLineFixture(poolId, ownerOrgId, { qty: 300, qty_unit: 'KG' });
     await createActiveDemandLineFixture(poolId, ownerOrgId, { qty: 200, qty_unit: 'KG' });
@@ -1401,7 +1402,7 @@ describe.skipIf(!hasDb)('Network Commerce Demand Line Routes Integration', () =>
     expect((res.json() as any).data.line_count).toBe(2);
   });
 
-  it('DLT-62 omitting expected_line_ids locks all ACTIVE lines', async () => {
+  it('DLT-62 omitting expected_line_ids locks all ACTIVE lines', { timeout: 15000 }, async () => {
     const poolId = await createPoolFixture(ownerOrgId, { lifecycleStateKey: 'AGGREGATING' });
     await createActiveDemandLineFixture(poolId, ownerOrgId);
     await createActiveDemandLineFixture(poolId, ownerOrgId);
@@ -1434,7 +1435,7 @@ describe.skipIf(!hasDb)('Network Commerce Demand Line Routes Integration', () =>
     expect((res.json() as any).error.code).toBe('DEMAND_LINE_SET_CHANGED');
   });
 
-  it('DLT-64 expected_line_ids with unknown UUID -> 409 DEMAND_LINE_SET_CHANGED', async () => {
+  it('DLT-64 expected_line_ids with unknown UUID -> 409 DEMAND_LINE_SET_CHANGED', { timeout: 15000 }, async () => {
     const poolId = await createPoolFixture(ownerOrgId, { lifecycleStateKey: 'AGGREGATING' });
     const lineId = await createActiveDemandLineFixture(poolId, ownerOrgId);
     const unknownId = randomUUID(); // not in the pool
@@ -1530,7 +1531,7 @@ describe.skipIf(!hasDb)('Network Commerce Demand Line Routes Integration', () =>
     });
   });
 
-  it('DLT-70 lock does not write NetworkLifecycleLog rows', async () => {
+  it('DLT-70 lock does not write NetworkLifecycleLog rows', { timeout: 15000 }, async () => {
     const poolId = await createPoolFixture(ownerOrgId, { lifecycleStateKey: 'AGGREGATING' });
     await createActiveDemandLineFixture(poolId, ownerOrgId);
 
