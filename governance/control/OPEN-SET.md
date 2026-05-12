@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-07 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001 VERIFIED_COMPLETE. 3 award routes + middleware delivered. PRQ-44..PRQ-60: 17/17 PASS. PRQ-54 timeout fix applied (Paresh-authorized). tsc PASS. rfq.award.enabled=false unchanged. FE-9 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE. All 3 award routes return 503 FEATURE_DISABLED in production. Gate chain: ncPoolFeatureGate→ncPoolRfqFeatureGate→ncPoolRfqAwardFeatureGate all fire correctly. Award flag row absent from production feature_flags — middleware fails closed; safety posture maintained. Quote row count=0 unchanged. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,18 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE (2026-05-12).
+  Production verification of all 3 award routes in deployed production (commit 6ed77bc).
+  GET quotes, POST accept, POST reject all return 503 FEATURE_DISABLED via 3-level gate chain.
+  FINDING: nc.procurement_pools.rfq.award.enabled flag row absent from production feature_flags.
+  Migration 20260534000000 recorded in _prisma_migrations (finished_at 2026-05-12T06:31:31Z).
+  Middleware fails closed (null?.enabled → undefined !== true → 503). Safety posture: MAINTAINED.
+  Re-seed of award flag to false recommended as separate provisioning packet (Paresh authorization required).
+  nc.procurement_pools.supplier_quotes.enabled=false (QD-6 hold maintained). Quote row count=0 pre+post.
+  No source/schema/migration/test/env changes. FE-9: HOLD_FOR_PARESH_DECISION.
+  DPP: HOLD_FOR_PARESH_DECISION — UNCHANGED.
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001.md.
 
 - TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001 VERIFIED_COMPLETE (2026-06-07).
   NC Phase 1D route layer complete. ncPoolRfqAwardFeatureGate.middleware.ts created.

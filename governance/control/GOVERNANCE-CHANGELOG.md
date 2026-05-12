@@ -5,6 +5,20 @@
 
 ---
 
+## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001
+
+Production verification of AWARD-ROUTE-001 backend route packet in deployed production environment.
+All 3 award routes (GET quotes, POST accept, POST reject) confirmed returning 503 FEATURE_DISABLED.
+3-level middleware gate chain fires correctly: ncPoolFeatureGate → ncPoolRfqFeatureGate → ncPoolRfqAwardFeatureGate.
+ncPoolRfqAwardFeatureGate fails closed (flag row absent → undefined !== true → 503). Safety posture: MAINTAINED.
+FINDING: nc.procurement_pools.rfq.award.enabled row absent from production feature_flags (migration 20260534000000
+recorded in _prisma_migrations with finished_at=2026-05-12T06:31:31Z; flag row not present at time of this verify).
+Middleware fail-closed semantics neutralize the gap. Re-seed recommended as separate provisioning packet.
+nc.procurement_pools.supplier_quotes.enabled=false (QD-6 hold maintained). Quote row count=0 unchanged.
+No source/schema/migration/test/env changes. No feature flag activated. No quote submitted/accepted/rejected.
+FE-9: HOLD_FOR_PARESH_DECISION. DPP: HOLD_FOR_PARESH_DECISION.
+Commit: docs(network-commerce): verify award routes production gate
+
 ## 2026-06-07 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001
 
 NC Phase 1D route layer. 3 owner-facing award routes added to poolRfq.ts.

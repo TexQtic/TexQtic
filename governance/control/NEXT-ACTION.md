@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-07 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001 VERIFIED_COMPLETE. 17/17 PRQ tests pass. PRQ-54 timeout fix authorized and applied. tsc PASS. rfq.award.enabled=false unchanged. FE-9 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE. All 3 award routes 503 FEATURE_DISABLED in production. Gate chain verified. Award flag row absent from production feature_flags — middleware fails closed; safety posture maintained. Quote count=0 unchanged. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -18,31 +18,31 @@ product_delivery_priority: >-
 active_delivery_unit: NONE_AUTHORIZED
 active_delivery_unit_status: NONE_AUTHORIZED
 active_delivery_unit_note: >
-  TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001 VERIFIED_COMPLETE (2026-06-07).
-  3 owner-facing award routes delivered. Award feature-gate middleware created.
-  PRQ-44..PRQ-60: 17/17 PASS. tsc PASS. 151/151 service unit tests PASS.
-  nc.procurement_pools.rfq.award.enabled=false — routes deployed but gated. Not activated.
+  TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE (2026-05-12).
+  All 3 award routes (GET quotes, POST accept, POST reject) return 503 FEATURE_DISABLED in production.
+  3-level gate chain (ncPoolFeatureGate → ncPoolRfqFeatureGate → ncPoolRfqAwardFeatureGate) verified.
+  FINDING: nc.procurement_pools.rfq.award.enabled row absent from production feature_flags.
+  Middleware fails closed: null?.enabled → undefined !== true → 503. Safety posture: MAINTAINED.
+  Re-seed to false recommended as separate provisioning packet (Paresh authorization required).
+  nc.procurement_pools.supplier_quotes.enabled=false (QD-6 hold maintained). Quote count=0 pre+post.
   FE-9 (TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001): HOLD_FOR_PARESH_DECISION — do not open.
   DPP: HOLD_FOR_PARESH_DECISION.
-  supplier_quotes.enabled=false (QD-6 hold maintained).
-  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001.md.
-last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001.md.
+last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  Route packet. ncPoolRfqAwardFeatureGate.middleware.ts created. 3 routes added to poolRfq.ts.
-  PRQ-44..PRQ-60: 17/17 route integration tests PASS. tsc PASS. prisma validate PASS.
-  151/151 service unit tests PASS. PRQ-54 timeout fix applied (Paresh-authorized).
-  nc.procurement_pools.rfq.award.enabled=false unchanged (not activated).
-  supplier_quotes.enabled=false unchanged (QD-6 hold maintained).
-  DPP posture: HOLD_FOR_PARESH_DECISION — UNCHANGED.
-last_closed_unit_commits: feat(network-commerce): add pool rfq award routes
+  Production verification. All 3 award routes return 503 FEATURE_DISABLED in production.
+  3-level gate chain fires correctly. Award flag row absent but middleware fails closed.
+  Safety posture maintained. Quote count=0 pre+post. No mutations. QD-6 hold maintained.
+  FE-9: HOLD_FOR_PARESH_DECISION. DPP: HOLD_FOR_PARESH_DECISION.
+last_closed_unit_commits: docs(network-commerce): verify award routes production gate
 last_closed_unit_closure_basis: >-
-  tsc --noEmit PASS. vitest 17/17 PASS (PRQ-44..PRQ-60). 151/151 service unit tests PASS.
-  prisma validate PASS. No schema/migration/frontend/env changes.
-  rfq.award.enabled=false confirmed unchanged.
-  supplier_quotes.enabled=false confirmed unchanged (QD-6 hold maintained).
-  DPP posture: HOLD_FOR_PARESH_DECISION — UNCHANGED.
-last_closed_unit_prior: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001
+  3x HTTP 503 FEATURE_DISABLED confirmed (GET quotes, POST accept, POST reject).
+  Feature flag pre/post check: supplier_quotes.enabled=f unchanged (QD-6 hold).
+  Quote row count=0 pre+post. git status --short clean. No source/schema/migration/env changes.
+  Award flag row absent from production feature_flags — documented as finding, not blocker.
+  Middleware fail-closed semantics verified in source code and confirmed in HTTP responses.
+last_closed_unit_prior: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001
 note_on_pending_verification: >-
   TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
   All 3 AF findings resolved. NC Pools + RFQ + Invite surfaces technically unblocked.
@@ -57,18 +57,15 @@ dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
 dpp_v3_design_status: OPTIONAL_POLISH
 prior_last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
 prior_last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-last_closed_governance_unit: TECS-DPP-PASSPORT-NETWORK-024
-last_closed_governance_unit_status: VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES
-last_closed_governance_unit_date: 2026-04-30
+last_closed_governance_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001
+last_closed_governance_unit_status: VERIFIED_COMPLETE
+last_closed_governance_unit_date: 2026-05-12
 last_closed_governance_unit_note: >-
-  Slice H governance closure. Launch decision: CURRENT IMPLEMENTED B2B QA SURFACES VERIFIED;
-  FULL PLATFORM LAUNCH NOT YET AUTHORIZED. Runtime QA: 55 passed / 3 skipped / 0 failed.
-  Approval-gate QA: 12/12 PASS. Data hygiene: P0=0, P1=0.
-  QA matrix active (13 tenants, ~77 catalog items, 8 BSRs, 25 RFQs) — retained for future
-  B2B sub-family QA (Orders, Trades, DPP Passport Network, Escrow, Escalations, Settlement,
-  Certifications, Traceability, Audit Log). Cleanup deferred; Slice C NOT_AUTHORIZED.
-  Closure artifact: docs/TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001-SLICE-H-LAUNCH-READINESS-DECISION.md.
-  Active delivery unit unchanged: TECS-DPP-PASSPORT-FOUNDATION-001 D-6 (IMPLEMENTATION_ACTIVE).
+  Production verification of AWARD-ROUTE-001 packet. All 3 award routes 503 FEATURE_DISABLED.
+  Award flag row absent from production feature_flags (finding documented — non-blocking).
+  Middleware fails closed. Safety posture maintained. Quote count=0. QD-6 hold maintained.
+  FE-9: HOLD_FOR_PARESH_DECISION. DPP: HOLD_FOR_PARESH_DECISION.
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001.md.
 prior_closed_unit: TECS-B2B-ORDERS-LIFECYCLE-001
 prior_closed_unit_status: VERIFIED_COMPLETE
 prior_closed_unit_runtime_verdict: >-
