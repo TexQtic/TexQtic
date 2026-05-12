@@ -6,6 +6,22 @@
 ---
 
 
+## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001
+
+NC Phase 1C Packet 13 (Route Layer) VERIFIED_COMPLETE.
+Routes: GET /supplier-rfq-invites/:inviteId/quote (200) + POST /supplier-rfq-invites/:inviteId/quote (201).
+Route plugin: server/src/routes/tenant/poolRfqSupplierQuotes.ts created.
+Registration: server/src/routes/tenant.ts import + fastify.register added.
+Guards: tenantAuthMiddleware + databaseContextMiddleware + ncPoolSupplierQuoteFeatureGateMiddleware.
+Error mapping: 404 SUPPLIER_INVITE_NOT_FOUND / SUPPLIER_QUOTE_NOT_FOUND; 409 QUOTE_ALREADY_SUBMITTED; 422 INVITE_NOT_ACCEPTED / INVALID_TRANSITION.
+Non-leaking 404s; POST 201; supplier-safe DTO (QD-5 preserved); strict body schema.
+Tests: 40/40 integration PASS; 206/206 total PASS (inc. service + middleware unit + invite regression).
+tsc --noEmit ✓; prisma validate ✓.
+No schema changes, no migrations, no frontend. FE-8 BLOCKED_PARESH_AUTHORIZATION_REQUIRED.
+Governance doc: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001.md
+Commit: feat(network-commerce): add supplier quote routes
+
+
 ## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001
 
 NC Phase 1C Packet 12 (Service Layer) VERIFIED_COMPLETE.

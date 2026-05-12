@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 — VERIFIED_COMPLETE; Packet 12 service layer delivered; 134/134 + 11/11 unit tests pass; tsc clean; regression flakiness confirmed pre-existing; Packet 13 route HOLD_FOR_PARESH_DECISION)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 — VERIFIED_COMPLETE; Packet 13 route layer delivered; 40/40 integration + 206/206 total tests pass; tsc clean; FE-8 BLOCKED_PARESH_AUTHORIZATION_REQUIRED)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,44 +15,46 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001
-active_delivery_unit_status: HOLD_FOR_PARESH_DECISION
+active_delivery_unit: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001
+active_delivery_unit_status: BLOCKED_PARESH_AUTHORIZATION_REQUIRED
 active_delivery_unit_note: >
-  NC Phase 1C Packet 13 (Route) is next but HOLD_FOR_PARESH_DECISION.
-  Packet 12 (Service) VERIFIED_COMPLETE (2026-05-12). Service methods submitQuote + getSupplierQuote delivered.
-  134/134 service unit tests + 11/11 middleware unit tests PASS. tsc --noEmit clean.
-  Packet 13 requires separate Paresh authorization before execution.
+  NC Phase 1C Packet 13 (Route) VERIFIED_COMPLETE (2026-05-12). GET + POST supplier quote routes delivered.
+  40/40 integration tests + 206/206 total tests PASS. tsc --noEmit clean.
+  FE-8 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001) is the next unit but BLOCKED_PARESH_AUTHORIZATION_REQUIRED.
+  Backend contract is complete (Packets 11 + 12 + 13 all VERIFIED_COMPLETE).
+  FE-8 requires explicit separate Paresh authorization before execution.
   DPP LAUNCH GATE (independent of NC Phase 1C):
   TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 VERIFIED_COMPLETE (2026-05-02).
   DPP Passport Network is technically production-ready based on PROD-AUDIT-002.
   DPP launch authorization: HOLD_FOR_PARESH_DECISION — separate decision; not unlocked by NC authorization.
   Do NOT open DPP next slice without separate explicit Paresh DPP authorization.
-last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001
+last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  NC Phase 1C Packet 12 (Service Layer) VERIFIED_COMPLETE (2026-05-12). SERVICE_LAYER only.
-  submitQuote + getSupplierQuote + toQuoteSupplierRecord + 4 error classes + 2 interfaces.
-  ncPoolSupplierQuoteFeatureGate.middleware.ts created (two-layer gate).
-  prisma validate ✓; prisma generate ✓; tsc --noEmit ✓ (zero errors).
-  Service unit tests 134/134 PASS; middleware unit tests 11/11 PASS.
-  Integration regression: 2 flaky failures confirmed pre-existing on clean HEAD stash baseline (not caused by Packet 12).
-  No routes, no schema changes, no frontend written.
-last_closed_unit_commits: feat(network-commerce): add supplier quote service layer
+  NC Phase 1C Packet 13 (Route Layer) VERIFIED_COMPLETE (2026-05-12). ROUTE_LAYER only.
+  GET /supplier-rfq-invites/:inviteId/quote + POST /supplier-rfq-invites/:inviteId/quote.
+  poolRfqSupplierQuotes.ts route plugin created; tenant.ts import + registration added.
+  Guards: tenantAuthMiddleware + databaseContextMiddleware + ncPoolSupplierQuoteFeatureGateMiddleware.
+  Non-leaking 404s; POST 201; supplier-safe DTO (QD-5). Error mapping: 404/409/422/400/401.
+  prisma validate ✓; tsc --noEmit ✓ (zero errors).
+  40/40 integration tests PASS; 134/134 service unit tests PASS; 11/11 middleware unit tests PASS;
+  11/11 invite regression PASS. Total: 206/206.
+  No schema changes, no migrations, no frontend written.
+last_closed_unit_commits: feat(network-commerce): add supplier quote routes
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE. Service layer + middleware validated. 134/134 + 11/11 unit tests pass. tsc clean.
-  submitQuote: invite gate (QD-1), conflict guard (QD-2), RFQ status gate, direct lifecycle log (QD-7), ISSUED→QUOTED update.
-  getSupplierQuote: org-scoped findFirst + NotFoundError.
-  Feature gate: two-layer (global flag + per-org override), fail-closed.
-  Regression flakiness confirmed pre-existing. No routes/schema/FE written.
-  Packet 13 (Route) gate: requires explicit Paresh authorization.
+  VERIFIED_COMPLETE. Route layer validated. 206/206 total tests pass. tsc clean.
+  GET: org-scoped invite lookup → getSupplierQuote → supplier-safe DTO → 200.
+  POST: strict schema validation → submitQuote → supplier-safe DTO → 201.
+  Feature gate: ncPoolSupplierQuoteFeatureGateMiddleware only (no parent gates).
+  Non-leaking 404s throughout. No routes/schema/FE written beyond scope.
+  FE-8 gate: requires explicit Paresh authorization.
 note_on_pending_verification: >-
-  TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 VERIFIED_COMPLETE (2026-05-12).
-  Packet 12 complete. Packet 13 (Route) HOLD_FOR_PARESH_DECISION.
-  FE-8 blocked until Packet 13 VERIFIED_COMPLETE + separate Paresh FE-8 authorization.
-  Active delivery unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 (HOLD).
+  TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 VERIFIED_COMPLETE (2026-05-12).
+  Packet 13 (Route) complete. FE-8 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001) BLOCKED_PARESH_AUTHORIZATION_REQUIRED.
+  Requires separate Paresh authorization before FE-8 execution can begin.
   DPP launch authorization: HOLD_FOR_PARESH_DECISION (UNCHANGED — separate decision).
-  Prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001 VERIFIED_COMPLETE (14e7e99).
-  Pre-prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001 PARESH_AUTHORIZED (2596862).
+  Prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 VERIFIED_COMPLETE (4279cc0).
+  Pre-prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001 VERIFIED_COMPLETE (14e7e99).
 dpp_passport_network_readiness: PRODUCTION_READY
 dpp_readiness_authority: TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002
 dpp_readiness_commit: 17c252c

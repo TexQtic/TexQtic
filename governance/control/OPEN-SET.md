@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 — VERIFIED_COMPLETE. Packet 12 (Service Layer): submitQuote + getSupplierQuote + feature gate middleware delivered. 134/134 service unit tests + 11/11 middleware unit tests PASS. tsc clean. Regression flakiness confirmed pre-existing. Packet 13 route HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 — VERIFIED_COMPLETE. Packet 13 (Route): GET + POST supplier quote routes delivered. 40/40 integration + 206/206 total tests PASS. tsc clean. FE-8 BLOCKED_PARESH_AUTHORIZATION_REQUIRED.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,15 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 VERIFIED_COMPLETE (2026-05-12).
+  NC Phase 1C Packet 13 (Route Layer) complete. GET + POST supplier quote routes delivered.
+  poolRfqSupplierQuotes.ts route plugin created; tenant.ts registered; 40 integration tests created.
+  Guards: tenantAuthMiddleware + databaseContextMiddleware + ncPoolSupplierQuoteFeatureGateMiddleware.
+  Non-leaking 404s; POST returns 201; supplier-safe DTO (QD-5 preserved).
+  40/40 integration tests PASS; 134/134 service unit tests PASS; 11/11 middleware unit tests PASS;
+  11/11 invite regression PASS. tsc --noEmit ✓; prisma validate ✓. Total: 206/206.
+  FE-8 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001): BLOCKED_PARESH_AUTHORIZATION_REQUIRED.
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001.md.
 - TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 VERIFIED_COMPLETE (2026-05-12).
   NC Phase 1C Packet 12 (Service Layer) complete. submitQuote + getSupplierQuote added to networkPoolRfq.service.ts.
   ncPoolSupplierQuoteFeatureGate.middleware.ts created. 4 error classes, 2 interfaces.

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 VERIFIED_COMPLETE: Packet 12 service layer delivered; Packet 13 route still HOLD_FOR_PARESH_DECISION; FE-8 remains BLOCKED_BACKEND_QUOTE_CONTRACT_MISSING)
+**Last Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 VERIFIED_COMPLETE: Packet 13 route layer delivered; FE-8 now BLOCKED_PARESH_AUTHORIZATION_REQUIRED — backend complete, frontend requires separate Paresh authorization)
 
 > Read this file after `NEXT-ACTION.md`. It records only current blockers, holds, and governance
 > exceptions relevant to live Layer 0 posture. It does not originate ordinary product delivery
@@ -14,7 +14,7 @@
 
 | Item | Status | Posture |
 | --- | --- | --- |
-| `TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001` | `BLOCKED_BACKEND_QUOTE_CONTRACT_MISSING` | FE-8 supplier quote UI blocked. Packet 11 (Schema) VERIFIED_COMPLETE. Packet 12 (Service) VERIFIED_COMPLETE. Packet 13 (Route) HOLD_FOR_PARESH_DECISION — not yet delivered. Unblocked when Packet 13 VERIFIED_COMPLETE and Paresh authorizes FE-8. Design authority: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001 DESIGN_COMPLETE. |
+| `TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001` | `BLOCKED_PARESH_AUTHORIZATION_REQUIRED` | FE-8 supplier quote UI: backend complete (Packets 11 + 12 + 13 all VERIFIED_COMPLETE). Routes: GET + POST /supplier-rfq-invites/:inviteId/quote live. Blocked on separate Paresh FE-8 authorization before frontend execution begins. Design authority: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001 DESIGN_COMPLETE. |
 | `TEXQTIC-NC-REMOTE-DB-PRISMA-LEDGER-RECONCILIATION-001` | `RESOLVED` | Subsumed and resolved by DEPLOYMENT-RESOLUTION-001. All 3 migrations now applied to remote Supabase DB. See `governance/TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001.md`. |
 | `TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-001` | `RESOLVED` | **RESOLVED by TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001 (2026-05-12).** Option A executed: `prisma migrate resolve --applied 20260530000000_nc_pool_supplier_invite_feature_flag_seed` + `prisma migrate deploy`. 20260531000000 + 20260532000000 applied. `network_pool_rfq_supplier_quotes` live. `nc.procurement_pools.supplier_quotes.enabled` seeded false. `nc.procurement_pools.supplier_invites.enabled` remains true (preserved). Prisma: "Database schema is up to date!". 104/104 regression tests pass. See `governance/TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001.md`. |
 
