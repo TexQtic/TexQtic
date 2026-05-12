@@ -6,10 +6,10 @@
 |-------|-------|
 | Packet ID | TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-PROD-VERIFY-001 |
 | Type | FRONTEND_PRODUCTION_VERIFICATION |
-| Date | 2026-05-12 |
+| Date | 2026-05-12 (initial attempt) | 2026-05-12 (completed via QA-DATA-SETUP-001) |
 | Follows | TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 (FE-8 IMPLEMENTED, commit d8a2ce2) |
-| Status | BLOCKED_PENDING_QA_ACCEPTED_INVITE |
-| Final Status Token | TEXQTIC_NC_FRONTEND_SUPPLIER_QUOTE_UI_PROD_VERIFY_001_BLOCKED_PENDING_QA_ACCEPTED_INVITE |
+| Status | VERIFIED_COMPLETE |
+| Final Status Token | TEXQTIC_NC_FRONTEND_SUPPLIER_QUOTE_UI_PROD_VERIFY_001_VERIFIED_COMPLETE |
 
 ---
 
@@ -139,15 +139,17 @@ WHERE key IN (
 
 ### 6.3 — Accepted Invite Quote Action
 
+> **STATUS UPDATE:** Completed via `TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001` (2026-05-12). QA accepted invite inserted and verified; FE-8 affordance fully confirmed.
+
 | Check | Expected | Observed | Result |
 |-------|----------|----------|--------|
-| Accepted invite exists | At least 1 accepted invite to trigger "Submit / View Quote" | ❌ Total: 0, Pending: 0 — no invites of any status | ❌ CANNOT VERIFY |
-| "Submit / View Quote" button | Visible on ACCEPTED invite card | ❌ No invite cards rendered | ❌ CANNOT VERIFY |
-| SupplierQuoteSurface renders | Opens inline on button click | ❌ No invite to click | ❌ CANNOT VERIFY |
-| Feature-disabled state | Amber banner when supplier_quotes.enabled=false | ❌ Cannot trigger without accepted invite | ❌ CANNOT VERIFY |
-| Back navigation | Returns to inbox | ❌ Cannot trigger | ❌ CANNOT VERIFY |
+| Accepted invite exists | At least 1 accepted invite | ✅ Total: 1 (QA-DATA-SETUP-001-INV, ACCEPTED) | ✅ PASS |
+| "Submit / View Quote" button | Visible on ACCEPTED invite card | ✅ Visible | ✅ PASS |
+| SupplierQuoteSurface renders | Opens inline on button click | ✅ `Invite: 37e10cc1-cfe1-47d8-90ea-1e87624cdf29` visible | ✅ PASS |
+| Feature-disabled state | Amber banner when supplier_quotes.enabled=false | ✅ `Supplier Quote Submission Disabled` amber banner confirmed | ✅ PASS |
+| Back navigation | Returns to inbox | ✅ `← Back to Inbox` returns to Supplier Invite Inbox | ✅ PASS |
 
-**Accepted invite verdict: BLOCKED — No invites in QA session. Tenant picker shows single tenant "QA B2B" only.**
+**Accepted invite verdict: VERIFIED_COMPLETE**
 
 ### 6.4 — Pending Invite Regression (FE-7)
 
@@ -196,32 +198,33 @@ No React crash or error state observed during NC Pools and Supplier Invite Inbox
 
 ---
 
-## §10 — Blocker Classification
+## §10 — Verification Status
 
-**BLOCKED_PENDING_QA_ACCEPTED_INVITE**
+**VERIFIED_COMPLETE** (via `TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001`, 2026-05-12)
 
-**Root cause:** No accepted supplier RFQ invites exist in the QA B2B production session. Total invite count: 0. Single tenant available: "QA B2B". The "Submit / View Quote" button and `SupplierQuoteSurface` inline render can only be triggered from an ACCEPTED invite card — with no invite cards rendered, the FE-8 affordance is unverifiable.
+Original block `BLOCKED_PENDING_QA_ACCEPTED_INVITE` was resolved by inserting a QA accepted invite via authorized controlled SQL (Paresh authorized 2026-05-12). Full FE-8 affordance verified:
 
-**Partial verification achieved:**
 - ✅ Deployment behavioral evidence consistent with d8a2ce2
 - ✅ Feature flags 4/4 in required state
 - ✅ NC Pools: HEALTHY
-- ✅ Supplier Invite Inbox: HEALTHY
-- ❌ FE-8-specific affordance: CANNOT VERIFY
+- ✅ Supplier Invite Inbox: HEALTHY, invite visible (Total: 1, ACCEPTED)
+- ✅ "Submit / View Quote" button: PRESENT on ACCEPTED invite card
+- ✅ SupplierQuoteSurface: OPENED — `Invite: 37e10cc1-cfe1-47d8-90ea-1e87624cdf29`
+- ✅ Feature-disabled state: CORRECT — amber `Supplier Quote Submission Disabled` banner
+- ✅ Back navigation: CONFIRMED — inbox reloads cleanly
+- ✅ No quote submitted — feature-disabled path prevents submission
 
-**TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 status: PENDING_PRODUCTION_VERIFY — UNCHANGED**
+**TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 status: VERIFIED_COMPLETE**
 
 ---
 
-## §11 — Required Next Action
+## §11 — Completion
 
-**Minimum next packet required:**
+**RESOLVED.** QA-DATA-SETUP-001 VERIFIED_COMPLETE.
 
-`TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001` — HOLD_FOR_PARESH_DECISION
+Original required next packet was `TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001`. That packet was authorized, executed, and verified 2026-05-12. This prod-verify packet is now VERIFIED_COMPLETE.
 
-Scope: Create a controlled accepted invite in the production QA tenant via the authorized test tenant flow (pool owner org sends invite to QA B2B supplier org; supplier accepts; then re-run production verification).
-
-Do not create production test data without separate explicit Paresh authorization.
+**Next:** Supplier quote feature flag activation decision — NOT authorized until Paresh explicitly lifts QD-6 hold. Do NOT open FE-9 without separate explicit authorization.
 
 ---
 
@@ -236,15 +239,19 @@ This packet did not modify, reference, or touch any DPP Passport Network launch 
 ## §13 — Final Status
 
 ```
-TEXQTIC_NC_FRONTEND_SUPPLIER_QUOTE_UI_PROD_VERIFY_001_BLOCKED_PENDING_QA_ACCEPTED_INVITE
+TEXQTIC_NC_FRONTEND_SUPPLIER_QUOTE_UI_PROD_VERIFY_001_VERIFIED_COMPLETE
 ```
+
+**FE-8 TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001: VERIFIED_COMPLETE (2026-05-12)**  
+All FE-8 affordances confirmed in production. `supplier_quotes.enabled=false` maintained. No quote submitted. QD-6 hold unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.
 
 | Property | Value |
 |----------|-------|
-| FE-8 packet status | `PENDING_PRODUCTION_VERIFY` — unchanged |
-| Prod verify packet | `BLOCKED_PENDING_QA_ACCEPTED_INVITE` |
-| supplier_quotes flag | `false` — unchanged |
+| FE-8 packet status | `VERIFIED_COMPLETE` (2026-05-12) |
+| Prod verify packet | `VERIFIED_COMPLETE` (2026-05-12) |
+| QA data setup mutation | Controlled QA-only accepted invite created (invite_id=37e10cc1-cfe1-47d8-90ea-1e87624cdf29, invite_ref=QA-DATA-SETUP-001-INV, status=ACCEPTED) |
+| supplier_quotes flag | `false` — unchanged (QD-6 hold maintained) |
 | Quote submitted | NO |
-| Production data mutation | NONE |
+| Quote row created | NO |
 | DPP hold | `HOLD_FOR_PARESH_DECISION` — unchanged |
-| Commit | `docs(network-commerce): record supplier quote frontend production verify blocker` |
+| Commit | `docs(network-commerce): verify supplier quote frontend production path` |

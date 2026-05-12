@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-05 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 SQL SAFETY REVIEW COMPLETE — AWAITING_EXECUTE_AUTHORIZATION; all 11 safety sections passed; BEGIN+ROLLBACK dry-run PASSED; owner org corrected from 32f03220 CLOSED to 00aee0d5 ACTIVE; no data committed; FE-8 stays PENDING_PRODUCTION_VERIFY; supplier_quotes.enabled=false unchanged; DPP HOLD_FOR_PARESH_DECISION unchanged)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-12 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 VERIFIED_COMPLETE; FE-8 VERIFIED_COMPLETE. QA invite SQL committed, invite_id=37e10cc1 ACCEPTED. SupplierQuoteSurface feature-disabled path confirmed in production. No quote submitted. supplier_quotes.enabled=false unchanged (QD-6 hold maintained). DPP HOLD_FOR_PARESH_DECISION unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -16,47 +16,45 @@ product_delivery_priority: >-
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
 active_delivery_unit: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001
-active_delivery_unit_status: PENDING_PRODUCTION_VERIFY — SAFETY_REVIEW_COMPLETE_AWAITING_EXECUTE
+active_delivery_unit_status: VERIFIED_COMPLETE
 active_delivery_unit_note: >
-  TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 (FE-8) IMPLEMENTED — PENDING_PRODUCTION_VERIFY (2026-06-05).
+  TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 (FE-8) VERIFIED_COMPLETE (2026-05-12).
   SupplierQuoteSurface.tsx created. SupplierInviteInbox.tsx narrowly integrated (Submit / View Quote button for ACCEPTED invites).
   Service methods added: getSupplierQuoteForInvite + submitSupplierQuoteForInvite.
   16 frontend tests passing. Typecheck clean. Exactly 4 allowlisted files changed.
   nc.procurement_pools.supplier_quotes.enabled remains false (QD-6 hold maintained).
   Surface shows feature-disabled state gracefully in production (flag = false).
-  PROD VERIFY ATTEMPT (2026-05-12): BLOCKED_PENDING_QA_ACCEPTED_INVITE.
-  NC Pools HEALTHY. Supplier Invite Inbox HEALTHY. QA B2B session has 0 invites (Total: 0, Pending: 0).
-  QA-DATA-SETUP-001 SQL SAFETY REVIEW COMPLETE (2026-06-05):
-  All 11 safety sections passed. BEGIN+ROLLBACK dry-run PASSED (NOTICE emitted, ROLLBACK confirmed).
-  Owner org corrected: 32f03220 (CLOSED) → 00aee0d5 test-tenant-rfq-route-owner (ACTIVE, integration test residue).
-  Supplier: faf2e4a7 (QA B2B). Lifecycle: a6fd9227 (POOL/CLOSED_FOR_BIDS). 0 pre-existing invites confirmed.
-  Idempotent COMMIT SQL + cleanup SQL produced in governance doc.
-  PENDING: Explicit Paresh EXECUTE authorization to commit QA data to production DB.
-  After EXECUTE: run post-insert verification SELECTs, then resume FE-8 browser verification.
-  Recommended next packet: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 (AWAITING_EXECUTE_AUTHORIZATION).
+  PROD VERIFY COMPLETE (2026-05-12): via TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001.
+  QA invite SQL committed: invite_id=37e10cc1-cfe1-47d8-90ea-1e87624cdf29 (ACCEPTED).
+  SupplierQuoteSurface opened, feature-disabled amber banner confirmed ("Supplier Quote Submission Disabled").
+  Back navigation confirmed: inbox reloads cleanly with invite still ACCEPTED.
+  No quote submitted. No quote row created. supplier_quotes.enabled=false unchanged.
+  NEXT: Supplier quote feature flag activation — REQUIRES separate explicit Paresh authorization to lift QD-6.
+  Do NOT open FE-9 or activate supplier_quotes without explicit Paresh decision.
   DPP LAUNCH GATE (independent of NC Phase 1C):
   TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 VERIFIED_COMPLETE (2026-05-02).
   DPP Passport Network is technically production-ready based on PROD-AUDIT-002.
   DPP launch authorization: HOLD_FOR_PARESH_DECISION — separate decision; not unlocked by NC work.
   Do NOT open DPP next slice without separate explicit Paresh DPP authorization.
-last_closed_unit: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-PROD-VERIFY-001
-last_closed_unit_status: BLOCKED_PENDING_QA_ACCEPTED_INVITE
+last_closed_unit: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001
+last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-PROD-VERIFY-001 BLOCKED_PENDING_QA_ACCEPTED_INVITE (2026-05-12).
-  Production verification attempted at app.texqtic.com (QA B2B session).
-  NC Pools surface: HEALTHY — loaded, empty state, no FEATURE_DISABLED error.
-  Supplier Invite Inbox: HEALTHY — loaded without disabled state, Total: 0, Pending: 0.
-  No accepted invites in QA B2B session. Cannot trigger Submit/View Quote affordance or SupplierQuoteSurface.
-  Feature flags: nc.procurement_pools.enabled=t, rfq.enabled=t, supplier_invites.enabled=t, supplier_quotes.enabled=f (all correct).
+  TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 VERIFIED_COMPLETE (2026-05-12).
+  QA invite SQL committed to production DB. invite_id=37e10cc1-cfe1-47d8-90ea-1e87624cdf29 (ACCEPTED).
+  FE-8 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001) VERIFIED_COMPLETE.
+  SupplierQuoteSurface: opened, feature-disabled amber banner confirmed.
+  Back navigation: confirmed, inbox reloads cleanly.
+  No quote submitted. No quote row. supplier_quotes.enabled=false unchanged (QD-6 hold).
+  All governance docs updated and committed.
   Deployment behavioral evidence: consistent with d8a2ce2 (NC surfaces render per flag state).
-  No production quote submitted. No feature flag mutation. No data mutation. DPP hold unchanged.
-  FE-8 status: PENDING_PRODUCTION_VERIFY — UNCHANGED.
-  Recommended next packet: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 (HOLD_FOR_PARESH_DECISION).
-last_closed_unit_commits: docs(network-commerce): record supplier quote frontend production verify blocker
+  No production quote submitted. No feature flag mutation. No source code changes. DPP hold unchanged.
+  FE-8 status: VERIFIED_COMPLETE (2026-05-12).
+  Next decision: supplier quote feature flag activation (QD-6 hold) — separate explicit Paresh decision required to lift.
+last_closed_unit_commits: docs(network-commerce): verify supplier quote frontend production path
 last_closed_unit_closure_basis: >-
-  BLOCKED_PENDING_QA_ACCEPTED_INVITE. NC surfaces HEALTHY. No accepted invite to trigger affordance.
-  Cannot advance FE-8 to VERIFIED_COMPLETE without QA accepted invite in production session.
-  supplier_quotes.enabled=false confirmed unchanged. QD-6 hold maintained.
+  QA-DATA-SETUP-001 VERIFIED_COMPLETE. SQL committed (invite_id=37e10cc1, ACCEPTED).
+  FE-8 SupplierQuoteSurface confirmed: feature-disabled banner, back navigation clean.
+  No quote submitted. supplier_quotes.enabled=false confirmed unchanged. QD-6 hold maintained.
   DPP posture: HOLD_FOR_PARESH_DECISION — UNCHANGED.
 note_on_pending_verification: >-
   TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).

@@ -5,6 +5,31 @@
 
 ---
 
+## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 + FE-8 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001)
+
+QA accepted invite SQL committed to production DB. FE-8 SupplierQuoteSurface fully verified.
+
+**Committed IDs:**
+- invite_id: `37e10cc1-cfe1-47d8-90ea-1e87624cdf29` (ACCEPTED, invite_ref=QA-DATA-SETUP-001-INV)
+- pool_id: `c108335e-e545-4f8d-a2e2-d87278277465`
+- rfq_id: `ba47b303-86c8-4e20-ad96-1bc85b1d7c71`
+- snapshot_id: `dc715995-509c-4515-8a59-e7b7e1c04eeb`
+- supplier_org_id: `faf2e4a7-5d79-4b00-811b-8d0dce4f4d80` (QA B2B)
+- owner_org_id: `00aee0d5-850c-43ea-bf5b-545f2a720133` (test-tenant-rfq-route-owner)
+
+**FE-8 Browser Verification:** `app.texqtic.com`, QA B2B tenant, v2.4.0.
+- Supplier Invite Inbox: HEALTHY, Total: 1, invite ACCEPTED visible.
+- "Submit / View Quote" button: PRESENT on accepted invite card.
+- SupplierQuoteSurface: opened, `Invite: 37e10cc1-cfe1-47d8-90ea-1e87624cdf29`.
+- Feature-disabled state: `Supplier Quote Submission Disabled` amber banner confirmed.
+- Back navigation: `← Back to Inbox` returns to inbox cleanly.
+- No quote submitted. No quote row created.
+
+**Safety constraints maintained:** supplier_quotes.enabled=f unchanged (QD-6 hold). No non-QA data touched.
+**DPP posture:** HOLD_FOR_PARESH_DECISION — UNCHANGED.
+**FE-8 status: VERIFIED_COMPLETE.**
+**Governance commit:** `docs(network-commerce): verify supplier quote frontend production path`
+
 
 ## 2026-06-05 -- SAFETY_REVIEW_COMPLETE / AWAITING_EXECUTE_AUTHORIZATION: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001
 

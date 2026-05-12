@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-05 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 SQL SAFETY REVIEW COMPLETE. All 11 safety sections passed. BEGIN+ROLLBACK dry-run PASSED. Owner org corrected 32f03220 CLOSED → 00aee0d5 ACTIVE. No data committed. AWAITING_EXECUTE_AUTHORIZATION. FE-8 remains PENDING_PRODUCTION_VERIFY. supplier_quotes.enabled=false unchanged (QD-6 hold maintained). DPP posture HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-05-12 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 VERIFIED_COMPLETE. FE-8 TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 VERIFIED_COMPLETE. QA invite SQL committed (invite_id=37e10cc1, ACCEPTED). SupplierQuoteSurface feature-disabled path confirmed in production at app.texqtic.com. No quote submitted. supplier_quotes.enabled=false unchanged (QD-6 hold maintained). DPP posture HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or

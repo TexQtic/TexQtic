@@ -1,9 +1,9 @@
 # TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001
 
 > **TYPE:** SQL Safety Review + QA Data Setup Packet  
-> **STATUS:** SAFETY_REVIEW_COMPLETE — AWAITING_EXECUTE_AUTHORIZATION  
-> **Date:** 2026-06-05  
-> **Related Packet:** TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 (FE-8) — PENDING_PRODUCTION_VERIFY  
+> **STATUS:** VERIFIED_COMPLETE  
+> **Date:** 2026-06-05 (safety review) | 2026-05-12 (execute + FE-8 verified)  
+> **Related Packet:** TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 (FE-8) — VERIFIED_COMPLETE (2026-05-12)  
 > **Blocked On:** FE-8 production verification requires one ACCEPTED supplier invite in the QA B2B session to trigger the Submit/View Quote affordance and SupplierQuoteSurface.
 
 ---
@@ -273,8 +273,8 @@ specific test objective.
 
 ### Section 8 — COMMIT Version (Idempotent SQL)
 
-> **STATUS: PENDING_EXECUTE_AUTHORIZATION**  
-> Do NOT execute until Paresh provides explicit "EXECUTE" authorization in a future prompt.
+> **STATUS: EXECUTED + VERIFIED (2026-05-12)**  
+> Paresh provided explicit EXECUTE authorization 2026-05-12. SQL committed. FE-8 production verification completed same session. See Post-Execute Evidence Log in step execution table above.
 
 ```sql
 -- TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001
@@ -418,9 +418,9 @@ to test/QA orgs, fully reversible via cleanup SQL, and idempotent. The original 
 (`32f03220`, CLOSED) has been resolved by substituting `00aee0d5` (ACTIVE, same test residue  
 class). No real customer data is at risk. No feature flags are changed.
 
-**Awaiting:** Explicit `EXECUTE` authorization from Paresh to run Section 8 COMMIT SQL.  
-After COMMIT: run Section 9 verification SELECTs, then resume FE-8 production verification  
-browser session at `app.texqtic.com` (QA B2B, Supplier Invite Inbox).
+**Executed:** `EXECUTE` authorization received from Paresh (2026-05-12). Section 8 COMMIT SQL run successfully.  
+Section 9 verification SELECTs completed — all expected rows confirmed.  
+FE-8 production verification browser session completed at `app.texqtic.com` (QA B2B, Supplier Invite Inbox). Full outcome: VERIFIED_COMPLETE.
 
 ---
 
@@ -435,11 +435,84 @@ browser session at `app.texqtic.com` (QA B2B, Supplier Invite Inbox).
 | Step 5: Existing invite check | ✅ CONFIRMED | 0 accepted invites, 0 quotes (Section 5) |
 | Step 6a: SQL safety review (full) | ✅ COMPLETE | Sections 1–11 above |
 | Step 6b: BEGIN+ROLLBACK dry-run | ✅ PASSED | NOTICE emitted, ROLLBACK confirmed (Section 7) |
-| Step 7: EXECUTE SQL | ⏸ PENDING | Awaiting Paresh EXECUTE authorization |
-| Step 8: Post-insert verification | ⏸ PENDING | Section 9 SELECTs — run after COMMIT |
-| Step 9: Browser verification (FE-8) | ⏸ PENDING | Resume app.texqtic.com QA B2B session |
-| Step 10: Governance close + commit | ⏸ PENDING | After FE-8 verification complete |
+| Step 7: EXECUTE SQL | ✅ COMMITTED | NOTICE: `invite_id=37e10cc1`, `pool_id=c108335e`, `rfq_id=ba47b303`, `snapshot_id=dc715995` — COMMIT returned |
+| Step 8: Post-insert verification | ✅ PASSED | Both SELECTs returned expected rows — invite ACCEPTED, supplier inbox join correct |
+| Step 9: Browser verification (FE-8) | ✅ VERIFIED_COMPLETE | SupplierQuoteSurface opened, feature-disabled banner confirmed, back navigation confirmed, 0 quotes submitted |
+| Step 10: Governance close + commit | ✅ COMPLETE | Governance docs updated; final commit created |
 
 ---
 
-*Packet: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 · Safety review complete 2026-06-05*
+## Post-Execute Evidence Log (2026-05-12)
+
+### SQL COMMIT Result
+
+```
+postgres=> \i 'C:/Users/PARESH/AppData/Local/Temp/tq_commit.sql'
+BEGIN
+DO
+psql:NOTICE:  QA-DATA-SETUP-001 COMMITTED:
+  invite_id=37e10cc1-cfe1-47d8-90ea-1e87624cdf29,
+  pool_id=c108335e-e545-4f8d-a2e2-d87278277465,
+  rfq_id=ba47b303-86c8-4e20-ad96-1bc85b1d7c71,
+  snapshot_id=dc715995-509c-4515-8a59-e7b7e1c04eeb
+COMMIT
+```
+
+### Committed IDs
+
+| Field | Value |
+|---|---|
+| `invite_id` | `37e10cc1-cfe1-47d8-90ea-1e87624cdf29` |
+| `pool_id` | `c108335e-e545-4f8d-a2e2-d87278277465` |
+| `rfq_id` | `ba47b303-86c8-4e20-ad96-1bc85b1d7c71` |
+| `snapshot_id` | `dc715995-509c-4515-8a59-e7b7e1c04eeb` |
+| `invite_ref` | `QA-DATA-SETUP-001-INV` |
+| `pool_ref` | `QA-DATA-SETUP-001` |
+| `rfq_ref` | `QA-DATA-SETUP-001-RFQ` |
+| `snapshot_ref` | `QA-DATA-SETUP-001-SNAP` |
+| `accepted_at` | `2026-05-12 05:02:25.889158+00` |
+| `supplier_org_id` | `faf2e4a7-5d79-4b00-811b-8d0dce4f4d80` |
+| `owner_org_id` | `00aee0d5-850c-43ea-bf5b-545f2a720133` |
+
+### Post-Insert Verification SELECTs
+
+**Query 1 — invite row:**
+```
+ id=37e10cc1-cfe1-47d8-90ea-1e87624cdf29 | status=ACCEPTED | accepted_at=2026-05-12 05:02:25.889158+00
+ invite_ref=QA-DATA-SETUP-001-INV | supplier_org_id=faf2e4a7... | owner_org_id=00aee0d5...
+(1 row)
+```
+
+**Query 2 — supplier inbox join:**
+```
+ id=37e10cc1... | status=ACCEPTED | invite_ref=QA-DATA-SETUP-001-INV | rfq_ref=QA-DATA-SETUP-001-RFQ | pool_ref=QA-DATA-SETUP-001
+(1 row)
+```
+
+### Forbidden State Confirmation (post-execute)
+
+| Check | Result |
+|---|---|
+| `nc.procurement_pools.supplier_quotes.enabled` | `f` — unchanged ✅ |
+| `network_pool_rfq_supplier_quotes` rows for QA B2B | `0` — no quotes inserted ✅ |
+| Feature flags mutated | `0` — no flag changes ✅ |
+| Non-QA tenant rows touched | `0` — no non-QA data touched ✅ |
+
+### FE-8 Production Browser Verification (2026-05-12)
+
+| Check | Observed | Result |
+|---|---|---|
+| Session | `app.texqtic.com` — QA B2B tenant, v2.4.0 | ✅ ACTIVE |
+| Supplier Invite Inbox loads | Total: 1, Pending: 0 | ✅ PASS |
+| Accepted invite visible | `ACCEPTED` badge, `Ref: QA-DATA-SETUP-001-INV` | ✅ PASS |
+| "Submit / View Quote" button | Present on accepted invite card | ✅ PASS |
+| SupplierQuoteSurface opens | `Invite: 37e10cc1-cfe1-47d8-90ea-1e87624cdf29` | ✅ PASS |
+| Feature-disabled state | `Supplier Quote Submission Disabled` banner visible | ✅ PASS |
+| Back navigation | `← Back to Inbox` returns cleanly to inbox | ✅ PASS |
+| No quote submitted | No POST made, no quote form visible | ✅ PASS |
+| No quote row created | `network_pool_rfq_supplier_quotes` count = 0 | ✅ PASS |
+| 503 on quote endpoint | Expected — FE handled with feature-disabled banner | ✅ EXPECTED |
+
+---
+
+*Packet: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 · Safety review 2026-06-05 · Execute + verified 2026-05-12*
