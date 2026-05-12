@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-REMOTE-DEPLOY-001 VERIFIED_COMPLETE. Both Phase 1D migrations verified on remote Supabase. Columns/constraint/flags confirmed. No source/env/feature changes. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP posture HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-06-07 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001 VERIFIED_COMPLETE. listOwnerQuotes/acceptQuote/rejectQuote added to NetworkPoolRfqService. 150/150 unit tests pass. tsc PASS. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP posture HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,18 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001 VERIFIED_COMPLETE (2026-06-07).
+  NC Phase 1D service layer complete. listOwnerQuotes, acceptQuote, rejectQuote added to NetworkPoolRfqService.
+  2 new error classes (NetworkPoolRfqOwnerQuoteNotFoundError, NetworkPoolRfqSupplierQuoteNotInSubmittedError).
+  NetworkPoolRfqSupplierQuoteOwnerRecord DTO + AcceptQuoteInput/RejectQuoteInput interfaces.
+  16 new unit tests (P-OWNER-01 → P-OWNER-16). Total: 150/150 PASS.
+  acceptQuote: mass-reject + pool CLOSED_FOR_BIDS→QUOTED→ACCEPTED + RFQ→ACCEPTED (QD-8 direct update).
+  rejectQuote: single-quote rejection, no pool/RFQ state change (AD-5).
+  tsc --noEmit PASS. QD-6 hold maintained: supplier_quotes.enabled=false.
+  FE-9: HOLD_FOR_PARESH_DECISION. DPP: HOLD_FOR_PARESH_DECISION.
+  Next packet: AWARD-ROUTE-001 (requires Paresh authorization).
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001.md.
 
 - TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-REMOTE-DEPLOY-001 VERIFIED_COMPLETE (2026-05-12).
   Remote deployment + verification of Phase 1D award schema migrations on remote Supabase.

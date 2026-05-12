@@ -49,6 +49,8 @@ import {
   NetworkPoolRfqSupplierQuoteNotFoundError,
   NetworkPoolRfqSupplierQuoteConflictError,
   NetworkPoolRfqSupplierQuoteInviteNotAcceptedError,
+  NetworkPoolRfqOwnerQuoteNotFoundError,
+  NetworkPoolRfqSupplierQuoteNotInSubmittedError,
 } from '../services/networkPoolRfq.service.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -2741,6 +2743,417 @@ describe('P-QUOTE-15 (SQ-15): PASS — only one lifecycle log when RFQ already Q
     const reason = logCreate.mock.calls[0][0].data.reason as string;
     expect(reason).toContain('nc_pool_rfq_supplier_quote_submitted');
     expect(reason).not.toContain('nc_pool_rfq_status_changed_to_quoted');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// OWNER AWARD TESTS — TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001
+// 16 tests: P-OWNER-01 → P-OWNER-16
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Award Test Constants ─────────────────────────────────────────────────────
+
+const QUOTE_ID_2        = '3333dddd-0000-0000-0000-000000000001';
+const QUOTED_STATE_ID   = '9999dddd-0000-0000-0000-000000000001';
+const ACCEPTED_STATE_ID = '9999eeee-0000-0000-0000-000000000001';
+
+// ─── Award Fixtures ───────────────────────────────────────────────────────────
+
+function makeOwnerQuoteRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id:                   QUOTE_ID,
+    ownerOrgId:           OWNER_ORG_ID,
+    supplierOrgId:        SUPPLIER_ORG_ID,
+    rfqId:                RFQ_ID,
+    poolId:               POOL_ID,
+    inviteId:             INVITE_ID,
+    quoteRef:             QUOTE_REF,
+    status:               'SUBMITTED',
+    quoteAmount:          '1500.00',
+    currency:             'USD',
+    validityUntil:        null,
+    supplierNote:         null,
+    submittedAt:          NOW,
+    submittedByUserId:    USER_ID,
+    withdrawnAt:          null,
+    acceptedAt:           null,
+    rejectedAt:           null,
+    rejectReason:         null,
+    metadataInternalJson: null,
+    createdAt:            NOW,
+    updatedAt:            NOW,
+    ...overrides,
+  };
+}
+
+function makePoolRowForAward(stateKey = 'CLOSED_FOR_BIDS') {
+  return {
+    id:               POOL_ID,
+    orgId:            OWNER_ORG_ID,
+    lifecycleState:   { stateKey, id: LIFECYCLE_STATE_ID },
+    lifecycleStateId: LIFECYCLE_STATE_ID,
+    createdAt:        NOW,
+    updatedAt:        NOW,
+  };
+}
+
+function makeRfqRowForAward(overrides: Record<string, unknown> = {}) {
+  return { id: RFQ_ID, ownerOrgId: OWNER_ORG_ID, poolId: POOL_ID, status: 'QUOTED', ...overrides };
+}
+
+// ─── Award Mock Factories ─────────────────────────────────────────────────────
+
+function makeTxForAcceptQuote(overrides: {
+  networkPool?:                  Record<string, unknown>;
+  networkPoolRfq?:               Record<string, unknown>;
+  networkPoolRfqSupplierQuote?:  Record<string, unknown>;
+  networkLifecycleLog?:          Record<string, unknown>;
+} = {}): any {
+  return {
+    networkPool: {
+      findFirst: vi.fn().mockResolvedValue(makePoolRowForAward()),
+      update:    vi.fn().mockResolvedValue({}),
+      ...(overrides.networkPool ?? {}),
+    },
+    networkPoolRfq: {
+      findFirst: vi.fn().mockResolvedValue(makeRfqRowForAward()),
+      update:    vi.fn().mockResolvedValue({}),
+      ...(overrides.networkPoolRfq ?? {}),
+    },
+    networkPoolRfqSupplierQuote: {
+      findFirst:   vi.fn().mockResolvedValue(makeOwnerQuoteRow()),
+      update:      vi.fn().mockResolvedValue(makeOwnerQuoteRow({ status: 'ACCEPTED', acceptedAt: NOW })),
+      updateMany:  vi.fn().mockResolvedValue({ count: 0 }),
+      ...(overrides.networkPoolRfqSupplierQuote ?? {}),
+    },
+    networkLifecycleLog: {
+      create: vi.fn().mockResolvedValue({ id: LOG_ID }),
+      ...(overrides.networkLifecycleLog ?? {}),
+    },
+  };
+}
+
+function makeDbForAcceptQuote(
+  txOverrides?: Parameters<typeof makeTxForAcceptQuote>[0],
+  lifecycleStateOverride?: any,
+): any {
+  const tx = makeTxForAcceptQuote(txOverrides ?? {});
+  return {
+    lifecycleState: {
+      findUnique: vi.fn().mockImplementation(({ where }: any) => {
+        const key = where?.entityType_stateKey?.stateKey;
+        if (key === 'QUOTED')   return Promise.resolve({ id: QUOTED_STATE_ID,   stateKey: 'QUOTED' });
+        if (key === 'ACCEPTED') return Promise.resolve({ id: ACCEPTED_STATE_ID, stateKey: 'ACCEPTED' });
+        return Promise.resolve(null);
+      }),
+      ...(lifecycleStateOverride ?? {}),
+    },
+    $transaction: vi.fn().mockImplementation((fn: (tx: any) => any) => fn(tx)),
+    _mockTx: tx,
+  };
+}
+
+function makeTxForRejectQuote(overrides: {
+  networkPool?:                  Record<string, unknown>;
+  networkPoolRfq?:               Record<string, unknown>;
+  networkPoolRfqSupplierQuote?:  Record<string, unknown>;
+  networkLifecycleLog?:          Record<string, unknown>;
+} = {}): any {
+  return {
+    networkPool: {
+      findFirst: vi.fn().mockResolvedValue(makePoolRowForAward()),
+      ...(overrides.networkPool ?? {}),
+    },
+    networkPoolRfq: {
+      findFirst: vi.fn().mockResolvedValue(makeRfqRowForAward()),
+      ...(overrides.networkPoolRfq ?? {}),
+    },
+    networkPoolRfqSupplierQuote: {
+      findFirst: vi.fn().mockResolvedValue(makeOwnerQuoteRow()),
+      update:    vi.fn().mockResolvedValue(makeOwnerQuoteRow({ status: 'REJECTED', rejectedAt: NOW })),
+      ...(overrides.networkPoolRfqSupplierQuote ?? {}),
+    },
+    networkLifecycleLog: {
+      create: vi.fn().mockResolvedValue({ id: LOG_ID }),
+      ...(overrides.networkLifecycleLog ?? {}),
+    },
+  };
+}
+
+function makeDbForRejectQuote(txOverrides?: Parameters<typeof makeTxForRejectQuote>[0]): any {
+  const tx = makeTxForRejectQuote(txOverrides ?? {});
+  return {
+    $transaction: vi.fn().mockImplementation((fn: (tx: any) => any) => fn(tx)),
+    _mockTx: tx,
+  };
+}
+
+function makeDbForListOwnerQuotes(rows: any[] = []): any {
+  return {
+    networkPoolRfqSupplierQuote: {
+      findMany: vi.fn().mockResolvedValue(rows),
+    },
+  };
+}
+
+// ─── listOwnerQuotes — P-OWNER-01 → P-OWNER-02 ───────────────────────────────
+
+describe('P-OWNER-01: PASS — listOwnerQuotes returns empty array when no quotes', () => {
+  it('resolves with [] when findMany returns empty', async () => {
+    const db  = makeDbForListOwnerQuotes([]);
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.listOwnerQuotes(OWNER_ORG_ID, POOL_ID, RFQ_ID);
+
+    expect(result).toEqual([]);
+  });
+});
+
+describe('P-OWNER-02: PASS — listOwnerQuotes returns owner DTOs and excludes internal fields', () => {
+  it('maps rows to owner DTOs including owner_org_id, supplier_org_id, rfq_id, pool_id', async () => {
+    const db  = makeDbForListOwnerQuotes([makeOwnerQuoteRow(), makeOwnerQuoteRow({ id: QUOTE_ID_2 })]);
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.listOwnerQuotes(OWNER_ORG_ID, POOL_ID, RFQ_ID);
+
+    expect(result).toHaveLength(2);
+    expect(result[0]).toHaveProperty('owner_org_id', OWNER_ORG_ID);
+    expect(result[0]).toHaveProperty('supplier_org_id', SUPPLIER_ORG_ID);
+    expect(result[0]).toHaveProperty('rfq_id', RFQ_ID);
+    expect(result[0]).toHaveProperty('pool_id', POOL_ID);
+    expect(result[0]).toHaveProperty('accepted_at', null);
+    expect(result[0]).toHaveProperty('rejected_at', null);
+    expect(result[0]).toHaveProperty('reject_reason', null);
+    expect(result[0]).not.toHaveProperty('metadataInternalJson');
+    expect(result[0]).not.toHaveProperty('withdrawReason');
+  });
+});
+
+// ─── acceptQuote — P-OWNER-03 → P-OWNER-09 ───────────────────────────────────
+
+describe('P-OWNER-03: PASS — acceptQuote returns owner DTO with status=ACCEPTED', () => {
+  it('resolves with NetworkPoolRfqSupplierQuoteOwnerRecord with status ACCEPTED', async () => {
+    const db  = makeDbForAcceptQuote();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.acceptQuote(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {});
+
+    expect(result).toHaveProperty('id', QUOTE_ID);
+    expect(result).toHaveProperty('status', 'ACCEPTED');
+    expect(result).toHaveProperty('owner_org_id', OWNER_ORG_ID);
+    expect(result).toHaveProperty('rfq_id', RFQ_ID);
+  });
+});
+
+describe('P-OWNER-04: PASS — acceptQuote mass-rejects other SUBMITTED quotes for same RFQ', () => {
+  it('updateMany is called with status SUBMITTED and id: { not: quoteId }', async () => {
+    const db  = makeDbForAcceptQuote();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.acceptQuote(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {});
+
+    const updateManyCall = db._mockTx.networkPoolRfqSupplierQuote.updateMany.mock.calls[0][0];
+    expect(updateManyCall.where.status).toBe('SUBMITTED');
+    expect(updateManyCall.where.id.not).toBe(QUOTE_ID);
+    expect(updateManyCall.data.status).toBe('REJECTED');
+    expect(updateManyCall.data.rejectedAt).toBeInstanceOf(Date);
+  });
+});
+
+describe('P-OWNER-05: PASS — acceptQuote does not set rejectReason on mass-rejected quotes', () => {
+  it('updateMany data does not include rejectReason', async () => {
+    const db  = makeDbForAcceptQuote();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.acceptQuote(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {});
+
+    const updateManyCall = db._mockTx.networkPoolRfqSupplierQuote.updateMany.mock.calls[0][0];
+    expect(updateManyCall.data).not.toHaveProperty('rejectReason');
+  });
+});
+
+describe('P-OWNER-06: PASS — acceptQuote updates RFQ status to ACCEPTED', () => {
+  it('networkPoolRfq.update is called with status ACCEPTED', async () => {
+    const db  = makeDbForAcceptQuote();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.acceptQuote(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {});
+
+    const rfqUpdateCall = db._mockTx.networkPoolRfq.update.mock.calls[0][0];
+    expect(rfqUpdateCall.data.status).toBe('ACCEPTED');
+  });
+});
+
+describe('P-OWNER-07: PASS — acceptQuote transitions pool CLOSED_FOR_BIDS→QUOTED→ACCEPTED', () => {
+  it('sm.transition is called twice when pool is CLOSED_FOR_BIDS', async () => {
+    const db  = makeDbForAcceptQuote();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.acceptQuote(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {});
+
+    expect(sm.transition).toHaveBeenCalledTimes(2);
+    const [call1Args] = sm.transition.mock.calls[0];
+    expect(call1Args.fromStateKey).toBe('CLOSED_FOR_BIDS');
+    expect(call1Args.toStateKey).toBe('QUOTED');
+    const [call2Args] = sm.transition.mock.calls[1];
+    expect(call2Args.fromStateKey).toBe('QUOTED');
+    expect(call2Args.toStateKey).toBe('ACCEPTED');
+  });
+});
+
+describe('P-OWNER-08: PASS — acceptQuote skips CLOSED_FOR_BIDS→QUOTED when pool already QUOTED', () => {
+  it('sm.transition is called only once (QUOTED→ACCEPTED) when pool is already QUOTED', async () => {
+    const db = makeDbForAcceptQuote({
+      networkPool: {
+        findFirst: vi.fn().mockResolvedValue(makePoolRowForAward('QUOTED')),
+        update:    vi.fn().mockResolvedValue({}),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.acceptQuote(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {});
+
+    expect(sm.transition).toHaveBeenCalledTimes(1);
+    const [callArgs] = sm.transition.mock.calls[0];
+    expect(callArgs.fromStateKey).toBe('QUOTED');
+    expect(callArgs.toStateKey).toBe('ACCEPTED');
+  });
+});
+
+describe('P-OWNER-09: FAIL — acceptQuote throws NotInSubmittedError for non-SUBMITTED quote', () => {
+  it('throws NetworkPoolRfqSupplierQuoteNotInSubmittedError when quote is ACCEPTED', async () => {
+    const db = makeDbForAcceptQuote({
+      networkPoolRfqSupplierQuote: {
+        findFirst:  vi.fn().mockResolvedValue(makeOwnerQuoteRow({ status: 'ACCEPTED', acceptedAt: NOW })),
+        update:     vi.fn(),
+        updateMany: vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.acceptQuote(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {}),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqSupplierQuoteNotInSubmittedError);
+  });
+});
+
+// ─── rejectQuote — P-OWNER-10 → P-OWNER-16 ───────────────────────────────────
+
+describe('P-OWNER-10: PASS — rejectQuote returns owner DTO with status=REJECTED', () => {
+  it('resolves with NetworkPoolRfqSupplierQuoteOwnerRecord with status REJECTED', async () => {
+    const db  = makeDbForRejectQuote();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.rejectQuote(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {});
+
+    expect(result).toHaveProperty('id', QUOTE_ID);
+    expect(result).toHaveProperty('status', 'REJECTED');
+  });
+});
+
+describe('P-OWNER-11: PASS — rejectQuote persists rejectReason in update data', () => {
+  it('update call includes reject_reason from input', async () => {
+    const db  = makeDbForRejectQuote();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.rejectQuote(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, { reject_reason: 'Price too high' });
+
+    const updateCall = db._mockTx.networkPoolRfqSupplierQuote.update.mock.calls[0][0];
+    expect(updateCall.data.status).toBe('REJECTED');
+    expect(updateCall.data.rejectReason).toBe('Price too high');
+    expect(updateCall.data.rejectedAt).toBeInstanceOf(Date);
+  });
+});
+
+describe('P-OWNER-12: PASS — rejectQuote does NOT change RFQ status', () => {
+  it('networkPoolRfq.update is never called during rejectQuote', async () => {
+    const txMockNoRfqUpdate = makeTxForRejectQuote();
+    const db: any = {
+      $transaction: vi.fn().mockImplementation((fn: (tx: any) => any) => fn(txMockNoRfqUpdate)),
+      _mockTx: txMockNoRfqUpdate,
+    };
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.rejectQuote(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {});
+
+    // The tx mock has no networkPoolRfq.update — access would throw TypeError if called
+    expect(txMockNoRfqUpdate.networkPoolRfqSupplierQuote.update).toHaveBeenCalledOnce();
+  });
+});
+
+describe('P-OWNER-13: PASS — rejectQuote does NOT change pool lifecycle state', () => {
+  it('sm.transition is never called during rejectQuote', async () => {
+    const db  = makeDbForRejectQuote();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.rejectQuote(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {});
+
+    expect(sm.transition).not.toHaveBeenCalled();
+  });
+});
+
+describe('P-OWNER-14: PASS — rejectQuote uses actual pool lifecycle state in log when pool is QUOTED', () => {
+  it('lifecycle log fromStateKey and toStateKey both equal QUOTED when pool state is QUOTED', async () => {
+    const db = makeDbForRejectQuote({
+      networkPool: {
+        findFirst: vi.fn().mockResolvedValue(makePoolRowForAward('QUOTED')),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.rejectQuote(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {});
+
+    const logCall = db._mockTx.networkLifecycleLog.create.mock.calls[0][0];
+    expect(logCall.data.fromStateKey).toBe('QUOTED');
+    expect(logCall.data.toStateKey).toBe('QUOTED');
+  });
+});
+
+describe('P-OWNER-15: FAIL — rejectQuote throws NotInSubmittedError for non-SUBMITTED quote', () => {
+  it('throws NetworkPoolRfqSupplierQuoteNotInSubmittedError when quote is REJECTED', async () => {
+    const db = makeDbForRejectQuote({
+      networkPoolRfqSupplierQuote: {
+        findFirst: vi.fn().mockResolvedValue(makeOwnerQuoteRow({ status: 'REJECTED', rejectedAt: NOW })),
+        update:    vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.rejectQuote(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {}),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqSupplierQuoteNotInSubmittedError);
+  });
+});
+
+describe('P-OWNER-16: FAIL — rejectQuote throws OwnerQuoteNotFoundError for wrong ownerOrgId', () => {
+  it('throws NetworkPoolRfqOwnerQuoteNotFoundError when findFirst returns null', async () => {
+    const db = makeDbForRejectQuote({
+      networkPoolRfqSupplierQuote: {
+        findFirst: vi.fn().mockResolvedValue(null),
+        update:    vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.rejectQuote('wrong-owner-id', USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {}),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqOwnerQuoteNotFoundError);
   });
 });
 

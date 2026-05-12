@@ -157,6 +157,25 @@ export class NetworkPoolRfqSupplierQuoteInviteNotAcceptedError extends Error {
   }
 }
 
+// ─── Phase 1D: Owner Quote Award Error Classes ────────────────────────────────
+
+export class NetworkPoolRfqOwnerQuoteNotFoundError extends Error {
+  constructor() {
+    super('Supplier quote not found for this RFQ and pool owner.');
+    this.name = 'NetworkPoolRfqOwnerQuoteNotFoundError';
+  }
+}
+
+export class NetworkPoolRfqSupplierQuoteNotInSubmittedError extends Error {
+  constructor(currentStatus: string) {
+    super(
+      `Quote cannot be accepted or rejected: current status is '${currentStatus}'. ` +
+      `Only SUBMITTED quotes may be acted on.`,
+    );
+    this.name = 'NetworkPoolRfqSupplierQuoteNotInSubmittedError';
+  }
+}
+
 // ─── Input / Record Types ─────────────────────────────────────────────────────
 
 export interface IssueNetworkPoolRfqInput {
@@ -288,6 +307,39 @@ export interface NetworkPoolRfqSupplierQuoteSupplierRecord {
   withdraw_reason:      string | null;
   created_at:           string;
   updated_at:           string;
+}
+
+/** Owner-facing quote DTO — returned by listOwnerQuotes, acceptQuote, rejectQuote. */
+export interface NetworkPoolRfqSupplierQuoteOwnerRecord {
+  id:                   string;
+  owner_org_id:         string;
+  supplier_org_id:      string;
+  rfq_id:               string;
+  pool_id:              string;
+  invite_id:            string;
+  quote_ref:            string;
+  status:               string;
+  quote_amount:         string;
+  currency:             string;
+  validity_until:       string | null;
+  supplier_note:        string | null;
+  submitted_at:         string;
+  submitted_by_user_id: string | null;
+  withdrawn_at:         string | null;
+  accepted_at:          string | null;
+  rejected_at:          string | null;
+  reject_reason:        string | null;
+  created_at:           string;
+  updated_at:           string;
+}
+
+export interface AcceptQuoteInput {
+  request_id?: string | null;
+}
+
+export interface RejectQuoteInput {
+  reject_reason?: string | null;
+  request_id?:    string | null;
 }
 
 // ─── Service ──────────────────────────────────────────────────────────────────
@@ -1208,6 +1260,50 @@ export class NetworkPoolRfqService {
     };
   }
 
+  // ── toQuoteOwnerRecord ────────────────────────────────────────────────────
+
+  /**
+   * Maps a DB quote row to NetworkPoolRfqSupplierQuoteOwnerRecord.
+   * Owner-facing DTO — includes ownerOrgId, supplierOrgId, rfqId, poolId.
+   * Excludes metadataInternalJson.
+   */
+  private toQuoteOwnerRecord(
+    row: Record<string, unknown>,
+  ): NetworkPoolRfqSupplierQuoteOwnerRecord {
+    return {
+      id:                   String(row['id']),
+      owner_org_id:         String(row['ownerOrgId']),
+      supplier_org_id:      String(row['supplierOrgId']),
+      rfq_id:               String(row['rfqId']),
+      pool_id:              String(row['poolId']),
+      invite_id:            String(row['inviteId']),
+      quote_ref:            String(row['quoteRef']),
+      status:               String(row['status']),
+      quote_amount:         String(row['quoteAmount']),
+      currency:             String(row['currency']),
+      validity_until:       row['validityUntil'] != null
+        ? new Date(row['validityUntil'] as string | Date).toISOString()
+        : null,
+      supplier_note:        row['supplierNote'] != null ? String(row['supplierNote']) : null,
+      submitted_at:         new Date(row['submittedAt'] as string | Date).toISOString(),
+      submitted_by_user_id: row['submittedByUserId'] != null
+        ? String(row['submittedByUserId'])
+        : null,
+      withdrawn_at:         row['withdrawnAt'] != null
+        ? new Date(row['withdrawnAt'] as string | Date).toISOString()
+        : null,
+      accepted_at:          row['acceptedAt'] != null
+        ? new Date(row['acceptedAt'] as string | Date).toISOString()
+        : null,
+      rejected_at:          row['rejectedAt'] != null
+        ? new Date(row['rejectedAt'] as string | Date).toISOString()
+        : null,
+      reject_reason:        row['rejectReason'] != null ? String(row['rejectReason']) : null,
+      created_at:           new Date(row['createdAt'] as string | Date).toISOString(),
+      updated_at:           new Date(row['updatedAt'] as string | Date).toISOString(),
+    };
+  }
+
   // ── getSupplierQuote ──────────────────────────────────────────────────────
 
   /**
@@ -1376,5 +1472,317 @@ export class NetworkPoolRfqService {
     });
 
     return this.toQuoteSupplierRecord(createdRow as Record<string, unknown>);
+  }
+
+  // ── listOwnerQuotes ───────────────────────────────────────────────────────
+
+  /**
+   * Pool owner retrieves all quotes submitted for a specific RFQ.
+   * Returns [] when no quotes exist — not a 404.
+   */
+  async listOwnerQuotes(
+    ownerOrgId: string,
+    poolId:     string,
+    rfqId:      string,
+  ): Promise<NetworkPoolRfqSupplierQuoteOwnerRecord[]> {
+    const rows = await (this.db as any).networkPoolRfqSupplierQuote.findMany({
+      where:   { ownerOrgId, poolId, rfqId },
+      orderBy: { submittedAt: 'desc' },
+    });
+    return (rows as Record<string, unknown>[]).map((r) => this.toQuoteOwnerRecord(r));
+  }
+
+  // ── acceptQuote ───────────────────────────────────────────────────────────
+
+  /**
+   * Pool owner accepts one SUBMITTED quote.
+   *
+   * AD-1: Mass-reject all other SUBMITTED quotes for the same RFQ atomically.
+   * AD-4: Pool MUST transition CLOSED_FOR_BIDS→QUOTED (if not already QUOTED), then QUOTED→ACCEPTED.
+   * QD-8: RFQ status update is a direct DB update — NOT an SM transition.
+   */
+  async acceptQuote(
+    ownerOrgId: string,
+    userId:     string | null,
+    poolId:     string,
+    rfqId:      string,
+    quoteId:    string,
+    input:      AcceptQuoteInput,
+  ): Promise<NetworkPoolRfqSupplierQuoteOwnerRecord> {
+    // Pre-load lifecycle state IDs for QUOTED and ACCEPTED (outside transaction)
+    const [quotedState, acceptedState] = await Promise.all([
+      (this.db as any).lifecycleState.findUnique({
+        where:  { entityType_stateKey: { entityType: 'POOL', stateKey: 'QUOTED' } },
+        select: { id: true, stateKey: true },
+      }) as Promise<{ id: string; stateKey: string } | null>,
+      (this.db as any).lifecycleState.findUnique({
+        where:  { entityType_stateKey: { entityType: 'POOL', stateKey: 'ACCEPTED' } },
+        select: { id: true, stateKey: true },
+      }) as Promise<{ id: string; stateKey: string } | null>,
+    ]);
+
+    if (!quotedState) {
+      throw new NetworkPoolRfqInvalidPoolStateError(
+        'POOL lifecycle state QUOTED not found in database.',
+      );
+    }
+    if (!acceptedState) {
+      throw new NetworkPoolRfqInvalidPoolStateError(
+        'POOL lifecycle state ACCEPTED not found in database.',
+      );
+    }
+
+    const acceptedRow = await this.db.$transaction(async (tx) => {
+      // 1. Load pool
+      const pool = await (tx as any).networkPool.findFirst({
+        where:   { id: poolId, orgId: ownerOrgId },
+        include: { lifecycleState: { select: { stateKey: true, id: true } } },
+      });
+      if (!pool) {
+        throw new NetworkPoolRfqPoolNotFoundError();
+      }
+
+      // 2. Pool state must be CLOSED_FOR_BIDS or QUOTED
+      const poolStateKey: string = (pool.lifecycleState as any).stateKey;
+      if (poolStateKey !== 'CLOSED_FOR_BIDS' && poolStateKey !== 'QUOTED') {
+        throw new NetworkPoolRfqInvalidPoolStateError(
+          `Pool must be in CLOSED_FOR_BIDS or QUOTED state to accept a quote. Current: '${poolStateKey}'.`,
+        );
+      }
+
+      // 3. Load RFQ
+      const rfq = await (tx as any).networkPoolRfq.findFirst({
+        where: { id: rfqId, poolId, ownerOrgId },
+      });
+      if (!rfq) {
+        throw new NetworkPoolRfqRfqNotFoundError();
+      }
+      if ((rfq as any).status !== 'QUOTED') {
+        throw new NetworkPoolRfqTransitionDeniedError(
+          'RFQ_NOT_QUOTED',
+          `RFQ status must be QUOTED to accept a quote. Current: '${(rfq as any).status}'.`,
+        );
+      }
+
+      // 4. Load the specific quote
+      const quote = await (tx as any).networkPoolRfqSupplierQuote.findFirst({
+        where: { id: quoteId, rfqId, ownerOrgId },
+      });
+      if (!quote) {
+        throw new NetworkPoolRfqOwnerQuoteNotFoundError();
+      }
+      if ((quote as any).status !== 'SUBMITTED') {
+        throw new NetworkPoolRfqSupplierQuoteNotInSubmittedError((quote as any).status);
+      }
+
+      const now = new Date();
+
+      // 5. Update the accepted quote
+      const updatedQuote = await (tx as any).networkPoolRfqSupplierQuote.update({
+        where: { id: quoteId },
+        data:  { status: 'ACCEPTED', acceptedAt: now, updatedAt: now },
+      });
+
+      // 6. AD-1: Mass-reject all other SUBMITTED quotes for this RFQ atomically
+      await (tx as any).networkPoolRfqSupplierQuote.updateMany({
+        where: { rfqId, ownerOrgId, status: 'SUBMITTED', id: { not: quoteId } },
+        data:  { status: 'REJECTED', rejectedAt: now, updatedAt: now },
+      });
+
+      // 7. QD-8: Update RFQ status — direct DB update, NOT an SM transition
+      await (tx as any).networkPoolRfq.update({
+        where: { id: rfqId },
+        data:  { status: 'ACCEPTED', updatedAt: now },
+      });
+
+      // 8. AD-4: Pool CLOSED_FOR_BIDS → QUOTED (only if pool was not already QUOTED)
+      if (poolStateKey === 'CLOSED_FOR_BIDS') {
+        const sm1Result = await this.stateMachine.transition(
+          {
+            entityType:   'POOL',
+            entityId:     poolId,
+            orgId:        ownerOrgId,
+            fromStateKey: 'CLOSED_FOR_BIDS',
+            toStateKey:   'QUOTED',
+            actorType:    'TENANT_ADMIN',
+            actorUserId:  userId ?? null,
+            actorAdminId: null,
+            actorRole:    'NC_POOL_ADMIN',
+            reason:       `nc_pool_rfq_quote_accept_pool_to_quoted: rfq=${rfqId}, quote=${quoteId}`,
+            requestId:    input.request_id ?? null,
+          },
+          { db: tx as unknown as PrismaClient },
+        );
+        if (sm1Result.status !== 'APPLIED') {
+          const denied = sm1Result as { status: string; code?: string; message?: string };
+          throw new NetworkPoolRfqTransitionDeniedError(
+            denied.code ?? sm1Result.status,
+            denied.message ?? `SM returned status '${sm1Result.status}'`,
+          );
+        }
+        await (tx as any).networkPool.update({
+          where: { id: poolId },
+          data:  { lifecycleStateId: quotedState.id, updatedAt: now },
+        });
+      }
+
+      // 9. AD-4: Pool QUOTED → ACCEPTED
+      const sm2Result = await this.stateMachine.transition(
+        {
+          entityType:   'POOL',
+          entityId:     poolId,
+          orgId:        ownerOrgId,
+          fromStateKey: 'QUOTED',
+          toStateKey:   'ACCEPTED',
+          actorType:    'TENANT_ADMIN',
+          actorUserId:  userId ?? null,
+          actorAdminId: null,
+          actorRole:    'NC_POOL_ADMIN',
+          reason:       `nc_pool_rfq_quote_accept_pool_to_accepted: rfq=${rfqId}, quote=${quoteId}`,
+          requestId:    input.request_id ?? null,
+        },
+        { db: tx as unknown as PrismaClient },
+      );
+      if (sm2Result.status !== 'APPLIED') {
+        const denied = sm2Result as { status: string; code?: string; message?: string };
+        throw new NetworkPoolRfqTransitionDeniedError(
+          denied.code ?? sm2Result.status,
+          denied.message ?? `SM returned status '${sm2Result.status}'`,
+        );
+      }
+      await (tx as any).networkPool.update({
+        where: { id: poolId },
+        data:  { lifecycleStateId: acceptedState.id, updatedAt: now },
+      });
+
+      // 10. Direct award event log (ACCEPTED → ACCEPTED, records the award decision)
+      await (tx as any).networkLifecycleLog.create({
+        data: {
+          orgId:           ownerOrgId,
+          entityType:      'POOL',
+          entityId:        poolId,
+          fromStateKey:    'ACCEPTED',
+          toStateKey:      'ACCEPTED',
+          actorUserId:     userId ?? null,
+          actorAdminId:    null,
+          actorType:       'TENANT_ADMIN',
+          actorRole:       'NC_POOL_ADMIN',
+          escalationLevel: null,
+          makerUserId:     null,
+          checkerUserId:   null,
+          aiTriggered:     false,
+          impersonationId: null,
+          reason:          `nc_pool_rfq_quote_accepted: quote=${quoteId}, rfq=${rfqId}, pool=${poolId}`,
+          requestId:       input.request_id ?? null,
+        },
+      });
+
+      return updatedQuote;
+    });
+
+    return this.toQuoteOwnerRecord(acceptedRow as Record<string, unknown>);
+  }
+
+  // ── rejectQuote ───────────────────────────────────────────────────────────
+
+  /**
+   * Pool owner rejects one SUBMITTED quote.
+   *
+   * AD-5: Does NOT transition the pool. Pool state remains unchanged.
+   * QD-8: No RFQ status change.
+   * Lifecycle log uses actual current pool state (NOT hard-coded).
+   */
+  async rejectQuote(
+    ownerOrgId: string,
+    userId:     string | null,
+    poolId:     string,
+    rfqId:      string,
+    quoteId:    string,
+    input:      RejectQuoteInput,
+  ): Promise<NetworkPoolRfqSupplierQuoteOwnerRecord> {
+    const rejectedRow = await this.db.$transaction(async (tx) => {
+      // 1. Load pool
+      const pool = await (tx as any).networkPool.findFirst({
+        where:   { id: poolId, orgId: ownerOrgId },
+        include: { lifecycleState: { select: { stateKey: true, id: true } } },
+      });
+      if (!pool) {
+        throw new NetworkPoolRfqPoolNotFoundError();
+      }
+
+      // 2. Pool state must be CLOSED_FOR_BIDS or QUOTED
+      const poolStateKey: string = (pool.lifecycleState as any).stateKey;
+      if (poolStateKey !== 'CLOSED_FOR_BIDS' && poolStateKey !== 'QUOTED') {
+        throw new NetworkPoolRfqInvalidPoolStateError(
+          `Pool must be in CLOSED_FOR_BIDS or QUOTED state to reject a quote. Current: '${poolStateKey}'.`,
+        );
+      }
+
+      // 3. Load RFQ
+      const rfq = await (tx as any).networkPoolRfq.findFirst({
+        where: { id: rfqId, poolId, ownerOrgId },
+      });
+      if (!rfq) {
+        throw new NetworkPoolRfqRfqNotFoundError();
+      }
+      if ((rfq as any).status !== 'QUOTED') {
+        throw new NetworkPoolRfqTransitionDeniedError(
+          'RFQ_NOT_QUOTED',
+          `RFQ status must be QUOTED to reject a quote. Current: '${(rfq as any).status}'.`,
+        );
+      }
+
+      // 4. Load the specific quote
+      const quote = await (tx as any).networkPoolRfqSupplierQuote.findFirst({
+        where: { id: quoteId, rfqId, ownerOrgId },
+      });
+      if (!quote) {
+        throw new NetworkPoolRfqOwnerQuoteNotFoundError();
+      }
+      if ((quote as any).status !== 'SUBMITTED') {
+        throw new NetworkPoolRfqSupplierQuoteNotInSubmittedError((quote as any).status);
+      }
+
+      const now = new Date();
+
+      // 5. Update the rejected quote
+      const updatedQuote = await (tx as any).networkPoolRfqSupplierQuote.update({
+        where: { id: quoteId },
+        data:  {
+          status:       'REJECTED',
+          rejectedAt:   now,
+          rejectReason: input.reject_reason ?? null,
+          updatedAt:    now,
+        },
+      });
+
+      // 6. AD-5: NO pool state change. NO RFQ status change.
+
+      // 7. Lifecycle log — use actual current pool state (NOT hard-coded CLOSED_FOR_BIDS)
+      await (tx as any).networkLifecycleLog.create({
+        data: {
+          orgId:           ownerOrgId,
+          entityType:      'POOL',
+          entityId:        poolId,
+          fromStateKey:    poolStateKey,
+          toStateKey:      poolStateKey,
+          actorUserId:     userId ?? null,
+          actorAdminId:    null,
+          actorType:       'TENANT_ADMIN',
+          actorRole:       'NC_POOL_ADMIN',
+          escalationLevel: null,
+          makerUserId:     null,
+          checkerUserId:   null,
+          aiTriggered:     false,
+          impersonationId: null,
+          reason:          `nc_pool_rfq_quote_rejected: quote=${quoteId}, rfq=${rfqId}, pool=${poolId}`,
+          requestId:       input.request_id ?? null,
+        },
+      });
+
+      return updatedQuote;
+    });
+
+    return this.toQuoteOwnerRecord(rejectedRow as Record<string, unknown>);
   }
 }

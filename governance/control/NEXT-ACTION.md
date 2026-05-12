@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-REMOTE-DEPLOY-001 VERIFIED_COMPLETE. Both Phase 1D migrations confirmed on remote Supabase. No source/env/feature changes. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-07 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001 VERIFIED_COMPLETE. listOwnerQuotes/acceptQuote/rejectQuote delivered. 150/150 tests pass. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,34 +15,31 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-REMOTE-DEPLOY-001
-active_delivery_unit_status: VERIFIED_COMPLETE
+active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001
+active_delivery_unit_status: HOLD_FOR_PARESH_DECISION
 active_delivery_unit_note: >
-  TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-REMOTE-DEPLOY-001 VERIFIED_COMPLETE (2026-05-12).
-  Remote deployment + verification of both Phase 1D migrations confirmed on remote Supabase.
-  accepted_at/rejected_at/reject_reason columns confirmed nullable on remote DB.
-  Status CHECK confirmed includes SUBMITTED|WITHDRAWN|ACCEPTED|REJECTED.
-  UNIQUE(invite_id) confirmed intact. nc.procurement_pools.rfq.award.enabled=false confirmed.
-  nc.procurement_pools.supplier_quotes.enabled=false confirmed (QD-6 hold intact).
-  Quote row count=0 (no rows modified by deployment).
-  No source/schema.prisma/migration/test/env changes. No feature flag activated.
-  AWARD-SERVICE-001 not opened. FE-9: HOLD_FOR_PARESH_DECISION. DPP: HOLD_FOR_PARESH_DECISION.
-  Next required packet: AWARD-SERVICE-001 (requires Paresh authorization).
-  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-REMOTE-DEPLOY-001.md.
-last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-DESIGN-001
+  TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001 VERIFIED_COMPLETE (2026-06-07).
+  listOwnerQuotes, acceptQuote, rejectQuote delivered in NetworkPoolRfqService.
+  150/150 unit tests PASS. tsc PASS. QD-6 hold maintained.
+  Next required packet: AWARD-ROUTE-001 (requires Paresh authorization).
+  FE-9 (TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001): HOLD_FOR_PARESH_DECISION — do not open until AWARD-ROUTE-001 VERIFIED_COMPLETE.
+  DPP: HOLD_FOR_PARESH_DECISION.
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001.md.
+last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  Deployment-only packet. No source/schema/test/env changes. No manual data writes. No feature flag activated.
-  Both Phase 1D migrations confirmed applied on remote Supabase (finished_at timestamps in _prisma_migrations).
-  accepted_at/rejected_at/reject_reason columns live and nullable. Status CHECK includes ACCEPTED/REJECTED.
-  UNIQUE(invite_id) intact. Both flags false. Quote row count=0 unchanged. QD-6 hold maintained.
+  Service-only packet. No schema/migration/route/frontend/env changes. No feature flag activated.
+  listOwnerQuotes, acceptQuote, rejectQuote added. 150/150 unit tests PASS. tsc PASS.
+  acceptQuote: mass-reject (AD-1), CLOSED_FOR_BIDS→QUOTED→ACCEPTED (AD-4), RFQ direct update (QD-8).
+  rejectQuote: single-quote reject, no pool/RFQ change (AD-5), actual pool state in log.
+  QD-6 hold maintained: supplier_quotes.enabled=false unchanged.
   DPP posture: HOLD_FOR_PARESH_DECISION — UNCHANGED.
-last_closed_unit_commits: docs(network-commerce): verify award schema remote deployment
+last_closed_unit_commits: feat(network-commerce): add pool rfq award service
 last_closed_unit_closure_basis: >-
-  QA-DATA-SETUP-001 VERIFIED_COMPLETE. SQL committed (invite_id=37e10cc1, ACCEPTED).
-  FE-8 SupplierQuoteSurface confirmed: feature-disabled banner, back navigation clean.
-  No quote submitted. supplier_quotes.enabled=false confirmed unchanged. QD-6 hold maintained.
+  tsc --noEmit PASS. vitest 150/150 PASS (16 new P-OWNER cases). prisma validate PASS.
+  supplier_quotes.enabled=false confirmed unchanged (QD-6 hold maintained).
   DPP posture: HOLD_FOR_PARESH_DECISION — UNCHANGED.
+last_closed_unit_prior: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-REMOTE-DEPLOY-001
 note_on_pending_verification: >-
   TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
   All 3 AF findings resolved. NC Pools + RFQ + Invite surfaces technically unblocked.

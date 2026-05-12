@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-06-07 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001
+
+NC Phase 1D service layer. listOwnerQuotes, acceptQuote, rejectQuote added to NetworkPoolRfqService.
+2 new error classes: NetworkPoolRfqOwnerQuoteNotFoundError, NetworkPoolRfqSupplierQuoteNotInSubmittedError.
+NetworkPoolRfqSupplierQuoteOwnerRecord DTO; AcceptQuoteInput/RejectQuoteInput interfaces.
+16 new unit tests (P-OWNER-01 → P-OWNER-16). Total: 150/150 PASS. tsc PASS.
+acceptQuote: mass-reject (AD-1), pool CLOSED_FOR_BIDS→QUOTED→ACCEPTED (AD-4), RFQ direct update (QD-8).
+rejectQuote: single-quote reject, no pool/RFQ change (AD-5), actual pool state in log.
+QD-6 hold maintained: supplier_quotes.enabled=false unchanged.
+Commit: feat(network-commerce): add pool rfq award service
+
 ## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-REMOTE-DEPLOY-001
 
 Remote deployment + verification of Phase 1D award schema migrations on remote Supabase confirmed.
