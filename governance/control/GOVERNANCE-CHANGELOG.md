@@ -5,6 +5,15 @@
 
 ---
 
+## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-REMOTE-DEPLOY-001
+
+Remote deployment + verification of Phase 1D award schema migrations on remote Supabase confirmed.
+Both migrations applied: 20260533000000_nc_pool_rfq_supplier_quote_award_schema + 20260534000000_nc_pool_rfq_award_feature_flag_seed.
+accepted_at/rejected_at/reject_reason columns confirmed nullable. Status CHECK includes ACCEPTED/REJECTED.
+UNIQUE(invite_id) intact. nc.procurement_pools.rfq.award.enabled=false. nc.procurement_pools.supplier_quotes.enabled=false (QD-6).
+No source/schema/migration/test/env changes. No feature flag activated. Quote row count=0 unchanged.
+Commit: docs(network-commerce): verify award schema remote deployment
+
 ## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-001
 
 NC Phase 1D schema foundation applied. Status CHECK extended to SUBMITTED|WITHDRAWN|ACCEPTED|REJECTED.

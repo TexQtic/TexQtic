@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-001 VERIFIED_COMPLETE. Phase 1D schema foundation applied. Status CHECK extended to ACCEPTED/REJECTED; accepted_at/rejected_at/reject_reason added; nc.procurement_pools.rfq.award.enabled seeded false. prisma validate + generate PASS. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP posture HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-REMOTE-DEPLOY-001 VERIFIED_COMPLETE. Both Phase 1D migrations verified on remote Supabase. Columns/constraint/flags confirmed. No source/env/feature changes. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP posture HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,15 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-REMOTE-DEPLOY-001 VERIFIED_COMPLETE (2026-05-12).
+  Remote deployment + verification of Phase 1D award schema migrations on remote Supabase.
+  Both migrations applied and confirmed: 20260533000000 + 20260534000000.
+  accepted_at/rejected_at/reject_reason columns live and nullable. CHECK includes ACCEPTED|REJECTED.
+  UNIQUE(invite_id) intact. Both award + supplier_quotes flags confirmed false.
+  No source/schema.prisma/migration/test/env changes. QD-6 hold maintained.
+  Next packet: AWARD-SERVICE-001 (requires Paresh authorization).
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-REMOTE-DEPLOY-001.md.
 
 - TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-001 VERIFIED_COMPLETE (2026-05-12).
   NC Phase 1D schema foundation. Status CHECK extended: SUBMITTED|WITHDRAWN|ACCEPTED|REJECTED.
