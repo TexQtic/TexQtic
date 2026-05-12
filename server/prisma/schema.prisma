@@ -2305,6 +2305,12 @@ model NetworkPoolRfqSupplierQuote {
   withdrawnAt          DateTime? @map("withdrawn_at") @db.Timestamptz(6)
   /// Optional supplier-provided reason on withdrawal.
   withdrawReason       String?   @map("withdraw_reason")
+  /// Set when owner accepts this quote (Phase 1D). Nullable.
+  acceptedAt           DateTime? @map("accepted_at") @db.Timestamptz(6)
+  /// Set when owner rejects this quote or quote is mass-rejected on award (Phase 1D). Nullable.
+  rejectedAt           DateTime? @map("rejected_at") @db.Timestamptz(6)
+  /// Owner-provided reason for rejection (Phase 1D). Nullable.
+  rejectReason         String?   @map("reject_reason") @db.Text
   /// Internal ops metadata. Never exposed to suppliers (QD-5).
   metadataInternalJson Json?     @map("metadata_internal_json")
   createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)

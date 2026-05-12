@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-001
+
+NC Phase 1D schema foundation applied. Status CHECK extended to SUBMITTED|WITHDRAWN|ACCEPTED|REJECTED.
+3 nullable audit columns added: accepted_at, rejected_at, reject_reason.
+Feature flag nc.procurement_pools.rfq.award.enabled seeded false (AD-7, independent of QD-6 hold).
+Migrations: 20260533000000_nc_pool_rfq_supplier_quote_award_schema + 20260534000000_nc_pool_rfq_award_feature_flag_seed.
+UNIQUE(invite_id) unchanged. prisma validate PASS; prisma generate PASS.
+No service/route/frontend/test/env changes. supplier_quotes.enabled=false unchanged (QD-6).
+Next packet: AWARD-SERVICE-001 (requires Paresh authorization).
+Commit: feat(network-commerce): add pool rfq award schema foundation
+
 ## 2026-06-05 -- DESIGN_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-DESIGN-001
 
 Phase 1D award/allocation governance design packet complete.

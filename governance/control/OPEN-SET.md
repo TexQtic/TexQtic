@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-05 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-DESIGN-001 DESIGN_COMPLETE. Phase 1D governance design packet closed. Award/acceptance/rejection contract designed. No runtime/schema/flag changes. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP posture HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-001 VERIFIED_COMPLETE. Phase 1D schema foundation applied. Status CHECK extended to ACCEPTED/REJECTED; accepted_at/rejected_at/reject_reason added; nc.procurement_pools.rfq.award.enabled seeded false. prisma validate + generate PASS. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP posture HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,16 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-001 VERIFIED_COMPLETE (2026-05-12).
+  NC Phase 1D schema foundation. Status CHECK extended: SUBMITTED|WITHDRAWN|ACCEPTED|REJECTED.
+  3 nullable audit columns added: accepted_at, rejected_at, reject_reason.
+  Feature flag nc.procurement_pools.rfq.award.enabled seeded false (AD-7, independent of QD-6).
+  Migrations: 20260533000000_nc_pool_rfq_supplier_quote_award_schema + 20260534000000_nc_pool_rfq_award_feature_flag_seed.
+  UNIQUE(invite_id) unchanged (AD-3/QD-2). No service/route/frontend/test/env changes.
+  prisma validate PASS; prisma generate PASS. QD-6 hold maintained: supplier_quotes.enabled=false.
+  Next packet: AWARD-SERVICE-001 (requires Paresh authorization).
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SCHEMA-001.md.
 
 - TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-DESIGN-001 DESIGN_COMPLETE (2026-06-05).
   Phase 1D governance design packet closed. No runtime/schema/flag changes produced.
