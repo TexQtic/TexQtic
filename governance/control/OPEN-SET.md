@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 VERIFIED_COMPLETE. FE-8 TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 VERIFIED_COMPLETE. QA invite SQL committed (invite_id=37e10cc1, ACCEPTED). SupplierQuoteSurface feature-disabled path confirmed in production at app.texqtic.com. No quote submitted. supplier_quotes.enabled=false unchanged (QD-6 hold maintained). DPP posture HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-06-05 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-DESIGN-001 DESIGN_COMPLETE. Phase 1D governance design packet closed. Award/acceptance/rejection contract designed. No runtime/schema/flag changes. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP posture HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,20 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-DESIGN-001 DESIGN_COMPLETE (2026-06-05).
+  Phase 1D governance design packet closed. No runtime/schema/flag changes produced.
+  Design covers: award/rejection semantics (AD-1 through AD-13), quote status machine extension
+  (SUBMITTED→ACCEPTED/REJECTED), pool lifecycle transitions (CLOSED_FOR_BIDS→QUOTED→ACCEPTED via SM),
+  RFQ status transition (QUOTED→ACCEPTED, direct update per QD-8), schema requirements (CHECK extend
+  + 3 new columns + new award feature flag), API route contract (3 routes in poolRfq.ts), service
+  contract (listOwnerQuotes, acceptQuote, rejectQuote), RLS/privacy design, FE-9 dependency contract.
+  QD-6 hold maintained: supplier_quotes.enabled=false unchanged.
+  New flag nc.procurement_pools.rfq.award.enabled: designed (seeded false in Phase 1D migration).
+  FE-9 (TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001): HOLD_FOR_PARESH_DECISION — do not open until
+  AWARD-ROUTE-001 VERIFIED_COMPLETE and explicit Paresh authorization received.
+  Next packets: AWARD-SCHEMA-001 → AWARD-SERVICE-001 → AWARD-ROUTE-001 (all require separate Paresh authorization).
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-DESIGN-001.md.
 
 - TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001 BLOCKED_RUNTIME_MISMATCH_CONFIRMED (2026-06-01).
   Runtime alignment audit for NC frontend surfaces vs. backend APIs completed at HEAD b75ced5.

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-12 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 VERIFIED_COMPLETE; FE-8 VERIFIED_COMPLETE. QA invite SQL committed, invite_id=37e10cc1 ACCEPTED. SupplierQuoteSurface feature-disabled path confirmed in production. No quote submitted. supplier_quotes.enabled=false unchanged (QD-6 hold maintained). DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-05 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-DESIGN-001 DESIGN_COMPLETE. Phase 1D award/allocation governance design closed. No runtime/schema/flag changes. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,42 +15,29 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001
-active_delivery_unit_status: VERIFIED_COMPLETE
+active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-DESIGN-001
+active_delivery_unit_status: DESIGN_COMPLETE
 active_delivery_unit_note: >
-  TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 (FE-8) VERIFIED_COMPLETE (2026-05-12).
-  SupplierQuoteSurface.tsx created. SupplierInviteInbox.tsx narrowly integrated (Submit / View Quote button for ACCEPTED invites).
-  Service methods added: getSupplierQuoteForInvite + submitSupplierQuoteForInvite.
-  16 frontend tests passing. Typecheck clean. Exactly 4 allowlisted files changed.
-  nc.procurement_pools.supplier_quotes.enabled remains false (QD-6 hold maintained).
-  Surface shows feature-disabled state gracefully in production (flag = false).
-  PROD VERIFY COMPLETE (2026-05-12): via TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001.
-  QA invite SQL committed: invite_id=37e10cc1-cfe1-47d8-90ea-1e87624cdf29 (ACCEPTED).
-  SupplierQuoteSurface opened, feature-disabled amber banner confirmed ("Supplier Quote Submission Disabled").
-  Back navigation confirmed: inbox reloads cleanly with invite still ACCEPTED.
-  No quote submitted. No quote row created. supplier_quotes.enabled=false unchanged.
-  NEXT: Supplier quote feature flag activation — REQUIRES separate explicit Paresh authorization to lift QD-6.
-  Do NOT open FE-9 or activate supplier_quotes without explicit Paresh decision.
-  DPP LAUNCH GATE (independent of NC Phase 1C):
-  TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 VERIFIED_COMPLETE (2026-05-02).
-  DPP Passport Network is technically production-ready based on PROD-AUDIT-002.
-  DPP launch authorization: HOLD_FOR_PARESH_DECISION — separate decision; not unlocked by NC work.
+  TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-DESIGN-001 DESIGN_COMPLETE (2026-06-05).
+  Phase 1D governance design packet closed. No runtime/schema/flag changes produced.
+  Design covers: award/rejection semantics, quote status machine extension (SUBMITTED→ACCEPTED/REJECTED),
+  pool lifecycle transitions (CLOSED_FOR_BIDS→QUOTED→ACCEPTED via SM), RFQ status (QUOTED→ACCEPTED direct),
+  schema requirements (CHECK extend + accepted_at/rejected_at/reject_reason + new award flag),
+  API route contract (3 owner routes), service contract (listOwnerQuotes/acceptQuote/rejectQuote),
+  RLS/privacy, FE-9 dependency contract.
+  QD-6 hold maintained: supplier_quotes.enabled=false unchanged.
+  New flag nc.procurement_pools.rfq.award.enabled: designed (to be seeded false in AWARD-SCHEMA-001).
+  FE-9: HOLD_FOR_PARESH_DECISION — do NOT open until AWARD-ROUTE-001 VERIFIED_COMPLETE and explicit Paresh authorization.
+  Next required packets: AWARD-SCHEMA-001 → AWARD-SERVICE-001 → AWARD-ROUTE-001 (each requires Paresh authorization).
+  DPP launch authorization: HOLD_FOR_PARESH_DECISION — UNCHANGED.
   Do NOT open DPP next slice without separate explicit Paresh DPP authorization.
-last_closed_unit: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001
-last_closed_unit_status: VERIFIED_COMPLETE
+last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-DESIGN-001
+last_closed_unit_status: DESIGN_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 VERIFIED_COMPLETE (2026-05-12).
-  QA invite SQL committed to production DB. invite_id=37e10cc1-cfe1-47d8-90ea-1e87624cdf29 (ACCEPTED).
-  FE-8 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001) VERIFIED_COMPLETE.
-  SupplierQuoteSurface: opened, feature-disabled amber banner confirmed.
-  Back navigation: confirmed, inbox reloads cleanly.
-  No quote submitted. No quote row. supplier_quotes.enabled=false unchanged (QD-6 hold).
-  All governance docs updated and committed.
-  Deployment behavioral evidence: consistent with d8a2ce2 (NC surfaces render per flag state).
-  No production quote submitted. No feature flag mutation. No source code changes. DPP hold unchanged.
-  FE-8 status: VERIFIED_COMPLETE (2026-05-12).
-  Next decision: supplier quote feature flag activation (QD-6 hold) — separate explicit Paresh decision required to lift.
-last_closed_unit_commits: docs(network-commerce): verify supplier quote frontend production path
+  Governance-only packet. No runtime changes. No production data. No feature flag mutation.
+  Design document created: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-DESIGN-001.md.
+  QD-6 hold maintained. DPP posture: HOLD_FOR_PARESH_DECISION — UNCHANGED.
+last_closed_unit_commits: docs(network-commerce): design pool rfq award allocation path
 last_closed_unit_closure_basis: >-
   QA-DATA-SETUP-001 VERIFIED_COMPLETE. SQL committed (invite_id=37e10cc1, ACCEPTED).
   FE-8 SupplierQuoteSurface confirmed: feature-disabled banner, back navigation clean.

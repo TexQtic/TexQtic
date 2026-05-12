@@ -5,6 +5,36 @@
 
 ---
 
+## 2026-06-05 -- DESIGN_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-DESIGN-001
+
+Phase 1D award/allocation governance design packet complete.
+
+**Design document created:** `governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-DESIGN-001.md`
+
+**Scope covered:**
+- Award and rejection semantics (AD-1 through AD-13).
+- Quote status machine extension: SUBMITTED → ACCEPTED (terminal) / REJECTED (terminal).
+- Pool lifecycle transitions: CLOSED_FOR_BIDS → QUOTED → ACCEPTED (two SM calls in one tx, per allowed_transitions constraint).
+- RFQ status transitions: QUOTED → ACCEPTED (direct update, QD-8 pattern maintained).
+- Schema requirements: extend `status` CHECK constraint; add `accepted_at`, `rejected_at`, `reject_reason` columns; seed `nc.procurement_pools.rfq.award.enabled = false`.
+- Service contract: `listOwnerQuotes`, `acceptQuote`, `rejectQuote`; 2 new error classes; `toQuoteOwnerRecord` helper; `NetworkPoolRfqSupplierQuoteOwnerRecord` DTO.
+- API route contract: 3 owner award routes in `poolRfq.ts`, `ncPoolRfqAwardFeatureGateMiddleware`.
+- Feature flag design: `nc.procurement_pools.rfq.award.enabled` (independent of QD-6 supplier_quotes flag).
+- RLS/privacy design: owner-scoped DTO, no cross-supplier leakage, metadataInternalJson excluded.
+- FE-9 dependency contract: surface APIs, DTO spec, display states, routing constraints.
+- Packet decomposition: AWARD-SCHEMA-001 → AWARD-SERVICE-001 → AWARD-ROUTE-001 → FE-9.
+
+**Safety constraints maintained:**
+- No runtime/schema/migration/test/env/flag changes.
+- `nc.procurement_pools.supplier_quotes.enabled = false` unchanged (QD-6 hold maintained).
+- `nc.procurement_pools.rfq.award.enabled`: designed but NOT seeded (deferred to AWARD-SCHEMA-001).
+- FE-9: HOLD_FOR_PARESH_DECISION — not opened.
+- DPP posture: HOLD_FOR_PARESH_DECISION — UNCHANGED.
+
+**DESIGN_COMPLETE.** Implementation requires separate Paresh authorization per packet.
+
+---
+
 ## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 + FE-8 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001)
 
 QA accepted invite SQL committed to production DB. FE-8 SupplierQuoteSurface fully verified.
