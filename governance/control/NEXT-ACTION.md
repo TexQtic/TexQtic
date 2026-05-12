@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-12 (TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001 — VERIFIED_COMPLETE; 3 migrations resolved/deployed; network_pool_rfq_supplier_quotes table live; supplier_quotes flag enabled=false seeded; supplier_invite flag enabled=true preserved; Packet 12 HOLD_FOR_PARESH_DECISION unchanged)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 — VERIFIED_COMPLETE; Packet 12 service layer delivered; 134/134 + 11/11 unit tests pass; tsc clean; regression flakiness confirmed pre-existing; Packet 13 route HOLD_FOR_PARESH_DECISION)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,40 +15,44 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001
+active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001
 active_delivery_unit_status: HOLD_FOR_PARESH_DECISION
 active_delivery_unit_note: >
-  NC Phase 1C Packet 12 (Service) is next but HOLD_FOR_PARESH_DECISION.
-  Packet 11 (Schema) VERIFIED_COMPLETE (2026-05-11). Schema + Prisma validated; 93/93 tests pass.
-  Packet 12 requires separate Paresh authorization before execution.
+  NC Phase 1C Packet 13 (Route) is next but HOLD_FOR_PARESH_DECISION.
+  Packet 12 (Service) VERIFIED_COMPLETE (2026-05-12). Service methods submitQuote + getSupplierQuote delivered.
+  134/134 service unit tests + 11/11 middleware unit tests PASS. tsc --noEmit clean.
+  Packet 13 requires separate Paresh authorization before execution.
   DPP LAUNCH GATE (independent of NC Phase 1C):
   TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 VERIFIED_COMPLETE (2026-05-02).
   DPP Passport Network is technically production-ready based on PROD-AUDIT-002.
   DPP launch authorization: HOLD_FOR_PARESH_DECISION — separate decision; not unlocked by NC authorization.
   Do NOT open DPP next slice without separate explicit Paresh DPP authorization.
-last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001
+last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  NC Phase 1C Packet 11 (Schema) VERIFIED_COMPLETE (2026-05-11). BACKEND_SCHEMA_FOUNDATION only.
-  NetworkPoolRfqSupplierQuote model + 5 back-relations; 2 migration SQL files; feature flag seed.
+  NC Phase 1C Packet 12 (Service Layer) VERIFIED_COMPLETE (2026-05-12). SERVICE_LAYER only.
+  submitQuote + getSupplierQuote + toQuoteSupplierRecord + 4 error classes + 2 interfaces.
+  ncPoolSupplierQuoteFeatureGate.middleware.ts created (two-layer gate).
   prisma validate ✓; prisma generate ✓; tsc --noEmit ✓ (zero errors).
-  SRI suite 11/11 PASS; PRQ+ORI suite 93/93 PASS (authoritative run).
-  PRQ-28 preserved; SRI-11 preserved; DPP hold keys unchanged; no service/route code written.
-last_closed_unit_commits: feat(network-commerce): add supplier quote schema foundation
+  Service unit tests 134/134 PASS; middleware unit tests 11/11 PASS.
+  Integration regression: 2 flaky failures confirmed pre-existing on clean HEAD stash baseline (not caused by Packet 12).
+  No routes, no schema changes, no frontend written.
+last_closed_unit_commits: feat(network-commerce): add supplier quote service layer
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE. Schema + Prisma validated. 93/93 regression tests pass.
-  NetworkPoolRfqSupplierQuote table, RLS, grants, and feature flag seed created.
-  PRQ-28 + SRI-11 regression guards confirmed passing. No service/route/FE code written.
-  Packet 12 (Service) gate: Q-1+Q-2+Q-3+Q-5+Q-6+Q-7+Q-8 ALL in schema foundation.
+  VERIFIED_COMPLETE. Service layer + middleware validated. 134/134 + 11/11 unit tests pass. tsc clean.
+  submitQuote: invite gate (QD-1), conflict guard (QD-2), RFQ status gate, direct lifecycle log (QD-7), ISSUED→QUOTED update.
+  getSupplierQuote: org-scoped findFirst + NotFoundError.
+  Feature gate: two-layer (global flag + per-org override), fail-closed.
+  Regression flakiness confirmed pre-existing. No routes/schema/FE written.
+  Packet 13 (Route) gate: requires explicit Paresh authorization.
 note_on_pending_verification: >-
-  TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001 VERIFIED_COMPLETE (2026-05-11).
-  Packet 11 complete. Packet 12 (Service) HOLD_FOR_PARESH_DECISION.
-  Packet 13 (Route) blocked on Packet 12 COMPLETE. FE-8 blocked on Packet 13 VERIFIED_COMPLETE.
-  FE-8 BLOCKED status unchanged until Packet 13 complete + separate Paresh FE-8 authorization.
-  Active delivery unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 (HOLD).
+  TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 VERIFIED_COMPLETE (2026-05-12).
+  Packet 12 complete. Packet 13 (Route) HOLD_FOR_PARESH_DECISION.
+  FE-8 blocked until Packet 13 VERIFIED_COMPLETE + separate Paresh FE-8 authorization.
+  Active delivery unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 (HOLD).
   DPP launch authorization: HOLD_FOR_PARESH_DECISION (UNCHANGED — separate decision).
-  Prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001 PARESH_AUTHORIZED (2596862).
-  Pre-prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001 DESIGN_COMPLETE (900ea66).
+  Prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001 VERIFIED_COMPLETE (14e7e99).
+  Pre-prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DECISION-AUDIT-001 PARESH_AUTHORIZED (2596862).
 dpp_passport_network_readiness: PRODUCTION_READY
 dpp_readiness_authority: TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002
 dpp_readiness_commit: 17c252c

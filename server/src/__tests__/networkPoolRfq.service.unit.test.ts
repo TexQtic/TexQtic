@@ -45,6 +45,10 @@ import {
   NetworkPoolRfqSupplierInviteNotFoundError,
   NetworkPoolRfqSupplierInviteAlreadySentError,
   NetworkPoolRfqSupplierInviteInvalidTransitionError,
+  NetworkPoolRfqSupplierQuoteInvalidInputError,
+  NetworkPoolRfqSupplierQuoteNotFoundError,
+  NetworkPoolRfqSupplierQuoteConflictError,
+  NetworkPoolRfqSupplierQuoteInviteNotAcceptedError,
 } from '../services/networkPoolRfq.service.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -2358,4 +2362,386 @@ describe('P-SUP-GEN-05: PASS — owner invite methods still pass after adding su
     await expect(svcCancel.cancelInvite(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, INVITE_ID)).resolves.not.toThrow();
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SUPPLIER QUOTE TESTS — TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001
+// 17 tests: P-QUOTE-GET-01–02 | P-QUOTE-01–15
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Quote Test Constants ─────────────────────────────────────────────────────
+
+const QUOTE_ID  = '3333cccc-0000-0000-0000-000000000001';
+const QUOTE_REF = 'SQ-AABBCCDD11223344';
+
+// ─── Quote Fixtures ───────────────────────────────────────────────────────────
+
+function makeQuoteRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id:                   QUOTE_ID,
+    ownerOrgId:           OWNER_ORG_ID,
+    supplierOrgId:        SUPPLIER_ORG_ID,
+    rfqId:                RFQ_ID,
+    poolId:               POOL_ID,
+    inviteId:             INVITE_ID,
+    quoteRef:             QUOTE_REF,
+    status:               'SUBMITTED',
+    quoteAmount:          '1500.00',
+    currency:             'USD',
+    validityUntil:        null,
+    supplierNote:         null,
+    submittedAt:          NOW,
+    submittedByUserId:    USER_ID,
+    withdrawnAt:          null,
+    withdrawReason:       null,
+    metadataInternalJson: null,
+    createdAt:            NOW,
+    updatedAt:            NOW,
+    ...overrides,
+  };
+}
+
+/** Invite row WITH the nested RFQ for submitQuote (include: { rfq: true }) */
+function makeInviteRowForSubmit(
+  rfqStatus = 'ISSUED',
+  inviteOverrides: Record<string, unknown> = {},
+) {
+  return {
+    ...makeInviteRow({ status: 'ACCEPTED', acceptedAt: NOW }),
+    rfq: { id: RFQ_ID, status: rfqStatus },
+    ...inviteOverrides,
+  };
+}
+
+function makeSubmitQuoteInput(overrides: Record<string, unknown> = {}): any {
+  return {
+    quote_amount: 1500,
+    currency:     'USD',
+    ...overrides,
+  };
+}
+
+// ─── Quote Mock Factories ─────────────────────────────────────────────────────
+
+function makeTxForSubmitQuote(overrides: {
+  networkPoolRfqSupplierInvite?: Record<string, unknown>;
+  networkPoolRfqSupplierQuote?:  Record<string, unknown>;
+  networkPoolRfq?:               Record<string, unknown>;
+  networkLifecycleLog?:          Record<string, unknown>;
+} = {}): any {
+  return {
+    networkPoolRfqSupplierInvite: {
+      findFirst: vi.fn().mockResolvedValue(makeInviteRowForSubmit()),
+      ...(overrides.networkPoolRfqSupplierInvite ?? {}),
+    },
+    networkPoolRfqSupplierQuote: {
+      findFirst: vi.fn().mockResolvedValue(null),   // no existing quote by default
+      create:    vi.fn().mockResolvedValue(makeQuoteRow()),
+      ...(overrides.networkPoolRfqSupplierQuote ?? {}),
+    },
+    networkPoolRfq: {
+      update: vi.fn().mockResolvedValue({}),
+      ...(overrides.networkPoolRfq ?? {}),
+    },
+    networkLifecycleLog: {
+      create: vi.fn().mockResolvedValue({ id: LOG_ID }),
+      ...(overrides.networkLifecycleLog ?? {}),
+    },
+  };
+}
+
+function makeDbForSubmitQuote(txOverrides?: Parameters<typeof makeTxForSubmitQuote>[0]): any {
+  const tx = makeTxForSubmitQuote(txOverrides ?? {});
+  return {
+    $transaction: vi.fn().mockImplementation((fn: (tx: any) => any) => fn(tx)),
+    _mockTx: tx,
+  };
+}
+
+function makeDbForGetQuote(row: any = makeQuoteRow()): any {
+  return {
+    networkPoolRfqSupplierQuote: {
+      findFirst: vi.fn().mockResolvedValue(row),
+    },
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// getSupplierQuote — P-QUOTE-GET-01 → P-QUOTE-GET-02
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('P-QUOTE-GET-01: PASS — getSupplierQuote returns supplier-safe DTO with expected fields', () => {
+  it('resolves with NetworkPoolRfqSupplierQuoteSupplierRecord containing required fields', async () => {
+    const db  = makeDbForGetQuote();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.getSupplierQuote(SUPPLIER_ORG_ID, INVITE_ID);
+
+    expect(result).toHaveProperty('id', QUOTE_ID);
+    expect(result).toHaveProperty('invite_id', INVITE_ID);
+    expect(result).toHaveProperty('quote_ref', QUOTE_REF);
+    expect(result).toHaveProperty('status', 'SUBMITTED');
+    expect(result).toHaveProperty('quote_amount', '1500.00');
+    expect(result).toHaveProperty('currency', 'USD');
+    expect(result).toHaveProperty('submitted_at');
+    expect(result).toHaveProperty('created_at');
+    expect(result).toHaveProperty('updated_at');
+    // QD-5: must NOT expose metadata_internal_json or owner_org_id
+    expect(result).not.toHaveProperty('metadata_internal_json');
+    expect(result).not.toHaveProperty('owner_org_id');
+    expect(result).not.toHaveProperty('rfq_id');
+    expect(result).not.toHaveProperty('pool_id');
+    expect(result).not.toHaveProperty('supplier_org_id');
+  });
+});
+
+describe('P-QUOTE-GET-02: FAIL — getSupplierQuote throws NetworkPoolRfqSupplierQuoteNotFoundError when quote absent', () => {
+  it('rejects with NetworkPoolRfqSupplierQuoteNotFoundError when findFirst returns null', async () => {
+    const db  = makeDbForGetQuote(null);
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(svc.getSupplierQuote(SUPPLIER_ORG_ID, INVITE_ID))
+      .rejects.toBeInstanceOf(NetworkPoolRfqSupplierQuoteNotFoundError);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// submitQuote — P-QUOTE-01 → P-QUOTE-15  (maps to SQ-01 → SQ-15 in §18.1)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('P-QUOTE-01 (SQ-01): PASS — submitQuote returns supplier-safe DTO for ACCEPTED invite', () => {
+  it('resolves with NetworkPoolRfqSupplierQuoteSupplierRecord containing required fields', async () => {
+    const db  = makeDbForSubmitQuote();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.submitQuote(SUPPLIER_ORG_ID, USER_ID, INVITE_ID, makeSubmitQuoteInput());
+
+    expect(result).toHaveProperty('id');
+    expect(result).toHaveProperty('invite_id');
+    expect(result).toHaveProperty('quote_ref');
+    expect(result).toHaveProperty('status', 'SUBMITTED');
+    expect(result).toHaveProperty('quote_amount');
+    expect(result).toHaveProperty('currency', 'USD');
+    expect(result).toHaveProperty('submitted_at');
+    expect(result).toHaveProperty('created_at');
+    expect(result).toHaveProperty('updated_at');
+  });
+});
+
+describe('P-QUOTE-02 (SQ-02): FAIL — submitQuote throws for PENDING invite', () => {
+  it('rejects with NetworkPoolRfqSupplierQuoteInviteNotAcceptedError when invite is PENDING', async () => {
+    const db = makeDbForSubmitQuote({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(makeInviteRowForSubmit('ISSUED', { status: 'PENDING', acceptedAt: null })),
+      },
+    });
+    const svc = new NetworkPoolRfqService(db, makeSm());
+
+    await expect(svc.submitQuote(SUPPLIER_ORG_ID, USER_ID, INVITE_ID, makeSubmitQuoteInput()))
+      .rejects.toBeInstanceOf(NetworkPoolRfqSupplierQuoteInviteNotAcceptedError);
+  });
+});
+
+describe('P-QUOTE-03 (SQ-03): FAIL — submitQuote throws for DECLINED invite', () => {
+  it('rejects with NetworkPoolRfqSupplierQuoteInviteNotAcceptedError when invite is DECLINED', async () => {
+    const db = makeDbForSubmitQuote({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(makeInviteRowForSubmit('ISSUED', { status: 'DECLINED', declinedAt: NOW, acceptedAt: null })),
+      },
+    });
+    const svc = new NetworkPoolRfqService(db, makeSm());
+
+    await expect(svc.submitQuote(SUPPLIER_ORG_ID, USER_ID, INVITE_ID, makeSubmitQuoteInput()))
+      .rejects.toBeInstanceOf(NetworkPoolRfqSupplierQuoteInviteNotAcceptedError);
+  });
+});
+
+describe('P-QUOTE-04 (SQ-04): FAIL — submitQuote throws for EXPIRED invite (past expiresAt)', () => {
+  it('rejects with NetworkPoolRfqSupplierQuoteInviteNotAcceptedError when invite is expired', async () => {
+    const db = makeDbForSubmitQuote({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(
+          makeInviteRowForSubmit('ISSUED', { status: 'PENDING', acceptedAt: null, expiresAt: PAST_EXPIRES_AT }),
+        ),
+      },
+    });
+    const svc = new NetworkPoolRfqService(db, makeSm());
+
+    await expect(svc.submitQuote(SUPPLIER_ORG_ID, USER_ID, INVITE_ID, makeSubmitQuoteInput()))
+      .rejects.toBeInstanceOf(NetworkPoolRfqSupplierQuoteInviteNotAcceptedError);
+  });
+});
+
+describe('P-QUOTE-05 (SQ-05): FAIL — submitQuote throws when invite not found', () => {
+  it('rejects with NetworkPoolRfqSupplierInviteNotFoundError when findFirst returns null', async () => {
+    const db = makeDbForSubmitQuote({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(null),
+      },
+    });
+    const svc = new NetworkPoolRfqService(db, makeSm());
+
+    await expect(svc.submitQuote(SUPPLIER_ORG_ID, USER_ID, INVITE_ID, makeSubmitQuoteInput()))
+      .rejects.toBeInstanceOf(NetworkPoolRfqSupplierInviteNotFoundError);
+  });
+});
+
+describe('P-QUOTE-06 (SQ-06): FAIL — submitQuote throws when invite belongs to different org', () => {
+  it('rejects with NetworkPoolRfqSupplierInviteNotFoundError when org scope filter excludes invite', async () => {
+    // Simulates findFirst returning null because supplierOrgId does not match
+    const db = makeDbForSubmitQuote({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(null),
+      },
+    });
+    const svc = new NetworkPoolRfqService(db, makeSm());
+
+    const differentOrgId = '9999ffff-0000-0000-0000-000000000001';
+    await expect(svc.submitQuote(differentOrgId, USER_ID, INVITE_ID, makeSubmitQuoteInput()))
+      .rejects.toBeInstanceOf(NetworkPoolRfqSupplierInviteNotFoundError);
+  });
+});
+
+describe('P-QUOTE-07 (SQ-07): FAIL — submitQuote throws when quote already exists on invite', () => {
+  it('rejects with NetworkPoolRfqSupplierQuoteConflictError when existing quote found', async () => {
+    const db = makeDbForSubmitQuote({
+      networkPoolRfqSupplierQuote: {
+        findFirst: vi.fn().mockResolvedValue(makeQuoteRow()),
+        create:    vi.fn(),
+      },
+    });
+    const svc = new NetworkPoolRfqService(db, makeSm());
+
+    await expect(svc.submitQuote(SUPPLIER_ORG_ID, USER_ID, INVITE_ID, makeSubmitQuoteInput()))
+      .rejects.toBeInstanceOf(NetworkPoolRfqSupplierQuoteConflictError);
+  });
+});
+
+describe('P-QUOTE-08 (SQ-08): PASS — submitQuote updates RFQ to QUOTED when RFQ status is ISSUED', () => {
+  it('calls networkPoolRfq.update with status QUOTED when RFQ was ISSUED', async () => {
+    const db  = makeDbForSubmitQuote();  // default: RFQ status 'ISSUED'
+    const svc = new NetworkPoolRfqService(db, makeSm());
+
+    await svc.submitQuote(SUPPLIER_ORG_ID, USER_ID, INVITE_ID, makeSubmitQuoteInput());
+
+    const rfqUpdate = (db._mockTx.networkPoolRfq.update as ReturnType<typeof vi.fn>);
+    expect(rfqUpdate).toHaveBeenCalledOnce();
+    expect(rfqUpdate.mock.calls[0][0]).toMatchObject({
+      where: { id: RFQ_ID },
+      data:  { status: 'QUOTED' },
+    });
+  });
+});
+
+describe('P-QUOTE-09 (SQ-09): PASS — submitQuote does NOT update RFQ when already QUOTED', () => {
+  it('does not call networkPoolRfq.update when RFQ status is already QUOTED', async () => {
+    const db = makeDbForSubmitQuote({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(makeInviteRowForSubmit('QUOTED')),
+      },
+    });
+    const svc = new NetworkPoolRfqService(db, makeSm());
+
+    await svc.submitQuote(SUPPLIER_ORG_ID, USER_ID, INVITE_ID, makeSubmitQuoteInput());
+
+    expect(db._mockTx.networkPoolRfq.update).not.toHaveBeenCalled();
+  });
+});
+
+describe('P-QUOTE-10 (SQ-10): FAIL — submitQuote throws for CANCELLED RFQ', () => {
+  it('rejects with NetworkPoolRfqSupplierQuoteInvalidInputError when RFQ is CANCELLED', async () => {
+    const db = makeDbForSubmitQuote({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(makeInviteRowForSubmit('CANCELLED')),
+      },
+    });
+    const svc = new NetworkPoolRfqService(db, makeSm());
+
+    await expect(svc.submitQuote(SUPPLIER_ORG_ID, USER_ID, INVITE_ID, makeSubmitQuoteInput()))
+      .rejects.toBeInstanceOf(NetworkPoolRfqSupplierQuoteInvalidInputError);
+  });
+});
+
+describe('P-QUOTE-11 (SQ-11): PASS — metadata_internal_json absent from submitQuote response', () => {
+  it('does not include metadata_internal_json in returned DTO', async () => {
+    const db  = makeDbForSubmitQuote();
+    const svc = new NetworkPoolRfqService(db, makeSm());
+
+    const result = await svc.submitQuote(SUPPLIER_ORG_ID, USER_ID, INVITE_ID, makeSubmitQuoteInput());
+
+    expect(result).not.toHaveProperty('metadata_internal_json');
+  });
+});
+
+describe('P-QUOTE-12 (SQ-12): PASS — owner_org_id absent from submitQuote response', () => {
+  it('does not include owner_org_id, rfq_id, pool_id or supplier_org_id in returned DTO', async () => {
+    const db  = makeDbForSubmitQuote();
+    const svc = new NetworkPoolRfqService(db, makeSm());
+
+    const result = await svc.submitQuote(SUPPLIER_ORG_ID, USER_ID, INVITE_ID, makeSubmitQuoteInput());
+
+    expect(result).not.toHaveProperty('owner_org_id');
+    expect(result).not.toHaveProperty('rfq_id');
+    expect(result).not.toHaveProperty('pool_id');
+    expect(result).not.toHaveProperty('supplier_org_id');
+  });
+});
+
+describe('P-QUOTE-13 (SQ-13): PASS — lifecycle log written on quote_submitted', () => {
+  it('calls networkLifecycleLog.create once for the quote_submitted event (QUOTED RFQ — no second log)', async () => {
+    const db = makeDbForSubmitQuote({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(makeInviteRowForSubmit('QUOTED')),
+      },
+    });
+    const svc = new NetworkPoolRfqService(db, makeSm());
+
+    await svc.submitQuote(SUPPLIER_ORG_ID, USER_ID, INVITE_ID, makeSubmitQuoteInput());
+
+    const logCreate = (db._mockTx.networkLifecycleLog.create as ReturnType<typeof vi.fn>);
+    expect(logCreate).toHaveBeenCalledOnce();
+    const logArg = logCreate.mock.calls[0][0].data;
+    expect(logArg.reason).toContain('nc_pool_rfq_supplier_quote_submitted');
+    expect(logArg.actorRole).toBe('NC_SUPPLIER');
+  });
+});
+
+describe('P-QUOTE-14 (SQ-14): PASS — two lifecycle logs written when ISSUED→QUOTED transition occurs', () => {
+  it('calls networkLifecycleLog.create twice when RFQ status transitions from ISSUED to QUOTED', async () => {
+    const db  = makeDbForSubmitQuote();  // default: RFQ status 'ISSUED'
+    const svc = new NetworkPoolRfqService(db, makeSm());
+
+    await svc.submitQuote(SUPPLIER_ORG_ID, USER_ID, INVITE_ID, makeSubmitQuoteInput());
+
+    const logCreate = (db._mockTx.networkLifecycleLog.create as ReturnType<typeof vi.fn>);
+    expect(logCreate).toHaveBeenCalledTimes(2);
+
+    const reasons = logCreate.mock.calls.map((call: any) => call[0].data.reason as string);
+    expect(reasons.some((r) => r.includes('nc_pool_rfq_supplier_quote_submitted'))).toBe(true);
+    expect(reasons.some((r) => r.includes('nc_pool_rfq_status_changed_to_quoted'))).toBe(true);
+  });
+});
+
+describe('P-QUOTE-15 (SQ-15): PASS — only one lifecycle log when RFQ already QUOTED', () => {
+  it('calls networkLifecycleLog.create once (no ISSUED→QUOTED log) when RFQ is already QUOTED', async () => {
+    const db = makeDbForSubmitQuote({
+      networkPoolRfqSupplierInvite: {
+        findFirst: vi.fn().mockResolvedValue(makeInviteRowForSubmit('QUOTED')),
+      },
+    });
+    const svc = new NetworkPoolRfqService(db, makeSm());
+
+    await svc.submitQuote(SUPPLIER_ORG_ID, USER_ID, INVITE_ID, makeSubmitQuoteInput());
+
+    const logCreate = (db._mockTx.networkLifecycleLog.create as ReturnType<typeof vi.fn>);
+    expect(logCreate).toHaveBeenCalledOnce();
+
+    const reason = logCreate.mock.calls[0][0].data.reason as string;
+    expect(reason).toContain('nc_pool_rfq_supplier_quote_submitted');
+    expect(reason).not.toContain('nc_pool_rfq_status_changed_to_quoted');
+  });
+});
+
 

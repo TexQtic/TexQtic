@@ -121,6 +121,42 @@ export class NetworkPoolRfqSupplierInviteInvalidTransitionError extends Error {
   }
 }
 
+// ─── Supplier Quote Error Classes ─────────────────────────────────────────────
+
+export class NetworkPoolRfqSupplierQuoteInvalidInputError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NetworkPoolRfqSupplierQuoteInvalidInputError';
+  }
+}
+
+export class NetworkPoolRfqSupplierQuoteNotFoundError extends Error {
+  constructor() {
+    super('Supplier quote not found or not owned by this organisation');
+    this.name = 'NetworkPoolRfqSupplierQuoteNotFoundError';
+  }
+}
+
+export class NetworkPoolRfqSupplierQuoteConflictError extends Error {
+  constructor() {
+    super(
+      'A quote for this invite already exists. ' +
+      'Re-submission is not permitted in Phase 1C (QD-2).',
+    );
+    this.name = 'NetworkPoolRfqSupplierQuoteConflictError';
+  }
+}
+
+export class NetworkPoolRfqSupplierQuoteInviteNotAcceptedError extends Error {
+  constructor(effectiveStatus: string) {
+    super(
+      `Cannot submit a quote for invite with effective status '${effectiveStatus}'. ` +
+      `Only ACCEPTED invites may be quoted against (QD-1).`,
+    );
+    this.name = 'NetworkPoolRfqSupplierQuoteInviteNotAcceptedError';
+  }
+}
+
 // ─── Input / Record Types ─────────────────────────────────────────────────────
 
 export interface IssueNetworkPoolRfqInput {
@@ -213,6 +249,43 @@ export interface NetworkPoolRfqSupplierInviteSupplierRecord {
   line_count:           number | null;
   total_qty:            string | null;
   qty_unit:             string | null;
+  created_at:           string;
+  updated_at:           string;
+}
+
+/** Input for submitting a supplier quote against an accepted invite. */
+export interface SubmitQuoteInput {
+  /** Required. Positive decimal (validated at route layer by Zod). */
+  quote_amount:    string | number;
+  /** Required. ISO 4217 currency code (3–10 chars). */
+  currency:        string;
+  /** Optional. ISO datetime string or Date. QD-3: stored but not enforced in Phase 1C. */
+  validity_until?: string | Date | null;
+  /** Optional. Free-text supplier note. Max 5000 chars (validated at route layer). */
+  supplier_note?:  string | null;
+  /** Optional Fastify request ID for log correlation. */
+  request_id?:     string | null;
+}
+
+/**
+ * Supplier-safe quote record. QD-5: metadataInternalJson, ownerOrgId, rfqId, poolId
+ * and supplierOrgId are NEVER exposed to the supplier.
+ */
+export interface NetworkPoolRfqSupplierQuoteSupplierRecord {
+  id:                   string;
+  invite_id:            string;
+  quote_ref:            string;
+  /** Current quote status. Phase 1C: always 'SUBMITTED'. */
+  status:               string;
+  /** QD-4: Decimal serialised as string to avoid floating-point loss. */
+  quote_amount:         string;
+  currency:             string;
+  validity_until:       string | null;
+  supplier_note:        string | null;
+  submitted_at:         string;
+  submitted_by_user_id: string | null;
+  withdrawn_at:         string | null;
+  withdraw_reason:      string | null;
   created_at:           string;
   updated_at:           string;
 }
@@ -1100,5 +1173,208 @@ export class NetworkPoolRfqService {
     });
 
     return this.toInviteSupplierRecord(updatedRow as Record<string, unknown>, null);
+  }
+
+  // ── toQuoteSupplierRecord ─────────────────────────────────────────────────
+
+  /**
+   * Maps a DB quote row to NetworkPoolRfqSupplierQuoteSupplierRecord.
+   * QD-5: Excludes metadataInternalJson, ownerOrgId, rfqId, poolId, supplierOrgId.
+   */
+  private toQuoteSupplierRecord(
+    row: Record<string, unknown>,
+  ): NetworkPoolRfqSupplierQuoteSupplierRecord {
+    return {
+      id:                   String(row['id']),
+      invite_id:            String(row['inviteId']),
+      quote_ref:            String(row['quoteRef']),
+      status:               String(row['status']),
+      quote_amount:         String(row['quoteAmount']),
+      currency:             String(row['currency']),
+      validity_until:       row['validityUntil'] != null
+        ? new Date(row['validityUntil'] as string | Date).toISOString()
+        : null,
+      supplier_note:        row['supplierNote'] != null ? String(row['supplierNote']) : null,
+      submitted_at:         new Date(row['submittedAt'] as string | Date).toISOString(),
+      submitted_by_user_id: row['submittedByUserId'] != null
+        ? String(row['submittedByUserId'])
+        : null,
+      withdrawn_at:         row['withdrawnAt'] != null
+        ? new Date(row['withdrawnAt'] as string | Date).toISOString()
+        : null,
+      withdraw_reason:      row['withdrawReason'] != null ? String(row['withdrawReason']) : null,
+      created_at:           new Date(row['createdAt'] as string | Date).toISOString(),
+      updated_at:           new Date(row['updatedAt'] as string | Date).toISOString(),
+    };
+  }
+
+  // ── getSupplierQuote ──────────────────────────────────────────────────────
+
+  /**
+   * Supplier retrieves their quote for a specific invite.
+   *
+   * QD-5: Returns supplier-safe DTO — metadataInternalJson, ownerOrgId, rfqId,
+   *       poolId and supplierOrgId are never included.
+   * Scope: supplierOrgId must match orgId (tenant isolation).
+   */
+  async getSupplierQuote(
+    orgId:    string,
+    inviteId: string,
+  ): Promise<NetworkPoolRfqSupplierQuoteSupplierRecord> {
+    const row = await (this.db as any).networkPoolRfqSupplierQuote.findFirst({
+      where: { inviteId, supplierOrgId: orgId },
+    });
+
+    if (!row) {
+      throw new NetworkPoolRfqSupplierQuoteNotFoundError();
+    }
+
+    return this.toQuoteSupplierRecord(row as Record<string, unknown>);
+  }
+
+  // ── submitQuote ───────────────────────────────────────────────────────────
+
+  /**
+   * Supplier submits a quote against an accepted invite.
+   *
+   * QD-1: Invite effective status must be ACCEPTED.
+   * QD-2: One quote per invite — conflict → NetworkPoolRfqSupplierQuoteConflictError (409).
+   * QD-3: validity_until stored but not enforced (no lazy-expiry in Phase 1C).
+   * QD-4: quoteAmount + currency required; validityUntil + supplierNote optional.
+   * QD-5: metadataInternalJson NEVER exposed to suppliers.
+   * QD-7: Direct tx.networkLifecycleLog.create — MUST NOT call StateMachineService.transition.
+   * QD-8: If RFQ status === 'ISSUED', update to 'QUOTED' and write a second lifecycle log.
+   *        If RFQ status === 'QUOTED', skip the RFQ update (already in target state).
+   *        If CANCELLED / EXPIRED / ACCEPTED / REJECTED → throw NetworkPoolRfqSupplierQuoteInvalidInputError.
+   */
+  async submitQuote(
+    orgId:    string,
+    userId:   string | null,
+    inviteId: string,
+    input:    SubmitQuoteInput,
+  ): Promise<NetworkPoolRfqSupplierQuoteSupplierRecord> {
+    const createdRow = await this.db.$transaction(async (tx: any) => {
+      // 1. Fetch invite scoped to supplier org (with RFQ join for status check)
+      const invite = await (tx as any).networkPoolRfqSupplierInvite.findFirst({
+        where:   { id: inviteId, supplierOrgId: orgId },
+        include: { rfq: true },
+      });
+
+      if (!invite) {
+        throw new NetworkPoolRfqSupplierInviteNotFoundError();
+      }
+
+      // 2. QD-1: Compute effective invite status — must be ACCEPTED
+      const effectiveStatus = this.computeEffectiveInviteStatus(
+        String(invite.status),
+        invite.expiresAt ?? null,
+      );
+
+      if (effectiveStatus !== 'ACCEPTED') {
+        throw new NetworkPoolRfqSupplierQuoteInviteNotAcceptedError(effectiveStatus);
+      }
+
+      // 3. QD-2: Check for existing quote (one per invite, non-partial unique in Phase 1C)
+      const existingQuote = await (tx as any).networkPoolRfqSupplierQuote.findFirst({
+        where: { inviteId },
+      });
+
+      if (existingQuote) {
+        throw new NetworkPoolRfqSupplierQuoteConflictError();
+      }
+
+      // 4. QD-8: Validate RFQ status — must be ISSUED or QUOTED
+      const rfqStatus = String((invite.rfq as Record<string, unknown>).status);
+      if (!['ISSUED', 'QUOTED'].includes(rfqStatus)) {
+        throw new NetworkPoolRfqSupplierQuoteInvalidInputError(
+          `RFQ is not open for quotes. Current status: '${rfqStatus}'.`,
+        );
+      }
+
+      // 5. Generate quoteRef — design §13.1 format: 'SQ-' + 16 hex chars uppercased
+      const quoteRef = 'SQ-' + randomUUID().replace(/-/g, '').slice(0, 16).toUpperCase();
+
+      const now = new Date();
+
+      // 6. Insert quote row
+      const created = await (tx as any).networkPoolRfqSupplierQuote.create({
+        data: {
+          ownerOrgId:        String(invite.ownerOrgId),
+          supplierOrgId:     orgId,
+          rfqId:             String(invite.rfqId),
+          poolId:            String(invite.poolId),
+          inviteId:          inviteId,
+          quoteRef:          quoteRef,
+          status:            'SUBMITTED',
+          quoteAmount:       input.quote_amount,
+          currency:          input.currency,
+          validityUntil:     input.validity_until != null
+            ? new Date(input.validity_until as string)
+            : null,
+          supplierNote:      input.supplier_note ?? null,
+          submittedAt:       now,
+          submittedByUserId: userId ?? null,
+          createdAt:         now,
+          updatedAt:         now,
+        },
+      });
+
+      // 7. QD-7: Write lifecycle log for quote_submitted
+      //    entityType/entityId follow the existing POOL-anchored pattern (schema constraint:
+      //    fromStateKey and toStateKey are non-nullable; pool state is unchanged).
+      await (tx as any).networkLifecycleLog.create({
+        data: {
+          orgId:           orgId,
+          entityType:      'POOL',
+          entityId:        String(invite.poolId),
+          fromStateKey:    'CLOSED_FOR_BIDS',
+          toStateKey:      'CLOSED_FOR_BIDS',
+          actorUserId:     userId ?? null,
+          actorAdminId:    null,
+          actorType:       'TENANT_USER',
+          actorRole:       'NC_SUPPLIER',
+          escalationLevel: null,
+          makerUserId:     null,
+          checkerUserId:   null,
+          aiTriggered:     false,
+          impersonationId: null,
+          reason:          `nc_pool_rfq_supplier_quote_submitted: invite=${inviteId}, quote=${String(created.id)}, rfq=${String(invite.rfqId)}`,
+          requestId:       input.request_id ?? null,
+        },
+      });
+
+      // 8. QD-8: If RFQ was ISSUED, transition it to QUOTED
+      if (rfqStatus === 'ISSUED') {
+        await (tx as any).networkPoolRfq.update({
+          where: { id: String(invite.rfqId) },
+          data:  { status: 'QUOTED', updatedAt: now },
+        });
+
+        await (tx as any).networkLifecycleLog.create({
+          data: {
+            orgId:           String(invite.ownerOrgId),
+            entityType:      'POOL',
+            entityId:        String(invite.poolId),
+            fromStateKey:    'CLOSED_FOR_BIDS',
+            toStateKey:      'CLOSED_FOR_BIDS',
+            actorUserId:     userId ?? null,
+            actorAdminId:    null,
+            actorType:       'TENANT_USER',
+            actorRole:       'NC_SUPPLIER',
+            escalationLevel: null,
+            makerUserId:     null,
+            checkerUserId:   null,
+            aiTriggered:     false,
+            impersonationId: null,
+            reason:          `nc_pool_rfq_status_changed_to_quoted: invite=${inviteId}, quote=${String(created.id)}, rfq=${String(invite.rfqId)}`,
+            requestId:       input.request_id ?? null,
+          },
+        });
+      }
+
+      return created;
+    });
+
+    return this.toQuoteSupplierRecord(createdRow as Record<string, unknown>);
   }
 }

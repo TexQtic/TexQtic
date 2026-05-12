@@ -5,6 +5,22 @@
 
 ---
 
+
+## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001
+
+NC Phase 1C Packet 12 (Service Layer) VERIFIED_COMPLETE.
+Service methods: submitQuote + getSupplierQuote added to networkPoolRfq.service.ts.
+Middleware: ncPoolSupplierQuoteFeatureGate.middleware.ts created (two-layer feature gate).
+Error classes: 4 new (InvalidInput, NotFound, Conflict, InviteNotAccepted).
+Interfaces: SubmitQuoteInput + NetworkPoolRfqSupplierQuoteSupplierRecord.
+Tests: 134/134 service unit tests PASS; 11/11 middleware unit tests PASS.
+tsc --noEmit ✓; prisma validate ✓; prisma generate ✓.
+Regression: PRQ/ORI/SRI — 2 failures confirmed pre-existing flakiness (reproduced on clean HEAD stash baseline); not caused by Packet 12.
+QD-1 through QD-7 implemented. No routes, no schema changes, no frontend.
+Governance doc: governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001.md
+Commit: feat(network-commerce): add supplier quote service layer
+
+
 ## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001
 
 Option A executed (Paresh authorized): prisma migrate resolve --applied 20260530000000_nc_pool_supplier_invite_feature_flag_seed + prisma migrate deploy.

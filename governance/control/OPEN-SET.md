@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001 — VERIFIED_COMPLETE. 3 migrations resolved/deployed: 20260530000000 resolved via --applied; 20260531000000 + 20260532000000 deployed. network_pool_rfq_supplier_quotes live. supplier_quotes flag enabled=false seeded. supplier_invite flag enabled=true preserved. Prisma: up to date. 104/104 regression tests pass. Packet 12 HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 — VERIFIED_COMPLETE. Packet 12 (Service Layer): submitQuote + getSupplierQuote + feature gate middleware delivered. 134/134 service unit tests + 11/11 middleware unit tests PASS. tsc clean. Regression flakiness confirmed pre-existing. Packet 13 route HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,13 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 VERIFIED_COMPLETE (2026-05-12).
+  NC Phase 1C Packet 12 (Service Layer) complete. submitQuote + getSupplierQuote added to networkPoolRfq.service.ts.
+  ncPoolSupplierQuoteFeatureGate.middleware.ts created. 4 error classes, 2 interfaces.
+  134/134 service unit tests PASS; 11/11 middleware unit tests PASS. tsc --noEmit ✓; prisma validate ✓.
+  Regression run: 2 flaky failures confirmed pre-existing on clean HEAD stash baseline — not caused by Packet 12.
+  No routes, no schema changes, no frontend written. Packet 13 (Route): HOLD_FOR_PARESH_DECISION.
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001.md.
 - TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001 VERIFIED_COMPLETE (2026-05-12).
   Option A executed (Paresh authorized): prisma migrate resolve --applied 20260530000000 + prisma migrate deploy. Migrations applied: 20260531000000_nc_pool_supplier_quote_schema (applied_steps_count=1), 20260532000000_nc_pool_supplier_quote_feature_flag_seed (applied_steps_count=1). network_pool_rfq_supplier_quotes: live on remote Supabase DB with RLS + grants. nc.procurement_pools.supplier_quotes.enabled: seeded enabled=false. nc.procurement_pools.supplier_invites.enabled: enabled=true PRESERVED (updated_at unchanged). Prisma: "Database schema is up to date!". 104/104 regression tests pass (SRI 11, ORI 50, PRQ 43). DEPLOYMENT-001 + LEDGER-RECONCILIATION-001 both RESOLVED. See governance/TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001.md.
 - TEXQTIC-NC-REMOTE-DB-MIGRATION-FLAG-COLLISION-INVESTIGATION-001 INVESTIGATION_COMPLETE (2026-05-12).
