@@ -1,5 +1,5 @@
 /**
- * ncPoolSupplierInviteFeatureGateMiddleware unit tests
+ * ncPoolFeatureGateMiddleware unit tests
  *
  * 11 test cases covering:
  *   --- Layer 1 (global flag) tests ---
@@ -8,19 +8,21 @@
  *   TC-003: Global flag row exists with enabled=false → 503 FEATURE_DISABLED
  *   TC-004: DB read throws on global flag → 503 FEATURE_DISABLED (fail-closed)
  *   TC-005: Global flag true + no orgId → 503 FEATURE_DISABLED (fail-closed)
- *   TC-006: Correct feature key queried (nc.procurement_pools.supplier_invites.enabled)
- *   TC-007: Parent flag keys NOT queried (nc.procurement_pools.enabled, nc.procurement_pools.rfq.enabled)
+ *   TC-006: Correct feature key queried (nc.procurement_pools.enabled)
  *   --- Layer 2 (per-org TenantFeatureOverride) tests ---
- *   TC-008: Global true, orgId present, no override row → allow
+ *   TC-007: Global true, orgId present, no override row → allow
  *           (global=true + no override = allow; override is an exception, not a requirement)
- *   TC-009: Global true, orgId present, override enabled=false → 503 FEATURE_DISABLED
+ *   TC-008: Global true, orgId present, override enabled=false → 503 FEATURE_DISABLED
+ *   TC-009: Global true, orgId present, override enabled=true → allow
  *   TC-010: Global true, orgId present, override DB throws → 503 FEATURE_DISABLED (fail-closed)
- *   TC-011: Supplier-only provisioning — only supplier_invites override exists (no parent pool
- *           overrides) → allows; confirms gate does NOT require parent flags
+ *   TC-011: Cross-tenant isolation — explicit disable for authenticated org is respected;
+ *           override lookup uses authenticated orgId, not a different org
+ *
+ * TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001 (Packet 14)
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ncPoolSupplierInviteFeatureGateMiddleware } from '../middleware/ncPoolSupplierInviteFeatureGate.middleware.js';
+import { ncPoolFeatureGateMiddleware } from '../middleware/ncPoolFeatureGate.middleware.js';
 
 // ─── Prisma mock ─────────────────────────────────────────────────────────────
 
@@ -41,7 +43,7 @@ import { prisma } from '../db/prisma.js';
 
 function makeRequest(overrides: Record<string, unknown> = {}): any {
   return {
-    url: '/api/tenant/pool-rfq-invites/invite-id',
+    url: '/api/tenant/network-commerce/pools',
     method: 'GET',
     log: {
       debug: vi.fn(),
@@ -69,12 +71,12 @@ function makeReply(): any {
   return reply;
 }
 
-const INVITE_FLAG_KEY = 'nc.procurement_pools.supplier_invites.enabled';
-const ORG_ID = 'bb000000-0000-0000-0000-000000000001';
+const POOL_FLAG_KEY = 'nc.procurement_pools.enabled';
+const ORG_ID = 'cc000000-0000-0000-0000-000000000001';
 
 function makeGlobalFlag(enabled: boolean) {
   return {
-    key: INVITE_FLAG_KEY,
+    key: POOL_FLAG_KEY,
     enabled,
     description: null,
     createdAt: new Date(),
@@ -87,7 +89,7 @@ function makeOverride(tenantId: string, enabled: boolean) {
   return {
     id: 'override-id',
     tenantId,
-    key: INVITE_FLAG_KEY,
+    key: POOL_FLAG_KEY,
     enabled,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -96,13 +98,13 @@ function makeOverride(tenantId: string, enabled: boolean) {
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
-describe('ncPoolSupplierInviteFeatureGateMiddleware', () => {
+describe('ncPoolFeatureGateMiddleware', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   // TC-001: Happy path — both layers pass → no 503
-  it('TC-001: allows request when global flag and per-org override are both enabled', async () => {
+  it('TC-001: allows request when global flag is enabled and per-org override is also enabled', async () => {
     vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue(makeGlobalFlag(true));
     vi.mocked(prisma.tenantFeatureOverride.findUnique).mockResolvedValue(
       makeOverride(ORG_ID, true),
@@ -113,7 +115,7 @@ describe('ncPoolSupplierInviteFeatureGateMiddleware', () => {
     });
     const reply = makeReply();
 
-    await ncPoolSupplierInviteFeatureGateMiddleware(request, reply);
+    await ncPoolFeatureGateMiddleware(request, reply);
 
     expect(reply._sent).toBeNull();
     expect(reply._code).toBe(200);
@@ -128,14 +130,14 @@ describe('ncPoolSupplierInviteFeatureGateMiddleware', () => {
     });
     const reply = makeReply();
 
-    await ncPoolSupplierInviteFeatureGateMiddleware(request, reply);
+    await ncPoolFeatureGateMiddleware(request, reply);
 
     expect(reply._code).toBe(503);
     expect(reply._sent).toMatchObject({
       success: false,
       error: {
         code: 'FEATURE_DISABLED',
-        message: 'Network Commerce procurement pool supplier invite is disabled.',
+        message: 'Network Commerce procurement pools are disabled.',
       },
     });
     // Layer 2 must not have been attempted
@@ -151,7 +153,7 @@ describe('ncPoolSupplierInviteFeatureGateMiddleware', () => {
     });
     const reply = makeReply();
 
-    await ncPoolSupplierInviteFeatureGateMiddleware(request, reply);
+    await ncPoolFeatureGateMiddleware(request, reply);
 
     expect(reply._code).toBe(503);
     expect((reply._sent as any).error.code).toBe('FEATURE_DISABLED');
@@ -169,13 +171,13 @@ describe('ncPoolSupplierInviteFeatureGateMiddleware', () => {
     });
     const reply = makeReply();
 
-    await ncPoolSupplierInviteFeatureGateMiddleware(request, reply);
+    await ncPoolFeatureGateMiddleware(request, reply);
 
     expect(reply._code).toBe(503);
     expect((reply._sent as any).error.code).toBe('FEATURE_DISABLED');
   });
 
-  // TC-005: Global true but no orgId resolvable → 503 (fail-closed — routes are tenant-scoped)
+  // TC-005: Global true but no orgId resolvable → 503 (fail-closed — pool routes are tenant-scoped)
   it('TC-005: returns 503 when global flag is true but no orgId is resolvable', async () => {
     vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue(makeGlobalFlag(true));
 
@@ -183,7 +185,7 @@ describe('ncPoolSupplierInviteFeatureGateMiddleware', () => {
     const request = makeRequest();
     const reply = makeReply();
 
-    await ncPoolSupplierInviteFeatureGateMiddleware(request, reply);
+    await ncPoolFeatureGateMiddleware(request, reply);
 
     expect(reply._code).toBe(503);
     expect((reply._sent as any).error.code).toBe('FEATURE_DISABLED');
@@ -192,52 +194,25 @@ describe('ncPoolSupplierInviteFeatureGateMiddleware', () => {
   });
 
   // TC-006: Correct feature key queried
-  it('TC-006: queries the correct feature flag key (nc.procurement_pools.supplier_invites.enabled)', async () => {
+  it('TC-006: queries the correct feature flag key (nc.procurement_pools.enabled)', async () => {
     vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue(null);
 
     const request = makeRequest();
     const reply = makeReply();
 
-    await ncPoolSupplierInviteFeatureGateMiddleware(request, reply);
+    await ncPoolFeatureGateMiddleware(request, reply);
 
     expect(prisma.featureFlag.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { key: 'nc.procurement_pools.supplier_invites.enabled' },
+        where: { key: 'nc.procurement_pools.enabled' },
       }),
     );
   });
 
-  // TC-007: Parent flag keys NOT queried
-  it('TC-007: does not query parent flag keys (nc.procurement_pools.enabled, nc.procurement_pools.rfq.enabled)', async () => {
-    vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue(makeGlobalFlag(true));
-    vi.mocked(prisma.tenantFeatureOverride.findUnique).mockResolvedValue(
-      makeOverride(ORG_ID, true),
-    );
-
-    const request = makeRequest({
-      dbContext: { orgId: ORG_ID, actorId: 'user-id', realm: 'tenant', requestId: 'req-id' },
-    });
-    const reply = makeReply();
-
-    await ncPoolSupplierInviteFeatureGateMiddleware(request, reply);
-
-    const allFlagCalls = vi.mocked(prisma.featureFlag.findUnique).mock.calls;
-    const queriedKeys = allFlagCalls.map((call) => (call[0] as any)?.where?.key);
-    expect(queriedKeys).not.toContain('nc.procurement_pools.enabled');
-    expect(queriedKeys).not.toContain('nc.procurement_pools.rfq.enabled');
-
-    const allOverrideCalls = vi.mocked(prisma.tenantFeatureOverride.findUnique).mock.calls;
-    const queriedOverrideKeys = allOverrideCalls.map(
-      (call) => (call[0] as any)?.where?.tenantId_key?.key,
-    );
-    expect(queriedOverrideKeys).not.toContain('nc.procurement_pools.enabled');
-    expect(queriedOverrideKeys).not.toContain('nc.procurement_pools.rfq.enabled');
-  });
-
-  // TC-008: Global true, orgId present, no override row → allow
-  // Canonical semantics: global=true + no per-org override = allow.
+  // TC-007: Global true, orgId present, no override row → allow
+  // Canonical semantics: global=true + no per-org override = allow for org.
   // Override is an exception mechanism (explicit disable), not a provisioning requirement.
-  it('TC-008: allows request when global flag is true and no per-org override row exists', async () => {
+  it('TC-007: allows request when global flag is true and no per-org override row exists', async () => {
     vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue(makeGlobalFlag(true));
     vi.mocked(prisma.tenantFeatureOverride.findUnique).mockResolvedValue(null);
 
@@ -246,7 +221,7 @@ describe('ncPoolSupplierInviteFeatureGateMiddleware', () => {
     });
     const reply = makeReply();
 
-    await ncPoolSupplierInviteFeatureGateMiddleware(request, reply);
+    await ncPoolFeatureGateMiddleware(request, reply);
 
     // Must allow — no error sent
     expect(reply._sent).toBeNull();
@@ -256,15 +231,15 @@ describe('ncPoolSupplierInviteFeatureGateMiddleware', () => {
       where: {
         tenantId_key: {
           tenantId: ORG_ID,
-          key: INVITE_FLAG_KEY,
+          key: POOL_FLAG_KEY,
         },
       },
       select: { enabled: true },
     });
   });
 
-  // TC-009: Global true, orgId present, override disabled → 503
-  it('TC-009: returns 503 when global flag is true but per-org override is disabled', async () => {
+  // TC-008: Global true, orgId present, override enabled=false → 503
+  it('TC-008: returns 503 when global flag is true but per-org override is explicitly disabled', async () => {
     vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue(makeGlobalFlag(true));
     vi.mocked(prisma.tenantFeatureOverride.findUnique).mockResolvedValue(
       makeOverride(ORG_ID, false),
@@ -275,10 +250,28 @@ describe('ncPoolSupplierInviteFeatureGateMiddleware', () => {
     });
     const reply = makeReply();
 
-    await ncPoolSupplierInviteFeatureGateMiddleware(request, reply);
+    await ncPoolFeatureGateMiddleware(request, reply);
 
     expect(reply._code).toBe(503);
     expect((reply._sent as any).error.code).toBe('FEATURE_DISABLED');
+  });
+
+  // TC-009: Global true, orgId present, override enabled=true → allow
+  it('TC-009: allows request when global flag is true and per-org override is explicitly enabled', async () => {
+    vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue(makeGlobalFlag(true));
+    vi.mocked(prisma.tenantFeatureOverride.findUnique).mockResolvedValue(
+      makeOverride(ORG_ID, true),
+    );
+
+    const request = makeRequest({
+      dbContext: { orgId: ORG_ID, actorId: 'user-id', realm: 'tenant', requestId: 'req-id' },
+    });
+    const reply = makeReply();
+
+    await ncPoolFeatureGateMiddleware(request, reply);
+
+    expect(reply._sent).toBeNull();
+    expect(reply._code).toBe(200);
   });
 
   // TC-010: Global true, orgId present, override DB throws → 503 (fail-closed)
@@ -293,40 +286,46 @@ describe('ncPoolSupplierInviteFeatureGateMiddleware', () => {
     });
     const reply = makeReply();
 
-    await ncPoolSupplierInviteFeatureGateMiddleware(request, reply);
+    await ncPoolFeatureGateMiddleware(request, reply);
 
     expect(reply._code).toBe(503);
     expect((reply._sent as any).error.code).toBe('FEATURE_DISABLED');
   });
 
-  // TC-011: Supplier-only provisioning — supplier org has only the invite flag override
-  // (no nc.procurement_pools.enabled or nc.procurement_pools.rfq.enabled overrides).
-  // The gate must allow the request — parent flags are not checked by this middleware.
-  // This test also asserts that ONLY the invite key is queried (no parent key queries).
-  it('TC-011: allows supplier org that has only the invite flag override (no parent pool overrides)', async () => {
+  // TC-011: Cross-tenant isolation — explicit disable for authenticated org is respected;
+  // override lookup uses authenticated orgId exactly, not any other tenant's ID.
+  it('TC-011: cross-tenant isolation — explicit disable for authenticated org blocks that org; lookup uses authenticated orgId', async () => {
+    const AUTHENTICATED_ORG_ID = 'cc000000-0000-0000-0000-000000000001';
     vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue(makeGlobalFlag(true));
+    // Authenticated org has an explicit disable override
     vi.mocked(prisma.tenantFeatureOverride.findUnique).mockResolvedValue(
-      makeOverride(ORG_ID, true),
+      makeOverride(AUTHENTICATED_ORG_ID, false),
     );
 
     const request = makeRequest({
-      dbContext: { orgId: ORG_ID, actorId: 'user-id', realm: 'tenant', requestId: 'req-id' },
+      dbContext: {
+        orgId: AUTHENTICATED_ORG_ID,
+        actorId: 'user-id',
+        realm: 'tenant',
+        requestId: 'req-id',
+      },
     });
     const reply = makeReply();
 
-    await ncPoolSupplierInviteFeatureGateMiddleware(request, reply);
+    await ncPoolFeatureGateMiddleware(request, reply);
 
-    // Gate must allow
-    expect(reply._sent).toBeNull();
-    expect(reply._code).toBe(200);
-
-    // Only the invite key was queried — no parent pool key queries
-    const allFlagCalls = vi.mocked(prisma.featureFlag.findUnique).mock.calls;
-    expect(allFlagCalls).toHaveLength(1);
-    expect((allFlagCalls[0][0] as any)?.where?.key).toBe(INVITE_FLAG_KEY);
-
-    const allOverrideCalls = vi.mocked(prisma.tenantFeatureOverride.findUnique).mock.calls;
-    expect(allOverrideCalls).toHaveLength(1);
-    expect((allOverrideCalls[0][0] as any)?.where?.tenantId_key?.key).toBe(INVITE_FLAG_KEY);
+    expect(reply._code).toBe(503);
+    expect((reply._sent as any).error.code).toBe('FEATURE_DISABLED');
+    // Override lookup must use the authenticated org's ID exactly
+    expect(prisma.tenantFeatureOverride.findUnique).toHaveBeenCalledWith({
+      where: {
+        tenantId_key: {
+          tenantId: AUTHENTICATED_ORG_ID,
+          key: POOL_FLAG_KEY,
+        },
+      },
+      select: { enabled: true },
+    });
+    expect(prisma.tenantFeatureOverride.findUnique).toHaveBeenCalledTimes(1);
   });
 });

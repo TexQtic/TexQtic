@@ -7,7 +7,8 @@ const NC_POOL_SUPPLIER_INVITE_FEATURE_FLAG_KEY = 'nc.procurement_pools.supplier_
 /**
  * Two-layer route gate for Network Commerce pool RFQ supplier invite routes.
  * Layer 1: global supplier invite sub-flag must exist and be enabled.
- * Layer 2: per-tenant override must exist and be enabled for the request org.
+ * Layer 2: if a per-tenant override exists and is explicitly disabled, block.
+ *          No override row → allow (global=true is sufficient).
  *
  * Fails closed if orgId is not resolvable — all supplier invite routes are tenant-scoped.
  * Does NOT check parent keys (nc.procurement_pools.enabled or nc.procurement_pools.rfq.enabled).
@@ -77,7 +78,7 @@ export async function ncPoolSupplierInviteFeatureGateMiddleware(
       select: { enabled: true },
     });
 
-    if (tenantOverride?.enabled !== true) {
+    if (tenantOverride?.enabled === false) {
       request.log.info(
         {
           event: 'nc.pool.supplier_invite.feature_gate.org_blocked',

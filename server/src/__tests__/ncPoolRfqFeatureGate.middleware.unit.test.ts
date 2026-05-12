@@ -15,11 +15,13 @@
  *   TC-010: Queries the correct feature flag key (nc.procurement_pools.rfq.enabled)
  *   TC-011: Does NOT query parent flag key (nc.procurement_pools.enabled)
  *   --- Layer 2 (per-org TenantFeatureOverride) tests ---
- *   TC-012: Global true, orgId in dbContext, no override row → 503 FEATURE_DISABLED
+ *   TC-012: Global true, orgId in dbContext, no override row → allow
+ *           (global=true + no override = allow; override is an exception, not a requirement)
  *   TC-013: Global true, orgId in dbContext, override enabled=true → allows
  *   TC-014: Global true, orgId in dbContext, override enabled=false → 503 FEATURE_DISABLED
  *   TC-015: Global true, orgId in dbContext, DB error on override lookup → 503 (fail-closed)
- *   TC-016: Cross-tenant isolation — override for different org does not grant access
+ *   TC-016: Cross-tenant isolation — explicit disable for authenticated org is respected;
+ *           override lookup uses authenticated orgId, not a different org
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -286,8 +288,10 @@ describe('ncPoolRfqFeatureGateMiddleware', () => {
 
   // ─── Layer 2 (per-org TenantFeatureOverride) tests ───────────────────────
 
-  // TC-012: Global true, orgId, no override row → 503
-  it('TC-012: returns 503 when global flag is true but no per-org override row exists', async () => {
+  // TC-012: Global true, orgId, no override row → allow
+  // Canonical semantics: global=true + no per-org override = allow.
+  // Override is an exception mechanism (explicit disable), not a provisioning requirement.
+  it('TC-012: allows request when global flag is true and no per-org override row exists', async () => {
     vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue(makeGlobalFlag(true));
     vi.mocked(prisma.tenantFeatureOverride.findUnique).mockResolvedValue(null);
 
@@ -298,8 +302,10 @@ describe('ncPoolRfqFeatureGateMiddleware', () => {
 
     await ncPoolRfqFeatureGateMiddleware(request, reply);
 
-    expect(reply._code).toBe(503);
-    expect((reply._sent as any).error.code).toBe('FEATURE_DISABLED');
+    // Must allow — no error sent
+    expect(reply._sent).toBeNull();
+    expect(reply._code).toBe(200);
+    // Override was still queried (to check for explicit disables)
     expect(prisma.tenantFeatureOverride.findUnique).toHaveBeenCalledWith({
       where: {
         tenantId_key: {
@@ -365,12 +371,15 @@ describe('ncPoolRfqFeatureGateMiddleware', () => {
     expect((reply._sent as any).error.code).toBe('FEATURE_DISABLED');
   });
 
-  // TC-016: Cross-tenant isolation — override lookup always uses authenticated request's orgId
-  it('TC-016: cross-tenant isolation — override lookup uses authenticated orgId, not a different org', async () => {
+  // TC-016: Cross-tenant isolation — explicit disable for authenticated org is respected;
+  // override lookup uses authenticated orgId exactly, not any other tenant's ID.
+  it('TC-016: cross-tenant isolation — explicit disable for authenticated org blocks that org; lookup uses authenticated orgId', async () => {
     const AUTHENTICATED_ORG_ID = 'aa000000-0000-0000-0000-000000000001';
     vi.mocked(prisma.featureFlag.findUnique).mockResolvedValue(makeGlobalFlag(true));
-    // No override for the authenticated org — gate must block
-    vi.mocked(prisma.tenantFeatureOverride.findUnique).mockResolvedValue(null);
+    // Authenticated org has an explicit disable override
+    vi.mocked(prisma.tenantFeatureOverride.findUnique).mockResolvedValue(
+      makeOverride(AUTHENTICATED_ORG_ID, false),
+    );
 
     const request = makeRequest({
       dbContext: {
@@ -386,7 +395,7 @@ describe('ncPoolRfqFeatureGateMiddleware', () => {
 
     expect(reply._code).toBe(503);
     expect((reply._sent as any).error.code).toBe('FEATURE_DISABLED');
-    // Override lookup must use the authenticated org's ID exactly — not a different tenant
+    // Override lookup must use the authenticated org's ID exactly
     expect(prisma.tenantFeatureOverride.findUnique).toHaveBeenCalledWith({
       where: {
         tenantId_key: {

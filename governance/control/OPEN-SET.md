@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-01 (TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001 — BLOCKED_RUNTIME_MISMATCH_CONFIRMED. Two runtime configuration mismatches confirmed: (A) nc.procurement_pools.enabled ABSENT from prod DB → all pool routes 503; (B) invite gate Layer 2 !==true semantics → invite inbox 503 without tenant override. Zero URL routing mismatches. FE-8 remains BLOCKED_PARESH_AUTHORIZATION_REQUIRED. Paresh must authorize DB provisioning + gate fix before NC surfaces can function end-to-end.)
+**Last Updated:** 2026-06-02 (TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001 — PENDING_PRODUCTION_VERIFY. Gate Layer 2 semantics fixed in 3 non-canonical middleware files (!=true → ===false). ncPoolFeatureGate new 11-test file created. ncPoolRfqFeatureGate + ncPoolSupplierInviteFeatureGate tests updated to canonical semantics. PoolListSurface error mapping fixed (APIError.code check). 49/49 gate unit tests + 31/31 frontend + 20/20 routing tests PASS. tsc clean. DB provisioning of nc.procurement_pools.enabled still BLOCKED_PARESH_PROVISIONING_REQUIRED — not resolved by this packet. FE-8 remains BLOCKED_PARESH_AUTHORIZATION_REQUIRED.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 — VERIFIED_COMPLETE; Packet 13 route layer delivered; 40/40 integration + 206/206 total tests pass; tsc clean; FE-8 BLOCKED_PARESH_AUTHORIZATION_REQUIRED)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-02 (TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001 — PENDING_PRODUCTION_VERIFY; gate semantics aligned; PoolListSurface error mapping fixed; 49+31+20=100 tests PASS; tsc clean; FE-8 BLOCKED_PARESH_AUTHORIZATION_REQUIRED; DB provisioning of nc.procurement_pools.enabled still required)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,49 +15,48 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001
-active_delivery_unit_status: BLOCKED_PARESH_AUTHORIZATION_REQUIRED
+active_delivery_unit: TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001
+active_delivery_unit_status: BLOCKED_PARESH_PROVISIONING_REQUIRED
 active_delivery_unit_note: >
-  NC Phase 1C Packet 13 (Route) VERIFIED_COMPLETE (2026-05-12). GET + POST supplier quote routes delivered.
-  40/40 integration tests + 206/206 total tests PASS. tsc --noEmit clean.
-  FE-8 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001) is the next unit but BLOCKED_PARESH_AUTHORIZATION_REQUIRED.
-  Backend contract is complete (Packets 11 + 12 + 13 all VERIFIED_COMPLETE).
-  FE-8 requires explicit separate Paresh authorization before execution.
+  TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001 PENDING_PRODUCTION_VERIFY (2026-06-02).
+  Gate semantics fix + PoolListSurface error mapping fix delivered. 49/49 gate unit tests PASS.
+  Remaining blocker: nc.procurement_pools.enabled ABSENT from production DB.
+  Next unit: TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 — seed nc.procurement_pools.enabled=true
+  and nc.procurement_pools.rfq.enabled=true in production DB via psql.
+  This is a pure DB provisioning operation. Requires Paresh authorization and execution.
+  FE-8 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001) remains BLOCKED_PARESH_AUTHORIZATION_REQUIRED (separate authorization).
   DPP LAUNCH GATE (independent of NC Phase 1C):
   TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 VERIFIED_COMPLETE (2026-05-02).
   DPP Passport Network is technically production-ready based on PROD-AUDIT-002.
-  DPP launch authorization: HOLD_FOR_PARESH_DECISION — separate decision; not unlocked by NC authorization.
+  DPP launch authorization: HOLD_FOR_PARESH_DECISION — separate decision; not unlocked by NC work.
   Do NOT open DPP next slice without separate explicit Paresh DPP authorization.
-last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001
-last_closed_unit_status: VERIFIED_COMPLETE
+last_closed_unit: TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001
+last_closed_unit_status: PENDING_PRODUCTION_VERIFY
 last_closed_unit_runtime_verdict: >-
-  NC Phase 1C Packet 13 (Route Layer) VERIFIED_COMPLETE (2026-05-12). ROUTE_LAYER only.
-  GET /supplier-rfq-invites/:inviteId/quote + POST /supplier-rfq-invites/:inviteId/quote.
-  poolRfqSupplierQuotes.ts route plugin created; tenant.ts import + registration added.
-  Guards: tenantAuthMiddleware + databaseContextMiddleware + ncPoolSupplierQuoteFeatureGateMiddleware.
-  Non-leaking 404s; POST 201; supplier-safe DTO (QD-5). Error mapping: 404/409/422/400/401.
-  prisma validate ✓; tsc --noEmit ✓ (zero errors).
-  40/40 integration tests PASS; 134/134 service unit tests PASS; 11/11 middleware unit tests PASS;
-  11/11 invite regression PASS. Total: 206/206.
-  No schema changes, no migrations, no frontend written.
-last_closed_unit_commits: feat(network-commerce): add supplier quote routes
+  TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001 PENDING_PRODUCTION_VERIFY (2026-06-02).
+  Gate Layer 2 semantics fixed: ncPoolFeatureGate + ncPoolRfqFeatureGate + ncPoolSupplierInviteFeatureGate.
+  Condition changed: tenantOverride?.enabled !== true → tenantOverride?.enabled === false.
+  ncPoolFeatureGate: Layer 2 restructured; fail-closed no-orgId guard added before override query.
+  ncPoolFeatureGate.middleware.unit.test.ts: NEW FILE, 11 canonical tests.
+  ncPoolRfqFeatureGate tests: TC-012 (no override → ALLOW) + TC-016 (explicit disable → 503) updated.
+  ncPoolSupplierInviteFeatureGate tests: TC-008 (no override → ALLOW) updated.
+  PoolListSurface.tsx: APIError import added; catch block uses err instanceof APIError check.
+  tsc --noEmit ✓ (server + frontend). 49/49 gate unit tests PASS. 20/20 routing PASS. 31/31 frontend PASS.
+  DB provisioning of nc.procurement_pools.enabled still required before production function.
+last_closed_unit_commits: fix(network-commerce): align feature gate runtime semantics
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE. Route layer validated. 206/206 total tests pass. tsc clean.
-  GET: org-scoped invite lookup → getSupplierQuote → supplier-safe DTO → 200.
-  POST: strict schema validation → submitQuote → supplier-safe DTO → 201.
-  Feature gate: ncPoolSupplierQuoteFeatureGateMiddleware only (no parent gates).
-  Non-leaking 404s throughout. No routes/schema/FE written beyond scope.
-  FE-8 gate: requires explicit Paresh authorization.
+  PENDING_PRODUCTION_VERIFY. Gate semantics canonical. PoolListSurface error mapping canonical.
+  AF-2 (gate !==true semantics): FIXED in all 3 non-canonical gates.
+  AF-3 (PoolListSurface error mapping): FIXED; APIError.code check (canonical pattern).
+  Production gap remaining: nc.procurement_pools.enabled ABSENT from production feature_flags.
+  Next: TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 (Paresh must authorize and execute).
 note_on_pending_verification: >-
-  TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001 BLOCKED_RUNTIME_MISMATCH_CONFIRMED (2026-06-01).
-  Two production runtime mismatches confirmed. Neither blocks FE-8 authorization (orthogonal concerns).
-  Mismatch A: nc.procurement_pools.enabled ABSENT from prod DB — all pool routes 503. Requires Paresh DB provisioning.
-  Mismatch B: invite/pool/rfq gate Layer 2 !==true semantics (non-canonical) — invite inbox 503 without per-tenant override. Requires Paresh-authorized backend gate fix unit.
-  Secondary frontend finding: PoolListSurface checks err.message not err.code (unlike SupplierInviteInbox) — can be scoped to FE-8 or separate unit.
-  Paresh must authorize: (1) DB provisioning of nc.procurement_pools.enabled=true; (2) gate semantics fix unit; (3) FE-8 execution (independent authorization).
-  Prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 VERIFIED_COMPLETE (2026-05-12).
-  Prior-prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 VERIFIED_COMPLETE (4279cc0).
-  Pre-prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001 VERIFIED_COMPLETE (14e7e99).
+  TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001 PENDING_PRODUCTION_VERIFY (2026-06-02).
+  Gate semantics fixed (AF-2) + PoolListSurface error mapping fixed (AF-3). All local tests PASS.
+  Production gap remaining: nc.procurement_pools.enabled ABSENT from production DB — pool routes still 503 in prod.
+  Next: TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 (psql INSERT, Paresh must authorize).
+  Prior: TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001 BLOCKED_RUNTIME_MISMATCH_CONFIRMED (2026-06-01).
+  Prior-prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 VERIFIED_COMPLETE (2026-05-12).
 dpp_passport_network_readiness: PRODUCTION_READY
 dpp_readiness_authority: TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002
 dpp_readiness_commit: 17c252c

@@ -7,7 +7,8 @@ const NC_POOL_RFQ_FEATURE_FLAG_KEY = 'nc.procurement_pools.rfq.enabled';
 /**
  * Two-layer route gate for Network Commerce pool RFQ sub-feature routes.
  * Layer 1: global RFQ sub-flag must exist and be enabled.
- * Layer 2: per-tenant override must exist and be enabled for the request org.
+ * Layer 2: if a per-tenant override exists and is explicitly disabled, block.
+ *          No override row → allow (global=true is sufficient).
  *
  * Fails closed if orgId is not resolvable — all RFQ routes are tenant-scoped.
  * Does NOT check parent key (nc.procurement_pools.enabled); that is enforced
@@ -72,7 +73,7 @@ export async function ncPoolRfqFeatureGateMiddleware(
       select: { enabled: true },
     });
 
-    if (tenantOverride?.enabled !== true) {
+    if (tenantOverride?.enabled === false) {
       request.log.info(
         {
           event: 'nc.pool.rfq.feature_gate.org_blocked',

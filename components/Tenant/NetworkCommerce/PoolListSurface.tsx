@@ -6,6 +6,7 @@ import {
   type OwnedPoolListItem,
   type CreateNetworkPoolInput,
 } from '../../../services/networkCommerceService';
+import { APIError } from '../../../services/apiClient';
 
 type PoolListSurfaceProps = Readonly<{
   onSelectPool: (poolId: string) => void;
@@ -253,10 +254,10 @@ export function PoolListSurface({
         }
       } catch (err) {
         if (isMounted) {
-          const message = err instanceof Error ? err.message : 'Failed to load pools';
-          if (message.includes('FEATURE_DISABLED') || message.includes('feature')) {
+          if (err instanceof APIError && (err.code === 'FEATURE_DISABLED' || err.status === 503)) {
             setState('feature-disabled');
           } else {
+            const message = err instanceof Error ? err.message : 'Failed to load pools';
             setError(message);
             setState('error');
           }

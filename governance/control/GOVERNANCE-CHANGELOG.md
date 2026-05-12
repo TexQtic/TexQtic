@@ -6,6 +6,25 @@
 ---
 
 
+## 2026-06-02 -- PENDING_PRODUCTION_VERIFY: TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001
+
+Packet 14 — Gate semantics fix + PoolListSurface error mapping fix. HEAD: 1d52d52 (base).
+AF-2 (gate !==true semantics): FIXED in ncPoolFeatureGate + ncPoolRfqFeatureGate + ncPoolSupplierInviteFeatureGate.
+Condition changed: tenantOverride?.enabled !== true → tenantOverride?.enabled === false in all 3 gates.
+ncPoolFeatureGate: Layer 2 restructured — fail-closed no-orgId guard moved before override query; jsdoc updated.
+ncPoolFeatureGate.middleware.unit.test.ts: NEW FILE, 11 canonical tests covering all 7 truth-table rules.
+ncPoolRfqFeatureGate tests: TC-012 (no override → ALLOW) + TC-016 (explicit disable → 503) updated to canonical semantics.
+ncPoolSupplierInviteFeatureGate tests: TC-008 (no override → ALLOW) updated. Header comment updated.
+AF-3 (PoolListSurface error mapping): FIXED. Added import { APIError } from '../../../services/apiClient'.
+Catch block changed from message.includes('FEATURE_DISABLED') → err instanceof APIError && (err.code === 'FEATURE_DISABLED' || err.status === 503).
+Validation: tsc --noEmit (server + frontend) PASS; 49/49 gate unit tests PASS; 51/51 integration tests PASS; 20/20 routing tests PASS; 31/31 frontend tests PASS.
+Remaining blocker: nc.procurement_pools.enabled ABSENT from production feature_flags — DB provisioning required (Paresh).
+FE-8 status: BLOCKED_PARESH_AUTHORIZATION_REQUIRED — UNCHANGED.
+DPP posture: HOLD_FOR_PARESH_DECISION — UNCHANGED.
+Governance doc: governance/TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001.md (created).
+Commit: fix(network-commerce): align feature gate runtime semantics
+
+
 ## 2026-06-01 -- BLOCKED_RUNTIME_MISMATCH_CONFIRMED: TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001
 
 Read-only runtime alignment audit for NC frontend surfaces vs. backend APIs. HEAD: b75ced5.
