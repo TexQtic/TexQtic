@@ -49,11 +49,14 @@ last_closed_unit_closure_basis: >-
   Non-leaking 404s throughout. No routes/schema/FE written beyond scope.
   FE-8 gate: requires explicit Paresh authorization.
 note_on_pending_verification: >-
-  TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 VERIFIED_COMPLETE (2026-05-12).
-  Packet 13 (Route) complete. FE-8 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001) BLOCKED_PARESH_AUTHORIZATION_REQUIRED.
-  Requires separate Paresh authorization before FE-8 execution can begin.
-  DPP launch authorization: HOLD_FOR_PARESH_DECISION (UNCHANGED — separate decision).
-  Prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 VERIFIED_COMPLETE (4279cc0).
+  TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001 BLOCKED_RUNTIME_MISMATCH_CONFIRMED (2026-06-01).
+  Two production runtime mismatches confirmed. Neither blocks FE-8 authorization (orthogonal concerns).
+  Mismatch A: nc.procurement_pools.enabled ABSENT from prod DB — all pool routes 503. Requires Paresh DB provisioning.
+  Mismatch B: invite/pool/rfq gate Layer 2 !==true semantics (non-canonical) — invite inbox 503 without per-tenant override. Requires Paresh-authorized backend gate fix unit.
+  Secondary frontend finding: PoolListSurface checks err.message not err.code (unlike SupplierInviteInbox) — can be scoped to FE-8 or separate unit.
+  Paresh must authorize: (1) DB provisioning of nc.procurement_pools.enabled=true; (2) gate semantics fix unit; (3) FE-8 execution (independent authorization).
+  Prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 VERIFIED_COMPLETE (2026-05-12).
+  Prior-prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SERVICE-001 VERIFIED_COMPLETE (4279cc0).
   Pre-prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-SCHEMA-001 VERIFIED_COMPLETE (14e7e99).
 dpp_passport_network_readiness: PRODUCTION_READY
 dpp_readiness_authority: TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002

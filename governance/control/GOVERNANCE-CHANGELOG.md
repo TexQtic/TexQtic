@@ -6,6 +6,20 @@
 ---
 
 
+## 2026-06-01 -- BLOCKED_RUNTIME_MISMATCH_CONFIRMED: TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001
+
+Read-only runtime alignment audit for NC frontend surfaces vs. backend APIs. HEAD: b75ced5.
+Two production runtime configuration mismatches confirmed:
+(A) nc.procurement_pools.enabled ABSENT from production DB → ncPoolFeatureGateMiddleware Layer 1 blocks → all pool routes return 503 FEATURE_DISABLED. PoolListSurface shows generic error (mapping bug: checks err.message not err.code; cannot distinguish 503/FEATURE_DISABLED).
+(B) ncPoolSupplierInviteFeatureGateMiddleware Layer 2 uses !==true (require-explicit-override semantics) instead of ===false (canonical semantics fixed in Packet 12). Invite inbox returns 503 for all tenants without tenant_feature_overrides row, even though global flag is enabled=true. Same non-canonical semantics in ncPoolFeatureGate + ncPoolRfqFeatureGate.
+Zero URL routing mismatches found (22 frontend calls / 22 backend registrations, all aligned).
+Pool Detail / Demand Lines / Pool RFQ placeholders: EXPECTED_PLACEHOLDER_STATE (selectedPoolId=null, downstream of pool list error).
+NC Pool Oversight: EXPECTED_PLACEHOLDER_STATE (FE-11 HOLD_FOR_PARESH_DECISION).
+FE-8 status: BLOCKED_PARESH_AUTHORIZATION_REQUIRED — UNCHANGED.
+DPP posture: HOLD_FOR_PARESH_DECISION — UNCHANGED.
+No source, test, or schema changes made. Audit doc: governance/TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001.md
+
+
 ## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001
 
 NC Phase 1C Packet 13 (Route Layer) VERIFIED_COMPLETE.

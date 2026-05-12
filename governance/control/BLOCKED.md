@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 VERIFIED_COMPLETE: Packet 13 route layer delivered; FE-8 now BLOCKED_PARESH_AUTHORIZATION_REQUIRED — backend complete, frontend requires separate Paresh authorization)
+**Last Updated:** 2026-06-01 (TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001 BLOCKED_RUNTIME_MISMATCH_CONFIRMED: two production runtime mismatches found — (A) nc.procurement_pools.enabled absent from prod DB; (B) invite gate !==true semantics blocks without tenant override. Both require Paresh authorization to resolve. FE-8 remains BLOCKED_PARESH_AUTHORIZATION_REQUIRED.)
 
 > Read this file after `NEXT-ACTION.md`. It records only current blockers, holds, and governance
 > exceptions relevant to live Layer 0 posture. It does not originate ordinary product delivery
@@ -14,6 +14,8 @@
 
 | Item | Status | Posture |
 | --- | --- | --- |
+| `NC-RUNTIME-MISMATCH-A: nc.procurement_pools.enabled absent` | `BLOCKED_PARESH_PROVISIONING_REQUIRED` | Production DB missing nc.procurement_pools.enabled flag. All pool-owner routes return 503 FEATURE_DISABLED. NC Pools surface shows generic error state (also: PoolListSurface error mapping bug — checks err.message not err.code). Fix: INSERT nc.procurement_pools.enabled=true in feature_flags via psql (requires Paresh). Paired with gate semantics fix below for canonical behavior. See governance/TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001.md §9 S-1. |
+| `NC-RUNTIME-MISMATCH-B: invite/pool/rfq gate !== true semantics` | `BLOCKED_PARESH_AUTHORIZATION_REQUIRED` | ncPoolSupplierInviteFeatureGateMiddleware Layer 2 uses !==true instead of ===false (canonical semantics). Same in ncPoolFeatureGateMiddleware + ncPoolRfqFeatureGateMiddleware. Requires explicit tenant_feature_overrides row to allow, even when global flag enabled=true. Invite inbox shows disabled for all tenants without override. Fix: change Layer 2 from !==true to ===false in all 3 gates (new authorized backend unit required). See governance/TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001.md §8 AF-2. |
 | `TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001` | `BLOCKED_PARESH_AUTHORIZATION_REQUIRED` | FE-8 supplier quote UI: backend complete (Packets 11 + 12 + 13 all VERIFIED_COMPLETE). Routes: GET + POST /supplier-rfq-invites/:inviteId/quote live. Blocked on separate Paresh FE-8 authorization before frontend execution begins. Design authority: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-DESIGN-001 DESIGN_COMPLETE. |
 | `TEXQTIC-NC-REMOTE-DB-PRISMA-LEDGER-RECONCILIATION-001` | `RESOLVED` | Subsumed and resolved by DEPLOYMENT-RESOLUTION-001. All 3 migrations now applied to remote Supabase DB. See `governance/TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001.md`. |
 | `TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-001` | `RESOLVED` | **RESOLVED by TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001 (2026-05-12).** Option A executed: `prisma migrate resolve --applied 20260530000000_nc_pool_supplier_invite_feature_flag_seed` + `prisma migrate deploy`. 20260531000000 + 20260532000000 applied. `network_pool_rfq_supplier_quotes` live. `nc.procurement_pools.supplier_quotes.enabled` seeded false. `nc.procurement_pools.supplier_invites.enabled` remains true (preserved). Prisma: "Database schema is up to date!". 104/104 regression tests pass. See `governance/TEXQTIC-NC-REMOTE-DB-MIGRATION-DEPLOYMENT-RESOLUTION-001.md`. |

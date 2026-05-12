@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 — VERIFIED_COMPLETE. Packet 13 (Route): GET + POST supplier quote routes delivered. 40/40 integration + 206/206 total tests PASS. tsc clean. FE-8 BLOCKED_PARESH_AUTHORIZATION_REQUIRED.)
+**Last Updated:** 2026-06-01 (TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001 — BLOCKED_RUNTIME_MISMATCH_CONFIRMED. Two runtime configuration mismatches confirmed: (A) nc.procurement_pools.enabled ABSENT from prod DB → all pool routes 503; (B) invite gate Layer 2 !==true semantics → invite inbox 503 without tenant override. Zero URL routing mismatches. FE-8 remains BLOCKED_PARESH_AUTHORIZATION_REQUIRED. Paresh must authorize DB provisioning + gate fix before NC surfaces can function end-to-end.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,17 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001 BLOCKED_RUNTIME_MISMATCH_CONFIRMED (2026-06-01).
+  Runtime alignment audit for NC frontend surfaces vs. backend APIs completed at HEAD b75ced5.
+  Two configuration mismatches confirmed:
+  (A) nc.procurement_pools.enabled ABSENT from production DB — all pool-owner routes return 503 FEATURE_DISABLED; NC Pools shows error state (also: PoolListSurface error mapping bug — checks err.message not err.code, unlike SupplierInviteInbox).
+  (B) ncPoolSupplierInviteFeatureGateMiddleware Layer 2 uses !== true semantics (requires explicit tenant_feature_overrides row) — invite inbox blocked without provisioning; same non-canonical semantics also in ncPoolFeatureGate + ncPoolRfqFeatureGate (not fixed in Packet 12).
+  Zero URL routing mismatches (22 frontend calls / 22 backend endpoints all aligned).
+  Pool Detail / Demand Lines / Pool RFQ placeholders: EXPECTED_PLACEHOLDER_STATE (downstream of pool list error, no independent API calls without selectedPoolId).
+  NC Pool Oversight: EXPECTED_PLACEHOLDER_STATE (FE-11 HOLD_FOR_PARESH_DECISION).
+  FE-8 remains BLOCKED_PARESH_AUTHORIZATION_REQUIRED. DPP posture UNCHANGED.
+  See governance/TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001.md.
 
 - TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 VERIFIED_COMPLETE (2026-05-12).
   NC Phase 1C Packet 13 (Route Layer) complete. GET + POST supplier quote routes delivered.
