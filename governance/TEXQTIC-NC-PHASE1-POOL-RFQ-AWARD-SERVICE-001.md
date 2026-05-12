@@ -243,11 +243,11 @@ cd server && pnpm exec tsc --noEmit
 cd server && pnpm exec vitest run src/__tests__/networkPoolRfq.service.unit.test.ts
 
  Test Files  1 passed (1)
-      Tests  150 passed (150)
+      Tests  151 passed (151)
    Duration  515ms
 ```
 
-Prior test count: 134. New test count: 150. All 16 P-OWNER cases pass.
+Prior test count: 134. New test count: 151. All 17 P-OWNER cases pass.
 
 ---
 
@@ -270,7 +270,7 @@ Prior test count: 134. New test count: 150. All 16 P-OWNER cases pass.
 This packet halts if:
 - Prisma validate fails
 - tsc produces errors
-- Any of the 150 tests fail
+- Any of the 151 tests fail
 - Route implementation required (out of scope → AWARD-ROUTE-001)
 - Feature flag activation required (not in this packet)
 
