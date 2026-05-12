@@ -2748,7 +2748,7 @@ describe('P-QUOTE-15 (SQ-15): PASS — only one lifecycle log when RFQ already Q
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // OWNER AWARD TESTS — TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001
-// 16 tests: P-OWNER-01 → P-OWNER-16
+// 17 tests: P-OWNER-01 → P-OWNER-17
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ─── Award Test Constants ─────────────────────────────────────────────────────
@@ -3154,6 +3154,22 @@ describe('P-OWNER-16: FAIL — rejectQuote throws OwnerQuoteNotFoundError for wr
     await expect(
       svc.rejectQuote('wrong-owner-id', USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {}),
     ).rejects.toBeInstanceOf(NetworkPoolRfqOwnerQuoteNotFoundError);
+  });
+});
+
+describe('P-OWNER-17: PASS — rejectQuote throws TransitionDeniedError when RFQ is not QUOTED', () => {
+  it('throws NetworkPoolRfqTransitionDeniedError when RFQ status is ACCEPTED', async () => {
+    const db = makeDbForRejectQuote({
+      networkPoolRfq: {
+        findFirst: vi.fn().mockResolvedValue(makeRfqRowForAward({ status: 'ACCEPTED' })),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.rejectQuote(OWNER_ORG_ID, USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {}),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqTransitionDeniedError);
   });
 });
 

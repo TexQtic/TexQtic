@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-07 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001 VERIFIED_COMPLETE. listOwnerQuotes/acceptQuote/rejectQuote added to NetworkPoolRfqService. 150/150 unit tests pass. tsc PASS. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP posture HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-06-07 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001-CORRECTION VERIFIED_COMPLETE. Governance doc corrected: §8 rejectQuote step 3 now documents RFQ status guard. P-OWNER-09/15/16 relabeled PASS. P-OWNER-17 added. 151/151 unit tests pass. tsc PASS. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,15 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001-CORRECTION VERIFIED_COMPLETE (2026-06-07).
+  Governance doc correction only. rejectQuote already validated rfq.status==='QUOTED' in implementation.
+  §8 rejectQuote step 3 updated to document the RFQ status check.
+  P-OWNER-09/15/16 relabeled PASS (were FAIL — misleading label for expected-error tests).
+  P-OWNER-17 added: rejectQuote throws TransitionDeniedError when RFQ status is not QUOTED.
+  17 new unit tests total (P-OWNER-01 → P-OWNER-17). Total: 151/151 PASS.
+  Stale risk note in §13 corrected. Correction addendum added to governance doc.
+  No service/route/schema/migration/env changes.
 
 - TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001 VERIFIED_COMPLETE (2026-06-07).
   NC Phase 1D service layer complete. listOwnerQuotes, acceptQuote, rejectQuote added to NetworkPoolRfqService.

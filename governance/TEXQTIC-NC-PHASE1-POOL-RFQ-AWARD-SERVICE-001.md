@@ -186,7 +186,7 @@ Steps (all inside `$transaction`):
 
 1. Load pool with `lifecycleState` → throw `NetworkPoolRfqPoolNotFoundError`; capture `poolStateKey`
 2. Pool state must be `CLOSED_FOR_BIDS` or `QUOTED` → throw `NetworkPoolRfqInvalidPoolStateError`
-3. Load RFQ → throw `NetworkPoolRfqRfqNotFoundError`
+3. Load RFQ → throw `NetworkPoolRfqRfqNotFoundError`; RFQ status must be `QUOTED` → throw `NetworkPoolRfqTransitionDeniedError`
 4. Load quote → throw `NetworkPoolRfqOwnerQuoteNotFoundError`; status must be `SUBMITTED` → throw `NetworkPoolRfqSupplierQuoteNotInSubmittedError`
 5. `update` quote: `{ status: 'REJECTED', rejectedAt: now, rejectReason: input.reject_reason ?? null, updatedAt: now }`
 6. Direct lifecycle log: `fromStateKey: poolStateKey, toStateKey: poolStateKey`, reason: `nc_pool_rfq_quote_rejected: quote=${quoteId}`
@@ -197,7 +197,7 @@ Steps (all inside `$transaction`):
 
 ## §9 Test Coverage
 
-16 test cases added to `server/src/__tests__/networkPoolRfq.service.unit.test.ts`.
+17 test cases added to `server/src/__tests__/networkPoolRfq.service.unit.test.ts`.
 
 | Test ID | Type | Method | Description |
 |---------|------|--------|-------------|
@@ -209,14 +209,15 @@ Steps (all inside `$transaction`):
 | P-OWNER-06 | PASS | `acceptQuote` | `networkPoolRfq.update` called with `status=ACCEPTED` |
 | P-OWNER-07 | PASS | `acceptQuote` | `sm.transition` called twice when pool is `CLOSED_FOR_BIDS` |
 | P-OWNER-08 | PASS | `acceptQuote` | `sm.transition` called once (QUOTED→ACCEPTED) when pool already `QUOTED` |
-| P-OWNER-09 | FAIL | `acceptQuote` | Throws `NetworkPoolRfqSupplierQuoteNotInSubmittedError` for non-SUBMITTED quote |
+| P-OWNER-09 | PASS | `acceptQuote` | Throws `NetworkPoolRfqSupplierQuoteNotInSubmittedError` for non-SUBMITTED quote |
 | P-OWNER-10 | PASS | `rejectQuote` | Returns DTO with `status=REJECTED` |
 | P-OWNER-11 | PASS | `rejectQuote` | Persists `rejectReason` in update data |
 | P-OWNER-12 | PASS | `rejectQuote` | `networkPoolRfq.update` is NOT called |
 | P-OWNER-13 | PASS | `rejectQuote` | `sm.transition` is NOT called |
 | P-OWNER-14 | PASS | `rejectQuote` | Lifecycle log uses actual pool state (`QUOTED`) for `fromStateKey`/`toStateKey` |
-| P-OWNER-15 | FAIL | `rejectQuote` | Throws `NetworkPoolRfqSupplierQuoteNotInSubmittedError` for non-SUBMITTED quote |
-| P-OWNER-16 | FAIL | `rejectQuote` | Throws `NetworkPoolRfqOwnerQuoteNotFoundError` for wrong `ownerOrgId` |
+| P-OWNER-15 | PASS | `rejectQuote` | Throws `NetworkPoolRfqSupplierQuoteNotInSubmittedError` for non-SUBMITTED quote |
+| P-OWNER-16 | PASS | `rejectQuote` | Throws `NetworkPoolRfqOwnerQuoteNotFoundError` for wrong `ownerOrgId` |
+| P-OWNER-17 | PASS | `rejectQuote` | Throws `NetworkPoolRfqTransitionDeniedError` when RFQ status is not `QUOTED` |
 
 ---
 
@@ -282,7 +283,7 @@ This packet halts if:
 | AWARD-ROUTE-001 | Next packet — HTTP routes for `listOwnerQuotes`, `acceptQuote`, `rejectQuote` |
 | Flag activation | `nc.procurement_pools.rfq.award.enabled` — not activated in this packet |
 | Concurrent accept | Two concurrent `acceptQuote` calls on the same RFQ could both pass the status check before either commits. Mitigation: Postgres transaction isolation + unique constraint on accepted quotes is recommended for AWARD-ROUTE-001 design. |
-| `rejectQuote` pool validation | Pool state check (`CLOSED_FOR_BIDS` or `QUOTED`) guards against stale calls, but RFQ status is not re-validated in rejectQuote (design intent: owner may reject individual quotes regardless of RFQ flow) |
+| `rejectQuote` validation | Pool state check (`CLOSED_FOR_BIDS` or `QUOTED`) + RFQ status `QUOTED` check both enforced. Corrected by SERVICE-001-CORRECTION. |
 
 ---
 
@@ -291,3 +292,29 @@ This packet halts if:
 ```
 feat(network-commerce): add pool rfq award service
 ```
+
+---
+
+## §15 Correction Addendum (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001-CORRECTION)
+
+**Date:** 2026-06-07  
+**Reason:** Governance doc deviation corrected before AWARD-ROUTE-001 opens.
+
+### Finding
+
+The service implementation correctly validates `rfq.status === 'QUOTED'` in `rejectQuote` (matching design doc §8.3 step 3 and `acceptQuote` behaviour). The original governance doc's §8 step 3 omitted this check, and §13 incorrectly stated "RFQ status is not re-validated in rejectQuote".
+
+### Changes
+
+| Area | Change |
+|------|--------|
+| §8 `rejectQuote` step 3 | Added: RFQ status must be `QUOTED` → throw `NetworkPoolRfqTransitionDeniedError` |
+| §9 test table | P-OWNER-09, P-OWNER-15, P-OWNER-16 relabeled `PASS` (expected-error tests that pass; `FAIL` label was misleading) |
+| §9 test table | P-OWNER-17 added: `rejectQuote` throws `NetworkPoolRfqTransitionDeniedError` when RFQ status is not `QUOTED` |
+| §9 count | Updated from 16 to 17 test cases |
+| §13 risk note | Corrected — both pool state and RFQ status are now validated in `rejectQuote` |
+
+### No other changes
+
+No route, middleware, frontend, schema, migration, or env files changed.  
+No feature flags activated. No production data mutated.

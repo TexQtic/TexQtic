@@ -5,6 +5,16 @@
 
 ---
 
+## 2026-06-07 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001-CORRECTION
+
+Governance doc correction for AWARD-SERVICE-001. Service implementation was already correct.
+§8 rejectQuote step 3 updated: RFQ status must be QUOTED → throw NetworkPoolRfqTransitionDeniedError.
+P-OWNER-09, P-OWNER-15, P-OWNER-16 relabeled PASS (expected-error tests; FAIL label was misleading).
+P-OWNER-17 added: rejectQuote throws TransitionDeniedError when RFQ status is ACCEPTED.
+Total unit tests: 151/151 PASS. tsc PASS. Stale §13 risk note corrected. Correction addendum added.
+No service/route/schema/migration/env changes.
+Commit: fix(network-commerce): align award rejection service state guard
+
 ## 2026-06-07 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001
 
 NC Phase 1D service layer. listOwnerQuotes, acceptQuote, rejectQuote added to NetworkPoolRfqService.
