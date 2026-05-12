@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-02 (TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001 — PENDING_PRODUCTION_VERIFY. Gate Layer 2 semantics fixed in 3 non-canonical middleware files (!=true → ===false). ncPoolFeatureGate new 11-test file created. ncPoolRfqFeatureGate + ncPoolSupplierInviteFeatureGate tests updated to canonical semantics. PoolListSurface error mapping fixed (APIError.code check). 49/49 gate unit tests + 31/31 frontend + 20/20 routing tests PASS. tsc clean. DB provisioning of nc.procurement_pools.enabled still BLOCKED_PARESH_PROVISIONING_REQUIRED — not resolved by this packet. FE-8 remains BLOCKED_PARESH_AUTHORIZATION_REQUIRED.)
+**Last Updated:** 2026-06-02 (TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 — VERIFIED_COMPLETE. Production DB provisioning confirmed: nc.procurement_pools.enabled=true + nc.procurement_pools.rfq.enabled=true in production feature_flags table. Descriptions updated from test-labels to production-canonical values via psql transaction (INSERT 0 2 + COMMIT). supplier_quotes.enabled remains false (QD-6 hold). All 3 AF findings from runtime alignment audit now resolved. FE-8 remains BLOCKED_PARESH_AUTHORIZATION_REQUIRED. DPP posture HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or

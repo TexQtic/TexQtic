@@ -6,6 +6,28 @@
 ---
 
 
+## 2026-06-02 -- VERIFIED_COMPLETE: TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001
+
+Packet 15 — Production DB provisioning of NC Phase 1 feature flags. No source code changes.
+Pre-state: nc.procurement_pools.enabled=t, nc.procurement_pools.rfq.enabled=t — already true (seeded by integration tests 2026-05-11/12 with test-label descriptions). supplier_quotes.enabled=f (unchanged).
+Key finding: AF-1 ("flags ABSENT") was incorrect at time of audit; flags had been seeded by integration test runs before the audit check.
+SQL executed: BEGIN; INSERT ON CONFLICT DO UPDATE (key, enabled, description) for nc.procurement_pools.enabled + nc.procurement_pools.rfq.enabled; COMMIT.
+Result: INSERT 0 2 + COMMIT (no ERROR, no ROLLBACK). Descriptions updated to production-canonical values.
+Post-state: nc.procurement_pools.enabled=t (description: NC Phase 1: procurement pools feature — global enable, updated_at refreshed).
+Post-state: nc.procurement_pools.rfq.enabled=t (description: NC Phase 1: pool RFQ feature — global enable, updated_at refreshed).
+Post-state: supplier_invites.enabled=t (unchanged). supplier_quotes.enabled=f (unchanged — QD-6 hold maintained).
+All 3 AF findings from TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001 now RESOLVED:
+  AF-1 (nc.procurement_pools.enabled absent/test-labeled): RESOLVED by this packet.
+  AF-2 (gate !==true semantics): RESOLVED by Packet 14 (acbdc3f).
+  AF-3 (PoolListSurface error mapping): RESOLVED by Packet 14 (acbdc3f).
+NC-RUNTIME-MISMATCH-A: RESOLVED. NC-RUNTIME-MISMATCH-B: already RESOLVED (Packet 14).
+FE-8 status: BLOCKED_PARESH_AUTHORIZATION_REQUIRED — UNCHANGED.
+DPP posture: HOLD_FOR_PARESH_DECISION — UNCHANGED.
+Governance doc: governance/TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001.md (created).
+Commit: docs(network-commerce): verify production feature flag provisioning
+UI verification recommended: Paresh to confirm NC Pools surface loads without feature-disabled error at app.texqtic.com.
+
+
 ## 2026-06-02 -- PENDING_PRODUCTION_VERIFY: TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001
 
 Packet 14 — Gate semantics fix + PoolListSurface error mapping fix. HEAD: 1d52d52 (base).

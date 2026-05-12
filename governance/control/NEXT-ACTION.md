@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-02 (TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001 — PENDING_PRODUCTION_VERIFY; gate semantics aligned; PoolListSurface error mapping fixed; 49+31+20=100 tests PASS; tsc clean; FE-8 BLOCKED_PARESH_AUTHORIZATION_REQUIRED; DB provisioning of nc.procurement_pools.enabled still required)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-02 (TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 — VERIFIED_COMPLETE; nc.procurement_pools.enabled=true + nc.procurement_pools.rfq.enabled=true confirmed in production DB; descriptions updated to production-canonical values; SQL INSERT 0 2 + COMMIT; supplier_quotes.enabled=false unchanged; all 3 AF findings resolved; FE-8 BLOCKED_PARESH_AUTHORIZATION_REQUIRED)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,48 +15,54 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001
-active_delivery_unit_status: BLOCKED_PARESH_PROVISIONING_REQUIRED
+active_delivery_unit: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001
+active_delivery_unit_status: HOLD_FOR_PARESH_DECISION
 active_delivery_unit_note: >
-  TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001 PENDING_PRODUCTION_VERIFY (2026-06-02).
-  Gate semantics fix + PoolListSurface error mapping fix delivered. 49/49 gate unit tests PASS.
-  Remaining blocker: nc.procurement_pools.enabled ABSENT from production DB.
-  Next unit: TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 — seed nc.procurement_pools.enabled=true
-  and nc.procurement_pools.rfq.enabled=true in production DB via psql.
-  This is a pure DB provisioning operation. Requires Paresh authorization and execution.
-  FE-8 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001) remains BLOCKED_PARESH_AUTHORIZATION_REQUIRED (separate authorization).
+  TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
+  NC Phase 1 production DB provisioning complete. nc.procurement_pools.enabled=true +
+  nc.procurement_pools.rfq.enabled=true confirmed in production feature_flags table.
+  All 3 AF findings from TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001 now resolved:
+  AF-1 (flags absent/test-labeled): RESOLVED by this packet.
+  AF-2 (gate !==true semantics): RESOLVED by Packet 14 (acbdc3f).
+  AF-3 (PoolListSurface error mapping): RESOLVED by Packet 14 (acbdc3f).
+  NC Pools and RFQ surfaces are technically unblocked. UI verification at app.texqtic.com recommended.
+  Next unit: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 (FE-8) — HOLD_FOR_PARESH_DECISION.
+  Backend complete (Packets 11+12+13 VERIFIED_COMPLETE). Routes live. Design complete.
+  Frontend execution requires separate explicit Paresh FE-8 authorization.
   DPP LAUNCH GATE (independent of NC Phase 1C):
   TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 VERIFIED_COMPLETE (2026-05-02).
   DPP Passport Network is technically production-ready based on PROD-AUDIT-002.
   DPP launch authorization: HOLD_FOR_PARESH_DECISION — separate decision; not unlocked by NC work.
   Do NOT open DPP next slice without separate explicit Paresh DPP authorization.
-last_closed_unit: TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001
-last_closed_unit_status: PENDING_PRODUCTION_VERIFY
+last_closed_unit: TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001
+last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001 PENDING_PRODUCTION_VERIFY (2026-06-02).
-  Gate Layer 2 semantics fixed: ncPoolFeatureGate + ncPoolRfqFeatureGate + ncPoolSupplierInviteFeatureGate.
-  Condition changed: tenantOverride?.enabled !== true → tenantOverride?.enabled === false.
-  ncPoolFeatureGate: Layer 2 restructured; fail-closed no-orgId guard added before override query.
-  ncPoolFeatureGate.middleware.unit.test.ts: NEW FILE, 11 canonical tests.
-  ncPoolRfqFeatureGate tests: TC-012 (no override → ALLOW) + TC-016 (explicit disable → 503) updated.
-  ncPoolSupplierInviteFeatureGate tests: TC-008 (no override → ALLOW) updated.
-  PoolListSurface.tsx: APIError import added; catch block uses err instanceof APIError check.
-  tsc --noEmit ✓ (server + frontend). 49/49 gate unit tests PASS. 20/20 routing PASS. 31/31 frontend PASS.
-  DB provisioning of nc.procurement_pools.enabled still required before production function.
-last_closed_unit_commits: fix(network-commerce): align feature gate runtime semantics
+  TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
+  Production DB provisioning confirmed via psql against Supabase production DB.
+  Pre-state: nc.procurement_pools.enabled=t, nc.procurement_pools.rfq.enabled=t (seeded by integration tests 2026-05-11).
+  SQL transaction: BEGIN; INSERT ON CONFLICT DO UPDATE (2 rows); COMMIT => INSERT 0 2 + COMMIT (no ERROR, no ROLLBACK).
+  Post-state: nc.procurement_pools.enabled=t (description updated to production-canonical value, updated_at refreshed).
+  Post-state: nc.procurement_pools.rfq.enabled=t (description updated to production-canonical value, updated_at refreshed).
+  Post-state: supplier_invites.enabled=t (unchanged). supplier_quotes.enabled=f (unchanged — QD-6 hold maintained).
+  All 3 AF findings from TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001 resolved.
+  UI verification at app.texqtic.com (NC Pools surface loads without feature-disabled error) recommended.
+  FE-8 BLOCKED_PARESH_AUTHORIZATION_REQUIRED. DPP posture HOLD_FOR_PARESH_DECISION. No source code changes.
+last_closed_unit_commits: docs(network-commerce): verify production feature flag provisioning
 last_closed_unit_closure_basis: >-
-  PENDING_PRODUCTION_VERIFY. Gate semantics canonical. PoolListSurface error mapping canonical.
-  AF-2 (gate !==true semantics): FIXED in all 3 non-canonical gates.
-  AF-3 (PoolListSurface error mapping): FIXED; APIError.code check (canonical pattern).
-  Production gap remaining: nc.procurement_pools.enabled ABSENT from production feature_flags.
-  Next: TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 (Paresh must authorize and execute).
+  VERIFIED_COMPLETE. NC production DB provisioning confirmed. Gate semantics canonical (Packet 14).
+  AF-1 (nc.procurement_pools.enabled absent/test-labeled): RESOLVED by this packet.
+  AF-2 (gate !==true semantics): RESOLVED by Packet 14 (acbdc3f).
+  AF-3 (PoolListSurface error mapping): RESOLVED by Packet 14 (acbdc3f).
+  supplier_quotes.enabled=false confirmed unchanged. QD-6 hold maintained.
+  FE-8: BLOCKED_PARESH_AUTHORIZATION_REQUIRED — UNCHANGED.
+  DPP posture: HOLD_FOR_PARESH_DECISION — UNCHANGED.
 note_on_pending_verification: >-
-  TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001 PENDING_PRODUCTION_VERIFY (2026-06-02).
-  Gate semantics fixed (AF-2) + PoolListSurface error mapping fixed (AF-3). All local tests PASS.
-  Production gap remaining: nc.procurement_pools.enabled ABSENT from production DB — pool routes still 503 in prod.
-  Next: TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 (psql INSERT, Paresh must authorize).
-  Prior: TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001 BLOCKED_RUNTIME_MISMATCH_CONFIRMED (2026-06-01).
-  Prior-prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 VERIFIED_COMPLETE (2026-05-12).
+  TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
+  All 3 AF findings resolved. NC Pools + RFQ + Invite surfaces technically unblocked.
+  UI verification at app.texqtic.com recommended as final Paresh step.
+  Prior: TEXQTIC-NC-RUNTIME-FEATURE-GATE-SEMANTICS-ALIGNMENT-001 — now resolved via this packet.
+  Prior-prior: TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001 BLOCKED_RUNTIME_MISMATCH_CONFIRMED (2026-06-01).
+  Prior-prior-prior: TEXQTIC-NC-PHASE1-POOL-RFQ-SUPPLIER-QUOTE-ROUTE-001 VERIFIED_COMPLETE (2026-05-12).
 dpp_passport_network_readiness: PRODUCTION_READY
 dpp_readiness_authority: TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002
 dpp_readiness_commit: 17c252c
