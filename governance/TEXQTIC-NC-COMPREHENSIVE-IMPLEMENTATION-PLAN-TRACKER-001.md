@@ -795,13 +795,13 @@ docs(network-commerce): audit implementation repo truth
 | Combined regression | PASS | 167/167 |
 | Total at close | **PASS** | **379/379** |
 
-### D. Schema Baseline (current repo truth through `fd9327e`)
+### D. Schema Baseline (current repo truth through `d8a2ce2`; governance reconciliation through `e85addc`)
 
 | Count | Type | Notes |
 |---|---|---|
-| 10 | NC schema entities (tables) | `network_lifecycle_logs`, `network_invoices`, `network_pools`, `network_pool_memberships`, `network_pool_demand_lines`, `network_pool_demand_snapshots`, `network_pool_demand_snapshot_lines`, `network_pool_rfqs`, `network_pool_rfq_lines`, `network_pool_rfq_supplier_invites` |
-| 9 | NC migration / data-migration packets applied | `20260520000000_nc_network_lifecycle_logs`, `20260521000000_nc_network_invoices`, `20260522000000_nc_network_pools`, `20260523000000_nc_pool_lifecycle_seed`, `20260524000000_nc_pool_demand_line_schema`, `20260525000000_nc_pool_demand_snapshot_schema`, `20260528000000_nc_pool_rfq_schema`, `20260529000000_nc_pool_rfq_supplier_invite_schema`, `20260530000000_nc_pool_supplier_invite_feature_flag_seed` |
-| 17 | NC tenant routes | pools.ts (7), poolDemandLines.ts (5), poolRfq.ts (5) |
+| 11 | NC schema entities (tables) | `network_lifecycle_logs`, `network_invoices`, `network_pools`, `network_pool_memberships`, `network_pool_demand_lines`, `network_pool_demand_snapshots`, `network_pool_demand_snapshot_lines`, `network_pool_rfqs`, `network_pool_rfq_lines`, `network_pool_rfq_supplier_invites`, `network_pool_rfq_supplier_quotes` |
+| 11 | NC migration / data-migration packets applied | `20260520000000_nc_network_lifecycle_logs`, `20260521000000_nc_network_invoices`, `20260522000000_nc_network_pools`, `20260523000000_nc_pool_lifecycle_seed`, `20260524000000_nc_pool_demand_line_schema`, `20260525000000_nc_pool_demand_snapshot_schema`, `20260528000000_nc_pool_rfq_schema`, `20260529000000_nc_pool_rfq_supplier_invite_schema`, `20260530000000_nc_pool_supplier_invite_feature_flag_seed`, `20260531000000_nc_pool_supplier_quote_schema`, `20260532000000_nc_pool_supplier_quote_feature_flag_seed` |
+| 23 | NC tenant routes | pools.ts (7), poolDemandLines.ts (5), poolRfq.ts (5 owner-facing), poolRfqSupplierInvites.ts (4 supplier invite routes — Packet 8), poolRfqSupplierQuotes.ts (2 quote routes — Packet 13) |
 | 4 | Active NC feature flags | `nc.procurement_pools.enabled`, `nc.procurement_pools.rfq.enabled`, `nc.procurement_pools.supplier_invites.enabled`, `nc.procurement_pools.supplier_quotes.enabled` (seeded `false`; QD-6 hold) |
 | 8 | Completed frontend NC packets | FE-1 design, FE-2 shell/nav foundation, FE-3 pool owner list/detail, FE-4 demand lines, FE-5 RFQ issue, FE-6 supplier invite owner UI, FE-7 supplier invite inbox, FE-8 supplier quote UI (feature-disabled path verified 2026-05-12) |
 
@@ -839,4 +839,4 @@ The schema at prisma\schema.prisma is valid 🚀
 *Document created: 2026-05-30 — TexQtic governance corpus, main branch.*
 *Authorized by: Paresh Patel.*
 *This document does not authorize any implementation. Each packet requires explicit Paresh authorization and a fresh TECS opening.*
-*Last updated: 2026-05-10 (v1.4 — reconciled with FE-4/FE-5/runtime-test-sync/FE-6 via TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CURRENT-STATE-SYNC-002).*
+*Last updated: 2026-05-12 (v1.5 — TRACKER-SYNC-001: synced after supplier quote verification; TRACKER-SYNC-002-CORRECTION: reconciled all body sections; TRACKER-SYNC-003-APPENDIX-FOOTER-CLEANUP: appendix/footer corrected to match reconciled tracker body).*
