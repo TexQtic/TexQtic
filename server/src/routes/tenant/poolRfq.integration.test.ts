@@ -1163,3 +1163,544 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Issue Route Integration', () 
     ).rejects.toThrow();
   });
 });
+
+// ─── Award Route Integration Tests (PRQ-44..PRQ-60) ─────────────────────────
+//
+// TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001
+//
+// Covers:
+//   PRQ-44..PRQ-48  — GET /:poolId/rfq/:rfqId/quotes (feature gate, auth, role, validation, success)
+//   PRQ-49..PRQ-54  — POST .../quotes/:quoteId/accept (feature gate, validation, error mapping, success)
+//   PRQ-55..PRQ-60  — POST .../quotes/:quoteId/reject (feature gate, validation, error mapping, success)
+//
+// Cleanup FK order: supplier_quotes → supplier_invites → rfq_lines → rfqs →
+//   snapshot_lines → snapshots → demand_lines → memberships → pools.
+
+describe.skipIf(!hasDb)('Network Commerce Pool RFQ Award Routes Integration', () => {
+  const awardFeatureFlagKey = 'nc.procurement_pools.rfq.award.enabled';
+  const poolFeatureFlagKey  = 'nc.procurement_pools.enabled';
+  const rfqFeatureFlagKey   = 'nc.procurement_pools.rfq.enabled';
+
+  let app: FastifyInstance;
+  let ownerOrgId:   string;
+  let supplierOrgId: string;
+  let ownerUserId:  string;
+  let testRunId:    string;
+
+  const createdPoolIds = new Set<string>();
+
+  // ─── App Builder ─────────────────────────────────────────────────────────
+
+  async function buildAwardApp(): Promise<FastifyInstance> {
+    const fastify = Fastify();
+    await fastify.register(poolRfqRoutes, { prefix: '/api/tenant/network-commerce/pools' });
+    await fastify.ready();
+    return fastify;
+  }
+
+  function makePoolRef(tag: string): string {
+    return `AWARD-POOL-${testRunId}-${tag}`;
+  }
+
+  // ─── Feature Flag Helpers ─────────────────────────────────────────────────
+
+  async function ensureAllGatesEnabled(): Promise<void> {
+    await withBypassForSeed(prisma, async tx => {
+      for (const key of [poolFeatureFlagKey, rfqFeatureFlagKey, awardFeatureFlagKey]) {
+        await tx.featureFlag.upsert({
+          where:  { key },
+          create: { key, enabled: true, description: `NC award route integration test — ${key}` },
+          update: { enabled: true },
+        });
+        for (const orgId of [ownerOrgId, supplierOrgId]) {
+          await tx.tenantFeatureOverride.upsert({
+            where:  { tenantId_key: { tenantId: orgId, key } },
+            create: { tenantId: orgId, key, enabled: true },
+            update: { enabled: true },
+          });
+        }
+      }
+    });
+  }
+
+  async function disableAwardFlag(): Promise<void> {
+    await withBypassForSeed(prisma, async tx => {
+      await tx.featureFlag.upsert({
+        where:  { key: awardFeatureFlagKey },
+        create: { key: awardFeatureFlagKey, enabled: false, description: 'award gate disabled for test' },
+        update: { enabled: false },
+      });
+    });
+  }
+
+  // ─── Fixture Helpers ──────────────────────────────────────────────────────
+
+  /** Create a pool in CLOSED_FOR_BIDS + an RFQ via bypass. rfqStatus defaults to 'ISSUED'; pass 'QUOTED' for award-path tests. */
+  async function createIssuedRfqFixture(rfqStatus: 'ISSUED' | 'QUOTED' = 'ISSUED'): Promise<{ poolId: string; rfqId: string }> {
+    return withBypassForSeed(prisma, async tx => {
+      const poolState = await tx.lifecycleState.findUnique({
+        where: { entityType_stateKey: { entityType: 'POOL', stateKey: 'CLOSED_FOR_BIDS' } },
+        select: { id: true },
+      });
+      if (!poolState) throw new Error('Missing lifecycle state: POOL/CLOSED_FOR_BIDS');
+
+      const poolId = randomUUID();
+      await tx.networkPool.create({
+        data: {
+          id: poolId,
+          orgId: ownerOrgId,
+          poolRef: makePoolRef(randomUUID().slice(0, 8)),
+          commodityCategory: 'COTTON_YARN',
+          targetQty: new Prisma.Decimal(1000),
+          qtyUnit: 'KG',
+          lifecycleStateId: poolState.id,
+          createdByUserId: ownerUserId,
+        },
+      });
+      createdPoolIds.add(poolId);
+
+      const snapshotId = randomUUID();
+      await tx.networkPoolDemandSnapshot.create({
+        data: {
+          id: snapshotId,
+          ownerOrgId,
+          poolId,
+          snapshotRef: randomUUID(),
+          snapshotVersion: 1,
+          basis: 'RFQ_ISSUE',
+          status: 'CAPTURED',
+          capturedAt: new Date(),
+          lineCount: 1,
+          totalQty: new Prisma.Decimal(500),
+          qtyUnit: 'KG',
+        },
+      });
+
+      const rfqId = randomUUID();
+      await tx.networkPoolRfq.create({
+        data: {
+          id: rfqId,
+          ownerOrgId,
+          poolId,
+          snapshotId,
+          rfqRef: randomUUID(),
+          rfqVersion: 1,
+          status: rfqStatus,
+          issueBasis: 'SNAPSHOT_LOCK',
+          issuedAt: new Date(),
+          issuedByUserId: ownerUserId,
+          supplierInviteMode: 'INVITE_ONLY',
+          lineCount: 1,
+          totalQty: new Prisma.Decimal(500),
+          qtyUnit: 'KG',
+        },
+      });
+
+      return { poolId, rfqId };
+    });
+  }
+
+  /** Create an ACCEPTED invite for the given pool/rfq. */
+  async function createAcceptedInviteFixture(
+    poolId: string,
+    rfqId: string,
+  ): Promise<string> {
+    return withBypassForSeed(prisma, async tx => {
+      const inviteId = randomUUID();
+      await tx.networkPoolRfqSupplierInvite.create({
+        data: {
+          id: inviteId,
+          ownerOrgId,
+          supplierOrgId,
+          rfqId,
+          poolId,
+          inviteRef: randomUUID(),
+          status: 'ACCEPTED',
+          invitedAt: new Date(),
+          invitedByUserId: ownerUserId,
+          acceptedAt: new Date(),
+        },
+      });
+      return inviteId;
+    });
+  }
+
+  /**
+   * Create a quote for the given invite/rfq/pool.
+   * Defaults to SUBMITTED; pass status override for non-SUBMITTED (INVALID_TRANSITION) tests.
+   */
+  async function createQuoteFixture(
+    inviteId: string,
+    rfqId: string,
+    poolId: string,
+    status: 'SUBMITTED' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN' = 'SUBMITTED',
+  ): Promise<string> {
+    return withBypassForSeed(prisma, async tx => {
+      const quoteId = randomUUID();
+      await tx.networkPoolRfqSupplierQuote.create({
+        data: {
+          id: quoteId,
+          ownerOrgId,
+          supplierOrgId,
+          rfqId,
+          poolId,
+          inviteId,
+          quoteRef: 'AWD-' + randomUUID().replaceAll('-', '').slice(0, 16).toUpperCase(),
+          status,
+          quoteAmount: new Prisma.Decimal('12500.00'),
+          currency: 'INR',
+          submittedAt: new Date(),
+        },
+      });
+      return quoteId;
+    });
+  }
+
+  // ─── beforeAll / beforeEach / afterEach / afterAll ────────────────────────
+
+  beforeAll(async () => {
+    app = await buildAwardApp();
+
+    ownerOrgId    = randomUUID();
+    supplierOrgId = randomUUID();
+    ownerUserId   = randomUUID();
+
+    await seedTenantForTest(ownerOrgId,    'award-route-owner');
+    await seedTenantForTest(supplierOrgId, 'award-route-supplier');
+
+    // Phase 1 award route requires direct SM transition QUOTED→ACCEPTED.
+    // The migration seed has requiresMakerChecker=true for this edge (future high-value MC flow).
+    // Disable it for integration tests so acceptQuote can complete end-to-end.
+    await withBypassForSeed(prisma, async tx => {
+      await tx.allowedTransition.updateMany({
+        where: { entityType: 'POOL', fromStateKey: 'QUOTED', toStateKey: 'ACCEPTED' },
+        data:  { requiresMakerChecker: false },
+      });
+    });
+  });
+
+  beforeEach(async () => {
+    testRunId = randomUUID().slice(0, 8);
+    await ensureAllGatesEnabled();
+  });
+
+  afterEach(async () => {
+    const poolIds = [...createdPoolIds];
+    createdPoolIds.clear();
+
+    await withBypassForSeed(prisma, async tx => {
+      if (poolIds.length > 0) {
+        // FK order: quotes → invites → rfq_lines → rfqs → snapshot_lines → snapshots → demand_lines → memberships → pools
+        await tx.networkPoolRfqSupplierQuote.deleteMany({ where: { poolId: { in: poolIds } } });
+        await tx.networkPoolRfqSupplierInvite.deleteMany({ where: { poolId: { in: poolIds } } });
+        await tx.networkPoolRfqLine.deleteMany({ where: { poolId: { in: poolIds } } });
+        await tx.networkPoolRfq.deleteMany({ where: { poolId: { in: poolIds } } });
+        await tx.networkPoolDemandSnapshotLine.deleteMany({ where: { poolId: { in: poolIds } } });
+        await tx.networkPoolDemandSnapshot.deleteMany({ where: { poolId: { in: poolIds } } });
+        await tx.networkPoolDemandLine.deleteMany({ where: { poolId: { in: poolIds } } });
+        await tx.networkPoolMembership.deleteMany({ where: { poolId: { in: poolIds } } });
+        await tx.networkPool.deleteMany({ where: { id: { in: poolIds } } });
+      }
+
+      await tx.featureFlag.deleteMany({ where: { key: awardFeatureFlagKey } });
+      await tx.tenantFeatureOverride.deleteMany({
+        where: {
+          key: { in: [poolFeatureFlagKey, rfqFeatureFlagKey, awardFeatureFlagKey] },
+          tenantId: { in: [ownerOrgId, supplierOrgId] },
+        },
+      });
+    }).catch(() => {
+      // Best-effort cleanup.
+    });
+  });
+
+  afterAll(async () => {
+    await app.close();
+
+    // Restore migration-seed value for requiresMakerChecker on POOL QUOTED→ACCEPTED.
+    await withBypassForSeed(prisma, async tx => {
+      await tx.allowedTransition.updateMany({
+        where: { entityType: 'POOL', fromStateKey: 'QUOTED', toStateKey: 'ACCEPTED' },
+        data:  { requiresMakerChecker: true },
+      });
+    }).catch(() => {});
+
+    await withBypassForSeed(prisma, async tx => {
+      const pools = await tx.networkPool.findMany({
+        where: { orgId: { in: [ownerOrgId, supplierOrgId] } },
+        select: { id: true },
+      });
+      const allPoolIds = pools.map((p: { id: string }) => p.id);
+
+      if (allPoolIds.length > 0) {
+        await tx.networkPoolRfqSupplierQuote.deleteMany({ where: { poolId: { in: allPoolIds } } });
+        await tx.networkPoolRfqSupplierInvite.deleteMany({ where: { poolId: { in: allPoolIds } } });
+        await tx.networkPoolRfqLine.deleteMany({ where: { poolId: { in: allPoolIds } } });
+        await tx.networkPoolRfq.deleteMany({ where: { poolId: { in: allPoolIds } } });
+        await tx.networkPoolDemandSnapshotLine.deleteMany({ where: { poolId: { in: allPoolIds } } });
+        await tx.networkPoolDemandSnapshot.deleteMany({ where: { poolId: { in: allPoolIds } } });
+        await tx.networkPoolDemandLine.deleteMany({ where: { poolId: { in: allPoolIds } } });
+        await tx.networkPoolMembership.deleteMany({ where: { poolId: { in: allPoolIds } } });
+        await tx.networkPool.deleteMany({ where: { id: { in: allPoolIds } } });
+      }
+
+      await tx.featureFlag.deleteMany({ where: { key: awardFeatureFlagKey } });
+      await tx.tenantFeatureOverride.deleteMany({
+        where: {
+          key: { in: [poolFeatureFlagKey, rfqFeatureFlagKey, awardFeatureFlagKey] },
+          tenantId: { in: [ownerOrgId, supplierOrgId] },
+        },
+      });
+    }).catch(() => {
+      // Best-effort final cleanup.
+    });
+  });
+
+  // ─── GET quotes (PRQ-44..PRQ-48) ─────────────────────────────────────────
+
+  it('PRQ-44 GET quotes — award flag disabled → 503 FEATURE_DISABLED', async () => {
+    await disableAwardFlag();
+
+    const poolId = randomUUID();
+    const rfqId  = randomUUID();
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(res.statusCode).toBe(503);
+    expect((res.json() as any).error.code).toBe('FEATURE_DISABLED');
+  });
+
+  it('PRQ-45 GET quotes — unauthenticated → 401', async () => {
+    const poolId = randomUUID();
+    const rfqId  = randomUUID();
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes`,
+      headers: { 'x-test-auth': '0', 'x-test-org-id': ownerOrgId, 'x-test-user-id': ownerUserId },
+    });
+
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('PRQ-46 GET quotes — MEMBER role → 403 FORBIDDEN', async () => {
+    const poolId = randomUUID();
+    const rfqId  = randomUUID();
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'MEMBER'),
+    });
+
+    expect(res.statusCode).toBe(403);
+    expect((res.json() as any).error.code).toBe('FORBIDDEN');
+  });
+
+  it('PRQ-47 GET quotes — invalid poolId UUID → 400', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/tenant/network-commerce/pools/not-a-uuid/rfq/${randomUUID()}/quotes`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('PRQ-48 GET quotes — issued RFQ, no quotes → 200 empty array', { timeout: 15000 }, async () => {
+    const { poolId, rfqId } = await createIssuedRfqFixture();
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as any;
+    expect(body.success).toBe(true);
+    expect(Array.isArray(body.data)).toBe(true);
+    expect(body.data).toHaveLength(0);
+  });
+
+  // ─── POST accept (PRQ-49..PRQ-54) ────────────────────────────────────────
+
+  it('PRQ-49 POST accept — award flag disabled → 503 FEATURE_DISABLED', async () => {
+    await disableAwardFlag();
+
+    const poolId  = randomUUID();
+    const rfqId   = randomUUID();
+    const quoteId = randomUUID();
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes/${quoteId}/accept`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: {},
+    });
+
+    expect(res.statusCode).toBe(503);
+    expect((res.json() as any).error.code).toBe('FEATURE_DISABLED');
+  });
+
+  it('PRQ-50 POST accept — invalid quoteId UUID → 400', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${randomUUID()}/rfq/${randomUUID()}/quotes/not-a-uuid/accept`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: {},
+    });
+
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('PRQ-51 POST accept — unknown body key → 400', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${randomUUID()}/rfq/${randomUUID()}/quotes/${randomUUID()}/accept`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: { unexpected_field: 'value' },
+    });
+
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('PRQ-52 POST accept — non-existent quoteId → 404 QUOTE_NOT_FOUND', { timeout: 15000 }, async () => {
+    const { poolId, rfqId } = await createIssuedRfqFixture('QUOTED');
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes/${randomUUID()}/accept`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: {},
+    });
+
+    expect(res.statusCode).toBe(404);
+    expect((res.json() as any).error.code).toBe('QUOTE_NOT_FOUND');
+  });
+
+  it('PRQ-53 POST accept — quote not in SUBMITTED state → 422 INVALID_TRANSITION', { timeout: 15000 }, async () => {
+    const { poolId, rfqId } = await createIssuedRfqFixture('QUOTED');
+    const inviteId = await createAcceptedInviteFixture(poolId, rfqId);
+    const quoteId  = await createQuoteFixture(inviteId, rfqId, poolId, 'REJECTED');
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes/${quoteId}/accept`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: {},
+    });
+
+    expect(res.statusCode).toBe(422);
+    expect((res.json() as any).error.code).toBe('INVALID_TRANSITION');
+  });
+
+  it('PRQ-54 POST accept — submitted quote → 200 ACCEPTED', { timeout: 15000 }, async () => {
+    const { poolId, rfqId } = await createIssuedRfqFixture('QUOTED');
+    const inviteId = await createAcceptedInviteFixture(poolId, rfqId);
+    const quoteId  = await createQuoteFixture(inviteId, rfqId, poolId, 'SUBMITTED');
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes/${quoteId}/accept`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: {},
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data.id).toBe(quoteId);
+    expect(body.data.status).toBe('ACCEPTED');
+  });
+
+  // ─── POST reject (PRQ-55..PRQ-60) ────────────────────────────────────────
+
+  it('PRQ-55 POST reject — award flag disabled → 503 FEATURE_DISABLED', async () => {
+    await disableAwardFlag();
+
+    const poolId  = randomUUID();
+    const rfqId   = randomUUID();
+    const quoteId = randomUUID();
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes/${quoteId}/reject`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: {},
+    });
+
+    expect(res.statusCode).toBe(503);
+    expect((res.json() as any).error.code).toBe('FEATURE_DISABLED');
+  });
+
+  it('PRQ-56 POST reject — invalid quoteId UUID → 400', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${randomUUID()}/rfq/${randomUUID()}/quotes/not-a-uuid/reject`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: {},
+    });
+
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('PRQ-57 POST reject — unknown body key → 400', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${randomUUID()}/rfq/${randomUUID()}/quotes/${randomUUID()}/reject`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: { unexpected_field: 'value' },
+    });
+
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('PRQ-58 POST reject — non-existent quoteId → 404 QUOTE_NOT_FOUND', { timeout: 15000 }, async () => {
+    const { poolId, rfqId } = await createIssuedRfqFixture('QUOTED');
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes/${randomUUID()}/reject`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: {},
+    });
+
+    expect(res.statusCode).toBe(404);
+    expect((res.json() as any).error.code).toBe('QUOTE_NOT_FOUND');
+  });
+
+  it('PRQ-59 POST reject — quote not in SUBMITTED state → 422 INVALID_TRANSITION', { timeout: 15000 }, async () => {
+    const { poolId, rfqId } = await createIssuedRfqFixture('QUOTED');
+    const inviteId = await createAcceptedInviteFixture(poolId, rfqId);
+    const quoteId  = await createQuoteFixture(inviteId, rfqId, poolId, 'ACCEPTED');
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes/${quoteId}/reject`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: {},
+    });
+
+    expect(res.statusCode).toBe(422);
+    expect((res.json() as any).error.code).toBe('INVALID_TRANSITION');
+  });
+
+  it('PRQ-60 POST reject — submitted quote → 200 REJECTED', { timeout: 15000 }, async () => {
+    const { poolId, rfqId } = await createIssuedRfqFixture('QUOTED');
+    const inviteId = await createAcceptedInviteFixture(poolId, rfqId);
+    const quoteId  = await createQuoteFixture(inviteId, rfqId, poolId, 'SUBMITTED');
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes/${quoteId}/reject`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: { reject_reason: 'Price too high' },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data.id).toBe(quoteId);
+    expect(body.data.status).toBe('REJECTED');
+  });
+});

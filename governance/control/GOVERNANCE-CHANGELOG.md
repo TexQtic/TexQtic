@@ -5,6 +5,18 @@
 
 ---
 
+## 2026-06-07 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001
+
+NC Phase 1D route layer. 3 owner-facing award routes added to poolRfq.ts.
+ncPoolRfqAwardFeatureGate.middleware.ts created. 17/17 route integration tests PASS (PRQ-44..PRQ-60).
+tsc PASS. prisma validate PASS. 151/151 service unit tests PASS.
+PRQ-54 blocker resolved: { timeout: 30000 } added to acceptQuote $transaction (Paresh-authorized).
+MC flag (POOL QUOTED→ACCEPTED requiresMakerChecker=true) neutralized in beforeAll for integration tests.
+nc.procurement_pools.rfq.award.enabled=false unchanged (not activated).
+supplier_quotes.enabled=false unchanged (QD-6 hold maintained). FE-9: HOLD_FOR_PARESH_DECISION.
+DPP posture: HOLD_FOR_PARESH_DECISION — UNCHANGED.
+Commit: feat(network-commerce): add pool rfq award routes
+
 ## 2026-06-07 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001-CORRECTION
 
 Governance doc correction for AWARD-SERVICE-001. Service implementation was already correct.

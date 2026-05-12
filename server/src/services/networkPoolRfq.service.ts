@@ -1532,7 +1532,8 @@ export class NetworkPoolRfqService {
       );
     }
 
-    const acceptedRow = await this.db.$transaction(async (tx) => {
+    const acceptedRow = await this.db.$transaction(
+      async (tx) => {
       // 1. Load pool
       const pool = await (tx as any).networkPool.findFirst({
         where:   { id: poolId, orgId: ownerOrgId },
@@ -1678,7 +1679,9 @@ export class NetworkPoolRfqService {
       });
 
       return updatedQuote;
-    });
+      },
+      { timeout: 30000 },
+    );
 
     return this.toQuoteOwnerRecord(acceptedRow as Record<string, unknown>);
   }

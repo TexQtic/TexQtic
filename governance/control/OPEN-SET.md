@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-07 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001-CORRECTION VERIFIED_COMPLETE. Governance doc corrected: §8 rejectQuote step 3 now documents RFQ status guard. P-OWNER-09/15/16 relabeled PASS. P-OWNER-17 added. 151/151 unit tests pass. tsc PASS. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-06-07 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001 VERIFIED_COMPLETE. 3 award routes + middleware delivered. PRQ-44..PRQ-60: 17/17 PASS. PRQ-54 timeout fix applied (Paresh-authorized). tsc PASS. rfq.award.enabled=false unchanged. FE-9 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,19 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001 VERIFIED_COMPLETE (2026-06-07).
+  NC Phase 1D route layer complete. ncPoolRfqAwardFeatureGate.middleware.ts created.
+  GET quotes, POST accept, POST reject routes added to poolRfq.ts.
+  PRQ-44..PRQ-60: 17/17 route integration tests PASS. 151/151 service unit tests PASS. tsc PASS.
+  PRQ-54 blocker resolved: Prisma $transaction timeout (default 5 s exceeded over remote Supabase).
+  { timeout: 30000 } added to acceptQuote $transaction — Paresh-authorized during packet.
+  MC seed conflict (POOL QUOTED→ACCEPTED requiresMakerChecker=true) neutralized in test beforeAll.
+  nc.procurement_pools.rfq.award.enabled=false unchanged (not activated).
+  supplier_quotes.enabled=false unchanged (QD-6 hold maintained).
+  FE-9 (TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001): HOLD_FOR_PARESH_DECISION.
+  DPP: HOLD_FOR_PARESH_DECISION — UNCHANGED.
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001.md.
 
 - TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-SERVICE-001-CORRECTION VERIFIED_COMPLETE (2026-06-07).
   Governance doc correction only. rejectQuote already validated rfq.status==='QUOTED' in implementation.

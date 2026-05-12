@@ -20,6 +20,7 @@ import { databaseContextMiddleware } from '../../middleware/database-context.mid
 import { ncPoolFeatureGateMiddleware } from '../../middleware/ncPoolFeatureGate.middleware.js';
 import { ncPoolRfqFeatureGateMiddleware } from '../../middleware/ncPoolRfqFeatureGate.middleware.js';
 import { ncPoolSupplierInviteFeatureGateMiddleware } from '../../middleware/ncPoolSupplierInviteFeatureGate.middleware.js';
+import { ncPoolRfqAwardFeatureGateMiddleware } from '../../middleware/ncPoolRfqAwardFeatureGate.middleware.js';
 import { prisma } from '../../db/prisma.js';
 import { sendError, sendSuccess, sendValidationError } from '../../utils/response.js';
 import { StateMachineService } from '../../services/stateMachine.service.js';
@@ -37,6 +38,8 @@ import {
   NetworkPoolRfqSupplierInviteNotFoundError,
   NetworkPoolRfqSupplierInviteAlreadySentError,
   NetworkPoolRfqSupplierInviteInvalidTransitionError,
+  NetworkPoolRfqOwnerQuoteNotFoundError,
+  NetworkPoolRfqSupplierQuoteNotInSubmittedError,
 } from '../../services/networkPoolRfq.service.js';
 
 // ─── Param / Body Schemas ─────────────────────────────────────────────────────
@@ -56,6 +59,12 @@ const inviteParamSchema = z.object({
   poolId:   uuidSchema,
   rfqId:    uuidSchema,
   inviteId: uuidSchema,
+});
+
+const rfqQuoteParamSchema = z.object({
+  poolId:  z.string().uuid('poolId must be a valid UUID'),
+  rfqId:   z.string().uuid('rfqId must be a valid UUID'),
+  quoteId: z.string().uuid('quoteId must be a valid UUID'),
 });
 
 const issueRfqBodySchema = z
@@ -103,6 +112,21 @@ const issueRfqBodySchema = z
     lifecycle_state_id: z
       .never({ errorMap: () => ({ message: 'lifecycle_state_id must not be provided in request body' }) })
       .optional(),
+  })
+  .strict();
+
+// POST accept quote body — strict.
+const acceptQuoteBodySchema = z
+  .object({
+    request_id: z.string().max(255, 'request_id max 255 chars').nullable().optional(),
+  })
+  .strict();
+
+// POST reject quote body — strict.
+const rejectQuoteBodySchema = z
+  .object({
+    reject_reason: z.string().max(5000, 'reject_reason max 5000 chars').nullable().optional(),
+    request_id:    z.string().max(255, 'request_id max 255 chars').nullable().optional(),
   })
   .strict();
 
@@ -244,6 +268,46 @@ function mapSupplierInviteServiceError(
   }
   if (err instanceof NetworkPoolRfqConflictError) {
     sendError(reply, 'SUPPLIER_INVITE_CONFLICT', err.message, 409);
+    return true;
+  }
+  return false;
+}
+
+// ─── Award Error Mapper ─────────────────────────────────────────────────────
+//
+// Maps owner quote award service errors to HTTP responses.
+// Called by all 3 owner award routes.
+
+function mapAwardRouteError(
+  reply: Parameters<typeof sendError>[0],
+  err: unknown,
+): boolean {
+  if (err instanceof NetworkPoolRfqPoolNotFoundError) {
+    sendError(reply, 'POOL_NOT_FOUND', err.message, 404);
+    return true;
+  }
+  if (err instanceof NetworkPoolRfqInvalidPoolStateError) {
+    sendError(reply, 'INVALID_STATE', err.message, 422);
+    return true;
+  }
+  if (err instanceof NetworkPoolRfqRfqNotFoundError) {
+    sendError(reply, 'RFQ_NOT_FOUND', err.message, 404);
+    return true;
+  }
+  if (err instanceof NetworkPoolRfqTransitionDeniedError) {
+    sendError(reply, 'INVALID_TRANSITION', err.message, 422);
+    return true;
+  }
+  if (err instanceof NetworkPoolRfqOwnerQuoteNotFoundError) {
+    sendError(reply, 'QUOTE_NOT_FOUND', err.message, 404);
+    return true;
+  }
+  if (err instanceof NetworkPoolRfqSupplierQuoteNotInSubmittedError) {
+    sendError(reply, 'INVALID_TRANSITION', err.message, 422);
+    return true;
+  }
+  if (err instanceof NetworkPoolRfqConflictError) {
+    sendError(reply, 'CONFLICT', err.message, 409);
     return true;
   }
   return false;
@@ -498,6 +562,149 @@ const poolRfqRoutes: FastifyPluginAsync = async fastify => {
         if (mapSupplierInviteServiceError(reply, err)) return;
         request.log.error(err, 'network-commerce.pool-rfq.invite.cancel');
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to cancel supplier invite', 500);
+      }
+    },
+  );
+
+  // ─── Owner Award Routes ───────────────────────────────────────────────────
+  //
+  // QD-6 / AWARD-ROUTE-001: All three owner award routes require the full 3-gate chain:
+  //   ncPoolFeatureGateMiddleware → ncPoolRfqFeatureGateMiddleware
+  //   → ncPoolRfqAwardFeatureGateMiddleware
+  //
+  // Role gate: OWNER + ADMIN only; MEMBER → 403.
+  // D-017-A: orgId always from request.dbContext.orgId.
+  //          userId always from request.userId.
+  //          pool_id / rfq_id / quote_id from path params only.
+
+  const ownerAwardPreHandler = [
+    ncPoolFeatureGateMiddleware,
+    ncPoolRfqFeatureGateMiddleware,
+    ncPoolRfqAwardFeatureGateMiddleware,
+  ];
+
+  // GET /:poolId/rfq/:rfqId/quotes — list all owner-facing supplier quotes for an RFQ
+  //
+  // No body. Returns array of NetworkPoolRfqSupplierQuoteOwnerRecord.
+  // QD-8: RFQ direct update path (accepted_at, accepted_by_user_id) confirmed in service.
+  fastify.get(
+    '/:poolId/rfq/:rfqId/quotes',
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: ownerAwardPreHandler,
+    },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+
+      const userRole = (request.userRole ?? '').trim().toUpperCase();
+      if (!userRole.includes('ADMIN') && userRole !== 'OWNER') {
+        return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may list quotes', 403);
+      }
+
+      const paramResult = rfqParamSchema.safeParse(request.params);
+      if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
+
+      const { poolId, rfqId } = paramResult.data;
+      const orgId = dbContext.orgId;
+
+      try {
+        const svc = new NetworkPoolRfqService(prisma, new StateMachineService(prisma, null, null));
+        const records = await svc.listOwnerQuotes(orgId, poolId, rfqId);
+        return sendSuccess(reply, records, 200);
+      } catch (err) {
+        if (mapAwardRouteError(reply, err)) return;
+        request.log.error(err, 'network-commerce.pool-rfq.quote.list');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to list quotes', 500);
+      }
+    },
+  );
+
+  // POST /:poolId/rfq/:rfqId/quotes/:quoteId/accept — accept a supplier quote
+  //
+  // Body (strict): request_id? (optional, nullable, max 255).
+  // AD-1: mass-reject all other SUBMITTED quotes in the same transaction.
+  // AD-4: pool transitions CLOSED_FOR_BIDS → QUOTED → ACCEPTED via SM.
+  // Errors: POOL_NOT_FOUND(404), INVALID_STATE(422), RFQ_NOT_FOUND(404),
+  //   INVALID_TRANSITION(422), QUOTE_NOT_FOUND(404), CONFLICT(409), INTERNAL_ERROR(500).
+  fastify.post(
+    '/:poolId/rfq/:rfqId/quotes/:quoteId/accept',
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: ownerAwardPreHandler,
+    },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+
+      const userRole = (request.userRole ?? '').trim().toUpperCase();
+      if (!userRole.includes('ADMIN') && userRole !== 'OWNER') {
+        return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may accept quotes', 403);
+      }
+
+      const paramResult = rfqQuoteParamSchema.safeParse(request.params);
+      if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
+
+      const body = request.body ?? {};
+      const bodyResult = acceptQuoteBodySchema.safeParse(body);
+      if (!handleBodyValidation(reply, bodyResult)) return;
+
+      const { poolId, rfqId, quoteId } = paramResult.data;
+      const orgId  = dbContext.orgId;
+      const userId = request.userId ?? null;
+
+      try {
+        const svc = new NetworkPoolRfqService(prisma, new StateMachineService(prisma, null, null));
+        const record = await svc.acceptQuote(orgId, userId, poolId, rfqId, quoteId, bodyResult.data);
+        return sendSuccess(reply, record, 200);
+      } catch (err) {
+        if (mapAwardRouteError(reply, err)) return;
+        request.log.error(err, 'network-commerce.pool-rfq.quote.accept');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to accept quote', 500);
+      }
+    },
+  );
+
+  // POST /:poolId/rfq/:rfqId/quotes/:quoteId/reject — reject a supplier quote
+  //
+  // Body (strict): reject_reason? (optional, nullable, max 5000), request_id? (optional, nullable, max 255).
+  // AD-5: single-quote reject — no pool/RFQ state change.
+  // Errors: POOL_NOT_FOUND(404), INVALID_STATE(422), RFQ_NOT_FOUND(404),
+  //   INVALID_TRANSITION(422), QUOTE_NOT_FOUND(404), CONFLICT(409), INTERNAL_ERROR(500).
+  fastify.post(
+    '/:poolId/rfq/:rfqId/quotes/:quoteId/reject',
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: ownerAwardPreHandler,
+    },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+
+      const userRole = (request.userRole ?? '').trim().toUpperCase();
+      if (!userRole.includes('ADMIN') && userRole !== 'OWNER') {
+        return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may reject quotes', 403);
+      }
+
+      const paramResult = rfqQuoteParamSchema.safeParse(request.params);
+      if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
+
+      const body = request.body ?? {};
+      const bodyResult = rejectQuoteBodySchema.safeParse(body);
+      if (!handleBodyValidation(reply, bodyResult)) return;
+
+      const { poolId, rfqId, quoteId } = paramResult.data;
+      const orgId  = dbContext.orgId;
+      const userId = request.userId ?? null;
+
+      try {
+        const svc = new NetworkPoolRfqService(prisma, new StateMachineService(prisma, null, null));
+        const record = await svc.rejectQuote(orgId, userId, poolId, rfqId, quoteId, bodyResult.data);
+        return sendSuccess(reply, record, 200);
+      } catch (err) {
+        if (mapAwardRouteError(reply, err)) return;
+        request.log.error(err, 'network-commerce.pool-rfq.quote.reject');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to reject quote', 500);
       }
     },
   );

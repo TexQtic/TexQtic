@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 VERIFIED_COMPLETE. FE-8 VERIFIED_COMPLETE. QA invite SQL committed. SupplierQuoteSurface feature-disabled path confirmed. No quote submitted. supplier_quotes.enabled=false unchanged. DPP posture HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-06-07 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001 VERIFIED_COMPLETE. 17/17 PRQ tests pass. Award routes deployed, flag gated false. FE-9 HOLD_FOR_PARESH_DECISION. DPP posture HOLD_FOR_PARESH_DECISION unchanged. supplier_quotes.enabled=false unchanged.)
 
 > Read this file after `NEXT-ACTION.md`. It records only current blockers, holds, and governance
 > exceptions relevant to live Layer 0 posture. It does not originate ordinary product delivery
