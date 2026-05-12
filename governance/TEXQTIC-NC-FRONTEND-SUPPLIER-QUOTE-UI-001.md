@@ -1,15 +1,120 @@
 # TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001
 
+> **STATUS UPDATE (2026-06-05):** This packet was initially blocked (backend quote contract missing at 2026-05-11). Backend was completed in Packets 11–13. FE-8 is now IMPLEMENTED — PENDING_PRODUCTION_VERIFY. See §COMPLETION below for full implementation record.
+
 ## Packet Metadata
 
 | Field | Value |
 |-------|-------|
 | Packet ID | TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 |
 | Feature Tag | FE-8 |
-| Date | 2026-05-11 |
-| Type | FRONTEND_IMPLEMENTATION_CONDITIONAL — BLOCKED |
-| Prerequisite | FE-7 commit `037eeb9` feat(network-commerce): add supplier invite inbox frontend |
-| Status | TEXQTIC_NC_FRONTEND_SUPPLIER_QUOTE_UI_001_BLOCKED_BACKEND_QUOTE_CONTRACT_MISSING |
+| Initial Date | 2026-05-11 |
+| Completion Date | 2026-06-05 |
+| Type | FRONTEND_IMPLEMENTATION |
+| Prerequisite | Backend Packets 11+12+13 VERIFIED_COMPLETE. Routes live: GET + POST `/api/tenant/network-commerce/supplier-rfq-invites/:inviteId/quote` |
+| Status | PENDING_PRODUCTION_VERIFY |
+| Commit | `feat(network-commerce): add supplier quote frontend` |
+
+---
+
+## §COMPLETION — FE-8 Implementation Record (2026-06-05)
+
+### Objective
+
+Implement the full frontend supplier quote UI for Network Commerce Phase 1C.
+
+This packet covers:
+1. Service methods in `networkCommerceService.ts`
+2. New `SupplierQuoteSurface` component — inline quote view/submit surface
+3. Narrow integration in `SupplierInviteInbox` — "Submit / View Quote" button for ACCEPTED invites
+4. 16 frontend tests (all passing)
+
+No backend changes. No schema changes. No feature flag activation. `nc.procurement_pools.supplier_quotes.enabled` remains `false` in production (QD-6 hold maintained).
+
+### Starting Repo State
+
+| Property | Value |
+| --- | --- |
+| HEAD at FE-8 start | `fdd19cf` — `docs(network-commerce): verify production feature flag provisioning` |
+| origin/main | `fdd19cf` (aligned) |
+| Working tree | Clean |
+
+### Architecture Decision: Inline Approach
+
+`SupplierQuoteSurface` rendered **inline within `SupplierInviteInbox`** via a `quoteInviteId` state variable — NOT as a separate route. No changes to `App.tsx` or `sessionRuntimeDescriptor.ts`.
+
+### Files Changed
+
+| File | Change Type | Description |
+| --- | --- | --- |
+| `services/networkCommerceService.ts` | Modified | Added `SupplierQuote` interface, `SubmitQuoteInput` interface, `getSupplierQuoteForInvite()`, `submitSupplierQuoteForInvite()` |
+| `components/Tenant/NetworkCommerce/SupplierQuoteSurface.tsx` | Created | Full quote view/submit surface — 7 UI states, client-side validation, forbidden-field safety |
+| `components/Tenant/NetworkCommerce/SupplierInviteInbox.tsx` | Modified | Import + `quoteInviteId` state + early-return render + "Submit / View Quote" button for ACCEPTED invites |
+| `tests/frontend/network-commerce-supplier-quote.test.tsx` | Created | 16 test cases |
+
+**Not changed:** `App.tsx`, `sessionRuntimeDescriptor.ts`, any backend files, `schema.prisma`, `.env`.
+
+### SupplierQuoteSurface UI States
+
+| State | Trigger | Renders |
+| --- | --- | --- |
+| `loading` | On mount | `<LoadingState message="Loading quote..." />` |
+| `feature-disabled` | 503 `FEATURE_DISABLED` | Feature-disabled amber banner |
+| `no-quote` | 404 `SUPPLIER_QUOTE_NOT_FOUND` | Submit form |
+| `submitted` | 200 (existing quote) | Read-only quote detail view |
+| `already-submitted` | 409 `QUOTE_ALREADY_SUBMITTED` | Already-submitted sky banner |
+| `invite-not-accepted` | 422 `INVITE_NOT_ACCEPTED` / `INVALID_TRANSITION` | Invite-not-accepted orange banner |
+| `error` | Other errors | Generic rose error with Retry |
+
+### Client-side Validation
+
+- `quote_amount`: required, must match `/^\d+(\.\d+)?$/`, must be > 0
+- `currency`: required, 3–10 characters
+- `supplier_note`: max 5000 chars
+- `validity_until`: optional; converted to ISO string if provided
+
+### Security — Forbidden Fields (QD-5)
+
+Never rendered: `metadata_internal_json`, `owner_org_id`, `rfq_id`, `pool_id`, `supplier_org_id` and camelCase equivalents.
+
+### Validation
+
+```
+pnpm run test:frontend
+ ✔ network-commerce-supplier-quote.test.tsx (16 tests)
+ Tests  47 passed (47)
+
+pnpm run typecheck → exit 0 — no type errors
+
+git diff --name-only → SupplierInviteInbox.tsx, networkCommerceService.ts
+git status --short → exactly 4 allowlisted files
+```
+
+### Production Behavior (Feature Flag Off)
+
+`nc.procurement_pools.supplier_quotes.enabled = false` → `SupplierQuoteSurface` shows feature-disabled state (503). Expected and graceful. Flag NOT activated.
+
+### Governance Constraints
+
+| Constraint | Status |
+| --- | --- |
+| `nc.procurement_pools.supplier_quotes.enabled` | `false` — NOT changed |
+| DPP launch authorization | `HOLD_FOR_PARESH_DECISION` — UNCHANGED |
+| FE-9 (withdraw UI) | NOT opened |
+| Backend changes | NONE |
+
+### Production Verification Checklist
+
+1. NC Supplier Invite Inbox loads for supplier-role session
+2. "Submit / View Quote" button appears on ACCEPTED invite cards
+3. Clicking shows feature-disabled state (expected — flag = false)
+4. Back button returns to inbox
+5. Accept/decline still work for PENDING invites
+6. No console errors
+
+---
+
+## Historical Record — Original BLOCKED State (2026-05-11)
 
 ---
 

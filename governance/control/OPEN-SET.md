@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-02 (TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 — VERIFIED_COMPLETE. Production DB provisioning confirmed: nc.procurement_pools.enabled=true + nc.procurement_pools.rfq.enabled=true in production feature_flags table. Descriptions updated from test-labels to production-canonical values via psql transaction (INSERT 0 2 + COMMIT). supplier_quotes.enabled remains false (QD-6 hold). All 3 AF findings from runtime alignment audit now resolved. FE-8 remains BLOCKED_PARESH_AUTHORIZATION_REQUIRED. DPP posture HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-06-05 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 — PENDING_PRODUCTION_VERIFY. FE-8 supplier quote frontend implemented: SupplierQuoteSurface.tsx created, SupplierInviteInbox.tsx narrowly integrated, service methods added, 16 tests passing, typecheck clean. nc.procurement_pools.supplier_quotes.enabled remains false (QD-6 hold maintained). DPP posture HOLD_FOR_PARESH_DECISION unchanged. FE-8 BLOCKED entry removed from BLOCKED.md.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or

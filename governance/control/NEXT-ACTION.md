@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-02 (TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 — VERIFIED_COMPLETE; nc.procurement_pools.enabled=true + nc.procurement_pools.rfq.enabled=true confirmed in production DB; descriptions updated to production-canonical values; SQL INSERT 0 2 + COMMIT; supplier_quotes.enabled=false unchanged; all 3 AF findings resolved; FE-8 BLOCKED_PARESH_AUTHORIZATION_REQUIRED)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-05 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 FE-8 IMPLEMENTED — PENDING_PRODUCTION_VERIFY; SupplierQuoteSurface.tsx created; SupplierInviteInbox narrowly integrated; 16 tests passing; typecheck clean; nc.procurement_pools.supplier_quotes.enabled=false unchanged; DPP HOLD_FOR_PARESH_DECISION unchanged)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -16,19 +16,16 @@ product_delivery_priority: >-
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
 active_delivery_unit: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001
-active_delivery_unit_status: HOLD_FOR_PARESH_DECISION
+active_delivery_unit_status: PENDING_PRODUCTION_VERIFY
 active_delivery_unit_note: >
-  TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
-  NC Phase 1 production DB provisioning complete. nc.procurement_pools.enabled=true +
-  nc.procurement_pools.rfq.enabled=true confirmed in production feature_flags table.
-  All 3 AF findings from TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001 now resolved:
-  AF-1 (flags absent/test-labeled): RESOLVED by this packet.
-  AF-2 (gate !==true semantics): RESOLVED by Packet 14 (acbdc3f).
-  AF-3 (PoolListSurface error mapping): RESOLVED by Packet 14 (acbdc3f).
-  NC Pools and RFQ surfaces are technically unblocked. UI verification at app.texqtic.com recommended.
-  Next unit: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 (FE-8) — HOLD_FOR_PARESH_DECISION.
-  Backend complete (Packets 11+12+13 VERIFIED_COMPLETE). Routes live. Design complete.
-  Frontend execution requires separate explicit Paresh FE-8 authorization.
+  TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 (FE-8) IMPLEMENTED — PENDING_PRODUCTION_VERIFY (2026-06-05).
+  SupplierQuoteSurface.tsx created. SupplierInviteInbox.tsx narrowly integrated (Submit / View Quote button for ACCEPTED invites).
+  Service methods added: getSupplierQuoteForInvite + submitSupplierQuoteForInvite.
+  16 frontend tests passing. Typecheck clean. Exactly 4 allowlisted files changed.
+  nc.procurement_pools.supplier_quotes.enabled remains false (QD-6 hold maintained).
+  Surface shows feature-disabled state gracefully in production (flag = false).
+  Production verification required: NC Invite Inbox loads, Submit/View Quote button visible for ACCEPTED invites,
+  feature-disabled state shown on click, back button works, accept/decline preserved.
   DPP LAUNCH GATE (independent of NC Phase 1C):
   TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 VERIFIED_COMPLETE (2026-05-02).
   DPP Passport Network is technically production-ready based on PROD-AUDIT-002.

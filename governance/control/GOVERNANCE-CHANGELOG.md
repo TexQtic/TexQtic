@@ -6,6 +6,23 @@
 ---
 
 
+## 2026-06-05 -- PENDING_PRODUCTION_VERIFY: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001
+
+FE-8 — Supplier Quote Frontend (Network Commerce Phase 1C). Frontend-only. No backend changes. No schema changes. No feature flag activation.
+Files changed (4): services/networkCommerceService.ts (service methods added), components/Tenant/NetworkCommerce/SupplierQuoteSurface.tsx (CREATED), components/Tenant/NetworkCommerce/SupplierInviteInbox.tsx (narrowly integrated), tests/frontend/network-commerce-supplier-quote.test.tsx (CREATED, 16 tests).
+Architecture: inline approach — SupplierQuoteSurface rendered within SupplierInviteInbox via quoteInviteId state. No App.tsx changes. No sessionRuntimeDescriptor.ts changes.
+Service methods: getSupplierQuoteForInvite() + submitSupplierQuoteForInvite() → GET/POST /api/tenant/network-commerce/supplier-rfq-invites/:inviteId/quote.
+UI states: loading, feature-disabled, no-quote (submit form), submitted (read-only), already-submitted, invite-not-accepted, error.
+Security: forbidden fields (metadata_internal_json, owner_org_id, rfq_id, pool_id) never rendered. QD-5 satisfied.
+Validation: 47/47 frontend tests pass. Typecheck exit 0. Exactly 4 allowlisted files in diff.
+Production behavior: nc.procurement_pools.supplier_quotes.enabled=false → surface shows feature-disabled state gracefully. Flag NOT activated (QD-6 hold maintained).
+DPP posture: HOLD_FOR_PARESH_DECISION — UNCHANGED.
+Commit: feat(network-commerce): add supplier quote frontend
+Production verification pending: Paresh to confirm at app.texqtic.com.
+
+---
+
+
 ## 2026-06-02 -- VERIFIED_COMPLETE: TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001
 
 Packet 15 — Production DB provisioning of NC Phase 1 feature flags. No source code changes.

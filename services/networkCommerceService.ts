@@ -628,3 +628,69 @@ export function declineIncomingSupplierInvite(
     { declineReason: input?.declineReason ?? null },
   );
 }
+
+// ─── FE-8 Supplier Quote Methods ──────────────────────────────────────────────
+
+/**
+ * Supplier-safe quote record returned by supplier quote routes.
+ * QD-5: metadata_internal_json, owner_org_id, rfq_id, pool_id excluded by backend.
+ */
+export interface SupplierQuote {
+  id: string;
+  invite_id: string;
+  quote_ref: string;
+  /** QD-3: Effective status — Phase 1C: SUBMITTED or WITHDRAWN */
+  status: string;
+  /** Decimal serialized as string */
+  quote_amount: string;
+  currency: string;
+  validity_until: string | null;
+  supplier_note: string | null;
+  submitted_at: string;
+  submitted_by_user_id: string | null;
+  withdrawn_at: string | null;
+  withdraw_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubmitQuoteInput {
+  quote_amount: number | string;
+  currency: string;
+  validity_until?: string | null;
+  supplier_note?: string | null;
+  request_id?: string | null;
+}
+
+/**
+ * Get the supplier's own quote for an accepted invite.
+ * Returns the quote if it exists. Throws APIError with code SUPPLIER_QUOTE_NOT_FOUND (404) if none.
+ * The feature gate returns 503 FEATURE_DISABLED if the flag is off.
+ */
+export function getSupplierQuoteForInvite(inviteId: string): Promise<SupplierQuote> {
+  return tenantGet<SupplierQuote>(
+    `/api/tenant/network-commerce/supplier-rfq-invites/${inviteId}/quote`,
+  );
+}
+
+/**
+ * Submit a new quote for an accepted invite. Returns 201 with the created quote record.
+ * Throws APIError QUOTE_ALREADY_SUBMITTED (409) if a quote already exists.
+ * Throws APIError INVITE_NOT_ACCEPTED (422) if the invite is not in ACCEPTED state.
+ * The feature gate returns 503 FEATURE_DISABLED if the flag is off.
+ */
+export function submitSupplierQuoteForInvite(
+  inviteId: string,
+  input: SubmitQuoteInput,
+): Promise<SupplierQuote> {
+  return tenantPost<SupplierQuote>(
+    `/api/tenant/network-commerce/supplier-rfq-invites/${inviteId}/quote`,
+    {
+      quote_amount: input.quote_amount,
+      currency: input.currency,
+      validity_until: input.validity_until ?? null,
+      supplier_note: input.supplier_note ?? null,
+      request_id: input.request_id ?? null,
+    },
+  );
+}

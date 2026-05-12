@@ -8,6 +8,7 @@ import {
   type SupplierInviteInboxItem,
 } from '../../../services/networkCommerceService';
 import { LoadingState } from '../../shared/LoadingState';
+import { SupplierQuoteSurface } from './SupplierQuoteSurface';
 
 type SupplierInviteInboxProps = Readonly<{
   onBack?: () => void;
@@ -98,6 +99,7 @@ export function SupplierInviteInbox({ onBack }: SupplierInviteInboxProps): React
   const [selectedInvite, setSelectedInvite] = useState<SupplierInviteInboxItem | null>(null);
   const [actionBusyInviteId, setActionBusyInviteId] = useState<string | null>(null);
   const [declineReason, setDeclineReason] = useState<string>('');
+  const [quoteInviteId, setQuoteInviteId] = useState<string | null>(null);
 
   const refreshInvites = useCallback(async () => {
     setUiState('loading');
@@ -176,6 +178,16 @@ export function SupplierInviteInbox({ onBack }: SupplierInviteInboxProps): React
       <div className="min-h-screen bg-slate-50 px-6 py-8">
         <LoadingState message="Loading supplier invite inbox..." />
       </div>
+    );
+  }
+
+  // FE-8: quote surface shown inline when user selects "Submit / View Quote" on an ACCEPTED invite
+  if (quoteInviteId) {
+    return (
+      <SupplierQuoteSurface
+        inviteId={quoteInviteId}
+        onBack={() => setQuoteInviteId(null)}
+      />
     );
   }
 
@@ -328,6 +340,15 @@ export function SupplierInviteInbox({ onBack }: SupplierInviteInboxProps): React
                             {isBusy ? 'Processing...' : 'Decline'}
                           </button>
                         </>
+                      )}
+                      {status === 'ACCEPTED' && (
+                        <button
+                          type="button"
+                          onClick={() => setQuoteInviteId(invite.id)}
+                          className="inline-flex items-center justify-center rounded-lg border border-sky-300 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-50 transition"
+                        >
+                          Submit / View Quote
+                        </button>
                       )}
                     </div>
                   </article>
