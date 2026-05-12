@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-05 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 — PENDING_PRODUCTION_VERIFY. FE-8 supplier quote frontend implemented: SupplierQuoteSurface.tsx created, SupplierInviteInbox.tsx narrowly integrated, service methods added, 16 tests passing, typecheck clean. nc.procurement_pools.supplier_quotes.enabled remains false (QD-6 hold maintained). DPP posture HOLD_FOR_PARESH_DECISION unchanged. FE-8 BLOCKED entry removed from BLOCKED.md.)
+**Last Updated:** 2026-05-12 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-PROD-VERIFY-001 — BLOCKED_PENDING_QA_ACCEPTED_INVITE. Production verification attempted at app.texqtic.com. NC Pools HEALTHY. Supplier Invite Inbox HEALTHY. No accepted invites in QA B2B session (Total: 0). FE-8 remains PENDING_PRODUCTION_VERIFY. supplier_quotes.enabled=false unchanged (QD-6 hold maintained). DPP posture HOLD_FOR_PARESH_DECISION unchanged. Recommended next packet: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-05 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001 FE-8 IMPLEMENTED — PENDING_PRODUCTION_VERIFY; SupplierQuoteSurface.tsx created; SupplierInviteInbox narrowly integrated; 16 tests passing; typecheck clean; nc.procurement_pools.supplier_quotes.enabled=false unchanged; DPP HOLD_FOR_PARESH_DECISION unchanged)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-12 (TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-PROD-VERIFY-001 BLOCKED_PENDING_QA_ACCEPTED_INVITE; NC Pools HEALTHY; Supplier Invite Inbox HEALTHY; 0 invites in QA B2B session; FE-8 stays PENDING_PRODUCTION_VERIFY; nc.procurement_pools.supplier_quotes.enabled=false unchanged; DPP HOLD_FOR_PARESH_DECISION unchanged)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -24,34 +24,34 @@ active_delivery_unit_note: >
   16 frontend tests passing. Typecheck clean. Exactly 4 allowlisted files changed.
   nc.procurement_pools.supplier_quotes.enabled remains false (QD-6 hold maintained).
   Surface shows feature-disabled state gracefully in production (flag = false).
-  Production verification required: NC Invite Inbox loads, Submit/View Quote button visible for ACCEPTED invites,
-  feature-disabled state shown on click, back button works, accept/decline preserved.
+  PROD VERIFY ATTEMPT (2026-05-12): BLOCKED_PENDING_QA_ACCEPTED_INVITE.
+  NC Pools HEALTHY. Supplier Invite Inbox HEALTHY. QA B2B session has 0 invites (Total: 0, Pending: 0).
+  Cannot verify Submit/View Quote affordance or SupplierQuoteSurface without accepted invite in QA session.
+  Required: Create QA accepted invite via authorized test flow before re-running prod verification.
+  Recommended next packet: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 (HOLD_FOR_PARESH_DECISION).
   DPP LAUNCH GATE (independent of NC Phase 1C):
   TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 VERIFIED_COMPLETE (2026-05-02).
   DPP Passport Network is technically production-ready based on PROD-AUDIT-002.
   DPP launch authorization: HOLD_FOR_PARESH_DECISION — separate decision; not unlocked by NC work.
   Do NOT open DPP next slice without separate explicit Paresh DPP authorization.
-last_closed_unit: TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001
-last_closed_unit_status: VERIFIED_COMPLETE
+last_closed_unit: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-PROD-VERIFY-001
+last_closed_unit_status: BLOCKED_PENDING_QA_ACCEPTED_INVITE
 last_closed_unit_runtime_verdict: >-
-  TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
-  Production DB provisioning confirmed via psql against Supabase production DB.
-  Pre-state: nc.procurement_pools.enabled=t, nc.procurement_pools.rfq.enabled=t (seeded by integration tests 2026-05-11).
-  SQL transaction: BEGIN; INSERT ON CONFLICT DO UPDATE (2 rows); COMMIT => INSERT 0 2 + COMMIT (no ERROR, no ROLLBACK).
-  Post-state: nc.procurement_pools.enabled=t (description updated to production-canonical value, updated_at refreshed).
-  Post-state: nc.procurement_pools.rfq.enabled=t (description updated to production-canonical value, updated_at refreshed).
-  Post-state: supplier_invites.enabled=t (unchanged). supplier_quotes.enabled=f (unchanged — QD-6 hold maintained).
-  All 3 AF findings from TEXQTIC-NC-FRONTEND-BACKEND-RUNTIME-ALIGNMENT-AUDIT-001 resolved.
-  UI verification at app.texqtic.com (NC Pools surface loads without feature-disabled error) recommended.
-  FE-8 BLOCKED_PARESH_AUTHORIZATION_REQUIRED. DPP posture HOLD_FOR_PARESH_DECISION. No source code changes.
-last_closed_unit_commits: docs(network-commerce): verify production feature flag provisioning
+  TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-PROD-VERIFY-001 BLOCKED_PENDING_QA_ACCEPTED_INVITE (2026-05-12).
+  Production verification attempted at app.texqtic.com (QA B2B session).
+  NC Pools surface: HEALTHY — loaded, empty state, no FEATURE_DISABLED error.
+  Supplier Invite Inbox: HEALTHY — loaded without disabled state, Total: 0, Pending: 0.
+  No accepted invites in QA B2B session. Cannot trigger Submit/View Quote affordance or SupplierQuoteSurface.
+  Feature flags: nc.procurement_pools.enabled=t, rfq.enabled=t, supplier_invites.enabled=t, supplier_quotes.enabled=f (all correct).
+  Deployment behavioral evidence: consistent with d8a2ce2 (NC surfaces render per flag state).
+  No production quote submitted. No feature flag mutation. No data mutation. DPP hold unchanged.
+  FE-8 status: PENDING_PRODUCTION_VERIFY — UNCHANGED.
+  Recommended next packet: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 (HOLD_FOR_PARESH_DECISION).
+last_closed_unit_commits: docs(network-commerce): record supplier quote frontend production verify blocker
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE. NC production DB provisioning confirmed. Gate semantics canonical (Packet 14).
-  AF-1 (nc.procurement_pools.enabled absent/test-labeled): RESOLVED by this packet.
-  AF-2 (gate !==true semantics): RESOLVED by Packet 14 (acbdc3f).
-  AF-3 (PoolListSurface error mapping): RESOLVED by Packet 14 (acbdc3f).
+  BLOCKED_PENDING_QA_ACCEPTED_INVITE. NC surfaces HEALTHY. No accepted invite to trigger affordance.
+  Cannot advance FE-8 to VERIFIED_COMPLETE without QA accepted invite in production session.
   supplier_quotes.enabled=false confirmed unchanged. QD-6 hold maintained.
-  FE-8: BLOCKED_PARESH_AUTHORIZATION_REQUIRED — UNCHANGED.
   DPP posture: HOLD_FOR_PARESH_DECISION — UNCHANGED.
 note_on_pending_verification: >-
   TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).

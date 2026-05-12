@@ -6,6 +6,19 @@
 ---
 
 
+## 2026-05-12 -- BLOCKED_PENDING_QA_ACCEPTED_INVITE: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-PROD-VERIFY-001
+
+Production verification attempt for FE-8 supplier quote frontend. Packet: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-PROD-VERIFY-001.
+Session: app.texqtic.com, QA B2B tenant.
+NC Pools: HEALTHY — loaded, empty state, no FEATURE_DISABLED. App version v2.4.0.
+Supplier Invite Inbox: HEALTHY — loaded without disabled state, Total: 0, Pending: 0.
+Feature flags: nc.procurement_pools.enabled=t, rfq.enabled=t, supplier_invites.enabled=t, supplier_quotes.enabled=f (4/4 correct).
+Blocker: No accepted invites in QA B2B session. Submit/View Quote affordance and SupplierQuoteSurface unverifiable.
+FE-8 status: PENDING_PRODUCTION_VERIFY — UNCHANGED. Cannot advance to VERIFIED_COMPLETE.
+Next required packet: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-QA-DATA-SETUP-001 (HOLD_FOR_PARESH_DECISION).
+No production quote submitted. No feature flag mutation. No source code changes. DPP HOLD_FOR_PARESH_DECISION unchanged.
+Commit: docs(network-commerce): record supplier quote frontend production verify blocker
+
 ## 2026-06-05 -- PENDING_PRODUCTION_VERIFY: TEXQTIC-NC-FRONTEND-SUPPLIER-QUOTE-UI-001
 
 FE-8 — Supplier Quote Frontend (Network Commerce Phase 1C). Frontend-only. No backend changes. No schema changes. No feature flag activation.
