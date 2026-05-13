@@ -53,6 +53,12 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-QA-B2B-CHECKER-USER-PROVISIONING-001 CHECKER_PROVISIONED_COMPLETE (2026-05-13).
+  qa.buyer@texqtic.com (b80f0cab) added as ADMIN to qa-b2b tenant (faf2e4a7).
+  Maker: qa.b2b@texqtic.com (ac6d2d3f, OWNER). Checker: qa.buyer@texqtic.com (b80f0cab, ADMIN). maker≠checker ✅.
+  Both flags remain false (fail-closed). No quote/RFQ/pool/approval/signature mutation.
+  MC-5 blocker resolved. See governance/TEXQTIC-NC-QA-B2B-CHECKER-USER-PROVISIONING-001.md.
+
 - TEXQTIC-NC-FRONTEND-AWARD-MAKER-CHECKER-UI-001 FRONTEND_IMPLEMENTED_PENDING_PROD_VERIFY (2026-07-01).
   FE-9 QuoteReviewPanel extended with G-021 maker-checker award flow.
   MAKER path: "Request Award Approval" dialog → POST award-request → pending approval card.

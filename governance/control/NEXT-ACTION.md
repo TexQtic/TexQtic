@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-01 (TEXQTIC-NC-FRONTEND-AWARD-MAKER-CHECKER-UI-001 FRONTEND_IMPLEMENTED_PENDING_PROD_VERIFY. FE-9 MC extension: request/approve/reject award UI, 42/42 tests PASS, tsc EXIT 0. No flag activation. nc.procurement_pools.rfq.award.enabled ABSENT. QD-6 hold unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged. Next: PARESH_DECISION_REQUIRED — prod verify when flags activated.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-13 (TEXQTIC-NC-QA-B2B-CHECKER-USER-PROVISIONING-001 CHECKER_PROVISIONED_COMPLETE. qa.buyer@texqtic.com added as ADMIN to qa-b2b. Maker ac6d2d3f ≠ checker b80f0cab. Flags unchanged. MC-5 blocker resolved. PARESH_DECISION_REQUIRED — activate flags to run prod E2E.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
