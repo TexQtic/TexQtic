@@ -7,6 +7,21 @@
 
 ---
 
+## 2026-06-09 -- VERIFIED_COMPLETE: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001
+
+FE-4 (`TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001`) Tailwind UI/UX polish complete.
+`DemandLineSurface.tsx` fully rewritten: all non-Tailwind class names (`btn btn-primary`, `form-group`,
+`nc-demand-line-surface`, etc.) replaced with Tailwind utility classes matching QuoteReviewPanel /
+SupplierInviteOwnerSurface visual standard. Data-flow bug fixed: old `DemandLineForm` had internal
+`useState` which diverged from parent `formState` — submit always sent `DEFAULT_FORM_STATE` values.
+Fix: made `DemandLineForm` a fully controlled component (parent owns `formState`, passes via
+`onFieldChange` callback). 27 new frontend tests created (`tests/frontend/network-commerce-demand-lines.test.tsx`).
+91/91 total frontend tests PASS. `pnpm run typecheck` EXIT 0. Lint clean on touched files.
+No backend/schema/migration/env/flag/production-data changes. `supplier_quotes.enabled=false` unchanged (QD-6).
+`rfq.award.enabled` row ABSENT. DPP: HOLD_FOR_PARESH_DECISION unchanged.
+
+---
+
 ## 2026-06-08 -- VERIFIED_COMPLETE: TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-PROD-VERIFY-GOV-CLOSE-001
 
 FE-9 (`TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001`) production verification complete. QuoteReviewPanel

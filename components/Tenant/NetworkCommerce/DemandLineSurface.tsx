@@ -11,7 +11,7 @@
  * Role-gated: lock-for-RFQ conditional on backend authorization (403 → hidden)
  */
 
-import { useState, useEffect, useCallback, type ReactElement } from 'react';
+import { useState, useEffect, useCallback, type ReactElement, type FormEvent } from 'react';
 import {
   listDemandLines,
   createDemandLine,
@@ -57,6 +57,50 @@ const DEFAULT_FORM_STATE: DemandLineFormState = {
   deliveryWindowEnd: '',
 };
 
+function formatDate(value: string | null | undefined): string {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(d);
+}
+
+function demandLineStatusBadge(status: string): ReactElement {
+  const upper = status.toUpperCase();
+  if (upper === 'DRAFT') {
+    return (
+      <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-widest text-amber-900">
+        Draft
+      </span>
+    );
+  }
+  if (upper === 'ACTIVE') {
+    return (
+      <span className="rounded-full border border-sky-300 bg-sky-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-widest text-sky-800">
+        Active
+      </span>
+    );
+  }
+  if (upper === 'LOCKED_FOR_RFQ') {
+    return (
+      <span className="rounded-full border border-indigo-300 bg-indigo-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-widest text-indigo-800">
+        Locked for RFQ
+      </span>
+    );
+  }
+  if (upper === 'CANCELLED') {
+    return (
+      <span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+        Cancelled
+      </span>
+    );
+  }
+  return (
+    <span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-widest text-slate-600">
+      {status}
+    </span>
+  );
+}
+
 /**
  * DemandLineSurface — Pool demand line management and display
  */
@@ -99,8 +143,12 @@ export function DemandLineSurface({ poolId, onBack }: DemandLineSurfaceProps): R
     loadDemandLines();
   }, [poolId]);
 
+  const handleFormFieldChange = useCallback((field: keyof DemandLineFormState, value: string | number) => {
+    setFormState((prev) => ({ ...prev, [field]: value }));
+  }, []);
+
   const handleCreateSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: FormEvent) => {
       e.preventDefault();
       setUiState('creating');
       try {
@@ -117,17 +165,17 @@ export function DemandLineSurface({ poolId, onBack }: DemandLineSurfaceProps): R
         };
 
         const newLine = await createDemandLine(poolId, input);
-        setDemandLines([...demandLines, newLine]);
+        setDemandLines((prev) => [...prev, newLine]);
         setFormState(DEFAULT_FORM_STATE);
         setShowCreateForm(false);
-        setUiState(demandLines.length === 0 ? 'ready' : 'ready');
+        setUiState('ready');
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to create demand line';
         setError(errorMessage);
         setUiState('ready');
       }
     },
-    [poolId, demandLines, formState],
+    [poolId, formState],
   );
 
   const handleEditStart = useCallback((line: NetworkPoolDemandLine) => {
@@ -148,7 +196,7 @@ export function DemandLineSurface({ poolId, onBack }: DemandLineSurfaceProps): R
   }, []);
 
   const handleUpdateSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: FormEvent) => {
       e.preventDefault();
       if (!editingLineId) return;
 
@@ -166,7 +214,7 @@ export function DemandLineSurface({ poolId, onBack }: DemandLineSurfaceProps): R
         };
 
         const updated = await updateDemandLine(poolId, editingLineId, input);
-        setDemandLines(demandLines.map((l) => (l.id === editingLineId ? updated : l)));
+        setDemandLines((prev) => prev.map((l) => (l.id === editingLineId ? updated : l)));
         setFormState(DEFAULT_FORM_STATE);
         setShowCreateForm(false);
         setEditingLineId(null);
@@ -177,7 +225,7 @@ export function DemandLineSurface({ poolId, onBack }: DemandLineSurfaceProps): R
         setUiState('ready');
       }
     },
-    [poolId, editingLineId, demandLines, formState],
+    [poolId, editingLineId, formState],
   );
 
   const handleCancel = useCallback(
@@ -185,21 +233,24 @@ export function DemandLineSurface({ poolId, onBack }: DemandLineSurfaceProps): R
       setUiState('cancelling');
       try {
         await cancelDemandLine(poolId, lineId);
-        setDemandLines(demandLines.filter((l) => l.id !== lineId));
-        setUiState(demandLines.length === 1 ? 'empty' : 'ready');
+        setDemandLines((prev) => {
+          const next = prev.filter((l) => l.id !== lineId);
+          setUiState(next.length === 0 ? 'empty' : 'ready');
+          return next;
+        });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to cancel demand line';
         setError(errorMessage);
         setUiState('ready');
       }
     },
-    [poolId, demandLines],
+    [poolId],
   );
 
   const handleLockForRfq = useCallback(async () => {
     setIsLocking(true);
     try {
-      const result = await lockDemandLinesForRfq(poolId);
+      await lockDemandLinesForRfq(poolId);
       // After locking, demand lines transition to locked state
       const updated = await listDemandLines(poolId, { limit: 50, offset: 0 });
       setDemandLines(updated.items);
@@ -230,143 +281,242 @@ export function DemandLineSurface({ poolId, onBack }: DemandLineSurfaceProps): R
     return line.status === 'DRAFT' || line.status === 'ACTIVE';
   };
 
-  // Render states
+  // ── Loading ────────────────────────────────────────────────────────────────
+
   if (uiState === 'loading') {
     return (
-      <div className="nc-demand-line-surface loading-state">
+      <div className="min-h-screen bg-slate-50 px-6 py-8">
         <LoadingState message="Loading demand lines..." />
       </div>
     );
   }
 
+  // ── Feature-disabled ───────────────────────────────────────────────────────
+
   if (uiState === 'feature-disabled') {
     return (
-      <div className="nc-demand-line-surface feature-disabled-state">
-        <div className="message">
-          <h3>Network Commerce - Demand Lines</h3>
-          <p>This feature is currently disabled. Please contact your administrator.</p>
+      <div className="min-h-screen bg-slate-50 px-6 py-8">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+          <header className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-400">Network Commerce</p>
+                <h1 className="mt-2 text-2xl font-bold text-slate-900">Demand Lines</h1>
+              </div>
+              {onBack && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+                >
+                  Back to Pool
+                </button>
+              )}
+            </div>
+          </header>
+
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-6 py-6 shadow-sm">
+            <h2 className="text-lg font-bold text-amber-900">Demand Lines Disabled</h2>
+            <p className="mt-3 text-sm text-amber-800">
+              This feature is currently disabled. Please contact your administrator to enable demand
+              line functionality for this pool.
+            </p>
+          </div>
         </div>
-        {onBack && (
-          <button onClick={onBack} className="btn btn-secondary">
-            Back to Pools
-          </button>
-        )}
       </div>
     );
   }
+
+  // ── Error ──────────────────────────────────────────────────────────────────
 
   if (uiState === 'error') {
     return (
-      <div className="nc-demand-line-surface error-state">
-        <div className="error-message">
-          <h3>Error Loading Demand Lines</h3>
-          <p>{error}</p>
+      <div className="min-h-screen bg-slate-50 px-6 py-8">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+          <header className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-400">Network Commerce</p>
+                <h1 className="mt-2 text-2xl font-bold text-slate-900">Demand Lines</h1>
+              </div>
+              {onBack && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+                >
+                  Back to Pool
+                </button>
+              )}
+            </div>
+          </header>
+
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-6 py-5 shadow-sm">
+            <h2 className="text-base font-bold text-rose-900">Unable to Load Demand Lines</h2>
+            <p className="mt-2 text-sm text-rose-800">{error}</p>
+          </div>
         </div>
-        {onBack && (
-          <button onClick={onBack} className="btn btn-secondary">
-            Back to Pools
-          </button>
-        )}
       </div>
     );
   }
 
-  if (uiState === 'empty') {
+  // ── Empty state ────────────────────────────────────────────────────────────
+
+  if (uiState === 'empty' && !showCreateForm) {
     return (
-      <div className="nc-demand-line-surface empty-state">
-        <div className="message">
-          <h3>Demand Lines</h3>
-          <p>No demand lines yet. Create one to get started.</p>
+      <div className="min-h-screen bg-slate-50 px-6 py-8">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+          <header className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-400">Network Commerce</p>
+                <h1 className="mt-2 text-2xl font-bold text-slate-900">Demand Lines</h1>
+                <p className="mt-1 text-sm text-slate-500">Pool: {poolId}</p>
+              </div>
+              {onBack && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+                >
+                  Back to Pool
+                </button>
+              )}
+            </div>
+          </header>
+
+          <div className="flex flex-col items-center gap-4 rounded-3xl border border-slate-200 bg-white px-6 py-12 shadow-sm">
+            <p className="text-sm font-semibold text-slate-500">No demand lines yet</p>
+            <p className="text-sm text-slate-400">
+              Add a demand line to specify the commodity, quantity, and delivery requirements for
+              this pool.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowCreateForm(true)}
+              className="inline-flex items-center justify-center rounded-xl border border-transparent bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700"
+            >
+              Add First Demand Line
+            </button>
+          </div>
         </div>
-        <button onClick={() => setShowCreateForm(true)} className="btn btn-primary">
-          Create Demand Line
-        </button>
-        {onBack && (
-          <button onClick={onBack} className="btn btn-secondary">
-            Back to Pool Detail
-          </button>
-        )}
-        {showCreateForm && (
-          <DemandLineForm
-            initialState={formState}
-            onSubmit={handleCreateSubmit}
-            onCancel={handleFormCancel}
-            isSubmitting={false}
-            mode="create"
-          />
-        )}
       </div>
     );
   }
 
-  // Ready state with demand lines
+  // ── Ready / Creating / Updating / Cancelling ───────────────────────────────
+
+  const isSubmitting = uiState === 'creating' || uiState === 'updating';
+  const isProcessing = uiState === 'cancelling' || isSubmitting;
+
   return (
-    <div className="nc-demand-line-surface ready-state">
-      <div className="header">
-        <h3>Demand Lines ({demandLines.length})</h3>
-        {onBack && (
-          <button onClick={onBack} className="btn btn-tertiary">
-            Back
-          </button>
+    <div className="min-h-screen bg-slate-50 px-6 py-8">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+        {/* ── Page header ── */}
+        <header className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-400">Network Commerce</p>
+              <h1 className="mt-2 text-2xl font-bold text-slate-900">Demand Lines</h1>
+              <p className="mt-1 text-sm text-slate-500">
+                {demandLines.length === 0
+                  ? 'No demand lines'
+                  : `${demandLines.length} demand line${demandLines.length === 1 ? '' : 's'}`}
+              </p>
+            </div>
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+              >
+                Back to Pool
+              </button>
+            )}
+          </div>
+
+          <div className="mt-1 flex flex-wrap gap-2 text-xs font-semibold text-slate-500">
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">
+              Pool: {poolId}
+            </span>
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">
+              Lines: {demandLines.length}
+            </span>
+          </div>
+        </header>
+
+        {/* ── Inline error banner ── */}
+        {error && (
+          <div className="flex items-start justify-between gap-4 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 shadow-sm">
+            <p className="text-sm text-rose-800">{error}</p>
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="shrink-0 text-xs font-semibold text-rose-600 hover:text-rose-800"
+            >
+              Dismiss
+            </button>
+          </div>
         )}
-      </div>
 
-      {error && (
-        <div className="error-banner">
-          <p>{error}</p>
-          <button onClick={() => setError(null)}>Dismiss</button>
-        </div>
-      )}
-
-      <div className="actions">
+        {/* ── Action bar ── */}
         {!showCreateForm && (
-          <>
-            <button onClick={() => setShowCreateForm(true)} className="btn btn-primary">
-              Create Demand Line
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowCreateForm(true)}
+              className="inline-flex items-center justify-center rounded-xl border border-transparent bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:opacity-50"
+              disabled={isProcessing}
+            >
+              Add Demand Line
             </button>
             {demandLines.some((l) => l.status === 'ACTIVE') && (
               <button
+                type="button"
                 onClick={handleLockForRfq}
-                disabled={isLocking || !canLockForRfq}
-                className="btn btn-secondary"
-                title={!canLockForRfq ? 'Not authorized to lock demand lines' : ''}
+                disabled={isLocking || !canLockForRfq || isProcessing}
+                title={!canLockForRfq ? 'Not authorized to lock demand lines' : undefined}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:opacity-50"
               >
-                {isLocking ? 'Locking...' : 'Lock for RFQ'}
+                {isLocking ? 'Locking…' : 'Lock for RFQ'}
               </button>
             )}
-          </>
+          </div>
         )}
-      </div>
 
-      {showCreateForm && (
-        <DemandLineForm
-          initialState={formState}
-          onSubmit={editingLineId ? handleUpdateSubmit : handleCreateSubmit}
-          onCancel={handleFormCancel}
-          isSubmitting={uiState === 'creating' || uiState === 'updating'}
-          mode={editingLineId ? 'edit' : 'create'}
-        />
-      )}
-
-      <div className="demand-lines-list">
-        {demandLines.map((line) => (
-          <DemandLineItem
-            key={line.id}
-            line={line}
-            isEditable={isEditable(line)}
-            isCancellable={isCancellable(line)}
-            onEdit={() => handleEditStart(line)}
-            onCancel={() => handleCancel(line.id)}
-            isProcessing={uiState === 'cancelling'}
+        {/* ── Create / Edit form ── */}
+        {showCreateForm && (
+          <DemandLineForm
+            formData={formState}
+            onFieldChange={handleFormFieldChange}
+            onSubmit={editingLineId ? handleUpdateSubmit : handleCreateSubmit}
+            onCancel={handleFormCancel}
+            isSubmitting={isSubmitting}
+            mode={editingLineId ? 'edit' : 'create'}
           />
-        ))}
+        )}
+
+        {/* ── Demand lines list ── */}
+        <div className="flex flex-col gap-4">
+          {demandLines.map((line) => (
+            <DemandLineItem
+              key={line.id}
+              line={line}
+              isEditable={isEditable(line)}
+              isCancellable={isCancellable(line)}
+              onEdit={() => handleEditStart(line)}
+              onCancel={() => handleCancel(line.id)}
+              isProcessing={isProcessing}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
 /**
- * DemandLineItem — Single demand line display
+ * DemandLineItem — Single demand line card
  */
 function DemandLineItem({
   line,
@@ -384,241 +534,317 @@ function DemandLineItem({
   isProcessing: boolean;
 }): ReactElement {
   return (
-    <div className={`demand-line-item status-${line.status.toLowerCase()}`}>
-      <div className="line-header">
-        <div className="line-ref-and-status">
-          <h4>{line.line_ref}</h4>
-          <span className={`status-badge status-${line.status.toLowerCase()}`}>{line.status}</span>
-          {line.locked_at && <span className="locked-badge">Locked for RFQ</span>}
-        </div>
-      </div>
-
-      <div className="line-content">
-        <div className="field">
-          <label>Commodity Category</label>
-          <span>{line.commodity_category}</span>
-        </div>
-        <div className="field">
-          <label>Quantity</label>
-          <span>
-            {line.qty} {line.qty_unit}
-          </span>
-        </div>
-        {line.product_spec_summary && (
-          <div className="field">
-            <label>Product Spec</label>
-            <span>{line.product_spec_summary}</span>
-          </div>
-        )}
-        {line.delivery_location && (
-          <div className="field">
-            <label>Delivery Location</label>
-            <span>{line.delivery_location}</span>
-          </div>
-        )}
-        {line.delivery_window_start && (
-          <div className="field">
-            <label>Delivery Window</label>
-            <span>
-              {new Date(line.delivery_window_start).toLocaleDateString()} to{' '}
-              {new Date(line.delivery_window_end || line.delivery_window_start).toLocaleDateString()}
+    <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-sm">
+      {/* Card header */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-base font-bold text-slate-900">{line.line_ref}</span>
+          {demandLineStatusBadge(line.status)}
+          {line.locked_at && (
+            <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700">
+              Locked {formatDate(line.locked_at)}
             </span>
-          </div>
-        )}
+          )}
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-2">
+          {isEditable && (
+            <button
+              type="button"
+              onClick={onEdit}
+              disabled={isProcessing}
+              className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-slate-50 disabled:opacity-50"
+            >
+              Edit
+            </button>
+          )}
+          {isCancellable && (
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={isProcessing}
+              className="inline-flex items-center justify-center rounded-lg border border-rose-300 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-50"
+            >
+              {isProcessing ? 'Processing…' : 'Cancel'}
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="line-actions">
-        {isEditable && (
-          <button onClick={onEdit} className="btn btn-sm btn-secondary" disabled={isProcessing}>
-            Edit
-          </button>
+      {/* Field grid */}
+      <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+        <div>
+          <dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Commodity</dt>
+          <dd className="mt-0.5 font-medium text-slate-900">{line.commodity_category}</dd>
+        </div>
+
+        {line.product_category && (
+          <div>
+            <dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Product Category</dt>
+            <dd className="mt-0.5 font-medium text-slate-900">{line.product_category}</dd>
+          </div>
         )}
-        {isCancellable && (
-          <button onClick={onCancel} className="btn btn-sm btn-danger" disabled={isProcessing}>
-            {isProcessing ? 'Cancelling...' : 'Cancel'}
-          </button>
+
+        <div>
+          <dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Quantity</dt>
+          <dd className="mt-0.5 font-medium text-slate-900">
+            {line.qty} {line.qty_unit}
+          </dd>
+        </div>
+
+        {line.delivery_location && (
+          <div>
+            <dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Delivery Location</dt>
+            <dd className="mt-0.5 font-medium text-slate-900">{line.delivery_location}</dd>
+          </div>
         )}
-      </div>
+
+        {line.delivery_window_start && (
+          <div className="col-span-2">
+            <dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Delivery Window</dt>
+            <dd className="mt-0.5 font-medium text-slate-900">
+              {formatDate(line.delivery_window_start)}
+              {line.delivery_window_end && line.delivery_window_end !== line.delivery_window_start
+                ? ` → ${formatDate(line.delivery_window_end)}`
+                : ''}
+            </dd>
+          </div>
+        )}
+      </dl>
+
+      {line.product_spec_summary && (
+        <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Product Spec</p>
+          <p className="mt-1 text-sm text-slate-700">{line.product_spec_summary}</p>
+        </div>
+      )}
     </div>
   );
 }
 
 /**
- * DemandLineForm — Create/Edit demand line form
+ * DemandLineForm — Controlled create/edit demand line form
+ *
+ * The parent owns formData and provides onFieldChange so the submit handlers
+ * always read the current field values from parent state.
  */
 interface DemandLineFormProps {
-  initialState: DemandLineFormState;
-  onSubmit: (e: React.FormEvent) => Promise<void>;
+  formData: DemandLineFormState;
+  onFieldChange: (field: keyof DemandLineFormState, value: string | number) => void;
+  onSubmit: (e: FormEvent) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
   mode: 'create' | 'edit';
 }
 
 function DemandLineForm({
-  initialState,
+  formData,
+  onFieldChange,
   onSubmit,
   onCancel,
   isSubmitting,
   mode,
 }: DemandLineFormProps): ReactElement {
-  const [formData, setFormData] = useState(initialState);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target as any;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'number' ? Number(value) : value,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await onSubmit(e);
-  };
+  const submitLabel = mode === 'create' ? 'Create Demand Line' : 'Save Changes';
 
   return (
-    <form className="demand-line-form" onSubmit={handleSubmit}>
-      <h4>{mode === 'create' ? 'Create Demand Line' : 'Edit Demand Line'}</h4>
+    <div className="rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
+      <h2 className="text-lg font-bold text-slate-900">
+        {mode === 'create' ? 'New Demand Line' : 'Edit Demand Line'}
+      </h2>
+      <p className="mt-1 text-sm text-slate-500">
+        {mode === 'create'
+          ? 'Specify the commodity, quantity, and delivery requirements.'
+          : 'Update the demand line details below.'}
+      </p>
 
-      <div className="form-group">
-        <label htmlFor="lineRef">Line Reference*</label>
-        <input
-          id="lineRef"
-          name="lineRef"
-          type="text"
-          value={formData.lineRef}
-          onChange={handleChange}
-          disabled={isSubmitting || mode === 'edit'}
-          required
-          maxLength={100}
-        />
-      </div>
+      <form onSubmit={onSubmit} className="mt-6 space-y-6" noValidate>
+        {/* ── Identification ── */}
+        <fieldset className="space-y-4">
+          <legend className="text-xs font-bold uppercase tracking-wider text-slate-500">Identification</legend>
 
-      <div className="form-group">
-        <label htmlFor="commodityCategory">Commodity Category*</label>
-        <input
-          id="commodityCategory"
-          name="commodityCategory"
-          type="text"
-          value={formData.commodityCategory}
-          onChange={handleChange}
-          disabled={isSubmitting}
-          required
-          maxLength={100}
-        />
-      </div>
+          <label className="block space-y-1.5 text-sm font-medium text-slate-700">
+            <span>
+              Line Reference <span className="text-rose-500">*</span>
+            </span>
+            <input
+              name="lineRef"
+              type="text"
+              value={formData.lineRef}
+              onChange={(e) => onFieldChange('lineRef', e.target.value)}
+              disabled={isSubmitting || mode === 'edit'}
+              required
+              maxLength={100}
+              placeholder="e.g. LINE-001"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-sky-400 disabled:bg-slate-50 disabled:text-slate-500"
+            />
+            <span className="block text-xs text-slate-400">Unique reference for this demand line within the pool.</span>
+          </label>
+        </fieldset>
 
-      <div className="form-group">
-        <label htmlFor="productCategory">Product Category</label>
-        <input
-          id="productCategory"
-          name="productCategory"
-          type="text"
-          value={formData.productCategory}
-          onChange={handleChange}
-          disabled={isSubmitting}
-          maxLength={100}
-        />
-      </div>
+        {/* ── Commodity & Product ── */}
+        <fieldset className="space-y-4">
+          <legend className="text-xs font-bold uppercase tracking-wider text-slate-500">Commodity &amp; Product</legend>
 
-      <div className="form-group">
-        <label htmlFor="qty">Quantity*</label>
-        <input
-          id="qty"
-          name="qty"
-          type="number"
-          value={formData.qty}
-          onChange={handleChange}
-          disabled={isSubmitting}
-          required
-          min="0.01"
-          step="0.01"
-        />
-      </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="block space-y-1.5 text-sm font-medium text-slate-700">
+              <span>
+                Commodity Category <span className="text-rose-500">*</span>
+              </span>
+              <input
+                name="commodityCategory"
+                type="text"
+                value={formData.commodityCategory}
+                onChange={(e) => onFieldChange('commodityCategory', e.target.value)}
+                disabled={isSubmitting}
+                required
+                maxLength={100}
+                placeholder="e.g. Grains"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-sky-400 disabled:bg-slate-50"
+              />
+            </label>
 
-      <div className="form-group">
-        <label htmlFor="qtyUnit">Quantity Unit*</label>
-        <select
-          id="qtyUnit"
-          name="qtyUnit"
-          value={formData.qtyUnit}
-          onChange={handleChange}
-          disabled={isSubmitting}
-          required
-        >
-          <option value="KG">Kilograms (KG)</option>
-          <option value="MT">Metric Tons (MT)</option>
-          <option value="L">Liters (L)</option>
-          <option value="M3">Cubic Meters (M3)</option>
-          <option value="UNIT">Units</option>
-          <option value="BOX">Boxes</option>
-        </select>
-      </div>
+            <label className="block space-y-1.5 text-sm font-medium text-slate-700">
+              <span>Product Category</span>
+              <input
+                name="productCategory"
+                type="text"
+                value={formData.productCategory}
+                onChange={(e) => onFieldChange('productCategory', e.target.value)}
+                disabled={isSubmitting}
+                maxLength={100}
+                placeholder="e.g. Wheat"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-sky-400 disabled:bg-slate-50"
+              />
+            </label>
+          </div>
 
-      <div className="form-group">
-        <label htmlFor="productSpecSummary">Product Specification</label>
-        <textarea
-          id="productSpecSummary"
-          name="productSpecSummary"
-          value={formData.productSpecSummary}
-          onChange={handleChange}
-          disabled={isSubmitting}
-          maxLength={2000}
-          rows={3}
-        />
-      </div>
+          <label className="block space-y-1.5 text-sm font-medium text-slate-700">
+            <span>Product Specification</span>
+            <textarea
+              name="productSpecSummary"
+              value={formData.productSpecSummary}
+              onChange={(e) => onFieldChange('productSpecSummary', e.target.value)}
+              disabled={isSubmitting}
+              maxLength={2000}
+              rows={3}
+              placeholder="Quality requirements, grade, certification notes…"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-sky-400 disabled:bg-slate-50"
+            />
+          </label>
+        </fieldset>
 
-      <div className="form-group">
-        <label htmlFor="deliveryLocation">Delivery Location</label>
-        <input
-          id="deliveryLocation"
-          name="deliveryLocation"
-          type="text"
-          value={formData.deliveryLocation}
-          onChange={handleChange}
-          disabled={isSubmitting}
-          maxLength={500}
-        />
-      </div>
+        {/* ── Quantity ── */}
+        <fieldset className="space-y-4">
+          <legend className="text-xs font-bold uppercase tracking-wider text-slate-500">Quantity</legend>
 
-      <div className="form-group">
-        <label htmlFor="deliveryWindowStart">Delivery Start Date</label>
-        <input
-          id="deliveryWindowStart"
-          name="deliveryWindowStart"
-          type="datetime-local"
-          value={formData.deliveryWindowStart}
-          onChange={handleChange}
-          disabled={isSubmitting}
-        />
-      </div>
+          <div className="grid grid-cols-2 gap-4">
+            <label className="block space-y-1.5 text-sm font-medium text-slate-700">
+              <span>
+                Quantity <span className="text-rose-500">*</span>
+              </span>
+              <input
+                name="qty"
+                type="number"
+                value={formData.qty}
+                onChange={(e) => onFieldChange('qty', Number(e.target.value))}
+                disabled={isSubmitting}
+                required
+                min="0.01"
+                step="0.01"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-sky-400 disabled:bg-slate-50"
+              />
+            </label>
 
-      <div className="form-group">
-        <label htmlFor="deliveryWindowEnd">Delivery End Date</label>
-        <input
-          id="deliveryWindowEnd"
-          name="deliveryWindowEnd"
-          type="datetime-local"
-          value={formData.deliveryWindowEnd}
-          onChange={handleChange}
-          disabled={isSubmitting}
-        />
-      </div>
+            <label className="block space-y-1.5 text-sm font-medium text-slate-700">
+              <span>
+                Unit <span className="text-rose-500">*</span>
+              </span>
+              <select
+                name="qtyUnit"
+                value={formData.qtyUnit}
+                onChange={(e) => onFieldChange('qtyUnit', e.target.value)}
+                disabled={isSubmitting}
+                required
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-sky-400 disabled:bg-slate-50"
+              >
+                <option value="KG">Kilograms (KG)</option>
+                <option value="MT">Metric Tons (MT)</option>
+                <option value="L">Liters (L)</option>
+                <option value="M3">Cubic Meters (M3)</option>
+                <option value="UNIT">Units</option>
+                <option value="BOX">Boxes</option>
+              </select>
+            </label>
+          </div>
+        </fieldset>
 
-      <div className="form-actions">
-        <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create' : 'Update'}
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={onCancel}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
+        {/* ── Delivery ── */}
+        <fieldset className="space-y-4">
+          <legend className="text-xs font-bold uppercase tracking-wider text-slate-500">Delivery</legend>
+
+          <label className="block space-y-1.5 text-sm font-medium text-slate-700">
+            <span>Delivery Location</span>
+            <input
+              name="deliveryLocation"
+              type="text"
+              value={formData.deliveryLocation}
+              onChange={(e) => onFieldChange('deliveryLocation', e.target.value)}
+              disabled={isSubmitting}
+              maxLength={500}
+              placeholder="e.g. Port of Rotterdam, Netherlands"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-sky-400 disabled:bg-slate-50"
+            />
+          </label>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="block space-y-1.5 text-sm font-medium text-slate-700">
+              <span>Delivery Window Start</span>
+              <input
+                name="deliveryWindowStart"
+                type="datetime-local"
+                value={formData.deliveryWindowStart}
+                onChange={(e) => onFieldChange('deliveryWindowStart', e.target.value)}
+                disabled={isSubmitting}
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-sky-400 disabled:bg-slate-50"
+              />
+            </label>
+
+            <label className="block space-y-1.5 text-sm font-medium text-slate-700">
+              <span>Delivery Window End</span>
+              <input
+                name="deliveryWindowEnd"
+                type="datetime-local"
+                value={formData.deliveryWindowEnd}
+                onChange={(e) => onFieldChange('deliveryWindowEnd', e.target.value)}
+                disabled={isSubmitting}
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-sky-400 disabled:bg-slate-50"
+              />
+            </label>
+          </div>
+        </fieldset>
+
+        {/* ── Form actions ── */}
+        <div className="flex items-center gap-3 border-t border-slate-100 pt-4">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="inline-flex items-center justify-center rounded-xl border border-transparent bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:opacity-50"
+          >
+            {isSubmitting ? 'Saving…' : submitLabel}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
 

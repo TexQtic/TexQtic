@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-08 (TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE. FE-9 production verification complete. QuoteReviewPanel feature-disabled path confirmed. rfq.award.enabled row absent — middleware fails closed. All 14-point §14 checks PASS. QA RFQ b3abfbdb ISSUED. supplier_quotes.enabled=false unchanged (QD-6). DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-09 (TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001 VERIFIED_COMPLETE. DemandLineSurface.tsx Tailwind rewrite + controlled-form data-flow fix. 27 new tests. 91/91 total frontend tests PASS. TypeCheck EXIT 0. Lint clean. No backend/schema/migration/env/flag/production-data changes. QD-6 unchanged. rfq.award.enabled ABSENT. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,36 +15,34 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001
-active_delivery_unit_status: VERIFIED_COMPLETE (2026-06-08)
+active_delivery_unit: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001
+active_delivery_unit_status: VERIFIED_COMPLETE (2026-06-09)
 active_delivery_unit_note: >
-  TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001 IMPLEMENTED_PENDING_PROD_VERIFY (2026-06-08).
-  FE-9 owner-facing award allocation frontend implemented.
-  QuoteReviewPanel component created, integrated inline into PoolRfqSurface.
-  3 service methods added: getOwnerQuotesForRfq, acceptQuoteForRfq, rejectQuoteForRfq.
-  17 frontend tests pass (64/64 total). TypeScript clean.
-  Feature-disabled state: 503 FEATURE_DISABLED → amber banner, NO accept/reject controls.
-  nc.procurement_pools.rfq.award.enabled=false (unchanged — flag activation requires separate Paresh authorization).
+  TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001 VERIFIED_COMPLETE (2026-06-09).
+  DemandLineSurface.tsx fully rewritten: non-Tailwind class names replaced with Tailwind
+  utility classes matching TexQtic platform visual standard (QuoteReviewPanel / SupplierInviteOwnerSurface).
+  Data-flow bug fixed: DemandLineForm made fully controlled component — parent owns formState,
+  passes via onFieldChange callback (old internal useState removed).
+  27 new frontend tests created. 91/91 total frontend tests PASS. pnpm run typecheck EXIT 0.
+  Lint clean on all touched files. No backend/schema/migration/env/flag/production-data changes.
   nc.procurement_pools.supplier_quotes.enabled=false (QD-6 hold unchanged).
+  rfq.award.enabled row ABSENT (FE-10 HOLD_FOR_PARESH_DECISION unchanged).
   DPP: HOLD_FOR_PARESH_DECISION unchanged.
-  Production verification checklist: governance/TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001.md §14.
-  Next: Paresh production verification → VERIFIED_COMPLETE. Flag activation = separate explicit decision.
-  See governance/TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001.md.
-last_closed_unit: TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001
-last_closed_unit_status: IMPLEMENTED_PENDING_PROD_VERIFY
+  See governance/TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001.md.
+last_closed_unit: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001
+last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  Frontend implementation. QuoteReviewPanel + 3 service methods + PoolRfqSurface integration.
-  17 tests pass. TypeScript clean. Feature-disabled state verified in test suite.
-  Production state: QuoteReviewPanel will show feature-disabled amber banner (flag=false).
-  nc.procurement_pools.rfq.award.enabled=false unchanged. supplier_quotes.enabled=false unchanged (QD-6).
-  DPP: HOLD_FOR_PARESH_DECISION.
-last_closed_unit_commits: feat(network-commerce): add award allocation frontend
+  Frontend polish only. DemandLineSurface.tsx Tailwind rewrite + controlled-form fix.
+  27/27 new tests pass. 91/91 total frontend tests pass. pnpm run typecheck exit 0. Lint clean.
+  No backend/schema/migration/env/flag/production-data changes.
+  supplier_quotes.enabled=false unchanged (QD-6). rfq.award.enabled ABSENT. DPP: HOLD_FOR_PARESH_DECISION.
+last_closed_unit_commits: feat(network-commerce): polish demand lines frontend
 last_closed_unit_closure_basis: >-
-  17/17 new FE-9 tests pass. 64/64 total frontend tests pass. pnpm run typecheck exit 0.
-  QuoteReviewPanel renders feature-disabled state when 503 FEATURE_DISABLED — no action controls.
-  Service methods call correct endpoints. Integration in PoolRfqSurface follows FE-8 inline pattern.
-  nc.procurement_pools.rfq.award.enabled=false (unchanged). supplier_quotes.enabled=false (QD-6 unchanged).
-last_closed_unit_prior: TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001
+  27/27 new FE-4 polish tests pass. 91/91 total frontend tests pass. pnpm run typecheck exit 0.
+  Lint clean on DemandLineSurface.tsx and network-commerce-demand-lines.test.tsx.
+  Tailwind rewrite complete. Controlled-component data-flow fix verified via tests.
+  nc.procurement_pools.supplier_quotes.enabled=false (QD-6 unchanged). rfq.award.enabled ABSENT.
+last_closed_unit_prior: TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001
 note_on_pending_verification: >-
   TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
   All 3 AF findings resolved. NC Pools + RFQ + Invite surfaces technically unblocked.

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-08 (TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE. FE-9 production verification complete. QuoteReviewPanel feature-disabled path confirmed in production (v2.4.0). rfq.award.enabled row absent — middleware fails closed → 503 FEATURE_DISABLED. All 14-point §14 checks PASS. QA RFQ b3abfbdb ISSUED, pool → CLOSED_FOR_BIDS. supplier_quotes.enabled=false unchanged (QD-6). DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-06-09 (TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001 VERIFIED_COMPLETE. DemandLineSurface.tsx fully rewritten: non-Tailwind class names replaced with Tailwind utility classes matching TexQtic platform visual standard. Data-flow bug fixed: DemandLineForm made fully controlled (parent owns formState, passes via onFieldChange). 27 new tests created. 91/91 total frontend tests PASS. TypeCheck EXIT 0. Lint clean on touched files. No backend/schema/migration/env/flag/production-data changes. QD-6 unchanged. rfq.award.enabled ABSENT. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
