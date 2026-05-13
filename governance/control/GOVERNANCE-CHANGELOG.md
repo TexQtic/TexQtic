@@ -5,6 +5,27 @@
 
 ---
 
+---
+
+## 2026-06-08 -- IMPLEMENTED_PENDING_PROD_VERIFY: TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001
+
+FE-9 owner-facing award allocation frontend implemented.
+QuoteReviewPanel component created — 5 UI states (loading, feature-disabled, empty, ready, error).
+3 service methods added to networkCommerceService.ts: getOwnerQuotesForRfq, acceptQuoteForRfq, rejectQuoteForRfq.
+Integrated inline into PoolRfqSurface via showQuoteReviewPanel state boolean (FE-8 inline pattern).
+"Review Submitted Quotes" button added to PoolRfqSurface success state.
+Feature-disabled state: 503 FEATURE_DISABLED → amber banner showing nc.procurement_pools.rfq.award.enabled flag name. NO accept/reject controls rendered.
+Accept wiring: acceptQuoteForRfq POST → refresh list. Reject wiring: inline dialog with reason textarea → rejectQuoteForRfq POST → refresh list.
+Data safety: OwnerQuote interface excludes metadataInternalJson (QD-5) and withdrawReason (supplier-internal). Neither field rendered.
+17 new tests created. 64/64 frontend tests pass. pnpm run typecheck exit 0.
+nc.procurement_pools.rfq.award.enabled=false (unchanged — flag row PRESENT in production, enabled=false).
+nc.procurement_pools.supplier_quotes.enabled=false (QD-6 hold unchanged).
+DPP: HOLD_FOR_PARESH_DECISION unchanged.
+No backend changes. No schema changes. No migration changes. No App.tsx changes.
+Commit: feat(network-commerce): add award allocation frontend
+
+---
+
 ## 2026-05-13 -- VERIFIED_COMPLETE: TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001
 
 Production provisioning: re-seed `nc.procurement_pools.rfq.award.enabled = false` into production `feature_flags`.

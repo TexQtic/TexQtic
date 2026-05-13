@@ -694,3 +694,96 @@ export function submitSupplierQuoteForInvite(
     },
   );
 }
+
+// ─── FE-9 Owner Award / Quote Review Methods ──────────────────────────────────
+
+/**
+ * Owner-safe quote record returned by owner award routes.
+ * Excludes metadataInternalJson (QD-5/ops-only) and withdrawReason (supplier-internal).
+ * Phase 1D additions: accepted_at, rejected_at, reject_reason.
+ */
+export interface OwnerQuote {
+  id: string;
+  owner_org_id: string;
+  supplier_org_id: string;
+  rfq_id: string;
+  pool_id: string;
+  invite_id: string;
+  quote_ref: string;
+  /** SUBMITTED | WITHDRAWN | ACCEPTED | REJECTED */
+  status: string;
+  /** Decimal serialized as string */
+  quote_amount: string;
+  currency: string;
+  validity_until: string | null;
+  supplier_note: string | null;
+  submitted_at: string;
+  submitted_by_user_id: string | null;
+  withdrawn_at: string | null;
+  accepted_at: string | null;
+  rejected_at: string | null;
+  reject_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AcceptQuoteInput {
+  request_id?: string | null;
+}
+
+export interface RejectQuoteInput {
+  reject_reason?: string | null;
+  request_id?: string | null;
+}
+
+/**
+ * List all submitted quotes for an RFQ (owner-only).
+ * Returns all statuses: SUBMITTED, WITHDRAWN, ACCEPTED, REJECTED.
+ * Returns [] when no quotes exist.
+ * The feature gate returns 503 FEATURE_DISABLED if nc.procurement_pools.rfq.award.enabled=false.
+ */
+export function getOwnerQuotesForRfq(
+  poolId: string,
+  rfqId: string,
+): Promise<OwnerQuote[]> {
+  return tenantGet<OwnerQuote[]>(
+    `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes`,
+  );
+}
+
+/**
+ * Accept a SUBMITTED quote (owner-only). Atomically mass-rejects all other SUBMITTED
+ * quotes for the same RFQ and transitions pool CLOSED_FOR_BIDS → QUOTED → ACCEPTED.
+ * The feature gate returns 503 FEATURE_DISABLED if nc.procurement_pools.rfq.award.enabled=false.
+ */
+export function acceptQuoteForRfq(
+  poolId: string,
+  rfqId: string,
+  quoteId: string,
+  requestId?: string | null,
+): Promise<OwnerQuote> {
+  return tenantPost<OwnerQuote>(
+    `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes/${quoteId}/accept`,
+    { request_id: requestId ?? null },
+  );
+}
+
+/**
+ * Reject a single SUBMITTED quote (owner-only). Does not transition RFQ or pool state.
+ * The feature gate returns 503 FEATURE_DISABLED if nc.procurement_pools.rfq.award.enabled=false.
+ */
+export function rejectQuoteForRfq(
+  poolId: string,
+  rfqId: string,
+  quoteId: string,
+  rejectReason?: string | null,
+  requestId?: string | null,
+): Promise<OwnerQuote> {
+  return tenantPost<OwnerQuote>(
+    `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes/${quoteId}/reject`,
+    {
+      reject_reason: rejectReason ?? null,
+      request_id: requestId ?? null,
+    },
+  );
+}

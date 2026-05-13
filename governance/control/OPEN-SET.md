@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-13 (TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001 VERIFIED_COMPLETE. Award flag re-seed confirmed. nc.procurement_pools.rfq.award.enabled=false row now PRESENT in production feature_flags. Previously ABSENT despite migration 20260534000000. INSERT 0 1 executed. All 3 award routes confirmed 503 FEATURE_DISABLED with authenticated QA token. Tracker corrected v1.6→v1.7: SEEDED_PROD_ABSENT→PRESENT_FALSE. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-06-08 (TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001 IMPLEMENTED_PENDING_PROD_VERIFY. FE-9 QuoteReviewPanel implemented and integrated into PoolRfqSurface. 17 frontend tests pass. TypeScript clean. nc.procurement_pools.rfq.award.enabled=false unchanged. nc.procurement_pools.supplier_quotes.enabled=false unchanged (QD-6 hold). DPP HOLD_FOR_PARESH_DECISION unchanged. Production verification pending Paresh.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,17 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001 IMPLEMENTED_PENDING_PROD_VERIFY (2026-06-08).
+  FE-9 owner-facing quote review / award allocation frontend implemented.
+  QuoteReviewPanel component created. 3 service methods added to networkCommerceService.ts.
+  Integrated inline into PoolRfqSurface via showQuoteReviewPanel state boolean.
+  17 frontend tests pass (64/64 total). TypeScript clean (pnpm run typecheck exit 0).
+  Feature-disabled state: 503 FEATURE_DISABLED → amber banner, NO accept/reject controls.
+  nc.procurement_pools.rfq.award.enabled=false (unchanged). nc.procurement_pools.supplier_quotes.enabled=false (QD-6 hold unchanged).
+  DPP: HOLD_FOR_PARESH_DECISION unchanged.
+  Production verification checklist in governance/TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001.md §14.
+  See governance/TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001.md.
 
 - TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001 VERIFIED_COMPLETE (2026-05-13).
   Award flag re-seed confirmed. nc.procurement_pools.rfq.award.enabled=false row now PRESENT in production feature_flags.

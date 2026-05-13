@@ -12,6 +12,7 @@ import {
   type NetworkPoolRfq,
 } from '../../../services/networkCommerceService';
 import { LoadingState } from '../../shared/LoadingState';
+import { QuoteReviewPanel } from './QuoteReviewPanel';
 import { SupplierInviteOwnerSurface } from './SupplierInviteOwnerSurface';
 
 type PoolRfqSurfaceProps = Readonly<{
@@ -142,6 +143,7 @@ export function PoolRfqSurface({ poolId, onBack }: PoolRfqSurfaceProps): ReactEl
   const [snapshot, setSnapshot] = useState<DemandSnapshotRecord | null>(null);
   const [issuedRfq, setIssuedRfq] = useState<NetworkPoolRfq | null>(null);
   const [showInviteOwnerPanel, setShowInviteOwnerPanel] = useState(false);
+  const [showQuoteReviewPanel, setShowQuoteReviewPanel] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [formState, setFormState] = useState<IssueFormState>(DEFAULT_FORM_STATE);
 
@@ -174,6 +176,7 @@ export function PoolRfqSurface({ poolId, onBack }: PoolRfqSurfaceProps): ReactEl
       setDemandLines(demandResponse.items);
       setIssuedRfq(null);
       setShowInviteOwnerPanel(false);
+      setShowQuoteReviewPanel(false);
       setSnapshot(null);
 
       if (demandResponse.items.length === 0) {
@@ -195,6 +198,7 @@ export function PoolRfqSurface({ poolId, onBack }: PoolRfqSurfaceProps): ReactEl
       setSnapshot(null);
       setIssuedRfq(null);
       setShowInviteOwnerPanel(false);
+      setShowQuoteReviewPanel(false);
       setUiState(resolution.state);
       setErrorMessage(resolution.message);
     }
@@ -283,6 +287,16 @@ export function PoolRfqSurface({ poolId, onBack }: PoolRfqSurfaceProps): ReactEl
         rfqId={issuedRfq?.id ?? null}
         rfqRef={issuedRfq?.rfq_ref ?? null}
         onBack={() => setShowInviteOwnerPanel(false)}
+      />
+    );
+  }
+
+  if (showQuoteReviewPanel && issuedRfq) {
+    return (
+      <QuoteReviewPanel
+        poolId={poolId}
+        rfqId={issuedRfq.id}
+        onBack={() => setShowQuoteReviewPanel(false)}
       />
     );
   }
@@ -543,6 +557,13 @@ export function PoolRfqSurface({ poolId, onBack }: PoolRfqSurfaceProps): ReactEl
                 className="inline-flex items-center justify-center rounded-xl border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-900 hover:bg-emerald-100 transition"
               >
                 Manage Supplier Invites
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowQuoteReviewPanel(true)}
+                className="inline-flex items-center justify-center rounded-xl border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-900 hover:bg-emerald-100 transition"
+              >
+                Review Submitted Quotes
               </button>
               <p className="self-center text-xs text-emerald-900/80">
                 Owner/admin flow only. Supplier inbox remains a separate later packet.

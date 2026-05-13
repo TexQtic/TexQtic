@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-13 (TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001 VERIFIED_COMPLETE. Award flag re-seed confirmed. nc.procurement_pools.rfq.award.enabled=false row now PRESENT in production feature_flags. Previously ABSENT despite migration 20260534000000. INSERT 0 1 executed. All 3 award routes confirmed 503 FEATURE_DISABLED with authenticated QA token. Tracker corrected v1.6→v1.7: SEEDED_PROD_ABSENT→PRESENT_FALSE. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-08 (TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001 IMPLEMENTED_PENDING_PROD_VERIFY. FE-9 QuoteReviewPanel implemented and integrated. 17 frontend tests pass. nc.procurement_pools.rfq.award.enabled=false unchanged. nc.procurement_pools.supplier_quotes.enabled=false unchanged (QD-6 hold). DPP HOLD_FOR_PARESH_DECISION unchanged. Production verification pending Paresh.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,33 +15,36 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: NONE_AUTHORIZED
-active_delivery_unit_status: NONE_AUTHORIZED
+active_delivery_unit: TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001
+active_delivery_unit_status: IMPLEMENTED_PENDING_PROD_VERIFY
 active_delivery_unit_note: >
-  TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001 VERIFIED_COMPLETE (2026-05-13).
-  Award flag re-seed confirmed. nc.procurement_pools.rfq.award.enabled=false row now PRESENT
-  in production feature_flags. Previously ABSENT despite migration 20260534000000.
-  INSERT 0 1 executed via psql stdin. Post-check: award=f (5 rows total), supplier_quotes=f.
-  All 3 award routes confirmed 503 FEATURE_DISABLED with authenticated QA token.
-  nc.procurement_pools.supplier_quotes.enabled=false (QD-6 hold maintained). Quote count=0.
-  FE-9 (TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001): HOLD_FOR_PARESH_DECISION — do not open.
-  DPP: HOLD_FOR_PARESH_DECISION.
-  See governance/TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001.md.
-last_closed_unit: TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001
-last_closed_unit_status: VERIFIED_COMPLETE
+  TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001 IMPLEMENTED_PENDING_PROD_VERIFY (2026-06-08).
+  FE-9 owner-facing award allocation frontend implemented.
+  QuoteReviewPanel component created, integrated inline into PoolRfqSurface.
+  3 service methods added: getOwnerQuotesForRfq, acceptQuoteForRfq, rejectQuoteForRfq.
+  17 frontend tests pass (64/64 total). TypeScript clean.
+  Feature-disabled state: 503 FEATURE_DISABLED → amber banner, NO accept/reject controls.
+  nc.procurement_pools.rfq.award.enabled=false (unchanged — flag activation requires separate Paresh authorization).
+  nc.procurement_pools.supplier_quotes.enabled=false (QD-6 hold unchanged).
+  DPP: HOLD_FOR_PARESH_DECISION unchanged.
+  Production verification checklist: governance/TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001.md §14.
+  Next: Paresh production verification → VERIFIED_COMPLETE. Flag activation = separate explicit decision.
+  See governance/TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001.md.
+last_closed_unit: TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001
+last_closed_unit_status: IMPLEMENTED_PENDING_PROD_VERIFY
 last_closed_unit_runtime_verdict: >-
-  Production provisioning. Award flag re-seeded false (INSERT 0 1). Row now PRESENT.
-  All 3 award routes return 503 FEATURE_DISABLED (authenticated QA token: qa.b2b@texqtic.com).
-  Gate chain fires: ncPoolFeatureGate → ncPoolRfqFeatureGate → ncPoolRfqAwardFeatureGate.
-  false !== true → 503. supplier_quotes.enabled=f unchanged (QD-6 hold). Quote count=0.
-  FE-9: HOLD_FOR_PARESH_DECISION. DPP: HOLD_FOR_PARESH_DECISION.
-last_closed_unit_commits: docs(network-commerce): verify award flag reseed
+  Frontend implementation. QuoteReviewPanel + 3 service methods + PoolRfqSurface integration.
+  17 tests pass. TypeScript clean. Feature-disabled state verified in test suite.
+  Production state: QuoteReviewPanel will show feature-disabled amber banner (flag=false).
+  nc.procurement_pools.rfq.award.enabled=false unchanged. supplier_quotes.enabled=false unchanged (QD-6).
+  DPP: HOLD_FOR_PARESH_DECISION.
+last_closed_unit_commits: feat(network-commerce): add award allocation frontend
 last_closed_unit_closure_basis: >-
-  INSERT 0 1 — award flag row inserted into production feature_flags, enabled=false.
-  5 rows confirmed in feature_flags post-reseed. supplier_quotes.enabled=f unchanged.
-  3x HTTP 503 FEATURE_DISABLED confirmed (GET quotes, POST accept, POST reject) with auth.
-  Quote row count=0 pre+post. git status --short clean. No source/schema/migration/env changes.
-last_closed_unit_prior: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001
+  17/17 new FE-9 tests pass. 64/64 total frontend tests pass. pnpm run typecheck exit 0.
+  QuoteReviewPanel renders feature-disabled state when 503 FEATURE_DISABLED — no action controls.
+  Service methods call correct endpoints. Integration in PoolRfqSurface follows FE-8 inline pattern.
+  nc.procurement_pools.rfq.award.enabled=false (unchanged). supplier_quotes.enabled=false (QD-6 unchanged).
+last_closed_unit_prior: TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001
 note_on_pending_verification: >-
   TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
   All 3 AF findings resolved. NC Pools + RFQ + Invite surfaces technically unblocked.
