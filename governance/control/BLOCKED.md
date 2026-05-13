@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001 SERVICE_VERIFIED_COMPLETE. 163/163 unit tests PASS. tsc EXIT 0. No blocker state changes in this packet. Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001. QD-6 hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001 ROUTE_VERIFIED_COMPLETE. 16/16 route tests PASS. 163/163 service regression PASS. tsc EXIT 0. commit 8d10fdf. No blocker state changes in this packet. QD-6 hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged. Next: PARESH_DECISION_REQUIRED.)
 
 > Read this file after `NEXT-ACTION.md`. It records only current blockers, holds, and governance
 > exceptions relevant to live Layer 0 posture. It does not originate ordinary product delivery

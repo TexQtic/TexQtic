@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001 SERVICE_VERIFIED_COMPLETE. 4 MC service methods (requestAward, approveAward, rejectAwardApproval, getOwnerPendingAwardApprovals) + 6 private helpers + 6 error classes + 6 DTOs + AWARD_APPROVAL_TTL_MS=72h. 163/163 unit tests PASS. tsc --noEmit EXIT 0. No routes/frontend/schema/migration/env/flag changes. QD-6 hold unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged. Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001.)
+**Last Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001 ROUTE_VERIFIED_COMPLETE. 4 HTTP routes (award-request/approve/reject/list) added to poolRfq.ts. 16 unit tests (MC-ROUTE-01..16). All 16 PASS. 163/163 service regression PASS. tsc EXIT 0. commit 8d10fdf. No frontend/schema/migration/env/flag changes. QD-6 hold unchanged. nc.procurement_pools.rfq.award.enabled ABSENT (fail-closed). DPP HOLD_FOR_PARESH_DECISION unchanged. Next: PARESH_DECISION_REQUIRED.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,25 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001 ROUTE_VERIFIED_COMPLETE (2026-07-01).
+  4 new HTTP routes added to server/src/routes/tenant/poolRfq.ts under ownerAwardPreHandler (3-gate chain).
+  Prefix: /api/tenant/network-commerce/pools/:poolId/rfq/:rfqId/
+    POST quotes/:quoteId/award-request → svc.requestAward() → 201 AwardApprovalRequest (maker)
+    POST award-approvals/:approvalId/approve → svc.approveAward() → 200 AwardApproved (checker)
+    POST award-approvals/:approvalId/reject → svc.rejectAwardApproval() → 200 AwardRejected (checker)
+    GET  award-approvals → svc.getOwnerPendingAwardApprovals() → 200 AwardApprovalRequest[] (read-only)
+  3 MC body schemas: requestAwardBodySchema, approveAwardBodySchema, rejectAwardApprovalBodySchema.
+  approvalParamSchema: poolId, rfqId, approvalId (all uuid). mapMakerCheckerError: 6 MC error → HTTP.
+  userId null-guard on 3 mutating routes (→ 401 if absent); MC methods require string not string|null.
+  All 4 routes gate-closed (nc.procurement_pools.rfq.award.enabled absent → 503 FEATURE_DISABLED).
+  Old /accept route preserved unchanged (legacy compat maintained).
+  16 unit tests (MC-ROUTE-01..16): gate-disabled, happy paths, all 6 error mappings, DTO shape, legacy compat. All PASS.
+  163/163 service regression PASS. tsc --noEmit EXIT 0. commit 8d10fdf.
+  No frontend, schema.prisma, migrations, .env, or feature flag activation changes.
+  QD-6 (supplier_quotes.enabled=false) hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged.
+  Next: PARESH_DECISION_REQUIRED — G-022 Escalation (backend) or FE-10 Award Frontend.
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001.md.
 
 - TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001 SERVICE_VERIFIED_COMPLETE (2026-07-01).
   4 public MC methods added to NetworkPoolRfqService: requestAward (MAKER, actorType=TENANT_ADMIN → SM PENDING_APPROVAL,

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001 SCHEMA_REMOTE_READY_VERIFIED_COMPLETE. All G-021 DB objects verified in remote Supabase: pending_approvals + approval_signatures tables, all required columns, partial unique index pending_approvals_active_unique, trg_check_maker_checker_separation trigger, trg_immutable_approval_signature trigger, RLS policies. POOL QUOTED→ACCEPTED transition unchanged: requires_maker_checker=true, CHECKER in allowed_actor_type. prisma validate/generate/tsc all PASS. No schema migration needed. Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001. QD-6 hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001 ROUTE_VERIFIED_COMPLETE. 4 HTTP routes + 16 unit tests added: POST award-request (201), POST approve (200), POST reject (200), GET award-approvals (200). All 16 route tests PASS. 163/163 service regression PASS. tsc --noEmit EXIT 0. commit 8d10fdf. QD-6 hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged. Next: PARESH_DECISION_REQUIRED.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,38 +15,39 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001
-active_delivery_unit_status: SERVICE_VERIFIED_COMPLETE (2026-07-01)
+active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001
+active_delivery_unit_status: ROUTE_VERIFIED_COMPLETE (2026-07-01)
 active_delivery_unit_note: >
-  TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001 SERVICE_VERIFIED_COMPLETE (2026-07-01).
-  4 public methods implemented in NetworkPoolRfqService: requestAward (MAKER), approveAward (CHECKER),
-  rejectAwardApproval (CHECKER), getOwnerPendingAwardApprovals (read-only).
-  6 private helpers: buildFrozenPayload, hashFrozenPayload (SHA-256), buildMakerPrincipalFingerprint,
-    toAwardApprovalRequest, assertApprovalRequestedAndNotExpired, assertMakerCheckerSeparated.
-  6 new error classes: AwardRequestAlreadyPendingError, ApprovalNotFoundError, ApprovalAlreadyDecidedError,
-    ApprovalExpiredError, MakerCheckerSameActorError, QuoteNoLongerSubmittedError.
-  6 DTOs: RequestAwardInput, ApproveAwardInput, RejectAwardApprovalInput, AwardApprovalRequest,
-    AwardApproved, AwardRejected. AWARD_APPROVAL_TTL_MS=72h.
-  12 new unit tests (MC-SVC-01 through MC-SVC-12). 163/163 tests PASS. tsc --noEmit EXIT 0.
-  No routes, no frontend, no schema.prisma, no migrations, no .env, no feature flags.
+  TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001 ROUTE_VERIFIED_COMPLETE (2026-07-01).
+  4 new HTTP routes added to server/src/routes/tenant/poolRfq.ts under ownerAwardPreHandler (3-gate chain):
+    POST /:poolId/rfq/:rfqId/quotes/:quoteId/award-request → 201 AwardApprovalRequest (maker)
+    POST /:poolId/rfq/:rfqId/award-approvals/:approvalId/approve → 200 AwardApproved (checker)
+    POST /:poolId/rfq/:rfqId/award-approvals/:approvalId/reject → 200 AwardRejected (checker)
+    GET  /:poolId/rfq/:rfqId/award-approvals → 200 AwardApprovalRequest[] (read-only)
+  All 4 routes gate-closed (nc.procurement_pools.rfq.award.enabled absent/false → 503 FEATURE_DISABLED).
+  Old /accept route preserved unchanged.
+  3 MC routes require non-null userId (guard → 401 if absent; maker-checker identity is mandatory).
+  mapMakerCheckerError: 6 error classes mapped to correct HTTP status codes.
+  16 unit tests (MC-ROUTE-01..16): gate-disabled, happy paths, error mappings, DTO shape, legacy compat.
+  All 16 route tests PASS. 163/163 service regression PASS. tsc --noEmit EXIT 0.
+  commit 8d10fdf. No frontend, no schema.prisma, no migrations, no .env, no flag activation.
   QD-6 (supplier_quotes.enabled=false) hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged.
-  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001.md.
-  Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001.
-last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001
-last_closed_unit_status: SCHEMA_REMOTE_READY_VERIFIED_COMPLETE (2026-07-01)
+  Next: PARESH_DECISION_REQUIRED — G-022 Escalation or FE-10 Award Frontend.
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001.md.
+last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001
+last_closed_unit_status: SERVICE_VERIFIED_COMPLETE (2026-07-01)
 last_closed_unit_runtime_verdict: >-
-  All G-021 DB objects confirmed present in remote Supabase: pending_approvals (23 cols),
-  approval_signatures (11 cols), partial unique index pending_approvals_active_unique,
-  trg_check_maker_checker_separation, trg_immutable_approval_signature, RLS policies.
-  POOL QUOTED→ACCEPTED: requires_maker_checker=true, CHECKER in allowed_actor_type — unchanged.
-  prisma validate/generate/tsc PASS. No schema migration required.
-  No source/schema/migration/env/flag changes. QD-6 unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.
-last_closed_unit_commits: docs(governance): record schema packet HEAD hash in changelog
+  4 public MC methods: requestAward, approveAward, rejectAwardApproval, getOwnerPendingAwardApprovals.
+  6 private helpers. 6 error classes. 6 DTOs. AWARD_APPROVAL_TTL_MS=72h.
+  12 unit tests MC-SVC-01 through MC-SVC-12. 163/163 PASS. tsc EXIT 0. commit ef3133f.
+  No routes, no frontend, no schema.prisma, no migrations, no .env, no feature flags.
+  QD-6 unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.
+last_closed_unit_commits: feat(network-commerce): add award maker checker service (ef3133f)
 last_closed_unit_closure_basis: >-
-  All G-021 remote DB objects verified. No schema migration needed. prisma validate/generate/tsc PASS.
-  No source/schema/migration/env/flag changes.
+  163/163 unit tests PASS. tsc --noEmit EXIT 0. No schema/migration/env/flag changes.
   supplier_quotes.enabled=false (QD-6 unchanged). rfq.award.enabled ABSENT.
-last_closed_unit_prior: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001
+  Old /accept route unchanged; no activation of MC routes.
+last_closed_unit_prior: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001
 note_on_pending_verification: >-
   TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
   All 3 AF findings resolved. NC Pools + RFQ + Invite surfaces technically unblocked.

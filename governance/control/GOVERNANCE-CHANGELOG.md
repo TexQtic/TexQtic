@@ -7,6 +7,32 @@
 
 ---
 
+## 2026-07-01 -- ROUTE_VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001
+
+Route layer implementation for G-021 award maker-checker in `server/src/routes/tenant/poolRfq.ts`. No frontend, no schema changes.
+
+**Implementation summary:**
+- 4 new Fastify routes added after existing `/reject` route (all use `ownerAwardPreHandler`, 3-gate preHandler chain):
+  - `POST /:poolId/rfq/:rfqId/quotes/:quoteId/award-request` → `svc.requestAward(...)` → 201 `AwardApprovalRequest`
+  - `POST /:poolId/rfq/:rfqId/award-approvals/:approvalId/approve` → `svc.approveAward(...)` → 200 `AwardApproved`
+  - `POST /:poolId/rfq/:rfqId/award-approvals/:approvalId/reject` → `svc.rejectAwardApproval(...)` → 200 `AwardRejected`
+  - `GET /:poolId/rfq/:rfqId/award-approvals` → `svc.getOwnerPendingAwardApprovals(...)` → 200 `AwardApprovalRequest[]`
+- `approvalParamSchema`: poolId, rfqId, approvalId (all uuid)
+- 3 body schemas: `requestAwardBodySchema`, `approveAwardBodySchema`, `rejectAwardApprovalBodySchema`
+- `mapMakerCheckerError`: maps 6 MC error classes → HTTP 409/404 with governance-canonical codes
+- userId null-guard on 3 mutating routes (MC service methods require `string`, not `string | null` → 401 if absent)
+- Old `/accept` route preserved unchanged (legacy compat)
+
+**Test coverage:** `server/src/__tests__/networkPoolRfq.routes.unit.test.ts` — 16 unit tests (MC-ROUTE-01 through MC-ROUTE-16) — all PASS.
+
+**Validation:** 16/16 route tests PASS. 163/163 service regression tests PASS. `tsc --noEmit` EXIT 0.
+
+**Confirmations:** No frontend, schema.prisma, migrations, env, or feature flag changes. QD-6 hold maintained (supplier_quotes.enabled=false). `nc.procurement_pools.rfq.award.enabled` ABSENT in production (all 4 MC routes fail closed → 503 FEATURE_DISABLED). DPP HOLD_FOR_PARESH_DECISION unchanged.
+
+**Commit:** `8d10fdf` — `feat(network-commerce): add award maker checker routes`
+
+---
+
 ## 2026-07-01 -- SERVICE_VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001
 
 Service layer implementation for G-021 award maker-checker in NetworkPoolRfqService. No routes, no frontend, no schema changes.
