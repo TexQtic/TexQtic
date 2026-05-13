@@ -7,6 +7,21 @@
 
 ---
 
+## 2026-06-08 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-TX-TIMEOUT-FIX-001
+
+Fix Prisma interactive transaction timeout in `issueRfq`. Default 5 s timeout exceeded in Vercel serverless
++ Supabase pooler (≥8 sequential round-trips). SM lifecycle log write received "Transaction not found"
+→ SM denied transition → route returned 422 TRANSITION_DENIED. Fix: add `{ timeout: 30000 }` to
+`issueRfq` `$transaction` call in `networkPoolRfq.service.ts`. Same pattern already used by `acceptQuote`
+(PRQ-54, TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001). Diff: 4 lines. Body/business logic unchanged.
+prisma validate: PASS. tsc --noEmit: EXIT 0. PRQ-16: ✓ PASSED (201). No route/frontend/schema/
+migration/env/flag changes. nc.procurement_pools.rfq.award.enabled=false unchanged.
+nc.procurement_pools.supplier_quotes.enabled=false unchanged (QD-6 hold). DPP: HOLD_FOR_PARESH_DECISION.
+Unblocks FE-9 production verification after deployment.
+See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-TX-TIMEOUT-FIX-001.md.
+
+---
+
 ## 2026-06-08 -- IMPLEMENTED_PENDING_PROD_VERIFY: TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001
 
 FE-9 owner-facing award allocation frontend implemented.

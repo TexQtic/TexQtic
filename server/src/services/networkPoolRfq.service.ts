@@ -422,7 +422,8 @@ export class NetworkPoolRfqService {
     //    All writes (rfq header, rfq lines, pool state update) + SM log write
     //    share one transaction boundary.
     try {
-      const rfqRow = await this.db.$transaction(async (tx) => {
+      const rfqRow = await this.db.$transaction(
+        async (tx) => {
         // 4a. Load pool with current lifecycle state — owner-scoped
         const poolRow = await (tx as any).networkPool.findFirst({
           where:   { id: input.pool_id.trim(), orgId: ownerOrgId },
@@ -561,7 +562,9 @@ export class NetworkPoolRfqService {
         });
 
         return createdRfq;
-      });
+        },
+        { timeout: 30000 },
+      );
 
       return this.toRfqRecord(rfqRow as Record<string, unknown>);
     } catch (err) {

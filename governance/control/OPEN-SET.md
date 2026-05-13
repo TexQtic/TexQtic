@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-08 (TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001 IMPLEMENTED_PENDING_PROD_VERIFY. FE-9 QuoteReviewPanel implemented and integrated into PoolRfqSurface. 17 frontend tests pass. TypeScript clean. nc.procurement_pools.rfq.award.enabled=false unchanged. nc.procurement_pools.supplier_quotes.enabled=false unchanged (QD-6 hold). DPP HOLD_FOR_PARESH_DECISION unchanged. Production verification pending Paresh.)
+**Last Updated:** 2026-06-08 (TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-TX-TIMEOUT-FIX-001 VERIFIED_COMPLETE. issueRfq $transaction timeout fixed: { timeout: 30000 } added. PRQ-16 PASS. tsc EXIT 0. Unblocks FE-9 production verification after deployment. nc.procurement_pools.rfq.award.enabled=false unchanged. nc.procurement_pools.supplier_quotes.enabled=false unchanged (QD-6 hold). DPP HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,15 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-TX-TIMEOUT-FIX-001 VERIFIED_COMPLETE (2026-06-08).
+  Fix: added { timeout: 30000 } to issueRfq $transaction in networkPoolRfq.service.ts.
+  Root cause: default 5 s Prisma tx timeout exceeded in Vercel serverless + Supabase pooler.
+  SM lifecycle log write hit closed tx → 422 TRANSITION_DENIED in production.
+  PRQ-16: ✓ PASSED (201). tsc --noEmit: EXIT 0. prisma validate: PASS.
+  No route/frontend/schema/migration/env/flag changes. QD-6 hold unchanged. DPP unchanged.
+  Unblocks FE-9 (TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-PROD-VERIFY-GOV-CLOSE-001) after deployment.
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-TX-TIMEOUT-FIX-001.md.
 
 - TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001 IMPLEMENTED_PENDING_PROD_VERIFY (2026-06-08).
   FE-9 owner-facing quote review / award allocation frontend implemented.
