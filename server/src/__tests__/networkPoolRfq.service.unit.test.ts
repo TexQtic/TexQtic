@@ -51,6 +51,13 @@ import {
   NetworkPoolRfqSupplierQuoteInviteNotAcceptedError,
   NetworkPoolRfqOwnerQuoteNotFoundError,
   NetworkPoolRfqSupplierQuoteNotInSubmittedError,
+  // G-021 Award Maker-Checker
+  NetworkPoolRfqAwardRequestAlreadyPendingError,
+  NetworkPoolRfqApprovalNotFoundError,
+  NetworkPoolRfqApprovalAlreadyDecidedError,
+  NetworkPoolRfqApprovalExpiredError,
+  NetworkPoolRfqMakerCheckerSameActorError,
+  NetworkPoolRfqQuoteNoLongerSubmittedError,
 } from '../services/networkPoolRfq.service.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -3173,4 +3180,446 @@ describe('P-OWNER-17: PASS — rejectQuote throws TransitionDeniedError when RFQ
   });
 });
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// AWARD MAKER-CHECKER TESTS — TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001
+// 12 tests: MC-SVC-01 → MC-SVC-12
+// ═══════════════════════════════════════════════════════════════════════════════
 
+// ─── MC Constants ─────────────────────────────────────────────────────────────
+
+const MAKER_USER_ID   = 'aaaa1001-0000-0000-0000-000000000001';
+const CHECKER_USER_ID = 'aaaa1002-0000-0000-0000-000000000002';
+const APPROVAL_ID     = 'bbbb1001-0000-0000-0000-000000000001';
+const FUTURE_EXPIRES  = new Date(NOW.getTime() + 72 * 60 * 60 * 1000); // now + 72h
+const PAST_EXPIRES    = new Date('2000-01-01T00:00:00.000Z'); // absolute past
+
+// ─── MC Fixtures ──────────────────────────────────────────────────────────────
+
+function makeFrozenPayload() {
+  return { orgId: OWNER_ORG_ID, poolId: POOL_ID, rfqId: RFQ_ID, quoteId: QUOTE_ID };
+}
+
+/** Produce the same deterministic hash as hashFrozenPayload() */
+function computeExpectedHash(payload: Record<string, string>): string {
+  const sorted = Object.fromEntries(Object.entries(payload).sort(([a], [b]) => a.localeCompare(b)));
+  // Use node:crypto via require — vitest runs in Node so this works
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { createHash } = require('node:crypto') as typeof import('crypto');
+  return createHash('sha256').update(JSON.stringify(sorted)).digest('hex');
+}
+
+function makeApprovalRow(overrides: Record<string, unknown> = {}) {
+  const fp = makeFrozenPayload();
+  return {
+    id:                        APPROVAL_ID,
+    orgId:                     OWNER_ORG_ID,
+    entityType:                'POOL',
+    entityId:                  POOL_ID,
+    fromStateKey:              'QUOTED',
+    toStateKey:                'ACCEPTED',
+    requestedByUserId:         MAKER_USER_ID,
+    requestedByAdminId:        null,
+    requestedByActorType:      'TENANT_ADMIN',
+    requestedByRole:           'NC_POOL_ADMIN',
+    requestReason:             'Need to award the best quote',
+    frozenPayload:             fp,
+    frozenPayloadHash:         computeExpectedHash(fp),
+    makerPrincipalFingerprint: `TENANT_ADMIN:${MAKER_USER_ID}`,
+    status:                    'REQUESTED',
+    attemptCount:              1,
+    expiresAt:                 FUTURE_EXPIRES,
+    escalationId:              null,
+    aiTriggered:               false,
+    impersonationId:           null,
+    requestId:                 null,
+    createdAt:                 NOW,
+    updatedAt:                 NOW,
+    ...overrides,
+  };
+}
+
+// ─── MC Mock Factories ────────────────────────────────────────────────────────
+
+function makeTxForRequestAward(overrides: {
+  networkPool?:                  Record<string, unknown>;
+  networkPoolRfq?:               Record<string, unknown>;
+  networkPoolRfqSupplierQuote?:  Record<string, unknown>;
+  pendingApproval?:              Record<string, unknown>;
+} = {}): any {
+  return {
+    networkPool: {
+      findFirst: vi.fn().mockResolvedValue(makePoolRowForAward('QUOTED')),
+      update:    vi.fn().mockResolvedValue({}),
+      ...(overrides.networkPool ?? {}),
+    },
+    networkPoolRfq: {
+      findFirst: vi.fn().mockResolvedValue(makeRfqRowForAward()),
+      ...(overrides.networkPoolRfq ?? {}),
+    },
+    networkPoolRfqSupplierQuote: {
+      findFirst: vi.fn().mockResolvedValue(makeOwnerQuoteRow()),
+      ...(overrides.networkPoolRfqSupplierQuote ?? {}),
+    },
+    pendingApproval: {
+      create: vi.fn().mockResolvedValue(makeApprovalRow()),
+      ...(overrides.pendingApproval ?? {}),
+    },
+  };
+}
+
+function makeDbForRequestAward(txOverrides?: Parameters<typeof makeTxForRequestAward>[0]): any {
+  const tx = makeTxForRequestAward(txOverrides ?? {});
+  return {
+    lifecycleState: {
+      findUnique: vi.fn().mockResolvedValue({ id: QUOTED_STATE_ID, stateKey: 'QUOTED' }),
+    },
+    $transaction: vi.fn().mockImplementation((fn: (tx: any) => any) => fn(tx)),
+    _mockTx: tx,
+  };
+}
+
+function makeTxForApproveAward(overrides: {
+  pendingApproval?:             Record<string, unknown>;
+  networkPoolRfqSupplierQuote?: Record<string, unknown>;
+  networkPoolRfq?:              Record<string, unknown>;
+  networkPool?:                 Record<string, unknown>;
+  approvalSignature?:           Record<string, unknown>;
+} = {}): any {
+  return {
+    pendingApproval: {
+      findFirst: vi.fn().mockResolvedValue(makeApprovalRow()),
+      update:    vi.fn().mockResolvedValue(makeApprovalRow({ status: 'APPROVED' })),
+      ...(overrides.pendingApproval ?? {}),
+    },
+    networkPoolRfqSupplierQuote: {
+      findFirst:  vi.fn().mockResolvedValue(makeOwnerQuoteRow()),
+      update:     vi.fn().mockResolvedValue(makeOwnerQuoteRow({ status: 'ACCEPTED', acceptedAt: NOW })),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      ...(overrides.networkPoolRfqSupplierQuote ?? {}),
+    },
+    networkPoolRfq: {
+      update: vi.fn().mockResolvedValue({}),
+      ...(overrides.networkPoolRfq ?? {}),
+    },
+    networkPool: {
+      update: vi.fn().mockResolvedValue({}),
+      ...(overrides.networkPool ?? {}),
+    },
+    approvalSignature: {
+      create: vi.fn().mockResolvedValue({ id: 'sig-001' }),
+      ...(overrides.approvalSignature ?? {}),
+    },
+  };
+}
+
+function makeDbForApproveAward(txOverrides?: Parameters<typeof makeTxForApproveAward>[0]): any {
+  const tx = makeTxForApproveAward(txOverrides ?? {});
+  return {
+    lifecycleState: {
+      findUnique: vi.fn().mockResolvedValue({ id: ACCEPTED_STATE_ID, stateKey: 'ACCEPTED' }),
+    },
+    $transaction: vi.fn().mockImplementation((fn: (tx: any) => any) => fn(tx)),
+    _mockTx: tx,
+  };
+}
+
+function makeTxForRejectAwardApproval(overrides: {
+  pendingApproval?:  Record<string, unknown>;
+  approvalSignature?: Record<string, unknown>;
+} = {}): any {
+  return {
+    pendingApproval: {
+      findFirst: vi.fn().mockResolvedValue(makeApprovalRow()),
+      update:    vi.fn().mockResolvedValue(makeApprovalRow({ status: 'REJECTED' })),
+      ...(overrides.pendingApproval ?? {}),
+    },
+    approvalSignature: {
+      create: vi.fn().mockResolvedValue({ id: 'sig-002' }),
+      ...(overrides.approvalSignature ?? {}),
+    },
+  };
+}
+
+function makeDbForRejectAwardApproval(txOverrides?: Parameters<typeof makeTxForRejectAwardApproval>[0]): any {
+  const tx = makeTxForRejectAwardApproval(txOverrides ?? {});
+  return {
+    $transaction: vi.fn().mockImplementation((fn: (tx: any) => any) => fn(tx)),
+    _mockTx: tx,
+  };
+}
+
+// ─── MC-SVC-01: requestAward valid maker \u2192 PENDING_APPROVAL ──────────────────────
+
+describe('MC-SVC-01: PASS — requestAward valid maker returns AwardApprovalRequest with status=REQUESTED', () => {
+  it('returns AwardApprovalRequest and creates pendingApproval row', async () => {
+    const db  = makeDbForRequestAward();
+    const sm  = makeSm();
+    sm.transition = vi.fn().mockResolvedValue({ status: 'PENDING_APPROVAL' });
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.requestAward(OWNER_ORG_ID, MAKER_USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, {
+      request_reason: 'Best price',
+    });
+
+    expect(result.status).toBe('REQUESTED');
+    expect(result.entity_type).toBe('POOL');
+    expect(result.from_state_key).toBe('QUOTED');
+    expect(result.to_state_key).toBe('ACCEPTED');
+    expect(result.requested_by_user_id).toBe(MAKER_USER_ID);
+    expect(db._mockTx.pendingApproval.create).toHaveBeenCalledOnce();
+  });
+});
+
+// ─── MC-SVC-02: requestAward duplicate \u2192 AlreadyPendingError ──────────────────────
+
+describe('MC-SVC-02: FAIL — requestAward duplicate P2002 throws NetworkPoolRfqAwardRequestAlreadyPendingError', () => {
+  it('maps Prisma P2002 to NetworkPoolRfqAwardRequestAlreadyPendingError', async () => {
+    const db = makeDbForRequestAward({
+      pendingApproval: {
+        create: vi.fn().mockRejectedValue(
+          Object.assign(new Error('Unique constraint'), { code: 'P2002', name: 'PrismaClientKnownRequestError', meta: {} }),
+        ),
+      },
+    });
+    const sm = makeSm();
+    sm.transition = vi.fn().mockResolvedValue({ status: 'PENDING_APPROVAL' });
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    // We need to make the thrown error be a real Prisma instance for the instanceof check.
+    // Directly test by injecting an error that matches the code path via a db.$transaction wrapper.
+    const Prisma = await import('@prisma/client').then(m => m.Prisma);
+    const p2002 = new Prisma.PrismaClientKnownRequestError('Unique constraint', {
+      code: 'P2002',
+      clientVersion: '0.0.0',
+    });
+    db._mockTx.pendingApproval.create.mockRejectedValueOnce(p2002);
+
+    await expect(
+      svc.requestAward(OWNER_ORG_ID, MAKER_USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, { request_reason: 'dup' }),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqAwardRequestAlreadyPendingError);
+  });
+});
+
+// ─── MC-SVC-03: requestAward does NOT accept quote or update RFQ to ACCEPTED ────
+
+describe('MC-SVC-03: PASS — requestAward does NOT accept quote or advance RFQ to ACCEPTED', () => {
+  it('pendingApproval.create called but networkPoolRfqSupplierQuote.update is never called', async () => {
+    const db = makeDbForRequestAward();
+    const sm = makeSm();
+    sm.transition = vi.fn().mockResolvedValue({ status: 'PENDING_APPROVAL' });
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.requestAward(OWNER_ORG_ID, MAKER_USER_ID, POOL_ID, RFQ_ID, QUOTE_ID, { request_reason: 'Test' });
+
+    // Quote update must NOT have been called (no ACCEPTED transition)
+    expect(db._mockTx.networkPoolRfqSupplierQuote).not.toHaveProperty('update');
+    // Approval create was called
+    expect(db._mockTx.pendingApproval.create).toHaveBeenCalledOnce();
+  });
+});
+
+// ─── MC-SVC-04: approveAward valid checker \u2192 AwardApproved ──────────────────────
+
+describe('MC-SVC-04: PASS — approveAward valid checker completes award and returns AwardApproved', () => {
+  it('returns AwardApproved with approval.status=APPROVED and accepted quote DTO', async () => {
+    const db  = makeDbForApproveAward();
+    const sm  = makeSm();
+    sm.transition = vi.fn().mockResolvedValue({
+      status:        'APPLIED',
+      transitionId:  LOG_ID,
+      entityType:    'POOL',
+      entityId:      POOL_ID,
+      fromStateKey:  'QUOTED',
+      toStateKey:    'ACCEPTED',
+      createdAt:     NOW,
+    });
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.approveAward(OWNER_ORG_ID, CHECKER_USER_ID, APPROVAL_ID, {
+      approve_reason: 'Approved',
+    });
+
+    expect(result.approval.status).toBe('APPROVED');
+    expect(result.quote.status).toBe('ACCEPTED');
+    expect(sm.transition).toHaveBeenCalledOnce();
+    const smCall = sm.transition.mock.calls[0][0];
+    expect(smCall.actorType).toBe('CHECKER');
+    expect(smCall.makerUserId).toBe(MAKER_USER_ID);
+    expect(smCall.checkerUserId).toBe(CHECKER_USER_ID);
+  });
+});
+
+// ─── MC-SVC-05: approveAward mass-rejects other SUBMITTED quotes ─────────────
+
+describe('MC-SVC-05: PASS — approveAward mass-rejects other SUBMITTED quotes for same RFQ', () => {
+  it('updateMany called with status SUBMITTED and id: { not: quoteId }', async () => {
+    const db  = makeDbForApproveAward();
+    const sm  = makeSm();
+    sm.transition = vi.fn().mockResolvedValue({ status: 'APPLIED', transitionId: LOG_ID, entityType: 'POOL', entityId: POOL_ID, fromStateKey: 'QUOTED', toStateKey: 'ACCEPTED', createdAt: NOW });
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await svc.approveAward(OWNER_ORG_ID, CHECKER_USER_ID, APPROVAL_ID, { approve_reason: 'ok' });
+
+    const updateManyCall = db._mockTx.networkPoolRfqSupplierQuote.updateMany.mock.calls[0][0];
+    expect(updateManyCall.where.status).toBe('SUBMITTED');
+    expect(updateManyCall.where.id.not).toBe(QUOTE_ID);
+    expect(updateManyCall.data.status).toBe('REJECTED');
+  });
+});
+
+// ─── MC-SVC-06: approveAward same checker = maker \u2192 SameActorError ──────────────
+
+describe('MC-SVC-06: FAIL — approveAward checker === maker throws NetworkPoolRfqMakerCheckerSameActorError', () => {
+  it('throws when checkerUserId equals requestedByUserId in approval row', async () => {
+    const db = makeDbForApproveAward({
+      pendingApproval: {
+        // Approval row where maker = MAKER_USER_ID
+        findFirst: vi.fn().mockResolvedValue(makeApprovalRow({ requestedByUserId: CHECKER_USER_ID })),
+        update:    vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.approveAward(OWNER_ORG_ID, CHECKER_USER_ID, APPROVAL_ID, { approve_reason: 'ok' }),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqMakerCheckerSameActorError);
+
+    expect(sm.transition).not.toHaveBeenCalled();
+  });
+});
+
+// ─── MC-SVC-07: approveAward expired \u2192 ExpiredError ────────────────────────────
+
+describe('MC-SVC-07: FAIL — approveAward expired approval throws NetworkPoolRfqApprovalExpiredError', () => {
+  it('throws when expiresAt is in the past', async () => {
+    const db = makeDbForApproveAward({
+      pendingApproval: {
+        findFirst: vi.fn().mockResolvedValue(makeApprovalRow({ expiresAt: PAST_EXPIRES })),
+        update:    vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.approveAward(OWNER_ORG_ID, CHECKER_USER_ID, APPROVAL_ID, { approve_reason: 'ok' }),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqApprovalExpiredError);
+
+    expect(sm.transition).not.toHaveBeenCalled();
+  });
+});
+
+// ─── MC-SVC-08: approveAward already decided \u2192 AlreadyDecidedError ────────────
+
+describe('MC-SVC-08: FAIL — approveAward already decided approval throws NetworkPoolRfqApprovalAlreadyDecidedError', () => {
+  it('throws when approval status is APPROVED', async () => {
+    const db = makeDbForApproveAward({
+      pendingApproval: {
+        findFirst: vi.fn().mockResolvedValue(makeApprovalRow({ status: 'APPROVED' })),
+        update:    vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.approveAward(OWNER_ORG_ID, CHECKER_USER_ID, APPROVAL_ID, { approve_reason: 'ok' }),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqApprovalAlreadyDecidedError);
+  });
+});
+
+// ─── MC-SVC-09: approveAward quote no longer SUBMITTED \u2192 QuoteNoLongerSubmittedError
+
+describe('MC-SVC-09: FAIL — approveAward quote no longer SUBMITTED throws NetworkPoolRfqQuoteNoLongerSubmittedError', () => {
+  it('throws when quote.status is WITHDRAWN at time of checker action', async () => {
+    const db = makeDbForApproveAward({
+      networkPoolRfqSupplierQuote: {
+        findFirst:  vi.fn().mockResolvedValue(makeOwnerQuoteRow({ status: 'WITHDRAWN' })),
+        update:     vi.fn(),
+        updateMany: vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.approveAward(OWNER_ORG_ID, CHECKER_USER_ID, APPROVAL_ID, { approve_reason: 'ok' }),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqQuoteNoLongerSubmittedError);
+
+    expect(sm.transition).not.toHaveBeenCalled();
+  });
+});
+
+// ─── MC-SVC-10: rejectAwardApproval \u2192 REJECTED + signature, no pool/RFQ change ──
+
+describe('MC-SVC-10: PASS — rejectAwardApproval sets REJECTED + inserts signature, no pool/RFQ/quote change', () => {
+  it('updates approval to REJECTED and inserts signature; SM is never called', async () => {
+    const db  = makeDbForRejectAwardApproval();
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.rejectAwardApproval(OWNER_ORG_ID, CHECKER_USER_ID, APPROVAL_ID, {
+      reject_reason: 'Price too high',
+    });
+
+    expect(result.approval.status).toBe('REJECTED');
+    expect(sm.transition).not.toHaveBeenCalled();
+    expect(db._mockTx.approvalSignature.create).toHaveBeenCalledOnce();
+    const sigCall = db._mockTx.approvalSignature.create.mock.calls[0][0];
+    expect(sigCall.data.decision).toBe('REJECTED');
+    expect(sigCall.data.signerActorType).toBe('CHECKER');
+    // No networkPool, networkPoolRfq, or networkPoolRfqSupplierQuote in this tx mock
+    expect(db._mockTx).not.toHaveProperty('networkPoolRfq');
+    expect(db._mockTx).not.toHaveProperty('networkPoolRfqSupplierQuote');
+  });
+});
+
+// ─── MC-SVC-11: getOwnerPendingAwardApprovals \u2192 owner-scoped REQUESTED list ──────
+
+describe('MC-SVC-11: PASS — getOwnerPendingAwardApprovals returns only owner-scoped REQUESTED approvals', () => {
+  it('filters by orgId, entityType=POOL, entityId=poolId, status=REQUESTED and rfqId in frozenPayload', async () => {
+    const matchingRow = makeApprovalRow();
+    const otherRfqRow = makeApprovalRow({
+      id:            'bbbb2002-0000-0000-0000-000000000002',
+      frozenPayload: { orgId: OWNER_ORG_ID, poolId: POOL_ID, rfqId: 'other-rfq-id', quoteId: QUOTE_ID },
+    });
+    const db: any = {
+      pendingApproval: {
+        findMany: vi.fn().mockResolvedValue([matchingRow, otherRfqRow]),
+      },
+    };
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.getOwnerPendingAwardApprovals(OWNER_ORG_ID, POOL_ID, RFQ_ID);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe(APPROVAL_ID);
+    expect(result[0]).not.toHaveProperty('frozenPayloadHash');
+    expect(result[0]).not.toHaveProperty('makerPrincipalFingerprint');
+  });
+});
+
+// ─── MC-SVC-12: approveAward frozen payload hash mismatch blocks award ──────
+
+describe('MC-SVC-12: FAIL — approveAward frozen payload hash mismatch throws NetworkPoolRfqApprovalNotFoundError', () => {
+  it('throws when stored frozenPayloadHash does not match recomputed hash', async () => {
+    const db = makeDbForApproveAward({
+      pendingApproval: {
+        findFirst: vi.fn().mockResolvedValue(
+          makeApprovalRow({ frozenPayloadHash: 'deadbeef'.repeat(8) }), // wrong hash
+        ),
+        update: vi.fn(),
+      },
+    });
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.approveAward(OWNER_ORG_ID, CHECKER_USER_ID, APPROVAL_ID, { approve_reason: 'ok' }),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqApprovalNotFoundError);
+
+    expect(sm.transition).not.toHaveBeenCalled();
+  });
+});

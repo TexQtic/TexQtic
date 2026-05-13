@@ -15,36 +15,36 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001
-active_delivery_unit_status: SCHEMA_REMOTE_READY_VERIFIED_COMPLETE (2026-07-01)
+active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001
+active_delivery_unit_status: SERVICE_VERIFIED_COMPLETE (2026-07-01)
 active_delivery_unit_note: >
-  TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001 SCHEMA_REMOTE_READY_VERIFIED_COMPLETE (2026-07-01).
-  All G-021 schema objects verified present in remote Supabase DB and server/prisma/schema.prisma.
-  Remote tables confirmed: public.pending_approvals (23 columns), public.approval_signatures (11 columns).
-  Unique partial index: pending_approvals_active_unique (org_id, entity_type, entity_id, from_state_key,
-    to_state_key) WHERE status IN ('REQUESTED','ESCALATED') — enforces one active approval per entity/transition.
-  Triggers: trg_check_maker_checker_separation (AFTER INSERT on approval_signatures) + function
-    check_maker_checker_separation (public schema) both present. trg_immutable_approval_signature
-    (BEFORE UPDATE/DELETE on approval_signatures) present — append-only enforced at DB level.
-  RLS: pending_approvals — INSERT/SELECT/UPDATE tenant-scoped, DELETE=false. approval_signatures —
-    INSERT/SELECT only, UPDATE=false, DELETE=false. Full G-021 RLS posture confirmed.
-  POOL QUOTED→ACCEPTED transition: requires_maker_checker=true, CHECKER in allowed_actor_type — unchanged.
-  Prisma validate: schema valid. Prisma generate: Client v6.1.0 generated. tsc --noEmit: zero errors.
-  No schema migration required. No source/schema/migration/env/flag changes.
-  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001.md.
-  Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001.
-last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001
-last_closed_unit_status: DESIGN_COMPLETE (2026-07-01)
+  TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001 SERVICE_VERIFIED_COMPLETE (2026-07-01).
+  4 public methods implemented in NetworkPoolRfqService: requestAward (MAKER), approveAward (CHECKER),
+  rejectAwardApproval (CHECKER), getOwnerPendingAwardApprovals (read-only).
+  6 private helpers: buildFrozenPayload, hashFrozenPayload (SHA-256), buildMakerPrincipalFingerprint,
+    toAwardApprovalRequest, assertApprovalRequestedAndNotExpired, assertMakerCheckerSeparated.
+  6 new error classes: AwardRequestAlreadyPendingError, ApprovalNotFoundError, ApprovalAlreadyDecidedError,
+    ApprovalExpiredError, MakerCheckerSameActorError, QuoteNoLongerSubmittedError.
+  6 DTOs: RequestAwardInput, ApproveAwardInput, RejectAwardApprovalInput, AwardApprovalRequest,
+    AwardApproved, AwardRejected. AWARD_APPROVAL_TTL_MS=72h.
+  12 new unit tests (MC-SVC-01 through MC-SVC-12). 163/163 tests PASS. tsc --noEmit EXIT 0.
+  No routes, no frontend, no schema.prisma, no migrations, no .env, no feature flags.
+  QD-6 (supplier_quotes.enabled=false) hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged.
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001.md.
+  Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001.
+last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001
+last_closed_unit_status: SCHEMA_REMOTE_READY_VERIFIED_COMPLETE (2026-07-01)
 last_closed_unit_runtime_verdict: >-
-  FE-4 prod verify only. DemandLineSurface polished surface confirmed in production.
-  12/12 browser checklist PASS. Controlled-form typed-value retention confirmed.
-  No data mutation. supplier_quotes.enabled=false unchanged (QD-6). rfq.award.enabled ABSENT.
-  DPP: HOLD_FOR_PARESH_DECISION.
-last_closed_unit_commits: docs(network-commerce): verify demand lines uiux production surface
+  All G-021 DB objects confirmed present in remote Supabase: pending_approvals (23 cols),
+  approval_signatures (11 cols), partial unique index pending_approvals_active_unique,
+  trg_check_maker_checker_separation, trg_immutable_approval_signature, RLS policies.
+  POOL QUOTED→ACCEPTED: requires_maker_checker=true, CHECKER in allowed_actor_type — unchanged.
+  prisma validate/generate/tsc PASS. No schema migration required.
+  No source/schema/migration/env/flag changes. QD-6 unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.
+last_closed_unit_commits: docs(governance): record schema packet HEAD hash in changelog
 last_closed_unit_closure_basis: >-
-  12/12 prod browser checklist PASS. Polished surface confirmed via screenshot.
-  Controlled-form fix confirmed (typed value retained). No data mutation.
-  DB post-check confirms all invariants unchanged.
+  All G-021 remote DB objects verified. No schema migration needed. prisma validate/generate/tsc PASS.
+  No source/schema/migration/env/flag changes.
   supplier_quotes.enabled=false (QD-6 unchanged). rfq.award.enabled ABSENT.
 last_closed_unit_prior: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001
 note_on_pending_verification: >-

@@ -21,7 +21,7 @@
  * D-017-A: ownerOrgId and userId are ALWAYS sourced from JWT/dbContext — never from caller body.
  */
 
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { Prisma } from '@prisma/client';
 import type { PrismaClient } from '@prisma/client';
 import type { StateMachineService } from './stateMachine.service.js';
@@ -173,6 +173,50 @@ export class NetworkPoolRfqSupplierQuoteNotInSubmittedError extends Error {
       `Only SUBMITTED quotes may be acted on.`,
     );
     this.name = 'NetworkPoolRfqSupplierQuoteNotInSubmittedError';
+  }
+}
+
+// ─── G-021: Award Maker-Checker Error Classes ─────────────────────────────────
+
+export class NetworkPoolRfqAwardRequestAlreadyPendingError extends Error {
+  constructor() {
+    super('An award approval request is already pending or escalated for this quote transition.');
+    this.name = 'NetworkPoolRfqAwardRequestAlreadyPendingError';
+  }
+}
+
+export class NetworkPoolRfqApprovalNotFoundError extends Error {
+  constructor() {
+    super('Pending approval not found for this organisation.');
+    this.name = 'NetworkPoolRfqApprovalNotFoundError';
+  }
+}
+
+export class NetworkPoolRfqApprovalAlreadyDecidedError extends Error {
+  constructor(currentStatus: string) {
+    super(`Approval has already been decided. Current status: '${currentStatus}'.`);
+    this.name = 'NetworkPoolRfqApprovalAlreadyDecidedError';
+  }
+}
+
+export class NetworkPoolRfqApprovalExpiredError extends Error {
+  constructor() {
+    super('The award approval request has expired and can no longer be acted on.');
+    this.name = 'NetworkPoolRfqApprovalExpiredError';
+  }
+}
+
+export class NetworkPoolRfqMakerCheckerSameActorError extends Error {
+  constructor() {
+    super('Maker-checker separation violation: the checker cannot be the same user as the maker.');
+    this.name = 'NetworkPoolRfqMakerCheckerSameActorError';
+  }
+}
+
+export class NetworkPoolRfqQuoteNoLongerSubmittedError extends Error {
+  constructor(currentStatus: string) {
+    super(`Quote is no longer SUBMITTED; cannot complete award. Current status: '${currentStatus}'.`);
+    this.name = 'NetworkPoolRfqQuoteNoLongerSubmittedError';
   }
 }
 
@@ -341,6 +385,49 @@ export interface RejectQuoteInput {
   reject_reason?: string | null;
   request_id?:    string | null;
 }
+
+// ─── G-021: Award Maker-Checker Input / Record Types ─────────────────────────
+
+export interface RequestAwardInput {
+  request_reason: string;
+  request_id?:    string | null;
+}
+
+export interface ApproveAwardInput {
+  approve_reason: string;
+  request_id?:    string | null;
+}
+
+export interface RejectAwardApprovalInput {
+  reject_reason: string;
+  request_id?:   string | null;
+}
+
+/** G-021: Award approval request DTO (no frozenPayloadHash, no makerPrincipalFingerprint). */
+export interface AwardApprovalRequest {
+  id:                   string;
+  status:               string;
+  expires_at:           string;
+  entity_type:          string;
+  entity_id:            string;
+  from_state_key:       string;
+  to_state_key:         string;
+  requested_by_user_id: string | null;
+  request_reason:       string | null;
+  created_at:           string;
+}
+
+export interface AwardApproved {
+  approval: AwardApprovalRequest;
+  quote:    NetworkPoolRfqSupplierQuoteOwnerRecord;
+}
+
+export interface AwardRejected {
+  approval: AwardApprovalRequest;
+}
+
+/** TTL for award approval requests. D-021-A. */
+const AWARD_APPROVAL_TTL_MS = 72 * 60 * 60 * 1000; // 72 hours
 
 // ─── Service ──────────────────────────────────────────────────────────────────
 
@@ -1790,5 +1877,514 @@ export class NetworkPoolRfqService {
     });
 
     return this.toQuoteOwnerRecord(rejectedRow as Record<string, unknown>);
+  }
+
+  // ── G-021: Award Maker-Checker Private Helpers ───────────────────────────────
+
+  /** G-021: Build frozen payload object for a POOL→ACCEPTED award approval. */
+  private buildFrozenPayload(params: {
+    orgId:    string;
+    poolId:   string;
+    rfqId:    string;
+    quoteId:  string;
+  }): Record<string, string> {
+    return {
+      orgId:   params.orgId,
+      poolId:  params.poolId,
+      rfqId:   params.rfqId,
+      quoteId: params.quoteId,
+    };
+  }
+
+  /** G-021: SHA-256 hex over alphabetically-sorted canonical JSON stringify. */
+  private hashFrozenPayload(payload: object): string {
+    const sorted = Object.fromEntries(
+      Object.entries(payload).sort(([a], [b]) => a.localeCompare(b)),
+    );
+    return createHash('sha256').update(JSON.stringify(sorted)).digest('hex');
+  }
+
+  /** G-021 D-021-C: "{actorType}:{userId}" maker principal fingerprint. */
+  private buildMakerPrincipalFingerprint(actorType: string, userId: string): string {
+    return `${actorType}:${userId}`;
+  }
+
+  /** Map pending_approvals DB row → AwardApprovalRequest DTO. */
+  private toAwardApprovalRequest(row: Record<string, unknown>): AwardApprovalRequest {
+    return {
+      id:                   String(row['id']),
+      status:               String(row['status']),
+      expires_at:           new Date(row['expiresAt'] as Date | string).toISOString(),
+      entity_type:          String(row['entityType']),
+      entity_id:            String(row['entityId']),
+      from_state_key:       String(row['fromStateKey']),
+      to_state_key:         String(row['toStateKey']),
+      requested_by_user_id: row['requestedByUserId'] != null ? String(row['requestedByUserId']) : null,
+      request_reason:       row['requestReason'] != null ? String(row['requestReason']) : null,
+      created_at:           new Date(row['createdAt'] as Date | string).toISOString(),
+    };
+  }
+
+  /** Assert pending_approvals row is REQUESTED and not expired. */
+  private assertApprovalRequestedAndNotExpired(row: Record<string, unknown>): void {
+    const status = String(row['status']);
+    if (status !== 'REQUESTED') {
+      throw new NetworkPoolRfqApprovalAlreadyDecidedError(status);
+    }
+    const expiresAt = row['expiresAt'] as Date;
+    if (expiresAt <= new Date()) {
+      throw new NetworkPoolRfqApprovalExpiredError();
+    }
+  }
+
+  /** Assert checker ≠ maker (D-021-C maker-checker separation). */
+  private assertMakerCheckerSeparated(row: Record<string, unknown>, checkerUserId: string): void {
+    const makerUserId = row['requestedByUserId'] != null ? String(row['requestedByUserId']) : null;
+    if (makerUserId != null && makerUserId === checkerUserId) {
+      throw new NetworkPoolRfqMakerCheckerSameActorError();
+    }
+  }
+
+  // ── requestAward ─────────────────────────────────────────────────────────────
+
+  /**
+   * Maker (TENANT_ADMIN) requests award approval for a SUBMITTED quote.
+   *
+   * G-021 §4: SM QUOTED→ACCEPTED returns PENDING_APPROVAL for TENANT_ADMIN actor.
+   * If pool is CLOSED_FOR_BIDS, advances pool CLOSED_FOR_BIDS→QUOTED first.
+   * Inserts pending_approvals row; D-021 partial unique index prevents duplicates.
+   * Does NOT accept the quote or update RFQ/pool to ACCEPTED.
+   *
+   * @throws NetworkPoolRfqAwardRequestAlreadyPendingError on P2002 unique violation.
+   */
+  async requestAward(
+    orgId:        string,
+    makerUserId:  string,
+    poolId:       string,
+    rfqId:        string,
+    quoteId:      string,
+    input:        RequestAwardInput,
+  ): Promise<AwardApprovalRequest> {
+    // Pre-load QUOTED lifecycle state (needed if pool is CLOSED_FOR_BIDS)
+    const quotedState = await (this.db as any).lifecycleState.findUnique({
+      where:  { entityType_stateKey: { entityType: 'POOL', stateKey: 'QUOTED' } },
+      select: { id: true, stateKey: true },
+    }) as { id: string; stateKey: string } | null;
+
+    try {
+      const approvalRow = await this.db.$transaction(async (tx) => {
+        // 1. Verify pool ownership
+        const pool = await (tx as any).networkPool.findFirst({
+          where:   { id: poolId, orgId },
+          include: { lifecycleState: { select: { stateKey: true, id: true } } },
+        });
+        if (!pool) {
+          throw new NetworkPoolRfqPoolNotFoundError();
+        }
+        const poolStateKey: string = (pool.lifecycleState as any).stateKey;
+
+        // 2. Verify RFQ is QUOTED
+        const rfq = await (tx as any).networkPoolRfq.findFirst({
+          where: { id: rfqId, poolId, ownerOrgId: orgId },
+        });
+        if (!rfq) {
+          throw new NetworkPoolRfqRfqNotFoundError();
+        }
+        if ((rfq as any).status !== 'QUOTED') {
+          throw new NetworkPoolRfqTransitionDeniedError(
+            'RFQ_NOT_QUOTED',
+            `RFQ status must be QUOTED to request award. Current: '${(rfq as any).status}'.`,
+          );
+        }
+
+        // 3. Verify quote is SUBMITTED
+        const quote = await (tx as any).networkPoolRfqSupplierQuote.findFirst({
+          where: { id: quoteId, rfqId, ownerOrgId: orgId },
+        });
+        if (!quote) {
+          throw new NetworkPoolRfqOwnerQuoteNotFoundError();
+        }
+        if ((quote as any).status !== 'SUBMITTED') {
+          throw new NetworkPoolRfqSupplierQuoteNotInSubmittedError((quote as any).status);
+        }
+
+        const now = new Date();
+
+        // 4. If pool is CLOSED_FOR_BIDS, advance to QUOTED first (same as acceptQuote step 8)
+        if (poolStateKey === 'CLOSED_FOR_BIDS') {
+          if (!quotedState) {
+            throw new NetworkPoolRfqInvalidPoolStateError(
+              'POOL lifecycle state QUOTED not found in database.',
+            );
+          }
+          const sm1Result = await this.stateMachine.transition(
+            {
+              entityType:   'POOL',
+              entityId:     poolId,
+              orgId,
+              fromStateKey: 'CLOSED_FOR_BIDS',
+              toStateKey:   'QUOTED',
+              actorType:    'TENANT_ADMIN',
+              actorUserId:  makerUserId,
+              actorAdminId: null,
+              actorRole:    'NC_POOL_ADMIN',
+              reason:       `nc_pool_rfq_award_request_pool_to_quoted: rfq=${rfqId}, quote=${quoteId}`,
+              requestId:    input.request_id ?? null,
+            },
+            { db: tx as unknown as PrismaClient },
+          );
+          if (sm1Result.status !== 'APPLIED') {
+            const denied = sm1Result as { status: string; code?: string; message?: string };
+            throw new NetworkPoolRfqTransitionDeniedError(
+              denied.code ?? sm1Result.status,
+              denied.message ?? `SM returned status '${sm1Result.status}'`,
+            );
+          }
+          await (tx as any).networkPool.update({
+            where: { id: poolId },
+            data:  { lifecycleStateId: quotedState.id, updatedAt: now },
+          });
+        } else if (poolStateKey !== 'QUOTED') {
+          throw new NetworkPoolRfqInvalidPoolStateError(
+            `Pool must be in CLOSED_FOR_BIDS or QUOTED state to request award. Current: '${poolStateKey}'.`,
+          );
+        }
+
+        // 5. SM QUOTED→ACCEPTED with TENANT_ADMIN actor → expect PENDING_APPROVAL
+        const smResult = await this.stateMachine.transition(
+          {
+            entityType:   'POOL',
+            entityId:     poolId,
+            orgId,
+            fromStateKey: 'QUOTED',
+            toStateKey:   'ACCEPTED',
+            actorType:    'TENANT_ADMIN',
+            actorUserId:  makerUserId,
+            actorAdminId: null,
+            actorRole:    'NC_POOL_ADMIN',
+            reason:       `nc_pool_rfq_award_approval_requested: maker=${makerUserId}, rfq=${rfqId}, quote=${quoteId}`,
+            requestId:    input.request_id ?? null,
+          },
+          { db: tx as unknown as PrismaClient },
+        );
+        if (smResult.status !== 'PENDING_APPROVAL') {
+          const denied = smResult as { status: string; code?: string; message?: string };
+          throw new NetworkPoolRfqTransitionDeniedError(
+            denied.code ?? smResult.status,
+            denied.message ?? `SM returned status '${smResult.status}' — expected PENDING_APPROVAL`,
+          );
+        }
+
+        // 6. INSERT pending_approvals row
+        const frozenPayload            = this.buildFrozenPayload({ orgId, poolId, rfqId, quoteId });
+        const frozenPayloadHash        = this.hashFrozenPayload(frozenPayload);
+        const makerPrincipalFingerprint = this.buildMakerPrincipalFingerprint('TENANT_ADMIN', makerUserId);
+        const expiresAt                = new Date(now.getTime() + AWARD_APPROVAL_TTL_MS);
+
+        return await (tx as any).pendingApproval.create({
+          data: {
+            orgId,
+            entityType:                'POOL',
+            entityId:                 poolId,
+            fromStateKey:             'QUOTED',
+            toStateKey:               'ACCEPTED',
+            requestedByUserId:        makerUserId,
+            requestedByAdminId:       null,
+            requestedByActorType:     'TENANT_ADMIN',
+            requestedByRole:          'NC_POOL_ADMIN',
+            requestReason:            input.request_reason,
+            frozenPayload,
+            frozenPayloadHash,
+            makerPrincipalFingerprint,
+            status:                   'REQUESTED',
+            attemptCount:             1,
+            expiresAt,
+            escalationId:             null,
+            aiTriggered:              false,
+            impersonationId:          null,
+            requestId:                input.request_id ?? null,
+          },
+        });
+      }, { timeout: 30000 });
+
+      return this.toAwardApprovalRequest(approvalRow as Record<string, unknown>);
+    } catch (err) {
+      if (
+        err instanceof NetworkPoolRfqPoolNotFoundError              ||
+        err instanceof NetworkPoolRfqInvalidPoolStateError          ||
+        err instanceof NetworkPoolRfqRfqNotFoundError               ||
+        err instanceof NetworkPoolRfqOwnerQuoteNotFoundError        ||
+        err instanceof NetworkPoolRfqSupplierQuoteNotInSubmittedError ||
+        err instanceof NetworkPoolRfqTransitionDeniedError
+      ) {
+        throw err;
+      }
+      // P2002 on partial unique index (org_id, entity_type, entity_id, from_state_key, to_state_key)
+      // WHERE status IN ('REQUESTED','ESCALATED') → already pending
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new NetworkPoolRfqAwardRequestAlreadyPendingError();
+      }
+      throw err;
+    }
+  }
+
+  // ── approveAward ──────────────────────────────────────────────────────────────
+
+  /**
+   * Checker (CHECKER actor) approves a pending award approval request.
+   *
+   * G-021 §4: SM QUOTED→ACCEPTED with CHECKER + makerUserId returns APPLIED.
+   * Advances pool to ACCEPTED, accepts quote, mass-rejects others, closes RFQ.
+   * Inserts ApprovalSignature; D-021-C DB trigger enforces maker ≠ checker at DB layer.
+   *
+   * @throws NetworkPoolRfqApprovalNotFoundError if approval not found or tampered.
+   * @throws NetworkPoolRfqApprovalAlreadyDecidedError if not REQUESTED.
+   * @throws NetworkPoolRfqApprovalExpiredError if TTL elapsed.
+   * @throws NetworkPoolRfqMakerCheckerSameActorError if checker === maker.
+   * @throws NetworkPoolRfqQuoteNoLongerSubmittedError if quote moved out of SUBMITTED.
+   */
+  async approveAward(
+    orgId:          string,
+    checkerUserId:  string,
+    approvalId:     string,
+    input:          ApproveAwardInput,
+  ): Promise<AwardApproved> {
+    // Pre-load ACCEPTED lifecycle state ID (needed to update pool after SM returns APPLIED)
+    const acceptedState = await (this.db as any).lifecycleState.findUnique({
+      where:  { entityType_stateKey: { entityType: 'POOL', stateKey: 'ACCEPTED' } },
+      select: { id: true, stateKey: true },
+    }) as { id: string; stateKey: string } | null;
+    if (!acceptedState) {
+      throw new NetworkPoolRfqInvalidPoolStateError(
+        'POOL lifecycle state ACCEPTED not found in database.',
+      );
+    }
+
+    const txResult = await this.db.$transaction(async (tx) => {
+      // 1. Load pending_approvals by { id: approvalId, orgId }
+      const approval = await (tx as any).pendingApproval.findFirst({
+        where: { id: approvalId, orgId },
+      });
+      if (!approval) {
+        throw new NetworkPoolRfqApprovalNotFoundError();
+      }
+
+      // 2. Assert REQUESTED and not expired
+      this.assertApprovalRequestedAndNotExpired(approval as Record<string, unknown>);
+
+      // 3. Verify frozen payload hash
+      const storedPayload  = (approval as any).frozenPayload as Record<string, unknown>;
+      const recomputedHash = this.hashFrozenPayload(storedPayload);
+      if (recomputedHash !== String((approval as any).frozenPayloadHash)) {
+        throw new NetworkPoolRfqApprovalNotFoundError();
+      }
+
+      // 4. Enforce checker ≠ maker
+      this.assertMakerCheckerSeparated(approval as Record<string, unknown>, checkerUserId);
+
+      // Extract coordinates from frozen payload
+      const poolId      = String(storedPayload['poolId']);
+      const rfqId       = String(storedPayload['rfqId']);
+      const quoteId     = String(storedPayload['quoteId']);
+      const makerUserId = (approval as any).requestedByUserId as string | null;
+
+      // 5. Re-load quote; verify still SUBMITTED
+      const quote = await (tx as any).networkPoolRfqSupplierQuote.findFirst({
+        where: { id: quoteId, rfqId, ownerOrgId: orgId },
+      });
+      if (!quote) {
+        throw new NetworkPoolRfqOwnerQuoteNotFoundError();
+      }
+      if ((quote as any).status !== 'SUBMITTED') {
+        throw new NetworkPoolRfqQuoteNoLongerSubmittedError((quote as any).status);
+      }
+
+      const now = new Date();
+
+      // 6. SM QUOTED→ACCEPTED with CHECKER actor + makerUserId + checkerUserId → expect APPLIED
+      const smResult = await this.stateMachine.transition(
+        {
+          entityType:    'POOL',
+          entityId:      poolId,
+          orgId,
+          fromStateKey:  'QUOTED',
+          toStateKey:    'ACCEPTED',
+          actorType:     'CHECKER',
+          actorUserId:   checkerUserId,
+          actorAdminId:  null,
+          actorRole:     'NC_POOL_ADMIN',
+          makerUserId:   makerUserId ?? undefined,
+          checkerUserId: checkerUserId,
+          reason:        `nc_pool_rfq_award_approved: checker=${checkerUserId}, maker=${makerUserId ?? 'unknown'}, rfq=${rfqId}, quote=${quoteId}`,
+          requestId:     input.request_id ?? null,
+        },
+        { db: tx as unknown as PrismaClient },
+      );
+      if (smResult.status !== 'APPLIED') {
+        const denied = smResult as { status: string; code?: string; message?: string };
+        throw new NetworkPoolRfqTransitionDeniedError(
+          denied.code ?? smResult.status,
+          denied.message ?? `SM returned status '${smResult.status}' — expected APPLIED`,
+        );
+      }
+
+      // Update pool.lifecycleStateId → ACCEPTED
+      await (tx as any).networkPool.update({
+        where: { id: poolId },
+        data:  { lifecycleStateId: acceptedState.id, updatedAt: now },
+      });
+
+      // 7. UPDATE quote status='ACCEPTED'
+      const updatedQuote = await (tx as any).networkPoolRfqSupplierQuote.update({
+        where: { id: quoteId },
+        data:  { status: 'ACCEPTED', acceptedAt: now, updatedAt: now },
+      });
+
+      // 8. AD-1: Mass-reject all other SUBMITTED quotes for same RFQ
+      await (tx as any).networkPoolRfqSupplierQuote.updateMany({
+        where: { rfqId, ownerOrgId: orgId, status: 'SUBMITTED', id: { not: quoteId } },
+        data:  { status: 'REJECTED', rejectedAt: now, updatedAt: now },
+      });
+
+      // 9. QD-8: UPDATE RFQ status='ACCEPTED' — direct DB update
+      await (tx as any).networkPoolRfq.update({
+        where: { id: rfqId },
+        data:  { status: 'ACCEPTED', updatedAt: now },
+      });
+
+      // 10. UPDATE pending_approvals status='APPROVED'
+      const updatedApproval = await (tx as any).pendingApproval.update({
+        where: { id: approvalId },
+        data:  { status: 'APPROVED', updatedAt: now },
+      });
+
+      // 11. INSERT ApprovalSignature (decision='APPROVED')
+      await (tx as any).approvalSignature.create({
+        data: {
+          approvalId,
+          orgId,
+          signerUserId:    checkerUserId,
+          signerAdminId:   null,
+          signerActorType: 'CHECKER',
+          signerRole:      'NC_POOL_ADMIN',
+          decision:        'APPROVED',
+          reason:          input.approve_reason,
+          impersonationId: null,
+        },
+      });
+
+      return {
+        approval: updatedApproval as Record<string, unknown>,
+        quote:    updatedQuote   as Record<string, unknown>,
+      };
+    }, { timeout: 30000 });
+
+    return {
+      approval: this.toAwardApprovalRequest(txResult.approval),
+      quote:    this.toQuoteOwnerRecord(txResult.quote),
+    };
+  }
+
+  // ── rejectAwardApproval ───────────────────────────────────────────────────────
+
+  /**
+   * Checker rejects a pending award approval request.
+   *
+   * G-021 §4: No SM call. Pool, RFQ, and quote states are NOT changed.
+   * Sets pending_approvals.status='REJECTED'; inserts ApprovalSignature.
+   *
+   * @throws NetworkPoolRfqApprovalNotFoundError if approval not found or already decided.
+   * @throws NetworkPoolRfqApprovalExpiredError if TTL elapsed.
+   * @throws NetworkPoolRfqMakerCheckerSameActorError if checker === maker.
+   */
+  async rejectAwardApproval(
+    orgId:          string,
+    checkerUserId:  string,
+    approvalId:     string,
+    input:          RejectAwardApprovalInput,
+  ): Promise<AwardRejected> {
+    const updatedApproval = await this.db.$transaction(async (tx) => {
+      // 1. Load pending_approvals scoped to { id, orgId, status: 'REQUESTED' }
+      const approval = await (tx as any).pendingApproval.findFirst({
+        where: { id: approvalId, orgId, status: 'REQUESTED' },
+      });
+      if (!approval) {
+        throw new NetworkPoolRfqApprovalNotFoundError();
+      }
+
+      // 2. Verify not expired
+      const expiresAt = (approval as any).expiresAt as Date;
+      if (expiresAt <= new Date()) {
+        throw new NetworkPoolRfqApprovalExpiredError();
+      }
+
+      // 3. Enforce checker ≠ maker
+      this.assertMakerCheckerSeparated(approval as Record<string, unknown>, checkerUserId);
+
+      const now = new Date();
+
+      // 4. No SM call. No pool/RFQ/quote state change.
+
+      // 5. UPDATE pending_approvals status='REJECTED'
+      const updated = await (tx as any).pendingApproval.update({
+        where: { id: approvalId },
+        data:  { status: 'REJECTED', updatedAt: now },
+      });
+
+      // 6. INSERT ApprovalSignature (decision='REJECTED')
+      await (tx as any).approvalSignature.create({
+        data: {
+          approvalId,
+          orgId,
+          signerUserId:    checkerUserId,
+          signerAdminId:   null,
+          signerActorType: 'CHECKER',
+          signerRole:      'NC_POOL_ADMIN',
+          decision:        'REJECTED',
+          reason:          input.reject_reason,
+          impersonationId: null,
+        },
+      });
+
+      return updated;
+    });
+
+    return { approval: this.toAwardApprovalRequest(updatedApproval as Record<string, unknown>) };
+  }
+
+  // ── getOwnerPendingAwardApprovals ─────────────────────────────────────────────
+
+  /**
+   * Owner retrieves REQUESTED award approvals for a specific pool+RFQ.
+   *
+   * G-021 §4: Filters by orgId, entityType='POOL', entityId=poolId, status='REQUESTED'.
+   * Post-filters application-side by frozenPayload.rfqId for RFQ scoping.
+   * Does NOT include frozenPayloadHash or makerPrincipalFingerprint in the response.
+   */
+  async getOwnerPendingAwardApprovals(
+    orgId:  string,
+    poolId: string,
+    rfqId:  string,
+  ): Promise<AwardApprovalRequest[]> {
+    const rows = await (this.db as any).pendingApproval.findMany({
+      where: {
+        orgId,
+        entityType: 'POOL',
+        entityId:   poolId,
+        status:     'REQUESTED',
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Post-filter: scope to rows whose frozenPayload.rfqId matches
+    const filtered = (rows as Record<string, unknown>[]).filter((row) => {
+      const payload = row['frozenPayload'] as Record<string, unknown> | null;
+      return payload != null && String(payload['rfqId']) === rfqId;
+    });
+
+    return filtered.map((row) => this.toAwardApprovalRequest(row));
   }
 }

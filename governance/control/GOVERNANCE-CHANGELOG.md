@@ -7,6 +7,27 @@
 
 ---
 
+## 2026-07-01 -- SERVICE_VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001
+
+Service layer implementation for G-021 award maker-checker in NetworkPoolRfqService. No routes, no frontend, no schema changes.
+
+**Implementation summary:**
+- 4 public methods: `requestAward` (MAKER), `approveAward` (CHECKER), `rejectAwardApproval` (CHECKER), `getOwnerPendingAwardApprovals` (read-only)
+- 6 private helpers: `buildFrozenPayload`, `hashFrozenPayload` (SHA-256), `buildMakerPrincipalFingerprint`, `toAwardApprovalRequest`, `assertApprovalRequestedAndNotExpired`, `assertMakerCheckerSeparated`
+- 6 new error classes: `NetworkPoolRfqAwardRequestAlreadyPendingError`, `NetworkPoolRfqApprovalNotFoundError`, `NetworkPoolRfqApprovalAlreadyDecidedError`, `NetworkPoolRfqApprovalExpiredError`, `NetworkPoolRfqMakerCheckerSameActorError`, `NetworkPoolRfqQuoteNoLongerSubmittedError`
+- 6 DTOs: `RequestAwardInput`, `ApproveAwardInput`, `RejectAwardApprovalInput`, `AwardApprovalRequest`, `AwardApproved`, `AwardRejected`
+- `AWARD_APPROVAL_TTL_MS = 72 * 60 * 60 * 1000` (72h TTL)
+- 12 unit tests MC-SVC-01 through MC-SVC-12
+
+**Validation:** 163/163 unit tests PASS. `tsc --noEmit` EXIT 0.
+
+**Confirmations:** No routes, frontend, schema.prisma, migrations, env, or feature flag changes. QD-6 hold maintained (supplier_quotes.enabled=false). DPP HOLD_FOR_PARESH_DECISION unchanged. POOL QUOTED→ACCEPTED transition unchanged.
+
+**Next packet:** TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001.  
+**Git HEAD at close:** (see commit)
+
+---
+
 ## 2026-07-01 -- SCHEMA_REMOTE_READY_VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001
 
 Schema remote readiness verification for the maker-checker award flow G-021 foundation.

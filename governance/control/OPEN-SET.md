@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001 SCHEMA_REMOTE_READY_VERIFIED_COMPLETE. All G-021 DB objects verified in remote Supabase: pending_approvals + approval_signatures tables, all columns, partial unique index pending_approvals_active_unique, trg_check_maker_checker_separation trigger, trg_immutable_approval_signature trigger, RLS policies. POOL QUOTED→ACCEPTED transition unchanged. prisma validate/generate/tsc PASS. No schema migration needed. No source/schema/migration/env/flag changes. Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001. QD-6 hold unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001 SERVICE_VERIFIED_COMPLETE. 4 MC service methods (requestAward, approveAward, rejectAwardApproval, getOwnerPendingAwardApprovals) + 6 private helpers + 6 error classes + 6 DTOs + AWARD_APPROVAL_TTL_MS=72h. 163/163 unit tests PASS. tsc --noEmit EXIT 0. No routes/frontend/schema/migration/env/flag changes. QD-6 hold unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged. Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,19 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001 SERVICE_VERIFIED_COMPLETE (2026-07-01).
+  4 public MC methods added to NetworkPoolRfqService: requestAward (MAKER, actorType=TENANT_ADMIN → SM PENDING_APPROVAL,
+  creates pendingApproval row), approveAward (CHECKER, actorType=CHECKER + makerUserId → SM APPLIED, full award tx),
+  rejectAwardApproval (CHECKER, no SM call, status=REJECTED + signature), getOwnerPendingAwardApprovals (read-only).
+  6 private helpers: buildFrozenPayload, hashFrozenPayload (SHA-256 alphabetically sorted JSON), buildMakerPrincipalFingerprint,
+    toAwardApprovalRequest, assertApprovalRequestedAndNotExpired, assertMakerCheckerSeparated.
+  6 new error classes: AwardRequestAlreadyPendingError, ApprovalNotFoundError, ApprovalAlreadyDecidedError,
+    ApprovalExpiredError, MakerCheckerSameActorError, QuoteNoLongerSubmittedError.
+  6 DTOs + AWARD_APPROVAL_TTL_MS=72h. 12 unit tests (MC-SVC-01→12). 163/163 PASS. tsc EXIT 0.
+  No routes, frontend, schema, migrations, env, or flag changes. QD-6 hold maintained.
+  DPP HOLD_FOR_PARESH_DECISION unchanged. Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001.
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001.md.
 
 - TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001 SCHEMA_REMOTE_READY_VERIFIED_COMPLETE (2026-07-01).
   All G-021 schema objects verified present in remote Supabase DB and server/prisma/schema.prisma.
