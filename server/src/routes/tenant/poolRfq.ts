@@ -40,6 +40,12 @@ import {
   NetworkPoolRfqSupplierInviteInvalidTransitionError,
   NetworkPoolRfqOwnerQuoteNotFoundError,
   NetworkPoolRfqSupplierQuoteNotInSubmittedError,
+  NetworkPoolRfqAwardRequestAlreadyPendingError,
+  NetworkPoolRfqApprovalNotFoundError,
+  NetworkPoolRfqApprovalAlreadyDecidedError,
+  NetworkPoolRfqApprovalExpiredError,
+  NetworkPoolRfqMakerCheckerSameActorError,
+  NetworkPoolRfqQuoteNoLongerSubmittedError,
 } from '../../services/networkPoolRfq.service.js';
 
 // ─── Param / Body Schemas ─────────────────────────────────────────────────────
@@ -65,6 +71,12 @@ const rfqQuoteParamSchema = z.object({
   poolId:  z.string().uuid('poolId must be a valid UUID'),
   rfqId:   z.string().uuid('rfqId must be a valid UUID'),
   quoteId: z.string().uuid('quoteId must be a valid UUID'),
+});
+
+const approvalParamSchema = z.object({
+  poolId:     uuidSchema,
+  rfqId:      uuidSchema,
+  approvalId: uuidSchema,
 });
 
 const issueRfqBodySchema = z
@@ -126,6 +138,30 @@ const acceptQuoteBodySchema = z
 const rejectQuoteBodySchema = z
   .object({
     reject_reason: z.string().max(5000, 'reject_reason max 5000 chars').nullable().optional(),
+    request_id:    z.string().max(255, 'request_id max 255 chars').nullable().optional(),
+  })
+  .strict();
+
+// POST award-request body — strict. MC-021: maker requests award approval.
+const requestAwardBodySchema = z
+  .object({
+    request_reason: z.string().max(5000, 'request_reason max 5000 chars'),
+    request_id:     z.string().max(255, 'request_id max 255 chars').nullable().optional(),
+  })
+  .strict();
+
+// POST approve award body — strict. MC-021: checker approves award.
+const approveAwardBodySchema = z
+  .object({
+    approve_reason: z.string().max(5000, 'approve_reason max 5000 chars'),
+    request_id:     z.string().max(255, 'request_id max 255 chars').nullable().optional(),
+  })
+  .strict();
+
+// POST reject award approval body — strict. MC-021: checker rejects award.
+const rejectAwardApprovalBodySchema = z
+  .object({
+    reject_reason: z.string().max(5000, 'reject_reason max 5000 chars'),
     request_id:    z.string().max(255, 'request_id max 255 chars').nullable().optional(),
   })
   .strict();
@@ -308,6 +344,42 @@ function mapAwardRouteError(
   }
   if (err instanceof NetworkPoolRfqConflictError) {
     sendError(reply, 'CONFLICT', err.message, 409);
+    return true;
+  }
+  return false;
+}
+
+// ─── Maker-Checker Error Mapper ──────────────────────────────────────────────
+//
+// Maps MC award service errors to HTTP responses.
+// Called by all 4 MC award routes (award-request, approve, reject, list).
+
+function mapMakerCheckerError(
+  reply: Parameters<typeof sendError>[0],
+  err: unknown,
+): boolean {
+  if (err instanceof NetworkPoolRfqAwardRequestAlreadyPendingError) {
+    sendError(reply, 'AWARD_REQUEST_ALREADY_PENDING', err.message, 409);
+    return true;
+  }
+  if (err instanceof NetworkPoolRfqApprovalNotFoundError) {
+    sendError(reply, 'APPROVAL_NOT_FOUND', err.message, 404);
+    return true;
+  }
+  if (err instanceof NetworkPoolRfqApprovalAlreadyDecidedError) {
+    sendError(reply, 'APPROVAL_ALREADY_DECIDED', err.message, 409);
+    return true;
+  }
+  if (err instanceof NetworkPoolRfqApprovalExpiredError) {
+    sendError(reply, 'APPROVAL_EXPIRED', err.message, 409);
+    return true;
+  }
+  if (err instanceof NetworkPoolRfqMakerCheckerSameActorError) {
+    sendError(reply, 'MAKER_CHECKER_SAME_ACTOR', err.message, 409);
+    return true;
+  }
+  if (err instanceof NetworkPoolRfqQuoteNoLongerSubmittedError) {
+    sendError(reply, 'QUOTE_NO_LONGER_SUBMITTED', err.message, 409);
     return true;
   }
   return false;
@@ -705,6 +777,191 @@ const poolRfqRoutes: FastifyPluginAsync = async fastify => {
         if (mapAwardRouteError(reply, err)) return;
         request.log.error(err, 'network-commerce.pool-rfq.quote.reject');
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to reject quote', 500);
+      }
+    },
+  );
+
+  // ─── Maker-Checker Award Routes ─────────────────────────────────────────────
+  //
+  // MC-021: 4 routes for the maker-checker award flow.
+  //   POST /:poolId/rfq/:rfqId/quotes/:quoteId/award-request
+  //   POST /:poolId/rfq/:rfqId/award-approvals/:approvalId/approve
+  //   POST /:poolId/rfq/:rfqId/award-approvals/:approvalId/reject
+  //   GET  /:poolId/rfq/:rfqId/award-approvals
+  //
+  // All 4 use ownerAwardPreHandler (3-gate chain).
+  // D-017-A: orgId from request.dbContext.orgId; userId from request.userId.
+  // Old /accept route preserved unchanged; NOT converted to maker-checker.
+  // Feature flag nc.procurement_pools.rfq.award.enabled is absent/false in production
+  // → all 4 routes fail closed (503 FEATURE_DISABLED) until explicitly enabled.
+
+  // POST /:poolId/rfq/:rfqId/quotes/:quoteId/award-request — maker requests award
+  //
+  // Body (strict): request_reason (required, max 5000), request_id? (optional, nullable, max 255).
+  // Returns 201 AwardApprovalRequest DTO (no frozenPayload / frozenPayloadHash).
+  fastify.post(
+    '/:poolId/rfq/:rfqId/quotes/:quoteId/award-request',
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: ownerAwardPreHandler,
+    },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+
+      const userRole = (request.userRole ?? '').trim().toUpperCase();
+      if (!userRole.includes('ADMIN') && userRole !== 'OWNER') {
+        return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may request an award', 403);
+      }
+
+      const paramResult = rfqQuoteParamSchema.safeParse(request.params);
+      if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
+
+      const body = request.body ?? {};
+      const bodyResult = requestAwardBodySchema.safeParse(body);
+      if (!handleBodyValidation(reply, bodyResult)) return;
+
+      const { poolId, rfqId, quoteId } = paramResult.data;
+      const orgId  = dbContext.orgId;
+      const userId = request.userId;
+      if (!userId) return sendError(reply, 'UNAUTHORIZED', 'User identity required for maker-checker actions', 401);
+
+      try {
+        const svc = new NetworkPoolRfqService(prisma, new StateMachineService(prisma, null, null));
+        const record = await svc.requestAward(orgId, userId, poolId, rfqId, quoteId, bodyResult.data);
+        return sendSuccess(reply, record, 201);
+      } catch (err) {
+        if (mapMakerCheckerError(reply, err)) return;
+        if (mapAwardRouteError(reply, err)) return;
+        request.log.error(err, 'network-commerce.pool-rfq.award.request');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to request award approval', 500);
+      }
+    },
+  );
+
+  // POST /:poolId/rfq/:rfqId/award-approvals/:approvalId/approve — checker approves award
+  //
+  // Body (strict): approve_reason (required, max 5000), request_id? (optional, nullable, max 255).
+  // poolId/rfqId validated in params; service validates hierarchy via frozen payload.
+  // Returns 200 AwardApproved DTO { approval, quote }.
+  fastify.post(
+    '/:poolId/rfq/:rfqId/award-approvals/:approvalId/approve',
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: ownerAwardPreHandler,
+    },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+
+      const userRole = (request.userRole ?? '').trim().toUpperCase();
+      if (!userRole.includes('ADMIN') && userRole !== 'OWNER') {
+        return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may approve an award', 403);
+      }
+
+      const paramResult = approvalParamSchema.safeParse(request.params);
+      if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
+
+      const body = request.body ?? {};
+      const bodyResult = approveAwardBodySchema.safeParse(body);
+      if (!handleBodyValidation(reply, bodyResult)) return;
+
+      const { approvalId } = paramResult.data;
+      const orgId  = dbContext.orgId;
+      const userId = request.userId;
+      if (!userId) return sendError(reply, 'UNAUTHORIZED', 'User identity required for maker-checker actions', 401);
+
+      try {
+        const svc = new NetworkPoolRfqService(prisma, new StateMachineService(prisma, null, null));
+        const record = await svc.approveAward(orgId, userId, approvalId, bodyResult.data);
+        return sendSuccess(reply, record, 200);
+      } catch (err) {
+        if (mapMakerCheckerError(reply, err)) return;
+        if (mapAwardRouteError(reply, err)) return;
+        request.log.error(err, 'network-commerce.pool-rfq.award.approve');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to approve award', 500);
+      }
+    },
+  );
+
+  // POST /:poolId/rfq/:rfqId/award-approvals/:approvalId/reject — checker rejects award
+  //
+  // Body (strict): reject_reason (required, max 5000), request_id? (optional, nullable, max 255).
+  // poolId/rfqId validated in params; service validates hierarchy via frozen payload.
+  // Returns 200 AwardRejected DTO { approval }.
+  fastify.post(
+    '/:poolId/rfq/:rfqId/award-approvals/:approvalId/reject',
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: ownerAwardPreHandler,
+    },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+
+      const userRole = (request.userRole ?? '').trim().toUpperCase();
+      if (!userRole.includes('ADMIN') && userRole !== 'OWNER') {
+        return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may reject an award', 403);
+      }
+
+      const paramResult = approvalParamSchema.safeParse(request.params);
+      if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
+
+      const body = request.body ?? {};
+      const bodyResult = rejectAwardApprovalBodySchema.safeParse(body);
+      if (!handleBodyValidation(reply, bodyResult)) return;
+
+      const { approvalId } = paramResult.data;
+      const orgId  = dbContext.orgId;
+      const userId = request.userId;
+      if (!userId) return sendError(reply, 'UNAUTHORIZED', 'User identity required for maker-checker actions', 401);
+
+      try {
+        const svc = new NetworkPoolRfqService(prisma, new StateMachineService(prisma, null, null));
+        const record = await svc.rejectAwardApproval(orgId, userId, approvalId, bodyResult.data);
+        return sendSuccess(reply, record, 200);
+      } catch (err) {
+        if (mapMakerCheckerError(reply, err)) return;
+        if (mapAwardRouteError(reply, err)) return;
+        request.log.error(err, 'network-commerce.pool-rfq.award.reject');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to reject award approval', 500);
+      }
+    },
+  );
+
+  // GET /:poolId/rfq/:rfqId/award-approvals — list owner pending award approvals
+  //
+  // No body. Returns AwardApprovalRequest[] (no frozenPayload / frozenPayloadHash).
+  fastify.get(
+    '/:poolId/rfq/:rfqId/award-approvals',
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: ownerAwardPreHandler,
+    },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+
+      const userRole = (request.userRole ?? '').trim().toUpperCase();
+      if (!userRole.includes('ADMIN') && userRole !== 'OWNER') {
+        return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may list award approvals', 403);
+      }
+
+      const paramResult = rfqParamSchema.safeParse(request.params);
+      if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
+
+      const { poolId, rfqId } = paramResult.data;
+      const orgId = dbContext.orgId;
+
+      try {
+        const svc = new NetworkPoolRfqService(prisma, new StateMachineService(prisma, null, null));
+        const records = await svc.getOwnerPendingAwardApprovals(orgId, poolId, rfqId);
+        return sendSuccess(reply, records, 200);
+      } catch (err) {
+        if (mapMakerCheckerError(reply, err)) return;
+        if (mapAwardRouteError(reply, err)) return;
+        request.log.error(err, 'network-commerce.pool-rfq.award.list');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to list award approvals', 500);
       }
     },
   );
