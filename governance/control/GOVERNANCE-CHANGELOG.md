@@ -5,6 +5,21 @@
 
 ---
 
+## 2026-05-13 -- VERIFIED_COMPLETE: TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001
+
+Production provisioning: re-seed `nc.procurement_pools.rfq.award.enabled = false` into production `feature_flags`.
+Prior session (AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001, 2026-05-12) found the row ABSENT despite migration 20260534000000 recorded in `_prisma_migrations` (finished_at 2026-05-12T06:31:31Z).
+Idempotent SQL executed via psql stdin pipe: `INSERT INTO feature_flags (key, enabled, ...) VALUES ('nc.procurement_pools.rfq.award.enabled', false, ...) ON CONFLICT (key) DO UPDATE SET enabled = false, updated_at = NOW();` → `INSERT 0 1`.
+Post-check: 5 rows in production `feature_flags`; `nc.procurement_pools.rfq.award.enabled = f`; `nc.procurement_pools.supplier_quotes.enabled = f` (QD-6 hold unchanged).
+Production route gate verification: all 3 award routes return 503 FEATURE_DISABLED with authenticated QA token (qa.b2b@texqtic.com, tenant faf2e4a7-5d79-4b00-811b-8d0dce4f4d80).
+GET quotes + POST accept + POST reject all return `{"success":false,"error":{"code":"FEATURE_DISABLED","message":"Network Commerce procurement pool RFQ award is disabled."}}`.
+Quote row count = 0 unchanged. No source/schema/migration/test/env changes. No feature flag activated. No quote submitted/accepted/rejected.
+Tracker updated: v1.6 → v1.7. §9 award flag status: SEEDED_PROD_ABSENT → PRESENT_FALSE. Appendix D: flags 4→5, routes 23→26. §17 corrected.
+FE-9: HOLD_FOR_PARESH_DECISION. DPP: HOLD_FOR_PARESH_DECISION.
+Commit: docs(network-commerce): verify award flag reseed
+
+---
+
 ## 2026-05-12 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001
 
 Production verification of AWARD-ROUTE-001 backend route packet in deployed production environment.

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE. All 3 award routes 503 FEATURE_DISABLED in production. Gate chain verified. Award flag row absent from production feature_flags — middleware fails closed; safety posture maintained. Quote count=0 unchanged. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-13 (TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001 VERIFIED_COMPLETE. Award flag re-seed confirmed. nc.procurement_pools.rfq.award.enabled=false row now PRESENT in production feature_flags. Previously ABSENT despite migration 20260534000000. INSERT 0 1 executed. All 3 award routes confirmed 503 FEATURE_DISABLED with authenticated QA token. Tracker corrected v1.6→v1.7: SEEDED_PROD_ABSENT→PRESENT_FALSE. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -18,31 +18,30 @@ product_delivery_priority: >-
 active_delivery_unit: NONE_AUTHORIZED
 active_delivery_unit_status: NONE_AUTHORIZED
 active_delivery_unit_note: >
-  TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE (2026-05-12).
-  All 3 award routes (GET quotes, POST accept, POST reject) return 503 FEATURE_DISABLED in production.
-  3-level gate chain (ncPoolFeatureGate → ncPoolRfqFeatureGate → ncPoolRfqAwardFeatureGate) verified.
-  FINDING: nc.procurement_pools.rfq.award.enabled row absent from production feature_flags.
-  Middleware fails closed: null?.enabled → undefined !== true → 503. Safety posture: MAINTAINED.
-  Re-seed to false recommended as separate provisioning packet (Paresh authorization required).
-  nc.procurement_pools.supplier_quotes.enabled=false (QD-6 hold maintained). Quote count=0 pre+post.
+  TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001 VERIFIED_COMPLETE (2026-05-13).
+  Award flag re-seed confirmed. nc.procurement_pools.rfq.award.enabled=false row now PRESENT
+  in production feature_flags. Previously ABSENT despite migration 20260534000000.
+  INSERT 0 1 executed via psql stdin. Post-check: award=f (5 rows total), supplier_quotes=f.
+  All 3 award routes confirmed 503 FEATURE_DISABLED with authenticated QA token.
+  nc.procurement_pools.supplier_quotes.enabled=false (QD-6 hold maintained). Quote count=0.
   FE-9 (TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001): HOLD_FOR_PARESH_DECISION — do not open.
   DPP: HOLD_FOR_PARESH_DECISION.
-  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001.md.
-last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001
+  See governance/TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001.md.
+last_closed_unit: TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  Production verification. All 3 award routes return 503 FEATURE_DISABLED in production.
-  3-level gate chain fires correctly. Award flag row absent but middleware fails closed.
-  Safety posture maintained. Quote count=0 pre+post. No mutations. QD-6 hold maintained.
+  Production provisioning. Award flag re-seeded false (INSERT 0 1). Row now PRESENT.
+  All 3 award routes return 503 FEATURE_DISABLED (authenticated QA token: qa.b2b@texqtic.com).
+  Gate chain fires: ncPoolFeatureGate → ncPoolRfqFeatureGate → ncPoolRfqAwardFeatureGate.
+  false !== true → 503. supplier_quotes.enabled=f unchanged (QD-6 hold). Quote count=0.
   FE-9: HOLD_FOR_PARESH_DECISION. DPP: HOLD_FOR_PARESH_DECISION.
-last_closed_unit_commits: docs(network-commerce): verify award routes production gate
+last_closed_unit_commits: docs(network-commerce): verify award flag reseed
 last_closed_unit_closure_basis: >-
-  3x HTTP 503 FEATURE_DISABLED confirmed (GET quotes, POST accept, POST reject).
-  Feature flag pre/post check: supplier_quotes.enabled=f unchanged (QD-6 hold).
+  INSERT 0 1 — award flag row inserted into production feature_flags, enabled=false.
+  5 rows confirmed in feature_flags post-reseed. supplier_quotes.enabled=f unchanged.
+  3x HTTP 503 FEATURE_DISABLED confirmed (GET quotes, POST accept, POST reject) with auth.
   Quote row count=0 pre+post. git status --short clean. No source/schema/migration/env changes.
-  Award flag row absent from production feature_flags — documented as finding, not blocker.
-  Middleware fail-closed semantics verified in source code and confirmed in HTTP responses.
-last_closed_unit_prior: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-001
+last_closed_unit_prior: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001
 note_on_pending_verification: >-
   TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
   All 3 AF findings resolved. NC Pools + RFQ + Invite surfaces technically unblocked.
@@ -57,15 +56,16 @@ dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
 dpp_v3_design_status: OPTIONAL_POLISH
 prior_last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
 prior_last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-last_closed_governance_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001
+last_closed_governance_unit: TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001
 last_closed_governance_unit_status: VERIFIED_COMPLETE
-last_closed_governance_unit_date: 2026-05-12
+last_closed_governance_unit_date: 2026-05-13
 last_closed_governance_unit_note: >-
-  Production verification of AWARD-ROUTE-001 packet. All 3 award routes 503 FEATURE_DISABLED.
-  Award flag row absent from production feature_flags (finding documented — non-blocking).
-  Middleware fails closed. Safety posture maintained. Quote count=0. QD-6 hold maintained.
-  FE-9: HOLD_FOR_PARESH_DECISION. DPP: HOLD_FOR_PARESH_DECISION.
-  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001.md.
+  Production provisioning close. Award flag re-seeded false in production feature_flags.
+  Row was ABSENT despite migration 20260534000000; INSERT 0 1 executed via psql stdin.
+  All 3 award routes return 503 FEATURE_DISABLED (authenticated QA token). Safety maintained.
+  Tracker updated v1.6→v1.7: §9 SEEDED_PROD_ABSENT→PRESENT_FALSE; Appendix D flags 4→5, routes 23→26.
+  QD-6 hold maintained. FE-9: HOLD_FOR_PARESH_DECISION. DPP: HOLD_FOR_PARESH_DECISION.
+  See governance/TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001.md.
 prior_closed_unit: TECS-B2B-ORDERS-LIFECYCLE-001
 prior_closed_unit_status: VERIFIED_COMPLETE
 prior_closed_unit_runtime_verdict: >-

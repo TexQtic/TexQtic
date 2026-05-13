@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE. All 3 award routes return 503 FEATURE_DISABLED in production. Gate chain: ncPoolFeatureGate→ncPoolRfqFeatureGate→ncPoolRfqAwardFeatureGate all fire correctly. Award flag row absent from production feature_flags — middleware fails closed; safety posture maintained. Quote row count=0 unchanged. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-05-13 (TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001 VERIFIED_COMPLETE. Award flag re-seed confirmed. nc.procurement_pools.rfq.award.enabled=false row now PRESENT in production feature_flags. Previously ABSENT despite migration 20260534000000. INSERT 0 1 executed. All 3 award routes confirmed 503 FEATURE_DISABLED with authenticated QA token. Tracker corrected v1.6→v1.7: SEEDED_PROD_ABSENT→PRESENT_FALSE. QD-6 hold maintained. FE-9 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,15 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001 VERIFIED_COMPLETE (2026-05-13).
+  Award flag re-seed confirmed. nc.procurement_pools.rfq.award.enabled=false row now PRESENT in production feature_flags.
+  Previously ABSENT despite migration 20260534000000 (finished_at 2026-05-12T06:31:31Z). INSERT 0 1 executed via psql stdin.
+  Post-check: 5 rows; award=f, supplier_quotes=f, quote_count=0 unchanged. No source/schema/migration/test/env changes.
+  All 3 award routes confirmed 503 FEATURE_DISABLED with authenticated QA token (qa.b2b@texqtic.com).
+  Tracker corrected v1.6→v1.7: SEEDED_PROD_ABSENT→PRESENT_FALSE; Appendix D flags 4→5, routes 23→26; §17 backend award corrected.
+  QD-6 hold maintained. FE-9: HOLD_FOR_PARESH_DECISION. DPP: HOLD_FOR_PARESH_DECISION unchanged.
+  See governance/TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001.md.
 
 - TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE (2026-05-12).
   Production verification of all 3 award routes in deployed production (commit 6ed77bc).

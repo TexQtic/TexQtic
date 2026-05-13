@@ -6,8 +6,8 @@
 |---|---|
 | **Document ID** | TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-001 |
 | **Document Type** | PLANNING_TRACKER |
-| **Status** | RECONCILED — AWARD-ROUTE-001-PROD-VERIFIED |
-| **Version** | 1.6 |
+| **Status** | RECONCILED — PROD-RFQ-AWARD-FLAG-RESEEDED |
+| **Version** | 1.7 |
 | **Created** | 2026-05-30 |
 | **Reconciled** | 2026-05-30 — correction packet TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CORRECTION-001 |
 | **Frontend addendum added** | 2026-05-10 — TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-FRONTEND-ADDENDUM-001 |
@@ -77,14 +77,14 @@ The audit (`TEXQTIC-NC-REPO-TRUTH-IMPLEMENTATION-AUDIT-001`, commit `29319f9`) r
 | CPP — Pool RFQ Issue | IMPLEMENTED |
 | CPP — Supplier Invite owner path (schema, feature gate, owner/supplier services, owner routes) | IMPLEMENTED |
 | CPP — Supplier Invite supplier routes (Packet 8) | IMPLEMENTED |
-| CPP — RFQ Award routes + feature gate middleware (GET quotes, POST accept/reject) | IMPLEMENTED (feature-gated: `nc.procurement_pools.rfq.award.enabled` — row absent from production DB; middleware fails closed → 503) |
+| CPP — RFQ Award routes + feature gate middleware (GET quotes, POST accept/reject) | IMPLEMENTED (feature-gated: `nc.procurement_pools.rfq.award.enabled = false` — row present in production DB; re-seeded via PROD-RFQ-AWARD-FLAG-RESEED-001 (2026-05-13); all 3 routes return 503 FEATURE_DISABLED in authenticated production probe; activation HOLD_FOR_PARESH_DECISION) |
 | CPP — Supplier Quote schema + service + routes (Packets 11–13) | IMPLEMENTED (feature-gated: `nc.procurement_pools.supplier_quotes.enabled=false`) |
 | CPP — NetworkInvoice | PARTIAL (`createNetworkInvoice`, `getNetworkInvoiceById` implemented; no route) |
 | Frontend — FE-1 through FE-8 (design, shell/nav, pool owner, demand lines, RFQ issue, supplier invite owner, supplier invite inbox, supplier quote UI) | IMPLEMENTED |
 | OES (Module B — Syndicates) | NOT_STARTED |
 | VCO (Module C — Chains) | NOT_STARTED |
 
-Current repo truth now includes NC schema entities including `network_pool_rfq_supplier_quotes`, supplier invite supplier routes (Packet 8), supplier quote schema/service/routes (Packets 11–13), 4 active NC feature flags (`nc.procurement_pools.supplier_quotes.enabled` seeded `false`; QD-6 hold), FE-1 design authority, FE-2 shell/navigation foundation, FE-3 pool owner list/detail, FE-4 demand lines, FE-5 RFQ issue panel, runtime routing expectation sync, FE-6 owner supplier-invite UI, FE-7 supplier invite inbox, and FE-8 supplier quote UI (feature-disabled path verified 2026-05-12).
+Current repo truth now includes NC schema entities including `network_pool_rfq_supplier_quotes`, supplier invite supplier routes (Packet 8), supplier quote schema/service/routes (Packets 11–13), award service/routes (Packets 14–16; production-gate-verified 2026-05-13), 5 active NC feature flags (`nc.procurement_pools.supplier_quotes.enabled` seeded `false` QD-6 hold; `nc.procurement_pools.rfq.award.enabled` seeded/re-seeded `false` 2026-05-13), FE-1 design authority, FE-2 shell/navigation foundation, FE-3 pool owner list/detail, FE-4 demand lines, FE-5 RFQ issue panel, runtime routing expectation sync, FE-6 owner supplier-invite UI, FE-7 supplier invite inbox, and FE-8 supplier quote UI (feature-disabled path verified 2026-05-12).
 
 **Frontend baseline reconciliation:** The UI/UX audit (`TEXQTIC-NC-UIUX-REPO-TRUTH-AUDIT-001`, commit `fda8139`) correctly found zero Network Commerce frontend surfaces at its audit baseline. Since then, FE-1 through FE-6 and runtime routing sync have completed.
 
@@ -254,9 +254,9 @@ Based on the foundation design §6 plus the 11 NC schema entities now present in
 | 21 | POST | `/api/tenant/network-commerce/supplier-rfq-invites/:inviteId/decline` | `routes/tenant/poolRfqSupplierInvites.ts` | Required | IMPLEMENTED | PASS |
 | 22 | GET | `/api/tenant/network-commerce/supplier-rfq-invites/:inviteId/quote` | `routes/tenant/poolRfqSupplierQuotes.ts` | Required | IMPLEMENTED | PASS |
 | 23 | POST | `/api/tenant/network-commerce/supplier-rfq-invites/:inviteId/quote` | `routes/tenant/poolRfqSupplierQuotes.ts` | Required | IMPLEMENTED | PASS |
-| 24 | GET | `/api/tenant/network-commerce/pools/:poolId/rfq/:rfqId/quotes` | `routes/tenant/poolRfq.ts` | Required | IMPLEMENTED (feature-gated: award flag absent → 503 FEATURE_DISABLED) | PASS (PRQ-44..PRQ-60) |
-| 25 | POST | `/api/tenant/network-commerce/pools/:poolId/rfq/:rfqId/quotes/:quoteId/accept` | `routes/tenant/poolRfq.ts` | Required | IMPLEMENTED (feature-gated: award flag absent → 503 FEATURE_DISABLED) | PASS (PRQ-44..PRQ-60) |
-| 26 | POST | `/api/tenant/network-commerce/pools/:poolId/rfq/:rfqId/quotes/:quoteId/reject` | `routes/tenant/poolRfq.ts` | Required | IMPLEMENTED (feature-gated: award flag absent → 503 FEATURE_DISABLED) | PASS (PRQ-44..PRQ-60) |
+| 24 | GET | `/api/tenant/network-commerce/pools/:poolId/rfq/:rfqId/quotes` | `routes/tenant/poolRfq.ts` | Required | IMPLEMENTED (feature-gated: award flag `enabled=false` → 503 FEATURE_DISABLED; re-seeded 2026-05-13) | PASS (PRQ-44..PRQ-60) |
+| 25 | POST | `/api/tenant/network-commerce/pools/:poolId/rfq/:rfqId/quotes/:quoteId/accept` | `routes/tenant/poolRfq.ts` | Required | IMPLEMENTED (feature-gated: award flag `enabled=false` → 503 FEATURE_DISABLED; re-seeded 2026-05-13) | PASS (PRQ-44..PRQ-60) |
+| 26 | POST | `/api/tenant/network-commerce/pools/:poolId/rfq/:rfqId/quotes/:quoteId/reject` | `routes/tenant/poolRfq.ts` | Required | IMPLEMENTED (feature-gated: award flag `enabled=false` → 503 FEATURE_DISABLED; re-seeded 2026-05-13) | PASS (PRQ-44..PRQ-60) |
 
 ### Planned Route Groups (not yet implemented)
 
@@ -264,7 +264,7 @@ Based on the foundation design §6 plus the 11 NC schema entities now present in
 |---|---|---|---|
 | **RFQ-1** | Supplier-facing invite inbox/detail/accept/decline routes | IMPLEMENTED (Packet 8; see current routes 18–21) | 1B |
 | **RFQ-2** | Supplier quote GET/POST routes | IMPLEMENTED (Packet 13; see current routes 22–23); quote activation pending QD-6 | 1C |
-| **RFQ-3** | Quote acceptance/rejection (GET /:poolId/rfq/:rfqId/quotes, POST accept, POST reject) | IMPLEMENTED (Packet 16; routes 24–26); award flag absent — middleware fails closed → 503; activation pending Paresh decision | 1D |
+| **RFQ-3** | Quote acceptance/rejection (GET /:poolId/rfq/:rfqId/quotes, POST accept, POST reject) | IMPLEMENTED (Packet 16; routes 24–26); award flag `enabled=false` row present (re-seeded 2026-05-13); all 3 routes return 503 FEATURE_DISABLED in production; activation pending Paresh decision | 1D |
 | **RFQ-4** | RFQ read surfaces (GET /:poolId/rfq, GET /:poolId/rfq/:rfqId) | Phase 1E — RFQ reads | 1E |
 | **ORDER-1** | Pool order trigger (POST /:poolId/order) | Phase 1F — Pool Order | 1F |
 | **INV-1** | NC Invoice routes (GET/POST on network invoices) | Phase 1G — NC Invoice completion | 1G |
@@ -363,7 +363,7 @@ States: PLANNED → STAGE_ASSIGNMENT → ACTIVE → [per-stage] → DPP_BUILDING
 
 ## 9. Feature Gate Tracker
 
-### Currently Implemented Feature Flags (5 seeded — 4 rows in DB; 1 row absent, fail-closed)
+### Currently Implemented Feature Flags (5 seeded — 5 rows in DB)
 
 | Flag Key | Default | Status | Tenant Override | Authority |
 |---|---|---|---|---|
@@ -371,7 +371,7 @@ States: PLANNED → STAGE_ASSIGNMENT → ACTIVE → [per-stage] → DPP_BUILDING
 | `nc.procurement_pools.rfq.enabled` | `false` | IMPLEMENTED | — | Audit §8; Foundation §20 |
 | `nc.procurement_pools.supplier_invites.enabled` | `false` | IMPLEMENTED | ✅ Per tenant override required for supplier orgs | Supplier Invite Feature Gate packet + seed migration |
 | `nc.procurement_pools.supplier_quotes.enabled` | `false` | IMPLEMENTED | — | Seeded by Packets 11–13 backend quote chain; **QD-6 hold** — activation requires explicit Paresh decision; `true` allows quote submission; `false` in production |
-| `nc.procurement_pools.rfq.award.enabled` | `false` (seeded; **ROW ABSENT from production DB**) | SEEDED_PROD_ABSENT — migration `20260534000000` recorded in `_prisma_migrations` (finished_at 2026-05-12T06:31:31Z); flag row subsequently absent from `feature_flags`; **middleware fails closed** (AD-7): `null?.enabled` → `undefined` → `undefined !== true` → 503 FEATURE_DISABLED | — | Award route middleware + seed migration; re-seed recommended as separate provisioning packet |
+| `nc.procurement_pools.rfq.award.enabled` | `false` | PRESENT_FALSE / RESEEDED_FALSE — migration `20260534000000` recorded in `_prisma_migrations` (finished_at 2026-05-12T06:31:31Z); row was absent at time of prior prod-verify (AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001); **re-seeded via TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001 (2026-05-13)**: `INSERT 0 1`; post-reseed confirmed `enabled = false`; production award routes return 503 FEATURE_DISABLED (authenticated probe: GET+POST accept+POST reject all 503); middleware (AD-7): `false !== true` → 503 FEATURE_DISABLED; activation: **HOLD_FOR_PARESH_DECISION** | — | Award route middleware + seed migration + PROD-RFQ-AWARD-FLAG-RESEED-001 |
 
 ### Planned Feature Flags (7 candidates — NOT created yet)
 
@@ -705,8 +705,12 @@ Current repo truth now includes:
 - FE-7 supplier invite inbox complete
 - Backend supplier quote schema + service + routes complete (Packets 11–13)
 - FE-8 supplier quote UI complete — production verified 2026-05-12
+- Backend award service + routes complete (Packets 14–16) — production gate verified 2026-05-13
+- `nc.procurement_pools.rfq.award.enabled = false` row provisioned in production (2026-05-13)
 
 FE-8 verified only the feature-disabled path (`nc.procurement_pools.supplier_quotes.enabled=false`). No quote was submitted. QD-6 hold maintained.
+
+`nc.procurement_pools.rfq.award.enabled` is now an explicit `false` row in production `feature_flags`. Re-seed complete (PROD-RFQ-AWARD-FLAG-RESEED-001). All 3 award routes verified 503 FEATURE_DISABLED in production via authenticated probe (2026-05-13).
 
 No further packet is opened by this sync. DPP posture and Layer 0 hold posture remain unchanged.
 
@@ -722,12 +726,12 @@ Status: **HOLD_FOR_PARESH_DECISION**
 
 Why FE-9 is next:
 - FE-8 supplier quote UI is complete in frontend repo truth (feature-disabled path verified)
-- FE-9 depends on backend award/allocation routes that are still NOT_STARTED (Packets 15–16)
-- FE-9 remains blocked by backend dependencies AND pending quote feature activation decision
+- Backend award service/routes VERIFIED_COMPLETE (Packets 14–16); production gate verified 503
+- FE-9 remains gated by QD-6 (`supplier_quotes.enabled` activation) AND explicit Paresh authorization
 
 #### Key Pending Decision (QD-6)
 
-Before FE-9 can begin:
+Before FE-9 can be fully exercised end-to-end:
 - Paresh must decide to lift the `nc.procurement_pools.supplier_quotes.enabled` hold
 - The flag is seeded `false` in production; actual quote submission requires it set `true`
 - This is a product/commercial decision, not a technical one
@@ -737,9 +741,10 @@ Before FE-9 can begin:
 
 | Decision | Impact | Current Status |
 |---|---|---|
-| Activate `nc.procurement_pools.supplier_quotes.enabled` (lift QD-6) | Enables live quote submission end-to-end; unblocks FE-9 | HOLD_FOR_PARESH_DECISION |
-| Authorize `TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001` (FE-9) | Opens quote review + accept/reject + allocation display | HOLD_FOR_PARESH_DECISION |
-| Authorize `TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-DESIGN-001` (Packet 14) | Quote acceptance + rejection design; pool state ACCEPTED | HOLD_FOR_PARESH_DECISION |
+| Activate `nc.procurement_pools.supplier_quotes.enabled` (lift QD-6) | Enables live quote submission end-to-end; unblocks full FE-9 exercise | HOLD_FOR_PARESH_DECISION |
+| Activate `nc.procurement_pools.rfq.award.enabled` | Enables award routes; requires QD-6 lifted AND supplier quotes live | HOLD_FOR_PARESH_DECISION |
+| Authorize `TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001` (FE-9) | Opens quote review + accept/reject + allocation display; backend routes ready | HOLD_FOR_PARESH_DECISION |
+| Authorize `TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001` (Packet 17) | RFQ read surfaces; parallel with 1D | HOLD_FOR_PARESH_DECISION |
 | DPP Passport Network launch | External product launch | HOLD_FOR_PARESH_DECISION |
 | DPP v3 design | Optional polish; no implementation blocked | OPTIONAL_POLISH |
 | NetworkSupplierInvite vs embedded invite on NetworkPoolRfq | Schema shape decision | Awaiting design packet |
@@ -775,6 +780,8 @@ Before FE-9 can begin:
 | `355c841` | docs(network-commerce): record supplier quote frontend production verify blocker | Governance doc — initial prod-verify attempt |
 | `113d99e` | docs(network-commerce): record supplier quote qa data setup safety review | Governance doc — QA data setup safety review |
 | `704aa7d` | docs(network-commerce): verify supplier quote frontend production path | Governance close — FE-8 VERIFIED_COMPLETE |
+| `56bf520` | docs(network-commerce): verify award routes production gate | Governance close — AWARD-ROUTE-001-PROD-VERIFY VERIFIED_COMPLETE; award flag row ABSENT documented |
+| *(this commit)* | docs(network-commerce): verify award flag reseed | Governance close — PROD-RFQ-AWARD-FLAG-RESEED-001 VERIFIED_COMPLETE; award flag row re-seeded `false` in production |
 
 ### B. Audit Metadata (git show --stat 29319f9 — authoritative)
 
@@ -807,8 +814,8 @@ docs(network-commerce): audit implementation repo truth
 |---|---|---|
 | 11 | NC schema entities (tables) | `network_lifecycle_logs`, `network_invoices`, `network_pools`, `network_pool_memberships`, `network_pool_demand_lines`, `network_pool_demand_snapshots`, `network_pool_demand_snapshot_lines`, `network_pool_rfqs`, `network_pool_rfq_lines`, `network_pool_rfq_supplier_invites`, `network_pool_rfq_supplier_quotes` |
 | 11 | NC migration / data-migration packets applied | `20260520000000_nc_network_lifecycle_logs`, `20260521000000_nc_network_invoices`, `20260522000000_nc_network_pools`, `20260523000000_nc_pool_lifecycle_seed`, `20260524000000_nc_pool_demand_line_schema`, `20260525000000_nc_pool_demand_snapshot_schema`, `20260528000000_nc_pool_rfq_schema`, `20260529000000_nc_pool_rfq_supplier_invite_schema`, `20260530000000_nc_pool_supplier_invite_feature_flag_seed`, `20260531000000_nc_pool_supplier_quote_schema`, `20260532000000_nc_pool_supplier_quote_feature_flag_seed` |
-| 23 | NC tenant routes | pools.ts (7), poolDemandLines.ts (5), poolRfq.ts (5 owner-facing), poolRfqSupplierInvites.ts (4 supplier invite routes — Packet 8), poolRfqSupplierQuotes.ts (2 quote routes — Packet 13) |
-| 4 | Active NC feature flags | `nc.procurement_pools.enabled`, `nc.procurement_pools.rfq.enabled`, `nc.procurement_pools.supplier_invites.enabled`, `nc.procurement_pools.supplier_quotes.enabled` (seeded `false`; QD-6 hold) |
+| 26 | NC tenant routes | pools.ts (7), poolDemandLines.ts (5), poolRfq.ts (8: 5 owner-facing + 3 award routes — Packet 16), poolRfqSupplierInvites.ts (4 supplier invite routes — Packet 8), poolRfqSupplierQuotes.ts (2 quote routes — Packet 13) |
+| 5 | Active NC feature flags | `nc.procurement_pools.enabled`, `nc.procurement_pools.rfq.enabled`, `nc.procurement_pools.supplier_invites.enabled`, `nc.procurement_pools.supplier_quotes.enabled` (seeded `false`; QD-6 hold), `nc.procurement_pools.rfq.award.enabled` (seeded `false`; re-seeded 2026-05-13 via PROD-RFQ-AWARD-FLAG-RESEED-001; activation HOLD_FOR_PARESH_DECISION) |
 | 8 | Completed frontend NC packets | FE-1 design, FE-2 shell/nav foundation, FE-3 pool owner list/detail, FE-4 demand lines, FE-5 RFQ issue, FE-6 supplier invite owner UI, FE-7 supplier invite inbox, FE-8 supplier quote UI (feature-disabled path verified 2026-05-12) |
 
 ### E. Prisma Validate Baseline (2026-05-30 — this tracker creation)
@@ -845,4 +852,4 @@ The schema at prisma\schema.prisma is valid 🚀
 *Document created: 2026-05-30 — TexQtic governance corpus, main branch.*
 *Authorized by: Paresh Patel.*
 *This document does not authorize any implementation. Each packet requires explicit Paresh authorization and a fresh TECS opening.*
-*Last updated: 2026-05-12 (v1.5 — TRACKER-SYNC-001: synced after supplier quote verification; TRACKER-SYNC-002-CORRECTION: reconciled all body sections; TRACKER-SYNC-003-APPENDIX-FOOTER-CLEANUP: appendix/footer corrected to match reconciled tracker body).*
+*Last updated: 2026-05-13 (v1.7 — PROD-RFQ-AWARD-FLAG-RESEED-001: re-seed complete; award flag row now PRESENT_FALSE in production; Appendix D updated flags 4→5, routes 23→26; §9 status SEEDED_PROD_ABSENT→PRESENT_FALSE; §17 §6 corrected to reflect VERIFIED_COMPLETE backend award routes).*
