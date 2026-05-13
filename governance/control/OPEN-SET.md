@@ -53,6 +53,18 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001 PARTIAL_VERIFIED_BLOCKED_BY_MAKER_CHECKER_DESIGN (2026-05-13).
+  Supplier quote submission path VERIFIED on QA fixture: `nc.procurement_pools.supplier_quotes.enabled` activated,
+  quote submitted (201), quote_id=`2ac70ff6`, ref=`SQ-639D77622A92476C`, status=`SUBMITTED`, RFQ advanced to `QUOTED`.
+  Award feature gate VERIFIED to service/SM boundary: `nc.procurement_pools.rfq.award.enabled` activated,
+  `POST /accept` reached `NetworkPoolRfqService.acceptQuote()` — blocked by SM maker-checker gate:
+  POOL QUOTED→ACCEPTED `requires_maker_checker=true`; service actor `TENANT_ADMIN !== CHECKER`;
+  SM returned `PENDING_APPROVAL`; route returned 422 `INVALID_TRANSITION`. Correct governance behavior.
+  Both flags restored false. Quote `accepted_at=NULL`, `rejected_at=NULL`. MC rule unchanged.
+  Next required design unit: `TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001`.
+  No source/schema/migration/env changes. QD-6 hold maintained. FE-10 HOLD_FOR_PARESH_DECISION.
+  DPP HOLD_FOR_PARESH_DECISION unchanged.
+  See governance/TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001.md.
 - TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE (2026-06-09).
   FE-4 DemandLineSurface polished surface confirmed in production. Tailwind polish + controlled-form fix verified.
   All 12-point checklist PASS. No flag activation. No data mutation. QD-6 hold unchanged. rfq.award.enabled ABSENT.

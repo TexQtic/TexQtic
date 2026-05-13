@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-09 (TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE. FE-4 DemandLineSurface polished surface confirmed live in production. All 12-point checklist PASS. Controlled-form fix verified in browser (typed value retained). DB invariants unchanged. No flag activation. No data mutation. QD-6 unchanged. rfq.award.enabled ABSENT. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-13 (TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001 PARTIAL_VERIFIED_BLOCKED_BY_MAKER_CHECKER_DESIGN. Supplier quote path VERIFIED (201, SQ-639D77622A92476C). Award path blocked by SM maker-checker gate on POOL QUOTED→ACCEPTED. Both flags restored false. Next required design unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001. QD-6 hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,17 +15,20 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-PROD-VERIFY-GOV-CLOSE-001
-active_delivery_unit_status: VERIFIED_COMPLETE (2026-06-09)
+active_delivery_unit: TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001
+active_delivery_unit_status: PARTIAL_VERIFIED_BLOCKED_BY_MAKER_CHECKER_DESIGN (2026-05-13)
 active_delivery_unit_note: >
-  TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE (2026-06-09).
-  FE-4 DemandLineSurface polished surface confirmed live in production at https://app.texqtic.com/qa-b2b.
-  All 12-point browser checklist items PASS. Controlled-form fix verified: typed value
-  TEST-CONTROLLED-FORM-001 retained in Line Reference input — proving parent-owned formState is effective.
-  No console errors on Demand Lines page. Back navigation works. No form submission performed.
-  DB post-check: supplier_quotes.enabled=false unchanged (QD-6); rfq.award.enabled ABSENT;
-  demand line LOCKED_FOR_RFQ unchanged; quote_count=0 unchanged.
-  See governance/TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-PROD-VERIFY-GOV-CLOSE-001.md.
+  TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001 PARTIAL_VERIFIED (2026-05-13).
+  Supplier quote path VERIFIED: nc.procurement_pools.supplier_quotes.enabled activated; POST quote
+  returned 201; quote SQ-639D77622A92476C created SUBMITTED; RFQ advanced to QUOTED.
+  Award path VERIFIED to service/SM boundary: nc.procurement_pools.rfq.award.enabled activated;
+  POST accept reached NetworkPoolRfqService.acceptQuote(); blocked by SM maker-checker gate:
+  POOL QUOTED→ACCEPTED requires_maker_checker=true; service actor TENANT_ADMIN ≠ CHECKER;
+  SM returned PENDING_APPROVAL; route returned 422 INVALID_TRANSITION. Correct governance behavior.
+  Both flags restored false. Quote accepted_at=NULL, rejected_at=NULL. MC rule unchanged.
+  Next required design unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001.
+  No source/schema/migration/env changes. QD-6 hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged.
+  See governance/TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001.md.
 last_closed_unit: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-PROD-VERIFY-GOV-CLOSE-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
@@ -54,16 +57,16 @@ dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
 dpp_v3_design_status: OPTIONAL_POLISH
 prior_last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
 prior_last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-last_closed_governance_unit: TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001
-last_closed_governance_unit_status: VERIFIED_COMPLETE
+last_closed_governance_unit: TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001
+last_closed_governance_unit_status: PARTIAL_VERIFIED_BLOCKED_BY_MAKER_CHECKER_DESIGN
 last_closed_governance_unit_date: 2026-05-13
-last_closed_governance_unit_note: >-
-  Production provisioning close. Award flag re-seeded false in production feature_flags.
-  Row was ABSENT despite migration 20260534000000; INSERT 0 1 executed via psql stdin.
-  All 3 award routes return 503 FEATURE_DISABLED (authenticated QA token). Safety maintained.
-  Tracker updated v1.6→v1.7: §9 SEEDED_PROD_ABSENT→PRESENT_FALSE; Appendix D flags 4→5, routes 23→26.
-  QD-6 hold maintained. FE-9: HOLD_FOR_PARESH_DECISION. DPP: HOLD_FOR_PARESH_DECISION.
-  See governance/TEXQTIC-NC-PROD-RFQ-AWARD-FLAG-RESEED-001.md.
+last_closed_governance_unit_note: >
+  Controlled QA activation close. Supplier quote path VERIFIED (201, SQ-639D77622A92476C, SUBMITTED).
+  Award path VERIFIED to service/SM boundary; blocked by MC gate (POOL QUOTED→ACCEPTED requires_maker_checker=true).
+  Both flags restored false (UPDATE 2 confirmed). Quote accepted_at=NULL, rejected_at=NULL.
+  Next design unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001.
+  QD-6 hold maintained. DPP: HOLD_FOR_PARESH_DECISION.
+  See governance/TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001.md.
 prior_closed_unit: TECS-B2B-ORDERS-LIFECYCLE-001
 prior_closed_unit_status: VERIFIED_COMPLETE
 prior_closed_unit_runtime_verdict: >-

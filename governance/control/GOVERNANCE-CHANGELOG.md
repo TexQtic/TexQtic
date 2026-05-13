@@ -7,6 +7,37 @@
 
 ---
 
+## 2026-05-13 -- PARTIAL_VERIFIED_BLOCKED_BY_MAKER_CHECKER_DESIGN: TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001
+
+Controlled QA activation for supplier quote submission and owner award acceptance on QA fixture
+(qa-b2b / qa-knt-b). Both `nc.procurement_pools.supplier_quotes.enabled` and
+`nc.procurement_pools.rfq.award.enabled` temporarily activated, then restored to `false`.
+
+**Supplier quote path VERIFIED:**
+`POST /api/tenant/network-commerce/supplier-rfq-invites/:inviteId/quote` returned HTTP 201.
+Quote `2ac70ff6` (`SQ-639D77622A92476C`) created with status `SUBMITTED`, amount 1250 USD.
+RFQ `55eb2858` advanced from `ISSUED` to `QUOTED`. Technical path confirmed end-to-end.
+
+**Award path VERIFIED to service/SM boundary — BLOCKED by maker-checker design:**
+`POST /api/tenant/network-commerce/pools/:poolId/rfq/:rfqId/quotes/:quoteId/accept` reached
+`NetworkPoolRfqService.acceptQuote()`. Service calls SM with `actorType: 'TENANT_ADMIN'`.
+SM `allowed_transitions` row: `POOL QUOTED → ACCEPTED requires_maker_checker=true`.
+Since `TENANT_ADMIN !== CHECKER`, SM returned `PENDING_APPROVAL` → service threw
+`NetworkPoolRfqTransitionDeniedError` → route returned 422 `INVALID_TRANSITION`.
+This is **correct governance behavior**, not a bug. Full award E2E requires two-actor approval design.
+
+**Post-rollback state confirmed:**
+Both flags `false` (UPDATE 2 confirmed). Quote `accepted_at=NULL`, `rejected_at=NULL`.
+`allowed_transitions` MC rule unchanged (`requires_maker_checker=true`). Pool state `CLOSED_FOR_BIDS`.
+RFQ status `QUOTED`. Git HEAD `7bcb4ad`. Working tree clean.
+
+**Next required design unit:** `TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001`
+No source/schema/migration/env changes. QD-6 hold maintained. DPP: HOLD_FOR_PARESH_DECISION.
+Tracker updated v1.7→v1.8. OPEN-SET, NEXT-ACTION, BLOCKED updated.
+See governance/TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001.md.
+
+---
+
 ## 2026-06-09 -- VERIFIED_COMPLETE: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-PROD-VERIFY-GOV-CLOSE-001
 
 FE-4 (`TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001`) production browser verification complete.

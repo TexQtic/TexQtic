@@ -6,12 +6,12 @@
 |---|---|
 | **Document ID** | TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-001 |
 | **Document Type** | PLANNING_TRACKER |
-| **Status** | RECONCILED — PROD-RFQ-AWARD-FLAG-RESEEDED |
-| **Version** | 1.7 |
+| **Status** | RECONCILED — CONTROLLED-QA-ACTIVATION-PARTIAL-VERIFIED |
+| **Version** | 1.8 |
 | **Created** | 2026-05-30 |
 | **Reconciled** | 2026-05-30 — correction packet TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-CORRECTION-001 |
 | **Frontend addendum added** | 2026-05-10 — TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-FRONTEND-ADDENDUM-001 |
-| **Current state synced** | 2026-05-12 — TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-ROUTE-PROD-VERIFY-GOV-CLOSE-001 (v1.6) |
+| **Current state synced** | 2026-05-13 — TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001 (v1.8) |
 | **Author** | Governance agent |
 | **Authorized by** | Paresh Patel |
 | **Primary basis commit** | `29319f9` — audit: TEXQTIC-NC-REPO-TRUTH-IMPLEMENTATION-AUDIT-001 |
@@ -33,7 +33,7 @@
 | **Frontend audit authority** | `governance/TEXQTIC-NC-UIUX-REPO-TRUTH-AUDIT-001.md` |
 | **Active delivery unit** | HOLD_FOR_AUTHORIZATION |
 | **DPP launch authorization** | HOLD_FOR_PARESH_DECISION |
-| **NC next action candidate** | HOLD_FOR_PARESH_DECISION — Award backend routes production-verified and feature-gated. Candidates: award flag re-seed provision · `TEXQTIC-NC-PROD-SUPPLIER-QUOTE-FEATURE-FLAG-ACTIVATION-001` (QD-6) · FE-9 award UI · `TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001` (Packet 17) |
+| **NC next action candidate** | HOLD_FOR_PARESH_DECISION — Controlled QA activation PARTIAL_VERIFIED_BLOCKED_BY_MAKER_CHECKER_DESIGN. Supplier quote path VERIFIED. Award path blocked by SM maker-checker gate. Next required design unit: `TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001`. Other candidates (all HOLD): QD-6 commercial lift · FE-10 award UI activation · `TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001` (Packet 17) |
 
 ### Governance Posture (Updated by TRACKER-SYNC-002-CORRECTION 2026-05-12 — prior stale candidates superseded)
 
@@ -741,8 +741,9 @@ Before FE-9 can be fully exercised end-to-end:
 
 | Decision | Impact | Current Status |
 |---|---|---|
-| Activate `nc.procurement_pools.supplier_quotes.enabled` (lift QD-6) | Enables live quote submission end-to-end; unblocks full FE-9 exercise | HOLD_FOR_PARESH_DECISION |
-| Activate `nc.procurement_pools.rfq.award.enabled` | Enables award routes; requires QD-6 lifted AND supplier quotes live | HOLD_FOR_PARESH_DECISION |
+| Activate `nc.procurement_pools.supplier_quotes.enabled` (lift QD-6) | Enables live quote submission end-to-end; QA path VERIFIED (CONTROLLED-QA-ACTIVATION-001 2026-05-13); commercial activation HOLD_FOR_PARESH_DECISION | HOLD_FOR_PARESH_DECISION |
+| Activate `nc.procurement_pools.rfq.award.enabled` | Award routes feature-gate VERIFIED; award E2E blocked by MC design (POOL QUOTED→ACCEPTED requires_maker_checker=true); requires MAKER-CHECKER-DESIGN-001 before commercial activation | HOLD_FOR_PARESH_DECISION |
+| `TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001` | Design award approval architecture (split call vs. MC bypass vs. PENDING_APPROVAL entity); prerequisite for true award E2E | HOLD_FOR_PARESH_DECISION |
 | Authorize `TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001` (FE-9) | Opens quote review + accept/reject + allocation display; backend routes ready | HOLD_FOR_PARESH_DECISION |
 | Authorize `TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001` (Packet 17) | RFQ read surfaces; parallel with 1D | HOLD_FOR_PARESH_DECISION |
 | DPP Passport Network launch | External product launch | HOLD_FOR_PARESH_DECISION |
@@ -782,6 +783,7 @@ Before FE-9 can be fully exercised end-to-end:
 | `704aa7d` | docs(network-commerce): verify supplier quote frontend production path | Governance close — FE-8 VERIFIED_COMPLETE |
 | `56bf520` | docs(network-commerce): verify award routes production gate | Governance close — AWARD-ROUTE-001-PROD-VERIFY VERIFIED_COMPLETE; award flag row ABSENT documented |
 | *(this commit)* | docs(network-commerce): verify award flag reseed | Governance close — PROD-RFQ-AWARD-FLAG-RESEED-001 VERIFIED_COMPLETE; award flag row re-seeded `false` in production |
+| *(this commit)* | docs(network-commerce): close controlled quote award activation blocker | Governance close — CONTROLLED-QA-ACTIVATION-001 PARTIAL_VERIFIED_BLOCKED_BY_MAKER_CHECKER_DESIGN; quote path VERIFIED; award path blocked by SM MC gate; both flags restored false |
 
 ### B. Audit Metadata (git show --stat 29319f9 — authoritative)
 
@@ -852,4 +854,4 @@ The schema at prisma\schema.prisma is valid 🚀
 *Document created: 2026-05-30 — TexQtic governance corpus, main branch.*
 *Authorized by: Paresh Patel.*
 *This document does not authorize any implementation. Each packet requires explicit Paresh authorization and a fresh TECS opening.*
-*Last updated: 2026-05-13 (v1.7 — PROD-RFQ-AWARD-FLAG-RESEED-001: re-seed complete; award flag row now PRESENT_FALSE in production; Appendix D updated flags 4→5, routes 23→26; §9 status SEEDED_PROD_ABSENT→PRESENT_FALSE; §17 §6 corrected to reflect VERIFIED_COMPLETE backend award routes).*
+*Last updated: 2026-05-13 (v1.8 — CONTROLLED-QA-ACTIVATION-001: controlled QA activation PARTIAL_VERIFIED_BLOCKED_BY_MAKER_CHECKER_DESIGN; supplier quote path VERIFIED (quote SQ-639D77622A92476C, SUBMITTED); award path VERIFIED to service/SM boundary but blocked by MC gate (POOL QUOTED→ACCEPTED requires_maker_checker=true); both flags restored false; TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001 recorded as next design requirement; §17 NC next action candidate updated; pending decisions table updated; Appendix A commit chain updated).*
