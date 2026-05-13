@@ -787,3 +787,118 @@ export function rejectQuoteForRfq(
     },
   );
 }
+
+// ─── FE-10 Award Maker-Checker Types ─────────────────────────────────────────
+
+/**
+ * Approval request record returned by MC award routes.
+ * frozenPayload and frozenPayloadHash are backend-internal and never exposed in frontend.
+ */
+export interface AwardApprovalRequest {
+  id: string;
+  status: string;
+  expires_at: string;
+  entity_type: string;
+  entity_id: string;
+  from_state_key: string;
+  to_state_key: string;
+  requested_by_user_id: string;
+  request_reason: string;
+  created_at: string;
+}
+
+export interface AwardApproved {
+  approval: AwardApprovalRequest;
+  quote: OwnerQuote;
+}
+
+export interface AwardRejected {
+  approval: AwardApprovalRequest;
+}
+
+export interface RequestAwardInput {
+  request_reason: string;
+  request_id?: string | null;
+}
+
+export interface ApproveAwardInput {
+  approve_reason: string;
+  request_id?: string | null;
+}
+
+export interface RejectAwardApprovalInput {
+  reject_reason: string;
+  request_id?: string | null;
+}
+
+// ─── FE-10 Award Maker-Checker Methods ───────────────────────────────────────
+
+/**
+ * Request an award approval for a SUBMITTED quote (maker action).
+ * POST /api/tenant/network-commerce/pools/:poolId/rfq/:rfqId/quotes/:quoteId/award-request
+ */
+export function requestAwardApprovalForQuote(
+  poolId: string,
+  rfqId: string,
+  quoteId: string,
+  input: RequestAwardInput,
+): Promise<AwardApprovalRequest> {
+  return tenantPost<AwardApprovalRequest>(
+    `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/quotes/${quoteId}/award-request`,
+    {
+      request_reason: input.request_reason,
+      request_id: input.request_id ?? null,
+    },
+  );
+}
+
+/**
+ * Approve a pending award approval (checker action).
+ * POST /api/tenant/network-commerce/pools/:poolId/rfq/:rfqId/award-approvals/:approvalId/approve
+ */
+export function approveAwardApproval(
+  poolId: string,
+  rfqId: string,
+  approvalId: string,
+  input: ApproveAwardInput,
+): Promise<AwardApproved> {
+  return tenantPost<AwardApproved>(
+    `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/award-approvals/${approvalId}/approve`,
+    {
+      approve_reason: input.approve_reason,
+      request_id: input.request_id ?? null,
+    },
+  );
+}
+
+/**
+ * Reject a pending award approval (checker action).
+ * POST /api/tenant/network-commerce/pools/:poolId/rfq/:rfqId/award-approvals/:approvalId/reject
+ */
+export function rejectAwardApproval(
+  poolId: string,
+  rfqId: string,
+  approvalId: string,
+  input: RejectAwardApprovalInput,
+): Promise<AwardRejected> {
+  return tenantPost<AwardRejected>(
+    `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/award-approvals/${approvalId}/reject`,
+    {
+      reject_reason: input.reject_reason,
+      request_id: input.request_id ?? null,
+    },
+  );
+}
+
+/**
+ * Get all pending award approvals for an RFQ (owner view).
+ * GET /api/tenant/network-commerce/pools/:poolId/rfq/:rfqId/award-approvals
+ */
+export function getPendingAwardApprovalsForRfq(
+  poolId: string,
+  rfqId: string,
+): Promise<AwardApprovalRequest[]> {
+  return tenantGet<AwardApprovalRequest[]>(
+    `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}/award-approvals`,
+  );
+}

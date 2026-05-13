@@ -17,10 +17,15 @@
  */
 import React, { useCallback, useEffect, useState, type ReactElement } from 'react';
 import { APIError } from '../../../services/apiClient';
+import { getCurrentUser } from '../../../services/authService';
 import {
-  acceptQuoteForRfq,
+  approveAwardApproval,
   getOwnerQuotesForRfq,
+  getPendingAwardApprovalsForRfq,
+  rejectAwardApproval,
   rejectQuoteForRfq,
+  requestAwardApprovalForQuote,
+  type AwardApprovalRequest,
   type OwnerQuote,
 } from '../../../services/networkCommerceService';
 import { LoadingState } from '../../shared/LoadingState';
@@ -35,6 +40,20 @@ type ReviewUiState = 'loading' | 'feature-disabled' | 'empty' | 'ready' | 'error
 
 type RejectDialogState = Readonly<{
   quoteId: string;
+  reason: string;
+  submitting: boolean;
+  error: string | null;
+}>;
+
+type RequestAwardDialogState = Readonly<{
+  quoteId: string;
+  reason: string;
+  submitting: boolean;
+  error: string | null;
+}>;
+
+type RejectApprovalDialogState = Readonly<{
+  approvalId: string;
   reason: string;
   submitting: boolean;
   error: string | null;
@@ -104,56 +123,121 @@ function classifyLoadError(error: unknown): { state: ReviewUiState; message: str
   return { state: 'error', message: 'Unable to load quotes.' };
 }
 
+function classifyMcError(error: unknown): string {
+  if (error instanceof APIError) {
+    const code = error.code ?? '';
+    if (code === 'AWARD_REQUEST_ALREADY_PENDING') return 'An approval is already pending for this quote.';
+    if (code === 'APPROVAL_NOT_FOUND') return 'Approval record not found.';
+    if (code === 'APPROVAL_ALREADY_DECIDED') return 'This approval has already been decided.';
+    if (code === 'APPROVAL_EXPIRED') return 'This approval request has expired.';
+    if (code === 'MAKER_CHECKER_SAME_ACTOR') return 'The same person cannot both request and approve an award.';
+    if (code === 'QUOTE_NO_LONGER_SUBMITTED') return 'This quote is no longer in a submitted state.';
+    return error.message || 'Action failed.';
+  }
+  if (error instanceof Error) return error.message;
+  return 'Action failed.';
+}
+
 export function QuoteReviewPanel({ poolId, rfqId, onBack }: QuoteReviewPanelProps): ReactElement {
   const [uiState, setUiState] = useState<ReviewUiState>('loading');
   const [quotes, setQuotes] = useState<OwnerQuote[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [acceptingId, setAcceptingId] = useState<string | null>(null);
-  const [acceptError, setAcceptError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [pendingApprovals, setPendingApprovals] = useState<AwardApprovalRequest[]>([]);
+  const [requestingAwardId, setRequestingAwardId] = useState<string | null>(null);
+  const [mcActionError, setMcActionError] = useState<string | null>(null);
+  const [requestAwardDialog, setRequestAwardDialog] = useState<RequestAwardDialogState | null>(null);
+  const [approvingApprovalId, setApprovingApprovalId] = useState<string | null>(null);
+  const [rejectApprovalDialog, setRejectApprovalDialog] = useState<RejectApprovalDialogState | null>(null);
   const [rejectDialog, setRejectDialog] = useState<RejectDialogState | null>(null);
 
-  const loadQuotes = useCallback(async () => {
+  const loadData = useCallback(async () => {
     setUiState('loading');
     setErrorMessage(null);
-    setAcceptError(null);
+    setMcActionError(null);
     setRejectDialog(null);
+    setRequestAwardDialog(null);
     try {
       const data = await getOwnerQuotesForRfq(poolId, rfqId);
+      const [approvalsResult, userResult] = await Promise.allSettled([
+        getPendingAwardApprovalsForRfq(poolId, rfqId),
+        getCurrentUser({ retry: false, dedupe: true }),
+      ]);
       setQuotes(data);
+      setPendingApprovals(approvalsResult.status === 'fulfilled' ? approvalsResult.value : []);
+      setCurrentUserId(userResult.status === 'fulfilled' ? userResult.value.user.id : null);
       setUiState(data.length === 0 ? 'empty' : 'ready');
     } catch (error) {
       const resolution = classifyLoadError(error);
       setQuotes([]);
+      setPendingApprovals([]);
       setUiState(resolution.state);
       setErrorMessage(resolution.message || null);
     }
   }, [poolId, rfqId]);
 
   useEffect(() => {
-    void loadQuotes();
-  }, [loadQuotes]);
+    void loadData();
+  }, [loadData]);
 
-  const handleAccept = useCallback(
-    async (quoteId: string) => {
-      setAcceptingId(quoteId);
-      setAcceptError(null);
+  const handleOpenRequestAwardDialog = useCallback((quoteId: string) => {
+    setRequestAwardDialog({ quoteId, reason: '', submitting: false, error: null });
+  }, []);
+
+  const handleRequestAwardSubmit = useCallback(async () => {
+    if (!requestAwardDialog) return;
+    setRequestAwardDialog((prev) => (prev ? { ...prev, submitting: true, error: null } : null));
+    try {
+      await requestAwardApprovalForQuote(poolId, rfqId, requestAwardDialog.quoteId, {
+        request_reason: requestAwardDialog.reason.trim(),
+        request_id: null,
+      });
+      setRequestAwardDialog(null);
+      await loadData();
+    } catch (error) {
+      const msg = classifyMcError(error);
+      setRequestAwardDialog((prev) => (prev ? { ...prev, submitting: false, error: msg } : null));
+    }
+  }, [poolId, rfqId, requestAwardDialog, loadData]);
+
+  const handleApproveAward = useCallback(
+    async (approvalId: string) => {
+      setApprovingApprovalId(approvalId);
+      setMcActionError(null);
       try {
-        await acceptQuoteForRfq(poolId, rfqId, quoteId);
-        await loadQuotes();
+        await approveAwardApproval(poolId, rfqId, approvalId, {
+          approve_reason: '',
+          request_id: null,
+        });
+        await loadData();
       } catch (error) {
-        const msg =
-          error instanceof APIError
-            ? error.message || 'Failed to accept quote.'
-            : error instanceof Error
-              ? error.message
-              : 'Failed to accept quote.';
-        setAcceptError(msg);
+        setMcActionError(classifyMcError(error));
       } finally {
-        setAcceptingId(null);
+        setApprovingApprovalId(null);
       }
     },
-    [poolId, rfqId, loadQuotes],
+    [poolId, rfqId, loadData],
   );
+
+  const handleOpenRejectApprovalDialog = useCallback((approvalId: string) => {
+    setRejectApprovalDialog({ approvalId, reason: '', submitting: false, error: null });
+  }, []);
+
+  const handleRejectApprovalSubmit = useCallback(async () => {
+    if (!rejectApprovalDialog) return;
+    setRejectApprovalDialog((prev) => (prev ? { ...prev, submitting: true, error: null } : null));
+    try {
+      await rejectAwardApproval(poolId, rfqId, rejectApprovalDialog.approvalId, {
+        reject_reason: rejectApprovalDialog.reason.trim(),
+        request_id: null,
+      });
+      setRejectApprovalDialog(null);
+      await loadData();
+    } catch (error) {
+      const msg = classifyMcError(error);
+      setRejectApprovalDialog((prev) => (prev ? { ...prev, submitting: false, error: msg } : null));
+    }
+  }, [poolId, rfqId, rejectApprovalDialog, loadData]);
 
   const handleOpenRejectDialog = useCallback((quoteId: string) => {
     setRejectDialog({ quoteId, reason: '', submitting: false, error: null });
@@ -165,7 +249,7 @@ export function QuoteReviewPanel({ poolId, rfqId, onBack }: QuoteReviewPanelProp
     try {
       await rejectQuoteForRfq(poolId, rfqId, rejectDialog.quoteId, rejectDialog.reason.trim() || null);
       setRejectDialog(null);
-      await loadQuotes();
+      await loadData();
     } catch (error) {
       const msg =
         error instanceof APIError
@@ -175,7 +259,7 @@ export function QuoteReviewPanel({ poolId, rfqId, onBack }: QuoteReviewPanelProp
             : 'Failed to reject quote.';
       setRejectDialog((prev) => (prev ? { ...prev, submitting: false, error: msg } : null));
     }
-  }, [poolId, rfqId, rejectDialog, loadQuotes]);
+  }, [poolId, rfqId, rejectDialog, loadData]);
 
   // ── Loading ──────────────────────────────────────────────────────────────────
 
@@ -261,7 +345,7 @@ export function QuoteReviewPanel({ poolId, rfqId, onBack }: QuoteReviewPanelProp
             <p className="mt-2 text-sm text-rose-800">{errorMessage || 'An unexpected error occurred.'}</p>
             <button
               type="button"
-              onClick={loadQuotes}
+              onClick={loadData}
               className="mt-4 inline-flex items-center justify-center rounded-xl border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-900 hover:bg-rose-50 transition"
             >
               Retry
@@ -309,10 +393,10 @@ export function QuoteReviewPanel({ poolId, rfqId, onBack }: QuoteReviewPanelProp
           </div>
         </header>
 
-        {/* Accept error banner */}
-        {acceptError && (
+        {/* MC action error banner */}
+        {mcActionError && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800">
-            <span className="font-semibold">Accept failed: </span>{acceptError}
+            <span className="font-semibold">Action failed: </span>{mcActionError}
           </div>
         )}
 
@@ -326,7 +410,7 @@ export function QuoteReviewPanel({ poolId, rfqId, onBack }: QuoteReviewPanelProp
             </p>
             <button
               type="button"
-              onClick={loadQuotes}
+              onClick={loadData}
               className="mt-4 inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50 transition"
             >
               Refresh
@@ -338,7 +422,13 @@ export function QuoteReviewPanel({ poolId, rfqId, onBack }: QuoteReviewPanelProp
         {uiState === 'ready' && quotes.map((quote) => {
           const isSubmitted = quote.status.toUpperCase() === 'SUBMITTED';
           const isAccepted = quote.status.toUpperCase() === 'ACCEPTED';
-          const isAcceptingThis = acceptingId === quote.id;
+          const pendingApproval = pendingApprovals.find((a) => a.entity_id === quote.id) ?? null;
+          const isRequestingThis = requestingAwardId === quote.id;
+          const isCheckerEligible =
+            pendingApproval !== null &&
+            currentUserId !== null &&
+            currentUserId !== pendingApproval.requested_by_user_id;
+          const isApprovingThis = approvingApprovalId === (pendingApproval?.id ?? '');
 
           return (
             <article
@@ -407,27 +497,65 @@ export function QuoteReviewPanel({ poolId, rfqId, onBack }: QuoteReviewPanelProp
                 </div>
               )}
 
-              {/* Accept / Reject controls — SUBMITTED quotes only */}
+              {/* Maker-Checker award controls — SUBMITTED quotes only */}
               {isSubmitted && (
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    disabled={isAcceptingThis || acceptingId !== null}
-                    onClick={() => { void handleAccept(quote.id); }}
-                    className="inline-flex items-center justify-center rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50 transition"
-                    aria-label={`Accept quote ${quote.quote_ref}`}
-                  >
-                    {isAcceptingThis ? 'Accepting…' : 'Accept Quote'}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isAcceptingThis || acceptingId !== null}
-                    onClick={() => handleOpenRejectDialog(quote.id)}
-                    className="inline-flex items-center justify-center rounded-xl border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 transition"
-                    aria-label={`Reject quote ${quote.quote_ref}`}
-                  >
-                    Reject Quote
-                  </button>
+                <div className="mt-5">
+                  {pendingApproval ? (
+                    <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-4">
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-sky-600">Award Approval Pending</p>
+                      <p className="mt-2 text-sm text-sky-800">
+                        <span className="font-semibold">Reason:</span>{' '}
+                        {pendingApproval.request_reason || '—'}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-4 text-xs text-sky-700">
+                        <span>Requested: {formatTimestamp(pendingApproval.created_at)}</span>
+                        <span>Expires: {formatTimestamp(pendingApproval.expires_at)}</span>
+                      </div>
+                      {isCheckerEligible && (
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            disabled={isApprovingThis}
+                            onClick={() => { void handleApproveAward(pendingApproval.id); }}
+                            className="inline-flex items-center justify-center rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50 transition"
+                            aria-label={`Approve award for quote ${quote.quote_ref}`}
+                          >
+                            {isApprovingThis ? 'Approving…' : 'Approve Award'}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isApprovingThis}
+                            onClick={() => handleOpenRejectApprovalDialog(pendingApproval.id)}
+                            className="inline-flex items-center justify-center rounded-xl border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50 transition"
+                            aria-label={`Reject approval for quote ${quote.quote_ref}`}
+                          >
+                            Reject Approval
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        disabled={isRequestingThis}
+                        onClick={() => handleOpenRequestAwardDialog(quote.id)}
+                        className="inline-flex items-center justify-center rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50 transition"
+                        aria-label={`Request award approval for quote ${quote.quote_ref}`}
+                      >
+                        {isRequestingThis ? 'Requesting…' : 'Request Award Approval'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isRequestingThis}
+                        onClick={() => handleOpenRejectDialog(quote.id)}
+                        className="inline-flex items-center justify-center rounded-xl border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 transition"
+                        aria-label={`Reject quote ${quote.quote_ref}`}
+                      >
+                        Reject Quote
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </article>
@@ -478,6 +606,109 @@ export function QuoteReviewPanel({ poolId, rfqId, onBack }: QuoteReviewPanelProp
                 type="button"
                 disabled={rejectDialog.submitting}
                 onClick={() => setRejectDialog(null)}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Request award approval dialog */}
+        {requestAwardDialog && (
+          <div
+            role="dialog"
+            aria-label="Request award approval"
+            className="rounded-3xl border border-emerald-200 bg-white px-6 py-6 shadow-sm"
+          >
+            <h2 className="text-base font-bold text-emerald-900">Request Award Approval</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Provide an optional reason for this award request. A checker will review and approve
+              or reject it.
+            </p>
+            <label className="mt-4 block space-y-2 text-sm font-medium text-slate-700">
+              <span>Request Reason (optional)</span>
+              <textarea
+                value={requestAwardDialog.reason}
+                onChange={(e) =>
+                  setRequestAwardDialog((prev) => (prev ? { ...prev, reason: e.target.value } : null))
+                }
+                rows={3}
+                maxLength={1000}
+                disabled={requestAwardDialog.submitting}
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-400"
+                placeholder="Optional reason for award request"
+              />
+            </label>
+
+            {requestAwardDialog.error && (
+              <p className="mt-2 text-sm text-rose-700">{requestAwardDialog.error}</p>
+            )}
+
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                type="button"
+                disabled={requestAwardDialog.submitting}
+                onClick={() => { void handleRequestAwardSubmit(); }}
+                className="inline-flex items-center justify-center rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50 transition"
+              >
+                {requestAwardDialog.submitting ? 'Requesting…' : 'Confirm Request'}
+              </button>
+              <button
+                type="button"
+                disabled={requestAwardDialog.submitting}
+                onClick={() => setRequestAwardDialog(null)}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Reject approval dialog */}
+        {rejectApprovalDialog && (
+          <div
+            role="dialog"
+            aria-label="Reject approval"
+            className="rounded-3xl border border-amber-200 bg-white px-6 py-6 shadow-sm"
+          >
+            <h2 className="text-base font-bold text-amber-900">Reject Award Approval</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Provide an optional reason for rejecting this award approval request.
+            </p>
+            <label className="mt-4 block space-y-2 text-sm font-medium text-slate-700">
+              <span>Reject Reason (optional)</span>
+              <textarea
+                value={rejectApprovalDialog.reason}
+                onChange={(e) =>
+                  setRejectApprovalDialog((prev) => (prev ? { ...prev, reason: e.target.value } : null))
+                }
+                rows={3}
+                maxLength={1000}
+                disabled={rejectApprovalDialog.submitting}
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-400"
+                placeholder="Optional reason for rejecting the approval"
+              />
+            </label>
+
+            {rejectApprovalDialog.error && (
+              <p className="mt-2 text-sm text-rose-700">{rejectApprovalDialog.error}</p>
+            )}
+
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                type="button"
+                disabled={rejectApprovalDialog.submitting}
+                onClick={() => { void handleRejectApprovalSubmit(); }}
+                className="inline-flex items-center justify-center rounded-xl bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-50 transition"
+              >
+                {rejectApprovalDialog.submitting ? 'Rejecting…' : 'Confirm Reject'}
+              </button>
+              <button
+                type="button"
+                disabled={rejectApprovalDialog.submitting}
+                onClick={() => setRejectApprovalDialog(null)}
                 className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 transition"
               >
                 Cancel

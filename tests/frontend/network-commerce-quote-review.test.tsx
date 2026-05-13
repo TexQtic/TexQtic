@@ -12,6 +12,10 @@ vi.mock('../../services/tenantApiClient', () => ({
   tenantPatch: vi.fn(),
 }));
 
+vi.mock('../../services/authService', () => ({
+  getCurrentUser: vi.fn().mockRejectedValue(new Error('not mocked in FE-9 tests')),
+}));
+
 import { tenantGet, tenantPost } from '../../services/tenantApiClient';
 import { QuoteReviewPanel } from '../../components/Tenant/NetworkCommerce/QuoteReviewPanel';
 
@@ -169,13 +173,14 @@ describe('FE-9 QuoteReviewPanel — submitted quote', () => {
     expect(screen.getByText('Best FOB pricing available')).toBeInTheDocument();
   });
 
-  it('renders Accept Quote and Reject Quote buttons for SUBMITTED status', async () => {
+  it('renders Request Award Approval and Reject Quote buttons for SUBMITTED status (MC flow)', async () => {
     tenantGetMock.mockResolvedValue([makeOwnerQuote()]);
     render(<QuoteReviewPanel poolId={POOL_ID} rfqId={RFQ_ID} onBack={() => undefined} />);
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /accept quote quo-901/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /request award approval for quote quo-901/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /reject quote quo-901/i })).toBeInTheDocument();
     });
+    expect(screen.queryByRole('button', { name: /^accept quote/i })).not.toBeInTheDocument();
   });
 });
 
@@ -240,25 +245,14 @@ describe('FE-9 QuoteReviewPanel — data safety', () => {
 });
 
 describe('FE-9 QuoteReviewPanel — accept action', () => {
-  it('calls acceptQuoteForRfq service and refreshes quote list on success', async () => {
-    const submittedQuote = makeOwnerQuote();
-    const acceptedQuote = makeOwnerQuote({ status: 'ACCEPTED', accepted_at: '2026-06-15T10:00:00.000Z' });
-    tenantGetMock
-      .mockResolvedValueOnce([submittedQuote])
-      .mockResolvedValueOnce([acceptedQuote]);
-    tenantPostMock.mockResolvedValue(acceptedQuote);
-
-    render(<QuoteReviewPanel poolId={POOL_ID} rfqId={RFQ_ID} onBack={() => undefined} />);
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /accept quote quo-901/i })).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /accept quote quo-901/i }));
-    expect(tenantPostMock).toHaveBeenCalledWith(acceptEndpoint(QUOTE_ID), { request_id: null });
-
-    await waitFor(() => {
-      expect(screen.getByText('Winning Quote')).toBeInTheDocument();
-    });
+  it('calls acceptQuoteForRfq service with correct endpoint (service-level test only)', async () => {
+    // NOTE: The "Accept Quote" button was replaced by the MC award flow in G-021.
+    // This test verifies the acceptQuoteForRfq service method still targets the correct
+    // endpoint path at the service layer, even though the button no longer exists in the UI.
+    tenantPostMock.mockResolvedValue(makeOwnerQuote({ status: 'ACCEPTED' }));
+    const { acceptQuoteForRfq } = await import('../../services/networkCommerceService');
+    await acceptQuoteForRfq(POOL_ID, RFQ_ID, QUOTE_ID, 'req-001');
+    expect(tenantPostMock).toHaveBeenCalledWith(acceptEndpoint(QUOTE_ID), { request_id: 'req-001' });
   });
 });
 

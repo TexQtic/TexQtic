@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001 ROUTE_VERIFIED_COMPLETE. 4 HTTP routes (award-request/approve/reject/list) added to poolRfq.ts. 16 unit tests (MC-ROUTE-01..16). All 16 PASS. 163/163 service regression PASS. tsc EXIT 0. commit 8d10fdf. No frontend/schema/migration/env/flag changes. QD-6 hold unchanged. nc.procurement_pools.rfq.award.enabled ABSENT (fail-closed). DPP HOLD_FOR_PARESH_DECISION unchanged. Next: PARESH_DECISION_REQUIRED.)
+**Last Updated:** 2026-07-01 (TEXQTIC-NC-FRONTEND-AWARD-MAKER-CHECKER-UI-001 FRONTEND_IMPLEMENTED_PENDING_PROD_VERIFY. FE-9 extended with G-021 maker-checker award flow: request/approve/reject UI + feature-disabled guard. 4 new service methods. 42/42 frontend tests PASS. tsc EXIT 0. No backend/schema/migration/env/flag activation. nc.procurement_pools.rfq.award.enabled ABSENT (fail-closed). QD-6 hold unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged. Next: PARESH_DECISION_REQUIRED — prod verify when flags activated.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,22 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-FRONTEND-AWARD-MAKER-CHECKER-UI-001 FRONTEND_IMPLEMENTED_PENDING_PROD_VERIFY (2026-07-01).
+  FE-9 QuoteReviewPanel extended with G-021 maker-checker award flow.
+  MAKER path: "Request Award Approval" dialog → POST award-request → pending approval card.
+  CHECKER path: "Approve Award" / "Reject Approval" buttons (only when checker ≠ maker) → refresh.
+  "Winning Quote" emerald badge on ACCEPTED quotes.
+  Feature-disabled amber banner preserved for 503 FEATURE_DISABLED (nc.procurement_pools.rfq.award.enabled absent/false).
+  6 safe error messages via classifyMcError (AWARD_REQUEST_ALREADY_PENDING, APPROVAL_NOT_FOUND,
+    APPROVAL_ALREADY_DECIDED, APPROVAL_EXPIRED, MAKER_CHECKER_SAME_ACTOR, QUOTE_NO_LONGER_SUBMITTED).
+  4 new service methods: requestAwardApprovalForQuote, approveAwardApproval, rejectAwardApproval, getPendingAwardApprovalsForRfq.
+  42/42 frontend tests PASS (25 new MC tests + 17 existing FE-9 tests). tsc --noEmit EXIT 0.
+  No backend/schema/migration/.env/flag changes. nc.procurement_pools.rfq.award.enabled ABSENT (fail-closed).
+  Legacy /accept route and old acceptQuoteForRfq service method preserved unchanged.
+  QD-6 (supplier_quotes.enabled=false) unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.
+  Next: PARESH_DECISION_REQUIRED — prod verify when flags activated.
+  See governance/TEXQTIC-NC-FRONTEND-AWARD-MAKER-CHECKER-UI-001.md.
 
 - TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001 ROUTE_VERIFIED_COMPLETE (2026-07-01).
   4 new HTTP routes added to server/src/routes/tenant/poolRfq.ts under ownerAwardPreHandler (3-gate chain).
