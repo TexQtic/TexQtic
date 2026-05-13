@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-08 (TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-TX-TIMEOUT-FIX-001 VERIFIED_COMPLETE. issueRfq $transaction timeout fixed: { timeout: 30000 } added. PRQ-16 PASS. tsc EXIT 0. Unblocks FE-9 production verification after deployment. nc.procurement_pools.rfq.award.enabled=false unchanged. nc.procurement_pools.supplier_quotes.enabled=false unchanged (QD-6 hold). DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-06-08 (TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE. FE-9 production verification complete. QuoteReviewPanel feature-disabled path confirmed in production (v2.4.0). rfq.award.enabled row absent — middleware fails closed → 503 FEATURE_DISABLED. All 14-point §14 checks PASS. QA RFQ b3abfbdb ISSUED, pool → CLOSED_FOR_BIDS. supplier_quotes.enabled=false unchanged (QD-6). DPP HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,14 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE (2026-06-08).
+  FE-9 QuoteReviewPanel feature-disabled path confirmed in production (v2.4.0).
+  nc.procurement_pools.rfq.award.enabled row ABSENT (fails closed → 503 FEATURE_DISABLED — same as false).
+  All 14-point §14 checks PASS. QA RFQ b3abfbdb ISSUED, pool → CLOSED_FOR_BIDS.
+  supplier_quotes.enabled=false unchanged (QD-6). quote_count=0 unchanged. No invariant violations.
+  FE-10 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.
+  See governance/TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-PROD-VERIFY-GOV-CLOSE-001.md.
 
 - TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-TX-TIMEOUT-FIX-001 VERIFIED_COMPLETE (2026-06-08).
   Fix: added { timeout: 30000 } to issueRfq $transaction in networkPoolRfq.service.ts.

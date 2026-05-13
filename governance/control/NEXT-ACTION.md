@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-08 (TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-TX-TIMEOUT-FIX-001 VERIFIED_COMPLETE. issueRfq tx timeout fixed. PRQ-16 PASS. tsc EXIT 0. Unblocks FE-9 production verification after deployment. nc.procurement_pools.rfq.award.enabled=false unchanged. QD-6 hold unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-08 (TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE. FE-9 production verification complete. QuoteReviewPanel feature-disabled path confirmed. rfq.award.enabled row absent — middleware fails closed. All 14-point §14 checks PASS. QA RFQ b3abfbdb ISSUED. supplier_quotes.enabled=false unchanged (QD-6). DPP HOLD_FOR_PARESH_DECISION unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -16,7 +16,7 @@ product_delivery_priority: >-
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
 active_delivery_unit: TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001
-active_delivery_unit_status: IMPLEMENTED_PENDING_PROD_VERIFY (tx-timeout-fix applied — deploy required)
+active_delivery_unit_status: VERIFIED_COMPLETE (2026-06-08)
 active_delivery_unit_note: >
   TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001 IMPLEMENTED_PENDING_PROD_VERIFY (2026-06-08).
   FE-9 owner-facing award allocation frontend implemented.

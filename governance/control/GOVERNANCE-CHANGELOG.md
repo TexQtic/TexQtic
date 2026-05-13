@@ -7,6 +7,21 @@
 
 ---
 
+## 2026-06-08 -- VERIFIED_COMPLETE: TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-PROD-VERIFY-GOV-CLOSE-001
+
+FE-9 (`TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001`) production verification complete. QuoteReviewPanel
+feature-disabled path confirmed in production (v2.4.0). `nc.procurement_pools.rfq.award.enabled` row absent
+in production `feature_flags` table — middleware fails closed (`undefined !== true` → 503 FEATURE_DISABLED);
+behaviorally identical to `enabled=false`. All 14-point §14 checks PASS: amber banner rendered, flag code
+element present, zero Accept/Reject buttons, Back navigation confirmed. QA RFQ fixture issued via production
+UI (RFQ ref `b3abfbdb-883c-4c60-af7b-4449631033dc`, ISSUED, SNAPSHOT_LOCK, pool → CLOSED_FOR_BIDS).
+Pre-condition: `e3ca40a` (TX timeout fix) deployed — confirmed by successful RFQ issue. Post-checks:
+`supplier_quotes.enabled=false` unchanged (QD-6), quote count=0 (unchanged), no invariant violations.
+No source/schema/migration/env/flag changes in this packet. FE-10 HOLD_FOR_PARESH_DECISION unchanged.
+DPP: HOLD_FOR_PARESH_DECISION unchanged.
+
+---
+
 ## 2026-06-08 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-TX-TIMEOUT-FIX-001
 
 Fix Prisma interactive transaction timeout in `issueRfq`. Default 5 s timeout exceeded in Vercel serverless
