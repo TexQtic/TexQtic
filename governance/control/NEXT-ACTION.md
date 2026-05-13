@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-09 (TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001 VERIFIED_COMPLETE. DemandLineSurface.tsx Tailwind rewrite + controlled-form data-flow fix. 27 new tests. 91/91 total frontend tests PASS. TypeCheck EXIT 0. Lint clean. No backend/schema/migration/env/flag/production-data changes. QD-6 unchanged. rfq.award.enabled ABSENT. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-09 (TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE. FE-4 DemandLineSurface polished surface confirmed live in production. All 12-point checklist PASS. Controlled-form fix verified in browser (typed value retained). DB invariants unchanged. No flag activation. No data mutation. QD-6 unchanged. rfq.award.enabled ABSENT. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,34 +15,31 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001
+active_delivery_unit: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-PROD-VERIFY-GOV-CLOSE-001
 active_delivery_unit_status: VERIFIED_COMPLETE (2026-06-09)
 active_delivery_unit_note: >
-  TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001 VERIFIED_COMPLETE (2026-06-09).
-  DemandLineSurface.tsx fully rewritten: non-Tailwind class names replaced with Tailwind
-  utility classes matching TexQtic platform visual standard (QuoteReviewPanel / SupplierInviteOwnerSurface).
-  Data-flow bug fixed: DemandLineForm made fully controlled component — parent owns formState,
-  passes via onFieldChange callback (old internal useState removed).
-  27 new frontend tests created. 91/91 total frontend tests PASS. pnpm run typecheck EXIT 0.
-  Lint clean on all touched files. No backend/schema/migration/env/flag/production-data changes.
-  nc.procurement_pools.supplier_quotes.enabled=false (QD-6 hold unchanged).
-  rfq.award.enabled row ABSENT (FE-10 HOLD_FOR_PARESH_DECISION unchanged).
-  DPP: HOLD_FOR_PARESH_DECISION unchanged.
-  See governance/TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001.md.
-last_closed_unit: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001
+  TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE (2026-06-09).
+  FE-4 DemandLineSurface polished surface confirmed live in production at https://app.texqtic.com/qa-b2b.
+  All 12-point browser checklist items PASS. Controlled-form fix verified: typed value
+  TEST-CONTROLLED-FORM-001 retained in Line Reference input — proving parent-owned formState is effective.
+  No console errors on Demand Lines page. Back navigation works. No form submission performed.
+  DB post-check: supplier_quotes.enabled=false unchanged (QD-6); rfq.award.enabled ABSENT;
+  demand line LOCKED_FOR_RFQ unchanged; quote_count=0 unchanged.
+  See governance/TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-PROD-VERIFY-GOV-CLOSE-001.md.
+last_closed_unit: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-PROD-VERIFY-GOV-CLOSE-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  Frontend polish only. DemandLineSurface.tsx Tailwind rewrite + controlled-form fix.
-  27/27 new tests pass. 91/91 total frontend tests pass. pnpm run typecheck exit 0. Lint clean.
-  No backend/schema/migration/env/flag/production-data changes.
-  supplier_quotes.enabled=false unchanged (QD-6). rfq.award.enabled ABSENT. DPP: HOLD_FOR_PARESH_DECISION.
-last_closed_unit_commits: feat(network-commerce): polish demand lines frontend
+  FE-4 prod verify only. DemandLineSurface polished surface confirmed in production.
+  12/12 browser checklist PASS. Controlled-form typed-value retention confirmed.
+  No data mutation. supplier_quotes.enabled=false unchanged (QD-6). rfq.award.enabled ABSENT.
+  DPP: HOLD_FOR_PARESH_DECISION.
+last_closed_unit_commits: docs(network-commerce): verify demand lines uiux production surface
 last_closed_unit_closure_basis: >-
-  27/27 new FE-4 polish tests pass. 91/91 total frontend tests pass. pnpm run typecheck exit 0.
-  Lint clean on DemandLineSurface.tsx and network-commerce-demand-lines.test.tsx.
-  Tailwind rewrite complete. Controlled-component data-flow fix verified via tests.
-  nc.procurement_pools.supplier_quotes.enabled=false (QD-6 unchanged). rfq.award.enabled ABSENT.
-last_closed_unit_prior: TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-001
+  12/12 prod browser checklist PASS. Polished surface confirmed via screenshot.
+  Controlled-form fix confirmed (typed value retained). No data mutation.
+  DB post-check confirms all invariants unchanged.
+  supplier_quotes.enabled=false (QD-6 unchanged). rfq.award.enabled ABSENT.
+last_closed_unit_prior: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001
 note_on_pending_verification: >-
   TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
   All 3 AF findings resolved. NC Pools + RFQ + Invite surfaces technically unblocked.

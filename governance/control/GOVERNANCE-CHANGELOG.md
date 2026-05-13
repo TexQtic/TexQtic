@@ -7,6 +7,22 @@
 
 ---
 
+## 2026-06-09 -- VERIFIED_COMPLETE: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-PROD-VERIFY-GOV-CLOSE-001
+
+FE-4 (`TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001`) production browser verification complete.
+`DemandLineSurface.tsx` polished surface confirmed live at `https://app.texqtic.com/qa-b2b`. All 12-point
+browser checklist items PASS: NETWORK COMMERCE eyebrow, Demand Lines h1, Pool ID / Lines badges confirmed;
+existing demand line `QA-DL-FE9-VERIFY-001` renders with LOCKED_FOR_RFQ indigo badge, Locked May 13 2026 date,
+COMMODITY=MMF, PRODUCT CATEGORY=YARN, QUANTITY=1000 KG in `<dl>` grid layout; create form opens with all
+4 fieldsets (Identification, Commodity & Product, Quantity, Delivery); controlled-form fix verified in browser
+— typed `TEST-CONTROLLED-FORM-001` into Line Reference; value retained in controlled input (proves
+parent-owned `formState` effective — old internal `useState` bug would reset or submit defaults); form
+cancelled without submission; Back navigation returns to Pool Detail; zero console errors on Demand Lines page.
+DB post-check: `supplier_quotes.enabled=false` unchanged (QD-6); `rfq.award.enabled` row ABSENT; demand line
+`36e9b346` = LOCKED_FOR_RFQ unchanged; `quote_row_count=0` unchanged. No data mutation. DPP: HOLD_FOR_PARESH_DECISION.
+
+---
+
 ## 2026-06-09 -- VERIFIED_COMPLETE: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001
 
 FE-4 (`TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001`) Tailwind UI/UX polish complete.

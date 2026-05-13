@@ -53,6 +53,10 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE (2026-06-09).
+  FE-4 DemandLineSurface polished surface confirmed in production. Tailwind polish + controlled-form fix verified.
+  All 12-point checklist PASS. No flag activation. No data mutation. QD-6 hold unchanged. rfq.award.enabled ABSENT.
+  DPP HOLD_FOR_PARESH_DECISION unchanged.
 - TEXQTIC-NC-FRONTEND-AWARD-ALLOCATION-UI-PROD-VERIFY-GOV-CLOSE-001 VERIFIED_COMPLETE (2026-06-08).
   FE-9 QuoteReviewPanel feature-disabled path confirmed in production (v2.4.0).
   nc.procurement_pools.rfq.award.enabled row ABSENT (fails closed → 503 FEATURE_DISABLED — same as false).
