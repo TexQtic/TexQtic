@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001 DESIGN_COMPLETE. Two-call G-021 split flow selected as MC architecture for POOL RFQ award acceptance. pending_approvals + ApprovalSignature tables confirmed already in schema. CHECKER in allowed_actor_type confirmed in lifecycle seed. No source/schema/migration/env/flag changes. BLOCKED item NC-PROD-AWARD-E2E-BLOCKED-BY-MAKER-CHECKER-DESIGN resolved by this design. Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001 (verify G-021 tables in remote DB). QD-6 hold unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001 SCHEMA_REMOTE_READY_VERIFIED_COMPLETE. All G-021 DB objects verified in remote Supabase: pending_approvals + approval_signatures tables, all columns, partial unique index pending_approvals_active_unique, trg_check_maker_checker_separation trigger, trg_immutable_approval_signature trigger, RLS policies. POOL QUOTED→ACCEPTED transition unchanged. prisma validate/generate/tsc PASS. No schema migration needed. No source/schema/migration/env/flag changes. Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001. QD-6 hold unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,17 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001 SCHEMA_REMOTE_READY_VERIFIED_COMPLETE (2026-07-01).
+  All G-021 schema objects verified present in remote Supabase DB and server/prisma/schema.prisma.
+  `pending_approvals` (23 cols) + `approval_signatures` (11 cols) confirmed. Partial unique index
+  `pending_approvals_active_unique` present (covers REQUESTED + ESCALATED). `trg_check_maker_checker_separation`
+  (AFTER INSERT on `approval_signatures`) + `trg_immutable_approval_signature` both confirmed.
+  RLS posture: `pending_approvals` INSERT/SELECT/UPDATE tenant-scoped + DELETE=false;
+  `approval_signatures` INSERT/SELECT only, UPDATE=false + DELETE=false (append-only at DB layer).
+  POOL QUOTED→ACCEPTED: `requires_maker_checker=true` + `CHECKER` in `allowed_actor_type` — unchanged.
+  No schema migration required. prisma validate/generate/tsc PASS. QD-6 hold maintained.
+  DPP HOLD_FOR_PARESH_DECISION unchanged. Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001.
 
 - TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001 DESIGN_COMPLETE (2026-07-01).
   Two-call G-021 split flow selected as the MC architecture for POOL RFQ quote award acceptance.

@@ -7,6 +7,34 @@
 
 ---
 
+## 2026-07-01 -- SCHEMA_REMOTE_READY_VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001
+
+Schema remote readiness verification for the maker-checker award flow G-021 foundation.
+No schema migration required. All G-021 objects confirmed present in remote Supabase DB.
+
+**Verification summary:**
+- `public.pending_approvals` — 23 columns, all required fields present, correct types
+- `public.approval_signatures` — 11 columns, all required fields present (no `updated_at` — append-only by design)
+- Partial unique index `pending_approvals_active_unique`: `(org_id, entity_type, entity_id, from_state_key, to_state_key) WHERE status IN ('REQUESTED','ESCALATED')` — enforces one active approval per entity/transition
+- `trg_check_maker_checker_separation` (AFTER INSERT on `approval_signatures`) + function `check_maker_checker_separation` — confirmed present
+- `trg_immutable_approval_signature` (BEFORE UPDATE/DELETE on `approval_signatures`) — confirmed present; append-only at DB layer
+- `frozenPayload` immutability — no separate DB trigger; covered by `frozenPayloadHash` (SHA-256, D-021-A) + application-layer invariant (acceptable per G-021 design)
+- RLS: `pending_approvals` — tenant-scoped INSERT/SELECT/UPDATE + DELETE=false. `approval_signatures` — tenant-scoped INSERT/SELECT + UPDATE=false + DELETE=false
+- `allowed_transitions` POOL QUOTED→ACCEPTED: `requires_maker_checker=true`, `CHECKER` in `allowed_actor_type` — confirmed unchanged
+
+**Prisma / TypeScript:**
+- `prisma validate` — schema valid (pre-existing SetNull warning, unrelated to MC)
+- `prisma generate` — Prisma Client v6.1.0 generated; `PendingApproval` and `ApprovalSignature` types accessible
+- `tsc --noEmit` — zero errors
+
+**Confirmations:** No source/schema/migration/test/env changes. No DB writes. No feature flags changed.
+POOL QUOTED→ACCEPTED transition unchanged. Packet 17 not opened. FE-10 not opened. DPP HOLD_FOR_PARESH_DECISION unchanged.
+
+**Next packet:** TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001.
+**Git HEAD at close:** (to be filled by commit)
+
+---
+
 ## 2026-07-01 -- DESIGN_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001
 
 Design authority for the pool RFQ quote award maker-checker architecture. Resolves blocker

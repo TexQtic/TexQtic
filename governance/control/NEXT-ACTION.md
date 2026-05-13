@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001 DESIGN_COMPLETE. Two-call G-021 split flow: requestAward (MAKER→PENDING_APPROVAL→pending_approvals row) + approveAward (CHECKER→SM APPLIED→award transaction). pending_approvals+ApprovalSignature already in schema. CHECKER in allowed_actor_type. Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001 — verify G-021 tables in remote DB, confirm Prisma client. QD-6 hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001 SCHEMA_REMOTE_READY_VERIFIED_COMPLETE. All G-021 DB objects verified in remote Supabase: pending_approvals + approval_signatures tables, all required columns, partial unique index pending_approvals_active_unique, trg_check_maker_checker_separation trigger, trg_immutable_approval_signature trigger, RLS policies. POOL QUOTED→ACCEPTED transition unchanged: requires_maker_checker=true, CHECKER in allowed_actor_type. prisma validate/generate/tsc all PASS. No schema migration needed. Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001. QD-6 hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,27 +15,26 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001
-active_delivery_unit_status: DESIGN_COMPLETE (2026-07-01)
+active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001
+active_delivery_unit_status: SCHEMA_REMOTE_READY_VERIFIED_COMPLETE (2026-07-01)
 active_delivery_unit_note: >
-  TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001 DESIGN_COMPLETE (2026-07-01).
-  Architecture: Two-call G-021 split flow.
-  MAKER call: requestAward() → SM QUOTED→ACCEPTED with actorType TENANT_ADMIN → SM returns
-    PENDING_APPROVAL → service creates pending_approvals row (G-021) → 202 response.
-  CHECKER call: approveAward() → load pending_approvals → SM QUOTED→ACCEPTED with actorType
-    CHECKER + makerUserId → SM returns APPLIED → full award transaction (quote ACCEPTED,
-    mass-reject, RFQ ACCEPTED, pool QUOTED→ACCEPTED) → pending_approvals APPROVED → 200.
-  Repo-truth confirmed:
-    pending_approvals + ApprovalSignature tables already in schema (TTP Foundation migration).
-    CHECKER in allowed_actor_type for POOL QUOTED→ACCEPTED (lifecycle seed confirmed).
-    SM Step 13: CHECKER + makerUserId → bypasses PENDING_APPROVAL gate → APPLIED.
-    SM comment: "caller creates the G-021 record".
-  BLOCKED item NC-PROD-AWARD-E2E-BLOCKED-BY-MAKER-CHECKER-DESIGN resolved by this design.
-  Next implementation packet: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001.
-  No source/schema/migration/env/flag changes. QD-6 hold maintained. DPP unchanged.
-  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001.md.
-last_closed_unit: TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001
-last_closed_unit_status: PARTIAL_VERIFIED_BLOCKED_BY_MAKER_CHECKER_DESIGN
+  TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001 SCHEMA_REMOTE_READY_VERIFIED_COMPLETE (2026-07-01).
+  All G-021 schema objects verified present in remote Supabase DB and server/prisma/schema.prisma.
+  Remote tables confirmed: public.pending_approvals (23 columns), public.approval_signatures (11 columns).
+  Unique partial index: pending_approvals_active_unique (org_id, entity_type, entity_id, from_state_key,
+    to_state_key) WHERE status IN ('REQUESTED','ESCALATED') — enforces one active approval per entity/transition.
+  Triggers: trg_check_maker_checker_separation (AFTER INSERT on approval_signatures) + function
+    check_maker_checker_separation (public schema) both present. trg_immutable_approval_signature
+    (BEFORE UPDATE/DELETE on approval_signatures) present — append-only enforced at DB level.
+  RLS: pending_approvals — INSERT/SELECT/UPDATE tenant-scoped, DELETE=false. approval_signatures —
+    INSERT/SELECT only, UPDATE=false, DELETE=false. Full G-021 RLS posture confirmed.
+  POOL QUOTED→ACCEPTED transition: requires_maker_checker=true, CHECKER in allowed_actor_type — unchanged.
+  Prisma validate: schema valid. Prisma generate: Client v6.1.0 generated. tsc --noEmit: zero errors.
+  No schema migration required. No source/schema/migration/env/flag changes.
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001.md.
+  Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001.
+last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001
+last_closed_unit_status: DESIGN_COMPLETE (2026-07-01)
 last_closed_unit_runtime_verdict: >-
   FE-4 prod verify only. DemandLineSurface polished surface confirmed in production.
   12/12 browser checklist PASS. Controlled-form typed-value retention confirmed.

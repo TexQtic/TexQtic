@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001 DESIGN_COMPLETE. NC-PROD-AWARD-E2E-BLOCKED-BY-MAKER-CHECKER-DESIGN resolved by design. Two-call G-021 split flow: requestAward (MAKER) + approveAward (CHECKER). pending_approvals + ApprovalSignature tables already in schema. Next implementation packet: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001. QD-6 hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001 SCHEMA_REMOTE_READY_VERIFIED_COMPLETE. All G-021 remote DB objects confirmed present. No schema migration required. No blocker state changes in this packet. Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001. QD-6 hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 
 > Read this file after `NEXT-ACTION.md`. It records only current blockers, holds, and governance
 > exceptions relevant to live Layer 0 posture. It does not originate ordinary product delivery
