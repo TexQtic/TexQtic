@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-13 (TEXQTIC-NC-QA-B2B-CHECKER-USER-PROVISIONING-001 CHECKER_PROVISIONED_COMPLETE. qa.buyer@texqtic.com added as ADMIN to qa-b2b. Maker ac6d2d3f ≠ checker b80f0cab. Flags unchanged. MC-5 blocker resolved. PARESH_DECISION_REQUIRED — activate flags to run prod E2E.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-13 (TEXQTIC-NC-PENDING-APPROVALS-ENTITY-TYPE-CONSTRAINT-REMEDIATION-001 COMPLETE. pending_approvals_entity_type_check extended to include POOL. Flags remain false. MC-5 HALTED — constraint blocker resolved; MC-5 Phase D requires separate Paresh authorization to resume.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a

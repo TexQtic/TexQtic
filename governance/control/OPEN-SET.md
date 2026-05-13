@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-01 (TEXQTIC-NC-FRONTEND-AWARD-MAKER-CHECKER-UI-001 FRONTEND_IMPLEMENTED_PENDING_PROD_VERIFY. FE-9 extended with G-021 maker-checker award flow: request/approve/reject UI + feature-disabled guard. 4 new service methods. 42/42 frontend tests PASS. tsc EXIT 0. No backend/schema/migration/env/flag activation. nc.procurement_pools.rfq.award.enabled ABSENT (fail-closed). QD-6 hold unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged. Next: PARESH_DECISION_REQUIRED — prod verify when flags activated.)
+**Last Updated:** 2026-05-13 (TEXQTIC-NC-PENDING-APPROVALS-ENTITY-TYPE-CONSTRAINT-REMEDIATION-001 COMPLETE. pending_approvals_entity_type_check constraint extended to include POOL. DDL applied; post-DDL state verified clean. API smoke → 503 FEATURE_DISABLED. Flags remain false. MC-5 HALTED — constraint blocker resolved; MC-5 resume requires separate Paresh authorization. No source/schema/migration/env changes.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
