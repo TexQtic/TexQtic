@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-09 (TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-001 VERIFIED_COMPLETE. DemandLineSurface.tsx fully rewritten: non-Tailwind class names replaced with Tailwind utility classes matching TexQtic platform visual standard. Data-flow bug fixed: DemandLineForm made fully controlled (parent owns formState, passes via onFieldChange). 27 new tests created. 91/91 total frontend tests PASS. TypeCheck EXIT 0. Lint clean on touched files. No backend/schema/migration/env/flag/production-data changes. QD-6 unchanged. rfq.award.enabled ABSENT. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001 DESIGN_COMPLETE. Two-call G-021 split flow selected as MC architecture for POOL RFQ award acceptance. pending_approvals + ApprovalSignature tables confirmed already in schema. CHECKER in allowed_actor_type confirmed in lifecycle seed. No source/schema/migration/env/flag changes. BLOCKED item NC-PROD-AWARD-E2E-BLOCKED-BY-MAKER-CHECKER-DESIGN resolved by this design. Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001 (verify G-021 tables in remote DB). QD-6 hold unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,17 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001 DESIGN_COMPLETE (2026-07-01).
+  Two-call G-021 split flow selected as the MC architecture for POOL RFQ quote award acceptance.
+  Repo-truth confirmed: `pending_approvals` + `ApprovalSignature` tables already in schema (TTP Foundation migration).
+  `CHECKER` already in `allowed_actor_type` for POOL QUOTED→ACCEPTED transition seed.
+  SM Step 13 logic: CHECKER + makerUserId set → bypasses PENDING_APPROVAL gate → APPLIED.
+  SM comment: "caller creates the G-021 record" — `pending_approvals` row created by service on MAKER call.
+  Design decisions: requestAward (MAKER), approveAward (CHECKER), rejectAwardApproval (CHECKER).
+  No source/schema/migration/env/flag changes. BLOCKED item NC-PROD-AWARD-E2E-BLOCKED-BY-MAKER-CHECKER-DESIGN resolved.
+  Next implementation packet: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001.
+  QD-6 hold unchanged. FE-10 HOLD_FOR_PARESH_DECISION unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001.md.
 - TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001 PARTIAL_VERIFIED_BLOCKED_BY_MAKER_CHECKER_DESIGN (2026-05-13).
   Supplier quote submission path VERIFIED on QA fixture: `nc.procurement_pools.supplier_quotes.enabled` activated,
   quote submitted (201), quote_id=`2ac70ff6`, ref=`SQ-639D77622A92476C`, status=`SUBMITTED`, RFQ advanced to `QUOTED`.

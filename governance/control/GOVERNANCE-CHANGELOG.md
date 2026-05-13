@@ -7,7 +7,56 @@
 
 ---
 
-## 2026-05-13 -- PARTIAL_VERIFIED_BLOCKED_BY_MAKER_CHECKER_DESIGN: TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001
+## 2026-07-01 -- DESIGN_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001
+
+Design authority for the pool RFQ quote award maker-checker architecture. Resolves blocker
+`NC-PROD-AWARD-E2E-BLOCKED-BY-MAKER-CHECKER-DESIGN` established 2026-05-13.
+
+**Architecture selected:** Option C — Two-call G-021 split flow.
+
+**Repo-truth findings confirmed before design:**
+- `CHECKER` is already in `allowed_actor_type = ARRAY['TENANT_ADMIN','PLATFORM_ADMIN','CHECKER']` for
+  POOL QUOTED→ACCEPTED in the lifecycle seed (`20260523000000_nc_pool_lifecycle_seed`). No transition
+  seed change required.
+- SM Step 13 (`isMakerCheckerCompletion = actorType === 'CHECKER' && makerUserId != null`): CHECKER +
+  makerUserId bypasses PENDING_APPROVAL gate and falls through to APPLIED write. SM comment explicitly
+  states "caller creates the G-021 record."
+- `PendingApproval` model (`pending_approvals` table) and `ApprovalSignature` model (`approval_signatures`
+  table) already in schema via TTP Foundation migration `20260515120000_ttp_foundation_001`. No new schema
+  models required.
+- `NetworkLifecycleLog` has `makerUserId` and `checkerUserId` fields — full audit trail already supported.
+- SM was designed for this two-call flow. `acceptQuote` was a MAKER-only prototype that needs refactoring.
+
+**Flow summary:**
+1. `requestAward()` (MAKER/TENANT_ADMIN): SM QUOTED→ACCEPTED → SM returns `PENDING_APPROVAL` →
+   service creates `pending_approvals` row (frozenPayload: poolId+rfqId+quoteId, expiresAt+72h) →
+   202 response to MAKER.
+2. `approveAward()` (CHECKER, different actor): load pending_approvals → verify maker≠checker →
+   SM QUOTED→ACCEPTED with `actorType:'CHECKER'`, `makerUserId=<maker>` → SM returns `APPLIED` →
+   quote ACCEPTED, mass-reject other quotes, RFQ ACCEPTED, pool QUOTED→ACCEPTED, pending_approvals
+   APPROVED, ApprovalSignature inserted → 200 response.
+3. `rejectAwardApproval()` (CHECKER): no SM call, pool stays QUOTED, pending_approvals REJECTED,
+   new requestAward is valid after rejection.
+
+**Design decisions:** DD-1 through DD-10 documented in §16. Key: SM not called with fake CHECKER;
+maker≠checker enforced at service layer before SM call; SM acts as defense-in-depth only for actor
+type; DB trigger `check_maker_checker_separation` is a backstop.
+
+**Packet decomposition (5 child packets):**
+1. `TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001` — verify G-021 tables in remote DB
+2. `TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SERVICE-001` — requestAward/approveAward/rejectAwardApproval service methods
+3. `TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001` — 4 new routes + deprecate /accept
+4. `TEXQTIC-NC-FRONTEND-AWARD-MAKER-CHECKER-UI-001` — QuoteReviewPanel MC-aware UI + networkCommerceService additions
+5. `TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001` — E2E activation (requires QD-6 lift + Paresh authorization)
+
+**No source/schema/migration/test/env/flag changes in this packet.** Design-only.
+OPEN-SET, NEXT-ACTION, BLOCKED updated. Git HEAD 34746d6 (pre-commit baseline).
+QD-6 hold maintained. FE-10 HOLD_FOR_PARESH_DECISION. DPP HOLD_FOR_PARESH_DECISION unchanged.
+See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001.md.
+
+---
+
+
 
 Controlled QA activation for supplier quote submission and owner award acceptance on QA fixture
 (qa-b2b / qa-knt-b). Both `nc.procurement_pools.supplier_quotes.enabled` and

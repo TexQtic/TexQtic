@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-13 (TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001 PARTIAL_VERIFIED_BLOCKED_BY_MAKER_CHECKER_DESIGN. Supplier quote path VERIFIED (201, SQ-639D77622A92476C). Award path blocked by SM maker-checker gate on POOL QUOTED→ACCEPTED. Both flags restored false. Next required design unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001. QD-6 hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-01 (TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001 DESIGN_COMPLETE. Two-call G-021 split flow: requestAward (MAKER→PENDING_APPROVAL→pending_approvals row) + approveAward (CHECKER→SM APPLIED→award transaction). pending_approvals+ApprovalSignature already in schema. CHECKER in allowed_actor_type. Next: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001 — verify G-021 tables in remote DB, confirm Prisma client. QD-6 hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,22 +15,27 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001
-active_delivery_unit_status: PARTIAL_VERIFIED_BLOCKED_BY_MAKER_CHECKER_DESIGN (2026-05-13)
+active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001
+active_delivery_unit_status: DESIGN_COMPLETE (2026-07-01)
 active_delivery_unit_note: >
-  TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001 PARTIAL_VERIFIED (2026-05-13).
-  Supplier quote path VERIFIED: nc.procurement_pools.supplier_quotes.enabled activated; POST quote
-  returned 201; quote SQ-639D77622A92476C created SUBMITTED; RFQ advanced to QUOTED.
-  Award path VERIFIED to service/SM boundary: nc.procurement_pools.rfq.award.enabled activated;
-  POST accept reached NetworkPoolRfqService.acceptQuote(); blocked by SM maker-checker gate:
-  POOL QUOTED→ACCEPTED requires_maker_checker=true; service actor TENANT_ADMIN ≠ CHECKER;
-  SM returned PENDING_APPROVAL; route returned 422 INVALID_TRANSITION. Correct governance behavior.
-  Both flags restored false. Quote accepted_at=NULL, rejected_at=NULL. MC rule unchanged.
-  Next required design unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001.
-  No source/schema/migration/env changes. QD-6 hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged.
-  See governance/TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001.md.
-last_closed_unit: TEXQTIC-NC-FRONTEND-DEMAND-LINES-UIUX-POLISH-PROD-VERIFY-GOV-CLOSE-001
-last_closed_unit_status: VERIFIED_COMPLETE
+  TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001 DESIGN_COMPLETE (2026-07-01).
+  Architecture: Two-call G-021 split flow.
+  MAKER call: requestAward() → SM QUOTED→ACCEPTED with actorType TENANT_ADMIN → SM returns
+    PENDING_APPROVAL → service creates pending_approvals row (G-021) → 202 response.
+  CHECKER call: approveAward() → load pending_approvals → SM QUOTED→ACCEPTED with actorType
+    CHECKER + makerUserId → SM returns APPLIED → full award transaction (quote ACCEPTED,
+    mass-reject, RFQ ACCEPTED, pool QUOTED→ACCEPTED) → pending_approvals APPROVED → 200.
+  Repo-truth confirmed:
+    pending_approvals + ApprovalSignature tables already in schema (TTP Foundation migration).
+    CHECKER in allowed_actor_type for POOL QUOTED→ACCEPTED (lifecycle seed confirmed).
+    SM Step 13: CHECKER + makerUserId → bypasses PENDING_APPROVAL gate → APPLIED.
+    SM comment: "caller creates the G-021 record".
+  BLOCKED item NC-PROD-AWARD-E2E-BLOCKED-BY-MAKER-CHECKER-DESIGN resolved by this design.
+  Next implementation packet: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001.
+  No source/schema/migration/env/flag changes. QD-6 hold maintained. DPP unchanged.
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001.md.
+last_closed_unit: TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001
+last_closed_unit_status: PARTIAL_VERIFIED_BLOCKED_BY_MAKER_CHECKER_DESIGN
 last_closed_unit_runtime_verdict: >-
   FE-4 prod verify only. DemandLineSurface polished surface confirmed in production.
   12/12 browser checklist PASS. Controlled-form typed-value retention confirmed.
