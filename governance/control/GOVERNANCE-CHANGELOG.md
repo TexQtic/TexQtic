@@ -7,6 +7,12 @@
 
 ---
 
+## 2026-07-03 -- IMPLEMENTED_AWAITING_PARESH_VERIFY: TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001
+
+Packet 19 NC invoice read routes IMPLEMENTED_AWAITING_PARESH_VERIFY. Two GET routes added: `GET /api/tenant/network-commerce/pools/:poolId/invoices` (list) and `GET /api/tenant/network-commerce/pools/:poolId/invoices/:invoiceId` (detail). `listNetworkInvoicesForPool` method added to `networkInvoice.service.ts`. Route file `server/src/routes/tenant/networkInvoices.ts` created (Fastify plugin, registered under `/tenant/network-commerce/pools` prefix in `tenant.ts`). `ncPoolFeatureGateMiddleware` (2-gate chain). D-017-A compliant (`orgId` from `dbContext.orgId` only). Non-leaking 404 for wrong-org/wrong-pool access. `tsc --noEmit` EXIT 0 (confirmed — `Prisma.Decimal` from `@prisma/client` resolves cleanly; zero type errors). 19/19 unit PASS (P-NI-01..12 + F-NI-01..07). 12 integration tests ADDED (`NILIST-01..06`, `NIGET-01..06`) — DB-gated (`describe.skipIf(!hasDb)`); NOT yet executed against live Supabase DB; pending runtime verification. No frontend, schema, migrations, new feature flags, or `.env` changes. `nc.procurement_pools.rfq.award.enabled` = false UNCHANGED. DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED. No invoice CREATE route (internal lifecycle only). `last_closed_unit` remains TEXQTIC-NC-PHASE1-POOL-ORDER-001 (VERIFIED_COMPLETE). See governance/TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001.md.
+
+---
+
 ## 2026-07-02 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-ORDER-001
 
 Packet 18 pool order trigger VERIFIED_COMPLETE. `POST /api/tenant/network-commerce/pools/:poolId/order` — transitions `ALLOCATED → ORDERED` via `StateMachineService` (atomic shared-tx). `ncPoolFeatureGateMiddleware` (2-gate chain). D-017-A compliant. Verified against live Supabase DB (`hasDb=true`). 21/21 unit PASS (P-NP-16..21). PORDER-01..08 all PASS (8/8). 67/67 Packet 17 regression PASS. `tsc --noEmit` EXIT 0. No frontend, schema, migrations, new feature gates, or .env changes. `nc.procurement_pools.rfq.award.enabled` = false UNCHANGED. DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED. QA fixture Pool=74436ecd (ACCEPTED) NOT touched. No invoice/settlement triggered (state transition only). Implementation commit: `a4c788c`. Governance close commit: `docs(network-commerce): verify pool order trigger`. See governance/TEXQTIC-NC-PHASE1-POOL-ORDER-001.md.

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-02 (TEXQTIC-NC-PHASE1-POOL-ORDER-001 VERIFIED_COMPLETE. Packet 18 pool order trigger: POST /:poolId/order, ALLOCATED → ORDERED. tsc EXIT 0. 21/21 unit PASS. PORDER-01..08 all PASS (hasDb=true). 67/67 Packet 17 regression PASS. Governance close commit: docs(network-commerce): verify pool order trigger. Active delivery unit: HOLD_FOR_AUTHORIZATION. G-022 HOLD_FOR_PARESH_DECISION unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-07-03 (TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001 IMPLEMENTED_AWAITING_PARESH_VERIFY. NC invoice read routes: GET /:poolId/invoices, GET /:poolId/invoices/:invoiceId. listNetworkInvoicesForPool added to service. tsc EXIT 0. 19/19 unit PASS. 12 integration tests ADDED — DB-gated, NOT yet executed. Active delivery unit: TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001. G-022 HOLD_FOR_PARESH_DECISION unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or

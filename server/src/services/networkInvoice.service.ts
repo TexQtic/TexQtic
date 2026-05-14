@@ -305,4 +305,27 @@ export class NetworkInvoiceService {
     if (!row) return null;
     return this.toRecord(row);
   }
+
+  /**
+   * List all NetworkInvoices for a specific pool within the caller's org scope.
+   * Returns invoices where network_entity_type = 'POOL' and network_entity_id = poolId.
+   * Ordered by created_at descending.
+   *
+   * @param orgId  - Tenant org (from JWT/dbContext — D-017-A).
+   * @param poolId - UUID of the network pool (soft reference).
+   */
+  async listNetworkInvoicesForPool(
+    orgId: string,
+    poolId: string,
+  ): Promise<NetworkInvoiceRecord[]> {
+    const rows = await (this.db as any).network_invoices.findMany({
+      where: {
+        org_id:               orgId,
+        network_entity_type:  'POOL',
+        network_entity_id:    poolId,
+      },
+      orderBy: { created_at: 'desc' },
+    });
+    return rows.map((r: Record<string, unknown>) => this.toRecord(r));
+  }
 }
