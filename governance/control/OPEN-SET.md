@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-14 (TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001 CONTROLLED_QA_ACTIVATION_VERIFIED_COMPLETE. MC-5 E2E verified: maker-request 201, same-actor 409 MAKER_CHECKER_SAME_ACTOR, checker-approve 200 APPROVED, DB states all confirmed. FE-9 MC-UI PROD_VERIFIED_COMPLETE. Flags restored false. QA fixture consumed. All holds unchanged. No source/schema/migration/env changes.)
+**Last Updated:** 2026-07-02 (TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 IMPLEMENTED. Packet 17 RFQ read surfaces implemented: GET /:poolId/rfq + GET /:poolId/rfq/:rfqId. 2 service methods, 2 route handlers, 4 unit tests (P-RFQ-READ-01..04), 7 integration tests (PRQ-READ-01..07). 167/167 unit PASS. tsc EXIT 0. Awaiting Paresh runtime verification before final closure. G-022 HOLD_FOR_PARESH_DECISION unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -65,10 +65,10 @@
     Approval=db01d0e3 APPROVED, Signature=be343be5 decision=APPROVE.
   Maker=ac6d2d3f (qa.b2b@texqtic.com, OWNER). Checker=b80f0cab (qa.buyer@texqtic.com, ADMIN).
   Flags posture: nc.procurement_pools.rfq.award.enabled=false, nc.procurement_pools.supplier_quotes.enabled=false.
-  Holds unchanged: DPP=HOLD_FOR_PARESH_DECISION, Packet 17=HOLD_FOR_PARESH_DECISION, G-022=HOLD_FOR_PARESH_DECISION.
+  Holds changed: Packet 17 → IMPLEMENTED (awaiting Paresh runtime verify). DPP=HOLD_FOR_PARESH_DECISION, G-022=HOLD_FOR_PARESH_DECISION.
   Next-unit candidates (not opened — all require separate Paresh authorization):
     A: TEXQTIC-NC-QA-AWARD-FLOW-SEED-RESET-001 (fresh QA fixture for future award-flow E2E)
-    B: TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 (Packet 17 — RFQ read surfaces)
+    B: TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 (Packet 17) → IMPLEMENTED — awaiting Paresh runtime verify
     C: TEXQTIC-NC-G022-ESCALATION-DESIGN-001 (future escalation path design)
   commit 8adeb4a. See governance/TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001.md.
 

@@ -2387,4 +2387,56 @@ export class NetworkPoolRfqService {
 
     return filtered.map((row) => this.toAwardApprovalRequest(row));
   }
+
+  // ── listPoolRfqsForOwner ──────────────────────────────────────────────────
+  //
+  // TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 (Packet 17)
+  //
+  // Owner/admin lists all RFQs for a pool they own.
+  //
+  // D-017-A: ownerOrgId always from dbContext.orgId — never from params/body.
+  // Tenant isolation: both ownerOrgId and poolId must match — no pool-existence
+  // assertion; an org that does not own the pool simply receives an empty array
+  // (non-leaking).
+
+  /**
+   * Owner lists all RFQs issued for a pool they own.
+   *
+   * Returns [] when no RFQs exist — not a 404.
+   * Non-leaking: wrong org + poolId combination returns [] (no error).
+   */
+  async listPoolRfqsForOwner(
+    ownerOrgId: string,
+    poolId:     string,
+  ): Promise<NetworkPoolRfqRecord[]> {
+    const rows = await (this.db as any).networkPoolRfq.findMany({
+      where:   { ownerOrgId, poolId },
+      orderBy: { issuedAt: 'desc' },
+    });
+    return (rows as Record<string, unknown>[]).map((r) => this.toRfqRecord(r));
+  }
+
+  // ── getPoolRfqForOwner ────────────────────────────────────────────────────
+
+  /**
+   * Owner retrieves a single RFQ by id, scoped to their pool.
+   *
+   * D-017-A: ownerOrgId from dbContext.orgId only.
+   * Non-leaking: wrong org, wrong pool, or wrong rfqId → same NetworkPoolRfqRfqNotFoundError.
+   *
+   * @throws NetworkPoolRfqRfqNotFoundError if RFQ not found or not owned by this org/pool.
+   */
+  async getPoolRfqForOwner(
+    ownerOrgId: string,
+    poolId:     string,
+    rfqId:      string,
+  ): Promise<NetworkPoolRfqRecord> {
+    const row = await (this.db as any).networkPoolRfq.findFirst({
+      where: { id: rfqId, ownerOrgId, poolId },
+    });
+    if (!row) {
+      throw new NetworkPoolRfqRfqNotFoundError();
+    }
+    return this.toRfqRecord(row as Record<string, unknown>);
+  }
 }

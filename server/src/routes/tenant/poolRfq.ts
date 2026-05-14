@@ -439,6 +439,96 @@ const poolRfqRoutes: FastifyPluginAsync = async fastify => {
     },
   );
 
+  // ─── Owner RFQ Read Routes ─────────────────────────────────────────────────
+  //
+  // TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 (Packet 17)
+  //
+  // Two-gate preHandler: pool + rfq feature flags only.
+  // No supplier-invite or award feature flag required.
+  // Role gate: OWNER + ADMIN only; MEMBER → 403.
+  // D-017-A: orgId always from request.dbContext.orgId.
+
+  const ownerRfqPreHandler = [
+    ncPoolFeatureGateMiddleware,
+    ncPoolRfqFeatureGateMiddleware,
+  ];
+
+  // GET /:poolId/rfq — list all RFQs for a pool owned by the authenticated tenant
+  //
+  // No body. Returns NetworkPoolRfqRecord[] ordered by issuedAt desc.
+  // Returns [] when no RFQs exist — not a 404.
+  // Non-leaking: wrong org + poolId returns [] (no error).
+  fastify.get(
+    '/:poolId/rfq',
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: ownerRfqPreHandler,
+    },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+
+      const userRole = (request.userRole ?? '').trim().toUpperCase();
+      if (!userRole.includes('ADMIN') && userRole !== 'OWNER') {
+        return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may list RFQs', 403);
+      }
+
+      const paramResult = poolParamSchema.safeParse(request.params);
+      if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
+
+      const { poolId } = paramResult.data;
+      const orgId = dbContext.orgId;
+
+      try {
+        const svc = new NetworkPoolRfqService(prisma, new StateMachineService(prisma, null, null));
+        const records = await svc.listPoolRfqsForOwner(orgId, poolId);
+        return sendSuccess(reply, records, 200);
+      } catch (err) {
+        request.log.error(err, 'network-commerce.pool-rfq.list');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to list Pool RFQs', 500);
+      }
+    },
+  );
+
+  // GET /:poolId/rfq/:rfqId — get a single RFQ for a pool owned by the authenticated tenant
+  //
+  // No body. Returns NetworkPoolRfqRecord or 404.
+  // Non-leaking: wrong org, wrong pool, or wrong rfqId → same 404 RFQ_NOT_FOUND.
+  fastify.get(
+    '/:poolId/rfq/:rfqId',
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: ownerRfqPreHandler,
+    },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+
+      const userRole = (request.userRole ?? '').trim().toUpperCase();
+      if (!userRole.includes('ADMIN') && userRole !== 'OWNER') {
+        return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may view an RFQ', 403);
+      }
+
+      const paramResult = rfqParamSchema.safeParse(request.params);
+      if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
+
+      const { poolId, rfqId } = paramResult.data;
+      const orgId = dbContext.orgId;
+
+      try {
+        const svc = new NetworkPoolRfqService(prisma, new StateMachineService(prisma, null, null));
+        const record = await svc.getPoolRfqForOwner(orgId, poolId, rfqId);
+        return sendSuccess(reply, record, 200);
+      } catch (err) {
+        if (err instanceof NetworkPoolRfqRfqNotFoundError) {
+          return sendError(reply, 'RFQ_NOT_FOUND', err.message, 404);
+        }
+        request.log.error(err, 'network-commerce.pool-rfq.get');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to get Pool RFQ', 500);
+      }
+    },
+  );
+
   // ─── Owner Supplier Invite Routes ──────────────────────────────────────────
   //
   // OD-6: All four owner invite routes require the full 3-gate chain:

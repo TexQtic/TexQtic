@@ -1704,3 +1704,345 @@ describe.skipIf(!hasDb)('Network Commerce Pool RFQ Award Routes Integration', ()
     expect(body.data.status).toBe('REJECTED');
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Network Commerce Pool RFQ Read Surfaces — Integration Tests
+// TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 (Packet 17)
+//
+// PRQ-READ-01  GET /:poolId/rfq         — 200, issued RFQ in result array
+// PRQ-READ-02  GET /:poolId/rfq         — 200, empty array when no RFQs
+// PRQ-READ-03  GET /:poolId/rfq/:rfqId  — 200, single RFQ record
+// PRQ-READ-04  GET /:poolId/rfq/:rfqId  — 404 RFQ_NOT_FOUND for nonexistent rfqId
+// PRQ-READ-05  GET /:poolId/rfq/:rfqId  — 404 RFQ_NOT_FOUND wrong org (non-leaking)
+// PRQ-READ-06  GET /:poolId/rfq         — 503 FEATURE_DISABLED when rfq flag off
+// PRQ-READ-07  GET /:poolId/rfq         — 403 FORBIDDEN for MEMBER role
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe.skipIf(!hasDb)('Network Commerce Pool RFQ Read Surfaces Integration', () => {
+  const poolFeatureFlagKey = 'nc.procurement_pools.enabled';
+  const rfqFeatureFlagKey  = 'nc.procurement_pools.rfq.enabled';
+
+  let app: FastifyInstance;
+  let ownerOrgId:  string;
+  let otherOrgId:  string;
+  let ownerUserId: string;
+  let testRunId:   string;
+
+  const createdPoolIds = new Set<string>();
+
+  async function buildReadApp(): Promise<FastifyInstance> {
+    const fastify = Fastify();
+    await fastify.register(poolRfqRoutes, { prefix: '/api/tenant/network-commerce/pools' });
+    await fastify.ready();
+    return fastify;
+  }
+
+  function makePoolRef(tag: string): string {
+    return `READ-POOL-${testRunId}-${tag}`;
+  }
+
+  async function ensureReadGatesEnabled(): Promise<void> {
+    await withBypassForSeed(prisma, async tx => {
+      for (const key of [poolFeatureFlagKey, rfqFeatureFlagKey]) {
+        await tx.featureFlag.upsert({
+          where:  { key },
+          create: { key, enabled: true, description: `NC rfq read route integration test — ${key}` },
+          update: { enabled: true },
+        });
+        for (const orgId of [ownerOrgId, otherOrgId]) {
+          await tx.tenantFeatureOverride.upsert({
+            where:  { tenantId_key: { tenantId: orgId, key } },
+            create: { tenantId: orgId, key, enabled: true },
+            update: { enabled: true },
+          });
+        }
+      }
+    });
+  }
+
+  async function disableRfqFlag(): Promise<void> {
+    await withBypassForSeed(prisma, async tx => {
+      await tx.featureFlag.upsert({
+        where:  { key: rfqFeatureFlagKey },
+        create: { key: rfqFeatureFlagKey, enabled: false, description: 'rfq gate disabled for read test' },
+        update: { enabled: false },
+      });
+    });
+  }
+
+  /** Create a pool (CLOSED_FOR_BIDS) + RFQ via bypass. Returns poolId + rfqId. */
+  async function createRfqForReadFixture(orgId: string): Promise<{ poolId: string; rfqId: string }> {
+    return withBypassForSeed(prisma, async tx => {
+      const poolState = await tx.lifecycleState.findUnique({
+        where: { entityType_stateKey: { entityType: 'POOL', stateKey: 'CLOSED_FOR_BIDS' } },
+        select: { id: true },
+      });
+      if (!poolState) throw new Error('Missing lifecycle state: POOL/CLOSED_FOR_BIDS');
+
+      const poolId = randomUUID();
+      await tx.networkPool.create({
+        data: {
+          id: poolId,
+          orgId,
+          poolRef: makePoolRef(randomUUID().slice(0, 8)),
+          commodityCategory: 'COTTON_YARN',
+          targetQty: new Prisma.Decimal(1000),
+          qtyUnit: 'KG',
+          lifecycleStateId: poolState.id,
+          createdByUserId: ownerUserId,
+        },
+      });
+      createdPoolIds.add(poolId);
+
+      const snapshotId = randomUUID();
+      await tx.networkPoolDemandSnapshot.create({
+        data: {
+          id: snapshotId,
+          ownerOrgId: orgId,
+          poolId,
+          snapshotRef: randomUUID(),
+          snapshotVersion: 1,
+          basis: 'RFQ_ISSUE',
+          status: 'CAPTURED',
+          capturedAt: new Date(),
+          lineCount: 1,
+          totalQty: new Prisma.Decimal(500),
+          qtyUnit: 'KG',
+        },
+      });
+
+      const rfqId = randomUUID();
+      await tx.networkPoolRfq.create({
+        data: {
+          id: rfqId,
+          ownerOrgId: orgId,
+          poolId,
+          snapshotId,
+          rfqRef: randomUUID(),
+          rfqVersion: 1,
+          status: 'ISSUED',
+          issueBasis: 'SNAPSHOT_LOCK',
+          issuedAt: new Date(),
+          issuedByUserId: ownerUserId,
+          supplierInviteMode: 'INVITE_ONLY',
+          lineCount: 1,
+          totalQty: new Prisma.Decimal(500),
+          qtyUnit: 'KG',
+        },
+      });
+
+      return { poolId, rfqId };
+    });
+  }
+
+  beforeAll(async () => {
+    app = await buildReadApp();
+
+    ownerOrgId  = randomUUID();
+    otherOrgId  = randomUUID();
+    ownerUserId = randomUUID();
+
+    await seedTenantForTest(ownerOrgId, 'rfq-read-owner');
+    await seedTenantForTest(otherOrgId, 'rfq-read-other');
+  });
+
+  beforeEach(async () => {
+    testRunId = randomUUID().slice(0, 8);
+    await ensureReadGatesEnabled();
+  });
+
+  afterEach(async () => {
+    const poolIds = [...createdPoolIds];
+    createdPoolIds.clear();
+
+    await withBypassForSeed(prisma, async tx => {
+      if (poolIds.length > 0) {
+        await tx.networkPoolRfqLine.deleteMany({ where: { poolId: { in: poolIds } } });
+        await tx.networkPoolRfq.deleteMany({ where: { poolId: { in: poolIds } } });
+        await tx.networkPoolDemandSnapshotLine.deleteMany({ where: { poolId: { in: poolIds } } });
+        await tx.networkPoolDemandSnapshot.deleteMany({ where: { poolId: { in: poolIds } } });
+        await tx.networkPoolDemandLine.deleteMany({ where: { poolId: { in: poolIds } } });
+        await tx.networkPoolMembership.deleteMany({ where: { poolId: { in: poolIds } } });
+        await tx.networkPool.deleteMany({ where: { id: { in: poolIds } } });
+      }
+      await tx.tenantFeatureOverride.deleteMany({
+        where: {
+          key: { in: [poolFeatureFlagKey, rfqFeatureFlagKey] },
+          tenantId: { in: [ownerOrgId, otherOrgId] },
+        },
+      });
+    }).catch(() => {});
+  });
+
+  afterAll(async () => {
+    await app.close();
+
+    await withBypassForSeed(prisma, async tx => {
+      const pools = await tx.networkPool.findMany({
+        where: { poolRef: { startsWith: 'READ-POOL-' } },
+        select: { id: true },
+      });
+      const allPoolIds = pools.map((p: { id: string }) => p.id);
+
+      if (allPoolIds.length > 0) {
+        await tx.networkPoolRfqLine.deleteMany({ where: { poolId: { in: allPoolIds } } });
+        await tx.networkPoolRfq.deleteMany({ where: { poolId: { in: allPoolIds } } });
+        await tx.networkPoolDemandSnapshotLine.deleteMany({ where: { poolId: { in: allPoolIds } } });
+        await tx.networkPoolDemandSnapshot.deleteMany({ where: { poolId: { in: allPoolIds } } });
+        await tx.networkPoolDemandLine.deleteMany({ where: { poolId: { in: allPoolIds } } });
+        await tx.networkPoolMembership.deleteMany({ where: { poolId: { in: allPoolIds } } });
+        await tx.networkPool.deleteMany({ where: { id: { in: allPoolIds } } });
+      }
+
+      await tx.tenantFeatureOverride.deleteMany({
+        where: {
+          key: { in: [poolFeatureFlagKey, rfqFeatureFlagKey] },
+          tenantId: { in: [ownerOrgId, otherOrgId] },
+        },
+      });
+    }).catch(() => {});
+  });
+
+  // ─── PRQ-READ-01 ──────────────────────────────────────────────────────────
+
+  it('PRQ-READ-01 GET /:poolId/rfq — 200 with issued RFQ in result array', { timeout: 15000 }, async () => {
+    const { poolId, rfqId } = await createRfqForReadFixture(ownerOrgId);
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as any;
+    expect(body.success).toBe(true);
+    expect(Array.isArray(body.data)).toBe(true);
+    expect(body.data.length).toBeGreaterThanOrEqual(1);
+    const found = body.data.find((r: any) => r.id === rfqId);
+    expect(found).toBeDefined();
+    expect(found.pool_id).toBe(poolId);
+    expect(found.owner_org_id).toBe(ownerOrgId);
+    expect(found.status).toBe('ISSUED');
+    expect(found).not.toHaveProperty('metadataInternalJson');
+  });
+
+  // ─── PRQ-READ-02 ──────────────────────────────────────────────────────────
+
+  it('PRQ-READ-02 GET /:poolId/rfq — 200 empty array when no RFQs', { timeout: 15000 }, async () => {
+    // Create a pool with no RFQ issued
+    const poolId = await withBypassForSeed(prisma, async tx => {
+      const poolState = await tx.lifecycleState.findUnique({
+        where: { entityType_stateKey: { entityType: 'POOL', stateKey: 'AGGREGATING' } },
+        select: { id: true },
+      });
+      if (!poolState) throw new Error('Missing POOL/AGGREGATING state');
+      const id = randomUUID();
+      await tx.networkPool.create({
+        data: {
+          id,
+          orgId: ownerOrgId,
+          poolRef: makePoolRef('EMPTY'),
+          commodityCategory: 'COTTON_YARN',
+          targetQty: new Prisma.Decimal(1000),
+          qtyUnit: 'KG',
+          lifecycleStateId: poolState.id,
+          createdByUserId: ownerUserId,
+        },
+      });
+      createdPoolIds.add(id);
+      return id;
+    });
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data).toEqual([]);
+  });
+
+  // ─── PRQ-READ-03 ──────────────────────────────────────────────────────────
+
+  it('PRQ-READ-03 GET /:poolId/rfq/:rfqId — 200 single RFQ record', { timeout: 15000 }, async () => {
+    const { poolId, rfqId } = await createRfqForReadFixture(ownerOrgId);
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data.id).toBe(rfqId);
+    expect(body.data.pool_id).toBe(poolId);
+    expect(body.data.owner_org_id).toBe(ownerOrgId);
+    expect(body.data.status).toBe('ISSUED');
+    expect(body.data).not.toHaveProperty('metadataInternalJson');
+  });
+
+  // ─── PRQ-READ-04 ──────────────────────────────────────────────────────────
+
+  it('PRQ-READ-04 GET /:poolId/rfq/:rfqId — 404 RFQ_NOT_FOUND nonexistent rfqId', { timeout: 15000 }, async () => {
+    const { poolId } = await createRfqForReadFixture(ownerOrgId);
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq/${randomUUID()}`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(res.statusCode).toBe(404);
+    expect((res.json() as any).error.code).toBe('RFQ_NOT_FOUND');
+  });
+
+  // ─── PRQ-READ-05 ──────────────────────────────────────────────────────────
+
+  it('PRQ-READ-05 GET /:poolId/rfq/:rfqId — 404 RFQ_NOT_FOUND wrong org (non-leaking)', { timeout: 15000 }, async () => {
+    // Create RFQ owned by otherOrgId; access from ownerOrgId should get 404
+    const { poolId, rfqId } = await createRfqForReadFixture(otherOrgId);
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/tenant/network-commerce/pools/${poolId}/rfq/${rfqId}`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(res.statusCode).toBe(404);
+    expect((res.json() as any).error.code).toBe('RFQ_NOT_FOUND');
+  });
+
+  // ─── PRQ-READ-06 ──────────────────────────────────────────────────────────
+
+  it('PRQ-READ-06 GET /:poolId/rfq — 503 FEATURE_DISABLED when rfq flag off', { timeout: 15000 }, async () => {
+    await disableRfqFlag();
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/tenant/network-commerce/pools/${randomUUID()}/rfq`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+    });
+
+    expect(res.statusCode).toBe(503);
+    expect((res.json() as any).error.code).toBe('FEATURE_DISABLED');
+  });
+
+  // ─── PRQ-READ-07 ──────────────────────────────────────────────────────────
+
+  it('PRQ-READ-07 GET /:poolId/rfq — 403 FORBIDDEN for MEMBER role', { timeout: 15000 }, async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/tenant/network-commerce/pools/${randomUUID()}/rfq`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'MEMBER'),
+    });
+
+    expect(res.statusCode).toBe(403);
+    expect((res.json() as any).error.code).toBe('FORBIDDEN');
+  });
+});

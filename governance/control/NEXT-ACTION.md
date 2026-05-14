@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-14 (TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001 CONTROLLED_QA_ACTIVATION_VERIFIED_COMPLETE. MC-5 E2E verified. FE-9 MC-UI PROD_VERIFIED_COMPLETE. Flags false. QA fixture consumed. Next-unit candidates A/B/C listed. All holds unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-02 (TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 IMPLEMENTED. Packet 17 RFQ read surfaces: GET /:poolId/rfq + GET /:poolId/rfq/:rfqId. 167/167 unit PASS. tsc EXIT 0. Awaiting Paresh runtime verify for final closure. G-022 HOLD unchanged. DPP HOLD unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,20 +15,22 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: HOLD_FOR_PARESH_DECISION
-active_delivery_unit_status: PARESH_DECISION_REQUIRED
+active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001
+active_delivery_unit_status: IMPLEMENTED_AWAITING_PARESH_VERIFY
 active_delivery_unit_note: >
-  TEXQTIC-NC-FRONTEND-AWARD-MAKER-CHECKER-UI-001 PROD_VERIFIED_COMPLETE (2026-05-14).
-  FE-9 MC-UI prod-verified via TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001.
-  Full E2E maker-checker award flow verified: maker-request 201, same-actor 409 MAKER_CHECKER_SAME_ACTOR,
-  checker-approve 200 APPROVED, quote ACCEPTED. DB states all confirmed.
-  QA fixture consumed. Both flags restored false. Holds unchanged.
-  Next-unit candidates (all HOLD_FOR_PARESH_DECISION):
+  TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 IMPLEMENTED (2026-07-02).
+  Packet 17 RFQ read surfaces delivered.
+  Backend: 2 service methods (listPoolRfqsForOwner, getPoolRfqForOwner) + 2 Fastify routes (GET /:poolId/rfq, GET /:poolId/rfq/:rfqId).
+  Two-gate preHandler (nc.procurement_pools.enabled + nc.procurement_pools.rfq.enabled). No supplier-invite or award gate.
+  Role gate: OWNER + ADMIN only. orgId from dbContext.orgId (D-017-A compliant).
+  Non-leaking: list returns [] for wrong org; detail returns same 404 for wrong org/pool/rfqId.
+  4 unit tests P-RFQ-READ-01..04 PASS. 7 integration tests PRQ-READ-01..07 added.
+  167/167 unit PASS. tsc --noEmit EXIT 0. Awaiting Paresh runtime verify for final VERIFIED_COMPLETE closure.
+  Next-unit candidates after verify:
     A: TEXQTIC-NC-QA-AWARD-FLOW-SEED-RESET-001 (fresh QA fixture for future award-flow E2E)
-    B: TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 (Packet 17 — RFQ read surfaces)
-    C: TEXQTIC-NC-G022-ESCALATION-DESIGN-001 (future escalation path design)
-  No unit may open without explicit Paresh authorization.
-  See governance/TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001.md.
+    B: TEXQTIC-NC-G022-ESCALATION-DESIGN-001 (future escalation path design)
+  No new unit may open without explicit Paresh authorization.
+  See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001.md.
 last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001
 last_closed_unit_status: ROUTE_VERIFIED_COMPLETE (2026-07-01)
 last_closed_unit_runtime_verdict: >-

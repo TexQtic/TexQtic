@@ -3629,3 +3629,97 @@ describe('MC-SVC-12: FAIL — approveAward frozen payload hash mismatch throws N
     expect(sm.transition).not.toHaveBeenCalled();
   });
 });
+
+// ─── Packet 17: RFQ read surfaces ─────────────────────────────────────────────
+//
+// TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001
+//
+// P-RFQ-READ-01 → P-RFQ-READ-04
+
+function makeDbForListPoolRfqs(rows: any[] = []): any {
+  return {
+    networkPoolRfq: {
+      findMany: vi.fn().mockResolvedValue(rows),
+    },
+  };
+}
+
+function makeDbForGetPoolRfq(row: any | null): any {
+  return {
+    networkPoolRfq: {
+      findFirst: vi.fn().mockResolvedValue(row),
+    },
+  };
+}
+
+// ─── P-RFQ-READ-01 ────────────────────────────────────────────────────────────
+
+describe('P-RFQ-READ-01: PASS — listPoolRfqsForOwner returns empty array when no RFQs', () => {
+  it('resolves with [] when findMany returns empty', async () => {
+    const db  = makeDbForListPoolRfqs([]);
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.listPoolRfqsForOwner(OWNER_ORG_ID, POOL_ID);
+
+    expect(result).toEqual([]);
+    expect(db.networkPoolRfq.findMany).toHaveBeenCalledWith({
+      where:   { ownerOrgId: OWNER_ORG_ID, poolId: POOL_ID },
+      orderBy: { issuedAt: 'desc' },
+    });
+  });
+});
+
+// ─── P-RFQ-READ-02 ────────────────────────────────────────────────────────────
+
+describe('P-RFQ-READ-02: PASS — listPoolRfqsForOwner maps rows to NetworkPoolRfqRecord DTOs', () => {
+  it('returns mapped records excluding metadataInternalJson', async () => {
+    const db  = makeDbForListPoolRfqs([makeRfqRow(), makeRfqRow({ id: 'aaaa0002-0000-0000-0000-000000000002', rfqVersion: 2 })]);
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.listPoolRfqsForOwner(OWNER_ORG_ID, POOL_ID);
+
+    expect(result).toHaveLength(2);
+    expect(result[0]).toHaveProperty('owner_org_id', OWNER_ORG_ID);
+    expect(result[0]).toHaveProperty('pool_id', POOL_ID);
+    expect(result[0]).toHaveProperty('status', 'ISSUED');
+    expect(result[0]).not.toHaveProperty('metadataInternalJson');
+    expect(result[1]).toHaveProperty('rfq_version', 2);
+  });
+});
+
+// ─── P-RFQ-READ-03 ────────────────────────────────────────────────────────────
+
+describe('P-RFQ-READ-03: PASS — getPoolRfqForOwner returns NetworkPoolRfqRecord when found', () => {
+  it('returns the mapped record and queries with ownerOrgId + poolId + id', async () => {
+    const db  = makeDbForGetPoolRfq(makeRfqRow());
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    const result = await svc.getPoolRfqForOwner(OWNER_ORG_ID, POOL_ID, RFQ_ID);
+
+    expect(result).toHaveProperty('id', RFQ_ID);
+    expect(result).toHaveProperty('owner_org_id', OWNER_ORG_ID);
+    expect(result).toHaveProperty('pool_id', POOL_ID);
+    expect(result).toHaveProperty('status', 'ISSUED');
+    expect(result).not.toHaveProperty('metadataInternalJson');
+    expect(db.networkPoolRfq.findFirst).toHaveBeenCalledWith({
+      where: { id: RFQ_ID, ownerOrgId: OWNER_ORG_ID, poolId: POOL_ID },
+    });
+  });
+});
+
+// ─── P-RFQ-READ-04 ────────────────────────────────────────────────────────────
+
+describe('P-RFQ-READ-04: FAIL — getPoolRfqForOwner throws NetworkPoolRfqRfqNotFoundError when not found', () => {
+  it('throws when findFirst returns null (non-leaking: same error for wrong org, wrong pool, wrong id)', async () => {
+    const db  = makeDbForGetPoolRfq(null);
+    const sm  = makeSm();
+    const svc = new NetworkPoolRfqService(db, sm);
+
+    await expect(
+      svc.getPoolRfqForOwner(OWNER_ORG_ID, POOL_ID, RFQ_ID),
+    ).rejects.toBeInstanceOf(NetworkPoolRfqRfqNotFoundError);
+  });
+});

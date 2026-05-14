@@ -7,6 +7,31 @@
 
 ---
 
+## 2026-07-02 -- IMPLEMENTED_AWAITING_PARESH_VERIFY: TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001
+
+Packet 17 RFQ read surfaces backend implementation in `server/src/services/networkPoolRfq.service.ts` and `server/src/routes/tenant/poolRfq.ts`. Authorized by Paresh Patel. No frontend, no schema, no migration, no feature flag activation changes.
+
+**Implementation summary:**
+- 2 new public service methods on `NetworkPoolRfqService`:
+  - `listPoolRfqsForOwner(ownerOrgId, poolId)` → `NetworkPoolRfqRecord[]` ordered by `issuedAt desc`. Non-leaking: wrong org returns `[]`.
+  - `getPoolRfqForOwner(ownerOrgId, poolId, rfqId)` → `NetworkPoolRfqRecord | throws NetworkPoolRfqRfqNotFoundError`. Non-leaking: wrong org/pool/rfqId all return same 404.
+- `ownerRfqPreHandler` 2-gate array `[ncPoolFeatureGateMiddleware, ncPoolRfqFeatureGateMiddleware]` — no supplier-invite or award gate.
+- 2 new Fastify GET routes:
+  - `GET /:poolId/rfq` → `svc.listPoolRfqsForOwner(orgId, poolId)` → 200 `NetworkPoolRfqRecord[]`; OWNER/ADMIN only (MEMBER → 403).
+  - `GET /:poolId/rfq/:rfqId` → `svc.getPoolRfqForOwner(orgId, poolId, rfqId)` → 200 record / 404 `RFQ_NOT_FOUND`.
+- D-017-A enforced: `orgId` sourced exclusively from `dbContext.orgId`.
+- `metadataInternalJson` excluded from all response DTOs (via existing `toRfqRecord()` mapper).
+
+**Test coverage:**
+- Unit: 4 tests P-RFQ-READ-01..04 added to `server/src/__tests__/networkPoolRfq.service.unit.test.ts`. All PASS.
+- Integration: 7 tests PRQ-READ-01..07 added to `server/src/routes/tenant/poolRfq.integration.test.ts`. DB-gated (`describe.skipIf(!hasDb)`). **PENDING runtime/DB verification** — not yet executed against live DB.
+
+**Validation:** 167/167 unit tests PASS (4 new + 163 regression). `tsc --noEmit` EXIT 0 (no TypeScript errors).
+
+**Confirmations:** No frontend, schema.prisma, migrations, .env, or feature flag activation changes. `nc.procurement_pools.rfq.award.enabled=false`, unchanged. `nc.procurement_pools.supplier_quotes.enabled=false`, unchanged — QD-6 hold maintained. DPP HOLD_FOR_PARESH_DECISION unchanged. G-022 HOLD_FOR_PARESH_DECISION unchanged. Supplier read surface (`/supplier-view`) NOT implemented — deferred.
+
+---
+
 ## 2026-07-01 -- ROUTE_VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001
 
 Route layer implementation for G-021 award maker-checker in `server/src/routes/tenant/poolRfq.ts`. No frontend, no schema changes.
