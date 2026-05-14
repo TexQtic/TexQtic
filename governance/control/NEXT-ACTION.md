@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-02 (TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 IMPLEMENTED. Packet 17 RFQ read surfaces: GET /:poolId/rfq + GET /:poolId/rfq/:rfqId. 167/167 unit PASS. tsc EXIT 0. Awaiting Paresh runtime verify for final closure. G-022 HOLD unchanged. DPP HOLD unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-02 (TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 VERIFIED_COMPLETE. Packet 17 RFQ read surfaces: GET /:poolId/rfq + GET /:poolId/rfq/:rfqId. 167/167 unit PASS. 67/67 integration PASS (PRQ-READ-01..07 all PASS, hasDb=true). tsc EXIT 0. commit c08f053. Awaiting Paresh decision for next unit.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,37 +15,36 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001
-active_delivery_unit_status: IMPLEMENTED_AWAITING_PARESH_VERIFY
+active_delivery_unit: HOLD_FOR_AUTHORIZATION
+active_delivery_unit_status: HOLD_FOR_PARESH_DECISION
 active_delivery_unit_note: >
-  TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 IMPLEMENTED (2026-07-02).
-  Packet 17 RFQ read surfaces delivered.
-  Backend: 2 service methods (listPoolRfqsForOwner, getPoolRfqForOwner) + 2 Fastify routes (GET /:poolId/rfq, GET /:poolId/rfq/:rfqId).
-  Two-gate preHandler (nc.procurement_pools.enabled + nc.procurement_pools.rfq.enabled). No supplier-invite or award gate.
-  Role gate: OWNER + ADMIN only. orgId from dbContext.orgId (D-017-A compliant).
-  Non-leaking: list returns [] for wrong org; detail returns same 404 for wrong org/pool/rfqId.
-  4 unit tests P-RFQ-READ-01..04 PASS. 7 integration tests PRQ-READ-01..07 added.
-  167/167 unit PASS. tsc --noEmit EXIT 0. Awaiting Paresh runtime verify for final VERIFIED_COMPLETE closure.
-  Next-unit candidates after verify:
+  Packet 17 (TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001) VERIFIED_COMPLETE (2026-07-02).
+  No active delivery unit. Awaiting Paresh decision on next unit.
+  Next-unit candidates (all require separate Paresh authorization):
     A: TEXQTIC-NC-QA-AWARD-FLOW-SEED-RESET-001 (fresh QA fixture for future award-flow E2E)
     B: TEXQTIC-NC-G022-ESCALATION-DESIGN-001 (future escalation path design)
+    C: Any new Packet 18+ work (requires explicit Paresh authorization)
   No new unit may open without explicit Paresh authorization.
   See governance/TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001.md.
-last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001
-last_closed_unit_status: ROUTE_VERIFIED_COMPLETE (2026-07-01)
+last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001
+last_closed_unit_status: VERIFIED_COMPLETE (2026-07-02)
 last_closed_unit_runtime_verdict: >-
-  4 HTTP routes added to poolRfq.ts: POST award-request (201), POST approve (200), POST reject (200), GET award-approvals (200).
-  ownerAwardPreHandler 3-gate chain. mapMakerCheckerError: 6 error classes → correct HTTP codes.
-  Gate-closed: nc.procurement_pools.rfq.award.enabled absent/false → 503 FEATURE_DISABLED.
-  16 unit tests MC-ROUTE-01..16. All 16 PASS. 163/163 service regression PASS. tsc EXIT 0. commit 8d10fdf.
-  No frontend, schema.prisma, migrations, .env, feature flag activation. Legacy /accept preserved.
-  QD-6 unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.
-last_closed_unit_commits: feat(network-commerce): add award maker checker route (8d10fdf)
+  2 new service methods (listPoolRfqsForOwner, getPoolRfqForOwner) + 2 Fastify GET routes.
+  GET /:poolId/rfq → 200 NetworkPoolRfqRecord[]; GET /:poolId/rfq/:rfqId → 200/404.
+  ownerRfqPreHandler 2-gate chain. D-017-A compliant. metadataInternalJson excluded.
+  Non-leaking: list returns [] for wrong org; detail returns same 404 for wrong org/pool/rfqId.
+  MEMBER → 403 FORBIDDEN. Feature flag disabled → 503 FEATURE_DISABLED.
+  4 unit tests P-RFQ-READ-01..04 PASS. 7 integration tests PRQ-READ-01..07 PASS (hasDb=true, 407.49s).
+  167/167 unit PASS. 67/67 integration PASS. tsc --noEmit EXIT 0. commit c08f053.
+  No frontend, schema.prisma, migrations, .env, feature flag activation changes.
+  QD-6 unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged. G-022 HOLD unchanged.
+last_closed_unit_commits: feat(network-commerce): add pool rfq read surfaces (Packet 17) (c08f053)
 last_closed_unit_closure_basis: >-
-  16/16 route tests PASS. 163/163 regression PASS. tsc --noEmit EXIT 0.
-  No schema/migration/env/flag changes. QD-6 unchanged. rfq.award.enabled ABSENT.
-  Old /accept route unchanged; no activation of MC routes.
-last_closed_unit_prior: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-SCHEMA-001
+  PRQ-READ-01..07 all PASS (7/7). 167/167 unit PASS. tsc --noEmit EXIT 0.
+  hasDb=true — tests executed against live Supabase DB, not skipped.
+  No schema/migration/env/flag changes. QD-6 unchanged. DPP HOLD unchanged.
+  Governance close commit: docs(network-commerce): verify pool rfq read surfaces.
+last_closed_unit_prior: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001
 note_on_pending_verification: >-
   TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
   All 3 AF findings resolved. NC Pools + RFQ + Invite surfaces technically unblocked.

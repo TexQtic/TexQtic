@@ -7,6 +7,23 @@
 
 ---
 
+## 2026-07-02 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001
+
+Packet 17 RFQ read surfaces VERIFIED_COMPLETE. PRQ-READ-01..07 all PASS against live Supabase DB (`hasDb=true`). 167/167 unit PASS (P-RFQ-READ-01..04 PASS). 67/67 integration PASS (duration 407.49s). `tsc --noEmit` EXIT 0. Governance close commit: docs(network-commerce): verify pool rfq read surfaces.
+
+**Verification summary:**
+- PRQ-READ-01: GET /:poolId/rfq → 200 with issued RFQ in result array ✅ (5935ms)
+- PRQ-READ-02: GET /:poolId/rfq → 200 empty array when no RFQs ✅ (5222ms)
+- PRQ-READ-03: GET /:poolId/rfq/:rfqId → 200 single RFQ record ✅ (5659ms)
+- PRQ-READ-04: GET /:poolId/rfq/:rfqId → 404 RFQ_NOT_FOUND nonexistent rfqId ✅ (5611ms)
+- PRQ-READ-05: GET /:poolId/rfq/:rfqId → 404 RFQ_NOT_FOUND wrong org (non-leaking) ✅ (5490ms)
+- PRQ-READ-06: GET /:poolId/rfq → 503 FEATURE_DISABLED when rfq flag off ✅ (3731ms)
+- PRQ-READ-07: GET /:poolId/rfq → 403 FORBIDDEN for MEMBER role ✅ (3065ms)
+
+**Verification points confirmed:** `metadataInternalJson` not exposed (PRQ-READ-01, PRQ-READ-03). Non-leaking 404 (PRQ-READ-04 vs PRQ-READ-05). MEMBER → 403 (PRQ-READ-07). Feature-disabled → 503 (PRQ-READ-06). D-017-A: orgId from `dbContext.orgId` only. QD-6 unchanged. DPP HOLD unchanged. G-022 HOLD unchanged. No frontend/schema/migration/.env/flag activation changes. Implementation commit: c08f053.
+
+---
+
 ## 2026-07-02 -- IMPLEMENTED_AWAITING_PARESH_VERIFY: TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001
 
 Packet 17 RFQ read surfaces backend implementation in `server/src/services/networkPoolRfq.service.ts` and `server/src/routes/tenant/poolRfq.ts`. Authorized by Paresh Patel. No frontend, no schema, no migration, no feature flag activation changes.

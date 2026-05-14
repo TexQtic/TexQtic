@@ -1,7 +1,7 @@
 # TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001
 
-**Status:** IMPLEMENTED_AWAITING_PARESH_VERIFY  
-**Date:** 2026-07-02  
+**Status:** VERIFIED_COMPLETE  
+**Date:** 2026-07-02 (implemented) / 2026-07-02 (verified)  
 **Authorized by:** Paresh Patel (explicit verbal authorization in session prompt)  
 **Governed unit:** Packet 17 — NC Pool RFQ Read Surfaces  
 **Domain:** Network Commerce / Collective Procurement Pools / RFQ  
@@ -71,16 +71,24 @@ No supplier-invite gate or award gate required.
 
 | Code | Description |
 |---|---|
-| PRQ-READ-01 | GET /:poolId/rfq → 200 with issued RFQ in result array |
-| PRQ-READ-02 | GET /:poolId/rfq → 200 empty array when no RFQs |
-| PRQ-READ-03 | GET /:poolId/rfq/:rfqId → 200 single RFQ record |
-| PRQ-READ-04 | GET /:poolId/rfq/:rfqId → 404 RFQ_NOT_FOUND nonexistent rfqId |
-| PRQ-READ-05 | GET /:poolId/rfq/:rfqId → 404 RFQ_NOT_FOUND wrong org (non-leaking) |
-| PRQ-READ-06 | GET /:poolId/rfq → 503 FEATURE_DISABLED when rfq flag off |
-| PRQ-READ-07 | GET /:poolId/rfq → 403 FORBIDDEN for MEMBER role |
+| Code | Description | Result |
+|---|---|---|
+| PRQ-READ-01 | GET /:poolId/rfq → 200 with issued RFQ in result array | PASS (5935ms) |
+| PRQ-READ-02 | GET /:poolId/rfq → 200 empty array when no RFQs | PASS (5222ms) |
+| PRQ-READ-03 | GET /:poolId/rfq/:rfqId → 200 single RFQ record | PASS (5659ms) |
+| PRQ-READ-04 | GET /:poolId/rfq/:rfqId → 404 RFQ_NOT_FOUND nonexistent rfqId | PASS (5611ms) |
+| PRQ-READ-05 | GET /:poolId/rfq/:rfqId → 404 RFQ_NOT_FOUND wrong org (non-leaking) | PASS (5490ms) |
+| PRQ-READ-06 | GET /:poolId/rfq → 503 FEATURE_DISABLED when rfq flag off | PASS (3731ms) |
+| PRQ-READ-07 | GET /:poolId/rfq → 403 FORBIDDEN for MEMBER role | PASS (3065ms) |
 
-Status: **ADDED — DB-GATED — PENDING RUNTIME/DB VERIFICATION.**  
-Tests use `describe.skipIf(!hasDb)`. Not yet executed against live DB. Pending Paresh runtime authorization and verification.
+**67/67 integration tests PASS** (7 new PRQ-READ + 60 regression). All 7 tests EXECUTED against live Supabase DB — not skipped (`hasDb=true`). Duration: 407.49s.
+
+Verification points confirmed:
+- `metadataInternalJson` not exposed (PRQ-READ-01, PRQ-READ-03 assertions)
+- Non-leaking 404: wrong org returns same `RFQ_NOT_FOUND` as wrong rfqId (PRQ-READ-05 vs PRQ-READ-04)
+- MEMBER role → 403 `FORBIDDEN` (PRQ-READ-07)
+- RFQ flag disabled → 503 `FEATURE_DISABLED` (PRQ-READ-06)
+- No direct live route probe performed (test harness used `withBypassForSeed` for fixture creation)
 
 ---
 
@@ -89,6 +97,7 @@ Tests use `describe.skipIf(!hasDb)`. Not yet executed against live DB. Pending P
 - `tsc --noEmit` EXIT 0 — no TypeScript errors.
 - `pnpm exec vitest run src/__tests__/networkPoolRfq.service.unit.test.ts` — 167/167 PASS.
 - `git diff --name-only` — 7 files modified (4 source files + 3 governance files); 1 new governance artifact untracked (`governance/TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001.md`).
+- `pnpm exec vitest run src/routes/tenant/poolRfq.integration.test.ts` — 67/67 PASS. PRQ-READ-01..07 all PASS. Duration: 407.49s. `hasDb=true` (DATABASE_URL present). commit c08f053.
 
 ---
 
@@ -118,4 +127,4 @@ TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001
 
 ---
 
-*Awaiting Paresh Patel runtime verification for VERIFIED_COMPLETE closure.*
+*VERIFIED_COMPLETE — 2026-07-02. Paresh Patel runtime verification passed. commit c08f053. Governance close commit: docs(network-commerce): verify pool rfq read surfaces.*
