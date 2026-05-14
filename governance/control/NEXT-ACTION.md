@@ -15,35 +15,36 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-SETTLE-001
-active_delivery_unit_status: IMPLEMENTED_AWAITING_PARESH_VERIFY
+active_delivery_unit: HOLD_FOR_AUTHORIZATION
+active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  TEXQTIC-NC-PHASE1-POOL-SETTLE-001 IMPLEMENTED — service + routes + tests created.
-  Authorization token: TEXQTIC-NC-PHASE1-POOL-SETTLE-001-IMPL-TRADETRUST-PAY-ALIGNED.
-  TradeTrust Pay doctrine confirmed: settlement is visibility/payable-split computation only.
-  No payment execution, no payout, no escrow release, no money movement, no platform-held funds,
-  no payment guarantee, no TexQtic-funded advance. nc.settlement_waterfall.enabled remains false.
-  /compute is fail-closed while flag is false. Newly created split rows, if any in tests, are
-  PENDING-only. escrowAccountId remains null. TRIGGERED/RELEASED status: schema-reserved, NOT
-  emitted by Packet 20. Packet 21 not opened. DPP HOLD unchanged. G-022 HOLD unchanged.
-  Awaits Paresh verification: tsc PASS, prisma validate PASS, tests to be confirmed.
-last_closed_unit: TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001
-last_closed_unit_status: VERIFIED_COMPLETE (2026-07-03)
+  TEXQTIC-NC-PHASE1-POOL-SETTLE-001 VERIFIED_COMPLETE (2026-07-05).
+  All verification gates passed. Next unit requires Paresh authorization.
+  tsc PASS. prisma validate PASS. 19/19 unit PASS. 22/22 integration PASS.
+  12/12 invoices regression PASS. 64/64 pools regression PASS. 67/67 poolRfq regression PASS.
+  TradeTrust Pay doctrine confirmed. nc.settlement_waterfall.enabled remains false.
+  DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED.
+  Packet 21 NOT opened. No schema/migration/frontend/.env changes.
+last_closed_unit: TEXQTIC-NC-PHASE1-POOL-SETTLE-001
+last_closed_unit_status: VERIFIED_COMPLETE (2026-07-05)
 last_closed_unit_runtime_verdict: >
-  network_settlement_splits table + RLS + indexes verified against remote Supabase DB.
-  V1 table present. V2 17 columns correct types/nullability. V3 14 constraints (pkey+2FKs+unique+9checks).
-  V4 6 indexes (4 named + pkey + unique). V5 RLS enabled+forced. V6 5 policies.
-  V7 grants correct (texqtic_admin→SELECT; texqtic_app→INSERT/SELECT/UPDATE).
-  V8 nc.settlement_waterfall.enabled=false, value=NULL. V9 supplier_quotes.enabled=false.
-  Post-flight NOTICE: NC-SETTLEMENT-WATERFALL-FLAG-SEED POST-FLIGHT PASSED. QD-AD7 hold intact.
-  prisma validate PASS. prisma generate PASS (v6.1.0). tsc --noEmit EXIT 0.
-  nc.settlement_waterfall.enabled NEVER activated. DPP HOLD unchanged. G-022 HOLD unchanged.
-last_closed_unit_commits: docs(network-commerce): verify pool settlement schema foundation
+  All verification gates passed (2026-07-05).
+  tsc --noEmit EXIT 0. prisma validate PASS.
+  Service unit tests: 19/19 PASS (NSS-01..NSS-16 + flag constant).
+  Route integration tests: 22/22 PASS (NSGET-*/NSPREV-*/NSCOMP-*, 138.67s, hasDb=true).
+  Regression: networkInvoices 12/12 PASS, pools 64/64 PASS, poolRfq 67/67 PASS.
+  TradeTrust Pay doctrine confirmed: settlement = visibility/payable-split computation only.
+  No payment, payout, escrow release, money movement, platform-held funds, TexQtic-funded advance.
+  All new rows: status=PENDING, escrowAccountId=null, triggeredAt=null, releasedAt=null.
+  nc.settlement_waterfall.enabled remains false (NEVER activated).
+  DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED.
+  Packet 21 NOT opened. No schema/migration/frontend/.env changes.
+last_closed_unit_commits: "[TEXQTIC] feat(network-commerce): add pool settlement visibility foundation (Packet 20) — ffea7bf; docs(network-commerce): verify pool settlement visibility foundation"
 last_closed_unit_closure_basis: >
-  V1–V9 remote DB verification all PASS. Repo validation all PASS.
-  Both migrations applied cleanly to remote Supabase. Post-flight guard confirmed.
-last_closed_unit_prior: TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001
-last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-07-02)
+  All repo + test + doctrine verification gates passed.
+  Implementation commit: ffea7bf. Governance close committed.
+last_closed_unit_prior: TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001
+last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-07-03)
 note_on_pending_verification: >-
   TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
   All 3 AF findings resolved. NC Pools + RFQ + Invite surfaces technically unblocked.

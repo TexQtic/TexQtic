@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-05 (TEXQTIC-NC-PHASE1-POOL-SETTLE-001 IMPLEMENTED_AWAITING_PARESH_VERIFY. Service + routes + tests created. nc.settlement_waterfall.enabled remains false. /compute fail-closed. TradeTrust Pay doctrine confirmed. No payment/payout/escrow/money movement. Awaits Paresh verify.)
+**Last Updated:** 2026-07-05 (TEXQTIC-NC-PHASE1-POOL-SETTLE-001 VERIFIED_COMPLETE. tsc PASS. prisma validate PASS. 19/19 unit PASS. 22/22 integration PASS. 12/12 invoices regression PASS. 64/64 pools regression PASS. 67/67 poolRfq regression PASS. TradeTrust Pay doctrine confirmed. No payment/payout/escrow/money movement. nc.settlement_waterfall.enabled remains false. Active delivery unit: HOLD_FOR_AUTHORIZATION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,20 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PHASE1-POOL-SETTLE-001 VERIFIED_COMPLETE (2026-07-05).
+  Packet 20: Settlement visibility foundation. 3 routes: GET /:poolId/settlement, POST /:poolId/settlement/preview, POST /:poolId/settlement/compute.
+  Service: networkSettlementSplit.service.ts — read-only status, non-mutating preview, gated PENDING-only create.
+  All rows: status=PENDING, escrowAccountId=null, triggeredAt=null, releasedAt=null.
+  tsc --noEmit EXIT 0. prisma validate PASS. 19/19 unit PASS (NSS-01..NSS-16 + flag constant). 22/22 integration PASS (138.67s).
+  Regression: networkInvoices 12/12 PASS. pools 64/64 PASS. poolRfq 67/67 PASS.
+  TradeTrust Pay doctrine confirmed: settlement = visibility/payable-split computation only. No payment/payout/escrow/money movement.
+  nc.settlement_waterfall.enabled NEVER activated (remains false). /compute fail-closed (503 FEATURE_DISABLED).
+  nc.procurement_pools.rfq.award.enabled=false UNCHANGED. nc.procurement_pools.supplier_quotes.enabled=false UNCHANGED.
+  No schema.prisma changes. No migrations. No frontend changes. No .env changes.
+  DPP=HOLD_FOR_PARESH_DECISION UNCHANGED. G-022=HOLD_FOR_PARESH_DECISION UNCHANGED.
+  Packet 21 NOT opened. Active delivery unit: HOLD_FOR_AUTHORIZATION. Next unit requires Paresh authorization.
+  Implementation commit: ffea7bf. See governance/TEXQTIC-NC-PHASE1-POOL-SETTLE-001.md §12.
 
 - TEXQTIC-NC-PHASE1-POOL-ORDER-001 VERIFIED_COMPLETE (2026-07-02).
   Packet 18: POST /api/tenant/network-commerce/pools/:poolId/order — ALLOCATED → ORDERED lifecycle transition.
