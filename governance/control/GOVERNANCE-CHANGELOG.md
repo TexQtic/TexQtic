@@ -7,6 +7,12 @@
 
 ---
 
+## 2026-07-03 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001
+
+Prerequisite schema packet for Packet 20 VERIFIED_COMPLETE against remote Supabase DB. Both migrations applied cleanly: `20260535000000_nc_network_settlement_splits` (DO, CREATE TABLE, ALTER TABLE×2, CREATE INDEX×4, ALTER TABLE×2 RLS, CREATE POLICY×5, GRANT×2 — EXIT 0) and `20260536000000_nc_settlement_waterfall_flag_seed` (DO, INSERT 0 1, DO + POST-FLIGHT PASSED NOTICE). Remote DB verification: V1 table present, V2 17 columns correct, V3 14 constraints (pkey+2FKs+unique+9checks), V4 6 indexes (4 named+pkey+unique), V5 RLS enabled+forced, V6 5 policies (admin_select, no_delete, tenant_insert, tenant_select, tenant_update), V7 grants correct (texqtic_admin→SELECT; texqtic_app→INSERT/SELECT/UPDATE), V8 nc.settlement_waterfall.enabled=false/val_null=true, V9 nc.procurement_pools.supplier_quotes.enabled=false. Repo: prisma validate PASS, prisma generate PASS (v6.1.0), tsc --noEmit EXIT 0. nc.settlement_waterfall.enabled NEVER activated. nc.procurement_pools.rfq.award.enabled=false UNCHANGED (QD-AD7). DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED. Packet 20 service/routes NOT authorized. Packet 21 NOT opened. No frontend, service, route, or money-movement changes. See governance/TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001.md §12.
+
+---
+
 ## 2026-07-03 -- IMPLEMENTED_AWAITING_PARESH_VERIFY: TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001
 
 Prerequisite schema packet for Packet 20 IMPLEMENTED. Two migrations added: `20260535000000_nc_network_settlement_splits` (table + RLS + indexes + grants) and `20260536000000_nc_settlement_waterfall_flag_seed` (seeds `nc.settlement_waterfall.enabled=false`, idempotent). Prisma model `NetworkSettlementSplit` added to `schema.prisma` with reverse relations on `organizations`. `prisma validate` PASS. `prisma generate` PASS (v6.1.0). `tsc --noEmit` EXIT 0. No service, routes, frontend, or money movement. `nc.settlement_waterfall.enabled` seeded false — NEVER activated. `nc.procurement_pools.rfq.award.enabled` = false UNCHANGED. DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED. Packet 20 now has schema prerequisites in place; implementation remains NOT authorized. See governance/TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001.md.

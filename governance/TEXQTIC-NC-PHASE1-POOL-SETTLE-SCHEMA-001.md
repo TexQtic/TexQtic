@@ -1,6 +1,6 @@
 # TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001
 
-**Status:** IMPLEMENTED_AWAITING_PARESH_VERIFY  
+**Status:** VERIFIED_COMPLETE  
 **Date:** 2026-07-03  
 **Author:** TexQtic Platform Engineering (Safe-Write Mode)  
 **Predecessor:** `governance/TEXQTIC-NC-PHASE1-POOL-SETTLE-001.md` (BLOCKED_PREREQ_MISSING, commit `bcfd689`)
@@ -168,3 +168,35 @@ These are NOT authorized in this packet.
 ## 11. Commit
 
 `feat(network-commerce): add pool settlement schema foundation`
+
+---
+
+## 12. Remote Verification Evidence — VERIFIED_COMPLETE
+
+**Date:** 2026-07-03  
+**DB:** Remote Supabase PostgreSQL 17 (psql client 16)  
+**Method:** Read-only SQL queries via psql stdin pipe
+
+| Check | Query | Result |
+|---|---|---|
+| V1-TABLE | `information_schema.tables` | `network_settlement_splits` present ✅ |
+| V2-COLS | `information_schema.columns` | 17 columns, correct types/nullability ✅ |
+| V3-CONSTRAINTS | `pg_constraint` | 14 constraints (pkey, 2 FKs, unique, 9 checks incl timing coherence) ✅ |
+| V4-INDEXES | `pg_indexes` | 4 named indexes + pkey index + unique index = 6 total ✅ |
+| V5-RLS | `pg_class` | `relrowsecurity=t`, `relforcerowsecurity=t` ✅ |
+| V6-POLICIES | `pg_policy` | 5 policies: admin_select, no_delete, tenant_insert, tenant_select, tenant_update ✅ |
+| V7-GRANTS | `role_table_grants` | texqtic_admin→SELECT; texqtic_app→INSERT/SELECT/UPDATE ✅ |
+| V8-FLAG | `feature_flags` | `nc.settlement_waterfall.enabled = false`, value=NULL ✅ |
+| V9-GUARDS | `feature_flags` | `nc.procurement_pools.supplier_quotes.enabled = false` ✅ |
+
+**Post-flight NOTICE (migration 20260536000000):**  
+`NC-SETTLEMENT-WATERFALL-FLAG-SEED POST-FLIGHT PASSED. key=nc.settlement_waterfall.enabled, enabled=false. QD-AD7 hold intact.`
+
+**Repo validation:**
+| Check | Result |
+|---|---|
+| `pnpm -C server exec prisma validate` | PASS — `The schema at prisma\schema.prisma is valid 🚀` |
+| `pnpm -C server exec prisma generate` | PASS — `Generated Prisma Client (v6.1.0)` |
+| `tsc --noEmit` (server) | PASS — no output (EXIT 0) |
+
+**Governance close commit:** `docs(network-commerce): verify pool settlement schema foundation`

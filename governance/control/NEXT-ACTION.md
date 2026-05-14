@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-03 (TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001 IMPLEMENTED_AWAITING_PARESH_VERIFY. network_settlement_splits table + RLS + nc.settlement_waterfall.enabled=false seeded. Prisma validate+generate+tsc PASS. Packet 20 prerequisites now in place. Active delivery unit: HOLD_FOR_PARESH_VERIFY — Packet 20 implementation NOT authorized until Paresh verifies this prereq packet.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-03 (TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001 VERIFIED_COMPLETE. network_settlement_splits table + RLS + nc.settlement_waterfall.enabled=false remotely verified. All DB checks pass. Prisma validate+generate+tsc PASS. Active delivery unit: HOLD_FOR_AUTHORIZATION — Packet 20 implementation requires explicit Paresh authorization before any service/routes work.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,35 +15,29 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001
-active_delivery_unit_status: IMPLEMENTED_AWAITING_PARESH_VERIFY
+active_delivery_unit: HOLD_FOR_AUTHORIZATION
+active_delivery_unit_status: VERIFIED_COMPLETE
 active_delivery_unit_note: >
-  TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001 IMPLEMENTED. network_settlement_splits table + RLS + indexes,
-  nc.settlement_waterfall.enabled=false seeded. Prisma validate+generate+tsc PASS. Schema prerequisites
-  for Packet 20 are now in place. Packet 20 (TEXQTIC-NC-PHASE1-POOL-SETTLE-001) implementation remains
-  NOT authorized until Paresh verifies this prereq packet. Do NOT begin Packet 20 service/routes
-  without explicit authorization after verification.
-last_closed_unit: TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001
+  TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001 VERIFIED_COMPLETE. network_settlement_splits table + RLS +
+  indexes remotely verified (V1–V9 all PASS). nc.settlement_waterfall.enabled=false confirmed in DB.
+  Packet 20 (TEXQTIC-NC-PHASE1-POOL-SETTLE-001) service/routes require explicit Paresh authorization
+  before implementation may begin. Do NOT begin Packet 20 service/routes without explicit authorization.
+last_closed_unit: TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-07-03)
 last_closed_unit_runtime_verdict: >
-  NC invoice read routes VERIFIED_COMPLETE against live Supabase DB (hasDb=true).
-  NILIST-01..06 + NIGET-01..06 all PASS (12/12). Duration 63.67s. Start 12:10:36 UTC 2026-07-03.
-  Blocker remediation applied: (1) 400→422 sendValidationError→sendError for param validation;
-  (2) Prisma accessor network_invoices→networkInvoice (camelCase model name);
-  (3) all where/data/orderBy field names snake_case→camelCase throughout service + unit test mock.
-  19/19 unit PASS. tsc --noEmit EXIT 0.
-  Packet 18 regression 64/64 PASS. Packet 17 regression 117/117 PASS.
-  No schema, migrations, frontend, .env, or feature flag activation changes.
-  D-017-A compliant (orgId from dbContext). Non-leaking 404 for wrong-org/wrong-pool access.
-  nc.procurement_pools.rfq.award.enabled = false UNCHANGED. DPP HOLD unchanged. G-022 HOLD unchanged.
-last_closed_unit_commits: fix(network-commerce): verify nc invoice read routes
+  network_settlement_splits table + RLS + indexes verified against remote Supabase DB.
+  V1 table present. V2 17 columns correct types/nullability. V3 14 constraints (pkey+2FKs+unique+9checks).
+  V4 6 indexes (4 named + pkey + unique). V5 RLS enabled+forced. V6 5 policies.
+  V7 grants correct (texqtic_admin→SELECT; texqtic_app→INSERT/SELECT/UPDATE).
+  V8 nc.settlement_waterfall.enabled=false, value=NULL. V9 supplier_quotes.enabled=false.
+  Post-flight NOTICE: NC-SETTLEMENT-WATERFALL-FLAG-SEED POST-FLIGHT PASSED. QD-AD7 hold intact.
+  prisma validate PASS. prisma generate PASS (v6.1.0). tsc --noEmit EXIT 0.
+  nc.settlement_waterfall.enabled NEVER activated. DPP HOLD unchanged. G-022 HOLD unchanged.
+last_closed_unit_commits: docs(network-commerce): verify pool settlement schema foundation
 last_closed_unit_closure_basis: >
-  NILIST-01..06 + NIGET-01..06 all PASS (12/12). 19/19 unit PASS. tsc --noEmit EXIT 0.
-  hasDb=true — tests executed against live Supabase DB, not skipped.
-  Packet 18 regression 64/64 PASS. Packet 17 regression 117/117 PASS.
-  No schema/migration/env/flag changes. DPP HOLD unchanged. G-022 HOLD unchanged.
-  Governance close commit: fix(network-commerce): verify nc invoice read routes.
-last_closed_unit_prior: TEXQTIC-NC-PHASE1-POOL-ORDER-001
+  V1–V9 remote DB verification all PASS. Repo validation all PASS.
+  Both migrations applied cleanly to remote Supabase. Post-flight guard confirmed.
+last_closed_unit_prior: TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-07-02)
 note_on_pending_verification: >-
   TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
