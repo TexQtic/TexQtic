@@ -52,7 +52,7 @@ const NOW           = new Date('2026-01-01T00:00:00.000Z');
 
 function makeDb(overrides: Record<string, unknown> = {}): any {
   return {
-    network_invoices: {
+    networkInvoice: {
       create:    vi.fn(),
       findFirst: vi.fn(),
       findMany:  vi.fn(),
@@ -66,25 +66,25 @@ function makeDb(overrides: Record<string, unknown> = {}): any {
 function makeRow(overrides: Record<string, unknown> = {}) {
   return {
     id:                   INVOICE_ID,
-    org_id:               ORG_ID,
-    invoice_type:         NC_INVOICE_TYPE.POOL_ORDER,
-    network_entity_type:  'POOL',
-    network_entity_id:    ENTITY_ID,
-    invoice_number:       'NC-INV-001',
-    invoice_date:         NOW,
-    due_date:             null,
+    orgId:                ORG_ID,
+    invoiceType:          NC_INVOICE_TYPE.POOL_ORDER,
+    networkEntityType:    'POOL',
+    networkEntityId:      ENTITY_ID,
+    invoiceNumber:        'NC-INV-001',
+    invoiceDate:          NOW,
+    dueDate:              null,
     currency:             'INR',
-    gross_amount:         '250000.000000',
-    issuer_org_id:        ISSUER_ORG,
-    payer_org_id:         null,
-    recipient_org_id:     null,
+    grossAmount:          '250000.000000',
+    issuerOrgId:          ISSUER_ORG,
+    payerOrgId:           null,
+    recipientOrgId:       null,
     status:               'DRAFT',
-    document_url:         null,
+    documentUrl:          null,
     notes:                null,
     metadata:             null,
-    created_by_user_id:   USER_ID,
-    created_at:           NOW,
-    updated_at:           NOW,
+    createdByUserId:      USER_ID,
+    createdAt:            NOW,
+    updatedAt:            NOW,
     ...overrides,
   };
 }
@@ -109,11 +109,11 @@ describe('NetworkInvoiceService', () => {
   // ── P-NI-01: POOL_ORDER without trade_id ───────────────────────────────────
   it('P-NI-01: POOL_ORDER invoice created without trade_id', async () => {
     const row = makeRow({
-      invoice_type:        NC_INVOICE_TYPE.POOL_ORDER,
-      network_entity_type: 'POOL',
+      invoiceType:          NC_INVOICE_TYPE.POOL_ORDER,
+      networkEntityType:    'POOL',
     });
     const db = makeDb({
-      network_invoices: {
+      networkInvoice: {
         create:    vi.fn().mockResolvedValue(row),
         findFirst: vi.fn().mockResolvedValue(null), // no duplicate
       },
@@ -126,19 +126,19 @@ describe('NetworkInvoiceService', () => {
     expect(result.network_entity_type).toBe('POOL');
     expect(result.status).toBe('DRAFT');
     // Confirm trade.findUnique was never called (no trade dependency)
-    expect(db.network_invoices.create).toHaveBeenCalledOnce();
-    const created = db.network_invoices.create.mock.calls[0][0].data;
+    expect(db.networkInvoice.create).toHaveBeenCalledOnce();
+    const created = db.networkInvoice.create.mock.calls[0][0].data;
     expect(created).not.toHaveProperty('trade_id');
   });
 
   // ── P-NI-02: SYNDICATE_EXECUTION without trade_id ──────────────────────────
   it('P-NI-02: SYNDICATE_EXECUTION invoice created without trade_id', async () => {
     const row = makeRow({
-      invoice_type:        NC_INVOICE_TYPE.SYNDICATE_EXECUTION,
-      network_entity_type: 'SYNDICATE',
+      invoiceType:          NC_INVOICE_TYPE.SYNDICATE_EXECUTION,
+      networkEntityType:    'SYNDICATE',
     });
     const db = makeDb({
-      network_invoices: {
+      networkInvoice: {
         create:    vi.fn().mockResolvedValue(row),
         findFirst: vi.fn().mockResolvedValue(null),
       },
@@ -149,18 +149,18 @@ describe('NetworkInvoiceService', () => {
     }));
     expect(result.invoice_type).toBe('SYNDICATE_EXECUTION');
     expect(result.network_entity_type).toBe('SYNDICATE');
-    const created = db.network_invoices.create.mock.calls[0][0].data;
+    const created = db.networkInvoice.create.mock.calls[0][0].data;
     expect(created).not.toHaveProperty('trade_id');
   });
 
   // ── P-NI-03: VCO_DELIVERY without trade_id ─────────────────────────────────
   it('P-NI-03: VCO_DELIVERY invoice created without trade_id', async () => {
     const row = makeRow({
-      invoice_type:        NC_INVOICE_TYPE.VCO_DELIVERY,
-      network_entity_type: 'VCO_CHAIN',
+      invoiceType:          NC_INVOICE_TYPE.VCO_DELIVERY,
+      networkEntityType:    'VCO_CHAIN',
     });
     const db = makeDb({
-      network_invoices: {
+      networkInvoice: {
         create:    vi.fn().mockResolvedValue(row),
         findFirst: vi.fn().mockResolvedValue(null),
       },
@@ -171,15 +171,15 @@ describe('NetworkInvoiceService', () => {
     }));
     expect(result.invoice_type).toBe('VCO_DELIVERY');
     expect(result.network_entity_type).toBe('VCO_CHAIN');
-    const created = db.network_invoices.create.mock.calls[0][0].data;
+    const created = db.networkInvoice.create.mock.calls[0][0].data;
     expect(created).not.toHaveProperty('trade_id');
   });
 
   // ── P-NI-04: payer_org_id and recipient_org_id optional ────────────────────
   it('P-NI-04: payer_org_id and recipient_org_id are optional', async () => {
-    const row = makeRow({ payer_org_id: null, recipient_org_id: null });
+    const row = makeRow({ payerOrgId: null, recipientOrgId: null });
     const db = makeDb({
-      network_invoices: {
+      networkInvoice: {
         create:    vi.fn().mockResolvedValue(row),
         findFirst: vi.fn().mockResolvedValue(null),
       },
@@ -208,18 +208,18 @@ describe('NetworkInvoiceService', () => {
 
   // ── F-NI-01: invalid invoice_type rejected ─────────────────────────────────
   it('F-NI-01: invalid invoice_type rejected', async () => {
-    const db = makeDb({ network_invoices: { create: vi.fn(), findFirst: vi.fn() } });
+    const db = makeDb({ networkInvoice: { create: vi.fn(), findFirst: vi.fn() } });
     const svc = new NetworkInvoiceService(db);
     await expect(
       svc.createNetworkInvoice(ORG_ID, USER_ID, makeBaseInput({ invoice_type: 'TRADE_INVOICE' })),
     ).rejects.toThrow(NetworkInvoiceInvalidTypeError);
-    expect(db.network_invoices.findFirst).not.toHaveBeenCalled();
-    expect(db.network_invoices.create).not.toHaveBeenCalled();
+    expect(db.networkInvoice.findFirst).not.toHaveBeenCalled();
+    expect(db.networkInvoice.create).not.toHaveBeenCalled();
   });
 
   // ── F-NI-02: zero gross_amount rejected ────────────────────────────────────
   it('F-NI-02: zero gross_amount rejected', async () => {
-    const db = makeDb({ network_invoices: { create: vi.fn(), findFirst: vi.fn() } });
+    const db = makeDb({ networkInvoice: { create: vi.fn(), findFirst: vi.fn() } });
     const svc = new NetworkInvoiceService(db);
     await expect(
       svc.createNetworkInvoice(ORG_ID, USER_ID, makeBaseInput({ gross_amount: 0 })),
@@ -228,7 +228,7 @@ describe('NetworkInvoiceService', () => {
 
   // ── F-NI-03: negative gross_amount rejected ────────────────────────────────
   it('F-NI-03: negative gross_amount rejected', async () => {
-    const db = makeDb({ network_invoices: { create: vi.fn(), findFirst: vi.fn() } });
+    const db = makeDb({ networkInvoice: { create: vi.fn(), findFirst: vi.fn() } });
     const svc = new NetworkInvoiceService(db);
     await expect(
       svc.createNetworkInvoice(ORG_ID, USER_ID, makeBaseInput({ gross_amount: -1 })),
@@ -237,7 +237,7 @@ describe('NetworkInvoiceService', () => {
 
   // ── F-NI-04: missing issuer_org_id rejected ────────────────────────────────
   it('F-NI-04: missing issuer_org_id rejected', async () => {
-    const db = makeDb({ network_invoices: { create: vi.fn(), findFirst: vi.fn() } });
+    const db = makeDb({ networkInvoice: { create: vi.fn(), findFirst: vi.fn() } });
     const svc = new NetworkInvoiceService(db);
     await expect(
       svc.createNetworkInvoice(ORG_ID, USER_ID, makeBaseInput({ issuer_org_id: '' })),
@@ -246,7 +246,7 @@ describe('NetworkInvoiceService', () => {
 
   // ── F-NI-05: missing currency rejected ────────────────────────────────────
   it('F-NI-05: missing currency rejected', async () => {
-    const db = makeDb({ network_invoices: { create: vi.fn(), findFirst: vi.fn() } });
+    const db = makeDb({ networkInvoice: { create: vi.fn(), findFirst: vi.fn() } });
     const svc = new NetworkInvoiceService(db);
     await expect(
       svc.createNetworkInvoice(ORG_ID, USER_ID, makeBaseInput({ currency: '' })),
@@ -255,7 +255,7 @@ describe('NetworkInvoiceService', () => {
 
   // ── F-NI-06: missing network_entity_id rejected ────────────────────────────
   it('F-NI-06: missing network_entity_id rejected', async () => {
-    const db = makeDb({ network_invoices: { create: vi.fn(), findFirst: vi.fn() } });
+    const db = makeDb({ networkInvoice: { create: vi.fn(), findFirst: vi.fn() } });
     const svc = new NetworkInvoiceService(db);
     await expect(
       svc.createNetworkInvoice(ORG_ID, USER_ID, makeBaseInput({ network_entity_id: '   ' })),
@@ -265,7 +265,7 @@ describe('NetworkInvoiceService', () => {
   // ── F-NI-07: duplicate invoice number rejected ─────────────────────────────
   it('F-NI-07: duplicate invoice_number for same entity rejected', async () => {
     const db = makeDb({
-      network_invoices: {
+      networkInvoice: {
         create:    vi.fn(),
         findFirst: vi.fn().mockResolvedValue({ id: INVOICE_ID }), // existing found
       },
@@ -274,14 +274,14 @@ describe('NetworkInvoiceService', () => {
     await expect(
       svc.createNetworkInvoice(ORG_ID, USER_ID, makeBaseInput()),
     ).rejects.toThrow(NetworkInvoiceDuplicateError);
-    expect(db.network_invoices.create).not.toHaveBeenCalled();
+    expect(db.networkInvoice.create).not.toHaveBeenCalled();
   });
 
   // ── P-NI-05: getNetworkInvoiceById returns record ──────────────────────────
   it('P-NI-05: getNetworkInvoiceById returns record within org scope', async () => {
     const row = makeRow();
     const db = makeDb({
-      network_invoices: {
+      networkInvoice: {
         create:    vi.fn(),
         findFirst: vi.fn().mockResolvedValue(row),
       },
@@ -293,15 +293,15 @@ describe('NetworkInvoiceService', () => {
     expect(result!.org_id).toBe(ORG_ID);
     expect(result!.invoice_type).toBe('POOL_ORDER');
     // Confirm org_id was passed to findFirst (tenant scoping)
-    const findArgs = db.network_invoices.findFirst.mock.calls[0][0];
-    expect(findArgs.where.org_id).toBe(ORG_ID);
+    const findArgs = db.networkInvoice.findFirst.mock.calls[0][0];
+    expect(findArgs.where.orgId).toBe(ORG_ID);
     expect(findArgs.where.id).toBe(INVOICE_ID);
   });
 
   // ── P-NI-06: getNetworkInvoiceById returns null when not found ─────────────
   it('P-NI-06: getNetworkInvoiceById returns null when not found', async () => {
     const db = makeDb({
-      network_invoices: {
+      networkInvoice: {
         create:    vi.fn(),
         findFirst: vi.fn().mockResolvedValue(null),
         findMany:  vi.fn(),
@@ -315,14 +315,14 @@ describe('NetworkInvoiceService', () => {
   // ── P-NI-10: listNetworkInvoicesForPool returns mapped records ─────────────
   it('P-NI-10: listNetworkInvoicesForPool returns records for org+pool scope', async () => {
     const POOL_ID = 'cccc0000-0000-0000-0000-000000000003';
-    const row1 = makeRow({ id: INVOICE_ID, network_entity_id: POOL_ID });
+    const row1 = makeRow({ id: INVOICE_ID, networkEntityId: POOL_ID });
     const row2 = makeRow({
       id: 'aaaa1111-0000-0000-0000-000000000007',
-      invoice_number: 'NC-INV-002',
-      network_entity_id: POOL_ID,
+      invoiceNumber: 'NC-INV-002',
+      networkEntityId: POOL_ID,
     });
     const db = makeDb({
-      network_invoices: {
+      networkInvoice: {
         create:    vi.fn(),
         findFirst: vi.fn(),
         findMany:  vi.fn().mockResolvedValue([row1, row2]),
@@ -339,7 +339,7 @@ describe('NetworkInvoiceService', () => {
   it('P-NI-11: listNetworkInvoicesForPool returns empty array when no invoices exist', async () => {
     const POOL_ID = 'cccc0000-0000-0000-0000-000000000003';
     const db = makeDb({
-      network_invoices: {
+      networkInvoice: {
         create:    vi.fn(),
         findFirst: vi.fn(),
         findMany:  vi.fn().mockResolvedValue([]),
@@ -354,7 +354,7 @@ describe('NetworkInvoiceService', () => {
   it('P-NI-12: listNetworkInvoicesForPool queries with org_id + POOL entity type + poolId', async () => {
     const POOL_ID = 'cccc0000-0000-0000-0000-000000000003';
     const db = makeDb({
-      network_invoices: {
+      networkInvoice: {
         create:    vi.fn(),
         findFirst: vi.fn(),
         findMany:  vi.fn().mockResolvedValue([]),
@@ -362,10 +362,10 @@ describe('NetworkInvoiceService', () => {
     });
     const svc = new NetworkInvoiceService(db);
     await svc.listNetworkInvoicesForPool(ORG_ID, POOL_ID);
-    const findArgs = db.network_invoices.findMany.mock.calls[0][0];
-    expect(findArgs.where.org_id).toBe(ORG_ID);
-    expect(findArgs.where.network_entity_type).toBe('POOL');
-    expect(findArgs.where.network_entity_id).toBe(POOL_ID);
-    expect(findArgs.orderBy).toEqual({ created_at: 'desc' });
+    const findArgs = db.networkInvoice.findMany.mock.calls[0][0];
+    expect(findArgs.where.orgId).toBe(ORG_ID);
+    expect(findArgs.where.networkEntityType).toBe('POOL');
+    expect(findArgs.where.networkEntityId).toBe(POOL_ID);
+    expect(findArgs.orderBy).toEqual({ createdAt: 'desc' });
   });
 });

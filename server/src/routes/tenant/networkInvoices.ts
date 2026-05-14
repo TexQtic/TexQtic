@@ -19,7 +19,7 @@ import { tenantAuthMiddleware } from '../../middleware/auth.js';
 import { databaseContextMiddleware } from '../../middleware/database-context.middleware.js';
 import { ncPoolFeatureGateMiddleware } from '../../middleware/ncPoolFeatureGate.middleware.js';
 import { prisma } from '../../db/prisma.js';
-import { sendError, sendNotFound, sendSuccess, sendValidationError } from '../../utils/response.js';
+import { sendError, sendNotFound, sendSuccess } from '../../utils/response.js';
 import {
   NetworkInvoiceService,
 } from '../../services/networkInvoice.service.js';
@@ -52,7 +52,7 @@ const networkInvoiceRoutes: FastifyPluginAsync = async fastify => {
       if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
 
       const paramResult = poolIdParamSchema.safeParse(request.params);
-      if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
+      if (!paramResult.success) return sendError(reply, 'VALIDATION_ERROR', 'Validation failed', 422, paramResult.error.errors);
 
       const { poolId } = paramResult.data;
       const orgId = dbContext.orgId;
@@ -92,7 +92,7 @@ const networkInvoiceRoutes: FastifyPluginAsync = async fastify => {
       if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
 
       const paramResult = poolAndInvoiceParamSchema.safeParse(request.params);
-      if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
+      if (!paramResult.success) return sendError(reply, 'VALIDATION_ERROR', 'Validation failed', 422, paramResult.error.errors);
 
       const { poolId, invoiceId } = paramResult.data;
       const orgId = dbContext.orgId;

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-03 (TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001 IMPLEMENTED_AWAITING_PARESH_VERIFY. NC invoice read routes: GET /:poolId/invoices, GET /:poolId/invoices/:invoiceId. tsc EXIT 0. 19/19 unit PASS. 12 integration tests ADDED (DB-gated, NOT yet executed). Active delivery unit: TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-03 (TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001 VERIFIED_COMPLETE. NC invoice read routes 12/12 PASS hasDb=true. Blocker remediation: 400→422, network_invoices→networkInvoice accessor, Prisma camelCase fields. 19/19 unit PASS. tsc EXIT 0. Packet 18 regression 64/64 PASS. Packet 17 regression 117/117 PASS. Active delivery unit: HOLD_FOR_AUTHORIZATION.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,38 +15,34 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001
-active_delivery_unit_status: IMPLEMENTED_AWAITING_PARESH_VERIFY
+active_delivery_unit: HOLD_FOR_AUTHORIZATION
+active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  Packet 19 (TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001) IMPLEMENTED_AWAITING_PARESH_VERIFY.
-  Two GET routes: GET /api/tenant/network-commerce/pools/:poolId/invoices (list) and
-  GET /api/tenant/network-commerce/pools/:poolId/invoices/:invoiceId (detail).
-  listNetworkInvoicesForPool added to networkInvoice.service.ts. D-017-A compliant (orgId from dbContext).
-  ncPoolFeatureGateMiddleware (2-gate chain). Non-leaking 404 for wrong-org/wrong-pool access.
-  tsc --noEmit EXIT 0. 19/19 unit PASS (P-NI-01..12 + F-NI-01..07).
-  12 integration tests ADDED (NILIST-01..06, NIGET-01..06) — DB-gated (describe.skipIf(!hasDb));
-  NOT YET EXECUTED against live Supabase DB; pending runtime verification by Paresh.
-  No frontend, no schema, no migrations, no new feature flags, no .env changes.
-  DPP=HOLD_FOR_PARESH_DECISION unchanged. G-022=HOLD_FOR_PARESH_DECISION unchanged.
-  nc.procurement_pools.rfq.award.enabled = false UNCHANGED.
-  See governance/TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001.md.
-last_closed_unit: TEXQTIC-NC-PHASE1-POOL-ORDER-001
-last_closed_unit_status: VERIFIED_COMPLETE (2026-07-02)
+  No active delivery unit. Packet 19 (TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001) is VERIFIED_COMPLETE.
+  Next unit (Packet 20 — TEXQTIC-NC-PHASE1-POOL-SETTLE-001) requires explicit Paresh authorization.
+  Do NOT open Packet 20 without Paresh authorization.
+last_closed_unit: TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001
+last_closed_unit_status: VERIFIED_COMPLETE (2026-07-03)
 last_closed_unit_runtime_verdict: >
-  POST /api/tenant/network-commerce/pools/:poolId/order ALLOCATED → ORDERED lifecycle transition.
-  StateMachineService atomic (shared-tx). ncPoolFeatureGateMiddleware 2-gate chain. D-017-A compliant.
-  PORDER-01..08 all PASS (hasDb=true — executed against live Supabase DB).
-  Positive: ALLOCATED pool → 200 ORDERED. Negative: DRAFT → 422, wrong-org → 404, unauth → 401, gate-off → 503.
-  21/21 unit PASS. 67/67 Packet 17 regression PASS. tsc EXIT 0.
+  NC invoice read routes VERIFIED_COMPLETE against live Supabase DB (hasDb=true).
+  NILIST-01..06 + NIGET-01..06 all PASS (12/12). Duration 63.67s. Start 12:10:36 UTC 2026-07-03.
+  Blocker remediation applied: (1) 400→422 sendValidationError→sendError for param validation;
+  (2) Prisma accessor network_invoices→networkInvoice (camelCase model name);
+  (3) all where/data/orderBy field names snake_case→camelCase throughout service + unit test mock.
+  19/19 unit PASS. tsc --noEmit EXIT 0.
+  Packet 18 regression 64/64 PASS. Packet 17 regression 117/117 PASS.
   No schema, migrations, frontend, .env, or feature flag activation changes.
-  QA fixture Pool=74436ecd (ACCEPTED) NOT touched. No invoice/settlement triggered (state transition only).
-last_closed_unit_commits: feat(network-commerce): add pool order trigger (a4c788c) / docs(network-commerce): verify pool order trigger
+  D-017-A compliant (orgId from dbContext). Non-leaking 404 for wrong-org/wrong-pool access.
+  nc.procurement_pools.rfq.award.enabled = false UNCHANGED. DPP HOLD unchanged. G-022 HOLD unchanged.
+last_closed_unit_commits: fix(network-commerce): verify nc invoice read routes
 last_closed_unit_closure_basis: >
-  PORDER-01..08 all PASS (8/8). 21/21 unit PASS. tsc --noEmit EXIT 0.
+  NILIST-01..06 + NIGET-01..06 all PASS (12/12). 19/19 unit PASS. tsc --noEmit EXIT 0.
   hasDb=true — tests executed against live Supabase DB, not skipped.
-  No schema/migration/env/flag changes. QD-6 unchanged. DPP HOLD unchanged.
-  Governance close commit: docs(network-commerce): verify pool order trigger.
-last_closed_unit_prior: TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001
+  Packet 18 regression 64/64 PASS. Packet 17 regression 117/117 PASS.
+  No schema/migration/env/flag changes. DPP HOLD unchanged. G-022 HOLD unchanged.
+  Governance close commit: fix(network-commerce): verify nc invoice read routes.
+last_closed_unit_prior: TEXQTIC-NC-PHASE1-POOL-ORDER-001
+last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-07-02)
 note_on_pending_verification: >-
   TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
   All 3 AF findings resolved. NC Pools + RFQ + Invite surfaces technically unblocked.

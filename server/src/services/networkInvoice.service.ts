@@ -173,27 +173,27 @@ export class NetworkInvoiceService {
   private toRecord(row: Record<string, unknown>): NetworkInvoiceRecord {
     return {
       id:                   String(row['id']),
-      org_id:               String(row['org_id']),
-      invoice_type:         String(row['invoice_type']),
-      network_entity_type:  String(row['network_entity_type']),
-      network_entity_id:    String(row['network_entity_id']),
-      invoice_number:       String(row['invoice_number']),
-      invoice_date:         (row['invoice_date'] as Date).toISOString(),
-      due_date:             row['due_date'] ? (row['due_date'] as Date).toISOString() : null,
+      org_id:               String(row['orgId']),
+      invoice_type:         String(row['invoiceType']),
+      network_entity_type:  String(row['networkEntityType']),
+      network_entity_id:    String(row['networkEntityId']),
+      invoice_number:       String(row['invoiceNumber']),
+      invoice_date:         (row['invoiceDate'] as Date).toISOString(),
+      due_date:             row['dueDate'] ? (row['dueDate'] as Date).toISOString() : null,
       currency:             String(row['currency']),
-      gross_amount:         String(row['gross_amount']),
-      issuer_org_id:        String(row['issuer_org_id']),
-      payer_org_id:         row['payer_org_id'] ? String(row['payer_org_id']) : null,
-      recipient_org_id:     row['recipient_org_id'] ? String(row['recipient_org_id']) : null,
+      gross_amount:         String(row['grossAmount']),
+      issuer_org_id:        String(row['issuerOrgId']),
+      payer_org_id:         row['payerOrgId'] ? String(row['payerOrgId']) : null,
+      recipient_org_id:     row['recipientOrgId'] ? String(row['recipientOrgId']) : null,
       status:               String(row['status']),
-      document_url:         row['document_url'] ? String(row['document_url']) : null,
+      document_url:         row['documentUrl'] ? String(row['documentUrl']) : null,
       notes:                row['notes'] ? String(row['notes']) : null,
       metadata:             row['metadata'] != null
                               ? (row['metadata'] as Record<string, unknown>)
                               : null,
-      created_by_user_id:   row['created_by_user_id'] ? String(row['created_by_user_id']) : null,
-      created_at:           (row['created_at'] as Date).toISOString(),
-      updated_at:           (row['updated_at'] as Date).toISOString(),
+      created_by_user_id:   row['createdByUserId'] ? String(row['createdByUserId']) : null,
+      created_at:           (row['createdAt'] as Date).toISOString(),
+      updated_at:           (row['updatedAt'] as Date).toISOString(),
     };
   }
 
@@ -247,41 +247,41 @@ export class NetworkInvoiceService {
     const networkEntityType = NC_ENTITY_TYPE_FOR_INVOICE[invoiceType];
 
     // 2. Duplicate check: same (org_id, invoice_type, entity_type, entity_id, invoice_number)
-    const existing = await (this.db as any).network_invoices.findFirst({
+    const existing = await (this.db as any).networkInvoice.findFirst({
       where: {
-        org_id:               orgId,
-        invoice_type:         invoiceType,
-        network_entity_type:  networkEntityType,
-        network_entity_id:    input.network_entity_id,
-        invoice_number:       input.invoice_number,
+        orgId:               orgId,
+        invoiceType:         invoiceType,
+        networkEntityType:   networkEntityType,
+        networkEntityId:     input.network_entity_id,
+        invoiceNumber:       input.invoice_number,
       },
       select: { id: true },
     });
     if (existing) throw new NetworkInvoiceDuplicateError();
 
     // 3. Insert DRAFT invoice — no trade_id, no lifecycle_state_id FK
-    const row = await (this.db as any).network_invoices.create({
+    const row = await (this.db as any).networkInvoice.create({
       data: {
         id:                   randomUUID(),
-        org_id:               orgId,
-        invoice_type:         invoiceType,
-        network_entity_type:  networkEntityType,
-        network_entity_id:    input.network_entity_id,
-        invoice_number:       input.invoice_number,
-        invoice_date:         new Date(input.invoice_date),
-        due_date:             input.due_date ? new Date(input.due_date) : null,
+        orgId:                orgId,
+        invoiceType:          invoiceType,
+        networkEntityType:    networkEntityType,
+        networkEntityId:      input.network_entity_id,
+        invoiceNumber:        input.invoice_number,
+        invoiceDate:          new Date(input.invoice_date),
+        dueDate:              input.due_date ? new Date(input.due_date) : null,
         currency:             input.currency,
-        gross_amount:         input.gross_amount,
-        issuer_org_id:        input.issuer_org_id,
-        payer_org_id:         input.payer_org_id ?? null,
-        recipient_org_id:     input.recipient_org_id ?? null,
+        grossAmount:          input.gross_amount,
+        issuerOrgId:          input.issuer_org_id,
+        payerOrgId:           input.payer_org_id ?? null,
+        recipientOrgId:       input.recipient_org_id ?? null,
         status:               NC_INVOICE_STATUS.DRAFT,
-        document_url:         input.document_url ?? null,
+        documentUrl:          input.document_url ?? null,
         notes:                input.notes ?? null,
         metadata:             input.metadata ?? null,
-        created_by_user_id:   userId ?? null,
-        created_at:           new Date(),
-        updated_at:           new Date(),
+        createdByUserId:      userId ?? null,
+        createdAt:            new Date(),
+        updatedAt:            new Date(),
       },
     });
 
@@ -299,8 +299,8 @@ export class NetworkInvoiceService {
     orgId: string,
     id: string,
   ): Promise<NetworkInvoiceRecord | null> {
-    const row = await (this.db as any).network_invoices.findFirst({
-      where: { id, org_id: orgId },
+    const row = await (this.db as any).networkInvoice.findFirst({
+      where: { id, orgId },
     });
     if (!row) return null;
     return this.toRecord(row);
@@ -318,13 +318,13 @@ export class NetworkInvoiceService {
     orgId: string,
     poolId: string,
   ): Promise<NetworkInvoiceRecord[]> {
-    const rows = await (this.db as any).network_invoices.findMany({
+    const rows = await (this.db as any).networkInvoice.findMany({
       where: {
-        org_id:               orgId,
-        network_entity_type:  'POOL',
-        network_entity_id:    poolId,
+        orgId:               orgId,
+        networkEntityType:   'POOL',
+        networkEntityId:     poolId,
       },
-      orderBy: { created_at: 'desc' },
+      orderBy: { createdAt: 'desc' },
     });
     return rows.map((r: Record<string, unknown>) => this.toRecord(r));
   }
