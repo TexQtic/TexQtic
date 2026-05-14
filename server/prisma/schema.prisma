@@ -1102,6 +1102,8 @@ model organizations {
   supplierInvitesAsSupplier                                                                          NetworkPoolRfqSupplierInvite[]      @relation("NetworkPoolRfqSupplierInviteSupplierOrg")
   supplierQuotesAsOwner                                                                              NetworkPoolRfqSupplierQuote[]       @relation("NetworkPoolRfqSupplierQuoteOwnerOrg")
   supplierQuotesAsSupplier                                                                           NetworkPoolRfqSupplierQuote[]       @relation("NetworkPoolRfqSupplierQuoteSupplierOrg")
+  settlementSplitsAsOwner                                                                            NetworkSettlementSplit[]            @relation("NetworkSettlementSplitOrg")
+  settlementSplitsAsRecipient                                                                        NetworkSettlementSplit[]            @relation("NetworkSettlementSplitRecipientOrg")
   network_pool_rfqs                                                                                  NetworkPoolRfq[]                    @relation("NetworkPoolRfqOwnerOrg")
   network_pools                                                                                      NetworkPool[]
   node_certifications                                                                                node_certifications[]
@@ -2330,6 +2332,57 @@ model NetworkPoolRfqSupplierQuote {
   @@index([submittedAt(sort: Desc)], map: "idx_nc_pool_rfq_supplier_quotes_submitted_at")
   @@index([createdAt(sort: Desc)], map: "idx_nc_pool_rfq_supplier_quotes_created_at")
   @@map("network_pool_rfq_supplier_quotes")
+}
+
+/// TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001: Settlement waterfall split record.
+/// Computation / audit record for NC pool (and future SYNDICATE / VCO_CHAIN) settlement.
+/// org_id (pool-owning org) is the canonical RLS anchor and tenant boundary.
+/// entity_type discriminant: POOL | SYNDICATE | VCO_CHAIN.
+/// recipient_org_id: the organisation that will receive net_payable when RELEASED.
+/// escrow_account_id: nullable UUID — NO FK (escrow coupling deferred; Phase 1H).
+/// No service layer, routes, payment, or escrow release in this packet.
+/// Design authority: TEXQTIC-NETWORK-COMMERCE-DESIGN-FOUNDATION-001 §6.12
+model NetworkSettlementSplit {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Pool-owning org. Primary RLS anchor. Never nullable.
+  orgId              String    @map("org_id") @db.Uuid
+  /// NC entity type discriminant: POOL | SYNDICATE | VCO_CHAIN. DB CHECK enforced.
+  entityType         String    @map("entity_type") @db.VarChar(30)
+  /// UUID of the NC entity (e.g. NetworkPool.id). Soft reference — no FK.
+  entityId           String    @map("entity_id") @db.Uuid
+  /// Organisation that receives net_payable when status → RELEASED.
+  recipientOrgId     String    @map("recipient_org_id") @db.Uuid
+  /// Sequential rank in the settlement waterfall for this entity. DB CHECK: >= 1.
+  waterfallSeq       Int       @map("waterfall_seq")
+  /// ISO 4217 currency code. Non-empty enforced by DB CHECK.
+  currency           String    @map("currency") @db.Char(3)
+  /// Total amount before deductions. DB CHECK: >= 0.
+  grossAmount        Decimal   @map("gross_amount") @db.Decimal(18, 6)
+  /// Portion withheld (retention, warranty hold). DB CHECK: >= 0. Default 0.
+  holdbackAmount     Decimal   @default(0) @map("holdback_amount") @db.Decimal(18, 6)
+  /// Deduction applied due to SLA breach / penalty. DB CHECK: >= 0. Default 0.
+  penaltyDeduction   Decimal   @default(0) @map("penalty_deduction") @db.Decimal(18, 6)
+  /// grossAmount - holdbackAmount - penaltyDeduction. DB CHECK: >= 0.
+  netPayable         Decimal   @map("net_payable") @db.Decimal(18, 6)
+  /// PENDING | TRIGGERED | RELEASED | FAILED. DB CHECK enforced.
+  status             String    @default("PENDING") @map("status") @db.VarChar(30)
+  /// Nullable link to escrow account. NO FK — escrow coupling deferred to Phase 1H.
+  escrowAccountId    String?   @map("escrow_account_id") @db.Uuid
+  /// Set when payment/escrow instruction is sent (TRIGGERED state).
+  triggeredAt        DateTime? @map("triggered_at") @db.Timestamptz(6)
+  /// Set when release is confirmed (RELEASED state).
+  releasedAt         DateTime? @map("released_at") @db.Timestamptz(6)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  org                organizations @relation("NetworkSettlementSplitOrg", fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_network_settlement_splits_org_id_fk")
+  recipientOrg       organizations @relation("NetworkSettlementSplitRecipientOrg", fields: [recipientOrgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "nc_network_settlement_splits_recipient_org_id_fk")
+
+  @@unique([entityType, entityId, waterfallSeq], map: "nc_network_settlement_splits_entity_seq_unique")
+  @@index([orgId, entityType, entityId], map: "idx_nc_network_settlement_splits_org_entity")
+  @@index([status], map: "idx_nc_network_settlement_splits_status")
+  @@index([recipientOrgId], map: "idx_nc_network_settlement_splits_recipient_org")
+  @@index([createdAt(sort: Desc)], map: "idx_nc_network_settlement_splits_created_at")
+  @@map("network_settlement_splits")
 }
 
 enum TenantType {

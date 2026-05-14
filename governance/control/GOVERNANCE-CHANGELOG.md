@@ -7,6 +7,12 @@
 
 ---
 
+## 2026-07-03 -- IMPLEMENTED_AWAITING_PARESH_VERIFY: TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001
+
+Prerequisite schema packet for Packet 20 IMPLEMENTED. Two migrations added: `20260535000000_nc_network_settlement_splits` (table + RLS + indexes + grants) and `20260536000000_nc_settlement_waterfall_flag_seed` (seeds `nc.settlement_waterfall.enabled=false`, idempotent). Prisma model `NetworkSettlementSplit` added to `schema.prisma` with reverse relations on `organizations`. `prisma validate` PASS. `prisma generate` PASS (v6.1.0). `tsc --noEmit` EXIT 0. No service, routes, frontend, or money movement. `nc.settlement_waterfall.enabled` seeded false — NEVER activated. `nc.procurement_pools.rfq.award.enabled` = false UNCHANGED. DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED. Packet 20 now has schema prerequisites in place; implementation remains NOT authorized. See governance/TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001.md.
+
+---
+
 ## 2026-07-03 -- BLOCKED_PREREQ_MISSING: TEXQTIC-NC-PHASE1-POOL-SETTLE-001
 
 Packet 20 Pool Settlement BLOCKED — prerequisites absent. Repo-truth validation confirms: (1) `NetworkSettlementSplit` model does not exist in schema.prisma — no table, no migration, no service, no route (tracker: NOT_STARTED all dimensions); (2) `nc.settlement_waterfall.enabled` feature flag row absent from all migrations and seed files; (3) Existing `settlement.service.ts` is G-019 trade domain — not suitable for NC pool settlement. Lifecycle states `SETTLEMENT_PENDING` and `SETTLED` ARE seeded for POOL entity type (`20260523000000_nc_pool_lifecycle_seed`), including `SETTLEMENT_PENDING→SETTLED` allowed transition (requires MakerChecker=true, PLATFORM_ADMIN/CHECKER roles). Implementation cannot proceed without prerequisite schema packet. Proposed prereq: `TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001` (schema migration + flag seed, no activation). No source files changed, no tests, no schema, no migrations, no frontend. Guardrails confirmed: award.enabled=false UNCHANGED, DPP HOLD_FOR_PARESH_DECISION UNCHANGED, G-022 HOLD_FOR_PARESH_DECISION UNCHANGED. Governance-only commit: `docs(network-commerce): record pool settlement blocker`. See governance/TEXQTIC-NC-PHASE1-POOL-SETTLE-001.md.

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-03 (TEXQTIC-NC-PHASE1-POOL-SETTLE-001 BLOCKED_PREREQ_MISSING. Repo-truth validation: NetworkSettlementSplit ABSENT, nc.settlement_waterfall.enabled ABSENT. No implementation. Prerequisite packet required: TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001. Active delivery unit: HOLD_FOR_AUTHORIZATION.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-03 (TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001 IMPLEMENTED_AWAITING_PARESH_VERIFY. network_settlement_splits table + RLS + nc.settlement_waterfall.enabled=false seeded. Prisma validate+generate+tsc PASS. Packet 20 prerequisites now in place. Active delivery unit: HOLD_FOR_PARESH_VERIFY — Packet 20 implementation NOT authorized until Paresh verifies this prereq packet.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,13 +15,14 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: HOLD_FOR_AUTHORIZATION
-active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
+active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001
+active_delivery_unit_status: IMPLEMENTED_AWAITING_PARESH_VERIFY
 active_delivery_unit_note: >
-  No active delivery unit. Packet 20 (TEXQTIC-NC-PHASE1-POOL-SETTLE-001) opened for repo-truth validation
-  and was found BLOCKED_PREREQ_MISSING. NetworkSettlementSplit schema and nc.settlement_waterfall.enabled
-  flag are both absent from the repo. A prerequisite packet (TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001)
-  must be authorized and delivered before Packet 20 can implement. Do NOT proceed without authorization.
+  TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001 IMPLEMENTED. network_settlement_splits table + RLS + indexes,
+  nc.settlement_waterfall.enabled=false seeded. Prisma validate+generate+tsc PASS. Schema prerequisites
+  for Packet 20 are now in place. Packet 20 (TEXQTIC-NC-PHASE1-POOL-SETTLE-001) implementation remains
+  NOT authorized until Paresh verifies this prereq packet. Do NOT begin Packet 20 service/routes
+  without explicit authorization after verification.
 last_closed_unit: TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-07-03)
 last_closed_unit_runtime_verdict: >
