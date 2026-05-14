@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-05 (TEXQTIC-NC-PHASE1-POOL-SETTLE-001 VERIFIED_COMPLETE. tsc PASS. prisma validate PASS. 19/19 unit PASS. 22/22 integration PASS. 12/12 invoices regression PASS. 64/64 pools regression PASS. 67/67 poolRfq regression PASS. TradeTrust Pay doctrine confirmed. No payment/payout/escrow/money movement. nc.settlement_waterfall.enabled remains false. Active delivery unit: HOLD_FOR_AUTHORIZATION.)
+**Last Updated:** 2026-07-05 (TEXQTIC-NC-PHASE1-LIFECYCLE-LOG-READ-001 IMPLEMENTED_AWAITING_PARESH_VERIFY. Read-only lifecycle log route + service + 10 unit + 10 integration tests. tsc PASS. prisma validate PASS. All regression suites PASS. No schema/migration/frontend/.env changes. Active delivery unit: TEXQTIC-NC-PHASE1-LIFECYCLE-LOG-READ-001.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
