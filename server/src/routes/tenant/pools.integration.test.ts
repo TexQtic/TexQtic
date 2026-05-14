@@ -1318,4 +1318,145 @@ describe.skipIf(!hasDb)('Network Commerce Pool Routes Integration', () => {
     });
     expect(list.statusCode).toBe(401);
   });
+
+  // ── Pool Order (PORDER-01..08) ─────────────────────────────────────────────
+
+  it('PORDER-01 ALLOCATED pool order -> 200 ORDERED', async () => {
+    const create = await createPoolAsOwner();
+    expect(create.res.statusCode).toBe(201);
+
+    const createBody = create.res.json() as any;
+    const poolId = createBody.data.id as string;
+    createdPoolIds.add(poolId);
+
+    await setPoolState(poolId, 'ALLOCATED');
+
+    const order = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/order`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: { reason: 'Pool fully allocated — triggering order' },
+    });
+
+    expect(order.statusCode).toBe(200);
+    const orderBody = order.json() as any;
+    expect(orderBody.data.lifecycle_state_key).toBe('ORDERED');
+    expect(orderBody.data.id).toBe(poolId);
+  });
+
+  it('PORDER-02 non-ALLOCATED pool (DRAFT) -> 422 INVALID_STATE', async () => {
+    const create = await createPoolAsOwner();
+    expect(create.res.statusCode).toBe(201);
+
+    const createBody = create.res.json() as any;
+    const poolId = createBody.data.id as string;
+    createdPoolIds.add(poolId);
+
+    // Pool stays in DRAFT — no setPoolState call
+
+    const order = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/order`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: { reason: 'Attempting order from DRAFT' },
+    });
+
+    expect(order.statusCode).toBe(422);
+    expect((order.json() as any).error.code).toBe('INVALID_STATE');
+  });
+
+  it('PORDER-03 other org cannot order owner pool -> 404 POOL_NOT_FOUND', async () => {
+    const create = await createPoolAsOwner();
+    expect(create.res.statusCode).toBe(201);
+
+    const createBody = create.res.json() as any;
+    const poolId = createBody.data.id as string;
+    createdPoolIds.add(poolId);
+
+    await setPoolState(poolId, 'ALLOCATED');
+
+    const order = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/order`,
+      headers: authHeaders(otherOrgId, otherUserId, 'OWNER'),
+      payload: { reason: 'Cross-tenant attempt must be blocked' },
+    });
+
+    expect(order.statusCode).toBe(404);
+    expect((order.json() as any).error.code).toBe('POOL_NOT_FOUND');
+  });
+
+  it('PORDER-04 non-existent pool -> 404 POOL_NOT_FOUND', async () => {
+    const fakeId = '00000000-0000-0000-0000-000000000099';
+
+    const order = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${fakeId}/order`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: { reason: 'Order for non-existent pool' },
+    });
+
+    expect(order.statusCode).toBe(404);
+    expect((order.json() as any).error.code).toBe('POOL_NOT_FOUND');
+  });
+
+  it('PORDER-05 feature gate disabled -> 503 FEATURE_DISABLED', async () => {
+    await setGlobalPoolFlag(false);
+
+    const order = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/00000000-0000-0000-0000-000000000001/order`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: { reason: 'Gate disabled test' },
+    });
+
+    expect(order.statusCode).toBe(503);
+    expect((order.json() as any).error.code).toBe('FEATURE_DISABLED');
+  });
+
+  it('PORDER-06 missing reason -> 400 VALIDATION_ERROR', async () => {
+    const create = await createPoolAsOwner();
+    expect(create.res.statusCode).toBe(201);
+
+    const createBody = create.res.json() as any;
+    const poolId = createBody.data.id as string;
+    createdPoolIds.add(poolId);
+
+    const order = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/order`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: {},
+    });
+
+    expect(order.statusCode).toBe(400);
+  });
+
+  it('PORDER-07 body contains unknown field (strict) -> 400 VALIDATION_ERROR', async () => {
+    const create = await createPoolAsOwner();
+    expect(create.res.statusCode).toBe(201);
+
+    const createBody = create.res.json() as any;
+    const poolId = createBody.data.id as string;
+    createdPoolIds.add(poolId);
+
+    const order = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/${poolId}/order`,
+      headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
+      payload: { reason: 'Valid reason', actor_type: 'TENANT_ADMIN' },
+    });
+
+    expect(order.statusCode).toBe(400);
+  });
+
+  it('PORDER-08 unauthenticated order -> 401', async () => {
+    const order = await app.inject({
+      method: 'POST',
+      url: `/api/tenant/network-commerce/pools/00000000-0000-0000-0000-000000000001/order`,
+      payload: { reason: 'Unauthenticated attempt' },
+    });
+
+    expect(order.statusCode).toBe(401);
+  });
 });

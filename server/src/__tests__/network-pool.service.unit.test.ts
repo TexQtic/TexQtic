@@ -4,7 +4,7 @@
  * Pure unit tests with mocked Prisma and mocked StateMachineService.
  * No DB access. No lifecycle seed dependency.
  *
- * COVERAGE (15 tests):
+ * COVERAGE (21 tests):
  *   P-NP-01  createNetworkPool — DRAFT pool created with valid input
  *   P-NP-02  createNetworkPool — rejects non-positive targetQty (zero)
  *   P-NP-03  createNetworkPool — rejects invalid openAt/closeAt ordering
@@ -20,6 +20,12 @@
  *   P-NP-13  joinNetworkPool   — rejects duplicate membership (same pool + org)
  *   P-NP-14  joinNetworkPool   — rejects join when pool is not in OPEN or AGGREGATING
  *   P-NP-15  getNetworkPoolMembership — query is scoped to member org only
+ *   P-NP-16  triggerPoolOrder  — transitions ALLOCATED → ORDERED via StateMachineService
+ *   P-NP-17  triggerPoolOrder  — SM call carries correct entityId, orgId, fromStateKey, toStateKey
+ *   P-NP-18  triggerPoolOrder  — rejects ordering a non-existent pool
+ *   P-NP-19  triggerPoolOrder  — rejects pool not in ALLOCATED state
+ *   P-NP-20  triggerPoolOrder  — wraps SM DENIED result in NetworkPoolTransitionDeniedError
+ *   P-NP-21  triggerPoolOrder  — throws NetworkPoolLifecycleStateMissingError if ORDERED state absent
  *
  * Run (from server/ directory):
  *   pnpm exec vitest run src/__tests__/network-pool.service.unit.test.ts
@@ -483,6 +489,148 @@ describe('NetworkPoolService', () => {
       expect(db.networkPoolMembership.findFirst).toHaveBeenCalledWith({
         where: { poolId: POOL_ID, orgId: MEMBER_ORG_ID },
       });
+    });
+  });
+
+  // ── triggerPoolOrder ────────────────────────────────────────────────────────
+
+  const ALLOCATED_STATE_ID_LOCAL = 'cccc0007-0000-0000-0000-000000000007';
+  const ORDERED_STATE_ID_LOCAL   = 'cccc0009-0000-0000-0000-000000000009';
+
+  function makeOrderInput(overrides: Record<string, unknown> = {}) {
+    return {
+      pool_id:       POOL_ID,
+      actor_type:    'TENANT_ADMIN' as const,
+      actor_user_id: USER_ID,
+      actor_role:    'ORG_ADMIN',
+      reason:        'Triggering pool order — ALLOCATED state confirmed',
+      ...overrides,
+    };
+  }
+
+  function makeOrderDb(overrides: Record<string, unknown> = {}): any {
+    const orderMockTx = {
+      networkPool: {
+        update: vi.fn().mockResolvedValue(
+          makePoolRow({ lifecycleStateId: ORDERED_STATE_ID_LOCAL, lifecycleState: { stateKey: 'ORDERED' } }),
+        ),
+      },
+    };
+    return {
+      lifecycleState: {
+        findUnique: vi.fn().mockResolvedValue({ id: ORDERED_STATE_ID_LOCAL, stateKey: 'ORDERED' }),
+      },
+      networkPool: {
+        findFirst: vi.fn().mockResolvedValue(
+          makePoolRow({ lifecycleStateId: ALLOCATED_STATE_ID_LOCAL, lifecycleState: { stateKey: 'ALLOCATED' } }),
+        ),
+        update: vi.fn(),
+      },
+      $transaction: vi.fn().mockImplementation((fn: (tx: any) => any) => fn(orderMockTx)),
+      ...overrides,
+    };
+  }
+
+  describe('P-NP-16: PASS — triggerPoolOrder transitions ALLOCATED → ORDERED', () => {
+    it('returns NetworkPoolRecord with lifecycle_state_key ORDERED', async () => {
+      const db = makeOrderDb();
+      const sm = makeSm();
+      const svc = new NetworkPoolService(db, sm);
+
+      const result = await svc.triggerPoolOrder(OWNER_ORG_ID, makeOrderInput());
+
+      expect(result.lifecycle_state_key).toBe('ORDERED');
+      expect(result.id).toBe(POOL_ID);
+      expect(result.org_id).toBe(OWNER_ORG_ID);
+      expect(sm.transition).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('P-NP-17: PASS — triggerPoolOrder SM call carries correct entityId, orgId, reason', () => {
+    it('calls SM.transition with fromStateKey=ALLOCATED, toStateKey=ORDERED', async () => {
+      const db = makeOrderDb();
+      const sm = makeSm();
+      const svc = new NetworkPoolService(db, sm);
+
+      await svc.triggerPoolOrder(OWNER_ORG_ID, makeOrderInput({ reason: 'ORDER_REASON_TEST' }));
+
+      const call = (sm.transition as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(call.entityType).toBe('POOL');
+      expect(call.entityId).toBe(POOL_ID);
+      expect(call.orgId).toBe(OWNER_ORG_ID);
+      expect(call.fromStateKey).toBe('ALLOCATED');
+      expect(call.toStateKey).toBe('ORDERED');
+      expect(call.reason).toBe('ORDER_REASON_TEST');
+    });
+  });
+
+  describe('P-NP-18: FAIL — triggerPoolOrder throws when pool not found', () => {
+    it('throws NetworkPoolNotFoundError if pool does not exist for org', async () => {
+      const db = makeOrderDb({
+        networkPool: {
+          findFirst: vi.fn().mockResolvedValue(null),
+          update:    vi.fn(),
+        },
+      });
+      const sm = makeSm();
+      const svc = new NetworkPoolService(db, sm);
+
+      await expect(
+        svc.triggerPoolOrder(OWNER_ORG_ID, makeOrderInput()),
+      ).rejects.toBeInstanceOf(NetworkPoolNotFoundError);
+    });
+  });
+
+  describe('P-NP-19: FAIL — triggerPoolOrder rejects pool not in ALLOCATED state', () => {
+    it('throws NetworkPoolInvalidStateError when pool is in OPEN state', async () => {
+      const db = makeOrderDb({
+        networkPool: {
+          findFirst: vi.fn().mockResolvedValue(
+            makePoolRow({ lifecycleStateId: OPEN_STATE_ID, lifecycleState: { stateKey: 'OPEN' } }),
+          ),
+          update: vi.fn(),
+        },
+      });
+      const sm = makeSm();
+      const svc = new NetworkPoolService(db, sm);
+
+      await expect(
+        svc.triggerPoolOrder(OWNER_ORG_ID, makeOrderInput()),
+      ).rejects.toBeInstanceOf(NetworkPoolInvalidStateError);
+    });
+  });
+
+  describe('P-NP-20: FAIL — triggerPoolOrder wraps SM DENIED in NetworkPoolTransitionDeniedError', () => {
+    it('throws NetworkPoolTransitionDeniedError when SM returns DENIED', async () => {
+      const sm = makeSm({
+        transition: vi.fn().mockResolvedValue({
+          status:  'DENIED',
+          code:    'TRANSITION_NOT_PERMITTED',
+          message: 'Transition not permitted',
+        }),
+      });
+      const db = makeOrderDb();
+      const svc = new NetworkPoolService(db, sm);
+
+      await expect(
+        svc.triggerPoolOrder(OWNER_ORG_ID, makeOrderInput()),
+      ).rejects.toBeInstanceOf(NetworkPoolTransitionDeniedError);
+    });
+  });
+
+  describe('P-NP-21: FAIL — triggerPoolOrder throws when ORDERED lifecycle state is absent', () => {
+    it('throws NetworkPoolLifecycleStateMissingError when ORDERED state not seeded', async () => {
+      const db = makeOrderDb({
+        lifecycleState: {
+          findUnique: vi.fn().mockResolvedValue(null),
+        },
+      });
+      const sm = makeSm();
+      const svc = new NetworkPoolService(db, sm);
+
+      await expect(
+        svc.triggerPoolOrder(OWNER_ORG_ID, makeOrderInput()),
+      ).rejects.toBeInstanceOf(NetworkPoolLifecycleStateMissingError);
     });
   });
 

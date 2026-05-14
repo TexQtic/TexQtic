@@ -39,6 +39,12 @@ const openPoolBodySchema = z
   })
   .strict();
 
+const orderPoolBodySchema = z
+  .object({
+    reason: z.string().trim().min(1).max(2000, 'reason max 2000 chars'),
+  })
+  .strict();
+
 const joinPoolBodySchema = z
   .object({
     member_org_id: z
@@ -418,6 +424,60 @@ const poolRoutes: FastifyPluginAsync = async fastify => {
         if (mapPoolServiceError(reply, err)) return;
         request.log.error(err, 'network-commerce.pools.membership.get');
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to read pool membership', 500);
+      }
+    },
+  );
+
+  // ── POST /:poolId/order ──────────────────────────────────────────────────────────
+
+  fastify.post(
+    '/:poolId/order',
+    {
+      onRequest: [tenantAuthMiddleware, databaseContextMiddleware],
+      preHandler: [ncPoolFeatureGateMiddleware],
+    },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+
+      const paramResult = poolIdParamSchema.safeParse(request.params);
+      if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
+
+      const bodyResult = orderPoolBodySchema.safeParse(request.body);
+      if (!handleBodyValidation(reply, bodyResult)) return;
+
+      const { poolId } = paramResult.data;
+      const orgId = dbContext.orgId;
+      const userId = request.userId ?? null;
+      const userRole = request.userRole;
+
+      try {
+        const ownerScopedRow = await prisma.networkPool.findFirst({
+          where: { id: poolId, orgId },
+          select: { id: true },
+        });
+
+        if (!ownerScopedRow) {
+          return sendError(reply, 'POOL_NOT_FOUND', 'Network pool not found', 404);
+        }
+
+        const stateMachine = new StateMachineService(prisma, null, null);
+        const svc = new NetworkPoolService(prisma, stateMachine);
+        const record = await svc.triggerPoolOrder(orgId, {
+          pool_id:       poolId,
+          actor_user_id:  userId,
+          actor_admin_id: null,
+          actor_type:    deriveActorType(userRole),
+          actor_role:    userRole ?? 'TENANT_MEMBER',
+          reason:        bodyResult.data.reason,
+          request_id:    request.id ?? null,
+        });
+
+        return sendSuccess(reply, record, 200);
+      } catch (err) {
+        if (mapPoolServiceError(reply, err)) return;
+        request.log.error(err, 'network-commerce.pools.order');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to trigger pool order', 500);
       }
     },
   );

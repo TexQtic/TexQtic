@@ -9,6 +9,7 @@
  *   joinNetworkPool         — create NetworkPoolMembership (pool state gate: OPEN | AGGREGATING)
  *   getNetworkPoolById      — load pool scoped to owner org
  *   getNetworkPoolMembership — load membership scoped to member org
+ *   triggerPoolOrder        — transition ALLOCATED → ORDERED via StateMachineService (atomic)
  *
  * Design decisions:
  *   - createNetworkPool does NOT call StateMachineService. Pool creation inserts the row at
@@ -123,6 +124,23 @@ export interface JoinNetworkPoolInput {
   declared_qty: number;
   /** Unit of measure for the declared quantity. */
   qty_unit: string;
+}
+
+export interface TriggerPoolOrderInput {
+  /** UUID of the pool to order. */
+  pool_id: string;
+  /** Actor user UUID (from JWT). Mutually exclusive with actor_admin_id. */
+  actor_user_id?: string | null;
+  /** Actor admin UUID. Mutually exclusive with actor_user_id. */
+  actor_admin_id?: string | null;
+  /** Actor type classification (D-020-A). */
+  actor_type: 'TENANT_USER' | 'TENANT_ADMIN' | 'PLATFORM_ADMIN' | 'SYSTEM_AUTOMATION' | 'MAKER' | 'CHECKER';
+  /** Membership role snapshot at time of call. */
+  actor_role: string;
+  /** Mandatory transition justification (D-020-D). */
+  reason: string;
+  /** Fastify request ID for correlation. */
+  request_id?: string | null;
 }
 
 export interface NetworkPoolListQuery {
@@ -778,5 +796,93 @@ export class NetworkPoolService {
         total,
       },
     };
+  }
+
+  // ── triggerPoolOrder ────────────────────────────────────────────────────────
+
+  /**
+   * Trigger Pool Order — transition ALLOCATED → ORDERED via StateMachineService.
+   *
+   * TEXQTIC-NC-PHASE1-POOL-ORDER-001
+   *
+   * Atomic: SM lifecycle log write and network_pools.lifecycle_state_id update
+   * share a single $transaction (shared-tx pattern — openNetworkPool reference).
+   *
+   * The POOL ORDERED lifecycle state must exist in lifecycle_states (seeded by
+   * TEXQTIC-NC-PHASE1-POOL-LIFECYCLE-SEED-001).
+   *
+   * Pool must be in ALLOCATED state. Only the pool owner org may trigger.
+   * D-017-A: orgId is ALWAYS from JWT/dbContext — never from caller body.
+   *
+   * @param orgId  - Owner org (from JWT/dbContext — D-017-A).
+   * @param input  - Transition context: pool_id, actor, reason.
+   * @returns      NetworkPoolRecord reflecting the ORDERED state.
+   */
+  async triggerPoolOrder(
+    orgId: string,
+    input: TriggerPoolOrderInput,
+  ): Promise<NetworkPoolRecord> {
+    // 1. Load pool with current lifecycle state key (owner-scoped)
+    const poolRow = await this.db.networkPool.findFirst({
+      where:   { id: input.pool_id, orgId },
+      include: { lifecycleState: { select: { stateKey: true } } },
+    });
+
+    if (!poolRow) throw new NetworkPoolNotFoundError();
+
+    const currentStateKey: string = poolRow.lifecycleState?.stateKey ?? '';
+    if (currentStateKey !== 'ALLOCATED') {
+      throw new NetworkPoolInvalidStateError(currentStateKey, ['ALLOCATED']);
+    }
+
+    // 2. Resolve POOL ORDERED state ID — fail fast outside tx if seed is absent
+    const orderedState = await this.db.lifecycleState.findUnique({
+      where: { entityType_stateKey: { entityType: 'POOL', stateKey: 'ORDERED' } },
+      select: { id: true, stateKey: true },
+    });
+    if (!orderedState) {
+      throw new NetworkPoolLifecycleStateMissingError('ORDERED');
+    }
+
+    // 3. Atomic: SM lifecycle log write + pool state update.
+    //    opts.db passes tx to SM so both writes share one transaction boundary.
+    const updatedRow = await this.db.$transaction(async (tx) => {
+      const smResult = await this.stateMachine.transition(
+        {
+          entityType:   'POOL',
+          entityId:     input.pool_id,
+          orgId,
+          fromStateKey: 'ALLOCATED',
+          toStateKey:   'ORDERED',
+          actorType:    input.actor_type,
+          actorUserId:  input.actor_user_id ?? null,
+          actorAdminId: input.actor_admin_id ?? null,
+          actorRole:    input.actor_role,
+          reason:       input.reason,
+          requestId:    input.request_id ?? null,
+        },
+        { db: tx as unknown as PrismaClient },
+      );
+
+      if (smResult.status !== 'APPLIED') {
+        const denied = smResult as { status: string; code?: string; message?: string };
+        throw new NetworkPoolTransitionDeniedError(
+          denied.code ?? smResult.status,
+          denied.message ?? `SM returned status '${smResult.status}'`,
+        );
+      }
+
+      const updated = await (tx as any).networkPool.update({
+        where: { id: input.pool_id },
+        data: {
+          lifecycleStateId: orderedState.id,
+          updatedAt:        new Date(),
+        },
+      });
+
+      return updated;
+    });
+
+    return this.toPoolRecord({ ...updatedRow, lifecycleState: { stateKey: 'ORDERED' } });
   }
 }
