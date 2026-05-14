@@ -1,7 +1,8 @@
 # TEXQTIC-NC-PHASE1-POOL-ORDER-001 — Pool Order Trigger (Packet 18)
 
-**Status:** IMPLEMENTED  
+**Status:** VERIFIED_COMPLETE  
 **Date Opened:** 2026-07-02  
+**Date Verified:** 2026-07-02  
 **Authorized by:** Paresh Patel  
 **Layer:** Network Commerce — Phase 1  
 **Prior Packet:** TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 (Packet 17, VERIFIED_COMPLETE 2026-07-02)
@@ -125,3 +126,47 @@ Pre-existing failures: 2 (OPR-05, DLR-06 — FK constraint on `tenant_feature_ov
 - G-022 = HOLD_FOR_PARESH_DECISION (UNCHANGED)
 - No schema.prisma, migrations, .env, or frontend changes
 - `orderedAt` field NOT added (does not exist on NetworkPool)
+
+---
+
+## Runtime Verification Record
+
+**Verified:** 2026-07-02  
+**Verified by:** Paresh Patel (Paresh verification pass)  
+**DB mode:** `hasDb=true` — executed against live Supabase DB (not skipped)
+
+### Verification Runs (post-implementation, fresh terminal)
+
+| Check | Result |
+| --- | --- |
+| `pnpm exec tsc --noEmit` from `server/` | EXIT 0 — zero errors |
+| Unit tests `network-pool.service.unit.test.ts` | 21/21 PASS (P-NP-01..21) |
+| Integration PORDER-01..08 | 8/8 PASS |
+| Packet 17 regression `poolRfq.integration.test.ts` | 67/67 PASS |
+
+### PORDER Verification Detail (live DB)
+
+| Test | Scenario | HTTP | Verified |
+| --- | --- | --- | --- |
+| PORDER-01 | ALLOCATED pool → POST /order | 200, `lifecycle_state_key=ORDERED` | ✅ |
+| PORDER-02 | DRAFT pool → POST /order | 422 INVALID_STATE | ✅ |
+| PORDER-03 | Other org → POST /order | 404 POOL_NOT_FOUND (non-leaking) | ✅ |
+| PORDER-04 | Non-existent poolId | 404 POOL_NOT_FOUND | ✅ |
+| PORDER-05 | Feature gate disabled | 503 FEATURE_DISABLED | ✅ |
+| PORDER-06 | Missing reason | 400 VALIDATION_ERROR | ✅ |
+| PORDER-07 | Unknown field strict schema | 400 VALIDATION_ERROR | ✅ |
+| PORDER-08 | No auth headers | 401 | ✅ |
+
+### Invariants Confirmed at Verification
+
+- `nc.procurement_pools.rfq.award.enabled` = false UNCHANGED ✅
+- `nc.procurement_pools.supplier_quotes.enabled` = false UNCHANGED ✅
+- DPP = HOLD_FOR_PARESH_DECISION UNCHANGED ✅
+- G-022 = HOLD_FOR_PARESH_DECISION UNCHANGED ✅
+- No frontend, schema.prisma, migrations, .env changes ✅
+- QA fixture Pool=74436ecd NOT touched (ACCEPTED state preserved) ✅
+- No invoice or settlement behavior triggered (state transition only) ✅
+
+### Governance Close Commit
+
+`docs(network-commerce): verify pool order trigger`
