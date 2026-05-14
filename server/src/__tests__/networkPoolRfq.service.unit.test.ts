@@ -3446,6 +3446,11 @@ describe('MC-SVC-04: PASS — approveAward valid checker completes award and ret
     expect(smCall.actorType).toBe('CHECKER');
     expect(smCall.makerUserId).toBe(MAKER_USER_ID);
     expect(smCall.checkerUserId).toBe(CHECKER_USER_ID);
+    // MC-SVC-SIG-01: approval_signatures.decision must be 'APPROVE' (DB CHECK constraint)
+    expect(db._mockTx.approvalSignature.create).toHaveBeenCalledOnce();
+    const sigCall = db._mockTx.approvalSignature.create.mock.calls[0][0];
+    expect(sigCall.data.decision).toBe('APPROVE');
+    expect(sigCall.data.signerActorType).toBe('CHECKER');
   });
 });
 
@@ -3567,7 +3572,8 @@ describe('MC-SVC-10: PASS — rejectAwardApproval sets REJECTED + inserts signat
     expect(sm.transition).not.toHaveBeenCalled();
     expect(db._mockTx.approvalSignature.create).toHaveBeenCalledOnce();
     const sigCall = db._mockTx.approvalSignature.create.mock.calls[0][0];
-    expect(sigCall.data.decision).toBe('REJECTED');
+    // MC-SVC-SIG-02: approval_signatures.decision must be 'REJECT' (DB CHECK constraint)
+    expect(sigCall.data.decision).toBe('REJECT');
     expect(sigCall.data.signerActorType).toBe('CHECKER');
     // No networkPool, networkPoolRfq, or networkPoolRfqSupplierQuote in this tx mock
     expect(db._mockTx).not.toHaveProperty('networkPoolRfq');

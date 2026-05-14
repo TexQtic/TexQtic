@@ -2261,7 +2261,7 @@ export class NetworkPoolRfqService {
         data:  { status: 'APPROVED', updatedAt: now },
       });
 
-      // 11. INSERT ApprovalSignature (decision='APPROVED')
+      // 11. INSERT ApprovalSignature (decision='APPROVE')
       await (tx as any).approvalSignature.create({
         data: {
           approvalId,
@@ -2270,7 +2270,7 @@ export class NetworkPoolRfqService {
           signerAdminId:   null,
           signerActorType: 'CHECKER',
           signerRole:      'NC_POOL_ADMIN',
-          decision:        'APPROVED',
+          decision:        'APPROVE',
           reason:          input.approve_reason,
           impersonationId: null,
         },
@@ -2334,7 +2334,7 @@ export class NetworkPoolRfqService {
         data:  { status: 'REJECTED', updatedAt: now },
       });
 
-      // 6. INSERT ApprovalSignature (decision='REJECTED')
+      // 6. INSERT ApprovalSignature (decision='REJECT')
       await (tx as any).approvalSignature.create({
         data: {
           approvalId,
@@ -2343,7 +2343,7 @@ export class NetworkPoolRfqService {
           signerAdminId:   null,
           signerActorType: 'CHECKER',
           signerRole:      'NC_POOL_ADMIN',
-          decision:        'REJECTED',
+          decision:        'REJECT',
           reason:          input.reject_reason,
           impersonationId: null,
         },
