@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-03 (TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001 VERIFIED_COMPLETE. NC invoice read routes 12/12 PASS hasDb=true. Blocker remediation: 400→422, network_invoices→networkInvoice accessor, Prisma camelCase fields. 19/19 unit PASS. tsc EXIT 0. Packet 18 regression 64/64 PASS. Packet 17 regression 117/117 PASS. Active delivery unit: HOLD_FOR_AUTHORIZATION.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-03 (TEXQTIC-NC-PHASE1-POOL-SETTLE-001 BLOCKED_PREREQ_MISSING. Repo-truth validation: NetworkSettlementSplit ABSENT, nc.settlement_waterfall.enabled ABSENT. No implementation. Prerequisite packet required: TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001. Active delivery unit: HOLD_FOR_AUTHORIZATION.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -18,9 +18,10 @@ product_delivery_priority: >-
 active_delivery_unit: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  No active delivery unit. Packet 19 (TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001) is VERIFIED_COMPLETE.
-  Next unit (Packet 20 — TEXQTIC-NC-PHASE1-POOL-SETTLE-001) requires explicit Paresh authorization.
-  Do NOT open Packet 20 without Paresh authorization.
+  No active delivery unit. Packet 20 (TEXQTIC-NC-PHASE1-POOL-SETTLE-001) opened for repo-truth validation
+  and was found BLOCKED_PREREQ_MISSING. NetworkSettlementSplit schema and nc.settlement_waterfall.enabled
+  flag are both absent from the repo. A prerequisite packet (TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001)
+  must be authorized and delivered before Packet 20 can implement. Do NOT proceed without authorization.
 last_closed_unit: TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-07-03)
 last_closed_unit_runtime_verdict: >

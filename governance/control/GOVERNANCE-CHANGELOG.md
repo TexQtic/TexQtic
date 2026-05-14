@@ -7,6 +7,12 @@
 
 ---
 
+## 2026-07-03 -- BLOCKED_PREREQ_MISSING: TEXQTIC-NC-PHASE1-POOL-SETTLE-001
+
+Packet 20 Pool Settlement BLOCKED — prerequisites absent. Repo-truth validation confirms: (1) `NetworkSettlementSplit` model does not exist in schema.prisma — no table, no migration, no service, no route (tracker: NOT_STARTED all dimensions); (2) `nc.settlement_waterfall.enabled` feature flag row absent from all migrations and seed files; (3) Existing `settlement.service.ts` is G-019 trade domain — not suitable for NC pool settlement. Lifecycle states `SETTLEMENT_PENDING` and `SETTLED` ARE seeded for POOL entity type (`20260523000000_nc_pool_lifecycle_seed`), including `SETTLEMENT_PENDING→SETTLED` allowed transition (requires MakerChecker=true, PLATFORM_ADMIN/CHECKER roles). Implementation cannot proceed without prerequisite schema packet. Proposed prereq: `TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001` (schema migration + flag seed, no activation). No source files changed, no tests, no schema, no migrations, no frontend. Guardrails confirmed: award.enabled=false UNCHANGED, DPP HOLD_FOR_PARESH_DECISION UNCHANGED, G-022 HOLD_FOR_PARESH_DECISION UNCHANGED. Governance-only commit: `docs(network-commerce): record pool settlement blocker`. See governance/TEXQTIC-NC-PHASE1-POOL-SETTLE-001.md.
+
+---
+
 ## 2026-07-03 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001
 
 Packet 19 NC invoice read routes VERIFIED_COMPLETE against live Supabase DB (hasDb=true). NILIST-01..06 + NIGET-01..06 all PASS (12/12). Duration 63.67s. Blocker remediation applied: (1) `sendValidationError` (hardcoded 400) → `sendError(..., 422, ...)` for param validation in `networkInvoices.ts`; (2) Prisma accessor `network_invoices` → `networkInvoice` (camelCase model name) in `networkInvoice.service.ts`; (3) all `where`/`data`/`orderBy` field names snake_case → camelCase throughout service + unit test mock. 19/19 unit PASS. `tsc --noEmit` EXIT 0. Packet 18 regression 64/64 PASS (pools.integration.test.ts). Packet 17 regression 117/117 PASS (poolRfq + poolRfqInvites). No frontend, schema, migrations, new feature flags, or `.env` changes. D-017-A compliant. `nc.procurement_pools.rfq.award.enabled` = false UNCHANGED. DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED. Governance close commit: `fix(network-commerce): verify nc invoice read routes`. See governance/TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001.md.

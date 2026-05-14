@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-03 (TEXQTIC-NC-PHASE1-NC-INVOICE-COMPLETE-001 VERIFIED_COMPLETE. NC invoice read routes 12/12 PASS hasDb=true. Blocker remediation: 400→422, network_invoices→networkInvoice, Prisma camelCase fields. 19/19 unit PASS. tsc EXIT 0. Packet 18 regression 64/64 PASS. Packet 17 regression 117/117 PASS. Active delivery unit: HOLD_FOR_AUTHORIZATION. G-022 HOLD_FOR_PARESH_DECISION unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-07-03 (TEXQTIC-NC-PHASE1-POOL-SETTLE-001 BLOCKED_PREREQ_MISSING. Packet 20 cannot implement: NetworkSettlementSplit schema absent, nc.settlement_waterfall.enabled flag absent. Prerequisite packet required: TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001. Active delivery unit: HOLD_FOR_AUTHORIZATION. G-022 HOLD_FOR_PARESH_DECISION unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
