@@ -28,6 +28,7 @@ import tenantPoolRfqRoutes from './tenant/poolRfq.js';
 import tenantPoolRfqSupplierInvitesRoutes from './tenant/poolRfqSupplierInvites.js';
 import tenantPoolRfqSupplierQuotesRoutes from './tenant/poolRfqSupplierQuotes.js';
 import tenantNetworkInvoiceRoutes from './tenant/networkInvoices.js';
+import tenantNetworkSettlementRoutes from './tenant/networkSettlement.js';
 import tenantInvoiceApprovalRoutes from './tenant/invoice-approval.js';
 import tenantTtpSummaryRoutes from './tenant/ttp-summary.js';
 import tenantTtpEnrollmentRoutes from './tenant/ttp-enrollment.js';
@@ -9007,6 +9008,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   await fastify.register(tenantPoolRfqSupplierInvitesRoutes, { prefix: '/tenant/network-commerce' });
   await fastify.register(tenantPoolRfqSupplierQuotesRoutes, { prefix: '/tenant/network-commerce' });
   await fastify.register(tenantNetworkInvoiceRoutes, { prefix: '/tenant/network-commerce/pools' });
+  await fastify.register(tenantNetworkSettlementRoutes, { prefix: '/tenant/network-commerce/pools' });
   await fastify.register(tenantInvoiceApprovalRoutes, { prefix: '/tenant' });
 
   // ─── TTP Slice 7: TTP Summary & Enrollment ────────────────────────────────

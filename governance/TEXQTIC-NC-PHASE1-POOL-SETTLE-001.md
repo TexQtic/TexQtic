@@ -1,8 +1,9 @@
 # TEXQTIC-NC-PHASE1-POOL-SETTLE-001 — NC Pool Settlement Foundation
 
 **Packet:** 20
-**Status:** BLOCKED_PREREQ_MISSING
-**Date:** 2026-07-03
+**Status:** IMPLEMENTED_AWAITING_PARESH_VERIFY
+**Date (initial block recorded):** 2026-07-03
+**Date (implementation):** 2026-07-05
 **Phase:** 1H — Settlement/Dispute/Quality/Bond
 **Domain:** Network Commerce / Collective Procurement Pools (Module A)
 **Authority:** TEXQTIC-NC-COMPREHENSIVE-IMPLEMENTATION-PLAN-TRACKER-001.md · Phase 1H
@@ -320,3 +321,94 @@ Files in commit:
 ---
 
 *Next action: Paresh to authorize `TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001` (schema + flag prerequisite packet) before Packet 20 implementation can proceed.*
+
+---
+
+## 11. Implementation Record (2026-07-05)
+
+**Authorization token:** `TEXQTIC-NC-PHASE1-POOL-SETTLE-001-IMPL-TRADETRUST-PAY-ALIGNED`
+**Prerequisite packet:** `TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001` — VERIFIED_COMPLETE (2026-07-03)
+
+### 11.1 TradeTrust Pay Doctrine
+
+Settlement is **visibility / payable-split computation only**.
+
+The TradeTrust Pay doctrine applies without exception:
+
+- ❌ No payment execution
+- ❌ No payout
+- ❌ No escrow release
+- ❌ No money movement
+- ❌ No platform-held funds
+- ❌ No payment guarantee
+- ❌ No TexQtic-funded advance
+- ❌ No pool `SETTLED` lifecycle transition (requires separate MakerChecker packet)
+- ❌ No `TRIGGERED` rows emitted — schema-reserved, NOT emitted by Packet 20
+- ❌ No `RELEASED` rows emitted — schema-reserved, NOT emitted by Packet 20
+- ❌ `escrowAccountId` remains `null` on all Packet 20 rows
+- ❌ `triggeredAt` remains `null` on all Packet 20 rows
+- ❌ `releasedAt` remains `null` on all Packet 20 rows
+- ❌ `nc.settlement_waterfall.enabled` remains `false` — NOT activated by Packet 20
+- ❌ `/compute` is fail-closed while `nc.settlement_waterfall.enabled = false`
+- ❌ Packet 21 NOT opened
+- ❌ DPP HOLD_FOR_PARESH_DECISION UNCHANGED
+- ❌ G-022 HOLD_FOR_PARESH_DECISION UNCHANGED
+
+### 11.2 Files Created / Modified
+
+| File | Change | Description |
+|---|---|---|
+| `server/src/services/networkSettlementSplit.service.ts` | CREATED | Settlement visibility service — read-only status, non-mutating preview, gated PENDING-only create |
+| `server/src/routes/tenant/networkSettlement.ts` | CREATED | Three settlement routes for pool visibility |
+| `server/src/routes/tenant.ts` | MODIFIED | Import + register `tenantNetworkSettlementRoutes` at prefix `/tenant/network-commerce/pools` |
+| `server/src/services/networkSettlementSplit.service.test.ts` | CREATED | 17 service unit tests (NSS-01 to NSS-16 + flag constant check) — no DB required |
+| `server/src/routes/tenant/networkSettlement.integration.test.ts` | CREATED | 17 route integration tests (NSGET-01–08, NSPREV-01–05, NSCOMP-01–09) |
+
+### 11.3 Route Surface
+
+| Route | Method | Description |
+|---|---|---|
+| `GET /api/tenant/network-commerce/pools/:poolId/settlement` | GET | Settlement status + existing payable split rows |
+| `POST /api/tenant/network-commerce/pools/:poolId/settlement/preview` | POST | Non-mutating computation preview |
+| `POST /api/tenant/network-commerce/pools/:poolId/settlement/compute` | POST | Creates PENDING split rows (gated — 503 while flag=false) |
+
+### 11.4 Behavioral Boundaries
+
+- `getPoolSettlementStatus` — read-only. No writes, no `$transaction` call.
+- `computePoolSettlementPreview` — non-mutating. No writes, no `$transaction` call.
+- `createPoolSettlementSplits` — gated: checks `nc.settlement_waterfall.enabled` FIRST; throws `NetworkSettlementSplitFeatureDisabledError` (→ HTTP 503) when flag is false or absent.
+- All newly created split rows: `status='PENDING'`, `escrowAccountId=null`, `triggeredAt=null`, `releasedAt=null`.
+- `org_id` sourced exclusively from `request.dbContext.orgId` (JWT). Never from params/query/body.
+- Wrong-org pool lookups return `NetworkSettlementSplitPoolNotFoundError` (non-leaking 404).
+
+### 11.5 Validation Outcomes
+
+- `pnpm --filter server tsc --noEmit` — PASS
+- `pnpm -C server exec prisma validate` — PASS
+- Service unit tests (NSS-*): run `pnpm exec vitest run src/services/networkSettlementSplit.service.test.ts`
+- Route integration tests (NSGET-*/NSPREV-*/NSCOMP-*): run `pnpm exec vitest run src/routes/tenant/networkSettlement.integration.test.ts`
+
+### 11.6 Schema / Schema.prisma
+
+No changes. `schema.prisma` and migrations are UNCHANGED. The `NetworkSettlementSplit` Prisma model was added in the prerequisite packet (`TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001`).
+
+### 11.7 Guardrail Confirmation (Implementation)
+
+| Guardrail | Status |
+|---|---|
+| `schema.prisma` NOT modified | ✅ Confirmed |
+| No migration files | ✅ Confirmed |
+| No frontend changes | ✅ Confirmed |
+| No `.env` changes | ✅ Confirmed |
+| `nc.settlement_waterfall.enabled` remains `false` | ✅ Confirmed — NOT activated |
+| No production data mutation | ✅ Confirmed |
+| No QA fixture reset | ✅ Confirmed |
+| No payment/payout/escrow/money movement code | ✅ Confirmed |
+| No pool `SETTLED` transition | ✅ Confirmed |
+| Packet 21 NOT opened | ✅ Confirmed |
+| DPP/G-022 UNCHANGED | ✅ Confirmed |
+| `escrowAccountId = null` in ALL new rows | ✅ Confirmed |
+| `status = 'PENDING'` in ALL new rows | ✅ Confirmed |
+| `triggeredAt = null`, `releasedAt = null` | ✅ Confirmed |
+| `org_id` from `dbContext.orgId` ONLY | ✅ Confirmed |
+| Wrong-org access non-leaking (404) | ✅ Confirmed |

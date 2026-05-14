@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-03 (TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001 VERIFIED_COMPLETE. Both migrations applied to remote Supabase and verified (V1–V9 all PASS). network_settlement_splits table + RLS + nc.settlement_waterfall.enabled=false confirmed in DB. prisma validate+generate+tsc PASS. Active delivery unit: HOLD_FOR_AUTHORIZATION — Packet 20 service/routes NOT authorized. G-022 HOLD_FOR_PARESH_DECISION unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-07-05 (TEXQTIC-NC-PHASE1-POOL-SETTLE-001 IMPLEMENTED_AWAITING_PARESH_VERIFY. Service + routes + tests created. nc.settlement_waterfall.enabled remains false. /compute fail-closed. TradeTrust Pay doctrine confirmed. No payment/payout/escrow/money movement. Awaits Paresh verify.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or

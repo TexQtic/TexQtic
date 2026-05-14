@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-03 (TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001 VERIFIED_COMPLETE. network_settlement_splits table + RLS + nc.settlement_waterfall.enabled=false remotely verified. All DB checks pass. Prisma validate+generate+tsc PASS. Active delivery unit: HOLD_FOR_AUTHORIZATION — Packet 20 implementation requires explicit Paresh authorization before any service/routes work.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-05 (TEXQTIC-NC-PHASE1-POOL-SETTLE-001 IMPLEMENTED_AWAITING_PARESH_VERIFY. Service + routes + tests created. nc.settlement_waterfall.enabled remains false. TradeTrust Pay doctrine confirmed. No payment, payout, escrow release, or money movement. /compute is fail-closed. Status awaits Paresh verification.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,13 +15,18 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: HOLD_FOR_AUTHORIZATION
-active_delivery_unit_status: VERIFIED_COMPLETE
+active_delivery_unit: TEXQTIC-NC-PHASE1-POOL-SETTLE-001
+active_delivery_unit_status: IMPLEMENTED_AWAITING_PARESH_VERIFY
 active_delivery_unit_note: >
-  TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001 VERIFIED_COMPLETE. network_settlement_splits table + RLS +
-  indexes remotely verified (V1–V9 all PASS). nc.settlement_waterfall.enabled=false confirmed in DB.
-  Packet 20 (TEXQTIC-NC-PHASE1-POOL-SETTLE-001) service/routes require explicit Paresh authorization
-  before implementation may begin. Do NOT begin Packet 20 service/routes without explicit authorization.
+  TEXQTIC-NC-PHASE1-POOL-SETTLE-001 IMPLEMENTED — service + routes + tests created.
+  Authorization token: TEXQTIC-NC-PHASE1-POOL-SETTLE-001-IMPL-TRADETRUST-PAY-ALIGNED.
+  TradeTrust Pay doctrine confirmed: settlement is visibility/payable-split computation only.
+  No payment execution, no payout, no escrow release, no money movement, no platform-held funds,
+  no payment guarantee, no TexQtic-funded advance. nc.settlement_waterfall.enabled remains false.
+  /compute is fail-closed while flag is false. Newly created split rows, if any in tests, are
+  PENDING-only. escrowAccountId remains null. TRIGGERED/RELEASED status: schema-reserved, NOT
+  emitted by Packet 20. Packet 21 not opened. DPP HOLD unchanged. G-022 HOLD unchanged.
+  Awaits Paresh verification: tsc PASS, prisma validate PASS, tests to be confirmed.
 last_closed_unit: TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-07-03)
 last_closed_unit_runtime_verdict: >
