@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-13 (TEXQTIC-NC-PENDING-APPROVALS-ENTITY-TYPE-CONSTRAINT-REMEDIATION-001 COMPLETE. pending_approvals_entity_type_check constraint extended to include POOL. DDL applied; post-DDL state verified clean. API smoke → 503 FEATURE_DISABLED. Flags remain false. MC-5 HALTED — constraint blocker resolved; MC-5 resume requires separate Paresh authorization. No source/schema/migration/env changes.)
+**Last Updated:** 2026-05-14 (TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001 CONTROLLED_QA_ACTIVATION_VERIFIED_COMPLETE. MC-5 E2E verified: maker-request 201, same-actor 409 MAKER_CHECKER_SAME_ACTOR, checker-approve 200 APPROVED, DB states all confirmed. FE-9 MC-UI PROD_VERIFIED_COMPLETE. Flags restored false. QA fixture consumed. All holds unchanged. No source/schema/migration/env changes.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,13 +53,32 @@
 
 ## Operating Notes
 
+- TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001 CONTROLLED_QA_ACTIVATION_VERIFIED_COMPLETE (2026-05-14).
+  MC-5 complete. Full E2E maker-checker award flow verified on production (app.texqtic.com) with QA fixtures.
+  Phase A: GET award-approvals → 200 ✅. Phase B: quote SUBMITTED, no accepted_at ✅.
+  Phase C: approval REQUESTED (db01d0e3), no prior signatures ✅.
+  Phase D: same-actor POST approve → 409 MAKER_CHECKER_SAME_ACTOR ✅ (negative control confirmed).
+  Phase E: checker POST approve → 200 APPROVED, quote ACCEPTED ✅.
+  Phase F: DB verified — pool=ACCEPTED, RFQ=ACCEPTED, quote=ACCEPTED, approval=APPROVED, signature decision=APPROVE, signer=b80f0cab ✅.
+  Phase G: both flags restored false (2026-05-14 01:50:05 UTC) ✅.
+  QA fixture consumed: Pool=74436ecd ACCEPTED, RFQ=55eb2858 ACCEPTED, Quote=2ac70ff6 ACCEPTED,
+    Approval=db01d0e3 APPROVED, Signature=be343be5 decision=APPROVE.
+  Maker=ac6d2d3f (qa.b2b@texqtic.com, OWNER). Checker=b80f0cab (qa.buyer@texqtic.com, ADMIN).
+  Flags posture: nc.procurement_pools.rfq.award.enabled=false, nc.procurement_pools.supplier_quotes.enabled=false.
+  Holds unchanged: DPP=HOLD_FOR_PARESH_DECISION, Packet 17=HOLD_FOR_PARESH_DECISION, G-022=HOLD_FOR_PARESH_DECISION.
+  Next-unit candidates (not opened — all require separate Paresh authorization):
+    A: TEXQTIC-NC-QA-AWARD-FLOW-SEED-RESET-001 (fresh QA fixture for future award-flow E2E)
+    B: TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 (Packet 17 — RFQ read surfaces)
+    C: TEXQTIC-NC-G022-ESCALATION-DESIGN-001 (future escalation path design)
+  commit 8adeb4a. See governance/TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001.md.
+
 - TEXQTIC-NC-QA-B2B-CHECKER-USER-PROVISIONING-001 CHECKER_PROVISIONED_COMPLETE (2026-05-13).
   qa.buyer@texqtic.com (b80f0cab) added as ADMIN to qa-b2b tenant (faf2e4a7).
   Maker: qa.b2b@texqtic.com (ac6d2d3f, OWNER). Checker: qa.buyer@texqtic.com (b80f0cab, ADMIN). maker≠checker ✅.
   Both flags remain false (fail-closed). No quote/RFQ/pool/approval/signature mutation.
   MC-5 blocker resolved. See governance/TEXQTIC-NC-QA-B2B-CHECKER-USER-PROVISIONING-001.md.
 
-- TEXQTIC-NC-FRONTEND-AWARD-MAKER-CHECKER-UI-001 FRONTEND_IMPLEMENTED_PENDING_PROD_VERIFY (2026-07-01).
+- TEXQTIC-NC-FRONTEND-AWARD-MAKER-CHECKER-UI-001 PROD_VERIFIED_COMPLETE (2026-05-14 — TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001).
   FE-9 QuoteReviewPanel extended with G-021 maker-checker award flow.
   MAKER path: "Request Award Approval" dialog → POST award-request → pending approval card.
   CHECKER path: "Approve Award" / "Reject Approval" buttons (only when checker ≠ maker) → refresh.
@@ -72,8 +91,9 @@
   No backend/schema/migration/.env/flag changes. nc.procurement_pools.rfq.award.enabled ABSENT (fail-closed).
   Legacy /accept route and old acceptQuoteForRfq service method preserved unchanged.
   QD-6 (supplier_quotes.enabled=false) unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.
-  Next: PARESH_DECISION_REQUIRED — prod verify when flags activated.
+  Prod verify: CONTROLLED_QA_ACTIVATION_VERIFIED_COMPLETE (2026-05-14). QA fixture consumed. commit 8adeb4a.
   See governance/TEXQTIC-NC-FRONTEND-AWARD-MAKER-CHECKER-UI-001.md.
+  See governance/TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001.md.
 
 - TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001 ROUTE_VERIFIED_COMPLETE (2026-07-01).
   4 new HTTP routes added to server/src/routes/tenant/poolRfq.ts under ownerAwardPreHandler (3-gate chain).

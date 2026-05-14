@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-13 (TEXQTIC-NC-PENDING-APPROVALS-ENTITY-TYPE-CONSTRAINT-REMEDIATION-001 COMPLETE. pending_approvals_entity_type_check extended to include POOL. Flags remain false. MC-5 HALTED — constraint blocker resolved; MC-5 Phase D requires separate Paresh authorization to resume.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-14 (TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001 CONTROLLED_QA_ACTIVATION_VERIFIED_COMPLETE. MC-5 E2E verified. FE-9 MC-UI PROD_VERIFIED_COMPLETE. Flags false. QA fixture consumed. Next-unit candidates A/B/C listed. All holds unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,23 +15,20 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-FRONTEND-AWARD-MAKER-CHECKER-UI-001
-active_delivery_unit_status: FRONTEND_IMPLEMENTED_PENDING_PROD_VERIFY (2026-07-01)
+active_delivery_unit: HOLD_FOR_PARESH_DECISION
+active_delivery_unit_status: PARESH_DECISION_REQUIRED
 active_delivery_unit_note: >
-  TEXQTIC-NC-FRONTEND-AWARD-MAKER-CHECKER-UI-001 FRONTEND_IMPLEMENTED_PENDING_PROD_VERIFY (2026-07-01).
-  FE-9 QuoteReviewPanel extended with G-021 maker-checker award flow.
-  MAKER path: "Request Award Approval" dialog → POST award-request → pending approval card.
-  CHECKER path: "Approve Award" / "Reject Approval" buttons (checker ≠ maker only) → data refresh.
-  "Winning Quote" emerald badge on ACCEPTED quote. 6 safe error messages via classifyMcError.
-  4 new service methods in networkCommerceService.ts.
-  Feature-disabled amber banner preserved (503 FEATURE_DISABLED when nc.procurement_pools.rfq.award.enabled absent/false).
-  Legacy /accept route + acceptQuoteForRfq unchanged.
-  42/42 frontend tests PASS (25 new MC-FE-01..17 + 17 existing FE-9). tsc --noEmit EXIT 0.
-  No backend, schema.prisma, migrations, .env, or feature flag activation changes.
-  nc.procurement_pools.rfq.award.enabled ABSENT (fail-closed). QD-6 unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.
-  Next: PARESH_DECISION_REQUIRED — prod verify when nc.procurement_pools.rfq.award.enabled and
-  supplier_quotes.enabled are activated for a real E2E test cycle.
-  See governance/TEXQTIC-NC-FRONTEND-AWARD-MAKER-CHECKER-UI-001.md.
+  TEXQTIC-NC-FRONTEND-AWARD-MAKER-CHECKER-UI-001 PROD_VERIFIED_COMPLETE (2026-05-14).
+  FE-9 MC-UI prod-verified via TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001.
+  Full E2E maker-checker award flow verified: maker-request 201, same-actor 409 MAKER_CHECKER_SAME_ACTOR,
+  checker-approve 200 APPROVED, quote ACCEPTED. DB states all confirmed.
+  QA fixture consumed. Both flags restored false. Holds unchanged.
+  Next-unit candidates (all HOLD_FOR_PARESH_DECISION):
+    A: TEXQTIC-NC-QA-AWARD-FLOW-SEED-RESET-001 (fresh QA fixture for future award-flow E2E)
+    B: TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 (Packet 17 — RFQ read surfaces)
+    C: TEXQTIC-NC-G022-ESCALATION-DESIGN-001 (future escalation path design)
+  No unit may open without explicit Paresh authorization.
+  See governance/TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001.md.
 last_closed_unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-ROUTE-001
 last_closed_unit_status: ROUTE_VERIFIED_COMPLETE (2026-07-01)
 last_closed_unit_runtime_verdict: >-
@@ -61,16 +58,18 @@ dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
 dpp_v3_design_status: OPTIONAL_POLISH
 prior_last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
 prior_last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-last_closed_governance_unit: TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001
-last_closed_governance_unit_status: PARTIAL_VERIFIED_BLOCKED_BY_MAKER_CHECKER_DESIGN
-last_closed_governance_unit_date: 2026-05-13
+last_closed_governance_unit: TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001
+last_closed_governance_unit_status: CONTROLLED_QA_ACTIVATION_VERIFIED_COMPLETE
+last_closed_governance_unit_date: 2026-05-14
 last_closed_governance_unit_note: >
-  Controlled QA activation close. Supplier quote path VERIFIED (201, SQ-639D77622A92476C, SUBMITTED).
-  Award path VERIFIED to service/SM boundary; blocked by MC gate (POOL QUOTED→ACCEPTED requires_maker_checker=true).
-  Both flags restored false (UPDATE 2 confirmed). Quote accepted_at=NULL, rejected_at=NULL.
-  Next design unit: TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001.
-  QD-6 hold maintained. DPP: HOLD_FOR_PARESH_DECISION.
-  See governance/TEXQTIC-NC-PROD-SUPPLIER-QUOTE-AWARD-CONTROLLED-QA-ACTIVATION-001.md.
+  MC-5 E2E verified on production. Full award maker-checker flow confirmed.
+  Maker 201, same-actor 409 MAKER_CHECKER_SAME_ACTOR, checker-approve 200 APPROVED, quote ACCEPTED.
+  DB: pool=ACCEPTED, RFQ=ACCEPTED, quote=ACCEPTED, approval=APPROVED, signature decision=APPROVE, signer=b80f0cab.
+  Both flags restored false (2026-05-14 01:50:05 UTC). QA fixture consumed.
+  Pool=74436ecd ACCEPTED, RFQ=55eb2858 ACCEPTED, Quote=2ac70ff6 ACCEPTED,
+  Approval=db01d0e3 APPROVED, Signature=be343be5 decision=APPROVE.
+  Holds unchanged: DPP=HOLD_FOR_PARESH_DECISION, Packet 17=HOLD_FOR_PARESH_DECISION, G-022=HOLD_FOR_PARESH_DECISION.
+  commit 8adeb4a. See governance/TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001.md.
 prior_closed_unit: TECS-B2B-ORDERS-LIFECYCLE-001
 prior_closed_unit_status: VERIFIED_COMPLETE
 prior_closed_unit_runtime_verdict: >-
