@@ -7,6 +7,12 @@
 
 ---
 
+## 2026-07-02 -- IMPLEMENTED: TEXQTIC-NC-PHASE1-POOL-ORDER-001
+
+Packet 18 pool order trigger IMPLEMENTED. `POST /api/tenant/network-commerce/pools/:poolId/order` — transitions `ALLOCATED → ORDERED` via `StateMachineService` (atomic shared-tx). `ncPoolFeatureGateMiddleware` (2-gate chain). D-017-A compliant. 6 new unit tests P-NP-16..21 PASS (21/21 total). 8 new integration tests PORDER-01..08 all PASS. 67/67 Packet 17 regression PASS. `tsc --noEmit` EXIT 0. No frontend, schema, migrations, new feature gates, or .env changes. `nc.procurement_pools.rfq.award.enabled` = false UNCHANGED. DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED. Implementation commit: `a4c788c`. Awaiting Paresh verification. See governance/TEXQTIC-NC-PHASE1-POOL-ORDER-001.md.
+
+---
+
 ## 2026-07-02 -- VERIFIED_COMPLETE: TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001
 
 Packet 17 RFQ read surfaces VERIFIED_COMPLETE. PRQ-READ-01..07 all PASS against live Supabase DB (`hasDb=true`). 167/167 unit PASS (P-RFQ-READ-01..04 PASS). 67/67 integration PASS (duration 407.49s). `tsc --noEmit` EXIT 0. Governance close commit: docs(network-commerce): verify pool rfq read surfaces.

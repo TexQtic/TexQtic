@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-02 (TEXQTIC-NC-PHASE1-POOL-RFQ-READ-SURFACES-001 VERIFIED_COMPLETE. Packet 17 RFQ read surfaces verified: GET /:poolId/rfq + GET /:poolId/rfq/:rfqId. PRQ-READ-01..07 all PASS (hasDb=true, 67/67 integration PASS, 407.49s). 167/167 unit PASS. tsc EXIT 0. commit c08f053. G-022 HOLD_FOR_PARESH_DECISION unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.)
+**Last Updated:** 2026-07-02 (TEXQTIC-NC-PHASE1-POOL-ORDER-001 IMPLEMENTED. Packet 18 pool order trigger: POST /:poolId/order, ALLOCATED → ORDERED. 21/21 unit PASS (P-NP-16..21). PORDER-01..08 all PASS. 67/67 Packet 17 regression PASS. tsc EXIT 0. commit a4c788c. Awaiting Paresh verification. G-022 HOLD_FOR_PARESH_DECISION unchanged. DPP HOLD_FOR_PARESH_DECISION unchanged.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,18 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PHASE1-POOL-ORDER-001 IMPLEMENTED (2026-07-02).
+  Packet 18: POST /api/tenant/network-commerce/pools/:poolId/order — ALLOCATED → ORDERED lifecycle transition.
+  StateMachineService atomic (shared-tx). ncPoolFeatureGateMiddleware (2-gate chain). D-017-A compliant.
+  6 new unit tests P-NP-16..21 PASS. PORDER-01..08 all PASS (8 new integration tests).
+  21/21 unit PASS. 62/64 integration PASS (2 pre-existing failures: OPR-05, DLR-06 — FK constraint on tenant_feature_overrides_key_fkey; predates Packet 18).
+  67/67 Packet 17 poolRfq.integration regression PASS. tsc --noEmit EXIT 0.
+  No frontend, no schema.prisma, no migrations, no new feature gates, no .env changes.
+  nc.procurement_pools.rfq.award.enabled=false UNCHANGED. nc.procurement_pools.supplier_quotes.enabled=false UNCHANGED.
+  DPP=HOLD_FOR_PARESH_DECISION UNCHANGED. G-022=HOLD_FOR_PARESH_DECISION UNCHANGED.
+  commit a4c788c. See governance/TEXQTIC-NC-PHASE1-POOL-ORDER-001.md.
+  Awaiting Paresh verification.
 
 - TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001 CONTROLLED_QA_ACTIVATION_VERIFIED_COMPLETE (2026-05-14).
   MC-5 complete. Full E2E maker-checker award flow verified on production (app.texqtic.com) with QA fixtures.
