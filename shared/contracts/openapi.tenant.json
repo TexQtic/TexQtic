@@ -4388,6 +4388,116 @@
           }
         }
       }
+    },
+    "/api/public/supplier/{slug}": {
+      "get": {
+        "summary": "Get public supplier profile by slug",
+        "description": "Returns a public-safe B2B supplier profile by slug. No authentication required. All five projection safety gates enforced: Gate A (publicEligibilityPosture=PUBLICATION_ELIGIBLE), Gate B (publication_posture in B2B_PUBLIC/BOTH), Gate C (org_type=B2B), Gate D (status in ACTIVE/VERIFICATION_APPROVED), Gate E (prohibited fields excluded — no org UUID, no price, no contact data). Any gate failure returns a safe 404 with no gate-detail exposed. After a successful 200 response, emits supplier_profile.viewed.v1 (best-effort, non-blocking). Design authority: MAIN-PLATFORM-PUBLIC-SUPPLIER-PROFILE-ROUTE-001.",
+        "operationId": "getPublicSupplierBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "pattern": "^[a-z0-9-]+$"
+            },
+            "description": "Supplier organization slug"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public supplier profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "enum": [true] },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "slug": { "type": "string" },
+                        "legalName": { "type": "string" },
+                        "orgType": { "type": "string" },
+                        "jurisdiction": { "type": "string" },
+                        "certificationCount": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "certificationTypes": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        },
+                        "hasTraceabilityEvidence": { "type": "boolean" },
+                        "taxonomy": {
+                          "type": "object",
+                          "nullable": true,
+                          "properties": {
+                            "primarySegment": { "type": "string" },
+                            "secondarySegments": {
+                              "type": "array",
+                              "items": { "type": "string" }
+                            },
+                            "rolePositions": {
+                              "type": "array",
+                              "items": { "type": "string" }
+                            }
+                          }
+                        },
+                        "offeringPreview": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": { "type": "string" },
+                              "moq": { "type": "number" },
+                              "imageUrl": { "type": "string", "nullable": true }
+                            }
+                          }
+                        },
+                        "publicationPosture": { "type": "string" },
+                        "eligibilityPosture": { "type": "string" }
+                      },
+                      "required": [
+                        "slug",
+                        "legalName",
+                        "orgType",
+                        "jurisdiction",
+                        "certificationCount",
+                        "certificationTypes",
+                        "hasTraceabilityEvidence",
+                        "offeringPreview",
+                        "publicationPosture",
+                        "eligibilityPosture"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid slug format",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Supplier not found (org absent or not publication-eligible; gate detail not exposed)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

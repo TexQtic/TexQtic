@@ -415,6 +415,9 @@ const AUDIT_ACTION_TO_EVENT_NAME: Record<string, KnownEventName> = {
   'cart.CART_ITEM_ADDED': 'marketplace.cart.item.added',
   'cart.CART_ITEM_UPDATED': 'marketplace.cart.item.updated',
   'cart.CART_ITEM_REMOVED': 'marketplace.cart.item.removed',
+
+  // ROUTE-001: Public supplier profile viewed (GAP-ACQ-001)
+  'public.supplier.profile.viewed': 'supplier_profile.viewed.v1',
 };
 
 /**

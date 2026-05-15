@@ -33,7 +33,7 @@ import { withDbContext } from '../lib/database-context.js';
 import { writeAuditLog } from '../lib/auditLog.js';
 import { normalizeHost, parsePlatformHost } from '../lib/hostNormalize.js';
 import { resolveHostToTenant } from './internal/resolveDomain.js';
-import { listPublicB2BSuppliers } from '../services/publicB2BProjection.service.js';
+import { listPublicB2BSuppliers, getPublicB2BSupplierBySlug } from '../services/publicB2BProjection.service.js';
 import { listPublicB2CProducts } from '../services/publicB2CProjection.service.js';
 
 type PublicEntryKind = 'PLATFORM' | 'TENANT_SUBDOMAIN' | 'TENANT_CUSTOM_DOMAIN';
@@ -648,6 +648,58 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     const { geo, page, limit } = parseResult.data;
     const result = await listPublicB2CProducts({ geo, page, limit }, prisma);
     return sendSuccess(reply, result);
+  });
+
+  // ── GET /api/public/supplier/:slug ─────────────────────────────────────────────
+  //
+  // Public B2B supplier profile by slug.
+  // No auth required. Applies five projection safety gates (A–E).
+  // Any gate failure → safe 404 (no gate-detail leak, no 403).
+  // After 200: emits supplier_profile.viewed.v1 (best-effort, non-blocking).
+  //
+  // Design authority: MAIN-PLATFORM-PUBLIC-SUPPLIER-PROFILE-ROUTE-001
+  // Event governance: shared/contracts/event-names.md §Acquisition Domain Events (EVENTS-003)
+
+  const supplierSlugParamsSchema = z.object({
+    slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/),
+  });
+
+  fastify.get('/supplier/:slug', async (request, reply) => {
+    const parseResult = supplierSlugParamsSchema.safeParse(request.params);
+    if (!parseResult.success) {
+      return sendError(reply, 'INVALID_SLUG', 'Invalid supplier slug', 400);
+    }
+
+    const { slug } = parseResult.data;
+    const result = await getPublicB2BSupplierBySlug(slug, prisma);
+
+    if (!result) {
+      return sendError(reply, 'NOT_FOUND', 'Supplier not found', 404);
+    }
+
+    // Emit supplier_profile.viewed.v1 (best-effort, fire-and-forget).
+    // writeAuditLog → maybeEmitEventFromAuditEntry → 'supplier_profile.viewed.v1'
+    // Event payload: { slug, source_channel, timestamp } — org UUID NOT in payload.
+    void prisma.$transaction(async (tx) => {
+      await writeAuditLog(tx, {
+        realm: 'TENANT',
+        tenantId: result.orgId,
+        actorType: 'SYSTEM',
+        actorId: null,
+        action: 'public.supplier.profile.viewed',
+        entity: 'organization',
+        entityId: result.orgId,
+        afterJson: {
+          slug,
+          source_channel: 'organic',
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }).catch((err: unknown) => {
+      fastify.log.warn({ err, slug }, '[supplier-profile] Event emission failed (non-blocking)');
+    });
+
+    return sendSuccess(reply, result.profile);
   });
 
   // ─── TECS-DPP-PUBLIC-QR-001 D-6: Public Published DPP Access ────────────────

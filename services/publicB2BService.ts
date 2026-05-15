@@ -53,3 +53,33 @@ export async function getPublicB2BSuppliers(
   const endpoint = `/api/public/b2b/suppliers${suffix}`;
   return get<PublicB2BSuppliersResponse>(endpoint);
 }
+
+// ── ROUTE-001: Single supplier profile by slug ────────────────────────────────
+
+/** Public-safe profile for a single supplier. Mirrors PublicB2BSupplierEntry exactly. */
+export interface PublicB2BSupplierProfile {
+  slug: string;
+  legalName: string;
+  orgType: string;
+  jurisdiction: string;
+  certificationCount: number;
+  certificationTypes: string[];
+  hasTraceabilityEvidence: boolean;
+  taxonomy: PublicB2BSupplierTaxonomy | null;
+  offeringPreview: PublicB2BSupplierOfferingPreviewItem[];
+  publicationPosture: string;
+  eligibilityPosture: string;
+}
+
+/**
+ * Fetch a public supplier profile by slug.
+ * Throws on network error or non-2xx response (handled by apiClient).
+ * Callers should handle 404 (supplier not found / not publication-eligible).
+ *
+ * ROUTE-001 / GAP-ACQ-001
+ */
+export async function getPublicSupplierBySlug(
+  slug: string,
+): Promise<PublicB2BSupplierProfile> {
+  return get<PublicB2BSupplierProfile>(`/api/public/supplier/${encodeURIComponent(slug)}`);
+}

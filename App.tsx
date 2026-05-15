@@ -78,6 +78,7 @@ import { EventStream } from './components/ControlPlane/EventStream';
 import { B2BDiscoveryPage } from './components/Public/B2BDiscovery';
 import { B2CBrowsePage } from './components/Public/B2CBrowse';
 import { PublicPassport } from './components/Public/PublicPassport';
+import { PublicSupplierProfile } from './components/Public/PublicSupplierProfile';
 import { getPlatformInsights } from './services/aiService';
 import {
   getAggregatorDiscoveryEntries,
@@ -1953,6 +1954,7 @@ type AppState =
   | 'PUBLIC_B2B_DISCOVERY'
   | 'PUBLIC_B2C_BROWSE'
   | 'PUBLIC_PASSPORT'
+  | 'PUBLIC_SUPPLIER_PROFILE'
   | 'AUTH'
   | 'FORGOT_PASSWORD'
   | 'VERIFY_EMAIL'
@@ -1991,6 +1993,14 @@ const resolveInitialAppState = (): AppState => {
     );
     if (passportPathMatch) {
       return 'PUBLIC_PASSPORT';
+    }
+
+    // ROUTE-001: Public supplier profile — /supplier/:slug
+    const supplierPathMatch = globalThis.window.location.pathname.match(
+      /^\/supplier\/([a-z0-9-]+)$/,
+    );
+    if (supplierPathMatch) {
+      return 'PUBLIC_SUPPLIER_PROFILE';
     }
 
     const params = new URLSearchParams(globalThis.window.location.search);
@@ -2062,6 +2072,14 @@ const App: React.FC = () => {
   const [publicPassportIdFromPath] = useState<string>(() => {
     if (globalThis.window !== undefined) {
       const m = globalThis.window.location.pathname.match(/^\/passport\/([^/]+)$/);
+      return m?.[1] ?? '';
+    }
+    return '';
+  });
+  // ROUTE-001: supplier slug captured from /supplier/:slug pathname on load
+  const [publicSupplierSlugFromPath] = useState<string>(() => {
+    if (globalThis.window !== undefined) {
+      const m = globalThis.window.location.pathname.match(/^\/supplier\/([a-z0-9-]+)$/);
       return m?.[1] ?? '';
     }
     return '';
@@ -2761,6 +2779,10 @@ const App: React.FC = () => {
 
     if (appState === 'PUBLIC_B2B_DISCOVERY') {
       return 'TexQtic — B2B Supplier Discovery';
+    }
+
+    if (appState === 'PUBLIC_SUPPLIER_PROFILE') {
+      return 'TexQtic — Supplier Profile';
     }
 
     if (appState === 'AUTH') {
@@ -6569,6 +6591,15 @@ const App: React.FC = () => {
       // TECS-DPP-PASSPORT-NETWORK-007: Public buyer passport page
       case 'PUBLIC_PASSPORT':
         return <PublicPassport publicPassportId={publicPassportIdFromPath} />;
+      // ROUTE-001: Public supplier profile page
+      case 'PUBLIC_SUPPLIER_PROFILE':
+        return (
+          <PublicSupplierProfile
+            slug={publicSupplierSlugFromPath}
+            onBack={() => setAppState('PUBLIC_ENTRY')}
+            onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+          />
+        );
       case 'AUTH': {
         const tenantBootstrapAuthView = resolveTenantBootstrapAuthView({
           authRealm,

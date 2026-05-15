@@ -327,3 +327,162 @@ export async function listPublicB2BSuppliers(
 
   return { items, total, page, limit };
 }
+
+// ── ROUTE-001: Single supplier profile by slug ────────────────────────────────
+
+/**
+ * Public-safe profile shape for a single supplier (GAP-ACQ-001 / ROUTE-001).
+ * Same allowed fields as PublicB2BSupplierEntry — no prohibited fields.
+ */
+export type PublicB2BSupplierProfile = PublicB2BSupplierEntry;
+
+/**
+ * Internal result — carries orgId for event emission only (never surfaced publicly).
+ * The route MUST NOT include orgId in the HTTP response.
+ */
+export type PublicB2BSupplierProfileResult = {
+  profile: PublicB2BSupplierProfile;
+  /** Internal org UUID — used for audit log + event emission only. */
+  orgId: string;
+};
+
+/**
+ * Retrieve a single public-safe supplier profile by slug.
+ *
+ * Applies all five projection safety gates (A–E).
+ * Returns null if the slug is not found OR if any gate fails — callers must
+ * translate null to a safe 404 (no gate-detail leak).
+ *
+ * ROUTE-001 / GAP-ACQ-001
+ */
+export async function getPublicB2BSupplierBySlug(
+  slug: string,
+  prismaClient: PrismaClient,
+): Promise<PublicB2BSupplierProfileResult | null> {
+  // ── Gate B + Gate C + Gate D: fetch eligible org by slug ─────────────────────
+  const orgRows: EligibleOrgRow[] = await withOrgAdminContext(prismaClient, async tx => {
+    return tx.organizations.findMany({
+      where: {
+        slug,
+        org_type: ELIGIBLE_ORG_TYPE,
+        status: { in: [...ELIGIBLE_ORG_STATUSES] },
+        publication_posture: { in: [...PUBLICATION_POSTURE_PUBLIC] },
+      },
+      select: {
+        id: true,
+        slug: true,
+        legal_name: true,
+        org_type: true,
+        jurisdiction: true,
+        status: true,
+        primary_segment_key: true,
+        publication_posture: true,
+        secondary_segments: {
+          select: { segment_key: true },
+          orderBy: { segment_key: 'asc' },
+        },
+        role_positions: {
+          select: { role_position_key: true },
+          orderBy: { role_position_key: 'asc' },
+        },
+      },
+    });
+  });
+
+  if (orgRows.length === 0) {
+    return null;
+  }
+
+  const org = orgRows[0];
+
+  // ── Gate A: verify tenant publicEligibilityPosture ────────────────────────────
+  const tenantRows: EligibleTenantRow[] = await withAdminContext(prismaClient, async tx => {
+    return tx.tenant.findMany({
+      where: {
+        id: org.id,
+        publicEligibilityPosture: ELIGIBLE_TENANT_POSTURE,
+      },
+      select: {
+        id: true,
+        publicEligibilityPosture: true,
+      },
+    });
+  });
+
+  if (tenantRows.length === 0) {
+    return null;
+  }
+
+  // ── Certifications ────────────────────────────────────────────────────────────
+  const certRows: CertificationRow[] = await withAdminContext(prismaClient, async tx => {
+    return tx.certification.findMany({
+      where: { orgId: org.id, issuedAt: { not: null } },
+      select: { orgId: true, certificationType: true, issuedAt: true },
+      orderBy: [{ orgId: 'asc' }, { issuedAt: 'desc' }],
+    });
+  });
+
+  const certCount = certRows.length;
+  const certTypes: string[] = [];
+  for (const row of certRows) {
+    if (certTypes.length < CERT_TYPES_LIMIT && !certTypes.includes(row.certificationType)) {
+      certTypes.push(row.certificationType);
+    }
+  }
+
+  // ── TraceabilityNodes ─────────────────────────────────────────────────────────
+  const evidenceRows: TraceabilityRow[] = await withAdminContext(prismaClient, async tx => {
+    return tx.traceabilityNode.findMany({
+      where: { orgId: org.id, visibility: TRACEABILITY_SHARED_VISIBILITY },
+      select: { orgId: true, visibility: true },
+    });
+  });
+
+  // ── CatalogItems (offering preview) ──────────────────────────────────────────
+  const catalogRows: CatalogItemRow[] = await withAdminContext(prismaClient, async tx => {
+    return tx.catalogItem.findMany({
+      where: {
+        tenantId: org.id,
+        active: true,
+        publicationPosture: { in: [...PUBLICATION_POSTURE_PUBLIC] },
+      },
+      select: {
+        tenantId: true,
+        name: true,
+        moq: true,
+        imageUrl: true,
+        publicationPosture: true,
+        // price: explicitly NOT selected (Gate E prohibition)
+      },
+      orderBy: [{ createdAt: 'asc' }],
+      take: MAX_OFFERING_PREVIEW,
+    });
+  });
+
+  // ── Gate E: build public-safe projection (prohibited fields excluded) ─────────
+  const posture = org.publication_posture as 'B2B_PUBLIC' | 'BOTH';
+
+  const profile: PublicB2BSupplierProfile = {
+    slug: org.slug,
+    legalName: org.legal_name,
+    orgType: org.org_type,
+    jurisdiction: org.jurisdiction,
+    certificationCount: certCount,
+    certificationTypes: certTypes,
+    hasTraceabilityEvidence: evidenceRows.length > 0,
+    taxonomy: {
+      primarySegment: org.primary_segment_key,
+      secondarySegments: org.secondary_segments.map((s) => s.segment_key),
+      rolePositions: org.role_positions.map((r) => r.role_position_key),
+    },
+    offeringPreview: catalogRows.map((c) => ({
+      name: c.name,
+      moq: c.moq,
+      imageUrl: c.imageUrl,
+    })),
+    publicationPosture: posture,
+    eligibilityPosture: 'PUBLICATION_ELIGIBLE',
+  };
+
+  return { profile, orgId: org.id };
+}
