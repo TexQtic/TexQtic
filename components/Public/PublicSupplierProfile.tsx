@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import {
   getPublicSupplierBySlug,
+  submitPublicInquiry,
   type PublicB2BSupplierProfile as SupplierProfile,
+  type PublicInquiryCategory,
 } from '../../services/publicB2BService';
 
 // ROUTE-001 / GAP-ACQ-001
 // Public supplier profile page — unauthenticated, read-only.
-// PROHIBITED: contact reveal, phone/email, buyer inquiry form, QR code UI, order actions.
+// PROHIBITED: contact reveal, phone/email, QR code UI, order actions.
+// INQUIRY-004: minimal pre-auth inquiry form added (no PII collection, no contact reveal).
 
 interface PublicSupplierProfileProps {
   readonly slug: string;
@@ -19,6 +22,30 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn }: Public
   const [profile, setProfile] = useState<SupplierProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  // INQUIRY-004: pre-auth inquiry form state
+  type InquiryStatus = 'idle' | 'submitting' | 'success' | 'error';
+  const [inquiryCategory, setInquiryCategory] = useState<PublicInquiryCategory | ''>('');
+  const [geoBand, setGeoBand] = useState('');
+  const [volumeBand, setVolumeBand] = useState('');
+  const [inquiryStatus, setInquiryStatus] = useState<InquiryStatus>('idle');
+
+  async function handleInquirySubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!inquiryCategory) return;
+    setInquiryStatus('submitting');
+    try {
+      await submitPublicInquiry({
+        supplier_slug: slug,
+        inquiry_category: inquiryCategory,
+        ...(geoBand.trim() ? { geo_band: geoBand.trim() } : {}),
+        ...(volumeBand.trim() ? { volume_band: volumeBand.trim() } : {}),
+      });
+      setInquiryStatus('success');
+    } catch {
+      setInquiryStatus('error');
+    }
+  }
 
   useEffect(() => {
     if (!slug) {
@@ -293,6 +320,94 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn }: Public
                 </div>
               </section>
             )}
+
+            {/* INQUIRY-004: Pre-auth inquiry form */}
+            <section
+              className="mt-6 rounded-2xl border border-[#d6e4e8] bg-white p-6 shadow-sm"
+              aria-label="Send an inquiry"
+            >
+              <h2 className="mb-1 text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+                Send an inquiry
+              </h2>
+              <p className="mb-4 text-xs text-slate-500">
+                Let TexQtic know your interest. No account required.
+              </p>
+
+              {inquiryStatus === 'success' ? (
+                <p className="rounded-xl bg-[#effaf5] px-4 py-3 text-sm font-medium text-[#1a7a4a]" role="status">
+                  Your inquiry has been received.
+                </p>
+              ) : (
+                <form onSubmit={handleInquirySubmit} noValidate>
+                  <div className="mb-3">
+                    <label htmlFor="inquiry-category" className="mb-1 block text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                      Inquiry type <span aria-hidden="true">*</span>
+                    </label>
+                    <select
+                      id="inquiry-category"
+                      value={inquiryCategory}
+                      onChange={(e) => setInquiryCategory(e.target.value as PublicInquiryCategory | '')}
+                      required
+                      disabled={inquiryStatus === 'submitting'}
+                      className="w-full rounded-xl border border-[#d6e4e8] px-3 py-2 text-sm text-[#071a2f] focus:outline-none focus:ring-2 focus:ring-[#2f8094] disabled:opacity-60"
+                    >
+                      <option value="">Select a type…</option>
+                      <option value="GENERAL">General inquiry</option>
+                      <option value="CAPABILITY_FIT">Capability fit</option>
+                      <option value="OFFERING_PREVIEW">Offering preview</option>
+                      <option value="SOURCING_INTENT">Sourcing intent</option>
+                      <option value="QUALIFICATION_CHECK">Qualification check</option>
+                    </select>
+                  </div>
+
+                  <div className="mb-3">
+                    <label htmlFor="inquiry-geo" className="mb-1 block text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                      Geography (optional)
+                    </label>
+                    <input
+                      id="inquiry-geo"
+                      type="text"
+                      value={geoBand}
+                      onChange={(e) => setGeoBand(e.target.value)}
+                      maxLength={100}
+                      placeholder="e.g. South Asia, EU"
+                      disabled={inquiryStatus === 'submitting'}
+                      className="w-full rounded-xl border border-[#d6e4e8] px-3 py-2 text-sm text-[#071a2f] placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#2f8094] disabled:opacity-60"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label htmlFor="inquiry-volume" className="mb-1 block text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                      Volume range (optional)
+                    </label>
+                    <input
+                      id="inquiry-volume"
+                      type="text"
+                      value={volumeBand}
+                      onChange={(e) => setVolumeBand(e.target.value)}
+                      maxLength={100}
+                      placeholder="e.g. 500–1 000 units/month"
+                      disabled={inquiryStatus === 'submitting'}
+                      className="w-full rounded-xl border border-[#d6e4e8] px-3 py-2 text-sm text-[#071a2f] placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#2f8094] disabled:opacity-60"
+                    />
+                  </div>
+
+                  {inquiryStatus === 'error' && (
+                    <p className="mb-3 rounded-xl bg-[#fff0f0] px-4 py-3 text-sm font-medium text-[#b91c1c]" role="alert">
+                      Unable to submit inquiry. Please try again.
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={!inquiryCategory || inquiryStatus === 'submitting'}
+                    className="inline-flex items-center justify-center rounded-full bg-[#2f8094] px-6 py-2.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#256b7c] disabled:opacity-50"
+                  >
+                    {inquiryStatus === 'submitting' ? 'Sending…' : 'Send inquiry'}
+                  </button>
+                </form>
+              )}
+            </section>
 
             {/* Sign-in CTA */}
             <div className="mt-10 rounded-2xl border border-[#d6e4e8] bg-white p-8 text-center shadow-sm">

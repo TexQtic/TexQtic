@@ -1214,6 +1214,91 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     return reply.send(structuredData);
   });
 
+  // ─── INQUIRY-004: Pre-auth buyer inquiry intake ───────────────────────────────
+  // POST /api/public/inquiry/submit
+  //
+  // Accepts a pre-authentication buyer inquiry for a public-eligible supplier.
+  // No auth required. Event-only persistence via buyer_inquiry.created.v1 (EventLog).
+  // No DB schema change: uses existing AuditLog + EventLog tables.
+  //
+  // Visibility gate: supplier must pass all five projection gates (via
+  // getPublicB2BSupplierBySlug). Non-eligible supplier → safe 404 (no gate detail).
+  //
+  // Prohibited in payload: raw contact email/phone, buyer name, org UUID,
+  // external_orchestration_ref, pricing, negotiation state, order state.
+  //
+  // Rate limit: max 20 req/15 min per IP (stricter than GET discovery routes).
+  //
+  // Design authority: MAIN-PLATFORM-BUYER-INQUIRY-PREAUTH-004
+  // Event governance: shared/contracts/event-names.md §Acquisition Domain Events (EVENTS-003)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const inquirySubmitBodySchema = z.object({
+    supplier_slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/),
+    inquiry_category: z.enum([
+      'GENERAL',
+      'CAPABILITY_FIT',
+      'OFFERING_PREVIEW',
+      'SOURCING_INTENT',
+      'QUALIFICATION_CHECK',
+    ]),
+    geo_band: z.string().min(1).max(100).optional(),
+    volume_band: z.string().min(1).max(100).optional(),
+  });
+
+  fastify.post('/inquiry/submit', {
+    config: {
+      rateLimit: { max: 20, timeWindow: '15 minutes' },
+    },
+  }, async (request, reply) => {
+    const parseResult = inquirySubmitBodySchema.safeParse(request.body);
+    if (!parseResult.success) {
+      return sendValidationError(reply, parseResult.error.errors);
+    }
+
+    const { supplier_slug, inquiry_category, geo_band, volume_band } = parseResult.data;
+
+    // Visibility gate — same five-gate check as ROUTE-001.
+    // Non-eligible or absent → safe 404 (no gate detail leak, no 403).
+    const supplierResult = await getPublicB2BSupplierBySlug(supplier_slug, prisma);
+    if (!supplierResult) {
+      return sendError(reply, 'NOT_FOUND', 'Supplier not found', 404);
+    }
+
+    // Emit buyer_inquiry.created.v1 (best-effort, fire-and-forget).
+    // writeAuditLog → maybeEmitEventFromAuditEntry → 'buyer_inquiry.created.v1'
+    // Payload (afterJson): supplier_slug, inquiry_category, geo_band?, volume_band?, timestamp
+    // — NO raw email, phone, buyer name, org UUID, external_orchestration_ref.
+    void prisma.$transaction(async (tx) => {
+      await writeAuditLog(tx, {
+        realm: 'TENANT',
+        tenantId: supplierResult.orgId,
+        actorType: 'SYSTEM',
+        actorId: null,
+        action: 'public.buyer.inquiry.created',
+        entity: 'organization',
+        entityId: supplierResult.orgId,
+        afterJson: {
+          supplier_slug,
+          inquiry_category,
+          ...(geo_band !== undefined ? { geo_band } : {}),
+          ...(volume_band !== undefined ? { volume_band } : {}),
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }).catch((err: unknown) => {
+      fastify.log.warn({ err, supplier_slug }, '[buyer-inquiry] Event emission failed (non-blocking)');
+    });
+
+    return reply.status(202).send({
+      success: true,
+      data: {
+        acknowledged: true,
+        message: 'Your inquiry has been received.',
+      },
+    });
+  });
+
 };
 
 export default publicRoutes;

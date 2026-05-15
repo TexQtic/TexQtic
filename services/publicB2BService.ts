@@ -1,4 +1,4 @@
-import { get } from './apiClient';
+import { get, post } from './apiClient';
 
 export interface PublicB2BSupplierTaxonomy {
   primarySegment: string;
@@ -86,4 +86,38 @@ export async function getPublicSupplierBySlug(
   const base = `/api/public/supplier/${encodeURIComponent(slug)}`;
   const url = source ? `${base}?source=${encodeURIComponent(source)}` : base;
   return get<PublicB2BSupplierProfile>(url);
+}
+
+// ── INQUIRY-004: Pre-auth buyer inquiry submission ────────────────────────────
+
+export type PublicInquiryCategory =
+  | 'GENERAL'
+  | 'CAPABILITY_FIT'
+  | 'OFFERING_PREVIEW'
+  | 'SOURCING_INTENT'
+  | 'QUALIFICATION_CHECK';
+
+export interface PublicInquirySubmitParams {
+  supplier_slug: string;
+  inquiry_category: PublicInquiryCategory;
+  geo_band?: string;
+  volume_band?: string;
+}
+
+export interface PublicInquirySubmitResponse {
+  acknowledged: boolean;
+  message: string;
+}
+
+/**
+ * Submit a pre-authentication buyer inquiry for a public supplier.
+ * No auth required. Returns 202 Accepted on success.
+ * Throws on network error or non-2xx response (handled by apiClient).
+ *
+ * INQUIRY-004 / GAP-ACQ-002
+ */
+export async function submitPublicInquiry(
+  params: PublicInquirySubmitParams,
+): Promise<PublicInquirySubmitResponse> {
+  return post<PublicInquirySubmitResponse>('/api/public/inquiry/submit', params);
 }

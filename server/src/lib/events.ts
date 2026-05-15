@@ -418,6 +418,9 @@ const AUDIT_ACTION_TO_EVENT_NAME: Record<string, KnownEventName> = {
 
   // ROUTE-001: Public supplier profile viewed (GAP-ACQ-001)
   'public.supplier.profile.viewed': 'supplier_profile.viewed.v1',
+
+  // INQUIRY-004: Pre-auth buyer inquiry submitted (GAP-ACQ-002, EVENTS-003)
+  'public.buyer.inquiry.created': 'buyer_inquiry.created.v1',
 };
 
 /**

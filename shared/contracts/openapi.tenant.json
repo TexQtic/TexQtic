@@ -4508,6 +4508,113 @@
           }
         }
       }
+    },
+    "/api/public/inquiry/submit": {
+      "post": {
+        "summary": "Submit a pre-authentication buyer inquiry",
+        "description": "Accepts a pre-authentication buyer inquiry for a public-eligible supplier. No authentication required. Supplier must pass all five projection safety gates (same as GET /api/public/supplier/{slug}). Non-eligible supplier returns a safe 404 with no gate detail exposed. On success, emits buyer_inquiry.created.v1 event (best-effort, non-blocking) via EventLog. No PII collection: no email, phone, buyer name, or org UUID in request or response. Rate-limited to 20 requests per 15 minutes per IP. Design authority: MAIN-PLATFORM-BUYER-INQUIRY-PREAUTH-004.",
+        "operationId": "submitPublicInquiry",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["supplier_slug", "inquiry_category"],
+                "properties": {
+                  "supplier_slug": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "pattern": "^[a-z0-9-]+$",
+                    "description": "Slug of the target supplier (must be publication-eligible)"
+                  },
+                  "inquiry_category": {
+                    "type": "string",
+                    "enum": [
+                      "GENERAL",
+                      "CAPABILITY_FIT",
+                      "OFFERING_PREVIEW",
+                      "SOURCING_INTENT",
+                      "QUALIFICATION_CHECK"
+                    ],
+                    "description": "Bounded inquiry type — no pricing, negotiation, or order categories"
+                  },
+                  "geo_band": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "Optional geography qualifier (e.g. 'South Asia', 'EU')"
+                  },
+                  "volume_band": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "Optional volume range qualifier (e.g. '500-1000 units/month')"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Inquiry accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "enum": [true] },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "acknowledged": { "type": "boolean", "enum": [true] },
+                        "message": { "type": "string" }
+                      },
+                      "required": ["acknowledged", "message"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure — invalid supplier_slug format, missing inquiry_category, or rejected field",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Supplier not found or not publication-eligible (gate detail not exposed)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded (20 req/15 min per IP)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string", "enum": ["rate_limited"] },
+                    "retryAfter": {
+                      "type": "integer",
+                      "description": "Seconds until limit resets"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
