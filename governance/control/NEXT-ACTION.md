@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-06 (TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001 LEGAL_PACKET_UPGRADED: Canonical legal counsel packet upgraded for Unified Platform TTP + NC-TTP scope. §12–§25 added. Regulatory posture matrix, consent framework doctrine, partner routing legal gate, wording pack, disclaimer pack D-001–D-007, terms acceptance flow, privacy questions Q1–Q16, open legal questions O–Y, future packet map 8 HOLD. ttp_enabled=false UNCHANGED. Governance-only. Send upgraded packet to external legal counsel. Await TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001. Prior close: TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001 ARCHITECTURE_LOCK_COMPLETE.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-06 (TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001 IMPLEMENTED_AWAITING_PARESH_VERIFY: NC Phase 1 post-audit QA fixture normalization. New seed script `server/scripts/qa/nc-phase1-qa-fixture-baseline.ts` created. Auth-gated, idempotent, P17–P20 entity chain. 0 tsc errors. No product implementation, no flags activated. Prior close: TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001 LEGAL_PACKET_UPGRADED: Canonical legal counsel packet upgraded for Unified Platform TTP + NC-TTP scope. §12–§25 added. Regulatory posture matrix, consent framework doctrine, partner routing legal gate, wording pack, disclaimer pack D-001–D-007, terms acceptance flow, privacy questions Q1–Q16, open legal questions O–Y, future packet map 8 HOLD. ttp_enabled=false UNCHANGED. Governance-only. Send upgraded packet to external legal counsel. Await TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001. Prior-prior close: TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001 ARCHITECTURE_LOCK_COMPLETE.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -28,32 +28,28 @@ active_delivery_unit_note: >
   No schema/migration/frontend/.env changes. No feature flags activated. No Packet 23 opened.
   DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED.
   Phase 1 CPP implementation chain declared AUDIT_COMPLETE. Next work requires Paresh authorization.
-last_closed_unit: TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001
-last_closed_unit_status: LEGAL_PACKET_UPGRADED_READY_FOR_COUNSEL (2026-07-06)
+last_closed_unit: TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001
+last_closed_unit_status: IMPLEMENTED_AWAITING_PARESH_VERIFY (2026-07-06)
 last_closed_unit_runtime_verdict: >
-  Canonical external legal counsel packet upgraded (2026-07-06) for Unified Platform TTP + NC-TTP scope.
-  §12–§25 added: NC-TTP product description, regulatory posture matrix (7 areas: PA/PG, NBFC,
-  credit bureau/CICRA, insurance/guarantee, escrow/custody, DPDP 2023, AA/GSTN/CIBIL),
-  consent framework doctrine (12 principles), partner routing legal gate (6 prerequisites + 6 counsel Qs),
-  user-facing wording review pack (5 NC-TTP surfaces + forbidden additions),
-  disclaimer pack D-001–D-007 (3 existing + 4 proposed new),
-  terms acceptance flow requirements (10 elements),
-  data sharing / privacy questions Q1–Q16,
-  open legal questions O–Y (11 activation blockers),
-  expanded counsel output (15 items),
-  future packet impact map (8 HOLD packets with counsel gate mapping),
-  final legal gate statement (ACTIVATION_GATE = LOCKED).
-  Operator decision guide cross-reference updated.
-  ttp_enabled=false UNCHANGED. All NC feature flags UNCHANGED.
-  No source/schema/migration/frontend/test/.env changes. No feature flag activation.
-  Governance-only. NEXT_ACTION = Send upgraded packet to external legal counsel.
-last_closed_unit_commits: "docs(tradetrust-pay): upgrade legal counsel packet for nc supplement"
+  NC Phase 1 post-audit QA fixture normalization (2026-07-06).
+  New seed script created: server/scripts/qa/nc-phase1-qa-fixture-baseline.ts.
+  Authorization-gated (PARESH_AUTHORIZED=true). Idempotent. Covers P17–P20 entity chain:
+  NetworkPool, NetworkPoolMembership, NetworkPoolDemandLine, NetworkPoolDemandSnapshot,
+  NetworkPoolDemandSnapshotLine, NetworkPoolRfq, NetworkPoolRfqSupplierInvite,
+  NetworkInvoice, NetworkSettlementSplit. G-020 compliance: no lifecycle log rows.
+  Three schema corrections applied: (1) organizations row creation added to upsertQaTenant;
+  (2) invitedByUserId (not sentByUserId); (3) sourceLineRef + sourceRevisionNo (not lineRef).
+  tsc --noEmit server: 0 errors. No product implementation. No schema/migration/frontend/.env changes.
+  No feature flags activated. ttp_enabled=false UNCHANGED. HOLD_FOR_COUNSEL_FEEDBACK UNCHANGED.
+  Script NOT YET EXECUTED — awaiting Paresh authorization.
+last_closed_unit_commits: "chore(network-commerce): normalize post phase 1 qa fixtures"
 last_closed_unit_closure_basis: >
-  TTP-EXTERNAL-LEGAL-COUNSEL-PACKET-001.md upgraded with §12–§25 (NC-TTP supplement).
-  TTP-LEGAL-PACKET-OPERATOR-DECISION-GUIDE-001.md cross-reference updated.
-  Governance-only — no implementation opened.
-last_closed_unit_prior: TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001
-last_closed_unit_prior_status: ARCHITECTURE_LOCK_COMPLETE (2026-07-06)
+  Repo-truth inspection confirmed no existing NC Phase 1 QA fixture seed script.
+  All P17–P21 integration tests use ephemeral fixtures — no static seed dependency.
+  Seed script created with auth gate, idempotency, and G-020 compliance.
+  Governance artifact created. Control files updated. tsc: 0 errors.
+last_closed_unit_prior: TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001
+last_closed_unit_prior_status: LEGAL_PACKET_UPGRADED_READY_FOR_COUNSEL (2026-07-06)
 next_candidate_unit: HOLD_FOR_COUNSEL_FEEDBACK
 next_candidate_unit_status: >
   HOLD_FOR_COUNSEL_FEEDBACK — No implementation packet may be opened until external legal counsel

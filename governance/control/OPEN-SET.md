@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-06 (TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001 LEGAL_PACKET_UPGRADED: Canonical external legal counsel packet upgraded from Platform TTP to Unified Platform TTP + NC-TTP scope. §12–§25 added. Regulatory posture matrix (7 areas), consent framework doctrine, partner routing legal gate, wording pack, disclaimer pack D-001–D-007, terms acceptance flow, privacy questions Q1–Q16, open legal questions O–Y, future packet map 8 HOLD packets. ttp_enabled=false UNCHANGED. All NC feature flags UNCHANGED. No implementation. Governance-only. Prior: TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001 ARCHITECTURE_LOCK_COMPLETE.)
+**Last Updated:** 2026-07-06 (TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001 IMPLEMENTED_AWAITING_PARESH_VERIFY: NC Phase 1 post-audit QA fixture normalization. New seed script `server/scripts/qa/nc-phase1-qa-fixture-baseline.ts` created. Auth-gated, idempotent, covers P17–P20 entity chain. tsc --noEmit: 0 errors. No product implementation, no schema/migration/frontend/.env changes, no feature flags activated. Prior: TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001 LEGAL_PACKET_UPGRADED: Canonical external legal counsel packet upgraded from Platform TTP to Unified Platform TTP + NC-TTP scope. §12–§25 added. Regulatory posture matrix (7 areas), consent framework doctrine, partner routing legal gate, wording pack, disclaimer pack D-001–D-007, terms acceptance flow, privacy questions Q1–Q16, open legal questions O–Y, future packet map 8 HOLD packets. ttp_enabled=false UNCHANGED. All NC feature flags UNCHANGED. No implementation. Governance-only.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,16 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001 IMPLEMENTED_AWAITING_PARESH_VERIFY (2026-07-06).
+  NC Phase 1 post-audit QA fixture normalization. New seed script created:
+  `server/scripts/qa/nc-phase1-qa-fixture-baseline.ts`. Authorization-gated (`PARESH_AUTHORIZED=true`).
+  Idempotent. Covers P17–P20 entity chain (pool, membership, demand line, snapshot, snapshot line,
+  RFQ, invite, invoice, settlement split). G-020 compliance: no lifecycle log rows.
+  tsc --noEmit: 0 errors. No product implementation. No schema/migration/frontend/.env changes.
+  No feature flags activated. `ttp_enabled=false` UNCHANGED. `HOLD_FOR_COUNSEL_FEEDBACK` UNCHANGED.
+  Artifact: governance/TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001.md.
+  Awaiting Paresh verification before execution authorization.
 
 - TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001 ARCHITECTURE_LOCK_COMPLETE (2026-07-06).
   TradeTrust Pay architecture decision and terms lock established. Governance-only — no implementation.
