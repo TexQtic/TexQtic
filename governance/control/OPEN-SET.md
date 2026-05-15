@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-05 (TEXQTIC-NC-POST-PHASE1-NEXT-TRACK-TRADETRUST-PAY-ALIGNMENT-001: Post-Phase-1 next-track governance realignment. TEXQTIC-NC-OES-ESCROW-DESIGN-001 superseded/reframed. Next candidate installed: TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001 HOLD_FOR_PARESH_DECISION. All holds preserved. Active delivery unit: HOLD_FOR_AUTHORIZATION. Prior: TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001 AUDIT_COMPLETE. tsc PASS. prisma validate PASS. 185/185 tests PASS (P17–P21). 12 schema entities + 34 routes + 6 services verified. D-017-A + G-020 + tenant isolation + no-money-movement all CONFIRMED. Active delivery unit: HOLD_FOR_AUTHORIZATION.)
+**Last Updated:** 2026-07-05 (TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001 DESIGN_COMPLETE: TradeTrust Pay finance-state layer design authority. 14 sections. Doctrine confirmed: TexQtic = verified trade-state + payable-visibility system of record only. No payment execution, no escrow custody, no platform-held funds, no lending. 6 future packets HOLD_FOR_PARESH_DECISION. All holds preserved. ttp_enabled=false. Active delivery unit: HOLD_FOR_AUTHORIZATION. Prior: TEXQTIC-NC-POST-PHASE1-NEXT-TRACK-TRADETRUST-PAY-ALIGNMENT-001 GOVERNANCE_SYNC_COMPLETE.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,25 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001 DESIGN_COMPLETE (2026-07-05).
+  TradeTrust Pay finance-state layer design authority established. Governance-only — no implementation.
+  14 sections: doctrine, escrow supersession rationale, textile payment-term model,
+  payment maturity status enumeration (9 statuses: NOT_APPLICABLE / TERMS_PENDING / TERM_ACTIVE /
+  DUE_SOON / DUE / OVERDUE / EXTERNALLY_CONFIRMED / DISPUTED / BLOCKED),
+  payable visibility (NSS PENDING=safe baseline, TRIGGERED/RELEASED reserved, escrow_account_id=null),
+  external settlement confirmation (manual / bank-ref / ERP-ref / counterparty / partner callback),
+  finance-readiness signals (advisory-only, 8 prohibited roles confirmed),
+  external partner routing readiness (concept only; no API; requires partner contract + legal review),
+  OES/VCO doctrine (TTP payable-visibility + external confirmation, not escrow custody),
+  legal/compliance guardrails (NBFC/PA/PSP all excluded, external legal review required before tenant surfaces),
+  TTP infrastructure relation (reuse gate middleware + disclaimer constants, no fork),
+  future packet map (6 packets, all HOLD_FOR_PARESH_DECISION).
+  TexQtic doctrine confirmed: verified trade-state + payable-visibility system of record only.
+  No payment execution. No escrow custody. No platform-held funds. No lending. No guarantee.
+  ttp_enabled=false UNCHANGED. All NC feature flags UNCHANGED. Active delivery unit: HOLD_FOR_AUTHORIZATION.
+  Next implementation requires explicit Paresh authorization (separate prompt).
+  Design artifact: governance/TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001.md.
 
 - TEXQTIC-NC-POST-PHASE1-NEXT-TRACK-TRADETRUST-PAY-ALIGNMENT-001 GOVERNANCE_SYNC (2026-07-05).
   Post-Phase-1 next-track governance realignment. Governance-only — no implementation opened.

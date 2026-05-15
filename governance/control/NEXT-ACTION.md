@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-05 (TEXQTIC-NC-POST-PHASE1-NEXT-TRACK-TRADETRUST-PAY-ALIGNMENT-001: Post-Phase-1 next-track governance realignment. Escrow-first OES candidate superseded. Next candidate installed: TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001 HOLD_FOR_PARESH_DECISION. Active delivery unit remains HOLD_FOR_AUTHORIZATION. Prior: TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001 AUDIT_COMPLETE. 185/185 tests PASS. All holds preserved.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-05 (TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001 DESIGN_COMPLETE: TradeTrust Pay finance-state layer design authority created. 14 sections. No implementation opened. All holds preserved. Active delivery unit: HOLD_FOR_AUTHORIZATION. Next implementation requires separate Paresh authorization. Prior close: TEXQTIC-NC-POST-PHASE1-NEXT-TRACK-TRADETRUST-PAY-ALIGNMENT-001 GOVERNANCE_SYNC_COMPLETE.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -28,29 +28,26 @@ active_delivery_unit_note: >
   No schema/migration/frontend/.env changes. No feature flags activated. No Packet 23 opened.
   DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED.
   Phase 1 CPP implementation chain declared AUDIT_COMPLETE. Next work requires Paresh authorization.
-last_closed_unit: TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001
-last_closed_unit_status: AUDIT_COMPLETE (2026-07-05)
+last_closed_unit: TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001
+last_closed_unit_status: DESIGN_COMPLETE (2026-07-05)
 last_closed_unit_runtime_verdict: >
-  Phase 1 CPP close audit passed (2026-07-05). HEAD 746c7af. Clean working tree.
-  tsc --noEmit EXIT 0. prisma validate PASS.
-  P21 unit: 10/10 PASS. P21 integration: 10/10 PASS. P20 settlement: 22/22 PASS.
-  P19 invoices: 12/12 PASS. P18 pools: 64/64 PASS. P17 poolRfq: 67/67 PASS. Total: 185/185.
-  12 schema entities verified. 34 route handlers verified. 6 service files verified.
-  D-017-A: actor_admin_id absent from DTO CONFIRMED. G-020 D-020-D: append-only CONFIRMED.
-  Tenant isolation: orgId from JWT only. Non-leaking 404. Dual-anchor entities confirmed.
-  No-money-movement: settlement_waterfall.enabled=false. No escrow release. No payment execution.
-  Feature flags: nc.procurement_pools.enabled=true, rfq.enabled=true, supplier_invites.enabled=true.
-  nc.procurement_pools.supplier_quotes.enabled=false. rfq.award.enabled=false. settlement_waterfall.enabled=false.
-  DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED.
-  No Packet 23 opened. OES/VCO not opened.
-last_closed_unit_commits: "docs(network-commerce): close phase 1 cpp audit — Packet 22 governance close"
+  TradeTrust Pay finance-state design complete (2026-07-05). HEAD e2885d9+ (design commit).
+  14 sections: doctrine, escrow supersession, textile payment-term model, maturity status
+  enumeration (9 statuses), payable visibility (NSS alignment), external settlement confirmation,
+  finance-readiness signals (advisory-only), external partner routing readiness, OES/VCO
+  implications, legal/compliance guardrails, TTP infrastructure relation, future packet map.
+  No source/schema/migration/frontend/test/.env changes. No feature flag activation.
+  ttp_enabled=false UNCHANGED. All NC feature flags UNCHANGED.
+  6 future packets installed as HOLD_FOR_PARESH_DECISION.
+  Next implementation requires separate explicit Paresh authorization.
+last_closed_unit_commits: "docs(network-commerce): design tradetrust pay finance state layer"
 last_closed_unit_closure_basis: >
-  All schema, route, service, test, tsc, and prisma validation gates passed.
-  Audit artifact: governance/TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001.md.
-last_closed_unit_prior: TEXQTIC-NC-PHASE1-LIFECYCLE-LOG-READ-001
-last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-07-05)
+  Design artifact created: governance/TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001.md.
+  All 14 sections complete. Governance-only — no implementation opened.
+last_closed_unit_prior: TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001
+last_closed_unit_prior_status: AUDIT_COMPLETE (2026-07-05)
 next_candidate_unit: TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001
-next_candidate_unit_status: HOLD_FOR_PARESH_DECISION
+next_candidate_unit_status: DESIGN_COMPLETE (2026-07-05) — next implementation packet requires explicit Paresh authorization
 next_candidate_unit_date_installed: "2026-07-05"
 next_candidate_unit_note: >
   Post-Phase-1 finance/settlement design direction is TradeTrust Pay — NOT escrow-first OES.
