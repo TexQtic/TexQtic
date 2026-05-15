@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-05 (TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001 DESIGN_COMPLETE: TradeTrust Pay finance-state layer design authority. 14 sections. Doctrine confirmed: TexQtic = verified trade-state + payable-visibility system of record only. No payment execution, no escrow custody, no platform-held funds, no lending. 6 future packets HOLD_FOR_PARESH_DECISION. All holds preserved. ttp_enabled=false. Active delivery unit: HOLD_FOR_AUTHORIZATION. Prior: TEXQTIC-NC-POST-PHASE1-NEXT-TRACK-TRADETRUST-PAY-ALIGNMENT-001 GOVERNANCE_SYNC_COMPLETE.)
+**Last Updated:** 2026-07-06 (TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001 ARCHITECTURE_LOCK_COMPLETE: TradeTrust Pay architecture decisions and terms locked. 18 sections. Single TTP family (Platform TTP Core + NC-TTP Extension). D-001–D-015 locked — no money movement / no custody / no lending / no guarantee are permanent invariants. Master T&C doctrine + NC supplement created. Wording lock established. Gate/activation matrix. 8 future packets HOLD_FOR_PARESH_DECISION. All holds preserved. ttp_enabled=false. Active delivery unit: HOLD_FOR_AUTHORIZATION. Prior: TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001 DESIGN_COMPLETE.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,23 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001 ARCHITECTURE_LOCK_COMPLETE (2026-07-06).
+  TradeTrust Pay architecture decision and terms lock established. Governance-only — no implementation.
+  18 sections: executive summary, activation state, architecture component map (Platform TTP Core + NC-TTP Extension +
+  forbidden patterns), Platform TTP ↔ NC-TTP alignment matrix, 15 architecture decisions (D-001–D-015),
+  master T&C doctrine, NC-TTP T&C supplement, user-facing wording lock (approved/forbidden/counsel-required),
+  feature gate/activation matrix, data architecture lock (7 future models), event/audit architecture lock,
+  consent and data-sharing lock, terms finalization matrix, 12 open gaps, final architecture lock statement,
+  8-packet future map, authority sources, invariants confirmed.
+  Key decisions: D-001 (single TTP family), D-002 (payment-term maturity / no escrow), D-003 (no money movement),
+  D-004 (no guarantee), D-005 (no lending), D-006 (shared disclaimers), D-007 (RELEASED reserved),
+  D-008 (external confirmation = record only), D-009 (configurable payment terms), D-010 (partner routing = readiness only),
+  D-011 (finance-readiness ≠ credit score), D-012 (one master doctrine + NC supplement), D-013 (OES → TTP),
+  D-014 (VCO → TTP), D-015 (escrow_account_id = reserved legacy field, null always).
+  ttp_enabled=false UNCHANGED. All NC feature flags UNCHANGED. Active delivery unit: HOLD_FOR_AUTHORIZATION.
+  8 future packets HOLD_FOR_PARESH_DECISION. Legal gate LEGAL_REVIEW_PENDING on all tenant surfaces.
+  Architecture lock artifact: governance/TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001.md.
 
 - TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001 DESIGN_COMPLETE (2026-07-05).
   TradeTrust Pay finance-state layer design authority established. Governance-only — no implementation.
