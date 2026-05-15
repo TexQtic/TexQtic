@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-05 (TEXQTIC-NC-PHASE1-LIFECYCLE-LOG-READ-001 VERIFIED_COMPLETE. All verification gates passed. tsc PASS. 10/10 unit + 10/10 integration PASS (hasDb=true). P20/P19/P18/P17 regressions all PASS. actor_admin_id absent confirmed. G-020 append-only confirmed. Active delivery unit: HOLD_FOR_AUTHORIZATION. Phase 1 CPP Packets 17-21 all VERIFIED_COMPLETE.)
+**Last Updated:** 2026-07-05 (TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001 AUDIT_COMPLETE. Phase 1 CPP close audit passed. tsc PASS. prisma validate PASS. 185/185 tests PASS (P17–P21). 12 schema entities + 34 routes + 6 services verified. D-017-A + G-020 + tenant isolation + no-money-movement all CONFIRMED. Active delivery unit: HOLD_FOR_AUTHORIZATION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,23 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001 AUDIT_COMPLETE (2026-07-05).
+  Packet 22: Phase 1 Network Commerce / Collective Procurement Pools close audit.
+  Read-only audit of full Phase 1 CPP implementation chain (P17–P21) at HEAD 746c7af.
+  tsc --noEmit EXIT 0. prisma validate PASS. Working tree clean.
+  185/185 tests PASS: P21 10+10, P20 22, P19 12, P18 64, P17 67.
+  12 schema entities verified. 34 route handlers (7 files) verified. 6 service files verified.
+  D-017-A: actor_admin_id absent from LifecycleLogDto CONFIRMED.
+  G-020 D-020-D: lifecycle logs append-only CONFIRMED.
+  Tenant isolation: orgId from JWT only, non-leaking 404, dual-anchor invite/quote CONFIRMED.
+  No-money-movement: settlement_waterfall.enabled=false, no escrow release, no payment execution CONFIRMED.
+  Feature flags: 3 open (pool/rfq/invites), 3 false (quotes/award/waterfall) preserved.
+  No schema/migration/frontend/.env changes. No feature flags activated. No Packet 23 opened.
+  DPP=HOLD_FOR_PARESH_DECISION UNCHANGED. G-022=HOLD_FOR_PARESH_DECISION UNCHANGED.
+  OES/VCO not opened. Active delivery unit: HOLD_FOR_AUTHORIZATION.
+  Audit artifact: governance/TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001.md.
+  Governance close commit: docs(network-commerce): close phase 1 cpp audit.
 
 - TEXQTIC-NC-PHASE1-POOL-SETTLE-001 VERIFIED_COMPLETE (2026-07-05).
   Packet 20: Settlement visibility foundation. 3 routes: GET /:poolId/settlement, POST /:poolId/settlement/preview, POST /:poolId/settlement/compute.
