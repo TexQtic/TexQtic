@@ -183,7 +183,13 @@ export type KnownEventName =
   // PW5-AI-EVENT-DOMAIN: AI Vector domain (G-028 §3.3)
   | 'ai.vector.upsert' // Vector document upserted
   | 'ai.vector.delete' // Vector document deleted
-  | 'ai.vector.query'; // Vector similarity query executed
+  | 'ai.vector.query' // Vector similarity query executed
+  // EVENTS-003: Acquisition supplier profile event domain (GAP-ACQ-002, GAP-ACQ-005)
+  | 'supplier_profile.viewed.v1' // Public supplier profile viewed (future ROUTE-001 emission)
+  | 'buyer_inquiry.created.v1' // Buyer inquiry submitted (future INQUIRY-004 emission)
+  | 'public_supplier_profile.provision_requested.v1' // CRM provisioning request received (future WEBHOOK-007)
+  | 'public_supplier_profile.provisioned.v1' // Acquisition-sourced public supplier profile provisioned (future WEBHOOK-007)
+  | 'public_supplier_profile.gate_failed.v1'; // Provisioning gate failure (future WEBHOOK-007)
 
 /**
  * Event envelope with known event name (type-safe)
@@ -267,6 +273,12 @@ export const knownEventEnvelopeSchema = eventEnvelopeSchema.extend({
     'ai.vector.upsert',
     'ai.vector.delete',
     'ai.vector.query',
+    // EVENTS-003: Acquisition supplier profile event domain (GAP-ACQ-002, GAP-ACQ-005)
+    'supplier_profile.viewed.v1',
+    'buyer_inquiry.created.v1',
+    'public_supplier_profile.provision_requested.v1',
+    'public_supplier_profile.provisioned.v1',
+    'public_supplier_profile.gate_failed.v1',
   ]),
 });
 
