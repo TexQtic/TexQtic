@@ -471,6 +471,7 @@ async function main() {
         commodityCategory:         'GREY_FABRIC',
         qty:                       new Prisma.Decimal(3000),
         qtyUnit:                   'MT',
+        sourceType:                'OWNER_DIRECT',
         normalizedFromMemberInput: false,
         supersedesLineId:          null,
         sourceMembershipId:        null,

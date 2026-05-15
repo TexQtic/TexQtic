@@ -1,7 +1,7 @@
 # TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001
 
 **Type:** QA Fixture Normalization — Governance / Tooling Only  
-**Status:** IMPLEMENTED_AWAITING_PARESH_VERIFY  
+**Status:** VERIFIED_COMPLETE  
 **Date:** 2026-07-06  
 **Author:** Automated governance agent, TexQtic repo  
 **Mode:** REPO-TRUTH VALIDATION + QA FIXTURE NORMALIZATION — NO PRODUCT IMPLEMENTATION
@@ -228,8 +228,21 @@ with `STOP: PARESH_AUTHORIZED not set.` — no DB writes occur.
 - Integration test baseline: 185/185 PASS (TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001 baseline)
 - No schema/migration/frontend/.env changes made
 
-> This script has NOT been executed against the remote Supabase DB. Execution requires
-> explicit Paresh authorization.
+### Runtime Verification (2026-07-06)
+
+| Check | Result | Evidence |
+|-------|--------|----------|
+| Negative gate (no PARESH_AUTHORIZED) | ✅ exit 1 | `[STOP] This script requires explicit authorization.` |
+| Environment | ✅ Supabase dev/QA | `DB: Supabase PostgreSQL (DATABASE_URL loaded from .env)` |
+| Authorized first run | ✅ exit 0 | `[DONE] POST_PHASE1_AUDIT_BASELINE seed complete` |
+| Idempotency run | ✅ all SKIP | Zero CREATE rows on second run |
+| TS typecheck | ✅ 0 errors | `tsc --noEmit` server: 0 errors |
+| Prisma validate | ✅ valid | `The schema at prisma\schema.prisma is valid` |
+| P17–P21 integration tests | ✅ 186/186 pass | `Test Files 6 passed (6), Tests 186 passed (186)` |
+
+**sourceType defect corrected during verification:** `NetworkPoolDemandSnapshotLine.create()` was
+missing required field `sourceType`. Fixed: `sourceType: 'OWNER_DIRECT'` added (canonical value
+from `networkPoolDemandLine.service.ts`). This was the only blocking defect found.
 
 ---
 
@@ -270,16 +283,18 @@ with `STOP: PARESH_AUTHORIZED not set.` — no DB writes occur.
 
 ---
 
-## 12. Next Recommended Action
+## 12. Verification Status
 
-This artifact is in status **IMPLEMENTED_AWAITING_PARESH_VERIFY**.
+This artifact is **VERIFIED_COMPLETE** (2026-07-06).
 
-Paresh to verify:
-1. Review `server/scripts/qa/nc-phase1-qa-fixture-baseline.ts` — confirm fixture
-   inventory and entity refs are correct for the intended QA baseline
-2. Authorize execution when ready: `PARESH_AUTHORIZED=true pnpm exec tsx ...`
-3. After execution: confirm idempotency by running a second time and verifying `[SKIP]`
-   log lines appear for all entities
+All verification checks passed:
+1. Authorized first run against remote Supabase dev/QA DB — exit 0, all entities created
+2. Idempotency confirmed — second run showed all `[SKIP]` log lines, zero CREATE rows
+3. P17–P21 integration tests: 186/186 PASS (6 test files, 1185s)
+4. TS typecheck: 0 errors. Prisma validate: PASS.
+
+One blocking defect was corrected during verification: `sourceType: 'OWNER_DIRECT'` added
+to `NetworkPoolDemandSnapshotLine.create()`. No other defects found.
 
 No further governance actions are required for this task. The Layer 0 hold posture
 (`HOLD_FOR_COUNSEL_FEEDBACK`) is unchanged. All other pending packets remain on their

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-06 (TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001 IMPLEMENTED_AWAITING_PARESH_VERIFY: NC Phase 1 post-audit QA fixture normalization. New seed script `server/scripts/qa/nc-phase1-qa-fixture-baseline.ts` created. Auth-gated, idempotent, P17–P20 entity chain. 0 tsc errors. No product implementation, no flags activated. Prior close: TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001 LEGAL_PACKET_UPGRADED: Canonical legal counsel packet upgraded for Unified Platform TTP + NC-TTP scope. §12–§25 added. Regulatory posture matrix, consent framework doctrine, partner routing legal gate, wording pack, disclaimer pack D-001–D-007, terms acceptance flow, privacy questions Q1–Q16, open legal questions O–Y, future packet map 8 HOLD. ttp_enabled=false UNCHANGED. Governance-only. Send upgraded packet to external legal counsel. Await TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001. Prior-prior close: TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001 ARCHITECTURE_LOCK_COMPLETE.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-06 (TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001 VERIFIED_COMPLETE: NC Phase 1 post-audit QA fixture baseline verified. Authorized first run exit 0. sourceType defect corrected. Idempotency confirmed (all SKIP). 186/186 integration PASS (6 files). Prior close: TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001 LEGAL_PACKET_UPGRADED: Canonical legal counsel packet upgraded for Unified Platform TTP + NC-TTP scope. §12–§25 added. Regulatory posture matrix, consent framework doctrine, partner routing legal gate, wording pack, disclaimer pack D-001–D-007, terms acceptance flow, privacy questions Q1–Q16, open legal questions O–Y, future packet map 8 HOLD. ttp_enabled=false UNCHANGED. Governance-only. Send upgraded packet to external legal counsel. Await TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001. Prior-prior close: TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001 ARCHITECTURE_LOCK_COMPLETE.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -29,7 +29,7 @@ active_delivery_unit_note: >
   DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED.
   Phase 1 CPP implementation chain declared AUDIT_COMPLETE. Next work requires Paresh authorization.
 last_closed_unit: TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001
-last_closed_unit_status: IMPLEMENTED_AWAITING_PARESH_VERIFY (2026-07-06)
+last_closed_unit_status: VERIFIED_COMPLETE (2026-07-06)
 last_closed_unit_runtime_verdict: >
   NC Phase 1 post-audit QA fixture normalization (2026-07-06).
   New seed script created: server/scripts/qa/nc-phase1-qa-fixture-baseline.ts.
@@ -41,7 +41,10 @@ last_closed_unit_runtime_verdict: >
   (2) invitedByUserId (not sentByUserId); (3) sourceLineRef + sourceRevisionNo (not lineRef).
   tsc --noEmit server: 0 errors. No product implementation. No schema/migration/frontend/.env changes.
   No feature flags activated. ttp_enabled=false UNCHANGED. HOLD_FOR_COUNSEL_FEEDBACK UNCHANGED.
-  Script NOT YET EXECUTED — awaiting Paresh authorization.
+  VERIFIED_COMPLETE (2026-07-06): authorized first run exit 0, sourceType defect corrected
+  (sourceType: 'OWNER_DIRECT' added to NetworkPoolDemandSnapshotLine.create()), idempotency
+  confirmed (all SKIP, zero CREATE rows), P17–P21 integration tests 186/186 PASS (6 files, 1185s).
+  tsc --noEmit server: 0 errors. Prisma validate: PASS.
 last_closed_unit_commits: "chore(network-commerce): normalize post phase 1 qa fixtures"
 last_closed_unit_closure_basis: >
   Repo-truth inspection confirmed no existing NC Phase 1 QA fixture seed script.
