@@ -317,7 +317,7 @@ Based on the foundation design §6 plus the 11 NC schema entities now present in
 | `stateMachine.service.ts` | Extend entity type set to include POOL, SYNDICATE, VCO_CHAIN | Phase 0 validation (already done for POOL) |
 | `invoice.service.ts` | Extend to handle `POOL_ORDER` invoice type | Phase 1G |
 | `makerChecker.service.ts` | Extend entity type support to SYNDICATE, VCO_CHAIN | Phase 2 pre-work |
-| `escrow.service.ts` | Extend to multi-party (>2 org) context | Phase 2 pre-work (OES-ESCROW-001) |
+| `escrow.service.ts` | Extend to multi-party (>2 org) context | Phase 2 pre-work — ~~OES-ESCROW-001~~ **SUPERSEDED/REFRAMED (2026-07-05)**: TradeTrust Pay design does not use escrow custody. Settlement model is payable-visibility + external settlement confirmation only. No platform-held funds. See TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001. |
 
 ---
 
@@ -440,7 +440,7 @@ Pre-work validation of existing services before NC code. Per Foundation §21 Pha
 | 0-B | Confirm `stateMachine.service.ts` accepts new entity types via configuration | ✅ PARTIAL — POOL confirmed | Audit §5 — pool state machine active |
 | 0-C | Confirm `invoice.service.ts` can handle `POOL_ORDER` invoice type extension | ❌ NOT_VERIFIED | Required in Phase 1G pre-work |
 | 0-D | Confirm `makerChecker.service.ts` supports POOL/SYNDICATE/VCO_CHAIN | ❌ NOT_VERIFIED | Required in Phase 2 pre-work |
-| 0-E | Confirm `escrow.service.ts` can extend to multi-party context | ❌ NOT_VERIFIED | Required in Phase 2 pre-work (OES-ESCROW-001) |
+| 0-E | Confirm `escrow.service.ts` can extend to multi-party context | ❌ NOT_VERIFIED | ~~OES-ESCROW-001~~ **SUPERSEDED/REFRAMED (2026-07-05)** — TradeTrust Pay design does not use escrow custody. Payable visibility and external settlement confirmation only. No money movement. See TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001. |
 
 ### Phase 1 — Module A: Collective Procurement Pools
 
@@ -457,7 +457,7 @@ Pre-work validation of existing services before NC code. Per Foundation §21 Pha
 
 ### Phase 2 — Module B: Order Execution Syndicates
 
-All slices NOT_STARTED. Requires Phase 1 complete + OES-ESCROW-001 multi-party escrow design.
+All slices NOT_STARTED. Requires Phase 1 complete + **TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001** TradeTrust Pay design (supersedes ~~OES-ESCROW-001~~ escrow-first framing — see TEXQTIC-NC-POST-PHASE1-NEXT-TRACK-TRADETRUST-PAY-ALIGNMENT-001.md).
 
 | Slice | Scope | Status |
 |---|---|---|
@@ -539,7 +539,7 @@ The following table is the forward map of all NC implementation packets. Status 
 | 20 | **TEXQTIC-NC-PHASE1-POOL-SETTLE-001** | A/CPP | Service+Route | Pool settlement split computation; `NetworkSettlementSplit` schema; state SETTLED | Packet 19 COMPLETE; prereq TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001 VERIFIED_COMPLETE | Service + route (schema prereq verified) | Service + route | VERIFIED_COMPLETE (2026-07-05). tsc PASS. prisma validate PASS. 19/19 unit PASS. 22/22 integration PASS. 12/12 invoices regression PASS. 64/64 pools regression PASS. 67/67 poolRfq regression PASS. TradeTrust Pay: visibility/payable-split computation only — no payment/payout/escrow/money movement. nc.settlement_waterfall.enabled remains false. /compute fail-closed. All rows: status=PENDING, escrowAccountId=null, triggeredAt=null, releasedAt=null. Packet 21 NOT opened. DPP HOLD unchanged. G-022 HOLD unchanged. Implementation commit: ffea7bf. |
 | 21 | **TEXQTIC-NC-PHASE1-LIFECYCLE-LOG-READ-001** | A/CPP | Route | GET read routes for `network_lifecycle_logs` (pool entity type) | Packet 20 COMPLETE | Route + tests | Route + tests | VERIFIED_COMPLETE (2026-07-05). tsc PASS. prisma validate PASS. 10/10 unit PASS. 10/10 integration PASS. 22/22 settlement regression PASS. 12/12 invoices regression PASS. 64/64 pools regression PASS. 67/67 poolRfq regression PASS. Read-only. orgId from JWT. Wrong-org non-leaking 404. actor_admin_id NOT in DTO. G-020 D-020-D immutability respected (no lifecycle log cleanup in tests). No schema/migration/frontend/.env changes. No feature flags activated. DPP HOLD unchanged. G-022 HOLD unchanged. Implementation commit: 95fe3c9. |
 | 22 | **TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001** | A/CPP | Audit | Full Phase 1/CPP audit: all entities SETTLED test; cross-tenant isolation proof | Packet 21 COMPLETE | Audit doc | PLANNING_ONLY | **AUDIT_COMPLETE (2026-07-05)** |
-| 23 | **TEXQTIC-NC-OES-ESCROW-DESIGN-001** | B/OES | Design | Multi-party escrow extension design for `escrow.service.ts`; N-org context | Phase 1 audit COMPLETE | Governance doc | PLANNING_ONLY | NOT_STARTED |
+| 23 | **TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001** *(post-Phase-1 next candidate — supersedes/reframes ~~TEXQTIC-NC-OES-ESCROW-DESIGN-001~~; see TEXQTIC-NC-POST-PHASE1-NEXT-TRACK-TRADETRUST-PAY-ALIGNMENT-001.md)* | A+B/CPP+OES | Design | TradeTrust Pay–aligned finance-state layer: payment-term maturity, payable visibility, external settlement confirmation, finance-readiness signals, external partner routing readiness. **No escrow custody. No payment execution. No money movement. No platform-held funds.** B2B textile payment terms range 5–100+ days across segment, relationship, invoice, shipment, export/compliance contexts. TexQtic = verified trade-state and payable-visibility system of record only. | Phase 1 audit COMPLETE | Governance doc | PLANNING_ONLY | **HOLD_FOR_PARESH_DECISION** |
 | 24 | **TEXQTIC-NC-PHASE2-OES-SCHEMA-FOUNDATION-001** | B/OES | Schema | `network_syndicates`, `network_syndicate_lots`, `network_syndicate_memberships` schema | Packet 23 COMPLETE | Schema + migration | Schema + migration | NOT_STARTED |
 | 25 | **TEXQTIC-NC-PHASE2-OES-LIFECYCLE-SERVICE-001** | B/OES | Service | Syndicate lifecycle state machine implementation | Packet 24 COMPLETE | Service + tests | Service + tests | NOT_STARTED |
 | 26 | **TEXQTIC-NC-PHASE2-OES-QUALITY-BOND-001** | B/OES | Service+Schema | `network_quality_gates` + `network_performance_bonds` schema + service | Packet 25 COMPLETE | Schema + service | Schema + service | NOT_STARTED |

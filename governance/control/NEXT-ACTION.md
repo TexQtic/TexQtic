@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-05 (TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001 AUDIT_COMPLETE. Phase 1 CPP close audit passed. tsc PASS. prisma validate PASS. 185/185 tests PASS (P17–P21). All 12 schema entities, 34 routes, 6 services verified. Security D-017-A + G-020 + tenant isolation + no-money-movement all CONFIRMED. Active: HOLD_FOR_AUTHORIZATION.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-05 (TEXQTIC-NC-POST-PHASE1-NEXT-TRACK-TRADETRUST-PAY-ALIGNMENT-001: Post-Phase-1 next-track governance realignment. Escrow-first OES candidate superseded. Next candidate installed: TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001 HOLD_FOR_PARESH_DECISION. Active delivery unit remains HOLD_FOR_AUTHORIZATION. Prior: TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001 AUDIT_COMPLETE. 185/185 tests PASS. All holds preserved.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -49,6 +49,29 @@ last_closed_unit_closure_basis: >
   Audit artifact: governance/TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001.md.
 last_closed_unit_prior: TEXQTIC-NC-PHASE1-LIFECYCLE-LOG-READ-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-07-05)
+next_candidate_unit: TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001
+next_candidate_unit_status: HOLD_FOR_PARESH_DECISION
+next_candidate_unit_date_installed: "2026-07-05"
+next_candidate_unit_note: >
+  Post-Phase-1 finance/settlement design direction is TradeTrust Pay — NOT escrow-first OES.
+  TradeTrust Pay scope: system-of-record, trade-state verification, payment-term maturity,
+  payable visibility, external settlement confirmation, finance-readiness signals,
+  external partner routing readiness.
+  NOT: escrow custody, payment execution, payout, escrow release, platform-held funds,
+  TexQtic-funded advance, payment guarantee, lending, money movement of any kind.
+  B2B textile payment terms range 5–100+ days across segment, relationship, invoice terms,
+  shipment, export/import compliance contexts. Escrow model not viable for this market.
+  TexQtic acts as verified trade-state and payable-visibility system of record only.
+  Design only — no implementation opened. Requires separate explicit Paresh authorization.
+  See governance/TEXQTIC-NC-POST-PHASE1-NEXT-TRACK-TRADETRUST-PAY-ALIGNMENT-001.md.
+superseded_candidate: TEXQTIC-NC-OES-ESCROW-DESIGN-001
+superseded_candidate_status: SUPERSEDED_REFRAMED (2026-07-05)
+superseded_candidate_note: >
+  Escrow-first design candidate superseded by TradeTrust Pay alignment (2026-07-05).
+  OES escrow-first framing retired. B2B textile buyers and suppliers do not want to tie up
+  capital in escrow. TradeTrust Pay replaces escrow as the post-Phase-1 settlement direction.
+  OES track (Phase 2 — syndicates, bonds, quality gates) remains unopened; it will be
+  revisited under TradeTrust Pay doctrine when authorized. VCO track not opened.
 note_on_pending_verification: >-
   TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 VERIFIED_COMPLETE (2026-06-02).
   All 3 AF findings resolved. NC Pools + RFQ + Invite surfaces technically unblocked.

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-05 (TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001 AUDIT_COMPLETE. Phase 1 CPP close audit passed. tsc PASS. prisma validate PASS. 185/185 tests PASS (P17–P21). 12 schema entities + 34 routes + 6 services verified. D-017-A + G-020 + tenant isolation + no-money-movement all CONFIRMED. Active delivery unit: HOLD_FOR_AUTHORIZATION.)
+**Last Updated:** 2026-07-05 (TEXQTIC-NC-POST-PHASE1-NEXT-TRACK-TRADETRUST-PAY-ALIGNMENT-001: Post-Phase-1 next-track governance realignment. TEXQTIC-NC-OES-ESCROW-DESIGN-001 superseded/reframed. Next candidate installed: TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001 HOLD_FOR_PARESH_DECISION. All holds preserved. Active delivery unit: HOLD_FOR_AUTHORIZATION. Prior: TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001 AUDIT_COMPLETE. tsc PASS. prisma validate PASS. 185/185 tests PASS (P17–P21). 12 schema entities + 34 routes + 6 services verified. D-017-A + G-020 + tenant isolation + no-money-movement all CONFIRMED. Active delivery unit: HOLD_FOR_AUTHORIZATION.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,27 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- TEXQTIC-NC-POST-PHASE1-NEXT-TRACK-TRADETRUST-PAY-ALIGNMENT-001 GOVERNANCE_SYNC (2026-07-05).
+  Post-Phase-1 next-track governance realignment. Governance-only — no implementation opened.
+  Old candidate TEXQTIC-NC-OES-ESCROW-DESIGN-001 SUPERSEDED/REFRAMED: escrow-first model not
+  appropriate for B2B textile market. Payment terms range 5–100+ days across segment, relationship,
+  invoice, shipment, export/import compliance contexts. B2B textile buyers and suppliers do not
+  want to tie up capital in escrow.
+  New candidate installed: TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001 HOLD_FOR_PARESH_DECISION.
+  TradeTrust Pay doctrine: TexQtic = verified trade-state and payable-visibility system of record.
+  Settlement = payment-term maturity + payable visibility + external settlement confirmation.
+  NOT: escrow custody, payment execution, payout, money movement, platform-held funds, lending,
+  guarantees, supplier advances.
+  OES Phase 2 track (syndicates, bonds, quality gates) remains unopened. VCO track not opened.
+  DPP=HOLD_FOR_PARESH_DECISION UNCHANGED. G-022=HOLD_FOR_PARESH_DECISION UNCHANGED.
+  Feature flags unchanged (quotes/award/waterfall all remain false).
+  Active delivery unit: HOLD_FOR_AUTHORIZATION — unchanged.
+  Tracker: Packet 23 row updated. NEXT-ACTION.md: next_candidate_unit added. Governance-only commit.
+  Alignment artifact: governance/TEXQTIC-NC-POST-PHASE1-NEXT-TRACK-TRADETRUST-PAY-ALIGNMENT-001.md.
+  TradeTrust Pay authority: governance/runbooks/TTP-ACTIVATION-ROLLBACK-RUNBOOK-001.md,
+    governance/legal/TTP-EXTERNAL-LEGAL-COUNSEL-PACKET-001.md,
+    governance/legal/TTP-LEGAL-PACKET-OPERATOR-DECISION-GUIDE-001.md.
 
 - TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001 AUDIT_COMPLETE (2026-07-05).
   Packet 22: Phase 1 Network Commerce / Collective Procurement Pools close audit.
