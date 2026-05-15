@@ -7,7 +7,7 @@
 | **Document ID** | TEXQTIC-NC-PHASE1-LIFECYCLE-LOG-READ-001 |
 | **Document Type** | IMPLEMENTATION_GOVERNANCE |
 | **Packet Number** | 21 |
-| **Status** | IMPLEMENTED_AWAITING_PARESH_VERIFY |
+| **Status** | VERIFIED_COMPLETE |
 | **Created** | 2026-07-05 |
 | **Implementation Commit** | `95fe3c9` — feat(network-commerce): add pool lifecycle log read surface (Packet 21) |
 | **Authorized by** | Paresh Patel |
@@ -230,15 +230,45 @@ All regression suites PASS. `tenant.ts` modification (2-line import + register) 
 
 ---
 
-## 12. Awaiting Paresh Verification
+## 12. Paresh Verification — PASS
 
-Status: **IMPLEMENTED_AWAITING_PARESH_VERIFY**
+Status: **VERIFIED_COMPLETE**  
+Verified: **2026-07-05**
 
-Verification checklist for Paresh:
-1. Review `GET /api/tenant/network-commerce/pools/:poolId/lifecycle` response shape
-2. Confirm `actor_admin_id` absence is acceptable (per D-017-A, platform-internal field)
-3. Confirm G-020 handling (test lifecycle log rows left in DB — append-only)
-4. Authorize promotion to VERIFIED_COMPLETE or identify any required corrections
+### Verification Gate Results
+
+| Gate | Command | Result |
+|---|---|---|
+| TypeScript compile | `pnpm exec tsc --noEmit` | ✅ EXIT 0 |
+| Prisma schema validate | `pnpm -C server exec prisma validate` | ✅ PASS (pre-existing SetNull warning only) |
+| P21 unit tests (10/10) | `vitest run networkLifecycleLog.service.unit.test.ts` | ✅ 10/10 PASS |
+| P21 integration tests (10/10) | `vitest run networkLifecycle.integration.test.ts` | ✅ 10/10 PASS — hasDb=true, RLS bypass triple-gate activated |
+| P20 regression (22/22) | `vitest run networkSettlement.integration.test.ts` | ✅ 22/22 PASS |
+| P19 regression (12/12) | `vitest run networkInvoices.integration.test.ts` | ✅ 12/12 PASS |
+| P18 regression (64/64) | `vitest run pools.integration.test.ts` | ✅ 64/64 PASS |
+| P17 regression (67/67) | `vitest run poolRfq.integration.test.ts` | ✅ 67/67 PASS |
+
+### Live DB Confirmation
+- `hasDb=true` — all integration tests ran against live Supabase DB
+- RLS bypass triple-gate: `bypass_rls=on + realm=test + roles=TEST_SEED`
+- `actor_admin_id` NOT present in response body (NLL-INT-10 PASS)
+- Wrong-org returns non-leaking `404 POOL_NOT_FOUND` (NLL-INT-07 PASS)
+- Route is read-only: no write methods called (NLL-INT-09 PASS)
+- Unauthenticated → `401 UNAUTHORIZED` (NLL-INT-01 PASS)
+- Feature gate off → `503 FEATURE_DISABLED` (NLL-INT-02 PASS)
+
+### Doctrine Confirmations
+- ✅ G-020 D-020-D: lifecycle log rows are append-only — test teardown does NOT delete lifecycle log rows
+- ✅ D-017-A: `orgId` exclusively from `request.dbContext.orgId` (JWT). Never from body/query/params.
+- ✅ DPP `HOLD_FOR_PARESH_DECISION` UNCHANGED
+- ✅ G-022 `HOLD_FOR_PARESH_DECISION` UNCHANGED
+- ✅ No schema/migration/frontend/.env changes in this verification pass
+- ✅ `nc.settlement_waterfall.enabled` remains false
+
+### Commits
+- Implementation: `95fe3c9` — feat(network-commerce): add pool lifecycle log read surface (Packet 21)
+- Governance (IMPL): `78674b6` — docs(network-commerce): verify pool lifecycle log read surface (Packet 21)
+- Governance close: see `docs(network-commerce): close pool lifecycle log read surface`
 
 ---
 

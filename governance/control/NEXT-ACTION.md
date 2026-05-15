@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-05 (TEXQTIC-NC-PHASE1-LIFECYCLE-LOG-READ-001 IMPLEMENTED_AWAITING_PARESH_VERIFY. Read-only lifecycle log route + service + tests created. orgId from JWT. Non-leaking 404. actor_admin_id omitted from DTO. G-020 immutability respected. tsc PASS. 10/10 unit + 10/10 integration PASS. All regression suites PASS. Awaits Paresh verification.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-05 (TEXQTIC-NC-PHASE1-LIFECYCLE-LOG-READ-001 VERIFIED_COMPLETE. All verification gates passed. tsc PASS. 10/10 unit + 10/10 integration PASS. P20/P19/P18/P17 regressions all PASS. actor_admin_id absent confirmed. G-020 append-only confirmed. hasDb=true. Active: HOLD_FOR_AUTHORIZATION.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,36 +15,35 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: TEXQTIC-NC-PHASE1-LIFECYCLE-LOG-READ-001
-active_delivery_unit_status: IMPLEMENTED_AWAITING_PARESH_VERIFY
+active_delivery_unit: HOLD_FOR_AUTHORIZATION
+active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  TEXQTIC-NC-PHASE1-LIFECYCLE-LOG-READ-001 IMPLEMENTED (2026-07-05).
-  Read-only GET /:poolId/lifecycle route. Service + route + unit tests (10/10) + integration tests (10/10).
-  tsc PASS. prisma validate PASS. orgId exclusively from dbContext.orgId (JWT).
-  Wrong-org returns non-leaking 404 POOL_NOT_FOUND. actor_admin_id NOT in DTO.
-  G-020 D-020-D immutability respected (no lifecycle log deletion in teardown).
+  TEXQTIC-NC-PHASE1-LIFECYCLE-LOG-READ-001 VERIFIED_COMPLETE (2026-07-05).
+  All verification gates passed. tsc PASS. prisma validate PASS.
+  10/10 unit PASS + 10/10 integration PASS (hasDb=true, RLS bypass triple-gate).
   Regression: settlement 22/22 PASS. invoices 12/12 PASS. pools 64/64 PASS. poolRfq 67/67 PASS.
+  actor_admin_id NOT in DTO confirmed. G-020 D-020-D immutability confirmed (no lifecycle log deletion).
   No schema/migration/frontend/.env changes. No feature flags activated.
   DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED.
-  Implementation commit: 95fe3c9. Status awaits Paresh verification.
-last_closed_unit: TEXQTIC-NC-PHASE1-POOL-SETTLE-001
+  Phase 1 CPP Packets 17-21 all VERIFIED_COMPLETE. Next unit (Packet 22 or beyond) requires Paresh authorization.
+last_closed_unit: TEXQTIC-NC-PHASE1-LIFECYCLE-LOG-READ-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-07-05)
 last_closed_unit_runtime_verdict: >
   All verification gates passed (2026-07-05).
   tsc --noEmit EXIT 0. prisma validate PASS.
-  Service unit tests: 19/19 PASS (NSS-01..NSS-16 + flag constant).
-  Route integration tests: 22/22 PASS (NSGET-*/NSPREV-*/NSCOMP-*, 138.67s, hasDb=true).
-  Regression: networkInvoices 12/12 PASS, pools 64/64 PASS, poolRfq 67/67 PASS.
-  TradeTrust Pay doctrine confirmed: settlement = visibility/payable-split computation only.
-  No payment, payout, escrow release, money movement, platform-held funds, TexQtic-funded advance.
-  All new rows: status=PENDING, escrowAccountId=null, triggeredAt=null, releasedAt=null.
-  nc.settlement_waterfall.enabled remains false (NEVER activated).
+  P21 unit tests: 10/10 PASS (NLL-SVC-01..NLL-SVC-10).
+  P21 integration tests: 10/10 PASS (NLL-INT-01..NLL-INT-10, hasDb=true, live Supabase DB, RLS bypass triple-gate).
+  Regression: settlement 22/22 PASS. invoices 12/12 PASS. pools 64/64 PASS. poolRfq 67/67 PASS.
+  actor_admin_id NOT in DTO (NLL-INT-10 PASS). Wrong-org non-leaking 404 (NLL-INT-07 PASS).
+  G-020 D-020-D: lifecycle logs append-only; test teardown does NOT delete lifecycle log rows.
+  orgId exclusively from dbContext.orgId (JWT). Route is read-only (GET only).
+  No schema/migration/frontend/.env changes. No feature flags activated.
   DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED.
-  No schema/migration/frontend/.env changes.
-last_closed_unit_commits: "[TEXQTIC] feat(network-commerce): add pool settlement visibility foundation (Packet 20) — ffea7bf; docs(network-commerce): verify pool settlement visibility foundation"
+  nc.settlement_waterfall.enabled remains false.
+last_closed_unit_commits: "feat(network-commerce): add pool lifecycle log read surface (Packet 21) — 95fe3c9; docs(network-commerce): verify pool lifecycle log read surface (Packet 21) — 78674b6; docs(network-commerce): close pool lifecycle log read surface — governance close commit"
 last_closed_unit_closure_basis: >
   All repo + test + doctrine verification gates passed.
-  Implementation commit: ffea7bf. Governance close committed.
+  Implementation commit: 95fe3c9. Governance close committed.
 last_closed_unit_prior: TEXQTIC-NC-PHASE1-POOL-SETTLE-SCHEMA-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-07-03)
 note_on_pending_verification: >-
