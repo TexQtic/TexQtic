@@ -3,11 +3,15 @@
 
 **Unit ID:** `TTP-EXTERNAL-LEGAL-COUNSEL-PACKET-001`
 **Document type:** External legal counsel review packet — governance artifact, non-code
-**Date:** 2026-05-06
+**Date (original):** 2026-05-06
+**Date (upgraded):** 2026-07-06
+**Upgrade unit:** `TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001`
+**Upgrade scope:** Unified Platform TTP + NC-TTP (New Commerce TradeTrust Pay) supplement; consent framework doctrine; partner routing legal gate; user-facing wording controls; disclaimer pack; activation blockers; counsel question matrix; future packet impact map; regulatory posture matrix; terms acceptance flow requirements; data sharing / privacy questions.
 **Prepared by:** Paresh Patel, TexQtic founder / operator
-**`ttp_enabled` state:** `false` — UNCHANGED. This document does not activate or authorize activation of TradeTrust Pay.
+**`ttp_enabled` state:** `false` — UNCHANGED. This document does not activate or authorize activation of TradeTrust Pay or NC-TTP.
 **Legal status:** `LEGAL_REVIEW_PENDING` throughout. No wording in this document is legally approved. All proposed or candidate wording requires counsel sign-off and Paresh decision before any production use.
 **Code changes:** None — governance/legal review packet only.
+**Architecture authority:** `governance/TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001.md` (D-001–D-015, committed 2026-07-06)
 **Schema / migration changes:** None.
 **Activation:** None — this document does not authorize or request TTP activation.
 
@@ -373,17 +377,544 @@ The following repository documents support this packet. They are available for c
 ## 11. Final Status
 
 ```
-TTP_EXTERNAL_LEGAL_COUNSEL_PACKET_001_STATUS = LEGAL_REVIEW_PENDING
+TTP_EXTERNAL_LEGAL_COUNSEL_PACKET_001_STATUS = LEGAL_PACKET_UPGRADED_READY_FOR_COUNSEL
 TTP_EXTERNAL_LEGAL_COUNSEL_PACKET_001_READY_TO_SEND_TO_COUNSEL = true
+UPGRADE_UNIT = TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001
+UPGRADE_DATE = 2026-07-06
+SCOPE = PLATFORM_TTP_AND_NC_TTP_UNIFIED
 ttp_enabled = false (UNCHANGED)
+NC_FEATURE_FLAGS = ALL_FALSE (UNCHANGED)
 IMPLEMENTATION_AUTHORIZED = false
 COUNSEL_FEEDBACK_RECEIVED = false
 ```
 
-**No implementation of any TradeTrust Pay surface is authorized until:**
-1. Counsel provides written feedback on this packet.
+**No implementation of any TradeTrust Pay or NC-TTP surface is authorized until:**
+1. Counsel provides written feedback on this upgraded packet (§12–§25).
 2. That feedback is recorded in `TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001`.
 3. Paresh explicitly approves the next bounded implementation unit.
+
+**The 8 future implementation packets listed in §24 all remain `HOLD_FOR_PARESH_DECISION` pending counsel feedback.**
+
+---
+
+## 12. Upgrade Notice — NC-TTP Supplement Added (2026-07-06)
+
+This packet has been upgraded from Platform TTP scope only to **Unified Platform TTP + NC-TTP scope**.
+
+The upgrade was triggered by the completion of:
+- `TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001` (DESIGN_COMPLETE 2026-07-05)
+- `TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001` (ARCHITECTURE_LOCK_COMPLETE 2026-07-06)
+
+**What changed in this upgrade:**
+- Header metadata updated to reflect unified scope and upgrade date
+- §11 Final Status updated to reflect upgraded scope
+- §12–§25 added: upgrade notice, unified product description, regulatory posture matrix, consent framework doctrine, partner routing legal gate, user-facing wording review pack, disclaimer pack, terms acceptance flow requirements, data sharing / privacy questions, open legal questions, expanded counsel output, expanded attachments, future packet impact map, and final legal gate statement
+
+**What did NOT change:**
+- Original §1–§10 are unchanged in substance
+- All existing safety invariants (§3.3) remain in full force
+- All no-go positions (§4) remain in full force
+- All existing disclaimer constants remain `LEGAL_REVIEW_PENDING`
+- `ttp_enabled = false` — unchanged
+- All NC feature flags — unchanged
+- No implementation authorized
+
+---
+
+## 13. Unified Product Description — Platform TTP + NC-TTP
+
+### 13.1 What TradeTrust Pay is (unified scope)
+
+TradeTrust Pay is a **readiness, documentation, and trade-infrastructure layer** within the TexQtic platform. It exists in two product contexts that share a single legal doctrine:
+
+| Context | Full name | Scope |
+|---|---|---|
+| Platform TTP | TradeTrust Pay (platform-level) | Available to all TexQtic tenants |
+| NC-TTP | TradeTrust Pay (New Commerce extension) | Extension within NC procurement-pool and syndication contexts |
+
+**TradeTrust Pay (both contexts) IS:**
+- A seller readiness assessment tool (internal, advisory)
+- A platform-internal advisory readiness indicator (TexQticScore)
+- A Virtual Payment Commitment record system (VPC — internal record-keeping only)
+- A payment-term visibility layer (shows agreed payment terms; does not enforce, guarantee, or fund them)
+- A trade documentation layer (document upload, completeness tracking)
+- A partner routing readiness package (routes a readiness package to an external finance partner; does NOT transmit funds, scores, or personal financial data unless explicit consent is in place)
+- An external confirmation record layer (records a party's assertion that an external payment event occurred; does NOT verify, guarantee, or intermediary that payment)
+- An audit and enrollment system (internal logs, admin-only)
+
+**TradeTrust Pay (both contexts) is NOT and will NEVER be:**
+- A lender, credit provider, or NBFC
+- A credit bureau or credit scoring service
+- An underwriter or insurance provider
+- A payment gateway, payment aggregator, or payment intermediary
+- An escrow agent or funds custodian
+- A TReDS platform or receivables discounting platform
+- A factoring company or financial arranger
+- A payment guarantor
+- A regulatory assessor of any kind
+- An authority for any financial determination
+- A holder of customer funds, even temporarily
+
+### 13.2 NC-TTP specific roles
+
+In the New Commerce context, TradeTrust Pay additionally:
+- Attaches payment terms (payment days 5–100+, discount rates, schedule types) to NC procurement pool award events
+- Tracks payment-term maturity status for awarded line items (informational only)
+- Records external settlement confirmation assertions (buyer/supplier party assertion that a payment occurred; TexQtic does NOT verify or intermediate)
+- Provides a finance-readiness signal to NC pool context (advisory only; not a credit score, not a credit decision)
+- Inherits and extends the Platform TTP legal doctrine without creating a separate legal product
+
+**NC-TTP payment-term maturity statuses are informational.** TexQtic does not hold funds, guarantee payment, or act as intermediary at any maturity status. The maturity status is a record of agreement terms and observed assertions — not a financial obligation of TexQtic.
+
+---
+
+## 14. Regulatory Posture Matrix
+
+This matrix covers the 7 highest-risk regulatory classification questions for TradeTrust Pay (Platform TTP + NC-TTP combined).
+
+**Legend:** Risk = risk if improperly implemented | Why safe = why the current design avoids this classification | Prohibited behavior = what must NEVER happen | Counsel question = question for counsel | Activation blocker = what blocks unsafe activation
+
+---
+
+### 14.1 Payment Aggregator / Payment Gateway Classification (PA/PG)
+
+| Dimension | Position |
+|---|---|
+| Regulatory risk | PA/PG classification under RBI Payment Aggregators guidelines |
+| Why safe (current design) | TexQtic does not touch, route, receive, hold, or settle any funds. External confirmation = party assertion only. No payment API calls. No escrow account (D-015: `escrow_account_id` = null permanently). |
+| Prohibited behavior | Receiving, routing, holding, or settling funds on behalf of any party; operating as a payment intermediary; providing payment checkout for third parties |
+| Counsel question | Does recording a buyer/supplier party assertion that an external payment occurred (without TexQtic touching the funds) constitute PA/PG activity? |
+| Activation blocker | Any feature that routes, receives, or holds funds must be blocked at schema + feature-flag level before any TTP surface is activated |
+
+### 14.2 NBFC / Lending Classification
+
+| Dimension | Position |
+|---|---|
+| Regulatory risk | NBFC registration requirement; money lending regulations |
+| Why safe | TexQtic does not provide credit, loans, or advances. TTP provides no financing. Partner routing routes only a readiness package — no funds. Finance partner decisions are entirely external to TexQtic. |
+| Prohibited behavior | Providing any credit, loan, or advance to any party; guaranteeing repayment; holding receivables; acting as lending arranger |
+| Counsel question | Does routing a readiness package to a finance partner (without TexQtic committing to or arranging financing) constitute NBFC activity or money lending activity? |
+| Activation blocker | Partner routing must route readiness package only; any finance commitment must be entirely external; no partner routing activated until written counsel sign-off |
+
+### 14.3 Credit Bureau / Credit Scoring Classification
+
+| Dimension | Position |
+|---|---|
+| Regulatory risk | Credit Information Companies (Regulation) Act 2005 (CICRA); RBI credit bureau regulations |
+| Why safe | TexQticScore is a platform-internal advisory readiness indicator derived entirely from platform usage signals (no CIBIL, no GSTN API, no AA, no credit bureau data). Disclaimers say explicitly it is not a credit score. Currently admin-only. |
+| Prohibited behavior | Using CIBIL/AA/GSTN/credit bureau data to compute the score; calling it a credit score; sharing it with finance partners without CICRA-compliant consent; using it as an underwriting input |
+| Counsel question | At what point (if any) does an internal advisory readiness score derived from platform signals only trigger CICRA obligations? Can it be shown to sellers with appropriate disclaimers? Can it be shared with finance partners (with consent) without creating credit bureau obligations? |
+| Activation blocker | `BLOCKED_LEGAL` — tenant-visible TexQticScore requires written counsel sign-off |
+
+### 14.4 Insurance / Guarantee Classification
+
+| Dimension | Position |
+|---|---|
+| Regulatory risk | IRDAI insurance regulations; guarantee product regulations |
+| Why safe | TexQtic provides no payment guarantees, trade guarantees, or indemnity of any kind. VPC is an internal readiness record, not a payment guarantee instrument. |
+| Prohibited behavior | Representing VPC as a payment guarantee or insurance product; promising indemnity on payment failure; acting as surety |
+| Counsel question | Does the term "Virtual Payment Commitment" or any VPC display copy create a risk of being interpreted as a payment guarantee instrument? What wording changes (if any) are required to make the non-guarantee nature clear? |
+| Activation blocker | VPC display copy must be reviewed and approved by counsel before any tenant-visible VPC surface is activated |
+
+### 14.5 Escrow / Funds Custody Classification
+
+| Dimension | Position |
+|---|---|
+| Regulatory risk | Escrow agent / custodian classification; RBI escrow requirements |
+| Why safe | D-015 (architecture lock): `escrow_account_id` field is permanently null; no escrow feature is designed or built. No funds held. |
+| Prohibited behavior | Accepting funds for escrow; holding funds on behalf of buyers or suppliers; routing funds between parties |
+| Counsel question | Is there any residual risk from the presence of an `escrow_account_id` schema field (permanently null, legacy bridge) that we should address by renaming or removing? |
+| Activation blocker | Escrow feature is permanently locked off by architecture decision D-015 |
+
+### 14.6 DPDP 2023 / Personal Data Classification
+
+| Dimension | Position |
+|---|---|
+| Regulatory risk | Digital Personal Data Protection Act 2023 (DPDP); RBI data localisation |
+| Why safe | No personal data is processed by TTP without consent framework in place. Consent table is `LEGAL_GATED__WAITING`. No data shared with partners currently. Data minimization as a design principle. |
+| Prohibited behavior | Sharing any personal data (seller, buyer, director, GST) with any finance partner without explicit, recorded, versioned DPDP-compliant consent; inferred consent |
+| Counsel question | What specific consent language, granularity, revocation mechanism, and retention policy is required under DPDP 2023 for: (a) sharing readiness indicators with finance partners; (b) sharing trade documents; (c) sharing payment-term data? |
+| Activation blocker | Consent table and consent framework must be designed + reviewed by counsel before any partner data sharing is enabled |
+
+### 14.7 Account Aggregator / GSTN / CIBIL Integration Risk
+
+| Dimension | Position |
+|---|---|
+| Regulatory risk | AA framework (RBI); GST system operator rules; CIBIL data usage rules |
+| Why safe | TexQtic has no AA integration, no live GSTN API call, no CIBIL API call, and no design for any of these. TexQticScore uses only platform-internal signals. |
+| Prohibited behavior | Calling CIBIL/AA/GSTN APIs to compute or enrich TexQticScore; using AA-sourced financial data in any TTP computation; becoming an AA-framework participant without regulatory approval |
+| Counsel question | Should we proactively clarify in our T&C / Privacy Policy that TexQticScore is derived from platform signals only and does not involve any AA, GSTN, or credit bureau data access? |
+| Activation blocker | Any AA/GSTN/CIBIL integration requires explicit regulatory counsel review before design is begun |
+
+---
+
+## 15. Consent Framework Doctrine
+
+**Status:** `LEGAL_GATED__WAITING` — no consent implementation authorized until counsel provides written framework.
+
+The following doctrine describes the consent framework TexQtic intends to implement, subject to counsel review and approval:
+
+### 15.1 Consent principles
+
+1. **No inferred consent.** Consent for any data sharing or partner transmission must be explicit and affirmative. Continued use of the platform does not constitute consent for TTP data sharing.
+
+2. **Granular consent by partner category and data category.** Consent must be obtained separately for each partner type (e.g., trade finance partner, dynamic discounting provider) and each data category (readiness indicators, trade documents, payment-term data, bank references).
+
+3. **Role-specific consent.** Consent must be obtained from the appropriate authorized role within each tenant organization. Platform Admin or Owner role required for org-level consent; individual seller consent for individual data sharing.
+
+4. **Transaction-level consent gate.** Consent must be verified before each partner routing action — not just once at enrollment.
+
+5. **Versioned consent.** Consent must reference the version of the terms / consent text in force at time of acceptance. Re-acceptance is required when consent text changes materially.
+
+6. **Revocation mechanism.** Every consent must be revocable at any time. Revocation must be effective immediately for future data sharing; historical data already shared is not recalled (but must be disclosed).
+
+7. **Consent audit trail.** Every consent event (grant, revocation, re-acceptance) must be recorded with: timestamp, user ID, tenant org_id, version of consent text, IP address, scope of consent, channel (web/API).
+
+8. **Data minimization.** Only the minimum data necessary for the specific consent scope may be shared. No bundling of unrelated data categories in a single consent event.
+
+9. **Purpose limitation.** Data shared under a TTP-partner consent may only be used for the stated purpose. TexQtic T&C must prohibit finance partners from using data for purposes beyond the stated scope.
+
+10. **Retention and deletion.** Consent records must be retained for the retention period required by DPDP 2023 (counsel to confirm). Deletion of consent records must be logged separately from deletion of the underlying data.
+
+11. **DPDP 2023 compliance.** All consent language, notice requirements, revocation rights, and grievance mechanisms must comply with the Digital Personal Data Protection Act 2023 and any rules issued thereunder. Counsel must confirm the specific requirements.
+
+12. **No activation without consent framework.** No partner routing, no finance request workflow, and no external data sharing of any kind may be activated until the consent framework has been:
+    - Reviewed and approved by external legal counsel
+    - Recorded in `TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001`
+    - Approved by Paresh
+    - Implemented in code (consent table + consent verification service)
+    - Tested and audited
+
+### 15.2 Proposed consent text (placeholder — requires counsel approval)
+
+> **Consent text placeholder — LEGAL_REVIEW_PENDING — NOT FOR PRODUCTION USE**
+>
+> *"I, [User Name], on behalf of [Organisation Name] (Platform Account [Org ID]), provide explicit consent for TexQtic to share the following information with [Partner Name] for the sole purpose of [Purpose]: [Data Categories]. I understand that TexQticScore is an internal advisory readiness indicator and not a credit score or financial assessment. I understand that TexQtic does not guarantee any financing outcome. I understand that I may withdraw this consent at any time by [revocation mechanism]. This consent applies to [Scope] and expires on [Expiry Date / Event]."*
+
+**Counsel questions on consent (see §21 for full list).**
+
+---
+
+## 16. External Partner Routing Legal Gate
+
+**Status:** `PARTNER_GATED__WAITING` — no partner routing workflow authorized until all prerequisites below are met.
+
+### 16.1 Prerequisites for any partner routing activation
+
+All of the following must be satisfied before any external partner routing workflow may be activated:
+
+1. **External legal counsel written sign-off** on the partner routing design (this packet).
+2. **Partner contract in place** — a signed contract between TexQtic and the external finance partner, reviewed by counsel, with data protection clauses, purpose limitation, and no-misuse provisions.
+3. **Data Protection Agreement (DPA)** — a signed DPA with the partner covering DPDP 2023 obligations, data minimization, retention, deletion, and grievance mechanisms.
+4. **Consent framework operational** — the consent table, consent verification service, and consent audit trail must be built, tested, and audited before any partner routing occurs.
+5. **Tenant explicit consent obtained** — the specific tenant (org_id) must have provided explicit, versioned, role-appropriate consent for the specific partner and data category.
+6. **Paresh explicit authorization** — Paresh must issue written authorization (recorded in governance/control) before the partner routing feature flag is activated for any tenant.
+
+### 16.2 What partner routing sends (readiness package only)
+
+When (and only if) partner routing is eventually activated for a consenting tenant, the routing sends a **readiness package** only. The readiness package is:
+- A set of platform-internal readiness signals (completeness indicators, VPC status, score band if approved)
+- Trade documentation completeness indicators (not the documents themselves, unless separately consented)
+- Payment-term data for the specific transaction (if consented)
+
+The readiness package does NOT include:
+- Raw GSTN data
+- CIBIL or credit bureau data
+- AA-sourced financial data
+- Bank account numbers (unless separately consented and counsel-approved)
+- Director personal data beyond what is consented
+
+### 16.3 Counsel questions on partner routing
+
+1. Does routing a readiness package (as described in §16.2) to an external finance partner constitute financial intermediation under any applicable regulation?
+2. What specific data categories require separate DPDP 2023 consent before inclusion in a partner routing package?
+3. What must the partner contract include to ensure TexQtic is not liable for the partner's financing decisions?
+4. What language in a routing confirmation UI is legally risky (e.g., implies TexQtic endorsement of the partner, implies a financing commitment, implies a payment guarantee)?
+5. Does the act of suggesting a finance partner to a tenant based on readiness signals constitute financial advice or regulated financial promotion?
+6. Are there any SEBI, RBI, or IRDAI notifications we should review before building partner routing?
+
+---
+
+## 17. User-Facing Wording Review Pack (NC-TTP Supplement)
+
+This section supplements §5 (original wording review surfaces) with NC-TTP-specific wording that requires counsel review.
+
+**Legend:** All wording marked `[CANDIDATE]` is proposed only. All wording marked `[CURRENT]` is in use but pending review. All wording is `LEGAL_REVIEW_PENDING`.
+
+### Surface NC-1: NC-TTP Payment Terms Display
+
+| Item | Content |
+|---|---|
+| Surface | Payment terms attached to an NC procurement pool award (buyer-visible, supplier-visible) |
+| Current wording | None — not yet implemented |
+| Candidate wording | `[CANDIDATE]` *"Payment terms: [X] days from [Invoice / Delivery / Acceptance]. Discount rate: [Y]%. These terms were agreed between buyer and supplier at time of award. TexQtic records this agreement for informational purposes only and does not guarantee, enforce, or intermediate this payment."* |
+| Counsel question | Is this display copy sufficient to make clear that TexQtic is not a payment guarantor or intermediary? |
+
+### Surface NC-2: Payment-Term Maturity Status Label
+
+| Item | Content |
+|---|---|
+| Surface | Maturity status shown on an NC award line item |
+| Proposed status labels | `PENDING` / `DUE_SOON` / `DUE` / `OVERDUE` / `SETTLED_EXTERNAL` / `DISPUTED` / `EXTENDED` / `CANCELLED` / `NSS_PENDING` |
+| Current wording | None — not yet implemented |
+| Candidate disclaimer | `[CANDIDATE]` *"Maturity status reflects the agreed payment schedule and any party-reported events. It is informational only. TexQtic does not hold, route, or guarantee any payment. 'Settled External' means a party has reported that payment occurred externally; TexQtic has not verified this."* |
+| Counsel question | Does labelling a line item as `OVERDUE` or `NSS_PENDING` create any legal exposure for TexQtic? Does `SETTLED_EXTERNAL` create any verification obligation? |
+
+### Surface NC-3: External Settlement Confirmation Display
+
+| Item | Content |
+|---|---|
+| Surface | Confirmation that a buyer or supplier has reported an external payment event |
+| Current wording | None — not yet implemented |
+| Candidate wording | `[CANDIDATE]` *"[Party] has reported that payment for this transaction was completed externally on [Date]. This is a party assertion recorded by TexQtic. TexQtic has not verified this payment and makes no representation as to its accuracy."* |
+| Counsel question | Does recording and displaying a party assertion of external payment create any liability for TexQtic if the assertion is later disputed? |
+
+### Surface NC-4: Finance-Readiness Signal to Finance Partner
+
+| Item | Content |
+|---|---|
+| Surface | Readiness signal included in a partner routing package |
+| Current wording | None — not yet implemented |
+| Candidate wording | `[CANDIDATE]` *"TexQtic Readiness Indicator: [READY / NEAR_READY / NEEDS_REVIEW / NOT_READY]. This indicator is derived from platform-internal signals only. It is not a credit score, credit assessment, underwriting output, or financing recommendation. The finance partner makes all financing decisions independently of TexQtic."* |
+| Counsel question | Is this disclaimer sufficient for inclusion in a readiness package sent to a finance partner? Does it need to be part of a formal data-sharing agreement rather than inline copy? |
+
+### Surface NC-5: NC-TTP Disclaimer (supplement to main TTP disclaimer)
+
+| Item | Content |
+|---|---|
+| Surface | Disclaimer shown on any NC-TTP surface visible to tenants |
+| Current wording | None — not yet implemented |
+| Candidate wording | `[CANDIDATE]` *"TradeTrust Pay (New Commerce) records payment terms agreed between buyers and suppliers, tracks maturity status, and provides a readiness documentation layer. TexQtic does not guarantee, enforce, or intermediate any payment. All maturity statuses are informational. External settlement confirmations are party assertions only — TexQtic has not verified any external payment."* |
+| Counsel question | Is this disclaimer sufficient for NC-TTP tenant surfaces? Does it need to appear on every relevant screen or only on enrollment? |
+
+### Forbidden wording additions (NC-TTP supplement to §5, Row 17)
+
+The following terms must NOT appear in any NC-TTP tenant-visible surface without explicit counsel approval:
+
+- "TexQtic guarantees payment"
+- "TexQtic will collect payment"
+- "TexQtic will process payment"
+- "TexQtic escrow" / "escrow account"
+- "Payment confirmed by TexQtic"
+- "TexQtic verified this payment"
+- "TexQtic finance" / "TexQtic credit"
+- "TexQtic lending" / "TexQtic loan"
+- "Credit assessment" (in any TTP/NC-TTP context)
+- "Underwriting" (in any TTP/NC-TTP context)
+- "NSS" or "Net Settlement Status" as a label visible to tenants without a disclaimer that this is an informational record only
+- Any language implying TexQtic has intermediated, verified, or guaranteed a financial transaction
+
+---
+
+## 18. Disclaimer Pack
+
+All disclaimers listed here are `LEGAL_REVIEW_PENDING`. None are approved for production use without counsel sign-off.
+
+### Existing disclaimers (originally in §6)
+
+**D-001: `TTP_DISCLAIMER_TEXT` (Platform TTP — current)**
+> *"TradeTrust Pay readiness signals are informational and advisory only. They are not a credit score, financing approval, payment guarantee, lending decision, or partner commitment."*
+> Location: `server/src/ttp/ttp.constants.ts` — `LEGAL_REVIEW_PENDING`
+
+**D-002: `SCORE_DISCLAIMER` (TexQticScore — current)**
+> *"TradeTrust Score is an advisory readiness indicator only. It is not a credit score, payment guarantee, financing approval, or partner commitment."*
+> Location: `server/src/services/ttpScore.service.ts` — `LEGAL_REVIEW_PENDING`
+
+**D-003: `TEXQTICSCORE_V2_DISCLAIMER` (TexQticScore v2 — current)**
+> *"TexQticScore is an advisory readiness indicator computed from platform-internal signals. It is not a credit bureau score, CIBIL assessment, underwriting output, or financing approval. It does not represent a regulatory determination of any kind."*
+> Location: in-progress — `LEGAL_REVIEW_PENDING`
+
+### Proposed new disclaimers (NC-TTP supplement — all LEGAL_REVIEW_PENDING)
+
+**D-004: NC-TTP General Disclaimer (candidate)**
+> *"TradeTrust Pay (New Commerce) records payment terms agreed between buyers and suppliers and tracks maturity status informally. TexQtic does not guarantee, enforce, fund, or intermediate any payment. Maturity statuses are informational only. External settlement confirmations are party assertions — TexQtic has not verified any external payment."*
+
+**D-005: External Settlement Confirmation Disclaimer (candidate)**
+> *"This settlement confirmation was reported by [Party Name]. TexQtic has not verified this payment and makes no representation as to its accuracy, completeness, or finality. This record is not a receipt, proof of payment, or guarantee."*
+
+**D-006: Partner Routing Readiness Package Disclaimer (candidate)**
+> *"This readiness package is provided to [Partner Name] solely for informational purposes, subject to explicit tenant consent. TexQtic makes no financing recommendation, credit assessment, or guarantee of any kind. All financing decisions are made independently by the finance partner."*
+
+**D-007: Payment-Term Maturity Status Disclaimer (candidate)**
+> *"Payment maturity status reflects the agreed schedule and any party-reported events. It is informational only. TexQtic does not hold, route, or guarantee any payment. Status changes require no action from TexQtic and do not constitute a financial obligation of TexQtic."*
+
+**Counsel questions on disclaimer pack:**
+1. Are disclaimers D-001, D-002, D-003 sufficient as currently worded?
+2. Are proposed disclaimers D-004, D-005, D-006, D-007 sufficient? What revisions are needed?
+3. Must any disclaimer appear on every screen (persistent), or is enrollment-time acceptance sufficient?
+4. Are any of the forbidden wording items (§17) already present in the existing constants that must be corrected?
+
+---
+
+## 19. Terms Acceptance Flow Requirements
+
+**Status:** `LEGAL_GATED__WAITING` — no terms acceptance flow may be implemented until counsel has approved the consent framework (§15) and the wording pack (§17).
+
+When (and only if) a terms acceptance flow is eventually built, it must include all of the following elements:
+
+1. **Version reference.** The acceptance record must capture the exact version of the terms text in force at time of acceptance.
+2. **Explicit affirmative action.** Acceptance must require a deliberate affirmative action (checkbox + button, or equivalent). Pre-ticked checkboxes are not acceptable.
+3. **Role identification.** The accepting user's role within the tenant org must be recorded. Only an authorized role (Platform Admin / Owner) may accept org-level TTP terms.
+4. **Timestamp.** Acceptance timestamp must be recorded in UTC with millisecond precision.
+5. **IP address.** Accepting user's IP address must be logged (subject to DPDP data minimization rules — counsel to confirm).
+6. **Scope declaration.** The acceptance record must state the scope of the terms being accepted (e.g., "Platform TTP readiness signals", "NC-TTP payment terms visibility", "Partner routing — [Partner Name]").
+7. **Re-acceptance trigger.** Re-acceptance must be required when the terms text changes materially. Counsel to define "materially".
+8. **Audit trail.** All acceptance events must be recorded in the consent audit table and queryable by Paresh / TexQtic admin.
+9. **Rollback capability.** If terms text is updated and the tenant has not re-accepted, access to the gated surface must be suspended until re-acceptance.
+10. **No activation without accepted terms.** No TTP or NC-TTP surface gated behind terms acceptance may be shown to any user of any tenant until the acceptance record exists and is valid for the current terms version.
+
+---
+
+## 20. Data Sharing / Privacy Questions for Counsel
+
+The following questions require written answers from counsel before any data sharing or privacy-related implementation is begun:
+
+**DPDP 2023 compliance:**
+1. What notice must TexQtic provide to data principals (sellers, buyers, directors) before processing their data for TTP/NC-TTP purposes?
+2. What consent mechanisms are required under DPDP 2023 for: (a) internal score computation; (b) sharing readiness indicators with finance partners; (c) sharing trade documents; (d) sharing payment-term data?
+3. What are the exact rights of data principals under DPDP 2023 that TexQtic must support (correction, erasure, grievance) for TTP/NC-TTP data?
+4. Does DPDP 2023 require a data protection officer (DPO) or similar role for TexQtic given the scope of TTP/NC-TTP data processing?
+
+**Consent withdrawal:**
+5. If a tenant withdraws consent for partner data sharing, what is TexQtic's obligation regarding data already shared with the partner?
+6. How long must TexQtic retain consent records after consent is withdrawn?
+
+**Data minimization and purpose limitation:**
+7. What is the minimum set of data fields that may be included in a partner routing readiness package without triggering additional consent requirements?
+8. Can payment-term data (days, discount rate) be shared with a finance partner under a general TTP consent, or does it require separate, specific consent?
+
+**Partner data sharing:**
+9. What contractual provisions must TexQtic require of a finance partner as a condition of receiving readiness package data?
+10. Does the transmission of a readiness package to a finance partner constitute "processing" under DPDP 2023 such that the partner must be a registered data fiduciary?
+11. Can TexQtic share a supplier's TexQticScore band (not the raw score) with a buyer within the same NC procurement pool without triggering DPDP consent requirements?
+
+**Document uploads and attachments:**
+12. If a seller uploads trade documents (invoices, PO, packing lists) for TTP compliance purposes, what consent is required before those documents are shared with a finance partner?
+13. What data retention limit applies to uploaded trade documents?
+
+**Payment and bank references:**
+14. If a buyer/supplier reports external payment via a bank reference or transaction ID, does recording that reference create any payment data processing obligation under DPDP 2023?
+15. Does recording a buyer's or supplier's bank name (not account number) in a readiness package trigger any DPDP or RBI data governance obligation?
+
+**Cross-border data transfer:**
+16. If a finance partner is headquartered outside India, does sharing the readiness package with them constitute a cross-border data transfer under DPDP 2023? What safeguards are required?
+
+---
+
+## 21. Open Legal Questions — Counsel Decision Matrix (NC-TTP additions)
+
+The following questions supplement §7 (original questions A–N) with NC-TTP-specific open questions requiring written counsel answers:
+
+| Question ID | Question | Context | Activation blocker? |
+|---|---|---|---|
+| O | Does the NC-TTP payment-term maturity status display (§17, Surface NC-2) create any legal risk for TexQtic if a buyer claims the status is inaccurate? | Payment-term maturity | YES — NC-TTP payment terms display blocked until answered |
+| P | Does the `NSS_PENDING` (Near-Settlement Status Pending) label create any implication that TexQtic is verifying or guaranteeing a near-settlement state? | NSS label | YES — NSS label blocked until answered |
+| Q | Does recording a party's assertion of external settlement (§17, Surface NC-3) without verification create any negligent misrepresentation risk? | External confirmation | YES — external confirmation display blocked until answered |
+| R | What must the partner routing readiness package disclaimer (D-006) contain to fully disclaim TexQtic's role as a financial intermediary? | Partner routing | YES — partner routing blocked until answered |
+| S | Are any of the NC-TTP payment-term maturity status labels (OVERDUE, DISPUTED, SETTLED_EXTERNAL) legally risky as tenant-visible labels? | Payment-term labels | YES — maturity status labels blocked until answered |
+| T | Does TexQtic's Terms of Service need to be updated to cover NC-TTP payment-term visibility before any tenant can see payment-term data? | T&C update | YES — T&C must be confirmed before NC-TTP tenant surfaces activated |
+| U | Does TexQtic's Privacy Policy need to be updated to cover NC-TTP payment-term data and external confirmation data before any tenant can see these? | Privacy Policy update | YES — Privacy Policy must be confirmed before NC-TTP tenant surfaces activated |
+| V | Is the VPC candidate display copy (§5, Row 11) sufficient to make clear that VPC is an internal readiness record and not a payment guarantee instrument? | VPC copy | YES — VPC tenant surface blocked until answered |
+| W | Does showing a buyer a supplier's readiness indicator (score band or VPC status) within the same NC procurement pool require DPDP consent from the supplier? | Cross-party visibility | YES — buyer-visible supplier readiness blocked until answered |
+| X | Can TexQtic share the NC-TTP finance-readiness signal (§17, Surface NC-4) with a finance partner under a general B2B data processing agreement, or is individual tenant consent required for each partner routing event? | Partner consent granularity | YES — partner routing blocked until answered |
+| Y | What specific language in our T&C / Privacy Policy do we need to cover the NC-TTP "external confirmation" data record (buyer/supplier assertion of payment)? | T&C / Privacy Policy | YES — external confirmation display blocked until answered |
+
+---
+
+## 22. Expanded Counsel Output Expected
+
+This section expands §9 (original requested counsel output) to include NC-TTP-specific outputs:
+
+**From the original §9 (unchanged):**
+1. Approved final wording for each disclaimer and surface listed in §5 and §6.
+2. Redlines on any candidate wording that needs revision.
+3. Explicit surface-by-surface restrictions (admin only, seller only, buyer excluded, etc.).
+4. User-role limitations: which roles may see which surfaces.
+5. Consent framework requirements: specific consent language, granularity, and revocation mechanism for DPDP 2023.
+6. Must-not-use terms: a list of additional forbidden wording.
+7. Required disclaimers: any disclaimers not currently present that counsel requires.
+8. Regulatory concerns: any classification risk (NBFC, TReDS, credit bureau, PA, PG, etc.) that must be resolved before activation.
+9. Recommended T&C and Privacy Policy updates that should be made before any TTP surface goes live for tenants.
+
+**Additional outputs required for NC-TTP (new):**
+10. Written answers to questions O–Y (§21) — each question is an activation blocker.
+11. Approved or redlined versions of disclaimers D-004, D-005, D-006, D-007 (§18).
+12. Written answers to data sharing / privacy questions 1–16 (§20).
+13. Consent framework requirements specific to NC-TTP: partner routing consent, external confirmation consent, payment-term data consent.
+14. Partner routing legal prerequisites: what must the partner contract and DPA contain (§16.3).
+15. Confirmation of whether TexQtic's T&C and Privacy Policy must be updated before any NC-TTP surface goes live for tenants — and if so, a specific list of required updates.
+
+---
+
+## 23. Expanded Attachments (NC-TTP supplement)
+
+The following reference documents supplement §10 and are provided for counsel's background reference:
+
+| Document | Purpose |
+|---|---|
+| `governance/TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001.md` | Architecture lock: D-001–D-015, master T&C doctrine, NC supplement, wording lock, feature gate matrix, consent/data-sharing lock, 12 open gaps, 8 future packets |
+| `governance/TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001.md` | NC-TTP full design: payment terms model, maturity statuses, NSS, external confirmation types, finance-readiness signal design, OES/VCO implications |
+| `governance/legal/TTP-LEGAL-PACKET-OPERATOR-DECISION-GUIDE-001.md` | Operator decision guide: decision areas, options, implementation gate mapping, recommended safest path |
+
+---
+
+## 24. Future Packet Impact Map
+
+The following 8 implementation packets (all `HOLD_FOR_PARESH_DECISION`) are blocked pending the counsel feedback that this upgraded packet is designed to obtain. The table maps each packet to the specific counsel outputs it requires before it can be authorized.
+
+| Packet | What it builds | Requires from counsel |
+|---|---|---|
+| `TEXQTIC-TRADETRUST-PAY-CORE-ARCHITECTURE-SYNC-001` | Sync TTP data model with architecture lock decisions | None — pure internal architecture; no counsel gate |
+| `TEXQTIC-NC-TRADETRUST-PAY-DATA-MODEL-001` | NC-TTP data model (payment terms, maturity, confirmation tables) | Confirmation that the data model does not create PA/PG or escrow classification risk |
+| `TEXQTIC-NC-TRADETRUST-PAY-PAYMENT-TERMS-001` | Payment-term display for NC awards (tenant-visible) | Answers to questions O, S, T, U (§21); approved Surface NC-1 and NC-2 wording (§17); D-007 disclaimer approval (§18) |
+| `TEXQTIC-NC-TRADETRUST-PAY-EXTERNAL-CONFIRMATION-001` | External settlement confirmation record + display | Answers to questions P, Q, Y (§21); approved Surface NC-3 wording (§17); D-005 disclaimer approval (§18) |
+| `TEXQTIC-NC-TRADETRUST-PAY-FINANCE-READINESS-001` | Finance-readiness signal + partner routing workflow | Answers to questions R, W, X (§21); §16.3 partner routing questions answered; §20 privacy questions 7–15 answered; D-006 disclaimer approval (§18); consent framework (§15) approved |
+| `TEXQTIC-NC-OES-TRADETRUST-PAY-ADAPTATION-001` | OES platform inherits NC-TTP doctrine | Same as NC-TTP packet plus OES-specific surface review |
+| `TEXQTIC-NC-VCO-TRADETRUST-PAY-ADAPTATION-001` | VCO context inherits NC-TTP doctrine | Answers to question V (§21); approved VPC display copy (§5 Row 11) |
+| `TTP-TEXQTICSCORE-V2-TENANT-SURFACE-001` | Tenant-visible TexQticScore surface | Answers to questions B, C, D, E, F, G from §7; CICRA analysis (§14.3); D-003 approved |
+
+**Note:** The previously-listed placeholder packet `TEXQTIC-TRADETRUST-PAY-TERMS-CONSENT-LEGAL-PACKET-001` is now superseded by this upgraded packet. This upgraded packet IS the legal counsel preparation for terms and consent. It does not require a separate packet.
+
+---
+
+## 25. Final Legal Gate Statement
+
+**This section is the canonical activation gate for all TradeTrust Pay and NC-TTP surfaces.**
+
+```
+TTP_EXTERNAL_LEGAL_COUNSEL_PACKET_001_STATUS = LEGAL_PACKET_UPGRADED_READY_FOR_COUNSEL
+SCOPE = PLATFORM_TTP_AND_NC_TTP_UNIFIED
+ttp_enabled = false — UNCHANGED
+NC_FEATURE_FLAGS = ALL_FALSE — UNCHANGED
+
+ACTIVATION_GATE = LOCKED
+
+No tenant-visible TradeTrust Pay surface (Platform TTP or NC-TTP) may be activated until ALL of:
+  1. External legal counsel provides written feedback on this upgraded packet.
+  2. Counsel feedback is formally recorded in TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001.
+  3. Paresh reviews counsel feedback and issues explicit written authorization.
+  4. Each specific implementation packet is opened by Paresh with a bounded scope.
+  5. The specific counsel outputs required for that packet (§24) have been received.
+
+The following remain blocked regardless of any other authorization:
+  - Tenant-visible TexQticScore (BLOCKED_LEGAL — §7 questions B–G unanswered)
+  - Consent / data-sharing table (LEGAL_GATED__WAITING — §15 consent framework unapproved)
+  - Partner routing workflow (PARTNER_GATED__WAITING — §16 prerequisites unmet)
+  - Finance request tables (PARTNER_GATED__WAITING)
+  - Dynamic discounting (PARTNER_GATED__WAITING)
+  - Fee events / fee calculations (FUTURE_DESIGN_TARGET__WAITING)
+  - Any AA / GSTN / CIBIL integration (architecture prohibition — D-003, D-005, D-011)
+  - NC-TTP payment-term display (LEGAL_GATED__WAITING — §21 questions O, S, T, U unanswered)
+  - NC-TTP external settlement confirmation display (LEGAL_GATED__WAITING — §21 questions P, Q, Y unanswered)
+  - NC-TTP finance-readiness signal to partners (PARTNER_GATED__WAITING — §21 questions R, W, X unanswered)
+  - VPC tenant-visible display (LEGAL_GATED__WAITING — §21 question V unanswered)
+  - Any NC-TTP surface activation for OES or VCO contexts (HOLD_FOR_PARESH_DECISION)
+
+IMPLEMENTATION_AUTHORIZED = false
+COUNSEL_FEEDBACK_RECEIVED = false
+NEXT_ACTION = Send this upgraded packet to external legal counsel.
+NEXT_REPO_ACTION_AFTER_COUNSEL_FEEDBACK = TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001
+```
 
 ---
 

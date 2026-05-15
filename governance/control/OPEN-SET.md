@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-06 (TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001 ARCHITECTURE_LOCK_COMPLETE: TradeTrust Pay architecture decisions and terms locked. 18 sections. Single TTP family (Platform TTP Core + NC-TTP Extension). D-001–D-015 locked — no money movement / no custody / no lending / no guarantee are permanent invariants. Master T&C doctrine + NC supplement created. Wording lock established. Gate/activation matrix. 8 future packets HOLD_FOR_PARESH_DECISION. All holds preserved. ttp_enabled=false. Active delivery unit: HOLD_FOR_AUTHORIZATION. Prior: TEXQTIC-NC-TRADETRUST-PAY-DESIGN-001 DESIGN_COMPLETE.)
+**Last Updated:** 2026-07-06 (TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001 LEGAL_PACKET_UPGRADED: Canonical external legal counsel packet upgraded from Platform TTP to Unified Platform TTP + NC-TTP scope. §12–§25 added. Regulatory posture matrix (7 areas), consent framework doctrine, partner routing legal gate, wording pack, disclaimer pack D-001–D-007, terms acceptance flow, privacy questions Q1–Q16, open legal questions O–Y, future packet map 8 HOLD packets. ttp_enabled=false UNCHANGED. All NC feature flags UNCHANGED. No implementation. Governance-only. Prior: TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001 ARCHITECTURE_LOCK_COMPLETE.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or

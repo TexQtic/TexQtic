@@ -4,11 +4,14 @@
 **Unit ID:** `TTP-LEGAL-PACKET-OPERATOR-DECISION-GUIDE-001`
 **Document type:** Operator-facing decision guide — non-code, internal governance
 **Audience:** Paresh Patel (TexQtic founder / operator) — NOT for external distribution without review
-**Date:** 2026-05-06
+**Date (original):** 2026-05-06
+**Date (cross-reference updated):** 2026-07-06
 **`ttp_enabled` state:** `false` — UNCHANGED.
 **Legal status:** `LEGAL_REVIEW_PENDING` throughout. No wording or decision in this document is legally approved.
 **Code changes:** None.
 **Schema / migration changes:** None.
+
+> **UPGRADE NOTICE (2026-07-06):** The canonical external legal counsel packet (`TTP-EXTERNAL-LEGAL-COUNSEL-PACKET-001.md`) has been upgraded under `TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001` to cover **Unified Platform TTP + NC-TTP** scope. §12–§25 have been added to that packet, including: NC-TTP product description, regulatory posture matrix, consent framework doctrine, partner routing legal gate, user-facing wording review pack, disclaimer pack (D-001–D-007), terms acceptance flow requirements, data sharing / privacy questions (Q1–Q16), open legal questions (O–Y), expanded counsel output expected, future packet impact map (8 HOLD packets), and the final legal gate statement. **This operator guide is a supporting reference only. The canonical packet is the single authority for counsel engagement.** All decisions listed in §5 of this guide are superseded by the activation blockers in §25 of the upgraded packet. No implementation or activation is authorized. Proceed by sending the upgraded canonical packet to external legal counsel.
 
 ---
 
