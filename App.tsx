@@ -79,6 +79,7 @@ import { B2BDiscoveryPage } from './components/Public/B2BDiscovery';
 import { B2CBrowsePage } from './components/Public/B2CBrowse';
 import { PublicPassport } from './components/Public/PublicPassport';
 import { PublicSupplierProfile } from './components/Public/PublicSupplierProfile';
+import { PublicReferralLanding } from './components/Public/PublicReferralLanding';
 import { getPlatformInsights } from './services/aiService';
 import {
   getAggregatorDiscoveryEntries,
@@ -1955,6 +1956,7 @@ type AppState =
   | 'PUBLIC_B2C_BROWSE'
   | 'PUBLIC_PASSPORT'
   | 'PUBLIC_SUPPLIER_PROFILE'
+  | 'PUBLIC_REFERRAL_LANDING'
   | 'AUTH'
   | 'FORGOT_PASSWORD'
   | 'VERIFY_EMAIL'
@@ -2001,6 +2003,14 @@ const resolveInitialAppState = (): AppState => {
     );
     if (supplierPathMatch) {
       return 'PUBLIC_SUPPLIER_PROFILE';
+    }
+
+    // REFERRAL-005: Referral join landing — /join/:referral_code
+    const referralPathMatch = globalThis.window.location.pathname.match(
+      /^\/join\/([a-zA-Z0-9_-]{1,80})$/,
+    );
+    if (referralPathMatch) {
+      return 'PUBLIC_REFERRAL_LANDING';
     }
 
     const params = new URLSearchParams(globalThis.window.location.search);
@@ -2088,6 +2098,14 @@ const App: React.FC = () => {
   const [publicSupplierSourceFromQuery] = useState<string>(() => {
     if (globalThis.window !== undefined) {
       return new URLSearchParams(globalThis.window.location.search).get('source') ?? '';
+    }
+    return '';
+  });
+  // REFERRAL-005: referral code captured from /join/:referral_code pathname on load
+  const [publicReferralCodeFromPath] = useState<string>(() => {
+    if (globalThis.window !== undefined) {
+      const m = globalThis.window.location.pathname.match(/^\/join\/([a-zA-Z0-9_-]{1,80})$/);
+      return m?.[1] ?? '';
     }
     return '';
   });
@@ -6604,6 +6622,15 @@ const App: React.FC = () => {
           <PublicSupplierProfile
             slug={publicSupplierSlugFromPath}
             source={publicSupplierSourceFromQuery || undefined}
+            onBack={() => setAppState('PUBLIC_ENTRY')}
+            onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+          />
+        );
+      // REFERRAL-005: Public referral join landing — /join/:referral_code
+      case 'PUBLIC_REFERRAL_LANDING':
+        return (
+          <PublicReferralLanding
+            referralCode={publicReferralCodeFromPath}
             onBack={() => setAppState('PUBLIC_ENTRY')}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
           />
