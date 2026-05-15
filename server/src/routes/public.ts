@@ -659,10 +659,31 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
   //
   // Design authority: MAIN-PLATFORM-PUBLIC-SUPPLIER-PROFILE-ROUTE-001
   // Event governance: shared/contracts/event-names.md §Acquisition Domain Events (EVENTS-003)
+  //
+  // QR-SOURCE-002: Optional ?source= query param for QR/referral/event attribution.
+  // Allowed input values: qr | referral | event | direct (else normalised to 'organic').
+  // Raw param value is NEVER stored or returned in HTTP response — only safe normalised
+  // enum value is included in supplier_profile.viewed.v1 event payload.
 
   const supplierSlugParamsSchema = z.object({
     slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/),
   });
+
+  const supplierSourceQuerySchema = z.object({
+    source: z.string().optional(),
+  });
+
+  // QR-SOURCE-002: Normalise raw ?source= to a bounded allowlist.
+  // Unknown / absent / non-string values → 'organic'.
+  // Exported for unit-testability.
+  const ALLOWED_SOURCE_CHANNELS = ['organic', 'qr', 'referral', 'event', 'direct'] as const;
+
+  function normalizeSourceChannel(raw: unknown): typeof ALLOWED_SOURCE_CHANNELS[number] {
+    if (typeof raw === 'string' && (ALLOWED_SOURCE_CHANNELS as readonly string[]).includes(raw)) {
+      return raw as typeof ALLOWED_SOURCE_CHANNELS[number];
+    }
+    return 'organic';
+  }
 
   fastify.get('/supplier/:slug', async (request, reply) => {
     const parseResult = supplierSlugParamsSchema.safeParse(request.params);
@@ -671,6 +692,13 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     }
 
     const { slug } = parseResult.data;
+
+    // QR-SOURCE-002: parse and normalise the optional source attribution param.
+    const queryResult = supplierSourceQuerySchema.safeParse(request.query);
+    const sourceChannel = normalizeSourceChannel(
+      queryResult.success ? queryResult.data.source : undefined,
+    );
+
     const result = await getPublicB2BSupplierBySlug(slug, prisma);
 
     if (!result) {
@@ -691,7 +719,7 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
         entityId: result.orgId,
         afterJson: {
           slug,
-          source_channel: 'organic',
+          source_channel: sourceChannel,
           timestamp: new Date().toISOString(),
         },
       });

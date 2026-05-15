@@ -4406,6 +4406,16 @@
               "pattern": "^[a-z0-9-]+$"
             },
             "description": "Supplier organization slug"
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["qr", "referral", "event", "direct"]
+            },
+            "description": "Optional source attribution marker for QR card, referral, event, or direct traffic. Unknown values are silently normalised to 'organic'. Never returned in the HTTP response body — included only in the supplier_profile.viewed.v1 event payload. QR-SOURCE-002."
           }
         ],
         "responses": {

@@ -10,11 +10,12 @@ import {
 
 interface PublicSupplierProfileProps {
   readonly slug: string;
+  readonly source?: string;  // QR-SOURCE-002: optional source attribution param forwarded to backend
   readonly onBack: () => void;
   readonly onSignIn: () => void;
 }
 
-export function PublicSupplierProfile({ slug, onBack, onSignIn }: PublicSupplierProfileProps) {
+export function PublicSupplierProfile({ slug, source, onBack, onSignIn }: PublicSupplierProfileProps) {
   const [profile, setProfile] = useState<SupplierProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -28,7 +29,7 @@ export function PublicSupplierProfile({ slug, onBack, onSignIn }: PublicSupplier
     let cancelled = false;
     setLoading(true);
     setNotFound(false);
-    getPublicSupplierBySlug(slug)
+    getPublicSupplierBySlug(slug, source)
       .then((data) => {
         if (!cancelled) {
           setProfile(data);

@@ -2084,6 +2084,13 @@ const App: React.FC = () => {
     }
     return '';
   });
+  // QR-SOURCE-002: optional ?source= query param captured on load for supplier profile attribution
+  const [publicSupplierSourceFromQuery] = useState<string>(() => {
+    if (globalThis.window !== undefined) {
+      return new URLSearchParams(globalThis.window.location.search).get('source') ?? '';
+    }
+    return '';
+  });
   const canAccessControlPlane = getCurrentAuthRealm() === 'CONTROL_PLANE';
   // Wave 4 P1: active panel in the WL Store Admin console
   const [wlAdminView, setWlAdminView] = useState<WLAdminView>('BRANDING');
@@ -6596,6 +6603,7 @@ const App: React.FC = () => {
         return (
           <PublicSupplierProfile
             slug={publicSupplierSlugFromPath}
+            source={publicSupplierSourceFromQuery || undefined}
             onBack={() => setAppState('PUBLIC_ENTRY')}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
           />

@@ -77,9 +77,13 @@ export interface PublicB2BSupplierProfile {
  * Callers should handle 404 (supplier not found / not publication-eligible).
  *
  * ROUTE-001 / GAP-ACQ-001
+ * QR-SOURCE-002: optional source attribution param forwarded as ?source= to the backend.
  */
 export async function getPublicSupplierBySlug(
   slug: string,
+  source?: string,
 ): Promise<PublicB2BSupplierProfile> {
-  return get<PublicB2BSupplierProfile>(`/api/public/supplier/${encodeURIComponent(slug)}`);
+  const base = `/api/public/supplier/${encodeURIComponent(slug)}`;
+  const url = source ? `${base}?source=${encodeURIComponent(source)}` : base;
+  return get<PublicB2BSupplierProfile>(url);
 }
