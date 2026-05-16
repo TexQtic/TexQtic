@@ -41,6 +41,10 @@ const envSchema = z.object({
   // Must be set in all environments. Shared with the Vercel Edge function.
   TEXQTIC_RESOLVER_SECRET: z.string().min(32),
 
+  // WEBHOOK-007 — CRM acquisition provisioning HMAC secret (≥ 32 chars).
+  // Distinct trust boundary from TEXQTIC_RESOLVER_SECRET.
+  ACQUISITION_PROVISIONING_WEBHOOK_SECRET: z.string().min(32),
+
   // Feature Flags
   KILL_SWITCH_ALL: z
     .string()

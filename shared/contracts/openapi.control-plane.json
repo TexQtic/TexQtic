@@ -1799,6 +1799,180 @@
         }
       }
     },
+    "/api/internal/acquisition/provision-supplier": {
+      "post": {
+        "summary": "Provision acquisition supplier profile (CRM machine-to-machine)",
+        "description": "Internal machine-to-machine endpoint used by CRM only. Auth is HMAC-SHA256 via timestamped headers, not JWT. CAE must not call this endpoint directly. Public projection safety constraints apply; contact/payment/trade/TTP fields are rejected.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "x-texqtic-provisioning-hmac",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Hex HMAC-SHA256 over canonical message: provision:<tsMs>:<sha256Hex(canonicalBodyJson)>"
+          },
+          {
+            "name": "x-texqtic-provisioning-ts",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Unix epoch timestamp in milliseconds. Replay window: 60000 ms."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "eventName",
+                  "eventId",
+                  "requestedAt",
+                  "external_orchestration_ref",
+                  "crmSupplierId",
+                  "supplierName",
+                  "publication_posture_target"
+                ],
+                "properties": {
+                  "eventName": {
+                    "type": "string",
+                    "enum": ["public_supplier_profile.provision_requested.v1"]
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "requestedAt": { "type": "string", "format": "date-time" },
+                  "external_orchestration_ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "crmSupplierId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "supplierName": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 200
+                  },
+                  "publication_posture_target": {
+                    "type": "string",
+                    "enum": ["B2B_PUBLIC"]
+                  },
+                  "cluster": { "type": ["string", "null"], "maxLength": 100 },
+                  "category": { "type": ["string", "null"], "maxLength": 100 },
+                  "likelyPrimarySegment": {
+                    "type": ["string", "null"],
+                    "maxLength": 100
+                  },
+                  "provisionalPlan": {
+                    "type": ["string", "null"],
+                    "maxLength": 50
+                  },
+                  "jurisdiction": {
+                    "type": ["string", "null"],
+                    "maxLength": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Provisioned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accepted": { "type": "boolean", "enum": [true] },
+                    "idempotent": { "type": "boolean", "enum": [false] },
+                    "status": { "type": "string", "enum": ["provisioned"] },
+                    "slug": { "type": "string" },
+                    "publicUrl": { "type": "string" },
+                    "platformRequestId": { "type": "string", "format": "uuid" },
+                    "reasonCode": { "type": "null" }
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Already exists (idempotent replay)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accepted": { "type": "boolean", "enum": [true] },
+                    "idempotent": { "type": "boolean", "enum": [true] },
+                    "status": { "type": "string", "enum": ["already_exists"] },
+                    "slug": { "type": "string" },
+                    "publicUrl": { "type": "string" },
+                    "platformRequestId": { "type": "string", "format": "uuid" },
+                    "reasonCode": { "type": "null" }
+                  }
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Accepted but gate failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accepted": { "type": "boolean", "enum": [true] },
+                    "idempotent": { "type": "boolean", "enum": [false] },
+                    "status": { "type": "string", "enum": ["gate_failed"] },
+                    "slug": { "type": "null" },
+                    "publicUrl": { "type": "null" },
+                    "platformRequestId": { "type": "string", "format": "uuid" },
+                    "reasonCode": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (HMAC verification failed)"
+          },
+          "409": {
+            "description": "external_orchestration_ref conflict",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/control/internal/gov/approvals": {
       "get": {
         "summary": "List pending maker-checker approvals (admin)",

@@ -31,6 +31,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { tenantApprovalRoutes, adminApprovalRoutes } from './makerChecker.js';
 import resolveDomainRoutes from './resolveDomain.js';
 import cacheInvalidateRoutes from './cacheInvalidate.js';
+import acquisitionProvisioningRoutes from './acquisitionProvisioning.js';
 
 /**
  * Combined internal governance routes plugin.
@@ -59,6 +60,11 @@ const internalGovRoutes: FastifyPluginAsync = async fastify => {
   // POST /api/internal/cache-invalidate
   // Called by domain CRUD emitters (TECS 6D) and manual ops tooling.
   await fastify.register(cacheInvalidateRoutes, { prefix: '/api/internal' });
+
+  // WEBHOOK-007 — Acquisition provisioning webhook (HMAC-only, no JWT).
+  // POST /api/internal/acquisition/provision-supplier
+  // Called by CRM after acquisition-sourced supplier approval/activation.
+  await fastify.register(acquisitionProvisioningRoutes, { prefix: '/api/internal' });
 };
 
 export default internalGovRoutes;

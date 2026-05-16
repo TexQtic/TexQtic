@@ -421,6 +421,11 @@ const AUDIT_ACTION_TO_EVENT_NAME: Record<string, KnownEventName> = {
 
   // INQUIRY-004: Pre-auth buyer inquiry submitted (GAP-ACQ-002, EVENTS-003)
   'public.buyer.inquiry.created': 'buyer_inquiry.created.v1',
+
+  // WEBHOOK-007: Internal acquisition provisioning lifecycle events.
+  'internal.public_supplier_profile.provision_requested': 'public_supplier_profile.provision_requested.v1',
+  'internal.public_supplier_profile.provisioned': 'public_supplier_profile.provisioned.v1',
+  'internal.public_supplier_profile.gate_failed': 'public_supplier_profile.gate_failed.v1',
 };
 
 /**
