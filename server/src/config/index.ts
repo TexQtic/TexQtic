@@ -43,7 +43,8 @@ const envSchema = z.object({
 
   // WEBHOOK-007 — CRM acquisition provisioning HMAC secret (≥ 32 chars).
   // Distinct trust boundary from TEXQTIC_RESOLVER_SECRET.
-  ACQUISITION_PROVISIONING_WEBHOOK_SECRET: z.string().min(32),
+  // Optional for API bootstrap; required only by acquisition provisioning webhook handler.
+  ACQUISITION_PROVISIONING_WEBHOOK_SECRET: z.string().min(32).optional(),
 
   // Feature Flags
   KILL_SWITCH_ALL: z

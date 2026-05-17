@@ -312,6 +312,18 @@ async function handleProvisionSupplier(request: FastifyRequest, reply: FastifyRe
   }
 
   const payload = parsed.data;
+  
+  // WEBHOOK-007 — Require secret for webhook authentication
+  if (!config.ACQUISITION_PROVISIONING_WEBHOOK_SECRET) {
+    request.log.error('ACQUISITION_PROVISIONING_WEBHOOK_SECRET not configured');
+    return void sendError(
+      reply,
+      'PROVISIONING_CONFIG_ERROR',
+      'Acquisition provisioning webhook is not properly configured.',
+      503,
+    );
+  }
+  
   const hmacHeader = request.headers[HMAC_HEADER] as string | undefined;
   const tsHeader = request.headers[TS_HEADER] as string | undefined;
   const authorized = verifyProvisioningHmac(
