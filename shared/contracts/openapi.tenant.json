@@ -4462,8 +4462,9 @@
                             "maxItems": 5,
                             "items": {
                               "type": "object",
-                              "required": ["name", "moq"],
+                              "required": ["slug", "name", "moq"],
                               "properties": {
+                                "slug": { "type": "string" },
                                 "name": { "type": "string" },
                                 "moq": { "type": "integer", "minimum": 1 },
                                 "price": { "type": "string", "nullable": true },
@@ -4496,6 +4497,119 @@
                     "limit": { "type": "integer", "minimum": 1 }
                   }
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/b2c/products/{slug}": {
+      "get": {
+        "summary": "Get public B2C product detail by slug",
+        "description": "Returns a public-safe product preview detail by slug. No authentication required. Applies the same five projection safety gates as browse: Gate A (tenant.publicEligibilityPosture=PUBLICATION_ELIGIBLE), Gate B (organization publication posture in B2C_PUBLIC/BOTH), Gate C (org_type=B2C), Gate D (status in ACTIVE/VERIFICATION_APPROVED), Gate E (strict public-safe fields only, no internal IDs, no SKU, no private continuity fields). Any private/unpublished/invalid slug returns safe 404 with no gate leak.",
+        "operationId": "getPublicB2CProductBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 180,
+              "pattern": "^[a-z0-9-]+(?:--[a-z0-9-]+)?$"
+            },
+            "description": "Public-safe product slug token for detail preview"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public product detail projection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data"],
+                  "properties": {
+                    "success": { "type": "boolean", "enum": [true] },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "slug",
+                        "name",
+                        "category",
+                        "material",
+                        "fabricType",
+                        "summary",
+                        "description",
+                        "imageUrls",
+                        "publicSupplierName",
+                        "publicSupplierSlug",
+                        "publicPriceLabel",
+                        "publicMoqLabel",
+                        "trustSignals",
+                        "hasTraceabilityEvidence",
+                        "hasPassport",
+                        "publicStatusLabel",
+                        "tags",
+                        "relatedProducts"
+                      ],
+                      "properties": {
+                        "slug": { "type": "string" },
+                        "name": { "type": "string" },
+                        "category": { "type": "string", "nullable": true },
+                        "material": { "type": "string", "nullable": true },
+                        "fabricType": { "type": "string", "nullable": true },
+                        "summary": { "type": "string", "nullable": true },
+                        "description": { "type": "string", "nullable": true },
+                        "imageUrls": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        },
+                        "publicSupplierName": { "type": "string" },
+                        "publicSupplierSlug": { "type": "string" },
+                        "publicPriceLabel": { "type": "string", "nullable": true },
+                        "publicMoqLabel": { "type": "string", "nullable": true },
+                        "trustSignals": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        },
+                        "hasTraceabilityEvidence": { "type": "boolean" },
+                        "hasPassport": { "type": "boolean", "nullable": true },
+                        "publicStatusLabel": { "type": "string" },
+                        "tags": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        },
+                        "relatedProducts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": ["slug", "name", "imageUrl", "price", "category"],
+                            "properties": {
+                              "slug": { "type": "string" },
+                              "name": { "type": "string" },
+                              "imageUrl": { "type": "string", "nullable": true },
+                              "price": { "type": "string", "nullable": true },
+                              "category": { "type": "string", "nullable": true }
+                            },
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found for public discovery",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           }

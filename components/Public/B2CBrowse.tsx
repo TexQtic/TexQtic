@@ -1,7 +1,6 @@
 ﻿import React, { useEffect, useMemo, useState } from 'react';
 import {
   getPublicB2CProducts,
-  type PublicB2CProductPreviewItem,
   type PublicB2CStorefrontEntry,
 } from '../../services/publicB2CService';
 
@@ -13,6 +12,7 @@ interface B2CBrowsePageProps {
 // â”€â”€ flat product item for browse grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface FlatProductItem {
+  slug: string;
   key: string;
   name: string;
   imageUrl: string | null;
@@ -31,6 +31,7 @@ function flattenStorefronts(storefronts: PublicB2CStorefrontEntry[]): FlatProduc
   for (const sf of storefronts) {
     for (const p of sf.productsPreview) {
       items.push({
+        slug: p.slug,
         key: `${sf.slug}::${p.name}`,
         name: p.name,
         imageUrl: p.imageUrl,
@@ -439,6 +440,15 @@ function ProductCard({ product, onSignIn }: ProductCardProps) {
         <h3 className="text-base font-semibold leading-snug text-[#0a2036] line-clamp-2">
           {product.name}
         </h3>
+
+        {product.slug ? (
+          <a
+            href={`/product/${encodeURIComponent(product.slug)}`}
+            className="mt-3 inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-[#f8fbfc] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#2f8094] transition hover:bg-[#eff6f8]"
+          >
+            View Product Preview
+          </a>
+        ) : null}
 
         {/* Supplier */}
         <p className="mt-1 text-[11px] font-medium text-slate-500">

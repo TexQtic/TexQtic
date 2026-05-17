@@ -34,7 +34,7 @@ import { writeAuditLog } from '../lib/auditLog.js';
 import { normalizeHost, parsePlatformHost } from '../lib/hostNormalize.js';
 import { resolveHostToTenant } from './internal/resolveDomain.js';
 import { listPublicB2BSuppliers, getPublicB2BSupplierBySlug } from '../services/publicB2BProjection.service.js';
-import { listPublicB2CProducts } from '../services/publicB2CProjection.service.js';
+import { listPublicB2CProducts, getPublicB2CProductBySlug } from '../services/publicB2CProjection.service.js';
 
 type PublicEntryKind = 'PLATFORM' | 'TENANT_SUBDOMAIN' | 'TENANT_CUSTOM_DOMAIN';
 type ResolutionSourceType =
@@ -647,6 +647,24 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
 
     const { geo, page, limit } = parseResult.data;
     const result = await listPublicB2CProducts({ geo, page, limit }, prisma);
+    return sendSuccess(reply, result);
+  });
+
+  const b2cProductDetailParamsSchema = z.object({
+    slug: z.string().min(1).max(180).regex(/^[a-z0-9-]+(?:--[a-z0-9-]+)?$/),
+  });
+
+  fastify.get('/b2c/products/:slug', async (request, reply) => {
+    const parseResult = b2cProductDetailParamsSchema.safeParse(request.params);
+    if (!parseResult.success) {
+      return sendError(reply, 'INVALID_SLUG', 'Invalid product slug', 400);
+    }
+
+    const result = await getPublicB2CProductBySlug(parseResult.data.slug, prisma);
+    if (!result) {
+      return sendError(reply, 'NOT_FOUND', 'Product not found', 404);
+    }
+
     return sendSuccess(reply, result);
   });
 

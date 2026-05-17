@@ -77,6 +77,7 @@ import { SupplierInviteInbox } from './components/Tenant/NetworkCommerce/Supplie
 import { EventStream } from './components/ControlPlane/EventStream';
 import { B2BDiscoveryPage } from './components/Public/B2BDiscovery';
 import { B2CBrowsePage } from './components/Public/B2CBrowse';
+import { PublicProductDetail } from './components/Public/PublicProductDetail';
 import { PublicPassport } from './components/Public/PublicPassport';
 import { PublicSupplierProfile } from './components/Public/PublicSupplierProfile';
 import { PublicReferralLanding } from './components/Public/PublicReferralLanding';
@@ -1954,6 +1955,7 @@ type AppState =
   | 'PUBLIC_ENTRY'
   | 'PUBLIC_B2B_DISCOVERY'
   | 'PUBLIC_B2C_BROWSE'
+  | 'PUBLIC_PRODUCT_DETAIL'
   | 'PUBLIC_PASSPORT'
   | 'PUBLIC_SUPPLIER_PROFILE'
   | 'PUBLIC_REFERRAL_LANDING'
@@ -2003,6 +2005,13 @@ const resolveInitialAppState = (): AppState => {
     );
     if (supplierPathMatch) {
       return 'PUBLIC_SUPPLIER_PROFILE';
+    }
+
+    const productPathMatch = globalThis.window.location.pathname.match(
+      /^\/product\/([a-z0-9-]+)$/,
+    );
+    if (productPathMatch) {
+      return 'PUBLIC_PRODUCT_DETAIL';
     }
 
     // REFERRAL-005: Referral join landing — /join/:referral_code
@@ -2098,6 +2107,13 @@ const App: React.FC = () => {
   const [publicSupplierSourceFromQuery] = useState<string>(() => {
     if (globalThis.window !== undefined) {
       return new URLSearchParams(globalThis.window.location.search).get('source') ?? '';
+    }
+    return '';
+  });
+  const [publicProductSlugFromPath] = useState<string>(() => {
+    if (globalThis.window !== undefined) {
+      const m = globalThis.window.location.pathname.match(/^\/product\/([a-z0-9-]+)$/);
+      return m?.[1] ?? '';
     }
     return '';
   });
@@ -2830,6 +2846,10 @@ const App: React.FC = () => {
 
     if (appState === 'PUBLIC_SUPPLIER_PROFILE') {
       return 'TexQtic — Supplier Profile';
+    }
+
+    if (appState === 'PUBLIC_PRODUCT_DETAIL') {
+      return 'TexQtic — Public Product Preview';
     }
 
     if (appState === 'AUTH') {
@@ -6603,6 +6623,17 @@ const App: React.FC = () => {
           <B2CBrowsePage
             onBack={() => setAppState('PUBLIC_ENTRY')}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+          />
+        );
+      case 'PUBLIC_PRODUCT_DETAIL':
+        return (
+          <PublicProductDetail
+            slug={publicProductSlugFromPath}
+            onBackToBrowse={() => setAppState('PUBLIC_B2C_BROWSE')}
+            onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+            onViewSupplierProfile={(slug) => {
+              globalThis.window?.location.assign(`/supplier/${encodeURIComponent(slug)}`);
+            }}
           />
         );
       // TECS-DPP-PASSPORT-NETWORK-007: Public buyer passport page

@@ -22,6 +22,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import {
+  getPublicB2CProductBySlug,
   listPublicB2CProducts,
   type PublicB2CBrowseResponse,
 } from '../services/publicB2CProjection.service.js';
@@ -32,10 +33,12 @@ function makeMockPrisma(overrides: {
   orgs?: unknown[];
   tenants?: unknown[];
   catalogItems?: unknown[];
+  traceabilityNodes?: unknown[];
 } = {}) {
   const orgs = overrides.orgs ?? [];
   const tenants = overrides.tenants ?? [];
   const catalogItems = overrides.catalogItems ?? [];
+  const traceabilityNodes = overrides.traceabilityNodes ?? [];
 
   const mockTx = {
     $executeRawUnsafe: vi.fn().mockResolvedValue(undefined),
@@ -44,6 +47,9 @@ function makeMockPrisma(overrides: {
     },
     tenant: {
       findMany: vi.fn().mockResolvedValue(tenants),
+    },
+    traceabilityNode: {
+      findMany: vi.fn().mockResolvedValue(traceabilityNodes),
     },
     catalogItem: {
       findMany: vi.fn().mockResolvedValue(catalogItems),
@@ -89,8 +95,10 @@ function makeEligibleTenantRow(id: string = 'b2c-org-uuid-001') {
 }
 
 function makeB2CCatalogRow(overrides: Partial<{
+  id: string;
   tenantId: string;
   name: string;
+  description: string | null;
   moq: number;
   price: string | null;
   imageUrl: string | null;
@@ -100,8 +108,10 @@ function makeB2CCatalogRow(overrides: Partial<{
   fabricType: string | null;
 }> = {}) {
   return {
+    id: 'catalog-uuid-001',
     tenantId: 'b2c-org-uuid-001',
     name: 'Organic Tote Bag',
+    description: 'A durable everyday tote for public preview detail.',
     moq: 1,
     price: '29.99',
     imageUrl: 'https://cdn.example.com/tote.jpg',
@@ -143,6 +153,7 @@ describe('listPublicB2CProducts', () => {
     expect(entry.publicationPosture).toBe('B2C_PUBLIC');
     expect(entry.eligibilityPosture).toBe('PUBLICATION_ELIGIBLE');
     expect(entry.productsPreview).toHaveLength(1);
+    expect(entry.productsPreview[0].slug).toMatch(/^sunshine-store--organic-tote-bag-[a-f0-9]{10}$/);
     expect(entry.productsPreview[0].name).toBe('Organic Tote Bag');
     expect(entry.productsPreview[0].moq).toBe(1);
     expect(entry.productsPreview[0].price).toBe('29.99');
@@ -320,5 +331,67 @@ describe('listPublicB2CProducts', () => {
     expect(preview.category).toBeNull();
     expect(preview.material).toBeNull();
     expect(preview.fabricType).toBeNull();
+  });
+});
+
+describe('getPublicB2CProductBySlug', () => {
+  it('returns public-safe product detail for an eligible slug', async () => {
+    const orgRow = makeEligibleB2COrgRow();
+    const tenantRow = makeEligibleTenantRow();
+    const primaryCatalogRow = makeB2CCatalogRow({ id: 'catalog-uuid-001', name: 'Organic Tote Bag' });
+    const relatedCatalogRow = makeB2CCatalogRow({ id: 'catalog-uuid-002', name: 'Linen Shopper Tote' });
+
+    const prisma = makeMockPrisma({
+      orgs: [orgRow],
+      tenants: [tenantRow],
+      catalogItems: [primaryCatalogRow, relatedCatalogRow],
+    });
+
+    const browse = await listPublicB2CProducts({}, prisma);
+    const slug = browse.items[0].productsPreview[0].slug;
+
+    const detail = await getPublicB2CProductBySlug(slug, prisma);
+
+    expect(detail).not.toBeNull();
+    expect(detail?.slug).toBe(slug);
+    expect(detail?.name).toBe('Organic Tote Bag');
+    expect(detail?.publicSupplierSlug).toBe('sunshine-store');
+    expect(detail?.publicSupplierName).toBe('Sunshine Store Ltd');
+    expect(detail?.publicPriceLabel).toBe('29.99');
+    expect(detail?.publicMoqLabel).toBe('MOQ 1');
+    expect(detail?.imageUrls).toEqual(['https://cdn.example.com/tote.jpg']);
+    expect(detail?.relatedProducts).toHaveLength(1);
+    expect(detail?.relatedProducts[0].slug).toMatch(/^sunshine-store--linen-shopper-tote-[a-f0-9]{10}$/);
+    expect(detail).not.toHaveProperty('id');
+    expect(detail).not.toHaveProperty('tenantId');
+    expect(detail).not.toHaveProperty('orgId');
+    expect(detail).not.toHaveProperty('sku');
+    expect(detail).not.toHaveProperty('composition');
+    expect(detail).not.toHaveProperty('catalogStage');
+  });
+
+  it('returns null when slug is invalid or product is not publicly eligible', async () => {
+    const orgRow = makeEligibleB2COrgRow();
+    const tenantRow = makeEligibleTenantRow();
+    const prisma = makeMockPrisma({
+      orgs: [orgRow],
+      tenants: [tenantRow],
+      catalogItems: [makeB2CCatalogRow()],
+    });
+
+    const detail = await getPublicB2CProductBySlug('sunshine-store--missing-product-deadbeef00', prisma);
+    expect(detail).toBeNull();
+  });
+
+  it('returns null when org fails Gate A eligibility even with matching storefront slug', async () => {
+    const orgRow = makeEligibleB2COrgRow();
+    const prisma = makeMockPrisma({
+      orgs: [orgRow],
+      tenants: [],
+      catalogItems: [makeB2CCatalogRow()],
+    });
+
+    const detail = await getPublicB2CProductBySlug('sunshine-store--organic-tote-bag-aaaaaaaaaa', prisma);
+    expect(detail).toBeNull();
   });
 });

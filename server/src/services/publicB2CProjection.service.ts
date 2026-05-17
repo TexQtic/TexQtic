@@ -38,6 +38,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { createHash } from 'node:crypto';
 import { withAdminContext, withOrgAdminContext } from '../lib/database-context.js';
 
 // ── constants ─────────────────────────────────────────────────────────────────
@@ -57,6 +58,7 @@ const ELIGIBLE_TENANT_POSTURE = 'PUBLICATION_ELIGIBLE' as const;
 type PublicationPosture = 'PRIVATE_OR_AUTH_ONLY' | 'B2B_PUBLIC' | 'B2C_PUBLIC' | 'BOTH';
 
 export type PublicB2CProductPreviewItem = {
+  slug: string;
   name: string;
   moq: number;
   // Public pricing visibility is lawful per boundary decision §3.1.
@@ -93,6 +95,35 @@ export type PublicB2CBrowseParams = {
   limit?: number;
 };
 
+export type PublicB2CProductCard = {
+  slug: string;
+  name: string;
+  imageUrl: string | null;
+  price: string | null;
+  category: string | null;
+};
+
+export type PublicB2CProductDetail = {
+  slug: string;
+  name: string;
+  category: string | null;
+  material: string | null;
+  fabricType: string | null;
+  summary: string | null;
+  description: string | null;
+  imageUrls: string[];
+  publicSupplierName: string;
+  publicSupplierSlug: string;
+  publicPriceLabel: string | null;
+  publicMoqLabel: string | null;
+  trustSignals: string[];
+  hasTraceabilityEvidence: boolean;
+  hasPassport: boolean | null;
+  publicStatusLabel: string;
+  tags: string[];
+  relatedProducts: PublicB2CProductCard[];
+};
+
 // ── internal row types ────────────────────────────────────────────────────────
 
 type EligibleB2COrgRow = {
@@ -111,8 +142,10 @@ type EligibleTenantRow = {
 };
 
 type B2CCatalogItemRow = {
+  id: string;
   tenantId: string;
   name: string;
+  description: string | null;
   moq: number;
   price: string | null;
   imageUrl: string | null;
@@ -121,6 +154,39 @@ type B2CCatalogItemRow = {
   material: string | null;
   fabricType: string | null;
 };
+
+type TraceabilityEvidenceRow = {
+  orgId: string;
+};
+
+function slugifyValue(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 64);
+}
+
+function buildPublicProductSlug(storefrontSlug: string, productName: string, catalogId: string): string {
+  const base = slugifyValue(productName) || 'product';
+  const token = createHash('sha256').update(catalogId).digest('hex').slice(0, 10);
+  return `${storefrontSlug}--${base}-${token}`;
+}
+
+function buildPublicMoqLabel(moq: number): string {
+  return `MOQ ${moq}`;
+}
+
+function buildSummary(description: string | null): string | null {
+  if (!description) {
+    return null;
+  }
+  const trimmed = description.trim();
+  if (!trimmed) {
+    return null;
+  }
+  return trimmed.length > 180 ? `${trimmed.slice(0, 177)}...` : trimmed;
+}
 
 // ── main service function ─────────────────────────────────────────────────────
 
@@ -203,8 +269,10 @@ export async function listPublicB2CProducts(
         publicationPosture: { in: [...PUBLICATION_POSTURE_B2C_PUBLIC] },
       },
       select: {
+        id: true,
         tenantId: true,
         name: true,
+        description: true,
         moq: true,
         price: true,
         imageUrl: true,
@@ -244,6 +312,7 @@ export async function listPublicB2CProducts(
       orgType: org.org_type,
       jurisdiction: org.jurisdiction,
       productsPreview: catalog.map((c) => ({
+        slug: buildPublicProductSlug(org.slug, c.name, c.id),
         name: c.name,
         moq: c.moq,
         // price is a Decimal from Prisma — convert to string for safe JSON serialization
@@ -266,4 +335,146 @@ export async function listPublicB2CProducts(
   const items = allItems.slice(offset, offset + limit);
 
   return { items, total, page, limit };
+}
+
+export async function getPublicB2CProductBySlug(
+  slug: string,
+  prismaClient: PrismaClient,
+): Promise<PublicB2CProductDetail | null> {
+  const storefrontSlug = slug.split('--')[0] ?? '';
+  if (!storefrontSlug) {
+    return null;
+  }
+
+  const orgRows: EligibleB2COrgRow[] = await withOrgAdminContext(prismaClient, async tx => {
+    return tx.organizations.findMany({
+      where: {
+        slug: storefrontSlug,
+        org_type: ELIGIBLE_ORG_TYPE,
+        status: { in: [...ELIGIBLE_ORG_STATUSES] },
+        publication_posture: { in: [...PUBLICATION_POSTURE_B2C_PUBLIC] },
+      },
+      select: {
+        id: true,
+        slug: true,
+        legal_name: true,
+        org_type: true,
+        jurisdiction: true,
+        status: true,
+        publication_posture: true,
+      },
+      take: 1,
+    });
+  });
+
+  if (orgRows.length === 0) {
+    return null;
+  }
+
+  const org = orgRows[0];
+
+  const tenantRows: EligibleTenantRow[] = await withAdminContext(prismaClient, async tx => {
+    return tx.tenant.findMany({
+      where: {
+        id: org.id,
+        publicEligibilityPosture: ELIGIBLE_TENANT_POSTURE,
+      },
+      select: {
+        id: true,
+        publicEligibilityPosture: true,
+      },
+      take: 1,
+    });
+  });
+
+  if (tenantRows.length === 0) {
+    return null;
+  }
+
+  const catalogRows: B2CCatalogItemRow[] = await withAdminContext(prismaClient, async tx => {
+    return tx.catalogItem.findMany({
+      where: {
+        tenantId: org.id,
+        active: true,
+        publicationPosture: { in: [...PUBLICATION_POSTURE_B2C_PUBLIC] },
+      },
+      select: {
+        id: true,
+        tenantId: true,
+        name: true,
+        description: true,
+        moq: true,
+        price: true,
+        imageUrl: true,
+        publicationPosture: true,
+        productCategory: true,
+        material: true,
+        fabricType: true,
+      },
+      orderBy: [{ createdAt: 'asc' }],
+      take: 25,
+    });
+  });
+
+  const resolvedRows = catalogRows.map((row) => ({
+    row,
+    slug: buildPublicProductSlug(org.slug, row.name, row.id),
+  }));
+
+  const activeItem = resolvedRows.find((entry) => entry.slug === slug);
+  if (!activeItem) {
+    return null;
+  }
+
+  const traceabilityRows: TraceabilityEvidenceRow[] = await withAdminContext(prismaClient, async tx => {
+    return tx.traceabilityNode.findMany({
+      where: { orgId: org.id, visibility: 'SHARED' },
+      select: { orgId: true },
+      take: 1,
+    });
+  });
+
+  const hasTraceabilityEvidence = traceabilityRows.length > 0;
+  const trustSignals = ['Public-safe projection only'];
+  if (hasTraceabilityEvidence) {
+    trustSignals.push('Traceability evidence available');
+  }
+
+  const tags = [
+    activeItem.row.productCategory,
+    activeItem.row.material,
+    activeItem.row.fabricType,
+  ].filter((value): value is string => Boolean(value));
+
+  const relatedProducts: PublicB2CProductCard[] = resolvedRows
+    .filter((entry) => entry.slug !== slug)
+    .slice(0, 4)
+    .map((entry) => ({
+      slug: entry.slug,
+      name: entry.row.name,
+      imageUrl: entry.row.imageUrl,
+      price: entry.row.price != null ? String(entry.row.price) : null,
+      category: entry.row.productCategory ?? null,
+    }));
+
+  return {
+    slug,
+    name: activeItem.row.name,
+    category: activeItem.row.productCategory ?? null,
+    material: activeItem.row.material ?? null,
+    fabricType: activeItem.row.fabricType ?? null,
+    summary: buildSummary(activeItem.row.description),
+    description: activeItem.row.description?.trim() || null,
+    imageUrls: activeItem.row.imageUrl ? [activeItem.row.imageUrl] : [],
+    publicSupplierName: org.legal_name,
+    publicSupplierSlug: org.slug,
+    publicPriceLabel: activeItem.row.price != null ? String(activeItem.row.price) : null,
+    publicMoqLabel: buildPublicMoqLabel(activeItem.row.moq),
+    trustSignals,
+    hasTraceabilityEvidence,
+    hasPassport: null,
+    publicStatusLabel: 'Publicly discoverable',
+    tags,
+    relatedProducts,
+  };
 }
