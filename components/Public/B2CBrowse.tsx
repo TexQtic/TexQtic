@@ -51,10 +51,10 @@ function flattenStorefronts(storefronts: PublicB2CStorefrontEntry[]): FlatProduc
 // â”€â”€ static category cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const CATEGORY_CARDS: { label: string; value: string; icon: string }[] = [
-  { label: 'Garments', value: 'Garments', icon: 'ðŸ‘•' },
-  { label: 'Home Textiles', value: 'Home Textiles', icon: 'ðŸ›ï¸' },
-  { label: 'Apparel', value: 'Apparel', icon: 'ðŸ§¥' },
-  { label: 'Fabrics', value: 'Fabrics', icon: 'ðŸ§µ' },
+  { label: 'Garments', value: 'Garments', icon: '\u{1F455}' },
+  { label: 'Home Textiles', value: 'Home Textiles', icon: '\u{1F6CF}\uFE0F' },
+  { label: 'Apparel', value: 'Apparel', icon: '\u{1F9E5}' },
+  { label: 'Fabrics', value: 'Fabrics', icon: '\u{1F9F5}' },
 ];
 
 // â”€â”€ page component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
