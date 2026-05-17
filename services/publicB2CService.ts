@@ -62,7 +62,8 @@ export interface PublicB2CProductDetail {
   publicMoqLabel: string | null;
   trustSignals: string[];
   hasTraceabilityEvidence: boolean;
-  hasPassport: boolean | null;
+  hasPassport: boolean;
+  publicPassportId?: string;
   publicStatusLabel: string;
   tags: string[];
   relatedProducts: PublicB2CProductCard[];

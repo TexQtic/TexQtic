@@ -118,7 +118,8 @@ export type PublicB2CProductDetail = {
   publicMoqLabel: string | null;
   trustSignals: string[];
   hasTraceabilityEvidence: boolean;
-  hasPassport: boolean | null;
+  hasPassport: boolean;
+  publicPassportId?: string;
   publicStatusLabel: string;
   tags: string[];
   relatedProducts: PublicB2CProductCard[];
@@ -157,6 +158,10 @@ type B2CCatalogItemRow = {
 
 type TraceabilityEvidenceRow = {
   orgId: string;
+};
+
+type PublishedPassportRow = {
+  public_token: string;
 };
 
 function slugifyValue(value: string): string {
@@ -435,6 +440,31 @@ export async function getPublicB2CProductBySlug(
   });
 
   const hasTraceabilityEvidence = traceabilityRows.length > 0;
+
+  // Query for published passport with public token for this org.
+  // Fail-closed: if no published passport with public_token exists, return false/no id.
+  let publicPassportId: string | undefined;
+  let hasPassport = false;
+
+  const passportRows: PublishedPassportRow[] = await withAdminContext(prismaClient, async tx => {
+    return tx.dpp_passport_states.findMany({
+      where: {
+        org_id: org.id,
+        status: 'PUBLISHED',
+        public_token: { not: null },
+      },
+      select: {
+        public_token: true,
+      },
+      take: 1,
+    });
+  });
+
+  if (passportRows.length > 0 && passportRows[0].public_token) {
+    hasPassport = true;
+    publicPassportId = passportRows[0].public_token;
+  }
+
   const trustSignals = ['Public-safe projection only'];
   if (hasTraceabilityEvidence) {
     trustSignals.push('Traceability evidence available');
@@ -472,7 +502,8 @@ export async function getPublicB2CProductBySlug(
     publicMoqLabel: buildPublicMoqLabel(activeItem.row.moq),
     trustSignals,
     hasTraceabilityEvidence,
-    hasPassport: null,
+    hasPassport,
+    ...(publicPassportId && { publicPassportId }),
     publicStatusLabel: 'Publicly discoverable',
     tags,
     relatedProducts,

@@ -252,6 +252,22 @@ export function PublicProductDetail({
                   </span>
                 ) : null}
               </div>
+              {product.hasPassport && product.publicPassportId ? (
+                <div className="mt-5 border-t border-[#d9e5ea] pt-5">
+                  <p className="text-sm text-slate-700 mb-3">
+                    A public passport is available for this product. It shows approved trust and origin context only.
+                  </p>
+                  <a
+                    href={`/passport/${product.publicPassportId}`}
+                    className="inline-flex items-center text-[#2f8094] hover:text-[#1e5a6a] text-sm font-semibold gap-2"
+                  >
+                    View Trust & Origin Passport
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </a>
+                </div>
+              ) : null}
             </div>
           </div>
 

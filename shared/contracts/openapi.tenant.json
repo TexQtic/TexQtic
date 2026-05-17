@@ -4792,7 +4792,8 @@
                           "items": { "type": "string" }
                         },
                         "hasTraceabilityEvidence": { "type": "boolean" },
-                        "hasPassport": { "type": "boolean", "nullable": true },
+                        "hasPassport": { "type": "boolean" },
+                        "publicPassportId": { "type": "string", "nullable": true, "description": "Public passport token suitable for /passport/{publicPassportId}; only present when hasPassport is true. This is a public token, not an internal ID." },
                         "publicStatusLabel": { "type": "string" },
                         "tags": {
                           "type": "array",
