@@ -78,6 +78,8 @@ import { EventStream } from './components/ControlPlane/EventStream';
 import { B2BDiscoveryPage } from './components/Public/B2BDiscovery';
 import { B2CBrowsePage } from './components/Public/B2CBrowse';
 import { PublicProductDetail } from './components/Public/PublicProductDetail';
+import { PublicCollectionsStub } from './components/Public/PublicCollectionsStub';
+import { PublicCollectionUnavailable } from './components/Public/PublicCollectionUnavailable';
 import { PublicPassport } from './components/Public/PublicPassport';
 import { PublicSupplierProfile } from './components/Public/PublicSupplierProfile';
 import { PublicReferralLanding } from './components/Public/PublicReferralLanding';
@@ -1955,6 +1957,8 @@ type AppState =
   | 'PUBLIC_ENTRY'
   | 'PUBLIC_B2B_DISCOVERY'
   | 'PUBLIC_B2C_BROWSE'
+  | 'PUBLIC_COLLECTIONS'
+  | 'PUBLIC_COLLECTION_DETAIL_UNAVAILABLE'
   | 'PUBLIC_PRODUCT_DETAIL'
   | 'PUBLIC_PASSPORT'
   | 'PUBLIC_SUPPLIER_PROFILE'
@@ -2012,6 +2016,13 @@ const resolveInitialAppState = (): AppState => {
     );
     if (productPathMatch) {
       return 'PUBLIC_PRODUCT_DETAIL';
+    }
+
+    const collectionPathMatch = globalThis.window.location.pathname.match(
+      /^\/collections(?:\/([a-z0-9-]+))?$/,
+    );
+    if (collectionPathMatch) {
+      return collectionPathMatch[1] ? 'PUBLIC_COLLECTION_DETAIL_UNAVAILABLE' : 'PUBLIC_COLLECTIONS';
     }
 
     // REFERRAL-005: Referral join landing — /join/:referral_code
@@ -2113,6 +2124,13 @@ const App: React.FC = () => {
   const [publicProductSlugFromPath] = useState<string>(() => {
     if (globalThis.window !== undefined) {
       const m = globalThis.window.location.pathname.match(/^\/product\/([a-z0-9-]+)$/);
+      return m?.[1] ?? '';
+    }
+    return '';
+  });
+  const [publicCollectionSlugFromPath] = useState<string>(() => {
+    if (globalThis.window !== undefined) {
+      const m = globalThis.window.location.pathname.match(/^\/collections(?:\/([a-z0-9-]+))?$/);
       return m?.[1] ?? '';
     }
     return '';
@@ -2850,6 +2868,14 @@ const App: React.FC = () => {
 
     if (appState === 'PUBLIC_PRODUCT_DETAIL') {
       return 'TexQtic — Public Product Preview';
+    }
+
+    if (appState === 'PUBLIC_COLLECTIONS') {
+      return 'TexQtic — Verified Textile Collections';
+    }
+
+    if (appState === 'PUBLIC_COLLECTION_DETAIL_UNAVAILABLE') {
+      return 'TexQtic — Verified Collection Preview';
     }
 
     if (appState === 'AUTH') {
@@ -6623,6 +6649,32 @@ const App: React.FC = () => {
           <B2CBrowsePage
             onBack={() => setAppState('PUBLIC_ENTRY')}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+          />
+        );
+      case 'PUBLIC_COLLECTIONS':
+        return (
+          <PublicCollectionsStub
+            onBackToEntry={() => {
+              globalThis.window?.history.replaceState(null, '', '/');
+              setAppState('PUBLIC_ENTRY');
+            }}
+            onBrowseProducts={() => setAppState('PUBLIC_B2C_BROWSE')}
+            onExploreB2BNetwork={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+            onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+            onListYourProducts={openSupplierRequestAccess}
+          />
+        );
+      case 'PUBLIC_COLLECTION_DETAIL_UNAVAILABLE':
+        return (
+          <PublicCollectionUnavailable
+            collectionSlug={publicCollectionSlugFromPath}
+            onBackToCollections={() => {
+              globalThis.window?.history.replaceState(null, '', '/collections');
+              setAppState('PUBLIC_COLLECTIONS');
+            }}
+            onBrowseProducts={() => setAppState('PUBLIC_B2C_BROWSE')}
+            onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+            onExploreB2BNetwork={() => setAppState('PUBLIC_B2B_DISCOVERY')}
           />
         );
       case 'PUBLIC_PRODUCT_DETAIL':
