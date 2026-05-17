@@ -2923,12 +2923,6 @@ const App: React.FC = () => {
       return;
     }
 
-    if (hasStoredAuthenticatedSession()) {
-      setPublicEntryBootstrapPending(false);
-      setAppState('AUTH');
-      return;
-    }
-
     const params = new URLSearchParams(globalThis.window.location.search);
     if (params.get('token')) {
       setPublicEntryBootstrapPending(false);
@@ -2955,13 +2949,20 @@ const App: React.FC = () => {
         setPublicEntryDescriptor(descriptor);
         setPublicEntryBootstrapPending(false);
 
-        if (isNeutralPublicEntryDescriptor(descriptor)) {
+        const isNeutralDescriptor = descriptor.resolutionDisposition === 'NEUTRAL_NO_TENANT'
+          && descriptor.resolvedRealmClass === 'NEUTRAL_PUBLIC_ENTRY'
+          && descriptor.allowedTargetSurfaceClass === 'NEUTRAL_PUBLIC_ENTRY_SURFACE';
+
+        if (isNeutralDescriptor) {
           setStoredAuthRealm('TENANT');
           setAuthRealm('TENANT');
           return;
         }
 
-        setAppState('AUTH');
+        if (descriptor.authenticationRequired) {
+          setAppState('AUTH');
+          return;
+        }
       } catch (error) {
         if (cancelled) {
           return;
@@ -2970,7 +2971,6 @@ const App: React.FC = () => {
         console.error('Failed to resolve public entry descriptor:', error);
         setPublicEntryDescriptor(null);
         setPublicEntryBootstrapPending(false);
-        setAppState('AUTH');
       }
     };
 
