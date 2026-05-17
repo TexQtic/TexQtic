@@ -496,6 +496,17 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
                     {profile.hasTraceabilityEvidence ? 'Available' : 'Not published'}
                   </p>
                 </div>
+                <div className="mt-4 rounded-xl border border-[#d6e4e8] bg-[#f7fbfc] p-4">
+                  <p className="text-xs leading-6 text-slate-600">
+                    TexQtic shows only public-safe trust context here. Deeper verification, documents, and compliance workflows remain available through authenticated TexQtic experiences.
+                  </p>
+                  <a
+                    href="/trust"
+                    className="mt-3 inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8094] transition hover:bg-[#eff6f8]"
+                  >
+                    Learn about Trust & Origin Passports
+                  </a>
+                </div>
               </section>
             </div>
             </section>
