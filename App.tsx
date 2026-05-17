@@ -83,6 +83,7 @@ import { PublicCollectionUnavailable } from './components/Public/PublicCollectio
 import { PublicPassport } from './components/Public/PublicPassport';
 import { PublicSupplierProfile } from './components/Public/PublicSupplierProfile';
 import { PublicReferralLanding } from './components/Public/PublicReferralLanding';
+import { PublicTrustLandingStub } from './components/Public/PublicTrustLandingStub';
 import { getPlatformInsights } from './services/aiService';
 import {
   getAggregatorDiscoveryEntries,
@@ -1961,6 +1962,7 @@ type AppState =
   | 'PUBLIC_COLLECTION_DETAIL_UNAVAILABLE'
   | 'PUBLIC_PRODUCT_DETAIL'
   | 'PUBLIC_PASSPORT'
+  | 'PUBLIC_TRUST_LANDING'
   | 'PUBLIC_SUPPLIER_PROFILE'
   | 'PUBLIC_REFERRAL_LANDING'
   | 'AUTH'
@@ -2001,6 +2003,12 @@ const resolveInitialAppState = (): AppState => {
     );
     if (passportPathMatch) {
       return 'PUBLIC_PASSPORT';
+    }
+
+    // TEXQTIC-PUBLIC-DPP-TRUST-ORIGIN-PASSPORT-LANDING-STUB-IMPLEMENTATION-001
+    // Static public trust landing page — /trust
+    if (globalThis.window.location.pathname === '/trust') {
+      return 'PUBLIC_TRUST_LANDING';
     }
 
     // ROUTE-001: Public supplier profile — /supplier/:slug
@@ -2856,6 +2864,10 @@ const App: React.FC = () => {
   const documentTitle = useMemo(() => {
     if (appState === 'PUBLIC_ENTRY') {
       return 'TexQtic Platform Entry';
+    }
+
+    if (appState === 'PUBLIC_TRUST_LANDING') {
+      return 'TexQtic — Trust & Origin Passport';
     }
 
     if (appState === 'PUBLIC_B2B_DISCOVERY') {
@@ -6675,6 +6687,19 @@ const App: React.FC = () => {
             onBrowseProducts={() => setAppState('PUBLIC_B2C_BROWSE')}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
             onExploreB2BNetwork={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+          />
+        );
+      case 'PUBLIC_TRUST_LANDING':
+        return (
+          <PublicTrustLandingStub
+            onBackToEntry={() => {
+              globalThis.window?.history.replaceState(null, '', '/');
+              setAppState('PUBLIC_ENTRY');
+            }}
+            onBrowseProducts={() => setAppState('PUBLIC_B2C_BROWSE')}
+            onExploreB2B={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+            onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+            onRequestAccess={openSupplierRequestAccess}
           />
         );
       case 'PUBLIC_PRODUCT_DETAIL':
