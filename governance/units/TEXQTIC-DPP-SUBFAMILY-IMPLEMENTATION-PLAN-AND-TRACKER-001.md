@@ -129,7 +129,7 @@ Register the already-live public DPP detail and structured-data endpoints in Ope
 
 **Readiness**
 
-`READY`
+`COMPLETED (Commit bbdc328, 2026-05-02)`
 
 **Dependencies**
 
@@ -139,18 +139,18 @@ Register the already-live public DPP detail and structured-data endpoints in Ope
 
 **Likely files**
 
-- `shared/contracts/openapi.tenant.json`
+- `shared/contracts/openapi.tenant.json` ✅
 
 **Verification plan**
 
-- Verify both path entries exist in OpenAPI.
-- Verify parameters and response shape match the live route contract.
-- Verify privacy notes exclude protected fields.
-- Verify no runtime code changes are introduced if the unit remains contract-only.
+- Verify both path entries exist in OpenAPI. ✅
+- Verify parameters and response shape match the live route contract. ✅
+- Verify privacy notes exclude protected fields. ✅
+- Verify no runtime code changes are introduced if the unit remains contract-only. ✅
 
 **Suggested commit message**
 
-- `[TEXQTIC] governance: register public dpp detail contract parity`
+- `[TEXQTIC] governance: register public dpp detail contract parity` ✅
 
 ### 2. PRIVATE-DPP-AUTH-HANDOFF-001
 
@@ -166,29 +166,29 @@ Add an explicit authenticated continuation panel to public passport detail so us
 
 **Readiness**
 
-`READY`
+`COMPLETED (Commit ba24c1d, 2026-05-02)` — Data-limited caveat: Panel rendering verified at code level; CTA verification blocked due to no valid public passport ID available in production.
 
 **Dependencies**
 
-- Contract parity is preferable first, but not technically blocking.
-- No schema change expected.
-- Likely frontend prop threading only.
+- Contract parity is preferable first, but not technically blocking. ✅
+- No schema change expected. ✅
+- Likely frontend prop threading only. ✅
 
 **Likely files**
 
-- `App.tsx`
-- `components/Public/PublicPassport.tsx`
+- `App.tsx` ✅
+- `components/Public/PublicPassport.tsx` ✅
 
 **Verification plan**
 
-- Verify continuation panel renders on public passport detail.
-- Verify sign-in CTA routes into the tenant auth handoff.
-- Verify request-access or equivalent CTA routes into the approved external path if included.
-- Verify no private fields or authenticated content are exposed on the public page.
+- Verify continuation panel renders on public passport detail. ✅ (code inspection)
+- Verify sign-in CTA routes into the tenant auth handoff. ✅ (code inspection)
+- Verify request-access or equivalent CTA routes into the approved external path if included. ✅ (code inspection)
+- Verify no private fields or authenticated content are exposed on the public page. ✅ (code inspection)
 
 **Suggested commit message**
 
-- `[TEXQTIC] frontend: add public passport auth handoff`
+- `[TEXQTIC] frontend: add public passport auth handoff` ✅
 
 ### 3. SUPPLIER-TO-TRUST-LINKING-001
 
@@ -204,26 +204,26 @@ Connect supplier public trust signals to the now-live `/trust` explanatory surfa
 
 **Readiness**
 
-`READY`
+`COMPLETED (Commit 4107af1, 2026-05-02)` — Data-limited caveat: CTA verified at code level; render state not observable without supplier with active trust signals in production.
 
 **Dependencies**
 
-- `/trust` must exist first, which is now satisfied.
-- No backend change expected.
+- `/trust` must exist first, which is now satisfied. ✅
+- No backend change expected. ✅
 
 **Likely files**
 
-- `components/Public/PublicSupplierProfile.tsx`
+- `components/Public/PublicSupplierProfile.tsx` ✅
 
 **Verification plan**
 
-- Verify a clear CTA or trust explainer link appears near supplier trust signals.
-- Verify it routes to `/trust`.
-- Verify supplier profile remains projection-only and does not overclaim live passport coverage.
+- Verify a clear CTA or trust explainer link appears near supplier trust signals. ✅ (code inspection)
+- Verify it routes to `/trust`. ✅ (code inspection)
+- Verify supplier profile remains projection-only and does not overclaim live passport coverage. ✅ (code inspection)
 
 **Suggested commit message**
 
-- `[TEXQTIC] frontend: link supplier trust signals to trust landing`
+- `[TEXQTIC] frontend: link supplier trust signals to trust landing` ✅
 
 ### 4. PRODUCT-TO-PASSPORT-LINKING-001
 
@@ -240,30 +240,30 @@ Expose a safe public passport link from public product detail when a published p
 
 **Readiness**
 
-`READY_FOR_IMPLEMENTATION_PROMPT`
+`COMPLETED (Commit 5d76e09, 2026-05-02)` — Data-limited caveat: CTA verified at code level; click verification blocked due to no product with published passport in production.
 
 **Dependencies**
 
-- Requires projection and frontend wiring.
-- Should rely on existing published passport/public token rules rather than inventing a second publication mechanism.
-- No schema change appears necessary from current repo truth.
+- Requires projection and frontend wiring. ✅
+- Should rely on existing published passport/public token rules rather than inventing a second publication mechanism. ✅
+- No schema change appears necessary from current repo truth. ✅
 
 **Likely files**
 
-- `server/src/services/publicB2CProjection.service.ts`
-- `shared/contracts/openapi.tenant.json`
-- `components/Public/PublicProductDetail.tsx`
+- `server/src/services/publicB2CProjection.service.ts` ✅
+- `shared/contracts/openapi.tenant.json` ✅
+- `components/Public/PublicProductDetail.tsx` ✅
 
 **Verification plan**
 
-- Verify public product payload includes a public-safe passport reference only when passport status is `PUBLISHED` and a public token exists.
-- Verify product detail renders the passport link only when safe.
-- Verify unpublished or absent passports fail closed.
-- Verify no internal node or org identifiers leak into the public product contract.
+- Verify public product payload includes a public-safe passport reference only when passport status is `PUBLISHED` and a public token exists. ✅ (code inspection)
+- Verify product detail renders the passport link only when safe. ✅ (code inspection)
+- Verify unpublished or absent passports fail closed. ✅ (code inspection)
+- Verify no internal node or org identifiers leak into the public product contract. ✅ (code inspection)
 
 **Suggested commit message**
 
-- `[TEXQTIC] frontend: link public product detail to published passport`
+- `[TEXQTIC] public: link product detail to published passport` ✅
 
 ### 5. PUBLIC-PASSPORT-LISTING-PROJECTION-001
 
@@ -391,8 +391,26 @@ No broader governance, product-truth, or control-plane file was modified in this
 
 ## Governance Notes
 
+### DPP-DOCUMENTATION-DRIFT-SYNC-001 (Current Pass)
+
+**Status:** COMPLETED (2026-05-02)
+
+This synchronization pass updated the tracker to reflect completed queue items 1-4:
+- Item 1 (PUBLIC-PASSPORT-DETAIL-CONTRACT-PARITY-001): Commit bbdc328 ✅
+- Item 2 (PRIVATE-DPP-AUTH-HANDOFF-001): Commit ba24c1d ✅ (data-limited caveat: panel verified at code level)
+- Item 3 (SUPPLIER-TO-TRUST-LINKING-001): Commit 4107af1 ✅ (data-limited caveat: CTA verified at code level)
+- Item 4 (PRODUCT-TO-PASSPORT-LINKING-001): Commit 5d76e09 ✅ (data-limited caveat: CTA verified at code level)
+- Item 5 (PUBLIC-PASSPORT-LISTING-PROJECTION-001): Remains NEEDS_DESIGN_DECISION
+
+Data-limited verification caveats have been preserved to indicate that while code-level verification (type safety, routing, fail-closed logic) passed, end-to-end click/render verification was blocked by lack of production data (no product with published passport, no supplier with active trust signals, no valid public passport ID in tenant auth context).
+
+All changes limited to governance/units/TEXQTIC-DPP-SUBFAMILY-IMPLEMENTATION-PLAN-AND-TRACKER-001.md.
+
+### Broader Tracker Notes
+
 - This unit is planning and tracker creation only.
-- No runtime code was implemented.
-- No schema, contract, route, projection, or data mutation was performed.
-- No broader authority document was edited.
+- Original pass (planning phase): No runtime code was implemented.
+- Original pass (planning phase): No schema, contract, route, projection, or data mutation was performed.
+- Original pass (planning phase): No broader authority document was edited.
+- Current pass (documentation sync): Only tracker was updated to reflect completed implementation queue items.
 - The tracker exists to help Paresh queue the next bounded DPP units in repo-truth order.
