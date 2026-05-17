@@ -6718,7 +6718,17 @@ const App: React.FC = () => {
         );
       // TECS-DPP-PASSPORT-NETWORK-007: Public buyer passport page
       case 'PUBLIC_PASSPORT':
-        return <PublicPassport publicPassportId={publicPassportIdFromPath} />;
+        return (
+          <PublicPassport
+            publicPassportId={publicPassportIdFromPath}
+            onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+            onRequestAccess={openSupplierRequestAccess}
+            onLearnAboutTrust={() => {
+              globalThis.window?.history.replaceState(null, '', '/trust');
+              setAppState('PUBLIC_TRUST_LANDING');
+            }}
+          />
+        );
       // ROUTE-001: Public supplier profile page
       case 'PUBLIC_SUPPLIER_PROFILE':
         return (

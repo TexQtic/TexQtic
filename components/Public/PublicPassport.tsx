@@ -116,9 +116,17 @@ function certVisualState(lifecycleStateName: string): {
 
 interface PublicPassportProps {
   readonly publicPassportId: string;
+  readonly onSignIn?: () => void;
+  readonly onRequestAccess?: () => void;
+  readonly onLearnAboutTrust?: () => void;
 }
 
-export function PublicPassport({ publicPassportId }: PublicPassportProps) {
+export function PublicPassport({
+  publicPassportId,
+  onSignIn,
+  onRequestAccess,
+  onLearnAboutTrust,
+}: PublicPassportProps) {
   const [passport, setPassport] = useState<PassportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -486,6 +494,46 @@ export function PublicPassport({ publicPassportId }: PublicPassportProps) {
             The canonical buyer page URL is already shown in the QR Verification Label above. */}
 
         {/* TexQtic attribution — controlled by showTexqticBrand (TECS-DPP-PASSPORT-NETWORK-020A) */}
+        <section
+          data-testid="public-passport-auth-handoff"
+          className="mt-6 rounded-2xl border border-[#d6e4e8] bg-white p-6"
+        >
+          <h2 className="text-lg font-semibold text-[#0a2036]">Need deeper verification?</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            Public passports show approved discovery information only. Sign in to continue into authenticated DPP,
+            verification, sourcing, or supplier workflows where available.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            {onSignIn && (
+              <button
+                type="button"
+                onClick={onSignIn}
+                className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white transition hover:bg-[#0d2743]"
+              >
+                Sign in to Continue
+              </button>
+            )}
+            {onRequestAccess && (
+              <button
+                type="button"
+                onClick={onRequestAccess}
+                className="inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8094] transition hover:bg-[#eff6f8]"
+              >
+                List Your Business
+              </button>
+            )}
+            {onLearnAboutTrust && (
+              <button
+                type="button"
+                onClick={onLearnAboutTrust}
+                className="inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-700 transition hover:bg-[#eff6f8]"
+              >
+                Learn About Trust & Origin Passport
+              </button>
+            )}
+          </div>
+        </section>
+
         {passport.labelConfig?.showTexqticBrand !== false && (
           <p
             data-testid="public-passport-texqtic-brand"
