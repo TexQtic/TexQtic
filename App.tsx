@@ -6629,7 +6629,10 @@ const App: React.FC = () => {
         return (
           <PublicProductDetail
             slug={publicProductSlugFromPath}
-            onBackToBrowse={() => setAppState('PUBLIC_B2C_BROWSE')}
+            onBackToBrowse={() => {
+              globalThis.window?.history.replaceState(null, '', '/');
+              setAppState('PUBLIC_B2C_BROWSE');
+            }}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
             onViewSupplierProfile={(slug) => {
               globalThis.window?.location.assign(`/supplier/${encodeURIComponent(slug)}`);
