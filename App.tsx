@@ -6592,6 +6592,10 @@ const App: React.FC = () => {
           <B2BDiscoveryPage
             onBack={() => setAppState('PUBLIC_ENTRY')}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+            onListBusiness={openSupplierRequestAccess}
+            onViewProfile={(slug) => {
+              globalThis.window?.location.assign(`/supplier/${encodeURIComponent(slug)}`);
+            }}
           />
         );
       case 'PUBLIC_B2C_BROWSE':
