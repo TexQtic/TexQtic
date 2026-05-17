@@ -16,9 +16,10 @@ interface PublicSupplierProfileProps {
   readonly source?: string;  // QR-SOURCE-002: optional source attribution param forwarded to backend
   readonly onBack: () => void;
   readonly onSignIn: () => void;
+  readonly onRequestAccess?: () => void;
 }
 
-export function PublicSupplierProfile({ slug, source, onBack, onSignIn }: PublicSupplierProfileProps) {
+export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onRequestAccess }: PublicSupplierProfileProps) {
   const [profile, setProfile] = useState<SupplierProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -78,6 +79,66 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn }: Public
     };
   }, [slug]);
 
+  const trustNotice = 'This public profile shows only information approved for public discovery. Connection, negotiation, pricing, documents, orders, and deeper business intelligence are available only through authenticated TexQtic workflows.';
+
+  const toPublicDiscoveryStatus = (eligibilityPosture: string, publicationPosture: string) => {
+    if (eligibilityPosture === 'PUBLICATION_ELIGIBLE' && (publicationPosture === 'B2B_PUBLIC' || publicationPosture === 'BOTH')) {
+      return 'Discoverable on TexQtic';
+    }
+    return 'Public-safe profile';
+  };
+
+  const toVisibilityLabel = (publicationPosture: string) => {
+    if (publicationPosture === 'BOTH') {
+      return 'Public B2B and B2C visibility';
+    }
+    if (publicationPosture === 'B2B_PUBLIC') {
+      return 'Public B2B visibility';
+    }
+    return 'Public-safe visibility';
+  };
+
+  const toProfileSummary = (currentProfile: SupplierProfile) => {
+    if (currentProfile.taxonomy?.primarySegment) {
+      return `A quick view of this participant's public role in the textile ecosystem. ${currentProfile.legalName} is currently discoverable through ${currentProfile.taxonomy.primarySegment.toLowerCase()} capability context.`;
+    }
+    return 'A quick view of this participant\'s public role in the textile ecosystem.';
+  };
+
+  const valueChainStages = [
+    'Yarn',
+    'Fabric',
+    'Garments',
+    'Wholesale',
+    'Retail',
+    'D2C',
+  ];
+
+  const stageKeywords: Record<string, string[]> = {
+    Yarn: ['yarn', 'fiber', 'fibre'],
+    Fabric: ['fabric', 'weaving', 'knitting', 'dyeing', 'finishing', 'processing'],
+    Garments: ['garment', 'apparel', 'cut and sew', 'stitching'],
+    Wholesale: ['wholesale', 'distribution', 'bulk'],
+    Retail: ['retail', 'storefront', 'consumer'],
+    D2C: ['d2c', 'direct-to-consumer', 'verified drop'],
+  };
+
+  const deriveStageSignals = (currentProfile: SupplierProfile) => {
+    const source = [
+      currentProfile.orgType,
+      currentProfile.taxonomy?.primarySegment ?? '',
+      ...(currentProfile.taxonomy?.secondarySegments ?? []),
+      ...(currentProfile.taxonomy?.rolePositions ?? []),
+      ...currentProfile.offeringPreview.map((item) => item.name),
+    ]
+      .join(' ')
+      .toLowerCase();
+
+    return valueChainStages.filter((stage) => {
+      return stageKeywords[stage].some((keyword) => source.includes(keyword));
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#f3f8fb] font-sans">
       {/* Nav */}
@@ -130,22 +191,30 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn }: Public
       {/* Not found state */}
       {!loading && notFound && (
         <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-[#2f8094]">
-            Supplier not found
-          </p>
           <h2 className="mt-3 text-2xl font-semibold text-[#071a2f]">
             This supplier profile is not available.
           </h2>
-          <p className="mt-3 max-w-sm text-sm text-slate-500">
-            The supplier may not be publicly listed, or the link may be incorrect.
+          <p className="mt-3 max-w-md text-sm text-slate-500">
+            The business may not have a public TexQtic profile, or its visibility may be limited to authenticated workflows.
           </p>
-          <button
-            type="button"
-            onClick={onBack}
-            className="mt-8 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
-          >
-            Back to platform entry
-          </button>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={onBack}
+              className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+            >
+              Back to B2B Discovery
+            </button>
+            {onRequestAccess && (
+              <button
+                type="button"
+                onClick={onRequestAccess}
+                className="inline-flex items-center justify-center rounded-full border border-[#d1dee3] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036]"
+              >
+                List Your Business
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -175,11 +244,14 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn }: Public
           <div className="bg-[#071a2f] px-6 py-12">
             <div className="mx-auto max-w-5xl">
               <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">
-                Verified supplier
+                Public Textile Profile
               </p>
               <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.02em] text-white md:text-4xl">
                 {profile.legalName}
               </h1>
+              <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-200">
+                Explore public-safe business information, capability signals, and trust context for this TexQtic ecosystem participant.
+              </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
                   {profile.orgType}
@@ -190,14 +262,150 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn }: Public
                   </span>
                 )}
                 <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-slate-200">
-                  {profile.eligibilityPosture === 'PUBLICATION_ELIGIBLE' ? 'Verified' : profile.eligibilityPosture}
+                  {toPublicDiscoveryStatus(profile.eligibilityPosture, profile.publicationPosture)}
                 </span>
+              </div>
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={onSignIn}
+                  className="inline-flex items-center justify-center rounded-full bg-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#071a2f] transition hover:bg-slate-100"
+                >
+                  Sign in to Connect
+                </button>
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="inline-flex items-center justify-center rounded-full border border-white/30 px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-white/10"
+                >
+                  Back to B2B Discovery
+                </button>
               </div>
             </div>
           </div>
 
           {/* Main content */}
           <main className="mx-auto max-w-5xl px-6 py-10">
+            <section className="rounded-2xl border border-[#d9e5ea] bg-white p-6 shadow-sm">
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+                Public trust notice
+              </p>
+              <p className="mt-3 text-sm leading-7 text-slate-600">
+                {trustNotice}
+              </p>
+            </section>
+
+            <section className="mt-6 rounded-2xl border border-[#d9e5ea] bg-white p-6 shadow-sm">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+                Business snapshot
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                {toProfileSummary(profile)}
+              </p>
+
+              <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Business Type</p>
+                  <p className="mt-2 text-sm font-semibold text-[#071a2f]">{profile.orgType}</p>
+                </article>
+                <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Textile Segment</p>
+                  <p className="mt-2 text-sm font-semibold text-[#071a2f]">
+                    {profile.taxonomy?.primarySegment ?? 'Public textile ecosystem participant'}
+                  </p>
+                </article>
+                <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Primary Role</p>
+                  <p className="mt-2 text-sm font-semibold text-[#071a2f]">
+                    {profile.taxonomy?.rolePositions?.[0] ?? 'Profile role available after sign-in context'}
+                  </p>
+                </article>
+                <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Market / Jurisdiction</p>
+                  <p className="mt-2 text-sm font-semibold text-[#071a2f]">{profile.jurisdiction || 'Public market context available'}</p>
+                </article>
+                <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Public Discovery Status</p>
+                  <p className="mt-2 text-sm font-semibold text-[#071a2f]">
+                    {toPublicDiscoveryStatus(profile.eligibilityPosture, profile.publicationPosture)}
+                  </p>
+                </article>
+                <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Visibility</p>
+                  <p className="mt-2 text-sm font-semibold text-[#071a2f]">
+                    {toVisibilityLabel(profile.publicationPosture)}
+                  </p>
+                </article>
+              </div>
+            </section>
+
+            <section className="mt-6 rounded-2xl border border-[#d9e5ea] bg-white p-6 shadow-sm">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+                Capability highlights
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                These public capability signals help visitors understand where this business fits across textile sourcing, supply, service, or commerce pathways.
+              </p>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {profile.taxonomy?.primarySegment && (
+                  <span className="rounded-full border border-[#d6e4e8] bg-[#f5fafb] px-3 py-1 text-xs font-medium text-[#2f8094]">
+                    {profile.taxonomy.primarySegment}
+                  </span>
+                )}
+                {profile.taxonomy?.rolePositions.slice(0, 4).map((role) => (
+                  <span key={role} className="rounded-full border border-[#d6e4e8] bg-[#f5fafb] px-3 py-1 text-xs font-medium text-[#2f8094]">
+                    {role}
+                  </span>
+                ))}
+                {profile.certificationCount > 0 && (
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                    Certification signals available
+                  </span>
+                )}
+                {profile.hasTraceabilityEvidence && (
+                  <span className="rounded-full border border-[#d6e4e8] bg-[#eef7fa] px-3 py-1 text-xs font-medium text-[#2f8094]">
+                    Traceability evidence available
+                  </span>
+                )}
+                {profile.offeringPreview.length > 0 && (
+                  <span className="rounded-full border border-[#d6e4e8] bg-[#eef7fa] px-3 py-1 text-xs font-medium text-[#2f8094]">
+                    Public offering preview
+                  </span>
+                )}
+              </div>
+            </section>
+
+            <section className="mt-6 rounded-2xl border border-[#d9e5ea] bg-[#f9fcfd] p-6 shadow-sm">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+                Textile value-chain position
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                TexQtic connects the textile value chain from manufacturing to wholesale, semi-wholesale, retail, and verified direct-to-consumer launches.
+              </p>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {valueChainStages.map((stage) => {
+                  const activeStages = deriveStageSignals(profile);
+                  const isActive = activeStages.includes(stage);
+                  return (
+                    <span
+                      key={stage}
+                      className={`rounded-full border px-3 py-1 text-xs font-semibold ${isActive ? 'border-[#2f8094] bg-[#e8f5f8] text-[#0b2238]' : 'border-[#d6e4e8] bg-white text-slate-500'}`}
+                    >
+                      {stage}
+                    </span>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="mt-6">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+                Public profile details
+              </h2>
+
             <div className="grid gap-6 md:grid-cols-2">
 
               {/* Taxonomy */}
@@ -256,7 +464,7 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn }: Public
               {/* Certifications + traceability */}
               <section className="rounded-2xl border border-[#d6e4e8] bg-white p-6 shadow-sm">
                 <h2 className="mb-4 text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
-                  Credentials
+                  Trust signals
                 </h2>
                 <div className="mb-3">
                   <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
@@ -290,6 +498,28 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn }: Public
                 </div>
               </section>
             </div>
+            </section>
+
+            <section className="mt-6 rounded-2xl border border-[#d9e5ea] bg-white p-6 shadow-sm">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+                TexQtic discovery context
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                This profile is part of TexQtic public discovery. The page intentionally shows approved public-safe business context only.
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Profile slug</p>
+                  <p className="mt-2 text-sm font-medium text-[#071a2f]">{profile.slug}</p>
+                </div>
+                <div className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Discovery posture</p>
+                  <p className="mt-2 text-sm font-medium text-[#071a2f]">
+                    {toPublicDiscoveryStatus(profile.eligibilityPosture, profile.publicationPosture)}
+                  </p>
+                </div>
+              </div>
+            </section>
 
             {/* Offering preview */}
             {profile.offeringPreview.length > 0 && (
@@ -321,7 +551,7 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn }: Public
               </section>
             )}
 
-            {/* INQUIRY-004: Pre-auth inquiry form */}
+            {/* INQUIRY-004: Pre-auth inquiry form (public-safe intent capture) */}
             <section
               className="mt-6 rounded-2xl border border-[#d6e4e8] bg-white p-6 shadow-sm"
               aria-label="Send an inquiry"
@@ -330,7 +560,7 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn }: Public
                 Send an inquiry
               </h2>
               <p className="mb-4 text-xs text-slate-500">
-                Let TexQtic know your interest. No account required.
+                This captures high-level public interest only. Pricing, negotiation, and transactional workflows remain authenticated.
               </p>
 
               {inquiryStatus === 'success' ? (
@@ -409,18 +639,40 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn }: Public
               )}
             </section>
 
-            {/* Sign-in CTA */}
+            {/* Authenticated handoff panel */}
             <div className="mt-10 rounded-2xl border border-[#d6e4e8] bg-white p-8 text-center shadow-sm">
-              <p className="text-sm font-semibold text-[#071a2f]">
-                Sign in to send a structured inquiry or access full supplier details.
+              <h2 className="text-xl font-semibold text-[#071a2f]">
+                Want to connect with this business?
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                Sign in to TexQtic to request a connection, continue sourcing workflows, or access authenticated business tools where available.
               </p>
-              <button
-                type="button"
-                onClick={onSignIn}
-                className="mt-5 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-7 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
-              >
-                Sign in to TexQtic
-              </button>
+
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={onSignIn}
+                  className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-7 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+                >
+                  Sign in to Connect
+                </button>
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="inline-flex items-center justify-center rounded-full border border-[#d1dee3] px-7 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036]"
+                >
+                  Back to B2B Discovery
+                </button>
+                {onRequestAccess && (
+                  <button
+                    type="button"
+                    onClick={onRequestAccess}
+                    className="inline-flex items-center justify-center rounded-full border border-[#d1dee3] px-7 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036]"
+                  >
+                    List Your Business
+                  </button>
+                )}
+              </div>
             </div>
           </main>
         </>

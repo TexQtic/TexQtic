@@ -6614,8 +6614,9 @@ const App: React.FC = () => {
           <PublicSupplierProfile
             slug={publicSupplierSlugFromPath}
             source={publicSupplierSourceFromQuery || undefined}
-            onBack={() => setAppState('PUBLIC_ENTRY')}
+            onBack={() => setAppState('PUBLIC_B2B_DISCOVERY')}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+            onRequestAccess={openSupplierRequestAccess}
           />
         );
       // REFERRAL-005: Public referral join landing — /join/:referral_code
