@@ -2734,67 +2734,89 @@ const App: React.FC = () => {
   const openIssuedAccessContinuation = () => {
     setAppState('ONBOARDING_CONTINUATION');
   };
-  const publicEntryLaunchGuidance = (() => {
-    if (neutralEntryPathSelection === 'B2B') {
-      return {
-        title: 'Structured B2B sourcing path',
-        detail:
-          'Begin with verified manufacturers, traders, and suppliers. Structured inquiries and sourcing continuity continue after the public entry surface hands off to the next appropriate authenticated step.',
-      };
-    }
-
-    if (neutralEntryPathSelection === 'B2C') {
-      return {
-        title: 'Curated product discovery path',
-        detail:
-          'Begin with curated textile product discovery and verified seller visibility. Account continuity, cart persistence, and checkout move into later authenticated commerce steps when appropriate.',
-      };
-    }
-
-    if (neutralEntryPathSelection === 'SUPPLIER') {
-      return {
-        title: 'Verified supplier onboarding path',
-        detail:
-          'Begin with Request Access so CRM can qualify fit, maintain onboarding continuity, and trigger platform provisioning only after approval and access issuance.',
-      };
-    }
-
-    return null;
-  })();
-  const publicEntryTrustSignals = [
-    'Verified suppliers',
-    'Structured inquiries',
-    'Trusted trade pathways',
-    'Curated discovery',
-  ] as const;
-  const publicEntryTrustBlocks = [
+  const publicEntryRoleCards = [
     {
-      title: 'Verified supplier profiles',
-      detail:
-        'Supplier presence is tied to structured identity, business context, and visible trust signals.',
+      audience: 'Buyers',
+      title: 'Find trusted textile partners',
+      body: 'Discover suppliers, manufacturers, service providers, and verified textile capabilities across the ecosystem.',
+      cta: 'Explore B2B Network',
+      action: 'B2B',
     },
     {
-      title: 'Structured category system',
-      detail:
-        'Listings and discovery pathways follow a textile-specific category model instead of a loose, generic directory.',
+      audience: 'Suppliers & Manufacturers',
+      title: 'Showcase your capability',
+      body: 'Build a trusted public presence, reach serious buyers, and prepare your business for B2B, B2C, and D2C opportunities.',
+      cta: 'List Your Business',
+      action: 'SUPPLIER_REQUEST',
     },
     {
-      title: 'Structured inquiry workflows',
-      detail:
-        'Business sourcing and product discovery are supported by more disciplined inquiry and handoff paths.',
+      audience: 'Designers & Brands',
+      title: 'Create with the textile ecosystem',
+      body: 'Connect with verified suppliers, manufacturers, and service providers to build products and launch consumer-ready collections.',
+      cta: 'Start Building',
+      action: 'SUPPLIER_REQUEST',
     },
     {
-      title: 'Trusted trade continuity',
-      detail:
-        'Public discovery can begin openly, while deeper commercial continuity moves into authenticated flows when appropriate.',
+      audience: 'Consumers',
+      title: 'Discover verified textile products',
+      body: 'Browse textile products backed by real origin, capability, and trust signals from the supply chain behind them.',
+      cta: 'Browse Products',
+      action: 'B2C',
+    },
+    {
+      audience: 'Service Providers',
+      title: 'Join the textile support network',
+      body: 'Offer design, compliance, certification, logistics, consulting, and other services to textile ecosystem participants.',
+      cta: 'Join as Service Provider',
+      action: 'SUPPLIER_REQUEST',
+    },
+    {
+      audience: 'D2C Launches',
+      title: 'Launch a verified textile drop',
+      body: 'Turn real textile capability into consumer-facing products with trust, origin, and supply-chain story built in.',
+      cta: 'Launch a Verified Drop',
+      action: 'SUPPLIER_REQUEST',
     },
   ] as const;
-  const publicEntrySupplierValuePoints = [
-    'Create a verified supplier or brand presence',
-    'Publish listings within a structured textile category system',
-    'Manage B2B and B2C visibility from one platform',
-    'Receive structured inquiries instead of unqualified noise',
-    'Strengthen buyer trust through visible credibility signals',
+  const publicEntryTextileChainCards = [
+    {
+      title: 'Manufacturing',
+      body: 'Yarn, fabric, processing, garmenting, design, compliance, logistics, and service capability.',
+    },
+    {
+      title: 'Wholesale',
+      body: 'B2B discovery, supplier qualification, bulk sourcing, and business trade relationships.',
+    },
+    {
+      title: 'Semi-wholesale',
+      body: 'Regional, category, and capability-based discovery for distributors, traders, and growing buyers.',
+    },
+    {
+      title: 'Retail',
+      body: 'Public-safe consumer browse and authenticated commerce continuity for textile products.',
+    },
+    {
+      title: 'D2C',
+      body: 'Verified textile drops that help ecosystem stakeholders turn supply-chain capability into consumer demand.',
+    },
+  ] as const;
+  const publicEntryTrustCards = [
+    {
+      title: 'Origin',
+      body: 'Understand where textile capability begins.',
+    },
+    {
+      title: 'Verification',
+      body: 'See public-approved trust and capability signals.',
+    },
+    {
+      title: 'Passport',
+      body: 'Explore product and material stories where public passport data is available.',
+    },
+    {
+      title: 'Handoff',
+      body: 'Move from public discovery into authenticated action when ready.',
+    },
   ] as const;
 
   const documentTitle = useMemo(() => {
@@ -6021,7 +6043,7 @@ const App: React.FC = () => {
       case 'PUBLIC_ENTRY': {
         return (
           <div className="min-h-screen bg-[#f3f8fb] font-sans text-slate-900">
-            <div className="bg-[radial-gradient(circle_at_top_left,_rgba(102,213,224,0.22),_transparent_28%),linear-gradient(180deg,_#eef6f8_0%,_#f3f8fb_100%)]">
+            <div className="bg-[radial-gradient(circle_at_top_left,_rgba(102,213,224,0.22),_transparent_30%),linear-gradient(180deg,_#eef6f8_0%,_#f3f8fb_100%)]">
               <div className="mx-auto max-w-7xl px-6 py-6 lg:px-10 lg:py-8">
                 <nav className="rounded-[32px] border border-[#d9e6ea] bg-white/92 px-5 py-4 shadow-[0_24px_70px_rgba(7,26,47,0.10)] backdrop-blur">
                   <div className="flex items-center justify-between gap-4">
@@ -6037,17 +6059,10 @@ const App: React.FC = () => {
                     <div className="hidden lg:flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => scrollToPublicEntrySection('public-entry-discovery')}
-                        className="rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600 transition hover:bg-[#eff6f8] hover:text-[#0b2238]"
-                      >
-                        Discover
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')}
                         className="rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600 transition hover:bg-[#eff6f8] hover:text-[#0b2238]"
                       >
-                        Source for Business
+                        Explore B2B Network
                       </button>
                       <button
                         type="button"
@@ -6058,10 +6073,10 @@ const App: React.FC = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')}
+                        onClick={() => scrollToPublicEntrySection('public-entry-d2c-preview')}
                         className="rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600 transition hover:bg-[#eff6f8] hover:text-[#0b2238]"
                       >
-                        For Suppliers
+                        Verified Drops
                       </button>
                     </div>
 
@@ -6078,7 +6093,7 @@ const App: React.FC = () => {
                         onClick={openSupplierRequestAccess}
                         className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
                       >
-                        List your business
+                        Join TexQtic
                       </button>
                     </div>
                   </div>
@@ -6086,17 +6101,10 @@ const App: React.FC = () => {
                   <div className="mt-4 flex flex-wrap gap-2 lg:hidden">
                     <button
                       type="button"
-                      onClick={() => scrollToPublicEntrySection('public-entry-discovery')}
-                      className="rounded-full border border-[#dbe6ea] bg-[#f8fbfc] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600"
-                    >
-                      Discover
-                    </button>
-                    <button
-                      type="button"
                       onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')}
                       className="rounded-full border border-[#dbe6ea] bg-[#f8fbfc] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600"
                     >
-                      Source for Business
+                      Explore B2B
                     </button>
                     <button
                       type="button"
@@ -6107,75 +6115,68 @@ const App: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')}
+                      onClick={() => scrollToPublicEntrySection('public-entry-d2c-preview')}
                       className="rounded-full border border-[#dbe6ea] bg-[#f8fbfc] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600"
                     >
-                      For Suppliers
-                    </button>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap gap-3 md:hidden">
-                    <button
-                      type="button"
-                      onClick={() => openSecondaryAuthenticatedEntry('TENANT')}
-                      className="rounded-full border border-[#dbe6ea] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600"
-                    >
-                      Sign in
-                    </button>
-                    <button
-                      type="button"
-                      onClick={openSupplierRequestAccess}
-                      className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-white"
-                    >
-                      List your business
+                      Verified Drops
                     </button>
                   </div>
                 </nav>
 
-                <div id="public-entry-top" className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.18fr)_360px] lg:items-start">
+                <div id="public-entry-top" className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_320px]">
                   <section className="rounded-[36px] border border-white/10 bg-[linear-gradient(135deg,_#071a2f_0%,_#0d2743_58%,_#123a57_100%)] p-8 text-white shadow-[0_30px_90px_rgba(7,26,47,0.28)] md:p-10">
                     <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-[0.24em] text-[#b7dbe3]">
                       <span className="rounded-full border border-white/15 bg-white/8 px-3 py-1.5">
-                        Verified textile commerce platform
+                        Public Attraction Layer
                       </span>
                       <span className="rounded-full border border-[#2c6078] bg-[#0b3550] px-3 py-1.5 text-[#87dae4]">
                         {publicEntryHostLabel} public entry
                       </span>
                       <span className="rounded-full border border-[#315f78] bg-[#0c2d46] px-3 py-1.5 text-[#d7edf1]">
-                        Pre-session and pre-workflow
+                        Entry, intent, and handoff only
                       </span>
                       {publicEntryBootstrapPending && (
                         <span className="rounded-full border border-[#4cbcc9] bg-[#0d4860] px-3 py-1.5 text-[#8fe0e8]">
                           Confirming neutral entry context
                         </span>
                       )}
+                      {neutralEntryPathSelection && (
+                        <span className="rounded-full border border-[#3b6c87] bg-[#0c304a] px-3 py-1.5 text-[#b6deea]">
+                          Last selected path: {neutralEntryPathSelection}
+                        </span>
+                      )}
                     </div>
 
-                    <div className="mt-8 max-w-3xl">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">
-                        Verified textile commerce platform
-                      </p>
-                      <h1 className="public-entry-editorial-heading mt-4 text-5xl leading-[1.02] tracking-[-0.04em] text-white md:text-6xl">
-                        Where textile businesses discover, source, and grow with structure and trust
-                      </h1>
-                      <p className="mt-6 max-w-2xl text-base leading-7 text-slate-200 md:text-lg">
-                        TexQtic is a verified textile commerce platform — structured sourcing for B2B,
-                        curated discovery for all. Buyers, suppliers, and brands can explore the right path
-                        with clarity and confidence.
-                      </p>
-                    </div>
+                    <h1 className="public-entry-editorial-heading mt-6 text-4xl leading-tight tracking-[-0.03em] text-white md:text-6xl">
+                      From yarn to consumer, TexQtic connects the textile world.
+                    </h1>
+                    <p className="mt-5 max-w-3xl text-base leading-7 text-slate-200 md:text-lg">
+                      TexQtic brings manufacturers, suppliers, buyers, designers, service providers, brands,
+                      and consumers into one connected textile commerce ecosystem - from manufacturing and
+                      wholesale to retail and verified direct-to-consumer launches.
+                    </p>
+                    <p className="mt-4 text-sm font-medium leading-6 text-[#c9eaf0] md:text-base">
+                      Discover trusted partners. Verify textile capability. Launch consumer-ready products.
+                      Trade with confidence.
+                    </p>
 
                     <div className="mt-8 flex flex-wrap gap-3">
                       <button
                         type="button"
-                        onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+                        onClick={() => {
+                          setNeutralEntryPathSelection('B2B');
+                          setAppState('PUBLIC_B2B_DISCOVERY');
+                        }}
                         className="inline-flex items-center justify-center rounded-full bg-[#7fd5de] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#08233a] transition hover:bg-[#98e2e9]"
                       >
-                        Source for Business
+                        Explore B2B Network
                       </button>
                       <button
                         type="button"
-                        onClick={() => setAppState('PUBLIC_B2C_BROWSE')}
+                        onClick={() => {
+                          setNeutralEntryPathSelection('B2C');
+                          setAppState('PUBLIC_B2C_BROWSE');
+                        }}
                         className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/8 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-white/14"
                       >
                         Browse Products
@@ -6185,58 +6186,24 @@ const App: React.FC = () => {
                         onClick={openSupplierRequestAccess}
                         className="inline-flex items-center justify-center rounded-full border border-[#7fd5de]/40 bg-transparent px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#a6e9f0] transition hover:border-[#a6e9f0] hover:bg-[#0a334d]"
                       >
-                        List Your Business
+                        Launch a Verified Drop
                       </button>
                     </div>
-
-                    <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                      {publicEntryTrustSignals.map((signal) => (
-                        <div
-                          key={signal}
-                          className="rounded-[24px] border border-white/10 bg-white/8 px-4 py-4 text-sm font-medium text-slate-100"
-                        >
-                          {signal}
-                        </div>
-                      ))}
-                    </div>
-
-                    {publicEntryLaunchGuidance && (
-                      <div className="mt-8 rounded-[28px] border border-[#2a4d66] bg-[#0b2238]/85 px-6 py-5 shadow-[0_20px_50px_rgba(3,16,28,0.22)]">
-                        <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#85d7e1]">
-                          Selected entry path
-                        </div>
-                        <h2 className="mt-3 text-xl font-semibold text-white">{publicEntryLaunchGuidance.title}</h2>
-                        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-                          {publicEntryLaunchGuidance.detail}
-                        </p>
-                      </div>
-                    )}
                   </section>
 
                   <aside className="rounded-[32px] border border-[#d7e4e8] bg-white p-6 shadow-[0_24px_70px_rgba(7,26,47,0.10)] md:p-7">
-                    <div className="rounded-[28px] border border-[#dce8eb] bg-[#f5fafb] p-5">
-                      <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#2f8196]">
-                        Returning users
-                      </div>
-                      <h2 className="public-entry-editorial-heading mt-3 text-2xl leading-tight text-[#0a2036]">
-                        Already have issued access or an active workspace?
-                      </h2>
-                      <p className="mt-3 text-sm leading-6 text-slate-600">
-                        The homepage stays public-safe and routing-led. Use your issued activation or access
-                        path only if TexQtic already sent it to you. Active tenant users and staff operators
-                        continue from their own dedicated sign-in destinations.
-                      </p>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#2f8196]">
+                      Authenticated entry
                     </div>
+                    <h2 className="public-entry-editorial-heading mt-3 text-2xl leading-tight text-[#0a2036]">
+                      Continue into your workspace when ready.
+                    </h2>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      Public pages stay projection-safe and non-transactional. Checkout, account, order,
+                      and deeper workflow continuity remain authenticated.
+                    </p>
 
                     <div className="mt-5 space-y-3">
-                      <button
-                        type="button"
-                        onClick={openIssuedAccessContinuation}
-                        className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036]"
-                      >
-                        <span>Use issued access link</span>
-                        <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Issued only</span>
-                      </button>
                       <button
                         type="button"
                         onClick={() => openSecondaryAuthenticatedEntry('TENANT')}
@@ -6253,278 +6220,299 @@ const App: React.FC = () => {
                         <span>Staff Control</span>
                         <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Sign in</span>
                       </button>
+                      <button
+                        type="button"
+                        onClick={openIssuedAccessContinuation}
+                        className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036]"
+                      >
+                        <span>Use issued access link</span>
+                        <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Issued only</span>
+                      </button>
                     </div>
-
-                    <p className="mt-5 text-sm leading-6 text-slate-500">
-                      New suppliers and business applicants begin through Request Access on texqtic.com.
-                      Issued access is only for users who already received a TexQtic activation or access link.
-                    </p>
                   </aside>
                 </div>
               </div>
             </div>
 
             <main className="mx-auto max-w-7xl space-y-8 px-6 py-12 lg:px-10 lg:py-16">
-              <section
-                id="public-entry-routing"
-                className="rounded-[32px] border border-[#d9e5ea] bg-white p-8 shadow-[0_18px_50px_rgba(7,26,47,0.08)] md:p-10"
-              >
-                <div className="max-w-3xl">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#2f8094]">
-                    Choose the path that fits your role
-                  </p>
-                  <h2 className="public-entry-editorial-heading mt-4 text-3xl leading-tight text-[#0a2036] md:text-4xl">
-                    TexQtic is designed for multiple kinds of visitors
-                  </h2>
-                  <p className="mt-4 text-base leading-7 text-slate-600">
-                    TexQtic is designed for multiple kinds of visitors. Start with the lane that matches what
-                    you want to do.
-                  </p>
-                </div>
-
-                <div className="mt-10 grid gap-5 lg:grid-cols-3">
-                  <article className="rounded-[28px] border border-[#d9e5ea] bg-[#fbfdfe] p-6 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#2f8094]">B2B sourcing</p>
-                    <h3 className="public-entry-editorial-heading mt-3 text-2xl leading-tight text-[#0a2036]">
-                      I&apos;m sourcing for my business
-                    </h3>
-                    <p className="mt-4 text-sm leading-6 text-slate-600">
-                      Discover verified manufacturers, traders, and suppliers. Compare capabilities, submit
-                      inquiries, and begin a structured sourcing workflow built for textile commerce.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')}
-                      className="mt-6 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
-                    >
-                      Start B2B sourcing
-                    </button>
-                  </article>
-
-                  <article className="rounded-[28px] border border-[#d9e5ea] bg-[#fbfdfe] p-6 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#2f8094]">B2C browsing</p>
-                    <h3 className="public-entry-editorial-heading mt-3 text-2xl leading-tight text-[#0a2036]">
-                      I&apos;m shopping for products
-                    </h3>
-                    <p className="mt-4 text-sm leading-6 text-slate-600">
-                      Browse textile products, collections, and branded storefronts from verified sellers.
-                      Explore curated options before account or checkout continuity begins.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setAppState('PUBLIC_B2C_BROWSE')}
-                      className="mt-6 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
-                    >
-                      Browse products
-                    </button>
-                  </article>
-
-                  <article className="rounded-[28px] border border-[#d9e5ea] bg-[#fbfdfe] p-6 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#2f8094]">
-                      Supplier onboarding
-                    </p>
-                    <h3 className="public-entry-editorial-heading mt-3 text-2xl leading-tight text-[#0a2036]">
-                      I want to list my business
-                    </h3>
-                    <p className="mt-4 text-sm leading-6 text-slate-600">
-                      Join TexQtic as a verified supplier or brand. Build your presence, publish structured
-                      listings, and connect with qualified buyers across B2B and B2C pathways.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={openSupplierRequestAccess}
-                      className="mt-6 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
-                    >
-                      Start supplier onboarding
-                    </button>
-                  </article>
-                </div>
+              <section className="rounded-[32px] border border-[#d9e5ea] bg-white p-8 shadow-[0_18px_50px_rgba(7,26,47,0.08)] md:p-10">
+                <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#2f8094]">
+                  The operating layer for textile commerce
+                </p>
+                <p className="mt-4 max-w-4xl text-base leading-7 text-slate-700 md:text-lg">
+                  Textile commerce is no longer just about finding a supplier or listing a product. It is
+                  about connecting capability, trust, production, discovery, and demand across the full value
+                  chain.
+                </p>
+                <p className="mt-4 max-w-4xl text-base leading-7 text-slate-700 md:text-lg">
+                  TexQtic helps the textile ecosystem move as one connected network - from factory capability
+                  to verified consumer demand.
+                </p>
+                <p className="mt-5 text-sm font-bold uppercase tracking-[0.22em] text-[#0a2036]">
+                  Manufacturing to marketplace, connected.
+                </p>
               </section>
 
-              <section
-                id="public-entry-trust"
-                className="rounded-[32px] bg-[linear-gradient(135deg,_#08233a_0%,_#0e304a_100%)] p-8 text-white shadow-[0_24px_70px_rgba(7,26,47,0.20)] md:p-10"
-              >
+              <section className="rounded-[32px] border border-[#d9e5ea] bg-white p-8 shadow-[0_18px_50px_rgba(7,26,47,0.08)] md:p-10">
                 <div className="max-w-3xl">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#83d7e1]">Why TexQtic</p>
-                  <h2 className="public-entry-editorial-heading mt-4 text-3xl leading-tight text-white md:text-4xl">
-                    Built on verified commerce infrastructure
-                  </h2>
-                  <p className="mt-4 text-base leading-7 text-slate-200">
-                    TexQtic is not an open listing directory. It is a verified textile commerce platform
-                    designed to make discovery, sourcing, and supplier visibility more credible, structured,
-                    and business-ready.
+                  <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#2f8094]">
+                    Where do you want to begin?
+                  </p>
+                  <p className="mt-4 text-base leading-7 text-slate-600">
+                    Whether you manufacture, source, design, trade, serve, or shop textile products,
+                    TexQtic gives you a clear path into the ecosystem.
                   </p>
                 </div>
 
-                <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                  {publicEntryTrustBlocks.map((block) => (
-                    <article
-                      key={block.title}
-                      className="rounded-[28px] border border-white/10 bg-white/8 p-6 shadow-sm"
-                    >
-                      <h3 className="text-lg font-semibold text-white">{block.title}</h3>
-                      <p className="mt-3 text-sm leading-6 text-slate-200">{block.detail}</p>
+                <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                  {publicEntryRoleCards.map((card) => (
+                    <article key={card.title} className="rounded-[28px] border border-[#d9e5ea] bg-[#fbfdfe] p-6 shadow-sm">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#2f8094]">{card.audience}</p>
+                      <h3 className="public-entry-editorial-heading mt-3 text-2xl leading-tight text-[#0a2036]">{card.title}</h3>
+                      <p className="mt-4 text-sm leading-6 text-slate-600">{card.body}</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (card.action === 'B2B') {
+                            setAppState('PUBLIC_B2B_DISCOVERY');
+                            return;
+                          }
+
+                          if (card.action === 'B2C') {
+                            setAppState('PUBLIC_B2C_BROWSE');
+                            return;
+                          }
+
+                          selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-d2c-preview');
+                          openSupplierRequestAccess();
+                        }}
+                        className="mt-6 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+                      >
+                        {card.cta}
+                      </button>
                     </article>
                   ))}
                 </div>
               </section>
 
-              <section id="public-entry-discovery" className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_360px]">
-                <div className="rounded-[32px] border border-[#d9e5ea] bg-white p-8 shadow-[0_18px_50px_rgba(7,26,47,0.08)] md:p-10">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#2f8094]">
-                    Start with discovery
-                  </p>
-                  <h2 className="public-entry-editorial-heading mt-4 text-3xl leading-tight text-[#0a2036] md:text-4xl">
-                    Explore by category, capability, or product need
-                  </h2>
-                  <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-                    TexQtic&apos;s discovery layer helps visitors browse curated textile categories and explore
-                    suppliers, capabilities, and listings before entering a deeper workflow.
-                  </p>
+              <section className="rounded-[32px] border border-[#d9e5ea] bg-white p-8 shadow-[0_18px_50px_rgba(7,26,47,0.08)] md:p-10">
+                <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#2f8094]">
+                  One platform across the textile value chain
+                </p>
+                <p className="mt-4 max-w-4xl text-base leading-7 text-slate-600">
+                  TexQtic connects the movement of textiles from production capability to commercial
+                  opportunity - across manufacturing, wholesale, semi-wholesale, retail, and
+                  direct-to-consumer launches.
+                </p>
 
-                  <div className="mt-8 flex flex-wrap gap-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#0a2036]">
-                    <span className="rounded-full border border-[#d7e5ea] bg-[#f7fbfc] px-4 py-2">Categories</span>
-                    <span className="rounded-full border border-[#d7e5ea] bg-[#f7fbfc] px-4 py-2">Capabilities</span>
-                    <span className="rounded-full border border-[#d7e5ea] bg-[#f7fbfc] px-4 py-2">Product needs</span>
+                <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
+                  {publicEntryTextileChainCards.map((chain) => (
+                    <article key={chain.title} className="rounded-[24px] border border-[#e2ecef] bg-[#fbfdfe] p-5">
+                      <h3 className="text-lg font-semibold text-[#0a2036]">{chain.title}</h3>
+                      <p className="mt-3 text-sm leading-6 text-slate-600">{chain.body}</p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              <section id="public-entry-b2b-preview" className="rounded-[32px] border border-[#d9e5ea] bg-white p-8 shadow-[0_18px_50px_rgba(7,26,47,0.08)] md:p-10">
+                <h2 className="public-entry-editorial-heading text-3xl leading-tight text-[#0a2036] md:text-4xl">
+                  Discover the textile ecosystem
+                </h2>
+                <p className="mt-4 max-w-4xl text-base leading-7 text-slate-600">
+                  TexQtic helps buyers and businesses discover textile participants by category, capability,
+                  region, and trust posture - without exposing private business data.
+                </p>
+                <p className="mt-3 max-w-4xl text-base leading-7 text-slate-600">
+                  Public discovery creates confidence. Authenticated journeys enable deeper connection,
+                  comparison, and trade.
+                </p>
+
+                <div className="mt-8 rounded-[24px] border border-[#dce8eb] bg-[#f6fbfc] p-6">
+                  <p className="text-sm font-semibold text-[#0a2036]">Verified Fabric Manufacturer</p>
+                  <p className="mt-2 text-sm text-slate-600">Surat, Gujarat</p>
+                  <p className="mt-2 text-sm text-slate-600">Capabilities: Cotton fabric, weaving, dyeing, finishing</p>
+                  <p className="mt-2 text-sm text-slate-600">Trust Signals: Public profile approved</p>
+
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+                      className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+                    >
+                      View Public Profile
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openSecondaryAuthenticatedEntry('TENANT')}
+                      className="inline-flex items-center justify-center rounded-full border border-[#d1dee3] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036]"
+                    >
+                      Sign in to Connect
+                    </button>
                   </div>
+                </div>
+              </section>
+
+              <section id="public-entry-b2c-preview" className="rounded-[32px] border border-[#d9e5ea] bg-white p-8 shadow-[0_18px_50px_rgba(7,26,47,0.08)] md:p-10">
+                <h2 className="public-entry-editorial-heading text-3xl leading-tight text-[#0a2036] md:text-4xl">
+                  Browse textile products with trust behind them
+                </h2>
+                <p className="mt-4 max-w-4xl text-base leading-7 text-slate-600">
+                  TexQtic&apos;s public consumer browse is designed to show products, storefronts, materials,
+                  pricing where approved, and trust signals - while checkout, orders, and account continuity
+                  remain protected inside authenticated journeys.
+                </p>
+
+                <div className="mt-8 rounded-[24px] border border-[#dce8eb] bg-[#f6fbfc] p-6">
+                  <p className="text-sm font-semibold text-[#0a2036]">Linen Summer Shirt</p>
+                  <p className="mt-2 text-sm text-slate-600">Material: Linen blend</p>
+                  <p className="mt-2 text-sm text-slate-600">Storefront: Verified textile seller</p>
+                  <p className="mt-2 text-sm text-slate-600">Origin: Public-approved supply-chain story</p>
+                  <p className="mt-2 text-sm text-slate-600">Price: Public price where available</p>
 
                   <button
                     type="button"
-                    onClick={() => setAppState('PUBLIC_B2C_BROWSE')}
-                    className="mt-8 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+                    onClick={() => openSecondaryAuthenticatedEntry('TENANT')}
+                    className="mt-5 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
                   >
-                    Explore discovery
+                    Sign in to Continue
                   </button>
                 </div>
 
-                <div className="rounded-[32px] border border-[#9ed0d8] bg-[linear-gradient(180deg,_#e9f8fb_0%,_#d9eef3_100%)] p-8 shadow-[0_18px_50px_rgba(47,128,148,0.16)]">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
-                    Curated discovery preview
-                  </p>
-                  <h3 className="public-entry-editorial-heading mt-4 text-2xl leading-tight text-[#0a2036]">
-                    Discovery starts openly, then deepens with context
-                  </h3>
-                  <p className="mt-4 text-sm leading-6 text-slate-700">
-                    Browse textile categories, evaluate supplier capabilities, and explore verified storefront
-                    signals before account continuity begins.
-                  </p>
+                <p className="mt-5 text-sm font-medium text-slate-700">
+                  Consumers do not just discover products - they discover the textile story behind them.
+                </p>
+              </section>
 
-                  <div className="mt-6 space-y-3">
-                    {['Curated category paths', 'Verified supplier visibility', 'Textile-specific capability cues', 'Product-led browse context'].map((item) => (
-                      <div key={item} className="rounded-2xl border border-white/60 bg-white/55 px-4 py-3 text-sm font-medium text-[#0a2036]">
-                        {item}
-                      </div>
-                    ))}
+              <section id="public-entry-d2c-preview" className="rounded-[32px] border border-[#d9e5ea] bg-white p-8 shadow-[0_18px_50px_rgba(7,26,47,0.08)] md:p-10">
+                <h2 className="public-entry-editorial-heading text-3xl leading-tight text-[#0a2036] md:text-4xl">
+                  Turn textile capability into consumer-facing drops
+                </h2>
+                <p className="mt-4 max-w-4xl text-base leading-7 text-slate-600">
+                  TexQtic Verified Drops help textile stakeholders move beyond traditional supply and trade. A
+                  fabric mill, garment manufacturer, designer, brand, or collaboration can turn real capability
+                  into a public consumer-facing product story.
+                </p>
+                <p className="mt-3 max-w-4xl text-base leading-7 text-slate-600">
+                  This is not generic retail. It is verified textile commerce built from the supply chain outward.
+                </p>
+
+                <div className="mt-8 rounded-[24px] border border-[#dce8eb] bg-[#f6fbfc] p-6">
+                  <p className="text-sm font-semibold text-[#0a2036]">Organic Cotton Monsoon Capsule</p>
+                  <p className="mt-2 text-sm text-slate-600">Drop Type: Limited verified drop</p>
+                  <p className="mt-2 text-sm text-slate-600">Created by: Textile ecosystem collaboration</p>
+                  <p className="mt-2 text-sm text-slate-600">Story: From certified cotton to finished garment</p>
+                  <p className="mt-2 text-sm text-slate-600">Status: Coming soon</p>
+
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => scrollToPublicEntrySection('public-entry-d2c-preview')}
+                      className="inline-flex items-center justify-center rounded-full border border-[#d1dee3] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036]"
+                    >
+                      Learn About Verified Drops
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openSupplierRequestAccess}
+                      className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+                    >
+                      Launch Your Drop
+                    </button>
                   </div>
+                </div>
+
+                <p className="mt-5 text-sm font-medium text-slate-700">
+                  The product is not just sold. The textile journey is sold.
+                </p>
+              </section>
+
+              <section id="public-entry-trust" className="rounded-[32px] bg-[linear-gradient(135deg,_#08233a_0%,_#0e304a_100%)] p-8 text-white shadow-[0_24px_70px_rgba(7,26,47,0.20)] md:p-10">
+                <h2 className="public-entry-editorial-heading text-3xl leading-tight text-white md:text-4xl">
+                  Trust built into the textile journey
+                </h2>
+                <p className="mt-4 max-w-4xl text-base leading-7 text-slate-200">
+                  TexQtic is designed around public-safe trust, origin, and visibility. Products and profiles
+                  can carry approved signals such as material information, region, certification summaries,
+                  public passport references, and verified capability indicators.
+                </p>
+                <p className="mt-3 max-w-4xl text-base leading-7 text-slate-200">
+                  Public pages show only approved trust signals. Private documents, internal scores, legal
+                  states, and operational records stay protected.
+                </p>
+
+                <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                  {publicEntryTrustCards.map((card) => (
+                    <article key={card.title} className="rounded-[28px] border border-white/10 bg-white/8 p-6 shadow-sm">
+                      <h3 className="text-lg font-semibold text-white">{card.title}</h3>
+                      <p className="mt-3 text-sm leading-6 text-slate-200">{card.body}</p>
+                    </article>
+                  ))}
                 </div>
               </section>
 
-              <section id="public-entry-suppliers" className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
-                <div className="rounded-[32px] bg-[linear-gradient(180deg,_#0a2036_0%,_#123552_100%)] p-8 text-white shadow-[0_24px_70px_rgba(7,26,47,0.22)]">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#83d7e1]">
-                    For manufacturers, traders, and brands
-                  </p>
-                  <h2 className="public-entry-editorial-heading mt-4 text-3xl leading-tight text-white">
-                    List your business. Reach qualified buyers.
-                  </h2>
-                  <p className="mt-4 text-base leading-7 text-slate-200">
-                    Build a trusted presence on TexQtic, publish structured listings, and connect with
-                    qualified buyers across B2B and B2C channels from one platform.
-                  </p>
+              <section className="rounded-[32px] border border-[#d9e5ea] bg-white p-8 shadow-[0_18px_50px_rgba(7,26,47,0.08)] md:p-10">
+                <h2 className="public-entry-editorial-heading text-3xl leading-tight text-[#0a2036] md:text-4xl">
+                  Explore the breadth of the textile network
+                </h2>
+                <p className="mt-4 max-w-4xl text-base leading-7 text-slate-600">
+                  TexQtic can preview the scale and categories of the textile ecosystem publicly, while deeper
+                  comparison, qualification, routing, and connection intelligence remain authenticated.
+                </p>
+                <p className="mt-3 max-w-4xl text-base leading-7 text-slate-600">
+                  Public pages show the doorway. Authenticated workspaces power the decisions.
+                </p>
 
-                  <div className="mt-8 flex flex-col gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        selectNeutralPublicEntryPath('SUPPLIER');
-                        openSupplierRequestAccess();
-                      }}
-                      className="inline-flex items-center justify-center rounded-full bg-[#7fd5de] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#08233a] transition hover:bg-[#98e2e9]"
-                    >
-                      Apply to list your business
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => scrollToPublicEntrySection('public-entry-trust')}
-                      className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/8 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-white/14"
-                    >
-                      Learn how supplier onboarding works
-                    </button>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => openSecondaryAuthenticatedEntry('TENANT')}
+                  className="mt-6 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+                >
+                  Sign in to Compare Textile Partners
+                </button>
+              </section>
 
-                <div className="rounded-[32px] border border-[#d9e5ea] bg-white p-8 shadow-[0_18px_50px_rgba(7,26,47,0.08)] md:p-10">
-                  <div className="space-y-4">
-                    {publicEntrySupplierValuePoints.map((point) => (
-                      <div key={point} className="flex items-start gap-4 rounded-[24px] border border-[#e3ecef] bg-[#fbfdfe] px-5 py-4">
-                        <span className="mt-1 h-3 w-3 rounded-full bg-[#2f8094]" />
-                        <p className="text-sm leading-6 text-slate-700">{point}</p>
-                      </div>
-                    ))}
-                  </div>
+              <section className="rounded-[32px] border border-[#d9e5ea] bg-[#f7fbfc] p-8 shadow-[0_18px_50px_rgba(7,26,47,0.08)] md:p-10">
+                <h2 className="public-entry-editorial-heading text-3xl leading-tight text-[#0a2036] md:text-4xl">
+                  Ready to connect your textile journey?
+                </h2>
+                <p className="mt-4 max-w-4xl text-base leading-7 text-slate-600">
+                  Whether you want to source, sell, manufacture, design, serve, browse, or launch, TexQtic
+                  gives you a connected path into the textile ecosystem.
+                </p>
+
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+                    className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+                  >
+                    Explore B2B Network
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAppState('PUBLIC_B2C_BROWSE')}
+                    className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+                  >
+                    Browse Products
+                  </button>
+                  <button
+                    type="button"
+                    onClick={openSupplierRequestAccess}
+                    className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+                  >
+                    Launch a Verified Drop
+                  </button>
+                  <button
+                    type="button"
+                    onClick={openSupplierRequestAccess}
+                    className="inline-flex items-center justify-center rounded-full border border-[#d1dee3] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036]"
+                  >
+                    Join TexQtic
+                  </button>
                 </div>
               </section>
             </main>
-
-            <footer className="bg-[#071a2f] text-slate-200">
-              <div className="mx-auto max-w-7xl px-6 py-14 lg:px-10">
-                <div className="grid gap-10 border-b border-white/10 pb-10 lg:grid-cols-[1.25fr_repeat(3,minmax(0,1fr))]">
-                  <div>
-                    <div className="inline-flex rounded-[24px] bg-white p-4 shadow-[0_18px_40px_rgba(0,0,0,0.15)]">
-                      <img
-                        src="/brand/texqtic-logo.png"
-                        alt="TexQtic"
-                        className="h-12 w-auto"
-                        loading="lazy"
-                      />
-                    </div>
-                    <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.28em] text-[#81d6e0]">
-                      Verified textile commerce platform
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-white">Discover</h3>
-                    <div className="mt-4 space-y-3 text-sm text-slate-300">
-                      <button type="button" onClick={() => scrollToPublicEntrySection('public-entry-discovery')} className="block transition hover:text-white">Discover</button>
-                      <button type="button" onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')} className="block transition hover:text-white">Source for Business</button>
-                      <button type="button" onClick={() => setAppState('PUBLIC_B2C_BROWSE')} className="block transition hover:text-white">Browse Products</button>
-                      <button type="button" onClick={() => scrollToPublicEntrySection('public-entry-discovery')} className="block transition hover:text-white">Categories</button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-white">Suppliers</h3>
-                    <div className="mt-4 space-y-3 text-sm text-slate-300">
-                      <button type="button" onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')} className="block transition hover:text-white">For Suppliers</button>
-                      <button type="button" onClick={openSupplierRequestAccess} className="block transition hover:text-white">List your business</button>
-                      <button type="button" onClick={openSupplierRequestAccess} className="block transition hover:text-white">Supplier onboarding</button>
-                      <button type="button" onClick={() => scrollToPublicEntrySection('public-entry-trust')} className="block transition hover:text-white">Verification process</button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-white">Platform</h3>
-                    <div className="mt-4 space-y-3 text-sm text-slate-300">
-                      <a href="https://texqtic.com/company" target="_blank" rel="noopener noreferrer" className="block transition hover:text-white">About TexQtic</a>
-                      <button type="button" onClick={() => scrollToPublicEntrySection('public-entry-trust')} className="block transition hover:text-white">Trust standards</button>
-                      <a href="mailto:hello@texqtic.com" className="block transition hover:text-white">Contact</a>
-                      <a href="https://texqtic.com/resources" target="_blank" rel="noopener noreferrer" className="block transition hover:text-white">Help</a>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex flex-col gap-4 text-xs uppercase tracking-[0.18em] text-slate-400 md:flex-row md:items-center md:justify-between">
-                  <span>© 2026 TexQtic. All rights reserved.</span>
-                  <div className="flex flex-wrap gap-4">
-                    <span>Privacy</span>
-                    <span>Terms</span>
-                    <span>Supplier policy</span>
-                  </div>
-                </div>
-              </div>
-            </footer>
           </div>
         );
       }
