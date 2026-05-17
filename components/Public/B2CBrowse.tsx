@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import {
   getPublicB2CProducts,
+  type PublicB2CProductPreviewItem,
   type PublicB2CStorefrontEntry,
 } from '../../services/publicB2CService';
 
@@ -9,10 +10,61 @@ interface B2CBrowsePageProps {
   readonly onSignIn: () => void;
 }
 
+// â”€â”€ flat product item for browse grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+interface FlatProductItem {
+  key: string;
+  name: string;
+  imageUrl: string | null;
+  price: string | null;
+  moq: number;
+  category: string | null;
+  material: string | null;
+  fabricType: string | null;
+  supplierName: string;
+  supplierSlug: string;
+  jurisdiction: string;
+}
+
+function flattenStorefronts(storefronts: PublicB2CStorefrontEntry[]): FlatProductItem[] {
+  const items: FlatProductItem[] = [];
+  for (const sf of storefronts) {
+    for (const p of sf.productsPreview) {
+      items.push({
+        key: `${sf.slug}::${p.name}`,
+        name: p.name,
+        imageUrl: p.imageUrl,
+        price: p.price,
+        moq: p.moq,
+        category: p.category,
+        material: p.material,
+        fabricType: p.fabricType,
+        supplierName: sf.legalName,
+        supplierSlug: sf.slug,
+        jurisdiction: sf.jurisdiction,
+      });
+    }
+  }
+  return items;
+}
+
+// â”€â”€ static category cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+const CATEGORY_CARDS: { label: string; value: string; icon: string }[] = [
+  { label: 'Garments', value: 'Garments', icon: 'ðŸ‘•' },
+  { label: 'Home Textiles', value: 'Home Textiles', icon: 'ðŸ›ï¸' },
+  { label: 'Apparel', value: 'Apparel', icon: 'ðŸ§¥' },
+  { label: 'Fabrics', value: 'Fabrics', icon: 'ðŸ§µ' },
+];
+
+// â”€â”€ page component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
 export function B2CBrowsePage({ onBack, onSignIn }: B2CBrowsePageProps) {
-  const [items, setItems] = useState<PublicB2CStorefrontEntry[]>([]);
+  const [storefronts, setStorefronts] = useState<PublicB2CStorefrontEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -21,13 +73,13 @@ export function B2CBrowsePage({ onBack, onSignIn }: B2CBrowsePageProps) {
     getPublicB2CProducts()
       .then((data) => {
         if (!cancelled) {
-          setItems(data.items);
+          setStorefronts(data.items);
           setLoading(false);
         }
       })
       .catch(() => {
         if (!cancelled) {
-          setError('Unable to load storefronts. Please try again.');
+          setError('We could not load public product previews right now.');
           setLoading(false);
         }
       });
@@ -35,6 +87,34 @@ export function B2CBrowsePage({ onBack, onSignIn }: B2CBrowsePageProps) {
       cancelled = true;
     };
   }, []);
+
+  const allProducts = useMemo(() => flattenStorefronts(storefronts), [storefronts]);
+
+  const filteredProducts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return allProducts.filter((p) => {
+      const matchesSearch =
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        (p.category?.toLowerCase().includes(q) ?? false) ||
+        (p.material?.toLowerCase().includes(q) ?? false) ||
+        (p.fabricType?.toLowerCase().includes(q) ?? false) ||
+        p.supplierName.toLowerCase().includes(q);
+      const matchesCategory = !activeCategory || p.category === activeCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [allProducts, searchQuery, activeCategory]);
+
+  const handleCategoryToggle = (value: string) => {
+    setActiveCategory((prev) => (prev === value ? null : value));
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setActiveCategory(null);
+  };
+
+  const hasActiveFilter = searchQuery.trim().length > 0 || activeCategory !== null;
 
   return (
     <div className="min-h-screen bg-[#f3f8fb] font-sans">
@@ -78,143 +158,314 @@ export function B2CBrowsePage({ onBack, onSignIn }: B2CBrowsePageProps) {
         </div>
       </header>
 
-      {/* Page heading */}
-      <div className="bg-[#071a2f] px-6 py-12">
+      {/* Hero */}
+      <div className="bg-[#071a2f] px-6 py-14">
         <div className="mx-auto max-w-7xl">
           <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">
-            Curated products
+            Public product discovery
           </p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-[-0.02em] text-white md:text-5xl">
-            B2C Product Browse
+            Browse textile products with trust behind them.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
-            Explore verified textile storefronts and browse curated products from trusted sellers.
-            Account continuity and checkout begin after sign-in.
+            Explore public-safe textile product previews across categories, materials, and commerce
+            pathways â€” from everyday products to verified ecosystem-led launches.
           </p>
+          <p className="mt-3 text-sm text-slate-400">
+            TexQtic connects product discovery with the textile ecosystem behind it.
+          </p>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <a
+              href="#browse-grid"
+              className="inline-flex items-center justify-center rounded-full bg-[#7fd5de] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#071a2f] transition hover:bg-[#a4e0e8]"
+            >
+              Start Browsing
+            </a>
+            <button
+              type="button"
+              onClick={onBack}
+              className="inline-flex items-center justify-center rounded-full border border-slate-600 px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-300 transition hover:border-slate-400 hover:text-white"
+            >
+              Explore B2B Network
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Content */}
-      <main className="mx-auto max-w-7xl px-6 py-12 lg:px-10">
+      <main className="mx-auto max-w-7xl px-6 py-10 lg:px-10">
+        {/* Search + filter */}
+        <div className="mb-8">
+          <div className="relative mb-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search fabrics, garments, home textiles, apparel, or product categories"
+              className="w-full rounded-full border border-[#d6e4e8] bg-white py-3 pl-11 pr-5 text-sm text-[#0a2036] placeholder-slate-400 shadow-[0_2px_8px_rgba(7,26,47,0.06)] focus:border-[#7fd5de] focus:outline-none focus:ring-2 focus:ring-[#7fd5de]/30"
+            />
+          </div>
+
+          {/* Category chips */}
+          <div className="flex flex-wrap gap-2">
+            {CATEGORY_CARDS.map((cat) => (
+              <button
+                key={cat.value}
+                type="button"
+                onClick={() => handleCategoryToggle(cat.value)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] transition ${
+                  activeCategory === cat.value
+                    ? 'border-[#2f8094] bg-[#2f8094] text-white'
+                    : 'border-[#d6e4e8] bg-white text-[#2f8094] hover:bg-[#eff6f8]'
+                }`}
+              >
+                <span aria-hidden="true">{cat.icon}</span>
+                {cat.label}
+              </button>
+            ))}
+            {hasActiveFilter && (
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 transition hover:bg-slate-50"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-24">
             <div className="flex flex-col items-center gap-4">
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#d6e4e8] border-t-[#7fd5de]" />
-              <p className="text-sm text-slate-500">Loading storefronts…</p>
+              <p className="text-sm text-slate-500">Loading productsâ€¦</p>
             </div>
           </div>
         )}
 
+        {/* Error */}
         {!loading && error && (
           <div className="rounded-[28px] border border-red-200 bg-red-50 px-6 py-8 text-center">
             <p className="text-sm font-medium text-red-700">{error}</p>
-          </div>
-        )}
-
-        {!loading && !error && items.length === 0 && (
-          <div className="rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-16 text-center shadow-[0_18px_50px_rgba(7,26,47,0.06)]">
-            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
-              No storefronts listed yet
-            </p>
-            <h2 className="mt-3 text-xl font-semibold text-[#0a2036]">
-              Storefront listings are coming soon
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-500">
-              Verified B2C sellers will appear here once their public storefronts are published.
+            <p className="mt-1 text-sm text-red-500">
+              Please try again or return to the TexQtic homepage.
             </p>
           </div>
         )}
 
-        {!loading && !error && items.length > 0 && (
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {items.map((storefront) => (
-              <StorefrontCard key={storefront.slug} storefront={storefront} />
-            ))}
-          </div>
-        )}
-
-        {/* Sign-in CTA */}
+        {/* Product grid */}
         {!loading && !error && (
-          <div className="mt-14 rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-10 text-center shadow-[0_18px_50px_rgba(7,26,47,0.06)]">
+          <div id="browse-grid">
+            {filteredProducts.length === 0 ? (
+              <div className="rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-16 text-center shadow-[0_18px_50px_rgba(7,26,47,0.06)]">
+                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+                  No results
+                </p>
+                <h2 className="mt-3 text-xl font-semibold text-[#0a2036]">
+                  No public products matched your search.
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-slate-500">
+                  Try a different keyword or explore another textile category.
+                </p>
+                {hasActiveFilter && (
+                  <button
+                    type="button"
+                    onClick={handleClearFilters}
+                    className="mt-5 inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#2f8094] transition hover:bg-[#eff6f8]"
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                {filteredProducts.map((product) => (
+                  <ProductCard key={product.key} product={product} onSignIn={onSignIn} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Trust / origin section */}
+        {!loading && !error && (
+          <section className="mt-14 rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-10 shadow-[0_8px_28px_rgba(7,26,47,0.06)]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+              Trust &amp; origin
+            </p>
+            <h2 className="mt-2 text-xl font-semibold text-[#0a2036]">
+              More than a product listing.
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+              TexQtic product discovery is designed to connect public product previews with the
+              textile ecosystem behind them â€” including origin, supplier context, traceability, and
+              trust signals where available.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {[
+                'Origin context where available',
+                'Supplier verification',
+                'Traceability signals where available',
+                'Public-safe projection only',
+              ].map((label) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#d6e4e8] bg-[#f0f8fb] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2f8094]"
+                >
+                  <span aria-hidden="true">âœ“</span> {label}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* D2C bridge â€” positioning only */}
+        {!loading && !error && (
+          <section className="mt-8 rounded-[32px] border border-[#d9e5ea] bg-[#071a2f] px-8 py-10">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#7fd5de]">
+              Verified drops
+            </p>
+            <h2 className="mt-2 text-xl font-semibold text-white">
+              From textile capability to consumer launches.
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
+              TexQtic helps textile ecosystem participants move from manufacturing capability to
+              verified consumer-facing launches. Public product browse is the first step in that
+              journey.
+            </p>
+            <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-600 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+              <span aria-hidden="true">ðŸ”’</span> Verified drops are part of TexQtic&apos;s public
+              attraction roadmap â€” coming soon
+            </p>
+          </section>
+        )}
+
+        {/* Authenticated handoff */}
+        {!loading && !error && (
+          <section className="mt-8 rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-10 text-center shadow-[0_18px_50px_rgba(7,26,47,0.06)]">
             <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
               Ready to continue?
             </p>
             <h2 className="mt-3 text-xl font-semibold text-[#0a2036]">
-              Sign in to continue
+              Sign in to save products, continue checkout, request details, or access authenticated
+              buyer workflows.
             </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-500">
-              Account continuity and full product features require an authenticated session.
-            </p>
-            <button
-              type="button"
-              onClick={onSignIn}
-              className="mt-6 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
-            >
-              Sign in to continue
-            </button>
-          </div>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <button
+                type="button"
+                onClick={onSignIn}
+                className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+              >
+                Sign in to Continue
+              </button>
+              <a
+                href="https://texqtic.com/request-access"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#2f8094] transition hover:bg-[#eff6f8]"
+              >
+                List Your Products
+              </a>
+            </div>
+          </section>
         )}
       </main>
     </div>
   );
 }
 
-interface StorefrontCardProps {
-  readonly storefront: PublicB2CStorefrontEntry;
+// â”€â”€ ProductCard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+interface ProductCardProps {
+  readonly product: FlatProductItem;
+  readonly onSignIn: () => void;
 }
 
-function StorefrontCard({ storefront }: StorefrontCardProps) {
-  const previewItems = storefront.productsPreview.slice(0, 3);
+function ProductCard({ product, onSignIn }: ProductCardProps) {
+  const tags = [product.category, product.material, product.fabricType].filter(Boolean) as string[];
 
   return (
-    <article className="rounded-[28px] border border-[#d9e5ea] bg-white p-6 shadow-[0_8px_28px_rgba(7,26,47,0.07)]">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-[#2f8094]">
-            {storefront.orgType}
-          </p>
-          <h3 className="mt-1 text-lg font-semibold leading-tight text-[#0a2036]">
-            {storefront.legalName}
-          </h3>
+    <article className="flex flex-col rounded-[28px] border border-[#d9e5ea] bg-white shadow-[0_8px_28px_rgba(7,26,47,0.07)] overflow-hidden">
+      {/* Image */}
+      {product.imageUrl ? (
+        <div className="h-44 w-full overflow-hidden bg-[#f0f8fb]">
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
         </div>
-        <span className="shrink-0 rounded-full border border-[#d6e4e8] bg-[#f0f8fb] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#2f8094]">
-          {storefront.jurisdiction}
-        </span>
-      </div>
-
-      {/* Product preview */}
-      {previewItems.length > 0 && (
-        <div className="mt-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
-            Product preview
-          </p>
-          <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-            {previewItems.map((item) => (
-              <div
-                key={item.name}
-                className="shrink-0 w-28 rounded-[16px] border border-[#e0ebee] bg-[#f8fbfc] overflow-hidden"
-              >
-                {item.imageUrl && (
-                  <img
-                    src={item.imageUrl}
-                    alt={item.name}
-                    className="h-20 w-full object-cover"
-                    loading="lazy"
-                  />
-                )}
-                <div className="px-2 py-2">
-                  <p className="truncate text-[10px] font-semibold text-[#0a2036]">{item.name}</p>
-                  {item.price !== null && (
-                    <p className="mt-0.5 text-[9px] font-medium text-[#2f8094]">{item.price}</p>
-                  )}
-                  <p className="mt-0.5 text-[9px] text-slate-400">MOQ {item.moq}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+      ) : (
+        <div className="flex h-44 w-full items-center justify-center bg-[#f0f8fb]">
+          <span className="text-4xl" aria-hidden="true">ðŸ§µ</span>
         </div>
       )}
+
+      {/* Body */}
+      <div className="flex flex-1 flex-col p-5">
+        {/* Tags */}
+        {tags.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-[#d6e4e8] bg-[#f0f8fb] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#2f8094]"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Name */}
+        <h3 className="text-base font-semibold leading-snug text-[#0a2036] line-clamp-2">
+          {product.name}
+        </h3>
+
+        {/* Supplier */}
+        <p className="mt-1 text-[11px] font-medium text-slate-500">
+          {product.supplierName}
+          {product.jurisdiction ? (
+            <span className="ml-1.5 text-slate-400">Â· {product.jurisdiction}</span>
+          ) : null}
+        </p>
+
+        {/* Price / MOQ */}
+        <div className="mt-3 flex items-center gap-3 text-[11px] font-medium text-slate-600">
+          {product.price !== null ? (
+            <span className="font-semibold text-[#2f8094]">{product.price}</span>
+          ) : null}
+          <span className="text-slate-400">MOQ {product.moq}</span>
+        </div>
+
+        {/* CTA */}
+        <button
+          type="button"
+          onClick={onSignIn}
+          className="mt-auto pt-4 w-full inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#2f8094] transition hover:bg-[#eff6f8]"
+        >
+          Sign in to Continue
+        </button>
+      </div>
     </article>
   );
 }
+

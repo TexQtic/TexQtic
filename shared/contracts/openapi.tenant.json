@@ -4389,6 +4389,119 @@
         }
       }
     },
+    "/api/public/b2c/products": {
+      "get": {
+        "summary": "List public B2C product browse entries",
+        "description": "Returns a public-safe paginated list of B2C storefront entries with product previews. No authentication required. All five projection safety gates enforced: Gate A (publicEligibilityPosture=PUBLICATION_ELIGIBLE), Gate B (publication_posture in B2C_PUBLIC/BOTH), Gate C (org_type=B2C), Gate D (status in ACTIVE/VERIFICATION_APPROVED), Gate E (prohibited fields excluded — no org UUID, no internal IDs, no private pricing, no inventory, no buyer data). Empty result (items=[]) is a lawful 200 response — no B2C-public data has been posture-assigned yet. Design authority: TEXQTIC-B2C-PUBLIC-BROWSE-PROJECTION-CONTRACT-AND-FRONTEND-IMPLEMENTATION-001.",
+        "operationId": "listPublicB2CProducts",
+        "parameters": [
+          {
+            "name": "geo",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "maxLength": 100 },
+            "description": "Optional jurisdiction filter (exact match, e.g. 'US', 'IN')"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "default": 1 },
+            "description": "1-based page number"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "description": "Items per page (max 100)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public B2C browse response — lawful empty when no eligible storefronts are published",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["items", "total", "page", "limit"],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "slug",
+                          "legalName",
+                          "orgType",
+                          "jurisdiction",
+                          "productsPreview",
+                          "publicationPosture",
+                          "eligibilityPosture"
+                        ],
+                        "properties": {
+                          "slug": { "type": "string" },
+                          "legalName": { "type": "string" },
+                          "orgType": { "type": "string" },
+                          "jurisdiction": { "type": "string" },
+                          "publicationPosture": {
+                            "type": "string",
+                            "enum": ["B2C_PUBLIC", "BOTH"]
+                          },
+                          "eligibilityPosture": {
+                            "type": "string",
+                            "enum": ["PUBLICATION_ELIGIBLE"]
+                          },
+                          "productsPreview": {
+                            "type": "array",
+                            "maxItems": 5,
+                            "items": {
+                              "type": "object",
+                              "required": ["name", "moq"],
+                              "properties": {
+                                "name": { "type": "string" },
+                                "moq": { "type": "integer", "minimum": 1 },
+                                "price": { "type": "string", "nullable": true },
+                                "imageUrl": {
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "category": {
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "material": {
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "fabricType": {
+                                  "type": "string",
+                                  "nullable": true
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "total": { "type": "integer", "minimum": 0 },
+                    "page": { "type": "integer", "minimum": 1 },
+                    "limit": { "type": "integer", "minimum": 1 }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/public/supplier/{slug}": {
       "get": {
         "summary": "Get public supplier profile by slug",

@@ -63,6 +63,11 @@ export type PublicB2CProductPreviewItem = {
   // Null when price is unset on the catalog item.
   price: string | null;
   imageUrl: string | null;
+  // Public-safe browse enrichment fields — null when not set on the catalog item.
+  // id, sku, composition, catalogStage, and internal fields NOT included (Gate E).
+  category: string | null;
+  material: string | null;
+  fabricType: string | null;
 };
 
 export type PublicB2CStorefrontEntry = {
@@ -112,6 +117,9 @@ type B2CCatalogItemRow = {
   price: string | null;
   imageUrl: string | null;
   publicationPosture: string;
+  productCategory: string | null;
+  material: string | null;
+  fabricType: string | null;
 };
 
 // ── main service function ─────────────────────────────────────────────────────
@@ -201,7 +209,10 @@ export async function listPublicB2CProducts(
         price: true,
         imageUrl: true,
         publicationPosture: true,
-        // sku, description: excluded from preview (detail-level, not browse-level)
+        productCategory: true,
+        material: true,
+        fabricType: true,
+        // sku, description, composition, certifications, catalogStage: excluded (detail-level / internal, not browse-level)
         // Gate E: id (catalog item UUID), createdAt, updatedAt NOT selected
       },
       orderBy: [{ tenantId: 'asc' }, { createdAt: 'asc' }],
@@ -238,6 +249,10 @@ export async function listPublicB2CProducts(
         // price is a Decimal from Prisma — convert to string for safe JSON serialization
         price: c.price != null ? String(c.price) : null,
         imageUrl: c.imageUrl,
+        // Browse enrichment — null when not set (Gate E: id, sku, composition, catalogStage NOT included)
+        category: c.productCategory ?? null,
+        material: c.material ?? null,
+        fabricType: c.fabricType ?? null,
       })),
       publicationPosture: posture,
       eligibilityPosture: 'PUBLICATION_ELIGIBLE',

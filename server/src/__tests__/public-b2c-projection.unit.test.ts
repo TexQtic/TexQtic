@@ -95,6 +95,9 @@ function makeB2CCatalogRow(overrides: Partial<{
   price: string | null;
   imageUrl: string | null;
   publicationPosture: string;
+  productCategory: string | null;
+  material: string | null;
+  fabricType: string | null;
 }> = {}) {
   return {
     tenantId: 'b2c-org-uuid-001',
@@ -103,6 +106,9 @@ function makeB2CCatalogRow(overrides: Partial<{
     price: '29.99',
     imageUrl: 'https://cdn.example.com/tote.jpg',
     publicationPosture: 'B2C_PUBLIC',
+    productCategory: 'Home Textiles',
+    material: 'Cotton',
+    fabricType: 'Woven',
     ...overrides,
   };
 }
@@ -262,5 +268,57 @@ describe('listPublicB2CProducts', () => {
     expect(result.items).toHaveLength(1);
     expect(result.items[0].productsPreview).toHaveLength(0);
     expect(result.items[0].slug).toBe('sunshine-store');
+  });
+
+  // ── test 11: browse enrichment fields pass through when set ───────────────
+  it('includes category, material, fabricType in product preview when set on catalog row', async () => {
+    const orgRow = makeEligibleB2COrgRow();
+    const tenantRow = makeEligibleTenantRow();
+    const catalogRow = makeB2CCatalogRow({
+      productCategory: 'Garments',
+      material: 'Linen',
+      fabricType: 'Knit',
+    });
+
+    const prisma = makeMockPrisma({
+      orgs: [orgRow],
+      tenants: [tenantRow],
+      catalogItems: [catalogRow],
+    });
+
+    const result = await listPublicB2CProducts({}, prisma);
+    const preview = result.items[0].productsPreview[0];
+    expect(preview.category).toBe('Garments');
+    expect(preview.material).toBe('Linen');
+    expect(preview.fabricType).toBe('Knit');
+    // Prohibited internal fields must not be present
+    expect(preview).not.toHaveProperty('id');
+    expect(preview).not.toHaveProperty('tenantId');
+    expect(preview).not.toHaveProperty('sku');
+    expect(preview).not.toHaveProperty('composition');
+    expect(preview).not.toHaveProperty('catalogStage');
+  });
+
+  // ── test 12: null enrichment fields are safely null ───────────────────────
+  it('returns null for category, material, fabricType when not set on catalog row', async () => {
+    const orgRow = makeEligibleB2COrgRow();
+    const tenantRow = makeEligibleTenantRow();
+    const catalogRow = makeB2CCatalogRow({
+      productCategory: null,
+      material: null,
+      fabricType: null,
+    });
+
+    const prisma = makeMockPrisma({
+      orgs: [orgRow],
+      tenants: [tenantRow],
+      catalogItems: [catalogRow],
+    });
+
+    const result = await listPublicB2CProducts({}, prisma);
+    const preview = result.items[0].productsPreview[0];
+    expect(preview.category).toBeNull();
+    expect(preview.material).toBeNull();
+    expect(preview.fabricType).toBeNull();
   });
 });

@@ -9,6 +9,10 @@ export interface PublicB2CProductPreviewItem {
   moq: number;
   price: string | null;
   imageUrl: string | null;
+  // Browse enrichment fields — null when not set on the catalog item.
+  category: string | null;
+  material: string | null;
+  fabricType: string | null;
 }
 
 export interface PublicB2CStorefrontEntry {
