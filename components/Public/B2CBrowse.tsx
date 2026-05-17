@@ -54,7 +54,7 @@ function flattenStorefronts(storefronts: PublicB2CStorefrontEntry[]): FlatProduc
 const CATEGORY_CARDS: { label: string; value: string; icon: string }[] = [
   { label: 'Garments', value: 'Garments', icon: '\u{1F455}' },
   { label: 'Home Textiles', value: 'Home Textiles', icon: '\u{1F6CF}\uFE0F' },
-  { label: 'Apparel', value: 'Apparel', icon: '\u{1F9E5}' },
+  { label: 'Technical Textiles', value: 'Technical Textiles', icon: '\u{1F9E5}' },
   { label: 'Fabrics', value: 'Fabrics', icon: '\u{1F9F5}' },
 ];
 
@@ -170,7 +170,7 @@ export function B2CBrowsePage({ onBack, onSignIn }: B2CBrowsePageProps) {
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
             Explore public-safe textile product previews across categories, materials, and commerce
-            pathways â€” from everyday products to verified ecosystem-led launches.
+            pathways - from everyday products to textile ecosystem launches where available.
           </p>
           <p className="mt-3 text-sm text-slate-400">
             TexQtic connects product discovery with the textile ecosystem behind it.
@@ -217,7 +217,7 @@ export function B2CBrowsePage({ onBack, onSignIn }: B2CBrowsePageProps) {
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search fabrics, garments, home textiles, apparel, or product categories"
+              placeholder="Search fabrics, garments, home textiles, technical textiles, or product categories"
               className="w-full rounded-full border border-[#d6e4e8] bg-white py-3 pl-11 pr-5 text-sm text-[#0a2036] placeholder-slate-400 shadow-[0_2px_8px_rgba(7,26,47,0.06)] focus:border-[#7fd5de] focus:outline-none focus:ring-2 focus:ring-[#7fd5de]/30"
             />
           </div>
@@ -256,7 +256,7 @@ export function B2CBrowsePage({ onBack, onSignIn }: B2CBrowsePageProps) {
           <div className="flex items-center justify-center py-24">
             <div className="flex flex-col items-center gap-4">
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#d6e4e8] border-t-[#7fd5de]" />
-              <p className="text-sm text-slate-500">Loading productsâ€¦</p>
+              <p className="text-sm text-slate-500">Loading products...</p>
             </div>
           </div>
         )}
@@ -316,13 +316,13 @@ export function B2CBrowsePage({ onBack, onSignIn }: B2CBrowsePageProps) {
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
               TexQtic product discovery is designed to connect public product previews with the
-              textile ecosystem behind them â€” including origin, supplier context, traceability, and
+              textile ecosystem behind them - including origin, supplier context, traceability, and
               trust signals where available.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               {[
                 'Origin context where available',
-                'Supplier verification',
+                'Supplier trust signals where available',
                 'Traceability signals where available',
                 'Public-safe projection only',
               ].map((label) => (
@@ -341,18 +341,18 @@ export function B2CBrowsePage({ onBack, onSignIn }: B2CBrowsePageProps) {
         {!loading && !error && (
           <section className="mt-8 rounded-[32px] border border-[#d9e5ea] bg-[#071a2f] px-8 py-10">
             <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#7fd5de]">
-              Verified drops
+              Consumer launch pathways
             </p>
             <h2 className="mt-2 text-xl font-semibold text-white">
               From textile capability to consumer launches.
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
               TexQtic helps textile ecosystem participants move from manufacturing capability to
-              verified consumer-facing launches. Public product browse is the first step in that
+              consumer-facing launch pathways where available. Public product browse is the first step in that
               journey.
             </p>
             <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-600 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
-              <span aria-hidden="true">ðŸ”’</span> Verified drops are part of TexQtic&apos;s public
+              <span aria-hidden="true">[Protected]</span> Consumer launch pathways are part of TexQtic&apos;s public
               attraction roadmap â€” coming soon
             </p>
           </section>
@@ -416,7 +416,7 @@ function ProductCard({ product, onSignIn }: ProductCardProps) {
         </div>
       ) : (
         <div className="flex h-44 w-full items-center justify-center bg-[#f0f8fb]">
-          <span className="text-4xl" aria-hidden="true">ðŸ§µ</span>
+          <span className="text-sm font-medium text-slate-400" aria-hidden="true">No image</span>
         </div>
       )}
 
@@ -454,7 +454,7 @@ function ProductCard({ product, onSignIn }: ProductCardProps) {
         <p className="mt-1 text-[11px] font-medium text-slate-500">
           {product.supplierName}
           {product.jurisdiction ? (
-            <span className="ml-1.5 text-slate-400">Â· {product.jurisdiction}</span>
+            <span className="ml-1.5 text-slate-400">- {product.jurisdiction}</span>
           ) : null}
         </p>
 

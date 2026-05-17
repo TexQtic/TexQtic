@@ -228,7 +228,7 @@ export function PublicProductDetail({
             <div className="rounded-[24px] border border-[#d9e5ea] bg-white p-6">
               <h2 className="text-lg font-semibold text-[#0a2036]">Material and textile context</h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                TexQtic connects product discovery with the textile ecosystem behind it — from materials and manufacturing capability to retail and verified consumer demand.
+                TexQtic connects product discovery with the textile ecosystem behind it - from materials and manufacturing capability to retail and consumer demand signals where available.
               </p>
             </div>
 
