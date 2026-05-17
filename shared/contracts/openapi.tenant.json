@@ -4389,6 +4389,223 @@
         }
       }
     },
+    "/api/public/dpp/{publicPassportId}": {
+      "get": {
+        "summary": "Get public DPP passport detail by public token",
+        "description": "Returns a public-safe DPP passport detail for a published passport addressed by public token. No authentication required. Public token semantics: this path parameter represents dpp_passport_states.public_token only, not internal passport IDs, node IDs, org IDs, tenant IDs, product IDs, or user IDs. Response intentionally excludes internal/private IDs, protected document URLs, private compliance workflow details, and commercial data.",
+        "operationId": "getPublicDppPassportById",
+        "parameters": [
+          {
+            "name": "publicPassportId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Published public passport token (dpp_passport_states.public_token). Not an internal ID."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public DPP passport detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data"],
+                  "properties": {
+                    "success": { "type": "boolean", "enum": [true] },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "publicPassportId",
+                        "passportStatus",
+                        "passportMaturity",
+                        "product",
+                        "lineageSummary",
+                        "certifications",
+                        "evidenceSummary",
+                        "qr",
+                        "exportedAt"
+                      ],
+                      "properties": {
+                        "publicPassportId": { "type": "string", "format": "uuid" },
+                        "passportStatus": { "type": "string", "enum": ["PUBLISHED"] },
+                        "passportMaturity": {
+                          "type": "string",
+                          "enum": ["LOCAL_TRUST", "TRADE_READY", "COMPLIANCE", "GLOBAL_DPP"]
+                        },
+                        "product": {
+                          "type": "object",
+                          "required": ["nodeType", "batchId", "manufacturerName", "manufacturerJurisdiction"],
+                          "properties": {
+                            "nodeType": { "type": "string" },
+                            "batchId": { "type": "string", "nullable": true },
+                            "manufacturerName": { "type": "string", "nullable": true },
+                            "manufacturerJurisdiction": { "type": "string", "nullable": true }
+                          },
+                          "additionalProperties": false
+                        },
+                        "lineageSummary": {
+                          "type": "object",
+                          "required": ["lineageDepth", "nodeCount"],
+                          "properties": {
+                            "lineageDepth": { "type": "integer", "minimum": 0 },
+                            "nodeCount": { "type": "integer", "minimum": 0 }
+                          },
+                          "additionalProperties": false
+                        },
+                        "certifications": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": ["certificationType", "lifecycleStateName", "expiryDate", "issuedAt"],
+                            "properties": {
+                              "certificationType": { "type": "string" },
+                              "lifecycleStateName": { "type": "string" },
+                              "expiryDate": { "type": "string", "format": "date-time", "nullable": true },
+                              "issuedAt": { "type": "string", "format": "date-time", "nullable": true }
+                            },
+                            "additionalProperties": false
+                          }
+                        },
+                        "evidenceSummary": {
+                          "type": "object",
+                          "required": ["approvedCertCount"],
+                          "properties": {
+                            "approvedCertCount": { "type": "integer", "minimum": 0 }
+                          },
+                          "additionalProperties": false
+                        },
+                        "qr": {
+                          "type": "object",
+                          "required": ["payloadUrl", "format"],
+                          "properties": {
+                            "payloadUrl": { "type": "string", "format": "uri" },
+                            "format": { "type": "string", "enum": ["url"] }
+                          },
+                          "additionalProperties": false
+                        },
+                        "exportedAt": { "type": "string", "format": "date-time" },
+                        "labelConfig": {
+                          "type": "object",
+                          "nullable": true,
+                          "required": ["publicTitle", "buyerFacingLabel", "subtitle", "showTexqticBrand"],
+                          "properties": {
+                            "publicTitle": { "type": "string", "nullable": true },
+                            "buyerFacingLabel": { "type": "string" },
+                            "subtitle": { "type": "string", "nullable": true },
+                            "showTexqticBrand": { "type": "boolean" }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (publicPassportId must be a valid UUID)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Public DPP passport not found. The passport may not exist, may not be published for public discovery, or may be unavailable.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/dpp/{publicPassportId}/structured-data": {
+      "get": {
+        "summary": "Get public DPP structured data by public token",
+        "description": "Returns a public-safe JSON-LD structured-data view for a published passport addressed by public token. No authentication required. Public token semantics are identical to GET /api/public/dpp/{publicPassportId}. Response is privacy-filtered and excludes internal IDs, private document URLs, and protected workflow/commercial fields.",
+        "operationId": "getPublicDppStructuredDataById",
+        "parameters": [
+          {
+            "name": "publicPassportId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Published public passport token (dpp_passport_states.public_token). Not an internal ID."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public DPP JSON-LD structured data",
+            "content": {
+              "application/ld+json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "@context",
+                    "@type",
+                    "@id",
+                    "passportUrl",
+                    "publicPassportId",
+                    "passportStatus",
+                    "passportMaturity",
+                    "passportMaturityLabel",
+                    "product",
+                    "certifications",
+                    "lineageSummary",
+                    "evidenceSummary",
+                    "generatedAt"
+                  ],
+                  "properties": {
+                    "@context": { "type": "object", "additionalProperties": true },
+                    "@type": { "type": "string" },
+                    "@id": { "type": "string", "format": "uri" },
+                    "passportUrl": { "type": "string", "format": "uri" },
+                    "publicPassportId": { "type": "string", "format": "uuid" },
+                    "passportStatus": { "type": "string", "enum": ["PUBLISHED"] },
+                    "passportMaturity": {
+                      "type": "string",
+                      "enum": ["LOCAL_TRUST", "TRADE_READY", "COMPLIANCE", "GLOBAL_DPP"]
+                    },
+                    "passportMaturityLabel": { "type": "string" },
+                    "product": { "type": "object", "additionalProperties": true },
+                    "certifications": {
+                      "type": "array",
+                      "items": { "type": "object", "additionalProperties": true }
+                    },
+                    "lineageSummary": { "type": "object", "additionalProperties": true },
+                    "evidenceSummary": { "type": "object", "additionalProperties": true },
+                    "generatedAt": { "type": "string", "format": "date-time" }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (publicPassportId must be a valid UUID)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Public DPP passport not found. The passport may not exist, may not be published for public discovery, or may be unavailable.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/public/b2c/products": {
       "get": {
         "summary": "List public B2C product browse entries",
