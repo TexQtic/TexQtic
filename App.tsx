@@ -6726,10 +6726,7 @@ const App: React.FC = () => {
               globalThis.window?.history.replaceState(null, '', '/');
               setAppState('PUBLIC_B2B_DISCOVERY');
             }}
-            onBrowseProducts={() => {
-              globalThis.window?.history.replaceState(null, '', '/');
-              setAppState('PUBLIC_B2C_BROWSE');
-            }}
+            onBrowseProducts={() => setAppState('PUBLIC_B2C_BROWSE')}
             onLearnAboutTrust={() => {
               globalThis.window?.history.replaceState(null, '', '/trust');
               setAppState('PUBLIC_TRUST_LANDING');
