@@ -85,6 +85,11 @@ import {
   PUBLIC_COLLECTION_PROJECTIONS,
   getCollectionBySlug,
 } from './config/publicCollectionsProjection';
+import {
+  applyPublicPageMeta,
+  clearPublicPageMeta,
+  PUBLIC_META_OG_FALLBACK_IMAGE,
+} from './utils/publicPageMeta';
 import { PublicPassport } from './components/Public/PublicPassport';
 import { PublicSupplierProfile } from './components/Public/PublicSupplierProfile';
 import { PublicReferralLanding } from './components/Public/PublicReferralLanding';
@@ -3009,6 +3014,122 @@ const App: React.FC = () => {
   useEffect(() => {
     document.title = documentTitle;
   }, [documentTitle]);
+
+  // PUBLIC-COLLECTION-SEO-METADATA-IMPLEMENTATION-001
+  // Manages SEO <head> metadata for D2C public collection surfaces.
+  // Authority: PUBLIC-SEO-INFRASTRUCTURE-DECISION-001, D2C-COLLECTION-SEO-GOVERNANCE-001
+  useEffect(() => {
+    const origin = globalThis.window?.location.origin ?? '';
+
+    if (appState === 'PUBLIC_COLLECTIONS') {
+      const hasEligible = PUBLIC_COLLECTION_PROJECTIONS.some(
+        (c) => c.listState.availability === 'AVAILABLE',
+      );
+      const listTitle = 'Verified Textile Collections — TexQtic';
+      const listDescription =
+        'Curated textile story and showcase collections on TexQtic. Natural fabrics, garments, home textiles, technical textiles, and ecosystem context.';
+      applyPublicPageMeta({
+        title: listTitle,
+        description: listDescription,
+        canonical: `${origin}/collections`,
+        robots: hasEligible ? 'index, follow' : 'noindex, nofollow',
+        ogTitle: listTitle,
+        ogDescription: listDescription,
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/collections`,
+        ogType: 'website',
+        twitterCard: 'summary_large_image',
+        twitterTitle: listTitle,
+        twitterDescription: listDescription,
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
+    if (appState === 'PUBLIC_COLLECTION_DETAIL') {
+      const collection = getCollectionBySlug(
+        publicCollectionSlugFromPath,
+        PUBLIC_COLLECTION_PROJECTIONS,
+      );
+      if (collection) {
+        const detailTitle = `${collection.title} — TexQtic Verified Textile Collections`;
+        const descPrefix = `${collection.title}: `;
+        const descSuffix = '. Eligible products may include public trust context where available.';
+        const maxSummaryLen = 155 - descPrefix.length - descSuffix.length;
+        const summarySnippet =
+          collection.summary.length > maxSummaryLen
+            ? `${collection.summary.slice(0, maxSummaryLen).trimEnd()}...`
+            : collection.summary;
+        const detailDescription = `${descPrefix}${summarySnippet}${descSuffix}`;
+        const canonical = `${origin}/collections/${collection.publicSlug}`;
+        applyPublicPageMeta({
+          title: detailTitle,
+          description: detailDescription,
+          canonical,
+          robots: 'index, follow',
+          ogTitle: detailTitle,
+          ogDescription: detailDescription,
+          ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+          ogUrl: canonical,
+          ogType: 'website',
+          twitterCard: 'summary_large_image',
+          twitterTitle: detailTitle,
+          twitterDescription: detailDescription,
+          twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        });
+        return;
+      }
+      // Fail-closed: collection not found at effect time — treat as unavailable
+      applyPublicPageMeta({
+        title: 'Collection Preview Unavailable — TexQtic',
+        description:
+          'This collection preview is not currently available. Explore other curated textile collections on TexQtic.',
+        canonical: `${origin}/collections`,
+        robots: 'noindex, nofollow',
+        ogTitle: 'TexQtic Textile Collections',
+        ogDescription:
+          'Explore curated textile story and showcase collections on TexQtic.',
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/collections`,
+        ogType: 'website',
+        twitterCard: 'summary',
+        twitterTitle: 'TexQtic Textile Collections',
+        twitterDescription:
+          'Explore curated textile story and showcase collections on TexQtic.',
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
+    if (appState === 'PUBLIC_COLLECTION_DETAIL_UNAVAILABLE') {
+      const slug = publicCollectionSlugFromPath;
+      const canonical = slug
+        ? `${origin}/collections/${slug}`
+        : `${origin}/collections`;
+      applyPublicPageMeta({
+        title: 'Collection Preview Unavailable — TexQtic',
+        description:
+          'This collection preview is not currently available. Explore other curated textile collections on TexQtic.',
+        canonical,
+        robots: 'noindex, nofollow',
+        ogTitle: 'TexQtic Textile Collections',
+        ogDescription:
+          'Explore curated textile story and showcase collections on TexQtic.',
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/collections`,
+        ogType: 'website',
+        twitterCard: 'summary',
+        twitterTitle: 'TexQtic Textile Collections',
+        twitterDescription:
+          'Explore curated textile story and showcase collections on TexQtic.',
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
+    // All other app states: remove managed metadata tags
+    clearPublicPageMeta();
+  }, [appState, publicCollectionSlugFromPath]);
 
   useEffect(() => {
     if (appState !== 'PUBLIC_ENTRY') {
