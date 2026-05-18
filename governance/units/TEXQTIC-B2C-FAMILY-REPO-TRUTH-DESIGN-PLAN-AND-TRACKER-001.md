@@ -937,4 +937,4 @@ Rationale:
 ### 18.13 Commit Reference
 
 - **Commit message:** `[TEXQTIC] governance: sync B2C product detail baseline`
-- **Commit hash:** TBD — record after commit.
+- **Commit hash:** 487582b
