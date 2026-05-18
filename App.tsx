@@ -2808,7 +2808,7 @@ const App: React.FC = () => {
     {
       audience: 'Designers & Brands',
       title: 'Create with the textile ecosystem',
-      body: 'Connect with verified suppliers, manufacturers, and service providers to build products and launch consumer-ready collections.',
+      body: 'Connect with verified suppliers, manufacturers, and service providers to build products and shape public-safe collection stories.',
       cta: 'Start Building',
       action: 'SUPPLIER_REQUEST',
     },
@@ -2827,10 +2827,10 @@ const App: React.FC = () => {
       action: 'SUPPLIER_REQUEST',
     },
     {
-      audience: 'D2C Launches',
-      title: 'Launch a verified textile drop',
-      body: 'Turn real textile capability into consumer-facing products with trust, origin, and supply-chain story built in.',
-      cta: 'Launch a Verified Drop',
+      audience: 'D2C Collections',
+      title: 'Prepare verified textile collections',
+      body: 'Shape public-safe curated story and showcase previews from real textile capability, with authenticated continuation where available.',
+      cta: 'Prepare Verified Textile Collections',
       action: 'SUPPLIER_REQUEST',
     },
   ] as const;
@@ -2853,7 +2853,7 @@ const App: React.FC = () => {
     },
     {
       title: 'D2C',
-      body: 'Verified textile drops that help ecosystem stakeholders turn supply-chain capability into consumer demand.',
+      body: 'Verified Textile Collections that help ecosystem stakeholders connect supply-chain capability with public-safe consumer storytelling.',
     },
   ] as const;
   const publicEntryTrustCards = [
@@ -6246,10 +6246,10 @@ const App: React.FC = () => {
                     <p className="mt-5 max-w-3xl text-base leading-7 text-slate-200 md:text-lg">
                       TexQtic brings manufacturers, suppliers, buyers, designers, service providers, brands,
                       and consumers into one connected textile commerce ecosystem - from manufacturing and
-                      wholesale to retail and verified direct-to-consumer launches.
+                      wholesale to retail and verified textile collections.
                     </p>
                     <p className="mt-4 text-sm font-medium leading-6 text-[#c9eaf0] md:text-base">
-                      Discover trusted partners. Verify textile capability. Launch consumer-ready products.
+                      Discover trusted partners. Verify textile capability. Explore curated textile collections.
                       Trade with confidence.
                     </p>
 
@@ -6279,7 +6279,7 @@ const App: React.FC = () => {
                         onClick={openSupplierRequestAccess}
                         className="inline-flex items-center justify-center rounded-full border border-[#7fd5de]/40 bg-transparent px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#a6e9f0] transition hover:border-[#a6e9f0] hover:bg-[#0a334d]"
                       >
-                        Launch a Verified Drop
+                        Prepare Verified Textile Collections
                       </button>
                     </div>
                   </section>
@@ -6395,7 +6395,7 @@ const App: React.FC = () => {
                 <p className="mt-4 max-w-4xl text-base leading-7 text-slate-600">
                   TexQtic connects the movement of textiles from production capability to commercial
                   opportunity - across manufacturing, wholesale, semi-wholesale, retail, and
-                  direct-to-consumer launches.
+                  verified textile collections.
                 </p>
 
                 <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
@@ -6479,12 +6479,12 @@ const App: React.FC = () => {
 
               <section id="public-entry-d2c-preview" className="rounded-[32px] border border-[#d9e5ea] bg-white p-8 shadow-[0_18px_50px_rgba(7,26,47,0.08)] md:p-10">
                 <h2 className="public-entry-editorial-heading text-3xl leading-tight text-[#0a2036] md:text-4xl">
-                  Turn textile capability into consumer-facing drops
+                  Turn textile capability into curated textile collection stories
                 </h2>
                 <p className="mt-4 max-w-4xl text-base leading-7 text-slate-600">
-                  TexQtic Verified Drops help textile stakeholders move beyond traditional supply and trade. A
-                  fabric mill, garment manufacturer, designer, brand, or collaboration can turn real capability
-                  into a public consumer-facing product story.
+                  Verified Textile Collections help textile stakeholders move beyond traditional supply and trade.
+                  A fabric mill, garment manufacturer, designer, brand, or collaboration can frame real
+                  capability through a public-safe curated story and showcase preview.
                 </p>
                 <p className="mt-3 max-w-4xl text-base leading-7 text-slate-600">
                   This is not generic retail. It is verified textile commerce built from the supply chain outward.
@@ -6492,7 +6492,7 @@ const App: React.FC = () => {
 
                 <div className="mt-8 rounded-[24px] border border-[#dce8eb] bg-[#f6fbfc] p-6">
                   <p className="text-sm font-semibold text-[#0a2036]">Organic Cotton Monsoon Capsule</p>
-                  <p className="mt-2 text-sm text-slate-600">Drop Type: Limited verified drop</p>
+                  <p className="mt-2 text-sm text-slate-600">Collection Type: Curated textile collection preview</p>
                   <p className="mt-2 text-sm text-slate-600">Created by: Textile ecosystem collaboration</p>
                   <p className="mt-2 text-sm text-slate-600">Story: From certified cotton to finished garment</p>
                   <p className="mt-2 text-sm text-slate-600">Status: Coming soon</p>
@@ -6503,14 +6503,14 @@ const App: React.FC = () => {
                       onClick={() => scrollToPublicEntrySection('public-entry-d2c-preview')}
                       className="inline-flex items-center justify-center rounded-full border border-[#d1dee3] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036]"
                     >
-                      Learn About Verified Drops
+                      Learn About Verified Textile Collections
                     </button>
                     <button
                       type="button"
                       onClick={openSupplierRequestAccess}
                       className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
                     >
-                      Launch Your Drop
+                      Prepare Your Collection
                     </button>
                   </div>
                 </div>
@@ -6570,8 +6570,8 @@ const App: React.FC = () => {
                   Ready to connect your textile journey?
                 </h2>
                 <p className="mt-4 max-w-4xl text-base leading-7 text-slate-600">
-                  Whether you want to source, sell, manufacture, design, serve, browse, or launch, TexQtic
-                  gives you a connected path into the textile ecosystem.
+                  Whether you want to source, sell, manufacture, design, serve, browse, or present curated
+                  collections, TexQtic gives you a connected path into the textile ecosystem.
                 </p>
 
                 <div className="mt-8 flex flex-wrap gap-3">
@@ -6594,7 +6594,7 @@ const App: React.FC = () => {
                     onClick={openSupplierRequestAccess}
                     className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
                   >
-                    Launch a Verified Drop
+                    Prepare Verified Textile Collections
                   </button>
                   <button
                     type="button"
