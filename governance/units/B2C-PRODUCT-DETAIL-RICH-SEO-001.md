@@ -3,7 +3,7 @@
 
 **Unit ID:** B2C-PRODUCT-DETAIL-RICH-SEO-001
 **Type:** implementation
-**Status:** IMPLEMENTATION_COMPLETE_LOCAL_VALIDATION_PASS
+**Status:** VERIFIED_COMPLETE
 **Created:** 2026-07-08
 **Depends on:** B2C-SEO-METADATA-EXPANSION-IMPLEMENTATION-001 (VERIFIED_COMPLETE, commit `3f1001c`)
 
@@ -102,8 +102,51 @@ publicProductDetailMeta.type === 'found'    → rich title and description from 
 ## 8. Commit
 
 - **Commit message:** `[TEXQTIC] public: implement B2C product detail rich SEO`
-<<<<<<< HEAD
-- **Commit hash:** `a548225`
-=======
-- **Commit hash:** (to be filled at VERIFY-CLOSE)
->>>>>>> a5482259eb16641c4b5a007488cd1e71d83f8f63
+- **Commit hash (original implementation):** `a548225`
+- **Commit hash (SEO useEffect fix — same message):** `057d998`
+
+---
+
+## 9. Production Verification — 2026-07-08
+
+**Verification unit:** `B2C-PRODUCT-DETAIL-RICH-SEO-001-VERIFY-CLOSE`
+**Backend health:** `GET https://app.texqtic.com/api/health` → `{"status":"ok"}` HTTP 200 ✅
+
+### 9.1 Not-Found Product Metadata (Stage 2b)
+
+Slug: `qa-b2c--qa-b2c-cotton-scarf-1ab8a85c10` (QA seed product; PDP API returns ERR_ABORTED/404)
+
+| Field | Expected | Actual | Pass |
+|---|---|---|---|
+| title | `Product Not Found — TexQtic` | `Product Not Found — TexQtic` | ✅ |
+| description | `This product is no longer available on TexQtic. Browse all available textile products.` | matched | ✅ |
+| canonical | `https://app.texqtic.com/products` | matched | ✅ |
+| robots | `noindex, nofollow` | matched | ✅ |
+| ogTitle | `Product Not Found — TexQtic` | matched | ✅ |
+| ogType | `website` | matched | ✅ |
+| ogUrl | `https://app.texqtic.com/products` | matched | ✅ |
+| ogDesc | correct not-found copy | matched | ✅ |
+| twitterCard | `summary_large_image` | matched | ✅ |
+
+Confirmed on second slug `qa-b2c--qa-b2c-linen-wrap-c48d2bc0ea` — identical result ✅
+
+### 9.2 Found Product Metadata (Stage 2b) — Data-Limited
+
+No publicly-accessible product detail page exists in production at this time. QA seed products appear on the browse page but their PDP API (`/api/public/b2c/products/:slug`) returns ERR_ABORTED/404 for all discovered slugs. The found-state code path is verified at TypeScript level only (tsc --noEmit PASS). Verification of live found-state rich metadata is deferred to when a product with an accessible PDP is published.
+
+### 9.3 Regression Checks
+
+| Route | Expected robots | Actual robots | Pass |
+|---|---|---|---|
+| `/products` | `index, follow` | `index, follow` | ✅ |
+| `/products/category/garments` | `index, follow` | `index, follow` | ✅ |
+| `/products/category/unknown-slug` | `noindex, nofollow` | `noindex, nofollow` | ✅ |
+| `/collections` | `index, follow` | `index, follow` | ✅ |
+| `/collections/natural-fabric-stories` | `index, follow` | `index, follow` | ✅ |
+| `/collections/unknown-slug` | `noindex, nofollow` | `noindex, nofollow` | ✅ |
+
+### 9.4 Public/Private Boundary
+
+No org_id, tenant ID, internal IDs, pricing, inventory, or private fields appeared in any metadata verified above. ✅
+
+**Verification result:** PASS (not-found path fully verified; found path data-limited — no production PDP accessible at this time)

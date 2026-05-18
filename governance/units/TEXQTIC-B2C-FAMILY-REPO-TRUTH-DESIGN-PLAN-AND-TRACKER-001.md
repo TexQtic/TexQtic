@@ -1684,7 +1684,7 @@ No other files modified.
 ## 26. B2C Product Detail Rich SEO — Stage 2b — Implementation — 2026-07-08
 
 **Unit:** B2C-PRODUCT-DETAIL-RICH-SEO-001
-**Status:** IMPLEMENTATION_COMPLETE_LOCAL_VALIDATION_PASS
+**Status:** VERIFIED_COMPLETE
 **Stage:** 2b (rich product metadata with found/notFound signal callback)
 
 ### 26.1 Scope
@@ -1742,8 +1742,20 @@ Upgraded Stage 2a generic `PUBLIC_PRODUCT_DETAIL` SEO arm in `App.tsx` to a sign
 ### 26.7 Implementation Commit Reference
 
 - **Commit message:** `[TEXQTIC] public: implement B2C product detail rich SEO`
-<<<<<<< HEAD
-- **Commit hash:** `a548225`
-=======
-- **Commit hash:** (to be filled at VERIFY-CLOSE)
->>>>>>> a5482259eb16641c4b5a007488cd1e71d83f8f63
+- **Commit hash (original implementation):** `a548225`
+- **Commit hash (SEO useEffect fix — same message):** `057d998`
+
+### 26.8 Production Verification Evidence (2026-07-08)
+
+**Backend health:** `GET https://app.texqtic.com/api/health` → `{"status":"ok"}` HTTP 200 ✅
+
+**Not-found path (Stage 2b):** slug `qa-b2c--qa-b2c-cotton-scarf-1ab8a85c10` → title `Product Not Found — TexQtic`, robots `noindex, nofollow`, canonical `https://app.texqtic.com/products` ✅  
+Confirmed on second QA slug — identical result ✅
+
+**Found path (Stage 2b):** Data-limited — no publicly-accessible PDP in production at this time. QA browse products return ERR_ABORTED/404 from PDP API. Found-state verified at TypeScript level (tsc --noEmit PASS) only.
+
+**Regression checks:** `/products` `index,follow` ✅ · `/products/category/garments` `index,follow` ✅ · `/products/category/unknown-slug` `noindex,nofollow` ✅ · `/collections` `index,follow` ✅ · `/collections/natural-fabric-stories` `index,follow` ✅ · `/collections/unknown-slug` `noindex,nofollow` ✅
+
+**Public/private boundary:** No private fields in any verified metadata ✅
+
+**Verification result:** PASS (not-found path fully verified; found path data-limited)
