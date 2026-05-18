@@ -18,6 +18,7 @@
  *   - PUBLIC_COLLECTIONS list surface
  *   - PUBLIC_COLLECTION_DETAIL surface
  *   - PUBLIC_COLLECTION_DETAIL_UNAVAILABLE surface
+ *   - PUBLIC_B2C_CATEGORY_STORY surface (B2C-PUBLIC-CATEGORY-STORY-PAGES-IMPLEMENTATION-001)
  *
  * Deferred (out of Stage 1 scope):
  *   - JSON-LD / structured data

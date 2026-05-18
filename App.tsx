@@ -96,6 +96,8 @@ import { PublicReferralLanding } from './components/Public/PublicReferralLanding
 import { PublicTrustLandingStub } from './components/Public/PublicTrustLandingStub';
 import { PublicAggregatorPreview } from './components/Public/PublicAggregatorPreview';
 import { PublicIndustryClusterLanding } from './components/Public/PublicIndustryClusterLanding';
+import { PublicB2CCategoryPage } from './components/Public/PublicB2CCategoryPage';
+import { getCategoryPageBySlug as getB2CCategoryPageBySlug } from './config/publicB2CCategoryPages';
 import { getPlatformInsights } from './services/aiService';
 import {
   getAggregatorDiscoveryEntries,
@@ -1970,6 +1972,7 @@ type AppState =
   | 'PUBLIC_ENTRY'
   | 'PUBLIC_B2B_DISCOVERY'
   | 'PUBLIC_B2C_BROWSE'
+  | 'PUBLIC_B2C_CATEGORY_STORY'
   | 'PUBLIC_AGGREGATOR'
   | 'PUBLIC_COLLECTIONS'
   | 'PUBLIC_COLLECTION_DETAIL'
@@ -2049,6 +2052,24 @@ const resolveInitialAppState = (): AppState => {
     );
     if (productPathMatch) {
       return 'PUBLIC_PRODUCT_DETAIL';
+    }
+
+    // B2C-PUBLIC-CATEGORY-STORY-PAGES-IMPLEMENTATION-001:
+    // /products base path → B2C browse (avoids unmatched-state 404 for /products)
+    if (
+      globalThis.window.location.pathname === '/products' ||
+      globalThis.window.location.pathname === '/products/'
+    ) {
+      return 'PUBLIC_B2C_BROWSE';
+    }
+
+    // B2C-PUBLIC-CATEGORY-STORY-PAGES-IMPLEMENTATION-001:
+    // /products/category/:slug → category story page
+    const categoryPathMatch = globalThis.window.location.pathname.match(
+      /^\/products\/category\/([a-z0-9-]+)$/,
+    );
+    if (categoryPathMatch) {
+      return 'PUBLIC_B2C_CATEGORY_STORY';
     }
 
     const collectionPathMatch = globalThis.window.location.pathname.match(
@@ -2175,6 +2196,17 @@ const App: React.FC = () => {
   const [publicReferralCodeFromPath] = useState<string>(() => {
     if (globalThis.window !== undefined) {
       const m = globalThis.window.location.pathname.match(/^\/join\/([a-zA-Z0-9_-]{1,80})$/);
+      return m?.[1] ?? '';
+    }
+    return '';
+  });
+  // B2C-PUBLIC-CATEGORY-STORY-PAGES-IMPLEMENTATION-001:
+  // category slug captured from /products/category/:slug pathname on load
+  const [publicCategorySlugFromPath] = useState<string>(() => {
+    if (globalThis.window !== undefined) {
+      const m = globalThis.window.location.pathname.match(
+        /^\/products\/category\/([a-z0-9-]+)$/,
+      );
       return m?.[1] ?? '';
     }
     return '';
@@ -3127,10 +3159,50 @@ const App: React.FC = () => {
       return;
     }
 
+    // B2C-PUBLIC-CATEGORY-STORY-PAGES-IMPLEMENTATION-001: category story page SEO
+    if (appState === 'PUBLIC_B2C_CATEGORY_STORY') {
+      const categoryConfig = getB2CCategoryPageBySlug(publicCategorySlugFromPath);
+      if (categoryConfig) {
+        const canonical = `${origin}${categoryConfig.canonicalPath}`;
+        applyPublicPageMeta({
+          title: categoryConfig.seoTitle,
+          description: categoryConfig.seoDescription,
+          canonical,
+          robots: 'index, follow',
+          ogTitle: categoryConfig.seoTitle,
+          ogDescription: categoryConfig.seoDescription,
+          ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+          ogUrl: canonical,
+          ogType: 'website',
+          twitterCard: 'summary_large_image',
+          twitterTitle: categoryConfig.seoTitle,
+          twitterDescription: categoryConfig.seoDescription,
+          twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        });
+        return;
+      }
+      // Unknown slug — fail-closed to noindex
+      applyPublicPageMeta({
+        title: 'Category Unavailable — TexQtic',
+        description: 'This textile product category is not currently available for public discovery.',
+        canonical: `${origin}/products`,
+        robots: 'noindex, nofollow',
+        ogTitle: 'TexQtic Textile Products',
+        ogDescription: 'Explore public-safe textile product previews on TexQtic.',
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/products`,
+        ogType: 'website',
+        twitterCard: 'summary',
+        twitterTitle: 'TexQtic Textile Products',
+        twitterDescription: 'Explore public-safe textile product previews on TexQtic.',
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
     // All other app states: remove managed metadata tags
     clearPublicPageMeta();
-  }, [appState, publicCollectionSlugFromPath]);
-
+  }, [appState, publicCollectionSlugFromPath, publicCategorySlugFromPath]);
   useEffect(() => {
     if (appState !== 'PUBLIC_ENTRY') {
       setPublicEntryBootstrapPending(false);
@@ -6968,6 +7040,19 @@ const App: React.FC = () => {
             onViewSupplierProfile={(slug) => {
               globalThis.window?.location.assign(`/supplier/${encodeURIComponent(slug)}`);
             }}
+          />
+        );
+      // B2C-PUBLIC-CATEGORY-STORY-PAGES-IMPLEMENTATION-001: category story page
+      case 'PUBLIC_B2C_CATEGORY_STORY':
+        return (
+          <PublicB2CCategoryPage
+            nav={{ ...publicNavBase, activeSection: 'products' }}
+            slug={publicCategorySlugFromPath}
+            onBack={() => {
+              globalThis.window?.history.replaceState(null, '', '/');
+              setAppState('PUBLIC_B2C_BROWSE');
+            }}
+            onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
           />
         );
       // TECS-DPP-PASSPORT-NETWORK-007: Public buyer passport page

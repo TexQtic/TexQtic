@@ -1343,3 +1343,46 @@ only, consistent with `B2C-DPP-PASSPORT-LINKAGE-SYNC-001` governance.
 
 - **Commit message:** `[TEXQTIC] governance: design B2C category story pages`
 - **Commit hash:** (see git log)
+
+---
+
+## 22. B2C Public Category Story Pages Implementation — 2026-05-18
+
+**Unit:** `B2C-PUBLIC-CATEGORY-STORY-PAGES-IMPLEMENTATION-001`
+**Status:** IMPLEMENTATION_COMPLETE
+
+### 22.1 Summary
+
+Implemented URL-addressable, taxonomy-backed B2C category story pages at `/products/category/:categorySlug` for Garments, Home Textiles, Technical Textiles, and Fabrics. All changes are additive; no existing routes or components were modified.
+
+### 22.2 Files Changed
+
+| File | Action | Notes |
+|---|---|---|
+| `config/publicB2CCategoryPages.ts` | Created | Static config for 4 category pages + `getCategoryPageBySlug` + `getCategoryPageBySegment` helpers |
+| `components/Public/PublicB2CCategoryPage.tsx` | Created | Full category story page component (hero, search, product grid, trust band, sign-in handoff) |
+| `App.tsx` | Modified | New import, `AppState` value, 2 new routes in `resolveInitialAppState()`, `publicCategorySlugFromPath` state, SEO useEffect arm, render case |
+| `utils/publicPageMeta.ts` | Modified | Doc-header scope list updated to include `PUBLIC_B2C_CATEGORY_STORY surface` |
+
+### 22.3 Key Behaviors
+
+- Route `/products` and `/products/` → `PUBLIC_B2C_BROWSE` (added as defensive explicit path)
+- Route `/products/category/:slug` → `PUBLIC_B2C_CATEGORY_STORY`
+- Unknown `slug` → `CategoryUnavailable` component (noindex SEO applied)
+- Known slug → full hero + search + product grid page (`index, follow` SEO applied)
+- Product filter: `p.category === config.segment` (exact-match; intentionally preserved from B2CBrowse behavior per Finding 1 in design artifact)
+- SEO ownership: App.tsx useEffect (not the component); consistent with all other public surfaces
+
+### 22.4 Adjacent Finding Confirmed Deferred
+
+B2CBrowse category chip link integration remains deferred. Converting filter-toggle chips to dual-purpose navigation links creates UX ambiguity (filter vs. navigate). Requires a separate design decision unit before implementation.
+
+### 22.5 Validation
+
+- `pnpm exec tsc --noEmit` — PASS (no errors)
+- Git staged files confirmed to allowlist only
+
+### 22.6 Commit Reference
+
+- **Commit message:** `[TEXQTIC] public: implement B2C category story pages`
+- **Commit hash:** (see git log)
