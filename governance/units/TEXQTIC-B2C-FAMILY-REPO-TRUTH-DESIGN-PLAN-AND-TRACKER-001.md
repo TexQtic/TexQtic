@@ -19,8 +19,8 @@
 - Relationship to SEO:
   - Current route-level title and static page SEO are limited; scalable metadata, canonical, and sitemap strategy remains pending.
 - Relationship to D2C:
-  - D2C collections remain stub-only.
-  - B2C and D2C must stay separate until D2C family planning and collection semantics are decided.
+  - D2C public collections public-surface slice is now production-verified and closed (2026-05-18). TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001 governs the D2C family. D2C post-auth continuation remains deferred.
+  - B2C and D2C must stay separate; collection semantics are designed but B2C-D2C-BOUNDARY-DECISION-001 remains pending.
 - Current baseline status:
   - B2C public browse baseline: previously verified and closed.
   - Public product detail and preview baseline: previously verified and closed.
@@ -126,10 +126,15 @@
 - No public cart or wishlist implementation is present on B2C public browse/detail surfaces in this unit scope.
 - Schema contains cart and order models, but those models represent private/authenticated commerce continuity and are not public attraction implementation evidence.
 
-### Relationship to collections and D2C stubs
-- Public collections routes and components exist as stub and unavailable surfaces.
-- Collections pages explicitly communicate coming soon, public-safe preview boundaries, and authenticated continuation.
-- Current collections implementation does not establish D2C collection semantics.
+### Relationship to collections and D2C surfaces
+- D2C public collections surfaces are now production-verified (closed 2026-05-18).
+- `/collections` renders 5 approved public-safe collection cards from `config/publicCollectionsProjection.ts` (static config, no backend API).
+- `/collections/:slug` renders `PublicCollectionDetail` for 5 approved slugs; unknown slugs render `PublicCollectionUnavailable`.
+- Stage 1 SEO metadata is implemented for all three collection states via `utils/publicPageMeta.ts` (`applyPublicPageMeta`).
+- Phase 1 trust/DPP conditional copy is implemented with `trustContextMode: 'CONDITIONAL_PRODUCT_CONTEXT_ONLY'` and `collectionHasTrustContext: false` (fail-closed).
+- CTA metadata is formalized; auth trigger opens TENANT modal in-place.
+- Post-auth D2C continuation is deferred to the D2C-AUTHENTICATED-COLLECTION-CONTINUATION family.
+- Current D2C implementation does not establish B2C product or category semantics; the families remain separate.
 
 ## 3. Current B2C Capabilities
 
@@ -159,8 +164,8 @@
 - B2C SEO metadata and sitemap strategy are not mature for scalable category/product storytelling expansion.
 - Inquiry context handoff from product/category/material is not fully schema-governed yet.
 - DPP/passport linkage is conditional and data-limited; not universal.
-- D2C relationship is partially implied but not fully governed in a dedicated D2C family tracker.
-- Collections remain stub-only and are not a defined D2C object model yet.
+- D2C family tracker (TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001) is now created and governs the D2C family. D2C public collections public-surface slice is production-verified and closed.
+- D2C post-auth continuation (D2C-AUTHENTICATED-COLLECTION-CONTINUATION family) remains deferred and does not affect B2C sequencing.
 - No public cart/checkout/wishlist/order flows should be added without separate bounded decisions and implementation units.
 
 ## 5. Public and Private Boundary
@@ -218,8 +223,9 @@ Also:
 ## 8. D2C Relationship
 
 - B2C and D2C are related but distinct families.
-- D2C collections remain stub-only under current repo truth.
-- D2C family tracker must be created separately.
+- D2C public collections public-surface slice is now production-verified and closed (2026-05-18). This corrects all prior stale references to D2C collections as stub-only.
+- TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001 is created and governs the D2C family.
+- D2C post-auth continuation (D2C-AUTHENTICATED-COLLECTION-CONTINUATION family) remains deferred; that deferral does not affect B2C planning.
 - B2C must not implement D2C collection semantics.
 - B2C product detail and category context may inform D2C planning, but B2C must not define collection object semantics.
 
@@ -244,7 +250,9 @@ Also:
 - Repo truth:
   - Browse baseline exists and is verified.
 - Readiness:
-  - READY_FOR_SYNC
+  - COMPLETED — 2026-05-18
+- Commit:
+  - [TEXQTIC] governance: sync B2C public browse baseline (see section 17)
 - Dependencies:
   - INDUSTRY-CLUSTER-TAXONOMY-DECISION-001
 - Likely files:
@@ -254,8 +262,6 @@ Also:
 - Verification plan:
   - Browse route and rendering continuity
   - Field exposure review against boundary
-- Suggested commit message:
-  - [TEXQTIC] public: sync b2c browse baseline governance
 - Relationship to Industry and D2C:
   - Industry taxonomy dependent; D2C independent
 
@@ -472,7 +478,7 @@ Also:
 - Purpose:
   - Formalize B2C and D2C boundary, including collections semantics ownership.
 - Repo truth:
-  - Collections are stub-only; D2C semantics unresolved.
+  - D2C collections data model designed (D2C-COLLECTIONS-DATA-MODEL-DESIGN-001 closed). D2C public-surface slice production-verified. Explicit B2C-vs-D2C boundary governance decision remains pending.
 - Readiness:
   - DECISION_GATED
 - Dependencies:
@@ -513,9 +519,9 @@ Parallel and boundary sequence:
 ## 13. B2C and D2C Carry-Forward
 
 - B2C is product and category discovery.
-- D2C is collection/story/early-access family and needs its own tracker.
+- D2C is collection/story/early-access family. TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001 is now created and governs the D2C family.
 - Do not implement D2C collection semantics in B2C units.
-- D2C tracker should follow immediately after this B2C tracker.
+- D2C public collections public-surface slice is production-verified. D2C post-auth continuation remains deferred.
 
 ## 14. Future Governance Sync Targets
 
@@ -527,7 +533,7 @@ Potential sync targets after acceptance of this tracker:
 - governance/units/TEXQTIC-INDUSTRY-CLUSTER-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001.md
 - governance/decisions/INDUSTRY-CLUSTER-TAXONOMY-DECISION-001.md
 - future DPP and trust tracker artifacts if introduced
-- future TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001 artifact
+- TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001 (already created; D2C public-surface slice closed 2026-05-18)
 
 ## 15. Acceptance Criteria
 
@@ -548,16 +554,170 @@ Status for this unit:
 
 ## 16. Next Recommended Units
 
-Preferred next sequence:
-1. TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001
-2. B2C-CATEGORY-TAXONOMY-ALIGNMENT-001
+Preferred next sequence (updated 2026-05-18 after B2C-PUBLIC-BROWSE-BASELINE-SYNC-001 closure):
+1. B2C-PRODUCT-DETAIL-BASELINE-SYNC-001 (READY_FOR_SYNC — may pair with browse sync or run immediately after)
+2. B2C-CATEGORY-TAXONOMY-ALIGNMENT-001 (READY_FOR_GOVERNANCE_ALIGNMENT — precondition for all category story work)
 3. B2C-DPP-PASSPORT-LINKAGE-SYNC-001
-4. B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001
+4. B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001 (DESIGN_GATED — requires taxonomy alignment first)
 5. SEO-SITEMAP-METADATA-STRUCTURED-DATA-001 or B2C-SEO-METADATA-EXPANSION-DESIGN-001 depending on governance sequencing
 6. PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-DESIGN-001 or B2C-PUBLIC-INQUIRY-HANDOFF-DESIGN-001 depending on inquiry sequencing decision
+
+Completed and no longer in queue:
+- TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001 — CLOSED (D2C public-surface slice production-verified 2026-05-18)
+- B2C-PUBLIC-BROWSE-BASELINE-SYNC-001 — COMPLETED 2026-05-18 (see section 17)
 
 ## Governance Notes
 
 - Planning and tracker only; no runtime changes.
 - No schema, API, OpenAPI, projection, migration, or data changes are included in this unit.
 - This document is the canonical B2C family repo-truth tracker and phased implementation queue anchor.
+
+---
+
+## 17. B2C Public Browse Baseline Sync — 2026-05-18
+
+**Unit ID:** B2C-PUBLIC-BROWSE-BASELINE-SYNC-001
+**Date:** 2026-05-18
+**Status:** COMPLETED
+**Authorized by:** Paresh
+**Commit:** [TEXQTIC] governance: sync B2C public browse baseline (hash: TBD — see git log)
+
+### 17.1 Repo-Truth Inspection Summary
+
+Files inspected:
+- `PUBLIC-FACING-PAGES-SEQUENCE-DECISION-001.md` — confirmed Option E decided: complete B2C public family first.
+- `governance/units/TEXQTIC-B2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001.md` — this file; stale D2C references corrected in this sync.
+- `governance/units/TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001.md` — confirmed section 17 shows D2C public-surface slice production-verified and closed.
+- `App.tsx` — confirmed `PUBLIC_B2C_BROWSE` → `B2CBrowsePage`, `PUBLIC_PRODUCT_DETAIL` → `PublicProductDetail`, and all D2C collection states are present and production-wired.
+- `components/Public/B2CBrowse.tsx` — confirmed browse component, `getPublicB2CProducts` call, flattenStorefronts, search/filter, product card routing to `/product/:slug`.
+- `components/Public/PublicProductDetail.tsx` — confirmed `getPublicB2CProductBySlug`, safe unavailable state, conditional `hasPassport`/`publicPassportId` passport link.
+- `services/publicB2CService.ts` — confirmed endpoint shape for `GET /api/public/b2c/products` and `GET /api/public/b2c/products/:slug`; no private fields.
+- `server/src/services/publicB2CProjection.service.ts` — confirmed five projection safety gates (A–E); prohibited fields listed; allowed payload categories match boundary decision.
+- `shared/contracts/openapi.tenant.json` — confirmed `/api/public/b2c/products` and `/api/public/b2c/products/{slug}` are documented.
+- `utils/publicPageMeta.ts` — confirmed Stage 1 scope is D2C collection surfaces only; B2C surfaces do not yet have equivalent SEO metadata expansion.
+- `config/publicIndustryClusterTaxonomy.ts` — confirmed INDUSTRY_SEGMENTS, PRODUCT_CATEGORIES, MATERIAL_TYPES, CLUSTER_LABELS, and ClaimSafety types are present and usable for B2C taxonomy alignment.
+- No B2C category story page components found. None implemented.
+- No B2C inquiry handoff implementation found. None implemented.
+- No B2C SEO metadata expansion beyond page-level defaults found. Not implemented.
+- No authenticated B2C continuation unexpectedly implemented.
+- No public/private boundary violations found on B2C public surfaces.
+
+### 17.2 Current B2C Browse Status
+
+| Surface | App State | Component | Status |
+|---|---|---|---|
+| B2C Browse (`/products` state-backed) | `PUBLIC_B2C_BROWSE` | `B2CBrowse.tsx` | IMPLEMENTED — production-verified baseline |
+| Public Product Detail (`/product/:slug`) | `PUBLIC_PRODUCT_DETAIL` | `PublicProductDetail.tsx` | IMPLEMENTED — production-verified baseline |
+
+**Browse behavior confirmed:**
+- Calls `getPublicB2CProducts()` from `services/publicB2CService.ts`.
+- Flattens storefronts to product grid; supports text search and static category chip filtering.
+- Category chips: `Garments`, `Home Textiles`, `Technical Textiles`, `Fabrics` (static, not yet taxonomy-aligned).
+- Product cards route to `/product/:slug`.
+- Safe loading, error, and no-result states present.
+- Sign-in handoff and back navigation present.
+- No private fields, org IDs, or tenant IDs on browse surface.
+
+**Product detail behavior confirmed:**
+- `getPublicB2CProductBySlug(slug)` called; safe unavailable state for missing/non-public products.
+- Passport link rendered only when `hasPassport === true` AND `publicPassportId` is present (conditional — fail-safe).
+- `trustSignals` array rendered without universal coverage claims.
+- No checkout, cart, wishlist, or order elements on public detail surface.
+
+### 17.3 Backend Projection Status
+
+- **Five gates confirmed** (Gate A–E) in `server/src/services/publicB2CProjection.service.ts`.
+- **Browse projection** returns: `slug`, `legalName`, `orgType`, `jurisdiction`, `publicationPosture`, `eligibilityPosture`, `productsPreview` (each with `slug`, `name`, `moq`, `price?`, `imageUrl?`, `category?`, `material?`, `fabricType?`).
+- **Detail projection** returns: `category`, `material`, `fabricType`, `summary`, `description`, `imageUrls`, `publicSupplierName`, `publicSupplierSlug`, `publicPriceLabel`, `publicMoqLabel`, `publicStatusLabel`, `trustSignals`, `hasTraceabilityEvidence`, `hasPassport`, `publicPassportId?`, `relatedProducts`.
+- **Confirmed prohibited**: org UUIDs, risk_score, plan, registration_no, external_orchestration_ref, admin/governance fields, negotiation state, order/trade state, draft/unpublished data.
+
+### 17.4 Public/Private Boundary Confirmation
+
+**CONFIRMED CLEAN.** No violations found in current B2C public browse or product detail surfaces.
+
+| Boundary | Status |
+|---|---|
+| Product slug and name | PUBLIC SAFE |
+| Public-safe category, material, fabricType | PUBLIC SAFE — present in both browse and detail |
+| Supplier name and slug | PUBLIC SAFE — `publicSupplierName`, `publicSupplierSlug` only |
+| Jurisdiction (country-level only) | PUBLIC SAFE |
+| Conditional trust/passport language | PUBLIC SAFE — availability-based, fail-closed |
+| org_id / internal org UUID | NOT PRESENT on public surfaces |
+| Internal supplier/user IDs | NOT PRESENT |
+| Private inventory or pricing beyond `publicPriceLabel` | NOT PRESENT |
+| RFQ/order/cart/wishlist/checkout | NOT PRESENT |
+| Buyer intent capture | NOT PRESENT |
+| Unsupported DPP/passport claims | NOT PRESENT |
+| AI/vector/ranking claims | NOT PRESENT |
+
+### 17.5 D2C State Correction
+
+The following stale references in this tracker have been corrected in this sync unit:
+
+| Location | Old (stale) | Corrected |
+|---|---|---|
+| Section 2 — Relationship to collections and D2C stubs | "Public collections routes and components exist as stub and unavailable surfaces" | D2C public collections are production-verified (closed 2026-05-18); 5 approved collection cards on `/collections`; `PublicCollectionDetail` on approved slugs |
+| Section 4 — Current Gaps | "Collections remain stub-only and are not a defined D2C object model yet" | D2C public-surface slice is production-verified; D2C family tracker exists; post-auth continuation deferred only |
+| Section 8 — D2C Relationship | "D2C collections remain stub-only under current repo truth" / "D2C family tracker must be created separately" | D2C public-surface slice production-verified; family tracker created; post-auth continuation deferred |
+| Section 13 — B2C and D2C Carry-Forward | "D2C is collection/story/early-access family and needs its own tracker" | D2C family tracker exists |
+| Section 14 — Future Governance Sync Targets | Listed as future artifact | Updated to reflect it exists |
+| Section 16 — Next Recommended Units | Listed TEXQTIC-D2C-FAMILY as #1 next unit | Removed from active queue; marked closed; updated queue reflects current B2C sequencing |
+
+### 17.6 Next-Unit Recommendation
+
+**Primary next unit:** `B2C-PRODUCT-DETAIL-BASELINE-SYNC-001`
+- Status: READY_FOR_SYNC
+- Product detail baseline is confirmed implemented and production-verified; this sync unit will formally record it.
+- May be run immediately; no additional dependency required.
+
+**After product detail sync:**
+- `B2C-CATEGORY-TAXONOMY-ALIGNMENT-001` — precondition for all B2C category story page work.
+  - `config/publicIndustryClusterTaxonomy.ts` is confirmed present; vocabulary is available.
+  - Category chips in `B2CBrowse.tsx` (`Garments`, `Home Textiles`, `Technical Textiles`, `Fabrics`) are not yet formally aligned to `INDUSTRY_SEGMENTS` or `PRODUCT_CATEGORIES` in `publicIndustryClusterTaxonomy.ts`. This alignment is the subject of `B2C-CATEGORY-TAXONOMY-ALIGNMENT-001`.
+
+### 17.7 Deferred Items
+
+| Item | Status | Gate |
+|---|---|---|
+| B2C category story pages | NOT IMPLEMENTED | DESIGN_GATED — requires `B2C-CATEGORY-TAXONOMY-ALIGNMENT-001` first |
+| B2C SEO metadata expansion | NOT IMPLEMENTED | DESIGN_GATED — requires SEO foundation and taxonomy alignment |
+| B2C inquiry handoff | NOT IMPLEMENTED | DESIGN_GATED — requires category/story context definition |
+| D2C post-auth continuation | DEFERRED | Separate family (D2C-AUTHENTICATED-COLLECTION-CONTINUATION) |
+| JSON-LD / structured data | NOT IMPLEMENTED | Deferred per `PUBLIC-SEO-INFRASTRUCTURE-DECISION-001` |
+| B2C authenticated continuation | NOT IMPLEMENTED | Separate authenticated family; must not bleed into public surfaces |
+
+### 17.8 Adjacent Findings
+
+**Finding 1: B2C category chip vocabulary not yet formally aligned to taxonomy**
+- Title: B2C browse category chips use display strings not mapped to `publicIndustryClusterTaxonomy.ts`
+- Rationale: `CATEGORY_CARDS` in `B2CBrowse.tsx` uses values `['Garments', 'Home Textiles', 'Technical Textiles', 'Fabrics']`; `INDUSTRY_SEGMENTS` in taxonomy config uses `['Yarn & Spinning', 'Fabrics', 'Garments', 'Home Textiles', 'Technical Textiles', 'Textile Services']` and `PRODUCT_CATEGORIES` uses different granularity. The mapping is not formalized.
+- Minimum file surface: `components/Public/B2CBrowse.tsx`, `config/publicIndustryClusterTaxonomy.ts`
+- Classification: implementation-ready pending taxonomy alignment decision
+- Blocks this unit: NO — alignment is the subject of `B2C-CATEGORY-TAXONOMY-ALIGNMENT-001`, not this sync
+
+**Finding 2: `utils/publicPageMeta.ts` scope is D2C-only; B2C browse/detail have no equivalent SEO metadata utility**
+- Title: No SEO metadata utility or `applyPublicPageMeta` calls on B2C public browse or product detail routes
+- Rationale: `publicPageMeta.ts` is scoped to D2C collection surfaces only (Stage 1). B2C browse (`PUBLIC_B2C_BROWSE`) and product detail (`PUBLIC_PRODUCT_DETAIL`) do not call `applyPublicPageMeta`. This gap is known and design-gated.
+- Minimum file surface: `utils/publicPageMeta.ts`, `App.tsx`
+- Classification: design-gated — subject of `B2C-SEO-METADATA-EXPANSION-DESIGN-001`
+- Blocks this unit: NO
+
+**Finding 3: No dedicated B2C projection tests found**
+- Title: `publicB2CProjection.service.ts` has no dedicated unit test file in `/tests/`
+- Rationale: Search of `/tests/**` found only `b2c-shell-authenticated-affordance-separation.test.tsx` (not a projection test). Five-gate projection correctness is not covered by dedicated tests under current repo truth.
+- Minimum file surface: new test file for `server/src/services/publicB2CProjection.service.ts`
+- Classification: verification-gated
+- Blocks this unit: NO — baseline sync does not require new test authoring
+
+### 17.9 Validation Evidence
+
+- `git diff --name-only` before this sync: **empty (clean working tree)**
+- `git status --short` before this sync: **empty (clean working tree)**
+- No runtime code modified. This is a documentation-only governance sync.
+- No package scripts required; no runtime validation applicable.
+- Governance lint/check script: not present in this repo. No runtime validation was required because this is documentation-only.
+
+### 17.10 Commit Reference
+
+- **Commit message:** `[TEXQTIC] governance: sync B2C public browse baseline`
+- **Commit hash:** TBD — record after commit.
