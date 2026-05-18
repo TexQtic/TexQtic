@@ -64,32 +64,32 @@ export function PublicCollectionsStub({
             Verified Textile Collections
           </p>
           <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.02em] md:text-4xl">
-            Verified Textile Collections are coming soon.
+            Verified Textile Collections are being prepared as public-safe curated story and showcase previews.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-200 md:text-base">
-            TexQtic is preparing public-safe collection experiences that connect textile capability with consumer demand.
+            TexQtic is preparing collection concept surfaces that can frame eligible products, supplier context, and public-safe textile storytelling without implying full runtime collection behavior.
           </p>
-          <p className="mt-3 text-sm text-slate-300">Where textile capability becomes consumer commerce.</p>
+          <p className="mt-3 text-sm text-slate-300">Public-safe showcase now. Authenticated continuation when available.</p>
         </section>
 
         <section className="mt-6 rounded-[24px] border border-[#d9e5ea] bg-white px-6 py-5 shadow-[0_8px_24px_rgba(7,26,47,0.06)]">
           <p className="text-sm leading-6 text-slate-600">
-            This public page is a preview of TexQtic's Verified Textile Collections direction. Collection saving, checkout, early access, private pricing, documents, and deeper buyer workflows will remain available only through authenticated TexQtic experiences.
+            This public page is a concept preview of TexQtic's Verified Textile Collections direction. It does not currently implement collection detail runtime, checkout, cart, wishlist, order, or private workflow behavior. Trust, passport, traceability, and origin context remain conditional and may appear only where available.
           </p>
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-3">
           <SectionCard
-            title="Textile capability"
-            body="Collections begin with real textile manufacturing, sourcing, and product readiness."
+            title="Curated story and showcase"
+            body="Collections are governed as public-safe story and showcase concepts rather than product-group commerce or launch mechanics."
           />
           <SectionCard
-            title="Public-safe trust"
-            body="Only approved discovery information will be shown publicly."
+            title="Public-safe trust where available"
+            body="Only approved public-safe context can be shown, and passport, trust, or origin references remain conditional rather than universal."
           />
           <SectionCard
             title="Authenticated continuation"
-            body="Saving, checkout, inquiry, early access, and deeper workflows continue after sign-in."
+            body="Request access, continue after sign-in, and deeper authenticated follow-up can be added later without exposing private workflow detail here."
           />
         </section>
 
@@ -98,22 +98,22 @@ export function PublicCollectionsStub({
             What Verified Textile Collections will represent
           </p>
           <h2 className="mt-3 text-2xl font-semibold text-[#0a2036]">
-            Market-ready textile collections with public-safe context.
+            Public-safe curated collection stories with approved product and supplier context.
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
-            Verified Textile Collections will help public visitors discover market-ready textile collections built from verified ecosystem capability - including product context, supplier or source context, and trust signals where available.
+            Verified Textile Collections may eventually group eligible products, material framing, and supplier context into public-safe showcases. Any trust, passport, or origin language must remain conditional, evidence-gated, and shown only where available.
           </p>
         </section>
 
         <section className="mt-8 rounded-[32px] border border-[#d9e5ea] bg-[#f9fcfd] px-8 py-10 shadow-[0_18px_50px_rgba(7,26,47,0.04)]">
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
-            Textile capability to consumer commerce bridge
+            Public attraction and continuity framing
           </p>
           <h2 className="mt-3 text-2xl font-semibold text-[#0a2036]">
-            Public attraction now. Authenticated continuation when ready.
+            Public-safe collection framing now. Authenticated continuation later.
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
-            TexQtic uses public attraction to route visitors toward the right journey without exposing private collection, pricing, campaign, or early-access detail.
+            TexQtic uses public attraction to route visitors toward the right journey without exposing private collection records, buyer intent, pricing continuity, or authenticated workflow detail.
           </p>
         </section>
 
@@ -125,6 +125,7 @@ export function PublicCollectionsStub({
             Continue through existing public-safe surfaces.
           </h2>
           <div className="mt-6 flex flex-wrap gap-3">
+            <ActionButton label="Back to Home" onClick={onBackToEntry} />
             <ActionButton label="Browse Products" onClick={onBrowseProducts} variant="primary" />
             <ActionButton label="Explore B2B Network" onClick={onExploreB2BNetwork} />
             <ActionButton label="Sign in to Continue" onClick={onSignIn} />
@@ -138,7 +139,7 @@ export function PublicCollectionsStub({
           </p>
           <h2 className="mt-3 text-2xl font-semibold">Prepare the public journey, then continue securely.</h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
-            Saving, checkout, inquiry, early access, private pricing, and deeper buyer workflows remain authenticated TexQtic experiences.
+            Request access, continue after sign-in, early-access direction where available, and deeper workflow continuity remain authenticated TexQtic experiences.
           </p>
         </section>
       </main>

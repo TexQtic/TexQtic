@@ -47,13 +47,16 @@ export function PublicCollectionUnavailable({
       <div className="px-6 py-16">
         <div className="mx-auto max-w-3xl rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-12 text-center shadow-[0_18px_50px_rgba(7,26,47,0.06)]">
         <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
-          Verified Collection Preview
+          Verified Textile Collection Preview
         </p>
         <h1 className="mt-3 text-2xl font-semibold text-[#0a2036]">
-          This Verified Collection Preview is not available.
+          This public collection preview is not currently available.
         </h1>
         <p className="mt-4 text-sm leading-6 text-slate-500">
-          The collection may not be published for public discovery, or its details may be available only through authenticated TexQtic workflows.
+          The slug may not match a published public-safe collection preview, or this collection concept may remain unavailable while TexQtic keeps collection runtime and authenticated continuation gated.
+        </p>
+        <p className="mt-3 text-sm leading-6 text-slate-500">
+          This fallback does not expose private collection data, does not imply collection-level passport or trust coverage, and does not confirm implemented runtime collection semantics.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <ActionButton label="Back to Collections" onClick={onBackToCollections} variant="primary" />
