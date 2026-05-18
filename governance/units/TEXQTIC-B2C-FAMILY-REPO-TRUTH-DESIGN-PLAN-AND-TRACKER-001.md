@@ -1494,4 +1494,85 @@ B2CBrowse category chip link integration remains deferred. Converting filter-tog
 ### 23.10 Verification Commit Reference
 
 - **Commit message:** `[TEXQTIC] governance: verify B2C category story pages`
-- **Commit hash:** (see git log)
+- **Commit hash:** `048f1b5`
+
+---
+
+## 24. B2C SEO Metadata Expansion — Design Close — 2026-07-07
+
+**Unit:** B2C-SEO-METADATA-EXPANSION-DESIGN-001
+**Status:** DESIGN_COMPLETE
+**Artifact:** `governance/units/B2C-SEO-METADATA-EXPANSION-DESIGN-001.md`
+
+### 24.1 Scope
+
+Design of SEO metadata model for the following B2C public routes not covered by Stage 1:
+
+| Route | AppState | Prior State | Designed State |
+|---|---|---|---|
+| `/products` | `PUBLIC_B2C_BROWSE` | `clearPublicPageMeta()` | `index, follow` — static copy |
+| `/product/:slug` (found) | `PUBLIC_PRODUCT_DETAIL` | `clearPublicPageMeta()` | `index, follow` — slug-only (Stage 2a); rich fields (Stage 2b) |
+| `/product/:slug` (not-found) | `PUBLIC_PRODUCT_DETAIL` | `clearPublicPageMeta()` | `noindex, nofollow` — requires Stage 2b state-back channel |
+| `/trust` | `PUBLIC_TRUST_LANDING` | `clearPublicPageMeta()` | `index, follow` — static copy |
+| `/industries` | `PUBLIC_INDUSTRY_CLUSTER_LANDING` | `clearPublicPageMeta()` | `index, follow` — static copy |
+| `/aggregator` | `PUBLIC_AGGREGATOR` | `clearPublicPageMeta()` | `noindex, nofollow` (not yet production-ready) |
+
+### 24.2 Key Design Decisions
+
+1. **No changes to `utils/publicPageMeta.ts`** — the existing utility is generic and complete. Only new callers needed in App.tsx.
+
+2. **Two-stage product detail approach:**
+   - **Stage 2a:** Slug-only generic metadata (`index, follow`; same title/description for all product pages). Immediate. Minimal App.tsx change. Known limitation: cannot distinguish found vs. not-found at SEO-effect time.
+   - **Stage 2b:** Callback-based state-back channel (`onProductMetaReady` prop on `PublicProductDetail`). Rich product metadata with name, category, summary. Correct `noindex` for not-found. Separate unit: `B2C-PRODUCT-DETAIL-RICH-SEO-001`.
+
+3. **Stage 2a product detail metadata (slug-only):**
+   - title: `"Textile Product Preview — TexQtic"`
+   - description: `"View this public-safe textile product preview on TexQtic. Discover materials, categories, and supply chain context from verified suppliers."`
+   - canonical: `${origin}/product/${publicProductSlugFromPath}`
+   - robots: `index, follow`
+   - ogType: `product`
+
+4. **Browse metadata (static):**
+   - title: `"Explore Textile Products — TexQtic"`
+   - description: `"Browse public-safe textile product previews across garments, home textiles, technical textiles, and fabrics on TexQtic."`
+   - canonical: `${origin}/products`
+   - robots: `index, follow`
+   - ogType: `website`
+
+5. **Fail-safe:** Any ambiguous state defaults to `noindex, nofollow`. Existing `clearPublicPageMeta()` fall-through is retained for all unaddressed states.
+
+6. **Canonical origin:** Continues to use `globalThis.window?.location.origin ?? ''`. No domain strategy change.
+
+### 24.3 Public / Private Metadata Boundary
+
+Field eligibility matrix for `PublicB2CProductDetail` defined in design artifact Section 11.1. Key: `name`, `category`, `material`, `fabricType`, `summary`, `publicSupplierName` are safe. `trustSignals`, `hasPassport`, `hasTraceabilityEvidence`, `publicPassportId`, `publicSupplierSlug`, `imageUrls` are forbidden in Stage 2a/2b.
+
+### 24.4 Explicit Deferrals
+
+| Item | Deferred To |
+|---|---|
+| `sitemap.xml` | Post domain strategy decision |
+| `robots.txt` | Post domain strategy decision |
+| Product JSON-LD | Post Stage 2b |
+| `/passport/:id` metadata | Separate design unit |
+| `/supplier/:slug` metadata | Separate design unit |
+| Product not-found `noindex` | `B2C-PRODUCT-DETAIL-RICH-SEO-001` |
+| Rich product metadata (name, description) | `B2C-PRODUCT-DETAIL-RICH-SEO-001` |
+| Domain canonical migration | Domain strategy decision |
+| Google Search Console | Operational task |
+
+### 24.5 Implementation Allowlist (for next unit)
+
+**Modify:** `App.tsx` (SEO useEffect only)
+**Create:** `governance/units/B2C-SEO-METADATA-EXPANSION-IMPLEMENTATION-001.md` (tracker record)
+**Read-only:** `utils/publicPageMeta.ts`, `components/Public/B2CBrowse.tsx`, `components/Public/PublicProductDetail.tsx`, `services/publicB2CService.ts`
+**Forbidden:** Any API, schema, service, or component file modification
+
+### 24.6 Recommended Next Unit
+
+`B2C-SEO-METADATA-EXPANSION-IMPLEMENTATION-001`
+
+### 24.7 Design Commit Reference
+
+- **Commit message:** `[TEXQTIC] governance: design B2C SEO metadata expansion`
+- **Commit hash:** `c71c625`
