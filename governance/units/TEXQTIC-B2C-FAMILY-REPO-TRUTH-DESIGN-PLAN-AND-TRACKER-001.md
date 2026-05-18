@@ -1817,4 +1817,49 @@ B2C tracker unit 6 (`B2C-PUBLIC-INQUIRY-HANDOFF-DESIGN-001`, status `DESIGN_GATE
 ### 27.7 Design Commit Reference
 
 - **Commit message:** `[TEXQTIC] governance: design public inquiry intent capture`
+- **Commit hash:** ceffea8
+
+---
+
+## 28. Public Inquiry Intent-Capture Page — Implementation — 2026-07-08
+
+**Unit ID:** PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-IMPLEMENTATION-001
+**Date:** 2026-07-08
+**Status:** IMPLEMENTATION_COMPLETE
+**Authorized by:** Paresh
+
+### 28.1 Scope
+
+Phase 1 runtime implementation of the standalone public inquiry intent-capture page (`/inquiry`).
+Reuses existing `POST /api/public/inquiry/submit` endpoint (INQUIRY-004). No backend changes.
+
+### 28.2 Files Changed
+
+| File | Action | Description |
+|---|---|---|
+| `components/Public/PublicInquiryPage.tsx` | Created | Standalone inquiry page component — 4 modes: NO_CONTEXT, FORM, SUCCESS, ERROR |
+| `App.tsx` | Modified | Added `PUBLIC_INQUIRY` to AppState union; `/inquiry` route in `resolveInitialAppState()`; `publicInquirySupplierSlugFromQuery` state; SEO arm; documentTitle arm; `onGoInquiry` in publicNavBase; render case |
+| `components/Public/PublicNavbar.tsx` | Modified | Added `'inquiry'` to `PublicNavSection`; `onGoInquiry` prop; `{ label: 'Inquire', section: 'inquiry' }` nav entry |
+| `tests/frontend/public-inquiry-page.test.tsx` | Created | 12 unit tests (PII-001 through PII-012) covering all page modes, error paths, PII-free assertion, and payload correctness |
+
+### 28.3 AppState Touch Points
+
+- `AppState` union: `'PUBLIC_INQUIRY'` added after `'PUBLIC_REFERRAL_LANDING'`
+- `resolveInitialAppState()`: pathname `=== '/inquiry'` returns `'PUBLIC_INQUIRY'` (before query-param token check)
+- `publicInquirySupplierSlugFromQuery`: parsed from `?supplierSlug=` on load; validated against `/^[a-z0-9-]+$/`; defaults to `''`
+- SEO useEffect: `applyPublicPageMeta` with canonical `/inquiry`, robots `index, follow`, title `Express Interest — TexQtic`
+- `documentTitle` useMemo: `'Express Interest — TexQtic'` for `PUBLIC_INQUIRY`
+- `publicNavBase`: `onGoInquiry` navigates to `/inquiry` and sets `PUBLIC_INQUIRY`
+- Render: `case 'PUBLIC_INQUIRY'` renders `<PublicInquiryPage>` with `activeSection: 'inquiry'`
+
+### 28.4 Phase 2 Deferrals (Recorded)
+
+- General/no-supplier-context endpoint support — deferred to `PUBLIC-INQUIRY-ENDPOINT-CONTEXT-DESIGN-001`
+- B2C product/category context handoff (`product_slug`, `category_slug`, `source_surface`) — deferred, backend-gated
+- Industry cluster inquiry context terms — deferred (`INDUSTRY-CLUSTER-INQUIRY-CONTEXT-001`)
+- Message / free-text field — deferred; not in current endpoint schema
+
+### 28.5 Implementation Commit Reference
+
+- **Commit message:** `[TEXQTIC] public: implement public inquiry intent capture`
 - **Commit hash:** (see git log)

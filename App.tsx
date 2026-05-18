@@ -97,6 +97,7 @@ import { PublicTrustLandingStub } from './components/Public/PublicTrustLandingSt
 import { PublicAggregatorPreview } from './components/Public/PublicAggregatorPreview';
 import { PublicIndustryClusterLanding } from './components/Public/PublicIndustryClusterLanding';
 import { PublicB2CCategoryPage } from './components/Public/PublicB2CCategoryPage';
+import { PublicInquiryPage } from './components/Public/PublicInquiryPage';
 import { getCategoryPageBySlug as getB2CCategoryPageBySlug } from './config/publicB2CCategoryPages';
 import { getPlatformInsights } from './services/aiService';
 import {
@@ -1983,6 +1984,7 @@ type AppState =
   | 'PUBLIC_INDUSTRY_CLUSTER_LANDING'
   | 'PUBLIC_SUPPLIER_PROFILE'
   | 'PUBLIC_REFERRAL_LANDING'
+  | 'PUBLIC_INQUIRY'
   | 'AUTH'
   | 'FORGOT_PASSWORD'
   | 'VERIFY_EMAIL'
@@ -2088,6 +2090,14 @@ const resolveInitialAppState = (): AppState => {
     );
     if (referralPathMatch) {
       return 'PUBLIC_REFERRAL_LANDING';
+    }
+
+    // PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-IMPLEMENTATION-001: /inquiry route
+    if (
+      globalThis.window.location.pathname === '/inquiry' ||
+      globalThis.window.location.pathname === '/inquiry/'
+    ) {
+      return 'PUBLIC_INQUIRY';
     }
 
     const params = new URLSearchParams(globalThis.window.location.search);
@@ -2200,6 +2210,16 @@ const App: React.FC = () => {
     if (globalThis.window !== undefined) {
       const m = globalThis.window.location.pathname.match(/^\/join\/([a-zA-Z0-9_-]{1,80})$/);
       return m?.[1] ?? '';
+    }
+    return '';
+  });
+  // PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-IMPLEMENTATION-001:
+  // supplier slug captured from ?supplierSlug= query param on /inquiry load
+  const [publicInquirySupplierSlugFromQuery] = useState<string>(() => {
+    if (globalThis.window !== undefined) {
+      const raw =
+        new URLSearchParams(globalThis.window.location.search).get('supplierSlug') ?? '';
+      return /^[a-z0-9-]+$/.test(raw) ? raw : '';
     }
     return '';
   });
@@ -2965,6 +2985,10 @@ const App: React.FC = () => {
       return 'TexQtic — Verified Collection Preview';
     }
 
+    if (appState === 'PUBLIC_INQUIRY') {
+      return 'Express Interest — TexQtic';
+    }
+
     if (appState === 'AUTH') {
       return authRealm === 'CONTROL_PLANE' ? 'TexQtic Admin Sign In' : 'TexQtic Sign In';
     }
@@ -3308,6 +3332,29 @@ const App: React.FC = () => {
         twitterCard: 'summary_large_image',
         twitterTitle: browseTitle,
         twitterDescription: browseDescription,
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
+    // PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-IMPLEMENTATION-001: inquiry page SEO
+    if (appState === 'PUBLIC_INQUIRY') {
+      const inquiryTitle = 'Express Interest — TexQtic';
+      const inquiryDescription =
+        "Tell us what you're looking for. Share sourcing interest with TexQtic-listed suppliers — no account required.";
+      applyPublicPageMeta({
+        title: inquiryTitle,
+        description: inquiryDescription,
+        canonical: `${origin}/inquiry`,
+        robots: 'index, follow',
+        ogTitle: inquiryTitle,
+        ogDescription: inquiryDescription,
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/inquiry`,
+        ogType: 'website',
+        twitterCard: 'summary',
+        twitterTitle: inquiryTitle,
+        twitterDescription: inquiryDescription,
         twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
       });
       return;
@@ -6447,6 +6494,7 @@ const App: React.FC = () => {
       onGoIndustry: () => { globalThis.window?.history.replaceState(null, '', '/industries'); setAppState('PUBLIC_INDUSTRY_CLUSTER_LANDING'); },
       onGoTrust: () => { globalThis.window?.history.replaceState(null, '', '/trust'); setAppState('PUBLIC_TRUST_LANDING'); },
       onGoAggregator: () => { globalThis.window?.history.replaceState(null, '', '/aggregator'); setAppState('PUBLIC_AGGREGATOR'); },
+      onGoInquiry: () => { globalThis.window?.history.replaceState(null, '', '/inquiry'); setAppState('PUBLIC_INQUIRY'); },
       onSignIn: () => openSecondaryAuthenticatedEntry('TENANT'),
       onRequestAccess: openSupplierRequestAccess,
     };
@@ -7193,6 +7241,16 @@ const App: React.FC = () => {
             onBack={() => setAppState('PUBLIC_B2B_DISCOVERY')}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
             onRequestAccess={openSupplierRequestAccess}
+          />
+        );
+      // PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-IMPLEMENTATION-001
+      case 'PUBLIC_INQUIRY':
+        return (
+          <PublicInquiryPage
+            nav={{ ...publicNavBase, activeSection: 'inquiry' }}
+            supplierSlug={publicInquirySupplierSlugFromQuery}
+            onBack={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+            onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
           />
         );
       // REFERRAL-005: Public referral join landing — /join/:referral_code

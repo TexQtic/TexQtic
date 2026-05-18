@@ -9,7 +9,8 @@ export type PublicNavSection =
   | 'collections'
   | 'industry'
   | 'trust'
-  | 'aggregator';
+  | 'aggregator'
+  | 'inquiry';
 
 export interface PublicNavbarProps {
   readonly activeSection?: PublicNavSection;
@@ -20,6 +21,7 @@ export interface PublicNavbarProps {
   readonly onGoIndustry: () => void;
   readonly onGoTrust: () => void;
   readonly onGoAggregator: () => void;
+  readonly onGoInquiry: () => void;
   readonly onSignIn: () => void;
   readonly onRequestAccess: () => void;
 }
@@ -37,6 +39,7 @@ const NAV_LINKS: ReadonlyArray<{
   { label: 'Industry & Clusters', section: 'industry' },
   { label: 'Trust & Origin', section: 'trust' },
   { label: 'Aggregator Preview', section: 'aggregator' },
+  { label: 'Inquire', section: 'inquiry' },
 ];
 
 // ── Icons ──────────────────────────────────────────────────────────────────────
@@ -91,6 +94,7 @@ export function PublicNavbar({
   onGoIndustry,
   onGoTrust,
   onGoAggregator,
+  onGoInquiry,
   onSignIn,
   onRequestAccess,
 }: PublicNavbarProps) {
@@ -109,6 +113,7 @@ export function PublicNavbar({
     industry: onGoIndustry,
     trust: onGoTrust,
     aggregator: onGoAggregator,
+    inquiry: onGoInquiry,
   };
 
   // Move focus into drawer when opened
