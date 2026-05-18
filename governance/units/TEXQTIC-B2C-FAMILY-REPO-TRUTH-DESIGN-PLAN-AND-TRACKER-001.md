@@ -1925,3 +1925,54 @@ Playwright browser automation used for all route and behavior checks.
 ### 29.5 Next Unit
 
 `PUBLIC-INQUIRY-ENDPOINT-CONTEXT-DESIGN-001`
+
+---
+
+## 30. Public Inquiry Endpoint Context Extension — Design — 2026-07-08
+
+**Unit ID:** PUBLIC-INQUIRY-ENDPOINT-CONTEXT-DESIGN-001
+**Status:** DESIGN_COMPLETE
+**Date:** 2026-07-08
+**Commit:** (see close commit)
+**Artifact:** `governance/units/PUBLIC-INQUIRY-ENDPOINT-CONTEXT-DESIGN-001.md`
+
+### 30.1 Purpose
+
+Defines the Phase 2 extension of `POST /api/public/inquiry/submit` to support general
+(non-supplier-scoped) inquiry and multi-context inquiry from product, category, and
+collection surfaces. Design-only — no runtime changes in this unit.
+
+### 30.2 Key Design Decisions
+
+| # | Decision |
+|---|---|
+| 1 | `supplier_slug` becomes OPTIONAL in Phase 2 (was required in Phase 1) |
+| 2 | Context exclusivity rule: `supplier_slug` cannot coexist with `product_slug`, `category_slug`, or `collection_slug` |
+| 3 | `source_surface` — optional advisory enum; 12 values; server normalizes unknown values to `DIRECT` |
+| 4 | `product_slug` — format-validated only; no existence gate (advisory pass-through) |
+| 5 | `category_slug` — format-validated + config-checked; unapproved slugs silently dropped (fail-closed, no 404 leak) |
+| 6 | `collection_slug` — format-validated + config-checked; unapproved slugs silently dropped |
+| 7 | `message` — max 500 chars; email/phone patterns → reject with 400; HTML stripped; never echoed in response |
+| 8 | Response schema unchanged (opaque 202) |
+| 9 | No schema/migration required — `afterJson` JSONB absorbs new context fields |
+| 10 | Rate limit unchanged: 20 req / 15 min / IP |
+| 11 | `buyer_inquiry.created.v1` event payload extended with Phase 2 context fields |
+| 12 | Phase 1 payloads remain backward-compatible without change |
+
+### 30.3 Implementation Sequencing
+
+1. `PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001` — backend / OpenAPI / service / event contract
+2. `PUBLIC-INQUIRY-GENERAL-MODE-IMPLEMENTATION-001` — frontend general mode in `PublicInquiryPage`
+3. `PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001` — CTA integration in product/category/collection pages
+4. `PUBLIC-INQUIRY-ENDPOINT-CONTEXT-VERIFY-CLOSE` — production verification
+
+### 30.4 Deferred Items
+
+- Layer 7 taxonomy `INQUIRY_CONTEXT_TERMS` — gated on `INDUSTRY-CLUSTER-TAXONOMY-DECISION-001` ACCEPTED
+- Authenticated continuation / CRM routing
+- Sitemap and JSON-LD for `/inquiry`
+- Rate limit differentiation by source_surface
+
+### 30.5 Next Unit
+
+`PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001`
