@@ -1,4 +1,10 @@
 import React from 'react';
+import {
+  PUBLIC_COLLECTION_PROJECTIONS,
+  getEligibleCollections,
+  deriveCollectionsListMeta,
+  type PublicCollectionProjection,
+} from '../../config/publicCollectionsProjection';
 import { PublicNavbar, type PublicNavbarProps } from './PublicNavbar';
 
 interface PublicCollectionsStubProps {
@@ -8,21 +14,6 @@ interface PublicCollectionsStubProps {
   readonly onListYourProducts: () => void;
   readonly onBackToEntry: () => void;
   readonly nav: PublicNavbarProps;
-}
-
-function SectionCard({
-  title,
-  body,
-}: {
-  readonly title: string;
-  readonly body: string;
-}) {
-  return (
-    <article className="rounded-[24px] border border-[#d9e5ea] bg-white p-6 shadow-[0_8px_24px_rgba(7,26,47,0.06)]">
-      <h3 className="text-lg font-semibold text-[#0a2036]">{title}</h3>
-      <p className="mt-3 text-sm leading-6 text-slate-600">{body}</p>
-    </article>
-  );
 }
 
 function ActionButton({
@@ -46,6 +37,81 @@ function ActionButton({
   );
 }
 
+function TagPill({ label }: { readonly label: string }) {
+  return (
+    <span className="inline-block rounded-full border border-[#d6e4e8] bg-[#f0f8fb] px-3 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#2f8094]">
+      {label}
+    </span>
+  );
+}
+
+function CollectionCard({
+  collection,
+  onSignIn,
+}: {
+  readonly collection: PublicCollectionProjection;
+  readonly onSignIn: () => void;
+}) {
+  const allTags = [
+    ...collection.segmentTags,
+    ...collection.categoryTags,
+    ...collection.materialTags,
+  ];
+
+  return (
+    <article
+      className="flex flex-col rounded-[24px] border border-[#d9e5ea] bg-white shadow-[0_8px_24px_rgba(7,26,47,0.06)] overflow-hidden"
+      aria-label={collection.title}
+    >
+      {/* Hero visual placeholder — no public image hosting in this phase */}
+      <div
+        className="flex h-36 items-center justify-center bg-gradient-to-br from-[#e8f4f7] to-[#d0eaf0]"
+        role="img"
+        aria-label={collection.heroAlt}
+      >
+        <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#5aafbe] opacity-60">
+          {collection.curatedContextLabel}
+        </span>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-3 p-6">
+        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+          {collection.curatedContextLabel}
+        </p>
+        <h2 className="text-lg font-semibold leading-snug text-[#0a2036]">
+          {collection.title}
+        </h2>
+        <p className="text-sm leading-6 text-slate-600">{collection.summary}</p>
+
+        {/* Taxonomy tags — public-safe only */}
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {allTags.map((tag) => (
+              <TagPill key={tag} label={tag} />
+            ))}
+          </div>
+        )}
+
+        {/* Trust context — fail-closed in this phase */}
+        {collection.collectionHasTrustContext === false && (
+          <p className="text-[11px] leading-5 text-slate-400">
+            Eligible products may include public trust context where available.
+          </p>
+        )}
+
+        {/* Authenticated continuation CTA */}
+        <div className="mt-auto pt-3">
+          <ActionButton
+            label={collection.cta.label}
+            onClick={onSignIn}
+            variant="secondary"
+          />
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export function PublicCollectionsStub({
   onBrowseProducts,
   onExploreB2BNetwork,
@@ -54,75 +120,75 @@ export function PublicCollectionsStub({
   onBackToEntry,
   nav,
 }: PublicCollectionsStubProps) {
+  const eligibleCollections = getEligibleCollections(PUBLIC_COLLECTION_PROJECTIONS);
+  const listMeta = deriveCollectionsListMeta(PUBLIC_COLLECTION_PROJECTIONS);
+
   return (
     <div className="min-h-screen bg-[#f3f8fb] font-sans">
       <PublicNavbar {...nav} />
-
       <main className="mx-auto max-w-7xl px-6 py-10 lg:px-10">
+
+        {/* Hero */}
         <section className="rounded-[32px] bg-[#071a2f] px-8 py-10 text-white shadow-[0_18px_50px_rgba(7,26,47,0.12)]">
           <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">
             Verified Textile Collections
           </p>
           <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.02em] md:text-4xl">
-            Verified Textile Collections are being prepared as public-safe curated story and showcase previews.
+            Public-safe curated textile collection stories and showcases.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-200 md:text-base">
-            TexQtic is preparing collection concept surfaces that can frame eligible products, supplier context, and public-safe textile storytelling without implying full runtime collection behavior.
+            TexQtic collections frame eligible textile stories, material context, and ecosystem positioning
+            as public-safe showcases — without exposing private supplier records, buyer workflows, pricing,
+            or product-owned passport detail.
           </p>
-          <p className="mt-3 text-sm text-slate-300">Public-safe showcase now. Authenticated continuation when available.</p>
+          <p className="mt-3 text-sm text-slate-300">
+            Public-safe showcase. Authenticated continuation after sign in.
+          </p>
         </section>
 
+        {/* Boundary disclosure */}
         <section className="mt-6 rounded-[24px] border border-[#d9e5ea] bg-white px-6 py-5 shadow-[0_8px_24px_rgba(7,26,47,0.06)]">
           <p className="text-sm leading-6 text-slate-600">
-            This public page is a concept preview of TexQtic's Verified Textile Collections direction. It does not currently implement collection detail runtime, checkout, cart, wishlist, order, or private workflow behavior. Trust, passport, traceability, and origin context remain conditional and may appear only where available.
+            These collections are public-safe concept showcases. They do not implement collection detail
+            runtime, checkout, cart, wishlist, order, or private workflow behavior. Trust, passport,
+            traceability, and origin context remain conditional and appear only where available.
           </p>
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-3">
-          <SectionCard
-            title="Curated story and showcase"
-            body="Collections are governed as public-safe story and showcase concepts rather than product-group commerce or launch mechanics."
-          />
-          <SectionCard
-            title="Public-safe trust where available"
-            body="Only approved public-safe context can be shown, and passport, trust, or origin references remain conditional rather than universal."
-          />
-          <SectionCard
-            title="Authenticated continuation"
-            body="Request access, continue after sign-in, and deeper authenticated follow-up can be added later without exposing private workflow detail here."
-          />
-        </section>
+        {/* Collection list or fallback */}
+        {listMeta.emptyState ? (
+          <section className="mt-8 rounded-[24px] border border-[#d9e5ea] bg-white px-8 py-12 text-center shadow-[0_8px_24px_rgba(7,26,47,0.06)]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+              Collections
+            </p>
+            <p className="mt-4 text-sm leading-6 text-slate-600">
+              Verified Textile Collections are being prepared as public-safe curated story and showcase previews.
+            </p>
+          </section>
+        ) : (
+          <section className="mt-8" aria-label="Verified Textile Collections">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+              Collections &middot; {eligibleCollections.length} available
+            </p>
+            <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {eligibleCollections.map((collection) => (
+                <CollectionCard
+                  key={collection.publicSlug}
+                  collection={collection}
+                  onSignIn={onSignIn}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
+        {/* Navigation pathways */}
         <section className="mt-8 rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-10 shadow-[0_18px_50px_rgba(7,26,47,0.06)]">
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
-            What Verified Textile Collections will represent
+            Continue exploring
           </p>
           <h2 className="mt-3 text-2xl font-semibold text-[#0a2036]">
-            Public-safe curated collection stories with approved product and supplier context.
-          </h2>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
-            Verified Textile Collections may eventually group eligible products, material framing, and supplier context into public-safe showcases. Any trust, passport, or origin language must remain conditional, evidence-gated, and shown only where available.
-          </p>
-        </section>
-
-        <section className="mt-8 rounded-[32px] border border-[#d9e5ea] bg-[#f9fcfd] px-8 py-10 shadow-[0_18px_50px_rgba(7,26,47,0.04)]">
-          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
-            Public attraction and continuity framing
-          </p>
-          <h2 className="mt-3 text-2xl font-semibold text-[#0a2036]">
-            Public-safe collection framing now. Authenticated continuation later.
-          </h2>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
-            TexQtic uses public attraction to route visitors toward the right journey without exposing private collection records, buyer intent, pricing continuity, or authenticated workflow detail.
-          </p>
-        </section>
-
-        <section className="mt-8 rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-10 shadow-[0_18px_50px_rgba(7,26,47,0.06)]">
-          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
-            Current safe pathways
-          </p>
-          <h2 className="mt-3 text-2xl font-semibold text-[#0a2036]">
-            Continue through existing public-safe surfaces.
+            Other public-safe surfaces.
           </h2>
           <div className="mt-6 flex flex-wrap gap-3">
             <ActionButton label="Back to Home" onClick={onBackToEntry} />
@@ -133,15 +199,23 @@ export function PublicCollectionsStub({
           </div>
         </section>
 
+        {/* Authenticated handoff */}
         <section className="mt-8 rounded-[32px] border border-[#d9e5ea] bg-[#071a2f] px-8 py-10 text-white shadow-[0_18px_50px_rgba(7,26,47,0.12)]">
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#7fd5de]">
-            Authenticated handoff
+            Authenticated continuation
           </p>
-          <h2 className="mt-3 text-2xl font-semibold">Prepare the public journey, then continue securely.</h2>
+          <h2 className="mt-3 text-2xl font-semibold">
+            Prepare the public journey, then continue securely.
+          </h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
-            Request access, continue after sign-in, early-access direction where available, and deeper workflow continuity remain authenticated TexQtic experiences.
+            Deeper authenticated workflows — sourcing, inquiries, business tools, and private
+            collection continuity — remain in TexQtic's authenticated surfaces.
           </p>
+          <div className="mt-6">
+            <ActionButton label="Sign in to Continue" onClick={onSignIn} variant="primary" />
+          </div>
         </section>
+
       </main>
     </div>
   );
