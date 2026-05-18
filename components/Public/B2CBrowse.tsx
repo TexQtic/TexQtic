@@ -4,6 +4,7 @@ import {
   type PublicB2CStorefrontEntry,
 } from '../../services/publicB2CService';
 import { PublicNavbar, type PublicNavbarProps } from './PublicNavbar';
+import { type IndustrySegment } from '../../config/publicIndustryClusterTaxonomy';
 
 interface B2CBrowsePageProps {
   readonly onBack: () => void;
@@ -51,14 +52,31 @@ function flattenStorefronts(storefronts: PublicB2CStorefrontEntry[]): FlatProduc
   return items;
 }
 
-// â”€â”€ static category cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- B2C browse category filter chips ----------------------------------
+// Values are a subset of INDUSTRY_SEGMENTS (PUBLIC_SAFE).
+// Authority: config/publicIndustryClusterTaxonomy.ts > INDUSTRY_SEGMENTS.
+// Do not add chip values that are not present in INDUSTRY_SEGMENTS.
+const B2C_BROWSE_CHIP_ICONS: Readonly<Partial<Record<IndustrySegment, string>>> = {
+  'Garments': '\u{1F455}',
+  'Home Textiles': '\u{1F6CF}\uFE0F',
+  'Technical Textiles': '\u{1F9E5}',
+  'Fabrics': '\u{1F9F5}',
+};
 
-const CATEGORY_CARDS: { label: string; value: string; icon: string }[] = [
-  { label: 'Garments', value: 'Garments', icon: '\u{1F455}' },
-  { label: 'Home Textiles', value: 'Home Textiles', icon: '\u{1F6CF}\uFE0F' },
-  { label: 'Technical Textiles', value: 'Technical Textiles', icon: '\u{1F9E5}' },
-  { label: 'Fabrics', value: 'Fabrics', icon: '\u{1F9F5}' },
+// Subset of INDUSTRY_SEGMENTS shown as B2C browse filter chips.
+// Filter values must match productCategory values emitted by the public B2C projection.
+const B2C_CATEGORY_FILTER_VALUES: ReadonlyArray<IndustrySegment> = [
+  'Garments',
+  'Home Textiles',
+  'Technical Textiles',
+  'Fabrics',
 ];
+
+const CATEGORY_CARDS = B2C_CATEGORY_FILTER_VALUES.map((value) => ({
+  label: value,
+  value,
+  icon: B2C_BROWSE_CHIP_ICONS[value] ?? '',
+}));
 
 // â”€â”€ page component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

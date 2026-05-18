@@ -288,7 +288,7 @@ Also:
 - Repo truth:
   - Partial category cards and tags exist but no dedicated alignment unit completed.
 - Readiness:
-  - READY_FOR_GOVERNANCE_ALIGNMENT
+  - COMPLETED — 2026-05-18
 - Dependencies:
   - INDUSTRY-CLUSTER-TAXONOMY-DECISION-001
 - Likely files:
@@ -551,17 +551,17 @@ Status for this unit:
 
 ## 16. Next Recommended Units
 
-Preferred next sequence (updated 2026-05-18 after B2C-PRODUCT-DETAIL-BASELINE-SYNC-001 closure):
-1. B2C-CATEGORY-TAXONOMY-ALIGNMENT-001 (READY_FOR_GOVERNANCE_ALIGNMENT — precondition for all category story work)
-2. B2C-DPP-PASSPORT-LINKAGE-SYNC-001
-3. B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001 (DESIGN_GATED — requires taxonomy alignment first)
-4. SEO-SITEMAP-METADATA-STRUCTURED-DATA-001 or B2C-SEO-METADATA-EXPANSION-DESIGN-001 depending on governance sequencing
-5. PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-DESIGN-001 or B2C-PUBLIC-INQUIRY-HANDOFF-DESIGN-001 depending on inquiry sequencing decision
+Preferred next sequence (updated 2026-05-18 after B2C-CATEGORY-TAXONOMY-ALIGNMENT-001 closure):
+1. B2C-DPP-PASSPORT-LINKAGE-SYNC-001
+2. B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001 (DESIGN_GATED — taxonomy alignment now complete)
+3. SEO-SITEMAP-METADATA-STRUCTURED-DATA-001 or B2C-SEO-METADATA-EXPANSION-DESIGN-001 depending on governance sequencing
+4. PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-DESIGN-001 or B2C-PUBLIC-INQUIRY-HANDOFF-DESIGN-001 depending on inquiry sequencing decision
 
 Completed and no longer in queue:
 - TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001 — CLOSED (D2C public-surface slice production-verified 2026-05-18)
 - B2C-PUBLIC-BROWSE-BASELINE-SYNC-001 — COMPLETED 2026-05-18 (see section 17)
 - B2C-PRODUCT-DETAIL-BASELINE-SYNC-001 — COMPLETED 2026-05-18 (see section 18)
+- B2C-CATEGORY-TAXONOMY-ALIGNMENT-001 — COMPLETED 2026-05-18 (see section 19)
 
 ## Governance Notes
 
@@ -938,3 +938,129 @@ Rationale:
 
 - **Commit message:** `[TEXQTIC] governance: sync B2C product detail baseline`
 - **Commit hash:** 487582b
+
+---
+
+## 19. B2C Category Taxonomy Alignment — 2026-05-18
+
+**Unit ID:** B2C-CATEGORY-TAXONOMY-ALIGNMENT-001
+**Date:** 2026-05-18
+**Status:** COMPLETED
+**Authorized by:** Paresh
+**Commit:** [TEXQTIC] public: align B2C category taxonomy (hash: TBD — see git log)
+
+### 19.1 Objective
+
+Replace hardcoded B2C browse category chip vocabulary in `B2CBrowse.tsx` with terms formally sourced from `config/publicIndustryClusterTaxonomy.ts` (`INDUSTRY_SEGMENTS`, `PUBLIC_SAFE`). No backend, schema, OpenAPI, projection, migration, or D2C changes.
+
+### 19.2 Scope
+
+**Runtime allowlist (Modify):**
+- `components/Public/B2CBrowse.tsx`
+
+**Governance allowlist (Modify):**
+- `governance/units/TEXQTIC-B2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001.md`
+
+**Read-only context:**
+- `config/publicIndustryClusterTaxonomy.ts`
+- `governance/decisions/INDUSTRY-CLUSTER-TAXONOMY-DECISION-001.md`
+- `components/Public/PublicProductDetail.tsx`
+- `services/publicB2CService.ts`
+- `server/src/services/publicB2CProjection.service.ts`
+
+### 19.3 Root Cause / Gap Identified
+
+`B2CBrowse.tsx` defined a module-level `CATEGORY_CARDS` constant with hardcoded string literals: `Garments`, `Home Textiles`, `Technical Textiles`, `Fabrics`. These strings were not imported from nor formally referenced to `config/publicIndustryClusterTaxonomy.ts`. All four values are present in `INDUSTRY_SEGMENTS` (PUBLIC_SAFE). The taxonomy config classifies `INDUSTRY_SEGMENTS` as the authoritative layer for B2B segment alignment and its terms exactly match the chip values in use.
+
+### 19.4 Decision: INDUSTRY_SEGMENTS as Browse Filter Source
+
+The taxonomy config maps two relevant layers:
+- `INDUSTRY_SEGMENTS`: authority is `organizations.primary_segment_key`; layer is B2B segment-level; status is `PUBLIC_SAFE`. Contains `Garments`, `Home Textiles`, `Technical Textiles`, `Fabrics` exactly matching current chip values.
+- `PRODUCT_CATEGORIES`: authority is `CatalogItem.productCategory`; layer is B2C product-level; status is `PUBLIC_SAFE`. Contains verbose terms (`Finished garments`, `Home textile products`, etc.) that do NOT match current chip filter values and whose DB alignment cannot be verified without live schema inspection.
+
+**Decision:** Chip filter values are aligned to `INDUSTRY_SEGMENTS` terms (exact match, no filter behavior change). Using `PRODUCT_CATEGORIES` terms as chip values would likely break filtering (DB values unknown). `INDUSTRY_SEGMENTS` alignment is PUBLIC_SAFE and formally correct for the surface presented.
+
+Product detail tag rendering (`category`, `material`, `fabricType` passthrough) is NOT changed. Detail tags are raw projection strings; taxonomy normalization of detail tags is design-gated pending `B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001` and further DB truth verification.
+
+### 19.5 Files Changed
+
+| File | Change |
+|---|---|
+| `components/Public/B2CBrowse.tsx` | Import `type IndustrySegment` from taxonomy; replace hardcoded `CATEGORY_CARDS` constant with `B2C_BROWSE_CHIP_ICONS` + `B2C_CATEGORY_FILTER_VALUES` + derived `CATEGORY_CARDS` |
+| `governance/units/TEXQTIC-B2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001.md` | Section 11 item 3 readiness → COMPLETED; Section 16 queue updated; Section 19 appended |
+
+### 19.6 Changes Made in B2CBrowse.tsx
+
+**Before:**
+```tsx
+const CATEGORY_CARDS: { label: string; value: string; icon: string }[] = [
+  { label: 'Garments', value: 'Garments', icon: '...' },
+  { label: 'Home Textiles', value: 'Home Textiles', icon: '...' },
+  { label: 'Technical Textiles', value: 'Technical Textiles', icon: '...' },
+  { label: 'Fabrics', value: 'Fabrics', icon: '...' },
+];
+```
+
+**After:**
+```tsx
+import { type IndustrySegment } from '../../config/publicIndustryClusterTaxonomy';
+
+const B2C_BROWSE_CHIP_ICONS: Readonly<Partial<Record<IndustrySegment, string>>> = {
+  'Garments': '...',
+  'Home Textiles': '...',
+  'Technical Textiles': '...',
+  'Fabrics': '...',
+};
+
+const B2C_CATEGORY_FILTER_VALUES: ReadonlyArray<IndustrySegment> = [
+  'Garments', 'Home Textiles', 'Technical Textiles', 'Fabrics',
+];
+
+const CATEGORY_CARDS = B2C_CATEGORY_FILTER_VALUES.map((value) => ({
+  label: value, value, icon: B2C_BROWSE_CHIP_ICONS[value] ?? '',
+}));
+```
+
+`IndustrySegment` is a union of INDUSTRY_SEGMENTS literal types. `B2C_CATEGORY_FILTER_VALUES: ReadonlyArray<IndustrySegment>` causes a TypeScript error if a non-approved term is added. Filter behavior is identical (same 4 values, same icons).
+
+### 19.7 PublicProductDetail.tsx — No Change
+
+Product detail tag rendering is raw passthrough from projection. No taxonomy normalization was applied. Rationale: DB values for `productCategory`, `material`, `fabricType` are unknown; adding a normalization layer without confirmed DB values could silently suppress valid tags or produce mismatches. Detail tag normalization is deferred to `B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001` after DB truth is verified.
+
+### 19.8 Taxonomy Config — No Change
+
+`config/publicIndustryClusterTaxonomy.ts` was not modified. The governance rule states: "No term may be added or modified without a corresponding update to INDUSTRY-CLUSTER-TAXONOMY-DECISION-001 (status must advance to ACCEPTED)." Decision status is PROPOSED. No additions were made.
+
+### 19.9 Governance Contracts Reviewed
+
+| Contract | File | Status |
+|---|---|---|
+| Taxonomy authority | `governance/decisions/INDUSTRY-CLUSTER-TAXONOMY-DECISION-001.md` | PROPOSED — alignment uses only existing PUBLIC_SAFE terms |
+| B2C tracker | `governance/units/TEXQTIC-B2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001.md` | Updated (this section) |
+| OpenAPI tenant contract | Not applicable — no API shape changes | N/A |
+| Prisma schema | Not applicable — no DB changes | N/A |
+
+### 19.10 Validation Evidence
+
+- `git status --short` before edits: **empty (clean working tree)**
+- `git diff --name-only` before edits: **empty (clean working tree)**
+- TypeScript: `IndustrySegment` type import resolves cleanly; `B2C_CATEGORY_FILTER_VALUES: ReadonlyArray<IndustrySegment>` type-checked correctly against `INDUSTRY_SEGMENTS` literal union.
+- No pre-existing TS errors introduced by this change.
+- Runtime behavior unchanged: same 4 chip values, same icons, same `p.category === activeCategory` filter logic.
+
+### 19.11 Adjacent Findings
+
+**Finding 1: Product detail tag normalization is design-gated**
+- Product detail tags render raw `category`, `material`, `fabricType` strings from projection.
+- Taxonomy normalization of detail tags requires knowing actual DB values for `CatalogItem.productCategory`, `material`, `fabricType`.
+- Classification: design-gated — subject of `B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001`.
+- Blocks this unit: NO.
+
+**Finding 2: INDUSTRY-CLUSTER-TAXONOMY-DECISION-001 is still PROPOSED**
+- The taxonomy decision has not advanced to ACCEPTED. No new terms were added in this unit.
+- When the decision advances to ACCEPTED, the taxonomy config may be updated and downstream surfaces (chip filters, detail tags, SEO metadata) should be re-audited.
+
+### 19.12 Commit Reference
+
+- **Commit message:** `[TEXQTIC] public: align B2C category taxonomy`
+- **Commit hash:** TBD — see git log
