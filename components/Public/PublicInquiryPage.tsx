@@ -13,8 +13,8 @@
  *
  * MODES
  * -----
- *   NO_CONTEXT   — supplierSlug absent or invalid → safe copy + "Find suppliers" CTA
- *   FORM         — supplierSlug valid → inquiry form (category required; geo/volume optional)
+ *   NO_CONTEXT   — supplierSlug absent or invalid → general public inquiry form (Phase 2)
+ *   FORM         — supplierSlug valid → supplier-context inquiry form (category required; geo/volume optional)
  *   SUCCESS      — post-submit → acknowledgment + auth handoff CTA
  *   ERROR        — submit error → categorised error message
  *
@@ -64,6 +64,10 @@ const CATEGORY_OPTIONS: ReadonlyArray<{ value: PublicInquiryCategory; label: str
 function classifySubmitError(err: unknown): string {
   if (err instanceof Error) {
     const msg = err.message;
+    const status = (err as { status?: number }).status;
+    if (status === 400) {
+      return 'Please do not include contact details (email or phone) in your message.';
+    }
     if (msg.includes('429') || msg.toLowerCase().includes('rate')) {
       return 'Too many submissions. Please wait a moment and try again.';
     }
@@ -74,29 +78,147 @@ function classifySubmitError(err: unknown): string {
   return 'We could not record your inquiry right now. Please try again.';
 }
 
-// ── No-context landing ─────────────────────────────────────────────────────────
+// ── General inquiry form ──────────────────────────────────────────────────────
+// Phase 2: no supplier context — submits without supplier_slug.
+// source_surface: 'GENERAL_PUBLIC' — canonical value for /inquiry general mode.
 
-function NoContextLanding({ onBack }: { onBack: () => void }) {
+interface GeneralInquiryFormProps {
+  readonly onSuccess: () => void;
+  readonly onError: (msg: string) => void;
+}
+
+function GeneralInquiryForm({ onSuccess, onError }: GeneralInquiryFormProps) {
+  const [category, setCategory] = useState<PublicInquiryCategory | ''>('');
+  const [geoBand, setGeoBand] = useState('');
+  const [volumeBand, setVolumeBand] = useState('');
+  const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!category) return;
+    setSubmitting(true);
+    try {
+      await submitPublicInquiry({
+        inquiry_category: category,
+        source_surface: 'GENERAL_PUBLIC',
+        ...(geoBand.trim() ? { geo_band: geoBand.trim().slice(0, 100) } : {}),
+        ...(volumeBand.trim() ? { volume_band: volumeBand.trim().slice(0, 100) } : {}),
+        ...(message.trim() ? { message: message.trim().slice(0, 2000) } : {}),
+      });
+      onSuccess();
+    } catch (err) {
+      onError(classifySubmitError(err));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-      <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#2f8094]">
-        No supplier selected
+    <section
+      aria-label="Submit a general inquiry"
+      className="w-full max-w-lg rounded-2xl border border-[#d6e4e8] bg-white p-8 shadow-sm"
+    >
+      <h2 className="text-xl font-semibold text-[#0a2036]">Share your sourcing interest</h2>
+      <p className="mt-2 text-[14px] text-slate-500">
+        Tell us what you are looking for. No account required.
       </p>
-      <h1 className="mt-4 max-w-lg text-2xl font-semibold text-[#0a2036]">
-        Looking for a specific supplier to enquire about?
-      </h1>
-      <p className="mt-3 max-w-md text-[15px] text-slate-600">
-        Browse the TexQtic B2B supplier network to find the right partner, then express
-        your interest directly from their profile.
-      </p>
-      <button
-        type="button"
-        onClick={onBack}
-        className="mt-8 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-6 py-3 text-[12px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
-      >
-        Find suppliers
-      </button>
-    </div>
+      <form onSubmit={handleSubmit} noValidate className="mt-6 flex flex-col gap-5">
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="inquiry-category"
+            className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-600"
+          >
+            Inquiry type{' '}
+            <span aria-hidden="true" className="text-rose-500">
+              *
+            </span>
+          </label>
+          <select
+            id="inquiry-category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value as PublicInquiryCategory | '')}
+            required
+            className="rounded-xl border border-[#d6e4e8] bg-[#f8fbfc] px-4 py-3 text-[14px] text-slate-800 focus:border-[#2f8094] focus:outline-none"
+          >
+            <option value="">— Select inquiry type —</option>
+            {CATEGORY_OPTIONS.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="inquiry-geo"
+            className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-600"
+          >
+            Geography{' '}
+            <span className="font-normal normal-case text-slate-400">(optional)</span>
+          </label>
+          <input
+            id="inquiry-geo"
+            type="text"
+            value={geoBand}
+            onChange={(e) => setGeoBand(e.target.value)}
+            placeholder="e.g. South Asia, EU, Global"
+            maxLength={100}
+            className="rounded-xl border border-[#d6e4e8] bg-[#f8fbfc] px-4 py-3 text-[14px] text-slate-800 placeholder:text-slate-400 focus:border-[#2f8094] focus:outline-none"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="inquiry-volume"
+            className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-600"
+          >
+            Volume range{' '}
+            <span className="font-normal normal-case text-slate-400">(optional)</span>
+          </label>
+          <input
+            id="inquiry-volume"
+            type="text"
+            value={volumeBand}
+            onChange={(e) => setVolumeBand(e.target.value)}
+            placeholder="e.g. 500–1000 units, 5,000 metres"
+            maxLength={100}
+            className="rounded-xl border border-[#d6e4e8] bg-[#f8fbfc] px-4 py-3 text-[14px] text-slate-800 placeholder:text-slate-400 focus:border-[#2f8094] focus:outline-none"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="inquiry-message"
+            className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-600"
+          >
+            Additional context{' '}
+            <span className="font-normal normal-case text-slate-400">(optional)</span>
+          </label>
+          <textarea
+            id="inquiry-message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Describe your sourcing interest or context."
+            maxLength={2000}
+            rows={4}
+            className="resize-none rounded-xl border border-[#d6e4e8] bg-[#f8fbfc] px-4 py-3 text-[14px] text-slate-800 placeholder:text-slate-400 focus:border-[#2f8094] focus:outline-none"
+          />
+          <p className="text-[11px] text-slate-400">
+            Do not include email addresses or phone numbers.
+          </p>
+        </div>
+
+        <button
+          type="submit"
+          disabled={!category || submitting}
+          className="mt-2 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-6 py-3 text-[12px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {submitting ? 'Sending…' : 'Send inquiry'}
+        </button>
+      </form>
+    </section>
   );
 }
 
@@ -296,13 +418,15 @@ export function PublicInquiryPage({
     setErrorMessage(msg);
     setMode('ERROR');
   };
-  const handleRetry = () => setMode('FORM');
+  const handleRetry = () => setMode(isValidSlug ? 'FORM' : 'NO_CONTEXT');
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f3f8fb] font-sans text-slate-900">
       <PublicNavbar {...nav} />
       <main className="flex flex-1 flex-col items-center justify-center px-6 py-12">
-        {mode === 'NO_CONTEXT' && <NoContextLanding onBack={onBack} />}
+        {mode === 'NO_CONTEXT' && (
+          <GeneralInquiryForm onSuccess={handleSuccess} onError={handleError} />
+        )}
         {mode === 'FORM' && isValidSlug && (
           <InquiryForm
             supplierSlug={supplierSlug}

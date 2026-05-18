@@ -2063,3 +2063,77 @@ deferred to `PUBLIC-INQUIRY-GENERAL-EVENT-INFRASTRUCTURE-001`.
 - Checks 11–14 (email/phone/size/opaque): rate-limited (correct behaviour); covered by INQ-016/017/024/015 ✅
 
 **Data limitation:** No live supplier slug available for full Phase 1 production end-to-end check; supplier 404 behavior confirmed. Event contract truth (`buyer_inquiry.created.v1` supplier-only) confirmed via `server/src/lib/events.ts` read — general action absent from registry.
+
+---
+
+## Section 32 — PUBLIC-INQUIRY-GENERAL-MODE-IMPLEMENTATION-001
+
+### 32.1 Unit Summary
+
+**Unit:** `PUBLIC-INQUIRY-GENERAL-MODE-IMPLEMENTATION-001`
+**Type:** Frontend implementation
+**Status:** `COMPLETE`
+**Commit:** (pending)
+**Implementation date:** 2026-07-09
+**Authority design:** PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-DESIGN-001 / Phase 2
+
+### 32.2 Objective
+
+Activate the general inquiry form on `/inquiry` when no valid `supplierSlug` is present.
+Phase 1 showed a passive no-context landing (copy + "Find suppliers" CTA).
+Phase 2 shows a live general inquiry form that submits without `supplier_slug`.
+
+### 32.3 Allowlist
+
+| File | Action |
+|---|---|
+| `components/Public/PublicInquiryPage.tsx` | MODIFY |
+| `tests/frontend/public-inquiry-page.test.tsx` | MODIFY |
+| `governance/units/TEXQTIC-B2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001.md` | MODIFY |
+
+No backend changes. No `App.tsx` changes. No service changes (`services/publicB2BService.ts` was already Phase 2-ready with `supplier_slug?: string`).
+
+### 32.4 Changes Made
+
+**`components/Public/PublicInquiryPage.tsx`**
+
+1. Removed `NoContextLanding` (passive copy + "Find suppliers" CTA — replaced by general form).
+2. Added `GeneralInquiryForm` component:
+   - Fields: `inquiry_category` (required), `geo_band` (optional), `volume_band` (optional), `message` (optional textarea, max 2000, no contact-detail guidance).
+   - Payload: `{ inquiry_category, source_surface: 'GENERAL_PUBLIC', geo_band?, volume_band?, message? }` — no `supplier_slug`.
+   - `source_surface` canonical value: `'GENERAL_PUBLIC'`.
+3. Updated `classifySubmitError`: added `status === 400` case → `'Please do not include contact details (email or phone) in your message.'`
+4. Fixed `handleRetry`: now returns to `isValidSlug ? 'FORM' : 'NO_CONTEXT'` (was always `'FORM'`, which was incorrect for general mode retry).
+5. Updated `NO_CONTEXT` render block: now renders `<GeneralInquiryForm>` instead of `<NoContextLanding>`.
+
+**`tests/frontend/public-inquiry-page.test.tsx`**
+
+- Updated PII-001 and PII-002 assertions to check for general form (not passive landing copy).
+- Added PII-013 through PII-020 (8 new tests):
+  - PII-013: general form renders when no supplierSlug
+  - PII-014: general form has no name/email/phone/company fields
+  - PII-015: general submit calls `submitPublicInquiry` without `supplier_slug`
+  - PII-016: general submit includes `source_surface: 'GENERAL_PUBLIC'`
+  - PII-017: general submit includes `message` when provided
+  - PII-018: general submit without message sends no message field
+  - PII-019: success state does not echo message content
+  - PII-020: 400 error shows safe UI copy
+
+### 32.5 Governance Checks
+
+- No PII fields (name, email, phone, company) — confirmed by PII-014.
+- No contact detail echo in success state — confirmed by PII-019.
+- `source_surface` is `'GENERAL_PUBLIC'` — valid known surface in backend schema.
+- Backend event pipeline: general inquiry uses `'public.buyer.inquiry.general.created'` (not in `AUDIT_ACTION_TO_EVENT_NAME`); returns silently — no change required.
+- No OpenAPI contract changes — existing `POST /api/public/inquiry/submit` handles optional `supplier_slug`.
+- Supplier-context mode backward-compatible — Phase 1 tests PII-003 through PII-012 unchanged and still pass.
+
+### 32.6 Validation
+
+- `pnpm typecheck` — PASS (frontend + server)
+- PII-001 through PII-020 (20/20) — PASS
+
+### 32.7 Next Units
+
+1. `PUBLIC-INQUIRY-GENERAL-MODE-IMPLEMENTATION-001-VERIFY-CLOSE` — production smoke + governance close
+2. `PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001` — CTA integration in product/category/collection pages

@@ -6,18 +6,26 @@
  * Date:    2026-07-08
  *
  * Covers:
- *   PII-001 — no-context mode rendered when supplierSlug is empty
- *   PII-002 — no-context mode rendered when supplierSlug is invalid
- *   PII-003 — form rendered when valid supplierSlug provided
+ *   PII-001 — no-context mode renders general inquiry form when supplierSlug is empty
+ *   PII-002 — no-context mode renders general inquiry form when supplierSlug is invalid
+ *   PII-003 — supplier-context form rendered when valid supplierSlug provided
  *   PII-004 — submit disabled when no category selected
  *   PII-005 — valid submit → success state
  *   PII-006 — submission error → error message with retry
  *   PII-007 — 429 error → rate-limit message
  *   PII-008 — 404 error → supplier unavailable message
- *   PII-009 — no PII fields rendered
- *   PII-010 — submitPublicInquiry called with correct payload (no PII)
+ *   PII-009 — no PII fields rendered in supplier form
+ *   PII-010 — submitPublicInquiry called with correct supplier payload (no PII)
  *   PII-011 — success state replaces form (no double-submit)
  *   PII-012 — no payment/order/RFQ language on page
+ *   PII-013 — general form renders when no supplierSlug
+ *   PII-014 — general form has no name/email/phone/company fields
+ *   PII-015 — general submit calls submitPublicInquiry without supplier_slug
+ *   PII-016 — general submit includes source_surface: GENERAL_PUBLIC
+ *   PII-017 — general submit includes message only when provided
+ *   PII-018 — general submit without message sends no message field
+ *   PII-019 — general success state does not echo message content
+ *   PII-020 — 400 PII error shows safe UI copy
  *
  * Harness: vitest + @testing-library/react + jsdom
  */
@@ -81,22 +89,22 @@ function renderPage(supplierSlug: string) {
 
 describe('PublicInquiryPage', () => {
   /**
-   * PII-001 — no-context mode rendered when supplierSlug is empty.
+   * PII-001 — no-context mode renders general inquiry form when supplierSlug is empty.
    */
-  it('PII-001 — no-context mode when supplierSlug is empty', () => {
+  it('PII-001 — no-context mode renders general form when supplierSlug is empty', () => {
     renderPage('');
-    expect(screen.getByText(/Looking for a specific supplier/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Find suppliers/i })).toBeInTheDocument();
-    expect(screen.queryByLabelText(/Inquiry type/i)).toBeNull();
+    expect(screen.getByLabelText(/Inquiry type/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Send inquiry/i })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: /Find suppliers/i })).toBeNull();
   });
 
   /**
-   * PII-002 — no-context mode rendered when supplierSlug is invalid (contains uppercase or spaces).
+   * PII-002 — no-context mode renders general inquiry form when supplierSlug is invalid.
    */
-  it('PII-002 — no-context mode when supplierSlug is invalid', () => {
+  it('PII-002 — no-context mode renders general form when supplierSlug is invalid', () => {
     renderPage('INVALID Slug!');
-    expect(screen.getByText(/Looking for a specific supplier/i)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/Inquiry type/i)).toBeNull();
+    expect(screen.getByLabelText(/Inquiry type/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Send inquiry/i })).toBeDisabled();
   });
 
   /**
@@ -296,5 +304,166 @@ describe('PublicInquiryPage', () => {
     expect(text).not.toMatch(/\bquote\b/i);
     expect(text).not.toMatch(/\bprice\b/i);
     expect(text).not.toMatch(/\bnegotiat/i);
+  });
+
+  // ── Phase 2: General mode tests ─────────────────────────────────────────────
+
+  /**
+   * PII-013 — general inquiry form renders when no supplierSlug.
+   */
+  it('PII-013 — general inquiry form renders when no supplierSlug', () => {
+    renderPage('');
+    expect(screen.getByLabelText(/Inquiry type/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Send inquiry/i })).toBeInTheDocument();
+  });
+
+  /**
+   * PII-014 — general inquiry form has no name/email/phone/company fields.
+   */
+  it('PII-014 — general form has no name/email/phone/company fields', () => {
+    renderPage('');
+    expect(screen.queryByLabelText(/email/i)).toBeNull();
+    expect(screen.queryByLabelText(/phone/i)).toBeNull();
+    expect(screen.queryByLabelText(/name/i)).toBeNull();
+    expect(screen.queryByLabelText(/company/i)).toBeNull();
+  });
+
+  /**
+   * PII-015 — general submit calls submitPublicInquiry without supplier_slug.
+   */
+  it('PII-015 — general submit calls submitPublicInquiry without supplier_slug', async () => {
+    renderPage('');
+
+    fireEvent.change(screen.getByLabelText(/Inquiry type/i), {
+      target: { value: 'GENERAL' },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Send inquiry/i }));
+    });
+
+    await waitFor(() => {
+      expect(publicB2BService.submitPublicInquiry).toHaveBeenCalledOnce();
+    });
+
+    const [payload] = vi.mocked(publicB2BService.submitPublicInquiry).mock.calls[0];
+    expect(payload.supplier_slug).toBeUndefined();
+    expect(payload.inquiry_category).toBe('GENERAL');
+  });
+
+  /**
+   * PII-016 — general submit includes source_surface: GENERAL_PUBLIC.
+   */
+  it('PII-016 — general submit includes source_surface GENERAL_PUBLIC', async () => {
+    renderPage('');
+
+    fireEvent.change(screen.getByLabelText(/Inquiry type/i), {
+      target: { value: 'SOURCING_INTENT' },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Send inquiry/i }));
+    });
+
+    await waitFor(() => {
+      expect(publicB2BService.submitPublicInquiry).toHaveBeenCalledOnce();
+    });
+
+    const [payload] = vi.mocked(publicB2BService.submitPublicInquiry).mock.calls[0];
+    expect(payload.source_surface).toBe('GENERAL_PUBLIC');
+  });
+
+  /**
+   * PII-017 — general submit includes message when provided.
+   */
+  it('PII-017 — general submit includes message when provided', async () => {
+    renderPage('');
+
+    fireEvent.change(screen.getByLabelText(/Inquiry type/i), {
+      target: { value: 'GENERAL' },
+    });
+    fireEvent.change(screen.getByLabelText(/Additional context/i), {
+      target: { value: 'Looking for garment suppliers' },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Send inquiry/i }));
+    });
+
+    await waitFor(() => {
+      expect(publicB2BService.submitPublicInquiry).toHaveBeenCalledOnce();
+    });
+
+    const [payload] = vi.mocked(publicB2BService.submitPublicInquiry).mock.calls[0];
+    expect(payload.message).toBe('Looking for garment suppliers');
+  });
+
+  /**
+   * PII-018 — general submit without message sends no message field.
+   */
+  it('PII-018 — general submit without message sends no message field', async () => {
+    renderPage('');
+
+    fireEvent.change(screen.getByLabelText(/Inquiry type/i), {
+      target: { value: 'GENERAL' },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Send inquiry/i }));
+    });
+
+    await waitFor(() => {
+      expect(publicB2BService.submitPublicInquiry).toHaveBeenCalledOnce();
+    });
+
+    const [payload] = vi.mocked(publicB2BService.submitPublicInquiry).mock.calls[0];
+    expect(payload.message).toBeUndefined();
+  });
+
+  /**
+   * PII-019 — general success state does not echo message content.
+   */
+  it('PII-019 — general success state does not echo message content', async () => {
+    renderPage('');
+
+    fireEvent.change(screen.getByLabelText(/Inquiry type/i), {
+      target: { value: 'GENERAL' },
+    });
+    fireEvent.change(screen.getByLabelText(/Additional context/i), {
+      target: { value: 'Unique-token-XYZ-9a3f2b' },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Send inquiry/i }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Your interest has been recorded/i)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/Unique-token-XYZ-9a3f2b/i)).toBeNull();
+  });
+
+  /**
+   * PII-020 — 400 error (PII in message) shows safe UI copy.
+   */
+  it('PII-020 — 400 PII error shows safe UI copy', async () => {
+    vi.mocked(publicB2BService.submitPublicInquiry).mockRejectedValueOnce(
+      Object.assign(new Error('Invalid message content'), { status: 400 }),
+    );
+
+    renderPage('');
+
+    fireEvent.change(screen.getByLabelText(/Inquiry type/i), {
+      target: { value: 'GENERAL' },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Send inquiry/i }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/do not include contact details/i)).toBeInTheDocument();
+    });
   });
 });
