@@ -102,4 +102,8 @@ publicProductDetailMeta.type === 'found'    → rich title and description from 
 ## 8. Commit
 
 - **Commit message:** `[TEXQTIC] public: implement B2C product detail rich SEO`
+<<<<<<< HEAD
 - **Commit hash:** `a548225`
+=======
+- **Commit hash:** (to be filled at VERIFY-CLOSE)
+>>>>>>> a5482259eb16641c4b5a007488cd1e71d83f8f63
