@@ -271,17 +271,14 @@ Also:
 - Repo truth:
   - Product detail baseline exists and is verified.
 - Readiness:
-  - READY_FOR_SYNC
+  - COMPLETED — 2026-05-18 (see section 18)
+- Commit:
+  - [TEXQTIC] governance: sync B2C product detail baseline
 - Dependencies:
   - INDUSTRY-CLUSTER-TAXONOMY-DECISION-001
 - Likely files:
   - components/Public/PublicProductDetail.tsx
   - services/publicB2CService.ts
-- Verification plan:
-  - Slug resolution and safe 404/unavailable behavior
-  - Conditional passport link behavior
-- Suggested commit message:
-  - [TEXQTIC] public: sync b2c product detail baseline governance
 - Relationship to Industry and D2C:
   - Industry taxonomy dependent; informs D2C later
 
@@ -554,17 +551,17 @@ Status for this unit:
 
 ## 16. Next Recommended Units
 
-Preferred next sequence (updated 2026-05-18 after B2C-PUBLIC-BROWSE-BASELINE-SYNC-001 closure):
-1. B2C-PRODUCT-DETAIL-BASELINE-SYNC-001 (READY_FOR_SYNC — may pair with browse sync or run immediately after)
-2. B2C-CATEGORY-TAXONOMY-ALIGNMENT-001 (READY_FOR_GOVERNANCE_ALIGNMENT — precondition for all category story work)
-3. B2C-DPP-PASSPORT-LINKAGE-SYNC-001
-4. B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001 (DESIGN_GATED — requires taxonomy alignment first)
-5. SEO-SITEMAP-METADATA-STRUCTURED-DATA-001 or B2C-SEO-METADATA-EXPANSION-DESIGN-001 depending on governance sequencing
-6. PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-DESIGN-001 or B2C-PUBLIC-INQUIRY-HANDOFF-DESIGN-001 depending on inquiry sequencing decision
+Preferred next sequence (updated 2026-05-18 after B2C-PRODUCT-DETAIL-BASELINE-SYNC-001 closure):
+1. B2C-CATEGORY-TAXONOMY-ALIGNMENT-001 (READY_FOR_GOVERNANCE_ALIGNMENT — precondition for all category story work)
+2. B2C-DPP-PASSPORT-LINKAGE-SYNC-001
+3. B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001 (DESIGN_GATED — requires taxonomy alignment first)
+4. SEO-SITEMAP-METADATA-STRUCTURED-DATA-001 or B2C-SEO-METADATA-EXPANSION-DESIGN-001 depending on governance sequencing
+5. PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-DESIGN-001 or B2C-PUBLIC-INQUIRY-HANDOFF-DESIGN-001 depending on inquiry sequencing decision
 
 Completed and no longer in queue:
 - TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001 — CLOSED (D2C public-surface slice production-verified 2026-05-18)
 - B2C-PUBLIC-BROWSE-BASELINE-SYNC-001 — COMPLETED 2026-05-18 (see section 17)
+- B2C-PRODUCT-DETAIL-BASELINE-SYNC-001 — COMPLETED 2026-05-18 (see section 18)
 
 ## Governance Notes
 
@@ -665,15 +662,12 @@ The following stale references in this tracker have been corrected in this sync 
 
 ### 17.6 Next-Unit Recommendation
 
-**Primary next unit:** `B2C-PRODUCT-DETAIL-BASELINE-SYNC-001`
-- Status: READY_FOR_SYNC
-- Product detail baseline is confirmed implemented and production-verified; this sync unit will formally record it.
-- May be run immediately; no additional dependency required.
+**Primary next unit at time of section 17 authoring:** `B2C-PRODUCT-DETAIL-BASELINE-SYNC-001` — NOW COMPLETED (see section 18).
 
-**After product detail sync:**
-- `B2C-CATEGORY-TAXONOMY-ALIGNMENT-001` — precondition for all B2C category story page work.
-  - `config/publicIndustryClusterTaxonomy.ts` is confirmed present; vocabulary is available.
-  - Category chips in `B2CBrowse.tsx` (`Garments`, `Home Textiles`, `Technical Textiles`, `Fabrics`) are not yet formally aligned to `INDUSTRY_SEGMENTS` or `PRODUCT_CATEGORIES` in `publicIndustryClusterTaxonomy.ts`. This alignment is the subject of `B2C-CATEGORY-TAXONOMY-ALIGNMENT-001`.
+**Current next unit (after section 18 closure):** `B2C-CATEGORY-TAXONOMY-ALIGNMENT-001`
+- Precondition for all B2C category story page work.
+- `config/publicIndustryClusterTaxonomy.ts` is confirmed present; vocabulary is available.
+- Category chips in `B2CBrowse.tsx` (`Garments`, `Home Textiles`, `Technical Textiles`, `Fabrics`) are not yet formally aligned to `INDUSTRY_SEGMENTS` or `PRODUCT_CATEGORIES` in `publicIndustryClusterTaxonomy.ts`. This alignment is the subject of `B2C-CATEGORY-TAXONOMY-ALIGNMENT-001`.
 
 ### 17.7 Deferred Items
 
@@ -720,4 +714,227 @@ The following stale references in this tracker have been corrected in this sync 
 ### 17.10 Commit Reference
 
 - **Commit message:** `[TEXQTIC] governance: sync B2C public browse baseline`
+- **Commit hash:** b40c2b9
+
+---
+
+## 18. B2C Product Detail Baseline Sync — 2026-05-18
+
+**Unit ID:** B2C-PRODUCT-DETAIL-BASELINE-SYNC-001
+**Date:** 2026-05-18
+**Status:** COMPLETED
+**Authorized by:** Paresh
+**Commit:** [TEXQTIC] governance: sync B2C product detail baseline (hash: see 18.10)
+
+### 18.1 Repo-Truth Inspection Summary
+
+Files inspected (read-only):
+- `PUBLIC-FACING-PAGES-SEQUENCE-DECISION-001.md` — confirmed Option E decision in force; B2C public family is current active family.
+- `governance/units/TEXQTIC-B2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001.md` — section 17 browse sync confirmed COMPLETED at b40c2b9; section 17.10 hash corrected to b40c2b9 in this sync.
+- `governance/units/TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001.md` — section 17 D2C public-surface slice confirmed COMPLETED; no new D2C changes.
+- `App.tsx` — confirmed `PUBLIC_PRODUCT_DETAIL` → `PublicProductDetail` for `/product/:slug`; no unexpected B2C authenticated continuation found.
+- `components/Public/PublicProductDetail.tsx` — full inspection confirmed; see 18.2.
+- `services/publicB2CService.ts` — confirmed `getPublicB2CProductBySlug(slug)` calls `GET /api/public/b2c/products/:slug`; proper 404 handling; response shape matches `PublicB2CProductDetail` type.
+- `server/src/routes/public.ts` — confirmed `/b2c/products/:slug` endpoint; slug regex validation (`/^[a-z0-9-]+(?:--[a-z0-9-]+)?$/`); returns 400 on invalid slug, 404 on not-found; no auth required.
+- `server/src/services/publicB2CProjection.service.ts` — confirmed `getPublicB2CProductBySlug` function; five-gate projection; passport fail-closed; field allowlist; see 18.4.
+- `shared/contracts/openapi.tenant.json` — confirmed `/api/public/b2c/products/{slug}` documented with trust and passport fields.
+- `utils/publicPageMeta.ts` — confirmed Stage 1 scope is D2C collection surfaces only; `PUBLIC_PRODUCT_DETAIL` and `PUBLIC_B2C_BROWSE` are NOT covered.
+- `config/publicIndustryClusterTaxonomy.ts` — confirmed present; `PRODUCT_CATEGORIES`, `MATERIAL_TYPES`, `INDUSTRY_SEGMENTS`, `CLUSTER_LABELS` all defined. Vocabulary available for B2C taxonomy alignment unit.
+- `tests/` — no dedicated unit tests for `PublicProductDetail`, `getPublicB2CProductBySlug`, safe unavailable behavior, conditional passport link, or `publicB2CProjection.service.ts` detail function found.
+- No B2C category story page components found. Not implemented.
+- No B2C inquiry handoff implementation found. Not implemented.
+- No B2C SEO metadata expansion found for product detail. Not implemented.
+- No unexpected authenticated B2C continuation found on public product detail surface.
+- No public/private boundary violations found.
+
+### 18.2 Product Detail Component Status
+
+| Dimension | Status | Detail |
+|---|---|---|
+| App state | IMPLEMENTED | `PUBLIC_PRODUCT_DETAIL` in App.tsx |
+| Route | IMPLEMENTED | `/product/:slug` |
+| Component | IMPLEMENTED | `components/Public/PublicProductDetail.tsx` |
+| Frontend service | IMPLEMENTED | `services/publicB2CService.ts` → `getPublicB2CProductBySlug(slug)` |
+| Backend projection | IMPLEMENTED | `server/src/services/publicB2CProjection.service.ts` → `getPublicB2CProductBySlug` |
+| OpenAPI contract | DOCUMENTED | `shared/contracts/openapi.tenant.json` |
+| Loading state | IMPLEMENTED | Spinner with "Loading product preview..." text; non-destructive |
+| Safe unavailable | IMPLEMENTED | `!product \|\| notFound` renders non-destructive unavailable page (see 18.3) |
+| Public-safe fields | IMPLEMENTED | Strict public field allowlist enforced (see 18.4 and 18.5) |
+| Conditional passport link | IMPLEMENTED | Dual condition: `hasPassport && publicPassportId` (see 18.6) |
+| Trust signals | IMPLEMENTED | `trustSignals[]` array; conditional `hasPassport` badge; availability-based copy |
+| Related products | IMPLEMENTED | Up to 4 related products from same storefront; rendered as `RelatedProductCard` |
+| Supplier attribution | IMPLEMENTED | `publicSupplierName` and `publicSupplierSlug`; optional supplier profile CTA |
+| Sign-in handoff | IMPLEMENTED | Authenticated continuation panel with sign-in button; "List Your Products" external CTA |
+| Product tags | IMPLEMENTED | `category`, `material`, `fabricType`, and `tags[]` rendered as pill badges (up to 6) |
+| Back to browse | IMPLEMENTED | `onBackToBrowse` prop wired to back button in hero and unavailable state |
+
+### 18.3 Safe Unavailable Behavior Confirmation
+
+**CONFIRMED SAFE.**
+
+- **Empty slug guard:** `useEffect` on `[slug]` — if `!slug`, immediately sets `notFound: true`, `loading: false`. Component never calls backend with empty slug.
+- **404 path:** `getPublicB2CProductBySlug` throws `{ status: 404 }` on HTTP 404. Component catches it, sets `notFound: true`.
+- **Other error path:** Non-404 HTTP errors throw `{ status: N }`. Component catches all errors, sets `loading: false`, `notFound` only for 404. For other errors, `product` remains null, triggering the unavailable render.
+- **Unavailable UI:** Non-destructive card with "This public product preview is not available." message, plus "Back to Product Browse" and "Sign in to Continue" CTAs. No error details leaked.
+- **Cleanup:** `useEffect` returns cancellation function; `cancelled = true` on unmount prevents state updates after navigation.
+- **Backend:** `getPublicB2CProductBySlug` in projection service returns `null` if any gate fails, org not found, or item slug doesn't match. Route handler returns HTTP 404 for null result. No gate-detail leakage.
+
+### 18.4 Backend Projection Field Confirmation
+
+**Five gates confirmed in `publicB2CProjection.service.ts`:**
+
+| Gate | Condition | Enforcement |
+|---|---|---|
+| Gate A | `tenant.publicEligibilityPosture === 'PUBLICATION_ELIGIBLE'` | Post-query filter in detail function |
+| Gate B | `org.publication_posture IN ('B2C_PUBLIC', 'BOTH')` | DB `where` clause |
+| Gate C | `org.org_type === 'B2C'` | DB `where` clause |
+| Gate D | `org.status IN ('ACTIVE', 'VERIFICATION_APPROVED')` | DB `where` clause |
+| Gate E | Strict public-safe field select only | Prisma `select` — no `id`, no `sku`, no `composition`, no `catalogStage`, no risk/admin fields |
+
+**Allowed payload fields in detail response:**
+- `slug`, `name`, `category`, `material`, `fabricType`, `summary`, `description`
+- `imageUrls[]`, `publicSupplierName`, `publicSupplierSlug`
+- `publicPriceLabel`, `publicMoqLabel`, `publicStatusLabel`
+- `trustSignals[]`, `hasTraceabilityEvidence`, `hasPassport`
+- `publicPassportId` — only if `hasPassport === true` AND `public_token` is non-null (spread with `...(publicPassportId && { publicPassportId })`)
+- `tags[]` (derived from `productCategory`, `material`, `fabricType`)
+- `relatedProducts[]` — up to 4 items; each with `slug`, `name`, `imageUrl`, `price`, `category` only
+
+**Confirmed absent from detail response:**
+- `org.id` — used internally only; never in output
+- `tenantId`, `catalogItem.id` — selected internally only; never in output
+- `risk_score`, `plan`, `registration_no`, `external_orchestration_ref` — not selected
+- Private pricing beyond `publicPriceLabel`; private inventory; RFQ/order state
+
+### 18.5 Passport Query Fail-Closed Confirmation
+
+Backend query:
+```
+dpp_passport_states.findMany({ where: { org_id: org.id, status: 'PUBLISHED', public_token: { not: null } } })
+```
+- `hasPassport` defaults to `false`.
+- `publicPassportId` defaults to `undefined`.
+- Only set to truthy if: `passportRows.length > 0` AND `passportRows[0].public_token` is truthy.
+- Output spread: `...(publicPassportId && { publicPassportId })` — field only present when truthy.
+- **If no published passport with non-null public_token exists → `hasPassport: false`, no `publicPassportId` field.** Fail-closed confirmed.
+
+### 18.6 Conditional Passport Link UI Confirmation
+
+From `components/Public/PublicProductDetail.tsx`:
+
+```tsx
+{/* Trust badge — hasPassport only */}
+{product.hasPassport === true ? (
+  <span>Public passport available</span>
+) : null}
+
+{/* Passport link — BOTH hasPassport AND publicPassportId required */}
+{product.hasPassport && product.publicPassportId ? (
+  <a href={`/passport/${product.publicPassportId}`}>
+    View Trust & Origin Passport
+  </a>
+) : null}
+```
+
+**Confirmed:**
+- Trust badge shown when `hasPassport === true` only.
+- Passport link rendered when `hasPassport && publicPassportId` — both must be truthy.
+- No link if `hasPassport` is false or `publicPassportId` is absent/undefined.
+- Passport URL uses `publicPassportId` (public token only — never internal UUID).
+- No universal DPP/passport claim; no unverified trust language.
+
+### 18.7 Public/Private Boundary Confirmation
+
+**CONFIRMED CLEAN.** No violations found on B2C public product detail surface.
+
+| Boundary | Status |
+|---|---|
+| Product slug and name | PUBLIC SAFE |
+| Category, material, fabricType, tags | PUBLIC SAFE — nullable; from projection only |
+| Summary, description | PUBLIC SAFE — from catalog item `description` only |
+| Image URLs | PUBLIC SAFE — `imageUrls[]` from projection |
+| Public supplier name and slug | PUBLIC SAFE — `publicSupplierName`, `publicSupplierSlug` only |
+| Public price label | PUBLIC SAFE — `publicPriceLabel` (nullable string label) |
+| Public MOQ label | PUBLIC SAFE — `publicMoqLabel` (nullable string label) |
+| Public status label | PUBLIC SAFE — hardcoded `'Publicly discoverable'` |
+| Trust signals array | PUBLIC SAFE — availability-based; no unverified claims |
+| Conditional passport link | PUBLIC SAFE — fail-closed; `hasPassport && publicPassportId` required |
+| Related products | PUBLIC SAFE — same projection gates; max 4; minimal fields only |
+| org_id / internal org UUID | NOT PRESENT on detail response or component |
+| Internal catalog item ID | NOT PRESENT in response |
+| Private supplier records | NOT PRESENT |
+| Private pricing / inventory | NOT PRESENT |
+| RFQ / order / cart / wishlist / checkout | NOT PRESENT |
+| Buyer intent capture | NOT PRESENT |
+| Auth state leakage | NOT PRESENT — only public unauthenticated sign-in CTA |
+| Universal DPP/passport claims | NOT PRESENT — fail-closed conditional only |
+| AI / vector / ranking claims | NOT PRESENT |
+
+### 18.8 Category/Material/Fabric Taxonomy Status
+
+**Current state:** Product detail renders `category`, `material`, `fabricType`, and `tags` from raw backend projection values. These are CatalogItem field strings — not aligned to vocabulary in `config/publicIndustryClusterTaxonomy.ts`.
+
+**`PRODUCT_CATEGORIES` in taxonomy config:** `['Yarn products', 'Fabric products', 'Finished garments', 'Home textile products', 'Technical textile products', 'Textile services']`
+
+**`MATERIAL_TYPES` in taxonomy config:** `['Cotton', 'Polyester', 'Wool', 'Blended materials', 'Silk', 'Linen', 'Synthetic fibers', 'Natural fibers']`
+
+**Assessment:** B2C product detail display of category/material/fabric strings is passthrough from raw catalog data. Formal vocabulary alignment to taxonomy config is not implemented on the detail surface.
+
+**Gate:** `B2C-CATEGORY-TAXONOMY-ALIGNMENT-001` governs this alignment. Must not be implemented before that unit closes.
+
+### 18.9 Not-Implemented Confirmations (Design-Gated)
+
+| Item | Status | Gate |
+|---|---|---|
+| B2C category story pages | NOT IMPLEMENTED | DESIGN_GATED — awaits `B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001` after `B2C-CATEGORY-TAXONOMY-ALIGNMENT-001` |
+| B2C SEO metadata for product detail | NOT IMPLEMENTED | DESIGN_GATED — `utils/publicPageMeta.ts` scope is D2C-only; `PUBLIC_PRODUCT_DETAIL` not covered |
+| B2C inquiry handoff | NOT IMPLEMENTED | DESIGN_GATED — awaits category/story context and `B2C-PUBLIC-INQUIRY-HANDOFF-DESIGN-001` |
+| B2C authenticated continuation | NOT IMPLEMENTED | Separate authenticated family; only sign-in CTA present |
+| JSON-LD / structured data | NOT IMPLEMENTED | Deferred per `PUBLIC-SEO-INFRASTRUCTURE-DECISION-001` |
+
+### 18.10 Next-Unit Recommendation
+
+**Recommended next unit:** `B2C-CATEGORY-TAXONOMY-ALIGNMENT-001`
+
+Rationale:
+- Both B2C browse and product detail baseline syncs are now complete.
+- Category and material vocabulary on both surfaces uses raw catalog data strings not formally aligned to `config/publicIndustryClusterTaxonomy.ts`.
+- `B2C-CATEGORY-TAXONOMY-ALIGNMENT-001` is the enabling governance gate for all B2C category story page design, B2C SEO metadata expansion, and B2C inquiry context definition.
+- The taxonomy config file is present and stable. The taxonomy decision (`INDUSTRY-CLUSTER-TAXONOMY-DECISION-001`) must be reviewed for current status before proceeding.
+- No runtime changes are required to start `B2C-CATEGORY-TAXONOMY-ALIGNMENT-001` if it is a governance/alignment unit.
+
+### 18.11 Adjacent Findings
+
+**Finding 1: No dedicated unit tests for product detail surface**
+- Title: `PublicProductDetail` component, `getPublicB2CProductBySlug`, safe unavailable behavior, and conditional passport link have no dedicated unit tests
+- Rationale: Search of `/tests/**` found only `b2c-shell-authenticated-affordance-separation.test.tsx` (B2CShell test, not product detail). No test covers: slug-based detail fetch, 404 → unavailable render, `hasPassport`/`publicPassportId` conditional link, or backend projection detail gate enforcement.
+- Minimum file surface: new test file, likely `tests/b2c-public-product-detail.test.tsx` and/or `server/src/tests/publicB2CProjection.detail.test.ts`
+- Classification: verification-gated
+- Blocks this unit: NO
+
+**Finding 2: Product detail tags use raw CatalogItem strings; no taxonomy-aligned vocabulary**
+- Title: `category`, `material`, `fabricType`, and `tags[]` on detail surface are raw backend strings; not formally aligned to `publicIndustryClusterTaxonomy.ts`
+- Rationale: Detail component renders tag pills directly from `product.category`, `product.material`, `product.fabricType`, and `product.tags[]`. No reference to `PRODUCT_CATEGORIES` or `MATERIAL_TYPES` from taxonomy config. Alignment gap is known and design-gated.
+- Minimum file surface: `components/Public/PublicProductDetail.tsx`, `config/publicIndustryClusterTaxonomy.ts`
+- Classification: design-gated — subject of `B2C-CATEGORY-TAXONOMY-ALIGNMENT-001`
+- Blocks this unit: NO
+
+**Finding 3: `publicPageMeta.ts` has no B2C product detail SEO coverage**
+- Title: `PUBLIC_PRODUCT_DETAIL` state is not covered by `utils/publicPageMeta.ts`; no per-product title/description/canonical/OG metadata
+- Rationale: Stage 1 scope of `publicPageMeta.ts` is explicitly limited to D2C collection surfaces (`PUBLIC_COLLECTIONS`, `PUBLIC_COLLECTION_DETAIL`, `PUBLIC_COLLECTION_DETAIL_UNAVAILABLE`). B2C product detail gets no dynamic SEO head metadata.
+- Minimum file surface: `utils/publicPageMeta.ts`, `App.tsx`
+- Classification: design-gated — subject of `B2C-SEO-METADATA-EXPANSION-DESIGN-001`
+- Blocks this unit: NO
+
+### 18.12 Validation Evidence
+
+- `git status --short` before edits: **empty (clean working tree)**
+- `git diff --name-only` before edits: **empty (clean working tree)**
+- No runtime code was modified. This is a documentation-only governance sync.
+- No package scripts required; no runtime validation applicable.
+- Governance lint/check script: not present in this repo.
+
+### 18.13 Commit Reference
+
+- **Commit message:** `[TEXQTIC] governance: sync B2C product detail baseline`
 - **Commit hash:** TBD — record after commit.
