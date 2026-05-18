@@ -72,13 +72,25 @@ export type CollectionTrustContextMode = 'CONDITIONAL_PRODUCT_CONTEXT_ONLY';
  */
 export type CtaAction = 'AUTH_CONTINUE';
 
+/** CTA intent class. Internal governance only — must not appear in SEO metadata or public URL params. */
+export type CtaIntent =
+  | 'COLLECTION_CONTINUATION'
+  | 'COLLECTION_DETAIL_CONTINUATION';
+
+/** Surface the CTA is rendered on. Internal governance only — must not appear in SEO metadata or public URL params. */
+export type CtaSourceSurface = 'COLLECTION_LIST' | 'COLLECTION_DETAIL';
+
 /** Single public-safe authenticated continuation CTA metadata. */
 export interface PublicCollectionCta {
   readonly label: string;
   /** Always 'AUTH_CONTINUE' — non-transactional attraction CTA only. */
   readonly action: CtaAction;
-  /** Conceptual auth target; actual entry is modal via openSecondaryAuthenticatedEntry. */
-  readonly intent: 'COLLECTION_CONTINUATION';
+  /** Continuation intent class. Internal governance — must not appear in SEO metadata or public URL params. */
+  readonly intent: CtaIntent;
+  /** Surface the CTA is rendered on. Internal governance — must not appear in SEO metadata or public URL params. */
+  readonly sourceSurface: CtaSourceSurface;
+  /** Always true. Non-transactional auth-gated CTA. Authority: D2C-EARLY-ACCESS-AUTH-HANDOFF-DESIGN-001 §4. */
+  readonly authRequired: true;
 }
 
 /** Public-safe list state for a single collection record. */
@@ -184,6 +196,8 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
       label: 'Continue after sign in',
       action: 'AUTH_CONTINUE',
       intent: 'COLLECTION_CONTINUATION',
+      sourceSurface: 'COLLECTION_LIST',
+      authRequired: true,
     },
     listState: {
       availability: 'AVAILABLE',
@@ -209,6 +223,8 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
       label: 'Continue after sign in',
       action: 'AUTH_CONTINUE',
       intent: 'COLLECTION_CONTINUATION',
+      sourceSurface: 'COLLECTION_LIST',
+      authRequired: true,
     },
     listState: {
       availability: 'AVAILABLE',
@@ -234,6 +250,8 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
       label: 'Continue after sign in',
       action: 'AUTH_CONTINUE',
       intent: 'COLLECTION_CONTINUATION',
+      sourceSurface: 'COLLECTION_LIST',
+      authRequired: true,
     },
     listState: {
       availability: 'AVAILABLE',
@@ -259,6 +277,8 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
       label: 'Continue after sign in',
       action: 'AUTH_CONTINUE',
       intent: 'COLLECTION_CONTINUATION',
+      sourceSurface: 'COLLECTION_LIST',
+      authRequired: true,
     },
     listState: {
       availability: 'AVAILABLE',
@@ -284,6 +304,8 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
       label: 'Continue after sign in',
       action: 'AUTH_CONTINUE',
       intent: 'COLLECTION_CONTINUATION',
+      sourceSurface: 'COLLECTION_LIST',
+      authRequired: true,
     },
     listState: {
       availability: 'AVAILABLE',
@@ -291,6 +313,23 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
     },
   },
 ] as const;
+
+// ---------------------------------------------------------------------------
+// Detail CTA Governance
+// ---------------------------------------------------------------------------
+
+/**
+ * Static governance metadata for the collection detail-level authenticated CTA.
+ * Internal governance only — not user-visible, not in SEO metadata, not in URL query
+ * params, not in any public payload. Exported for future post-auth continuation use.
+ * Authority: D2C-EARLY-ACCESS-AUTH-HANDOFF-DESIGN-001 §4.2
+ */
+export const COLLECTION_DETAIL_CTA_GOVERNANCE = {
+  intent: 'COLLECTION_DETAIL_CONTINUATION' as CtaIntent,
+  sourceSurface: 'COLLECTION_DETAIL' as CtaSourceSurface,
+  action: 'AUTH_CONTINUE' as CtaAction,
+  authRequired: true,
+} as const;
 
 // ---------------------------------------------------------------------------
 // List Meta

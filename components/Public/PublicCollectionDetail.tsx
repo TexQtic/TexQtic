@@ -217,7 +217,7 @@ export function PublicCollectionDetail({
               onClick={onSignIn}
               className="inline-flex items-center justify-center rounded-full bg-[#7fd5de] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#071a2f] transition hover:bg-[#a4e0e8]"
             >
-              Sign in to Continue
+              {collection.cta.label}
             </button>
           </div>
         </section>
