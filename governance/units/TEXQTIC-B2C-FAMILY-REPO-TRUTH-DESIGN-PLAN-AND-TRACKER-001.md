@@ -1862,4 +1862,66 @@ Reuses existing `POST /api/public/inquiry/submit` endpoint (INQUIRY-004). No bac
 ### 28.5 Implementation Commit Reference
 
 - **Commit message:** `[TEXQTIC] public: implement public inquiry intent capture`
-- **Commit hash:** (see git log)
+- **Commit hash:** `3b1971b`
+
+---
+
+## 29. Public Inquiry Intent-Capture Page — Verification Close — 2026-07-08
+
+**Unit ID:** PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-IMPLEMENTATION-001-VERIFY-CLOSE
+**Date:** 2026-07-08
+**Status:** VERIFIED_COMPLETE
+**Verified by:** Paresh
+**Implementation commit:** `3b1971b`
+
+### 29.1 Verification Protocol
+
+Production URL: `https://app.texqtic.com`
+Backend health: `GET /api/health` → `200 {"status":"ok"}` ✅
+Playwright browser automation used for all route and behavior checks.
+
+### 29.2 Verification Results
+
+| Check | Route / Target | Result | Notes |
+|---|---|---|---|
+| Route loads | `/inquiry` | PASS | No-context mode, "Looking for a specific supplier to enquire about?" |
+| SEO metadata | `/inquiry` | PASS | title=`Express Interest — TexQtic`, canonical=`https://app.texqtic.com/inquiry`, robots=`index, follow`, description+OG+Twitter all present |
+| Trailing slash | `/inquiry/` | PASS | No-context mode, canonical strips trailing slash |
+| Navbar Inquire link | `/inquiry` | PASS | "Inquire" present in mobile hamburger nav |
+| Supplier-context form | `/inquiry?supplierSlug=qa-gmt-d&sourceSurface=SUPPLIER_PROFILE` | PASS | Form renders; 3 fields only (`inquiry-category`, `inquiry-geo`, `inquiry-volume`); no PII fields |
+| Canonical on supplier URL | `/inquiry?supplierSlug=qa-gmt-d&sourceSurface=SUPPLIER_PROFILE` | PASS | Canonical = `https://app.texqtic.com/inquiry` (no query params) |
+| `sourceSurface` exclusion | Live submission | PASS | `sourceSurface` query param correctly ignored; not in POST payload |
+| Live submission payload | POST to `/api/public/inquiry/submit` | PASS | `{ supplier_slug: 'qa-gmt-d', inquiry_category: 'GENERAL', geo_band: 'South Asia', volume_band: '500-1000 units' }` — no PII, no forbidden fields |
+| Success state | `/inquiry?supplierSlug=qa-gmt-d` | PASS | "Your interest has been recorded." + "Create account to follow up" CTA; form replaced |
+| Invalid slug | `/inquiry?supplierSlug=INVALID%20Slug!` | PASS | No-context mode shown (INVALID_SLUG rejected by `/^[a-z0-9-]+$/` regex) |
+| `/products` SEO | `/products` | PASS | canonical=`https://app.texqtic.com/products`, robots=`index, follow` |
+| `/products/category/garments` | `/products/category/garments` | PASS | canonical=`https://app.texqtic.com/products/category/garments`, robots=`index, follow` |
+| Unknown category | `/products/category/unknown-slug` | PASS | robots=`noindex, nofollow` |
+| `/collections` SEO | `/collections` | PASS | canonical=`https://app.texqtic.com/collections`, robots=`index, follow` |
+| `/collections/natural-fabric-stories` | `/collections/natural-fabric-stories` | PASS | canonical correct, robots=`index, follow` |
+| Supplier profile inline inquiry | `/supplier/qa-gmt-d` | PASS | Inline inquiry form present and unaffected; `inquiry-category`, `inquiry-geo`, `inquiry-volume` fields present |
+| Console runtime errors | All verified routes | PASS | No runtime errors detected |
+
+### 29.3 Public / Private Boundary
+
+- All public routes served with correct SEO metadata (`index, follow` on valid routes, `noindex, nofollow` on error/unknown paths)
+- No PII fields on any public inquiry surface
+- No payment, order, checkout, or RFQ language on public surfaces
+- `sourceSurface` excluded from all POST payloads
+- Auth CTA present on success state; no transactional behavior
+- Inline supplier profile inquiry unaffected by standalone page addition
+
+### 29.4 Deferred Items (Not Implemented in This Unit)
+
+- `PUBLIC-INQUIRY-ENDPOINT-CONTEXT-DESIGN-001` — general/multi-context inquiry endpoint design
+- Phase 2: product-context and category-context inquiry (`product_slug`, `category_slug`, `source_surface` backend attribution)
+- Message / free-text field — deferred; not in current endpoint schema
+- B2C handoff Phase 2 (Page 12 authenticated continuation)
+- JSON-LD structured data for inquiry page
+- Sitemap entry for `/inquiry`
+- Domain strategy (app.texqtic.com vs texqtic.com consolidation)
+- Industry cluster inquiry context terms (`INDUSTRY-CLUSTER-INQUIRY-CONTEXT-001`)
+
+### 29.5 Next Unit
+
+`PUBLIC-INQUIRY-ENDPOINT-CONTEXT-DESIGN-001`
