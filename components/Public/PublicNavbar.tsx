@@ -118,6 +118,47 @@ export function PublicNavbar({
     }
   }, [drawerOpen]);
 
+  // Keep keyboard focus trapped inside drawer while it is open
+  useEffect(() => {
+    if (!drawerOpen) return;
+
+    const handleTabTrap = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      const drawer = document.getElementById(drawerId);
+      if (!drawer) return;
+
+      const focusableElements = Array.from(
+        drawer.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+
+      if (focusableElements.length === 0) return;
+
+      const first = focusableElements[0];
+      const last = focusableElements[focusableElements.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      const focusInsideDrawer = !!active && drawer.contains(active);
+
+      if (e.shiftKey) {
+        if (!focusInsideDrawer || active === first) {
+          e.preventDefault();
+          last.focus();
+        }
+        return;
+      }
+
+      if (!focusInsideDrawer || active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleTabTrap);
+    return () => document.removeEventListener('keydown', handleTabTrap);
+  }, [drawerOpen, drawerId]);
+
   // Lock body scroll while drawer is open
   useEffect(() => {
     if (drawerOpen) {
