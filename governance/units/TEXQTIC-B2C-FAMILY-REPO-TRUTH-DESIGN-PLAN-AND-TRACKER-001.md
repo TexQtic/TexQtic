@@ -1759,3 +1759,62 @@ Confirmed on second QA slug — identical result ✅
 **Public/private boundary:** No private fields in any verified metadata ✅
 
 **Verification result:** PASS (not-found path fully verified; found path data-limited)
+
+---
+
+## 27. Public Inquiry Intent-Capture Page — Design — 2026-07-08
+
+**Unit ID:** PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-DESIGN-001
+**Date:** 2026-07-08
+**Status:** DESIGN_COMPLETE
+**Authorized by:** Paresh
+
+### 27.1 Scope
+
+Design unit for Page 11 — the standalone public inquiry intent-capture page (`/inquiry`). Design-only; no runtime changes in this unit.
+
+### 27.2 Key Findings
+
+Files inspected:
+- `App.tsx` — confirmed: no `PUBLIC_INQUIRY` app state, no `/inquiry` route in `resolveInitialAppState()`
+- `services/publicB2BService.ts` — confirmed: `submitPublicInquiry` exists; supplier-scoped only; `supplier_slug` required
+- `server/src/routes/public.ts` — confirmed: `POST /api/public/inquiry/submit` (INQUIRY-004) is IMPLEMENTED; requires `supplier_slug`; rate-limited to 20 req/15 min/IP
+- `shared/contracts/openapi.tenant.json` — confirmed: endpoint documented; no PII fields; `supplier_slug` required
+- `config/publicIndustryClusterTaxonomy.ts` — confirmed: Layer 7 inquiry context terms status DEFERRED (`INDUSTRY-CLUSTER-INQUIRY-CONTEXT-001`)
+- `governance/units/PUBLIC-PAGES-NAVBAR-IA-AUDIT-AND-DESIGN-001.md` section 9 — confirmed: Page 11 nav treatment: omit until implemented; no "coming soon" link
+
+### 27.3 Design Decisions
+
+| Decision | Value |
+|---|---|
+| Route | `/inquiry` |
+| App state | `PUBLIC_INQUIRY` (new) |
+| Component | `components/Public/PublicInquiryPage.tsx` (to be created at implementation) |
+| Phase 1 scope | Supplier-context-only; reuses existing `POST /api/public/inquiry/submit` |
+| Phase 2 scope | General + multi-context; DEFERRED to `PUBLIC-INQUIRY-ENDPOINT-CONTEXT-DESIGN-001` |
+| SEO | `index, follow`; canonical `/inquiry`; title `Express Interest — TexQtic` |
+| PII collection | NONE — no name, email, phone, company in any phase |
+| Form fields (Phase 1) | `inquiry_category` (required), `geo_band` (optional), `volume_band` (optional), context summary (read-only) |
+| Auth handoff CTA | "Create an account to follow up" → `onSignIn()` |
+
+### 27.4 Backend-Gated Assessment
+
+- **Phase 1:** NOT backend-gated — existing endpoint fully compatible with supplier-context mode.
+- **Phase 2:** BACKEND-GATED — `supplier_slug` required by current schema; no `source_surface`, `product_slug`, `category_slug`, `collection_slug`, or `message` fields supported.
+
+### 27.5 B2C Unit 6 Reconciliation
+
+B2C tracker unit 6 (`B2C-PUBLIC-INQUIRY-HANDOFF-DESIGN-001`, status `DESIGN_GATED`) is **subsumed** by this design unit:
+- Page 11 standalone design (this unit) covers the broader scope
+- B2C-specific handoff context (product/category context carriage) is the Phase 2 scope, deferred to `PUBLIC-INQUIRY-ENDPOINT-CONTEXT-DESIGN-001`
+- Unit 6 should be treated as superseded; do not create a separate `B2C-PUBLIC-INQUIRY-HANDOFF-DESIGN-001` artifact
+
+### 27.6 Recommended Next Units
+
+1. **`PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-IMPLEMENTATION-001`** — implement Phase 1 (supplier-context only; no backend changes)
+2. **`PUBLIC-INQUIRY-ENDPOINT-CONTEXT-DESIGN-001`** — design extended endpoint for Phase 2 (parallel; not blocking Phase 1)
+
+### 27.7 Design Commit Reference
+
+- **Commit message:** `[TEXQTIC] governance: design public inquiry intent capture`
+- **Commit hash:** (see git log)
