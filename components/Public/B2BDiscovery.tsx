@@ -100,15 +100,37 @@ export function B2BDiscoveryPage({ onBack, onSignIn, onListBusiness, onViewProfi
 
   useEffect(() => {
     let cancelled = false;
+    let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
+
+    // Timeout safety: prevent indefinite loading if fetch hangs (15s max)
+    const startTimeout = () => {
+      timeoutHandle = setTimeout(() => {
+        if (!cancelled) {
+          setError('Unable to load supplier listings. Please try again.');
+          setLoading(false);
+        }
+      }, 15000);
+    };
+
+    const clearTimeout_ = () => {
+      if (timeoutHandle) {
+        clearTimeout(timeoutHandle);
+        timeoutHandle = null;
+      }
+    };
+
+    startTimeout();
 
     getPublicB2BSuppliers()
       .then((data) => {
+        clearTimeout_();
         if (!cancelled) {
           setItems(data.items);
           setLoading(false);
         }
       })
       .catch(() => {
+        clearTimeout_();
         if (!cancelled) {
           setError('Unable to load supplier listings. Please try again.');
           setLoading(false);
@@ -117,6 +139,7 @@ export function B2BDiscoveryPage({ onBack, onSignIn, onListBusiness, onViewProfi
 
     return () => {
       cancelled = true;
+      clearTimeout_();
     };
   }, []);
 
