@@ -43,13 +43,27 @@ INQUIRY-004, WEBHOOK-007, and PROVISIONED-EVENTS-008 are authorized and implemen
 | Field | Value |
 | --- | --- |
 | Domain | `buyer_inquiry` |
-| Trigger | Future `POST /api/public/inquiry/submit` |
-| Producer | INQUIRY-004 (future) |
+| Trigger | `POST /api/public/inquiry/submit` — **supplier-context inquiries only** (`supplier_slug` present) |
+| Producer | INQUIRY-004 / PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001 (corrected by CORRECTION-001) |
 | Consumer | CRM / AI backbone (future) |
 
-**Allowed payload:** `supplier_slug`, `inquiry_category`, `geo_band` (optional), `volume_band` (optional), `timestamp`
+> **Scope constraint:** This event is emitted only when `supplier_slug` is present (supplier-context inquiry path). The entity UUID is the supplier's `org_id`, which satisfies the `EventLog.entityId NOT NULL` constraint.
+>
+> **General inquiries** (no `supplier_slug`) are AuditLog-preserved with action `public.buyer.inquiry.general.created` (not in the event registry). Event emission for the general inquiry path is deferred to `PUBLIC-INQUIRY-GENERAL-EVENT-INFRASTRUCTURE-001`, which must define an entity UUID strategy for platform-level inquiries.
 
-**Prohibited payload:** raw email, phone number, buyer full name, org UUID, `external_orchestration_ref`, pricing/negotiation/order/trade state
+**Allowed payload:**
+- `inquiry_category` (required)
+- `supplier_slug` (always present — this event is supplier-context-only)
+- `source_surface` (optional — normalized; defaults to `DIRECT` if absent or unknown)
+- `product_slug` (optional — advisory; format-validated only, no existence gate)
+- `category_slug` (optional — present only if on approved server-side list)
+- `collection_slug` (optional — present only if on approved server-side list)
+- `geo_band` (optional)
+- `volume_band` (optional)
+- `inquiry_message` (optional — sanitized; HTML and URL stripped; email/phone PII-blocked)
+- `timestamp`
+
+**Prohibited payload:** raw email, phone number, buyer full name, org UUID, `external_orchestration_ref`, pricing/negotiation/order/trade state, visitor IP address, session ID, auth token, internal database IDs
 
 ---
 

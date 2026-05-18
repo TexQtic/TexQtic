@@ -4427,20 +4427,42 @@
                         "exportedAt"
                       ],
                       "properties": {
-                        "publicPassportId": { "type": "string", "format": "uuid" },
-                        "passportStatus": { "type": "string", "enum": ["PUBLISHED"] },
+                        "publicPassportId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "passportStatus": {
+                          "type": "string",
+                          "enum": ["PUBLISHED"]
+                        },
                         "passportMaturity": {
                           "type": "string",
-                          "enum": ["LOCAL_TRUST", "TRADE_READY", "COMPLIANCE", "GLOBAL_DPP"]
+                          "enum": [
+                            "LOCAL_TRUST",
+                            "TRADE_READY",
+                            "COMPLIANCE",
+                            "GLOBAL_DPP"
+                          ]
                         },
                         "product": {
                           "type": "object",
-                          "required": ["nodeType", "batchId", "manufacturerName", "manufacturerJurisdiction"],
+                          "required": [
+                            "nodeType",
+                            "batchId",
+                            "manufacturerName",
+                            "manufacturerJurisdiction"
+                          ],
                           "properties": {
                             "nodeType": { "type": "string" },
                             "batchId": { "type": "string", "nullable": true },
-                            "manufacturerName": { "type": "string", "nullable": true },
-                            "manufacturerJurisdiction": { "type": "string", "nullable": true }
+                            "manufacturerName": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "manufacturerJurisdiction": {
+                              "type": "string",
+                              "nullable": true
+                            }
                           },
                           "additionalProperties": false
                         },
@@ -4457,12 +4479,25 @@
                           "type": "array",
                           "items": {
                             "type": "object",
-                            "required": ["certificationType", "lifecycleStateName", "expiryDate", "issuedAt"],
+                            "required": [
+                              "certificationType",
+                              "lifecycleStateName",
+                              "expiryDate",
+                              "issuedAt"
+                            ],
                             "properties": {
                               "certificationType": { "type": "string" },
                               "lifecycleStateName": { "type": "string" },
-                              "expiryDate": { "type": "string", "format": "date-time", "nullable": true },
-                              "issuedAt": { "type": "string", "format": "date-time", "nullable": true }
+                              "expiryDate": {
+                                "type": "string",
+                                "format": "date-time",
+                                "nullable": true
+                              },
+                              "issuedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "nullable": true
+                              }
                             },
                             "additionalProperties": false
                           }
@@ -4471,7 +4506,10 @@
                           "type": "object",
                           "required": ["approvedCertCount"],
                           "properties": {
-                            "approvedCertCount": { "type": "integer", "minimum": 0 }
+                            "approvedCertCount": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
                           },
                           "additionalProperties": false
                         },
@@ -4484,13 +4522,24 @@
                           },
                           "additionalProperties": false
                         },
-                        "exportedAt": { "type": "string", "format": "date-time" },
+                        "exportedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
                         "labelConfig": {
                           "type": "object",
                           "nullable": true,
-                          "required": ["publicTitle", "buyerFacingLabel", "subtitle", "showTexqticBrand"],
+                          "required": [
+                            "publicTitle",
+                            "buyerFacingLabel",
+                            "subtitle",
+                            "showTexqticBrand"
+                          ],
                           "properties": {
-                            "publicTitle": { "type": "string", "nullable": true },
+                            "publicTitle": {
+                              "type": "string",
+                              "nullable": true
+                            },
                             "buyerFacingLabel": { "type": "string" },
                             "subtitle": { "type": "string", "nullable": true },
                             "showTexqticBrand": { "type": "boolean" }
@@ -4562,24 +4611,47 @@
                     "generatedAt"
                   ],
                   "properties": {
-                    "@context": { "type": "object", "additionalProperties": true },
+                    "@context": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
                     "@type": { "type": "string" },
                     "@id": { "type": "string", "format": "uri" },
                     "passportUrl": { "type": "string", "format": "uri" },
                     "publicPassportId": { "type": "string", "format": "uuid" },
-                    "passportStatus": { "type": "string", "enum": ["PUBLISHED"] },
+                    "passportStatus": {
+                      "type": "string",
+                      "enum": ["PUBLISHED"]
+                    },
                     "passportMaturity": {
                       "type": "string",
-                      "enum": ["LOCAL_TRUST", "TRADE_READY", "COMPLIANCE", "GLOBAL_DPP"]
+                      "enum": [
+                        "LOCAL_TRUST",
+                        "TRADE_READY",
+                        "COMPLIANCE",
+                        "GLOBAL_DPP"
+                      ]
                     },
                     "passportMaturityLabel": { "type": "string" },
-                    "product": { "type": "object", "additionalProperties": true },
+                    "product": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
                     "certifications": {
                       "type": "array",
-                      "items": { "type": "object", "additionalProperties": true }
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
                     },
-                    "lineageSummary": { "type": "object", "additionalProperties": true },
-                    "evidenceSummary": { "type": "object", "additionalProperties": true },
+                    "lineageSummary": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "evidenceSummary": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
                     "generatedAt": { "type": "string", "format": "date-time" }
                   },
                   "additionalProperties": true
@@ -4785,15 +4857,25 @@
                         },
                         "publicSupplierName": { "type": "string" },
                         "publicSupplierSlug": { "type": "string" },
-                        "publicPriceLabel": { "type": "string", "nullable": true },
-                        "publicMoqLabel": { "type": "string", "nullable": true },
+                        "publicPriceLabel": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "publicMoqLabel": {
+                          "type": "string",
+                          "nullable": true
+                        },
                         "trustSignals": {
                           "type": "array",
                           "items": { "type": "string" }
                         },
                         "hasTraceabilityEvidence": { "type": "boolean" },
                         "hasPassport": { "type": "boolean" },
-                        "publicPassportId": { "type": "string", "nullable": true, "description": "Public passport token suitable for /passport/{publicPassportId}; only present when hasPassport is true. This is a public token, not an internal ID." },
+                        "publicPassportId": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "Public passport token suitable for /passport/{publicPassportId}; only present when hasPassport is true. This is a public token, not an internal ID."
+                        },
                         "publicStatusLabel": { "type": "string" },
                         "tags": {
                           "type": "array",
@@ -4803,11 +4885,20 @@
                           "type": "array",
                           "items": {
                             "type": "object",
-                            "required": ["slug", "name", "imageUrl", "price", "category"],
+                            "required": [
+                              "slug",
+                              "name",
+                              "imageUrl",
+                              "price",
+                              "category"
+                            ],
                             "properties": {
                               "slug": { "type": "string" },
                               "name": { "type": "string" },
-                              "imageUrl": { "type": "string", "nullable": true },
+                              "imageUrl": {
+                                "type": "string",
+                                "nullable": true
+                              },
                               "price": { "type": "string", "nullable": true },
                               "category": { "type": "string", "nullable": true }
                             },
@@ -4957,7 +5048,7 @@
     "/api/public/inquiry/submit": {
       "post": {
         "summary": "Submit a pre-authentication buyer inquiry",
-        "description": "Accepts a pre-authentication buyer inquiry for a public-eligible supplier. No authentication required. Supplier must pass all five projection safety gates (same as GET /api/public/supplier/{slug}). Non-eligible supplier returns a safe 404 with no gate detail exposed. On success, emits buyer_inquiry.created.v1 event (best-effort, non-blocking) via EventLog. No PII collection: no email, phone, buyer name, or org UUID in request or response. Rate-limited to 20 requests per 15 minutes per IP. Design authority: MAIN-PLATFORM-BUYER-INQUIRY-PREAUTH-004.",
+        "description": "Phase 2: Accepts a pre-authentication buyer inquiry in general mode (no supplier required) or supplier-context mode. supplier_slug is now optional. New context fields: source_surface, product_slug, category_slug, collection_slug, message. Context exclusivity rule: supplier_slug cannot coexist with product_slug, category_slug, or collection_slug. message is PII-blocked (email/phone rejected with 400), HTML-stripped, max 500 chars after sanitization. unapproved category_slug / collection_slug values are silently dropped. source_surface unknown values normalized to DIRECT. Phase 1 payloads (supplier_slug provided) remain fully backward-compatible. No auth required. On success, emits buyer_inquiry.created.v1 event (best-effort, non-blocking). No PII collection. Rate-limited to 20 requests per 15 minutes per IP. Implementation: PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001.",
         "operationId": "submitPublicInquiry",
         "requestBody": {
           "required": true,
@@ -4965,15 +5056,8 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["supplier_slug", "inquiry_category"],
+                "required": ["inquiry_category"],
                 "properties": {
-                  "supplier_slug": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 100,
-                    "pattern": "^[a-z0-9-]+$",
-                    "description": "Slug of the target supplier (must be publication-eligible)"
-                  },
                   "inquiry_category": {
                     "type": "string",
                     "enum": [
@@ -4984,6 +5068,52 @@
                       "QUALIFICATION_CHECK"
                     ],
                     "description": "Bounded inquiry type — no pricing, negotiation, or order categories"
+                  },
+                  "supplier_slug": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "pattern": "^[a-z0-9-]+$",
+                    "description": "Optional slug of the target supplier (must be publication-eligible). Cannot be combined with product_slug, category_slug, or collection_slug."
+                  },
+                  "source_surface": {
+                    "type": "string",
+                    "enum": [
+                      "GENERAL_PUBLIC",
+                      "SUPPLIER_PROFILE",
+                      "PRODUCT_DETAIL",
+                      "PRODUCT_BROWSE",
+                      "CATEGORY_STORY",
+                      "COLLECTION_DETAIL",
+                      "COLLECTION_LIST",
+                      "TRUST_LANDING",
+                      "INDUSTRY_LANDING",
+                      "NAVBAR",
+                      "DIRECT",
+                      "UNKNOWN"
+                    ],
+                    "description": "Advisory surface identifier. Unknown values are normalized to DIRECT server-side."
+                  },
+                  "product_slug": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "pattern": "^[a-z0-9-]+$",
+                    "description": "Optional product context (format-validated only; no existence gate). Cannot be combined with supplier_slug."
+                  },
+                  "category_slug": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "pattern": "^[a-z0-9-]+$",
+                    "description": "Optional category page context. Unapproved values are silently dropped. Cannot be combined with supplier_slug."
+                  },
+                  "collection_slug": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "pattern": "^[a-z0-9-]+$",
+                    "description": "Optional collection page context. Unapproved values are silently dropped. Cannot be combined with supplier_slug."
                   },
                   "geo_band": {
                     "type": "string",
@@ -4996,6 +5126,11 @@
                     "minLength": 1,
                     "maxLength": 100,
                     "description": "Optional volume range qualifier (e.g. '500-1000 units/month')"
+                  },
+                  "message": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "Optional free-text message. PII-blocked: messages containing email addresses or phone numbers are rejected with 400. HTML tags and URLs are stripped server-side. Never echoed in response."
                   }
                 },
                 "additionalProperties": false
@@ -5026,7 +5161,7 @@
             }
           },
           "400": {
-            "description": "Validation failure — invalid supplier_slug format, missing inquiry_category, or rejected field",
+            "description": "Validation failure — missing inquiry_category, invalid field format, context exclusivity violation (supplier_slug combined with product/category/collection context), or message containing PII (email or phone)",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -5034,7 +5169,7 @@
             }
           },
           "404": {
-            "description": "Supplier not found or not publication-eligible (gate detail not exposed)",
+            "description": "Supplier not found or not publication-eligible (gate detail not exposed; only returned when supplier_slug is provided)",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }

@@ -1976,3 +1976,64 @@ collection surfaces. Design-only — no runtime changes in this unit.
 ### 30.5 Next Unit
 
 `PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001`
+
+---
+
+## 31. Public Inquiry Endpoint Context Extension — Implementation — 2026-07-08
+
+**Unit ID:** PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001
+**Status:** IMPLEMENTATION_COMPLETE_LOCAL_VALIDATION_PASS
+**Date:** 2026-07-08
+**Artifact:** `governance/units/PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001.md`
+
+### 31.1 Purpose
+
+Backend implementation of Phase 2 multi-context inquiry as designed in
+`PUBLIC-INQUIRY-ENDPOINT-CONTEXT-DESIGN-001`. Extends `POST /api/public/inquiry/submit`
+to support general mode (no supplier gate) and new context fields from product,
+category, and collection surfaces.
+
+### 31.2 Files Changed
+
+| File | Change |
+|---|---|
+| `server/src/config/publicB2CCategoryPageSlugs.ts` | Created — category slug approval registry |
+| `server/src/config/publicCollectionSlugs.ts` | Created — collection slug approval registry |
+| `server/src/routes/public.ts` | Phase 2 inquiry schema + handler (INQUIRY-004 replaced) |
+| `services/publicB2BService.ts` | `supplier_slug` optional; Phase 2 types added |
+| `shared/contracts/openapi.tenant.json` | `/api/public/inquiry/submit` endpoint updated |
+| `shared/contracts/event-names.md` | `buyer_inquiry.created.v1` payload spec updated |
+| `server/src/__tests__/public-buyer-inquiry.unit.test.ts` | INQ-013–027 added (15 new tests) |
+| `governance/units/PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001.md` | Created |
+
+### 31.3 Key Behaviours Implemented
+
+| # | Behaviour |
+|---|---|
+| 1 | `supplier_slug` optional — general mode supported |
+| 2 | Context exclusivity enforced (supplier vs product/category/collection) → 400 |
+| 3 | Message PII-blocked: email/phone patterns → 400 |
+| 4 | Message HTML/URL stripped; max 500 chars post-sanitization |
+| 5 | `source_surface` unknown values normalized to `DIRECT` |
+| 6 | `category_slug` / `collection_slug` approval gate (fail-closed, silent drop) |
+| 7 | General inquiry: realm ADMIN, tenantId null, entityId null |
+| 8 | Phase 1 supplier path: realm TENANT, tenantId = orgId (unchanged) |
+| 9 | Response opaque 202 in all success cases (unchanged) |
+
+### 31.4 Adjacent Finding
+
+**AF-001 — RESOLVED (CORRECTION-001):** General inquiry EventLog write silently failed
+(entityId null → empty string `''` fails UUID validation → best-effort catch → warning
+logged). Resolution: general inquiry path now uses action `'public.buyer.inquiry.general.created'`
+(distinct from supplier path; not in `AUDIT_ACTION_TO_EVENT_NAME` registry). Event pipeline
+returns early silently. AuditLog preserved. `buyer_inquiry.created.v1` is now documented as
+supplier-context-only in `shared/contracts/event-names.md`. General inquiry event emission
+deferred to `PUBLIC-INQUIRY-GENERAL-EVENT-INFRASTRUCTURE-001`.
+
+**Correction unit:** `PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001-CORRECTION-001`
+
+### 31.5 Next Units
+
+1. `PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001-VERIFY-CLOSE` — production verification
+2. `PUBLIC-INQUIRY-GENERAL-MODE-IMPLEMENTATION-001` — frontend general mode
+3. `PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001` — CTA integration in product/category/collection pages

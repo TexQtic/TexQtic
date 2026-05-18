@@ -35,6 +35,8 @@ import { normalizeHost, parsePlatformHost } from '../lib/hostNormalize.js';
 import { resolveHostToTenant } from './internal/resolveDomain.js';
 import { listPublicB2BSuppliers, getPublicB2BSupplierBySlug } from '../services/publicB2BProjection.service.js';
 import { listPublicB2CProducts, getPublicB2CProductBySlug } from '../services/publicB2CProjection.service.js';
+import { APPROVED_CATEGORY_SLUGS } from '../config/publicB2CCategoryPageSlugs.js';
+import { APPROVED_COLLECTION_SLUGS } from '../config/publicCollectionSlugs.js';
 
 type PublicEntryKind = 'PLATFORM' | 'TENANT_SUBDOMAIN' | 'TENANT_CUSTOM_DOMAIN';
 type ResolutionSourceType =
@@ -1232,27 +1234,49 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     return reply.send(structuredData);
   });
 
-  // ─── INQUIRY-004: Pre-auth buyer inquiry intake ───────────────────────────────
+  // ─── INQUIRY-004: Pre-auth buyer inquiry intake (Phase 2) ───────────────────
   // POST /api/public/inquiry/submit
   //
-  // Accepts a pre-authentication buyer inquiry for a public-eligible supplier.
-  // No auth required. Event-only persistence via buyer_inquiry.created.v1 (EventLog).
-  // No DB schema change: uses existing AuditLog + EventLog tables.
+  // Phase 2 extends Phase 1 to support multi-context inquiry:
+  //   • General mode: supplier_slug is now OPTIONAL
+  //   • New context fields: source_surface, product_slug, category_slug, collection_slug, message
+  //   • Context exclusivity: supplier_slug cannot coexist with product/category/collection context
+  //   • message: PII-blocked (email/phone), HTML stripped, max 500 chars after sanitization
+  //   • category_slug / collection_slug: fail-closed approval gate; unapproved slugs silently dropped
+  //   • source_surface: unknown values normalized to 'DIRECT'
+  //   • Phase 1 payloads (supplier_slug required) remain fully backward-compatible
   //
-  // Visibility gate: supplier must pass all five projection gates (via
-  // getPublicB2BSupplierBySlug). Non-eligible supplier → safe 404 (no gate detail).
+  // No DB schema change: afterJson JSONB absorbs new context fields.
+  // Rate limit: max 20 req/15 min per IP (unchanged).
   //
-  // Prohibited in payload: raw contact email/phone, buyer name, org UUID,
-  // external_orchestration_ref, pricing, negotiation state, order state.
-  //
-  // Rate limit: max 20 req/15 min per IP (stricter than GET discovery routes).
-  //
-  // Design authority: MAIN-PLATFORM-BUYER-INQUIRY-PREAUTH-004
-  // Event governance: shared/contracts/event-names.md §Acquisition Domain Events (EVENTS-003)
+  // Design authority: PUBLIC-INQUIRY-ENDPOINT-CONTEXT-DESIGN-001
+  // Implementation:   PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001
+  // Event governance: shared/contracts/event-names.md §buyer_inquiry.created.v1
   // ─────────────────────────────────────────────────────────────────────────────
 
+  // Module-level: approved source surface values for normalization
+  const KNOWN_SOURCE_SURFACES = new Set<string>([
+    'GENERAL_PUBLIC',
+    'SUPPLIER_PROFILE',
+    'PRODUCT_DETAIL',
+    'PRODUCT_BROWSE',
+    'CATEGORY_STORY',
+    'COLLECTION_DETAIL',
+    'COLLECTION_LIST',
+    'TRUST_LANDING',
+    'INDUSTRY_LANDING',
+    'NAVBAR',
+    'DIRECT',
+    'UNKNOWN',
+  ]);
+
+  // Message sanitization patterns
+  const INQUIRY_HTML_TAG_PATTERN = /<[^>]*>/g;
+  const INQUIRY_EMAIL_PATTERN = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/;
+  const INQUIRY_PHONE_PATTERN = /(?:\+?\d{1,3}[.\-]?)?\(?\d{3}\)?[.\-]\d{3}[.\-]\d{4}|\b\d{10,11}\b/;
+  const INQUIRY_URL_PATTERN = /https?:\/\/[^\s]+/g;
+
   const inquirySubmitBodySchema = z.object({
-    supplier_slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/),
     inquiry_category: z.enum([
       'GENERAL',
       'CAPABILITY_FIT',
@@ -1260,8 +1284,14 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       'SOURCING_INTENT',
       'QUALIFICATION_CHECK',
     ]),
+    supplier_slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/).optional(),
+    source_surface: z.string().max(64).optional(),
+    product_slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/).optional(),
+    category_slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/).optional(),
+    collection_slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/).optional(),
     geo_band: z.string().min(1).max(100).optional(),
     volume_band: z.string().min(1).max(100).optional(),
+    message: z.string().max(2000).optional(),
   });
 
   fastify.post('/inquiry/submit', {
@@ -1274,39 +1304,126 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       return sendValidationError(reply, parseResult.error.errors);
     }
 
-    const { supplier_slug, inquiry_category, geo_band, volume_band } = parseResult.data;
+    const {
+      inquiry_category,
+      supplier_slug,
+      source_surface: rawSurface,
+      product_slug,
+      category_slug,
+      collection_slug,
+      geo_band,
+      volume_band,
+      message: rawMessage,
+    } = parseResult.data;
 
-    // Visibility gate — same five-gate check as ROUTE-001.
-    // Non-eligible or absent → safe 404 (no gate detail leak, no 403).
-    const supplierResult = await getPublicB2BSupplierBySlug(supplier_slug, prisma);
-    if (!supplierResult) {
-      return sendError(reply, 'NOT_FOUND', 'Supplier not found', 404);
+    // Context exclusivity: supplier_slug cannot coexist with product/category/collection context
+    if (
+      supplier_slug !== undefined &&
+      (product_slug !== undefined || category_slug !== undefined || collection_slug !== undefined)
+    ) {
+      return sendValidationError(reply, [{ message: 'Invalid request: conflicting context fields' }]);
     }
 
-    // Emit buyer_inquiry.created.v1 (best-effort, fire-and-forget).
-    // writeAuditLog → maybeEmitEventFromAuditEntry → 'buyer_inquiry.created.v1'
-    // Payload (afterJson): supplier_slug, inquiry_category, geo_band?, volume_band?, timestamp
-    // — NO raw email, phone, buyer name, org UUID, external_orchestration_ref.
-    void prisma.$transaction(async (tx) => {
-      await writeAuditLog(tx, {
-        realm: 'TENANT',
-        tenantId: supplierResult.orgId,
-        actorType: 'SYSTEM',
-        actorId: null,
-        action: 'public.buyer.inquiry.created',
-        entity: 'organization',
-        entityId: supplierResult.orgId,
-        afterJson: {
-          supplier_slug,
-          inquiry_category,
-          ...(geo_band !== undefined ? { geo_band } : {}),
-          ...(volume_band !== undefined ? { volume_band } : {}),
-          timestamp: new Date().toISOString(),
-        },
+    // Message sanitization: PII check on raw input, then strip HTML and URLs
+    let inquiry_message: string | undefined;
+    if (rawMessage !== undefined) {
+      if (INQUIRY_EMAIL_PATTERN.test(rawMessage)) {
+        return sendValidationError(reply, [{ message: 'Invalid message content' }]);
+      }
+      if (INQUIRY_PHONE_PATTERN.test(rawMessage)) {
+        return sendValidationError(reply, [{ message: 'Invalid message content' }]);
+      }
+      const sanitized = rawMessage.replace(INQUIRY_HTML_TAG_PATTERN, '').replace(INQUIRY_URL_PATTERN, '').trim();
+      if (sanitized.length === 0) {
+        inquiry_message = undefined;
+      } else if (sanitized.length > 500) {
+        return sendValidationError(reply, [{ message: 'Message too long' }]);
+      } else {
+        inquiry_message = sanitized;
+      }
+    }
+
+    // Normalize source_surface; unknown values → 'DIRECT'
+    const source_surface = (rawSurface !== undefined && KNOWN_SOURCE_SURFACES.has(rawSurface))
+      ? rawSurface
+      : 'DIRECT';
+
+    // Category / collection approval gate — fail-closed: unapproved slugs silently dropped
+    const approvedCategorySlug = (category_slug !== undefined && APPROVED_CATEGORY_SLUGS.has(category_slug))
+      ? category_slug
+      : undefined;
+    const approvedCollectionSlug = (collection_slug !== undefined && APPROVED_COLLECTION_SLUGS.has(collection_slug))
+      ? collection_slug
+      : undefined;
+
+    if (supplier_slug !== undefined) {
+      // ── Supplier context path (Phase 1 behavior preserved) ─────────────────
+      // Visibility gate: supplier must pass all five projection gates.
+      const supplierResult = await getPublicB2BSupplierBySlug(supplier_slug, prisma);
+      if (!supplierResult) {
+        return sendError(reply, 'NOT_FOUND', 'Supplier not found', 404);
+      }
+
+      // Emit buyer_inquiry.created.v1 (best-effort, fire-and-forget).
+      // Payload: supplier_slug, inquiry_category, source_surface, context fields, timestamp.
+      // NO raw email, phone, buyer name, org UUID, external_orchestration_ref.
+      void prisma.$transaction(async (tx) => {
+        await writeAuditLog(tx, {
+          realm: 'TENANT',
+          tenantId: supplierResult.orgId,
+          actorType: 'SYSTEM',
+          actorId: null,
+          action: 'public.buyer.inquiry.created',
+          entity: 'organization',
+          entityId: supplierResult.orgId,
+          afterJson: {
+            supplier_slug,
+            inquiry_category,
+            source_surface,
+            ...(product_slug !== undefined ? { product_slug } : {}),
+            ...(approvedCategorySlug !== undefined ? { category_slug: approvedCategorySlug } : {}),
+            ...(approvedCollectionSlug !== undefined ? { collection_slug: approvedCollectionSlug } : {}),
+            ...(geo_band !== undefined ? { geo_band } : {}),
+            ...(volume_band !== undefined ? { volume_band } : {}),
+            ...(inquiry_message !== undefined ? { inquiry_message } : {}),
+            timestamp: new Date().toISOString(),
+          },
+        });
+      }).catch((err: unknown) => {
+        fastify.log.warn({ err, supplier_slug }, '[buyer-inquiry] Event emission failed (non-blocking)');
       });
-    }).catch((err: unknown) => {
-      fastify.log.warn({ err, supplier_slug }, '[buyer-inquiry] Event emission failed (non-blocking)');
-    });
+    } else {
+      // ── General inquiry path (no supplier gate) ─────────────────────────────
+      // realm: ADMIN, tenantId: null, entityId: null — audit trail preserved.
+      // Uses a distinct action ('public.buyer.inquiry.general.created') NOT registered in
+      // AUDIT_ACTION_TO_EVENT_NAME, so maybeEmitEventFromAuditEntry returns early silently.
+      // buyer_inquiry.created.v1 event emission for general inquiries is deferred to
+      // PUBLIC-INQUIRY-GENERAL-EVENT-INFRASTRUCTURE-001 (requires entity UUID strategy).
+      void prisma.$transaction(async (tx) => {
+        await writeAuditLog(tx, {
+          realm: 'ADMIN',
+          tenantId: null,
+          actorType: 'SYSTEM',
+          actorId: null,
+          action: 'public.buyer.inquiry.general.created',
+          entity: 'platform_inquiry',
+          entityId: null,
+          afterJson: {
+            inquiry_category,
+            source_surface,
+            ...(product_slug !== undefined ? { product_slug } : {}),
+            ...(approvedCategorySlug !== undefined ? { category_slug: approvedCategorySlug } : {}),
+            ...(approvedCollectionSlug !== undefined ? { collection_slug: approvedCollectionSlug } : {}),
+            ...(geo_band !== undefined ? { geo_band } : {}),
+            ...(volume_band !== undefined ? { volume_band } : {}),
+            ...(inquiry_message !== undefined ? { inquiry_message } : {}),
+            timestamp: new Date().toISOString(),
+          },
+        });
+      }).catch((err: unknown) => {
+        fastify.log.warn({ err }, '[buyer-inquiry] General inquiry event emission failed (non-blocking)');
+      });
+    }
 
     return reply.status(202).send({
       success: true,

@@ -330,4 +330,265 @@ describe('POST /api/public/inquiry/submit', () => {
     // (it's in the AuditLog row, not in afterJson)
     expect(JSON.stringify(afterJson)).not.toContain(ELIGIBLE_SUPPLIER_RESULT.orgId);
   });
+
+  // ── Phase 2 tests ─────────────────────────────────────────────────────────
+
+  /**
+   * INQ-013: General inquiry (no supplier_slug, category GENERAL) → 202.
+   * Supplier gate must NOT be called.
+   */
+  it('INQ-013: general inquiry (no supplier_slug, category GENERAL) → 202', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'GENERAL' },
+    });
+    expect(response.statusCode).toBe(202);
+    const body = JSON.parse(response.body);
+    expect(body.success).toBe(true);
+    expect(body.data.acknowledged).toBe(true);
+    expect(getPublicB2BSupplierBySlug).not.toHaveBeenCalled();
+  });
+
+  /**
+   * INQ-014: General inquiry with known source_surface NAVBAR → 202.
+   * source_surface preserved in afterJson.
+   */
+  it('INQ-014: general inquiry with source_surface NAVBAR → 202, source_surface in afterJson', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'GENERAL', source_surface: 'NAVBAR' },
+    });
+    expect(response.statusCode).toBe(202);
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    const [, entry] = vi.mocked(writeAuditLog).mock.calls[0];
+    const afterJson = entry.afterJson as Record<string, unknown>;
+    expect(afterJson.source_surface).toBe('NAVBAR');
+  });
+
+  /**
+   * INQ-015: General inquiry with valid message → 202.
+   * inquiry_message stored in afterJson (not as 'message').
+   */
+  it('INQ-015: general inquiry with valid message → 202, inquiry_message in afterJson', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'GENERAL', message: 'Looking for natural fabric suppliers' },
+    });
+    expect(response.statusCode).toBe(202);
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    const [, entry] = vi.mocked(writeAuditLog).mock.calls[0];
+    const afterJson = entry.afterJson as Record<string, unknown>;
+    expect(afterJson.inquiry_message).toBe('Looking for natural fabric suppliers');
+    expect(afterJson).not.toHaveProperty('message');
+  });
+
+  /**
+   * INQ-016: Message containing email address → 400.
+   */
+  it('INQ-016: message containing email → 400', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'GENERAL', message: 'Please contact me at buyer@example.com for details' },
+    });
+    expect(response.statusCode).toBe(400);
+  });
+
+  /**
+   * INQ-017: Message containing phone number → 400.
+   */
+  it('INQ-017: message containing phone number → 400', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'GENERAL', message: 'Call me at 555-123-4567 to discuss pricing' },
+    });
+    expect(response.statusCode).toBe(400);
+  });
+
+  /**
+   * INQ-018: product_slug in valid format, no supplier_slug → 202.
+   * product_slug present in afterJson (advisory pass-through).
+   */
+  it('INQ-018: product_slug valid format → 202, product_slug in afterJson', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'SOURCING_INTENT', product_slug: 'organic-cotton-tee' },
+    });
+    expect(response.statusCode).toBe(202);
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    const [, entry] = vi.mocked(writeAuditLog).mock.calls[0];
+    const afterJson = entry.afterJson as Record<string, unknown>;
+    expect(afterJson.product_slug).toBe('organic-cotton-tee');
+  });
+
+  /**
+   * INQ-019: category_slug 'garments' (approved) → 202, category_slug in afterJson.
+   */
+  it('INQ-019: category_slug garments (approved) → 202, category_slug in afterJson', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'GENERAL', category_slug: 'garments' },
+    });
+    expect(response.statusCode).toBe(202);
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    const [, entry] = vi.mocked(writeAuditLog).mock.calls[0];
+    const afterJson = entry.afterJson as Record<string, unknown>;
+    expect(afterJson.category_slug).toBe('garments');
+  });
+
+  /**
+   * INQ-020: category_slug 'unknown-category' (unapproved) → 202, category_slug absent from afterJson.
+   * Fail-closed: unapproved slugs silently dropped, request still accepted.
+   */
+  it('INQ-020: category_slug unknown-category (unapproved) → 202, category_slug absent from afterJson', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'GENERAL', category_slug: 'unknown-category' },
+    });
+    expect(response.statusCode).toBe(202);
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    const [, entry] = vi.mocked(writeAuditLog).mock.calls[0];
+    const afterJson = entry.afterJson as Record<string, unknown>;
+    expect(afterJson).not.toHaveProperty('category_slug');
+  });
+
+  /**
+   * INQ-021: collection_slug 'natural-fabric-stories' (approved) → 202, collection_slug in afterJson.
+   */
+  it('INQ-021: collection_slug natural-fabric-stories (approved) → 202, collection_slug in afterJson', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'GENERAL', collection_slug: 'natural-fabric-stories' },
+    });
+    expect(response.statusCode).toBe(202);
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    const [, entry] = vi.mocked(writeAuditLog).mock.calls[0];
+    const afterJson = entry.afterJson as Record<string, unknown>;
+    expect(afterJson.collection_slug).toBe('natural-fabric-stories');
+  });
+
+  /**
+   * INQ-022: supplier_slug + product_slug context exclusivity violation → 400.
+   * Supplier gate must NOT be reached.
+   */
+  it('INQ-022: supplier_slug + product_slug exclusivity violation → 400', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: {
+        inquiry_category: 'GENERAL',
+        supplier_slug: 'acme-textiles',
+        product_slug: 'organic-cotton-tee',
+      },
+    });
+    expect(response.statusCode).toBe(400);
+    expect(getPublicB2BSupplierBySlug).not.toHaveBeenCalled();
+  });
+
+  /**
+   * INQ-023: Unknown source_surface → 202, afterJson source_surface normalized to 'DIRECT'.
+   */
+  it('INQ-023: unknown source_surface → 202, source_surface DIRECT in afterJson', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'GENERAL', source_surface: 'SOME_UNKNOWN_SURFACE' },
+    });
+    expect(response.statusCode).toBe(202);
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    const [, entry] = vi.mocked(writeAuditLog).mock.calls[0];
+    const afterJson = entry.afterJson as Record<string, unknown>;
+    expect(afterJson.source_surface).toBe('DIRECT');
+  });
+
+  /**
+   * INQ-024: Message exceeding 500 chars after sanitization → 400.
+   */
+  it('INQ-024: oversized message (>500 chars after sanitization) → 400', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'GENERAL', message: 'A'.repeat(501) },
+    });
+    expect(response.statusCode).toBe(400);
+  });
+
+  /**
+   * INQ-025: Message with HTML tags → 202, tags stripped in afterJson inquiry_message.
+   */
+  it('INQ-025: message with HTML tags → 202, HTML stripped in inquiry_message', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'GENERAL', message: '<b>Looking for</b> natural fabric suppliers' },
+    });
+    expect(response.statusCode).toBe(202);
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    const [, entry] = vi.mocked(writeAuditLog).mock.calls[0];
+    const afterJson = entry.afterJson as Record<string, unknown>;
+    expect(afterJson.inquiry_message).toBe('Looking for natural fabric suppliers');
+  });
+
+  /**
+   * INQ-026: Phase 1 regression — supplier inquiry with all Phase 1 fields → 202.
+   * Supplier gate called; supplier_slug present in afterJson (backward compatible).
+   */
+  it('INQ-026: Phase 1 supplier inquiry regression → 202 (backward compatibility)', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: {
+        supplier_slug: 'acme-textiles',
+        inquiry_category: 'SOURCING_INTENT',
+        geo_band: 'South Asia',
+        volume_band: '500-1000 units/month',
+      },
+    });
+    expect(response.statusCode).toBe(202);
+    expect(getPublicB2BSupplierBySlug).toHaveBeenCalledWith('acme-textiles', expect.anything());
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    const [, entry] = vi.mocked(writeAuditLog).mock.calls[0];
+    const afterJson = entry.afterJson as Record<string, unknown>;
+    expect(afterJson.supplier_slug).toBe('acme-textiles');
+    expect(afterJson.inquiry_category).toBe('SOURCING_INTENT');
+    expect(afterJson.geo_band).toBe('South Asia');
+    expect(afterJson.volume_band).toBe('500-1000 units/month');
+    expect(entry.realm).toBe('TENANT');
+    expect(entry.tenantId).toBe(ELIGIBLE_SUPPLIER_RESULT.orgId);
+    expect(entry.action).toBe('public.buyer.inquiry.created');
+  });
+
+  /**
+   * INQ-027: General inquiry afterJson contains no org UUID.
+   * Realm must be ADMIN; tenantId and entityId must be null.
+   * Action must be 'public.buyer.inquiry.general.created' (distinct from supplier path;
+   * not in AUDIT_ACTION_TO_EVENT_NAME registry — event emission cleanly deferred).
+   */
+  it('INQ-027: general inquiry afterJson has no org UUID, realm ADMIN, tenantId null, action general.created', async () => {
+    await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'CAPABILITY_FIT' },
+    });
+    expect(getPublicB2BSupplierBySlug).not.toHaveBeenCalled();
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    const [, entry] = vi.mocked(writeAuditLog).mock.calls[0];
+    const afterJson = entry.afterJson as Record<string, unknown>;
+    expect(JSON.stringify(afterJson)).not.toContain(ELIGIBLE_SUPPLIER_RESULT.orgId);
+    expect(afterJson).not.toHaveProperty('org_id');
+    expect(afterJson).not.toHaveProperty('orgId');
+    expect(afterJson).not.toHaveProperty('supplier_slug');
+    expect(entry.realm).toBe('ADMIN');
+    expect(entry.tenantId).toBeNull();
+    expect(entry.entityId).toBeNull();
+    expect(entry.action).toBe('public.buyer.inquiry.general.created');
+  });
 });

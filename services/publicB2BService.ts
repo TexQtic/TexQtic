@@ -88,7 +88,10 @@ export async function getPublicSupplierBySlug(
   return get<PublicB2BSupplierProfile>(url);
 }
 
-// ── INQUIRY-004: Pre-auth buyer inquiry submission ────────────────────────────
+// ── INQUIRY-004 Phase 2: Pre-auth buyer inquiry submission ───────────────────
+// Phase 2: supplier_slug is optional; new context fields added.
+// Phase 1 callers passing supplier_slug remain backward-compatible.
+// Implementation: PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001
 
 export type PublicInquiryCategory =
   | 'GENERAL'
@@ -97,11 +100,30 @@ export type PublicInquiryCategory =
   | 'SOURCING_INTENT'
   | 'QUALIFICATION_CHECK';
 
+export type PublicInquirySourceSurface =
+  | 'GENERAL_PUBLIC'
+  | 'SUPPLIER_PROFILE'
+  | 'PRODUCT_DETAIL'
+  | 'PRODUCT_BROWSE'
+  | 'CATEGORY_STORY'
+  | 'COLLECTION_DETAIL'
+  | 'COLLECTION_LIST'
+  | 'TRUST_LANDING'
+  | 'INDUSTRY_LANDING'
+  | 'NAVBAR'
+  | 'DIRECT'
+  | 'UNKNOWN';
+
 export interface PublicInquirySubmitParams {
-  supplier_slug: string;
   inquiry_category: PublicInquiryCategory;
+  supplier_slug?: string;
+  source_surface?: PublicInquirySourceSurface;
+  product_slug?: string;
+  category_slug?: string;
+  collection_slug?: string;
   geo_band?: string;
   volume_band?: string;
+  message?: string;
 }
 
 export interface PublicInquirySubmitResponse {
@@ -110,11 +132,12 @@ export interface PublicInquirySubmitResponse {
 }
 
 /**
- * Submit a pre-authentication buyer inquiry for a public supplier.
+ * Submit a pre-authentication buyer inquiry.
+ * Phase 2: supplier_slug is optional; supports general and multi-context modes.
  * No auth required. Returns 202 Accepted on success.
  * Throws on network error or non-2xx response (handled by apiClient).
  *
- * INQUIRY-004 / GAP-ACQ-002
+ * INQUIRY-004 / PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001
  */
 export async function submitPublicInquiry(
   params: PublicInquirySubmitParams,
