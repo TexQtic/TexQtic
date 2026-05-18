@@ -551,8 +551,8 @@ Status for this unit:
 
 ## 16. Next Recommended Units
 
-Preferred next sequence (updated 2026-05-18 after B2C-DPP-PASSPORT-LINKAGE-SYNC-001 closure):
-1. B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001 (DESIGN_GATED — taxonomy alignment now complete)
+Preferred next sequence (updated 2026-05-18 after B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001 closure):
+1. B2C-PUBLIC-CATEGORY-STORY-PAGES-IMPLEMENTATION-001 (DESIGN_COMPLETE — design artifact ready; implementation blocked until design accepted)
 2. SEO-SITEMAP-METADATA-STRUCTURED-DATA-001 or B2C-SEO-METADATA-EXPANSION-DESIGN-001 depending on governance sequencing
 3. PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-DESIGN-001 or B2C-PUBLIC-INQUIRY-HANDOFF-DESIGN-001 depending on inquiry sequencing decision
 
@@ -562,6 +562,7 @@ Completed and no longer in queue:
 - B2C-PRODUCT-DETAIL-BASELINE-SYNC-001 — COMPLETED 2026-05-18 (see section 18)
 - B2C-CATEGORY-TAXONOMY-ALIGNMENT-001 — COMPLETED 2026-05-18 (see section 19)
 - B2C-DPP-PASSPORT-LINKAGE-SYNC-001 — COMPLETED 2026-05-18 (see section 20)
+- B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001 — DESIGN_COMPLETE 2026-05-18 (see section 21)
 
 ## Governance Notes
 
@@ -1223,4 +1224,122 @@ Preflight:
 ### 20.9 Commit Reference
 
 - **Commit message:** `[TEXQTIC] governance: sync B2C DPP passport linkage`
+- **Commit hash:** (see git log)
+
+---
+
+## 21. B2C Public Category Story Pages Design — 2026-05-18
+
+**Unit ID:** B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001
+**Date:** 2026-05-18
+**Status:** DESIGN_COMPLETE
+**Authorized by:** Paresh
+**Commit:** [TEXQTIC] governance: design B2C category story pages
+
+### 21.1 Objective
+
+Design authority for B2C public category story pages. Defines route model, app state, page IA,
+taxonomy-backed category set, slug strategy, static-config / projection strategy, B2C browse
+integration, public/private boundary, claim rules, DPP/passport/trust rules, SEO ownership,
+and implementation plan. No runtime implementation in this design unit.
+
+### 21.2 Scope
+
+Files inspected (read-only):
+- `App.tsx` — AppState union and resolveInitialAppState() route handling
+- `config/publicIndustryClusterTaxonomy.ts` — full taxonomy inventory
+- `utils/publicPageMeta.ts` — SEO utility scope and interface
+- `components/Public/B2CBrowse.tsx` — B2C_CATEGORY_FILTER_VALUES and filter chip logic
+- `components/Public/` (directory) — confirmed no category story component exists
+- `services/publicB2CService.ts` — projection interface fields
+- `server/src/services/publicB2CProjection.service.ts` — projection safety gates
+- `governance/decisions/INDUSTRY-CLUSTER-TAXONOMY-DECISION-001.md` — taxonomy authority
+- `PUBLIC-SEO-INFRASTRUCTURE-DECISION-001.md` — Option E decided; Stage 1 scope
+- `governance/units/PUBLIC-PAGES-NAVBAR-IA-AUDIT-AND-DESIGN-001.md` — page inventory
+
+Governance file created:
+- `governance/units/B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001.md` — design artifact
+
+Governance file updated:
+- `governance/units/TEXQTIC-B2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001.md` — this file
+
+**No runtime files changed.**
+
+### 21.3 Key Design Decisions
+
+#### 21.3.1 Recommended Route Model
+
+**Decision:** Option B — `/products/category/:categorySlug`
+
+Regex: `^\/products\/category\/([a-z0-9-]+)$`
+
+Rationale: Unambiguously distinct from `/product/:slug` (singular, 2-segment) and all other
+existing App.tsx routes. No conflict confirmed by direct regex analysis. The `category` infix
+makes the page type explicit and leaves the `/products/` prefix available for potential future
+material story pages (`/products/material/:materialSlug`).
+
+New AppState required: `PUBLIC_B2C_CATEGORY_STORY`
+
+#### 21.3.2 Initial Category Set
+
+Four category story pages for Phase 1:
+
+| IndustrySegment | Slug | Status |
+|---|---|---|
+| Garments | `garments` | Phase 1 |
+| Home Textiles | `home-textiles` | Phase 1 |
+| Technical Textiles | `technical-textiles` | Phase 1 |
+| Fabrics | `fabrics` | Phase 1 |
+| Yarn & Spinning | — | DEFERRED (B2B-oriented) |
+| Textile Services | — | DEFERRED (service category, not product) |
+
+Alignment with `B2C_CATEGORY_FILTER_VALUES` in `B2CBrowse.tsx` is exact.
+
+#### 21.3.3 Static Config / Projection Strategy
+
+- **Page copy (hero, context band, SEO fields):** Static config (`config/publicB2CCategoryPages.ts`)
+- **Product grid:** Live projection via existing `GET /api/public/b2c/products` endpoint
+- **No new backend endpoint required** for initial implementation
+
+#### 21.3.4 SEO Ownership
+
+- **Implementation-owned (Stage 1):** title, meta description, canonical, robots, OG/Twitter via `publicPageMeta.ts`
+- **Deferred:** sitemap, JSON-LD, per-category OG images, advanced canonicalization
+
+#### 21.3.5 DPP/Passport Rules Confirmed
+
+No category-level DPP/passport claims permitted. Trust band uses "where available" qualification
+only, consistent with `B2C-DPP-PASSPORT-LINKAGE-SYNC-001` governance.
+
+### 21.4 Files to Change in Implementation Unit
+
+**Create (new):**
+- `config/publicB2CCategoryPages.ts`
+- `components/Public/PublicB2CCategoryPage.tsx`
+
+**Modify:**
+- `App.tsx` — AppState union, route matching, component wiring
+- `utils/publicPageMeta.ts` — doc-header scope comment only (no functional change)
+
+**Optional modify (UX decision at implementation time):**
+- `components/Public/B2CBrowse.tsx` — category chip href links
+
+**No backend changes. No schema changes. No OpenAPI changes.**
+
+### 21.5 Adjacent Findings Recorded in Design Artifact
+
+1. `CatalogItem.productCategory` normalization vs IndustrySegment alignment — implementation risk
+2. `publicPageMeta.ts` doc-header scope update needed (comment only)
+3. No `/products` landing page exists — deliberate decision required in implementation unit
+4. `B2C_CATEGORY_FILTER_VALUES` and `publicB2CCategoryPages.ts` must remain in sync
+
+### 21.6 Implementation Gate
+
+`B2C-PUBLIC-CATEGORY-STORY-PAGES-IMPLEMENTATION-001` is BLOCKED until:
+- This design artifact (`B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001.md`) is reviewed and accepted
+- `INDUSTRY-CLUSTER-TAXONOMY-DECISION-001` is in PROPOSED or ACCEPTED status (currently PROPOSED — acceptable for implementation using existing PUBLIC_SAFE vocabulary only)
+
+### 21.7 Commit Reference
+
+- **Commit message:** `[TEXQTIC] governance: design B2C category story pages`
 - **Commit hash:** (see git log)
