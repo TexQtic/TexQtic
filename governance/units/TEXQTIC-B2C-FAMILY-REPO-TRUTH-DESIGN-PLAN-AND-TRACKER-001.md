@@ -1063,4 +1063,4 @@ Product detail tag rendering is raw passthrough from projection. No taxonomy nor
 ### 19.12 Commit Reference
 
 - **Commit message:** `[TEXQTIC] public: align B2C category taxonomy`
-- **Commit hash:** TBD — see git log
+- **Commit hash:** 221e2bb
