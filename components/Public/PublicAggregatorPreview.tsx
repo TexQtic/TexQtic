@@ -1,4 +1,5 @@
 import React from 'react';
+import { PublicNavbar, type PublicNavbarProps } from './PublicNavbar';
 
 export interface PublicAggregatorPreviewProps {
   readonly onBackToEntry: () => void;
@@ -7,6 +8,7 @@ export interface PublicAggregatorPreviewProps {
   readonly onBrowseProducts: () => void;
   readonly onLearnAboutTrust: () => void;
   readonly onRequestAccess: () => void;
+  readonly nav: PublicNavbarProps;
 }
 
 function ActionButton({
@@ -52,38 +54,11 @@ export function PublicAggregatorPreview({
   onBrowseProducts,
   onLearnAboutTrust,
   onRequestAccess,
+  nav,
 }: PublicAggregatorPreviewProps) {
   return (
     <div className="min-h-screen bg-[#f3f8fb] font-sans">
-      <header className="border-b border-[#d6e4e8] bg-white px-6 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={onBackToEntry}
-            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#2f8094] transition hover:bg-[#eff6f8]"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-            Back
-          </button>
-          <img src="/brand/texqtic-logo.png" alt="TexQtic" className="h-10 w-auto" loading="eager" />
-          <div className="hidden text-[11px] font-bold uppercase tracking-[0.22em] text-[#2f8094] sm:block">
-            TexQtic Aggregator Preview
-          </div>
-        </div>
-      </header>
+      <PublicNavbar {...nav} />
 
       <main className="mx-auto max-w-7xl space-y-10 px-6 py-10">
         <section className="rounded-[28px] border border-[#d9e5ea] bg-white p-8 shadow-[0_10px_30px_rgba(7,26,47,0.08)] md:p-10">

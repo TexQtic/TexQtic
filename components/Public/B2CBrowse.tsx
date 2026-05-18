@@ -3,10 +3,12 @@ import {
   getPublicB2CProducts,
   type PublicB2CStorefrontEntry,
 } from '../../services/publicB2CService';
+import { PublicNavbar, type PublicNavbarProps } from './PublicNavbar';
 
 interface B2CBrowsePageProps {
   readonly onBack: () => void;
   readonly onSignIn: () => void;
+  readonly nav: PublicNavbarProps;
 }
 
 // â”€â”€ flat product item for browse grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -60,7 +62,7 @@ const CATEGORY_CARDS: { label: string; value: string; icon: string }[] = [
 
 // â”€â”€ page component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-export function B2CBrowsePage({ onBack, onSignIn }: B2CBrowsePageProps) {
+export function B2CBrowsePage({ onBack, onSignIn, nav }: B2CBrowsePageProps) {
   const [storefronts, setStorefronts] = useState<PublicB2CStorefrontEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -119,45 +121,7 @@ export function B2CBrowsePage({ onBack, onSignIn }: B2CBrowsePageProps) {
 
   return (
     <div className="min-h-screen bg-[#f3f8fb] font-sans">
-      {/* Nav */}
-      <header className="border-b border-[#d6e4e8] bg-white px-6 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <button
-            type="button"
-            onClick={onBack}
-            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#2f8094] transition hover:bg-[#eff6f8]"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-            Back
-          </button>
-          <img
-            src="/brand/texqtic-logo.png"
-            alt="TexQtic"
-            className="h-10 w-auto"
-            loading="eager"
-          />
-          <button
-            type="button"
-            onClick={onSignIn}
-            className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
-          >
-            Sign in
-          </button>
-        </div>
-      </header>
+      <PublicNavbar {...nav} />
 
       {/* Hero */}
       <div className="bg-[#071a2f] px-6 py-14">

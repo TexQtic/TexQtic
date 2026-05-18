@@ -6119,6 +6119,19 @@ const App: React.FC = () => {
   };
 
   const renderCurrentState = () => {
+    // Shared nav callbacks for all public surface render cases
+    const publicNavBase = {
+      onGoHome: () => { globalThis.window?.history.replaceState(null, '', '/'); setAppState('PUBLIC_ENTRY'); },
+      onGoB2B: () => setAppState('PUBLIC_B2B_DISCOVERY'),
+      onGoProducts: () => setAppState('PUBLIC_B2C_BROWSE'),
+      onGoCollections: () => { globalThis.window?.history.replaceState(null, '', '/collections'); setAppState('PUBLIC_COLLECTIONS'); },
+      onGoIndustry: () => { globalThis.window?.history.replaceState(null, '', '/industries'); setAppState('PUBLIC_INDUSTRY_CLUSTER_LANDING'); },
+      onGoTrust: () => { globalThis.window?.history.replaceState(null, '', '/trust'); setAppState('PUBLIC_TRUST_LANDING'); },
+      onGoAggregator: () => { globalThis.window?.history.replaceState(null, '', '/aggregator'); setAppState('PUBLIC_AGGREGATOR'); },
+      onSignIn: () => openSecondaryAuthenticatedEntry('TENANT'),
+      onRequestAccess: openSupplierRequestAccess,
+    };
+
     switch (appState) {
       case 'PUBLIC_ENTRY': {
         return (
@@ -6670,6 +6683,7 @@ const App: React.FC = () => {
       case 'PUBLIC_B2B_DISCOVERY':
         return (
           <B2BDiscoveryPage
+            nav={{ ...publicNavBase, activeSection: 'b2b' }}
             onBack={() => setAppState('PUBLIC_ENTRY')}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
             onListBusiness={openSupplierRequestAccess}
@@ -6681,6 +6695,7 @@ const App: React.FC = () => {
       case 'PUBLIC_B2C_BROWSE':
         return (
           <B2CBrowsePage
+            nav={{ ...publicNavBase, activeSection: 'products' }}
             onBack={() => setAppState('PUBLIC_ENTRY')}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
           />
@@ -6688,6 +6703,7 @@ const App: React.FC = () => {
       case 'PUBLIC_COLLECTIONS':
         return (
           <PublicCollectionsStub
+            nav={{ ...publicNavBase, activeSection: 'collections' }}
             onBackToEntry={() => {
               globalThis.window?.history.replaceState(null, '', '/');
               setAppState('PUBLIC_ENTRY');
@@ -6701,6 +6717,7 @@ const App: React.FC = () => {
       case 'PUBLIC_COLLECTION_DETAIL_UNAVAILABLE':
         return (
           <PublicCollectionUnavailable
+            nav={{ ...publicNavBase, activeSection: 'collections' }}
             collectionSlug={publicCollectionSlugFromPath}
             onBackToCollections={() => {
               globalThis.window?.history.replaceState(null, '', '/collections');
@@ -6714,6 +6731,7 @@ const App: React.FC = () => {
       case 'PUBLIC_TRUST_LANDING':
         return (
           <PublicTrustLandingStub
+            nav={{ ...publicNavBase, activeSection: 'trust' }}
             onBackToEntry={() => {
               globalThis.window?.history.replaceState(null, '', '/');
               setAppState('PUBLIC_ENTRY');
@@ -6727,6 +6745,7 @@ const App: React.FC = () => {
       case 'PUBLIC_INDUSTRY_CLUSTER_LANDING':
         return (
           <PublicIndustryClusterLanding
+            nav={{ ...publicNavBase, activeSection: 'industry' }}
             onBackToEntry={() => {
               globalThis.window?.history.replaceState(null, '', '/');
               setAppState('PUBLIC_ENTRY');
@@ -6748,6 +6767,7 @@ const App: React.FC = () => {
       case 'PUBLIC_AGGREGATOR':
         return (
           <PublicAggregatorPreview
+            nav={{ ...publicNavBase, activeSection: 'aggregator' }}
             onBackToEntry={() => {
               globalThis.window?.history.replaceState(null, '', '/');
               setAppState('PUBLIC_ENTRY');
@@ -6768,6 +6788,7 @@ const App: React.FC = () => {
       case 'PUBLIC_PRODUCT_DETAIL':
         return (
           <PublicProductDetail
+            nav={{ ...publicNavBase, activeSection: 'products' }}
             slug={publicProductSlugFromPath}
             onBackToBrowse={() => {
               globalThis.window?.history.replaceState(null, '', '/');
@@ -6783,6 +6804,7 @@ const App: React.FC = () => {
       case 'PUBLIC_PASSPORT':
         return (
           <PublicPassport
+            nav={{ ...publicNavBase, activeSection: 'trust' }}
             publicPassportId={publicPassportIdFromPath}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
             onRequestAccess={openSupplierRequestAccess}
@@ -6796,6 +6818,7 @@ const App: React.FC = () => {
       case 'PUBLIC_SUPPLIER_PROFILE':
         return (
           <PublicSupplierProfile
+            nav={{ ...publicNavBase, activeSection: 'b2b' }}
             slug={publicSupplierSlugFromPath}
             source={publicSupplierSourceFromQuery || undefined}
             onBack={() => setAppState('PUBLIC_B2B_DISCOVERY')}
@@ -6807,6 +6830,7 @@ const App: React.FC = () => {
       case 'PUBLIC_REFERRAL_LANDING':
         return (
           <PublicReferralLanding
+            nav={{ ...publicNavBase, activeSection: 'home' }}
             referralCode={publicReferralCodeFromPath}
             onBack={() => setAppState('PUBLIC_ENTRY')}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}

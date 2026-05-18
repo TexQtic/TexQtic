@@ -1,4 +1,5 @@
 import React from 'react';
+import { PublicNavbar, type PublicNavbarProps } from './PublicNavbar';
 
 interface PublicCollectionUnavailableProps {
   readonly collectionSlug?: string;
@@ -6,6 +7,7 @@ interface PublicCollectionUnavailableProps {
   readonly onBrowseProducts: () => void;
   readonly onSignIn: () => void;
   readonly onExploreB2BNetwork?: () => void;
+  readonly nav: PublicNavbarProps;
 }
 
 function ActionButton({
@@ -35,12 +37,15 @@ export function PublicCollectionUnavailable({
   onBrowseProducts,
   onSignIn,
   onExploreB2BNetwork,
+  nav,
 }: PublicCollectionUnavailableProps) {
   const hasCollectionSlug = Boolean(collectionSlug?.trim());
 
   return (
-    <div className="min-h-screen bg-[#f3f8fb] font-sans px-6 py-16">
-      <div className="mx-auto max-w-3xl rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-12 text-center shadow-[0_18px_50px_rgba(7,26,47,0.06)]">
+    <div className="min-h-screen bg-[#f3f8fb] font-sans">
+      <PublicNavbar {...nav} />
+      <div className="px-6 py-16">
+        <div className="mx-auto max-w-3xl rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-12 text-center shadow-[0_18px_50px_rgba(7,26,47,0.06)]">
         <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
           Verified Collection Preview
         </p>
@@ -57,6 +62,7 @@ export function PublicCollectionUnavailable({
           {onExploreB2BNetwork && hasCollectionSlug ? (
             <ActionButton label="Explore B2B Network" onClick={onExploreB2BNetwork} />
           ) : null}
+        </div>
         </div>
       </div>
     </div>

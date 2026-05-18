@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
+import { PublicNavbar, type PublicNavbarProps } from './PublicNavbar';
 
 type DppMaturity = 'LOCAL_TRUST' | 'TRADE_READY' | 'COMPLIANCE' | 'GLOBAL_DPP';
 
@@ -119,6 +120,7 @@ interface PublicPassportProps {
   readonly onSignIn?: () => void;
   readonly onRequestAccess?: () => void;
   readonly onLearnAboutTrust?: () => void;
+  readonly nav: PublicNavbarProps;
 }
 
 export function PublicPassport({
@@ -126,6 +128,7 @@ export function PublicPassport({
   onSignIn,
   onRequestAccess,
   onLearnAboutTrust,
+  nav,
 }: PublicPassportProps) {
   const [passport, setPassport] = useState<PassportData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -224,20 +227,7 @@ export function PublicPassport({
       data-testid="public-passport-page"
       className="min-h-screen bg-[#f3f8fb] font-sans text-slate-900"
     >
-      {/* Header */}
-      <header data-testid="public-passport-header" className="border-b border-[#d6e4e8] bg-white px-6 py-4">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <img
-            src="/brand/texqtic-logo.png"
-            alt="TexQtic"
-            className="h-10 w-auto"
-            loading="eager"
-          />
-          <span className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-            Public Product Passport
-          </span>
-        </div>
-      </header>
+      <PublicNavbar {...nav} />
 
       {/* Body */}
       <main className="mx-auto max-w-3xl px-6 py-10">
