@@ -77,7 +77,7 @@ import { SupplierInviteInbox } from './components/Tenant/NetworkCommerce/Supplie
 import { EventStream } from './components/ControlPlane/EventStream';
 import { B2BDiscoveryPage } from './components/Public/B2BDiscovery';
 import { B2CBrowsePage } from './components/Public/B2CBrowse';
-import { PublicProductDetail } from './components/Public/PublicProductDetail';
+import { PublicProductDetail, type PublicProductDetailMetaSignal } from './components/Public/PublicProductDetail';
 import { PublicCollectionsStub } from './components/Public/PublicCollectionsStub';
 import { PublicCollectionUnavailable } from './components/Public/PublicCollectionUnavailable';
 import { PublicCollectionDetail } from './components/Public/PublicCollectionDetail';
@@ -2185,6 +2185,9 @@ const App: React.FC = () => {
     }
     return '';
   });
+  // B2C-PRODUCT-DETAIL-RICH-SEO-001: product detail meta signal from PublicProductDetail callback
+  const [publicProductDetailMeta, setPublicProductDetailMeta] =
+    useState<PublicProductDetailMetaSignal | null>(null);
   const [publicCollectionSlugFromPath] = useState<string>(() => {
     if (globalThis.window !== undefined) {
       const m = globalThis.window.location.pathname.match(/^\/collections(?:\/([a-z0-9-]+))?$/);
@@ -3047,6 +3050,13 @@ const App: React.FC = () => {
     document.title = documentTitle;
   }, [documentTitle]);
 
+  // B2C-PRODUCT-DETAIL-RICH-SEO-001: reset product meta signal when leaving product detail
+  useEffect(() => {
+    if (appState !== 'PUBLIC_PRODUCT_DETAIL') {
+      setPublicProductDetailMeta(null);
+    }
+  }, [appState, publicProductSlugFromPath]);
+
   // PUBLIC-COLLECTION-SEO-METADATA-IMPLEMENTATION-001
   // Manages SEO <head> metadata for D2C public collection surfaces.
   // Authority: PUBLIC-SEO-INFRASTRUCTURE-DECISION-001, D2C-COLLECTION-SEO-GOVERNANCE-001
@@ -3200,7 +3210,87 @@ const App: React.FC = () => {
       return;
     }
 
-    // B2C-SEO-METADATA-EXPANSION-IMPLEMENTATION-001: Stage 2a — B2C browse + product detail
+    // B2C-PRODUCT-DETAIL-RICH-SEO-001: Stage 2b — rich product metadata with found/notFound signal
+    if (appState === 'PUBLIC_PRODUCT_DETAIL') {
+      if (!publicProductSlugFromPath) {
+        clearPublicPageMeta();
+        return;
+      }
+      const productCanonical = `${origin}/product/${publicProductSlugFromPath}`;
+      if (publicProductDetailMeta === null) {
+        // Loading state: generic Stage 2a metadata while fetch resolves
+        const productTitle = 'Textile Product Preview — TexQtic';
+        const productDescription =
+          'View this public-safe textile product preview on TexQtic. Discover materials, categories, and supply chain context from verified suppliers.';
+        applyPublicPageMeta({
+          title: productTitle,
+          description: productDescription,
+          canonical: productCanonical,
+          robots: 'index, follow',
+          ogTitle: productTitle,
+          ogDescription: productDescription,
+          ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+          ogUrl: productCanonical,
+          ogType: 'website',
+          twitterCard: 'summary_large_image',
+          twitterTitle: productTitle,
+          twitterDescription: productDescription,
+          twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        });
+        return;
+      }
+      if (publicProductDetailMeta.type === 'notFound') {
+        const notFoundTitle = 'Product Not Found — TexQtic';
+        const notFoundDescription =
+          'This product is no longer available on TexQtic. Browse all available textile products.';
+        applyPublicPageMeta({
+          title: notFoundTitle,
+          description: notFoundDescription,
+          canonical: `${origin}/products`,
+          robots: 'noindex, nofollow',
+          ogTitle: notFoundTitle,
+          ogDescription: notFoundDescription,
+          ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+          ogUrl: `${origin}/products`,
+          ogType: 'website',
+          twitterCard: 'summary_large_image',
+          twitterTitle: notFoundTitle,
+          twitterDescription: notFoundDescription,
+          twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        });
+        return;
+      }
+      // publicProductDetailMeta.type === 'found'
+      const { name, summary, description: productDesc } = publicProductDetailMeta;
+      const MAX_DESC_LEN = 155;
+      const truncateDesc = (s: string) =>
+        s.length <= MAX_DESC_LEN ? s : `${s.slice(0, MAX_DESC_LEN).trimEnd()}...`;
+      const resolvedTitle = name
+        ? `${name} — TexQtic Textile Products`
+        : 'Textile Product Preview — TexQtic';
+      const resolvedDescription = summary
+        ? truncateDesc(summary)
+        : productDesc
+          ? truncateDesc(productDesc)
+          : 'Public-safe textile product preview on TexQtic. Browse category, material, and supplier context for public discovery.';
+      applyPublicPageMeta({
+        title: resolvedTitle,
+        description: resolvedDescription,
+        canonical: productCanonical,
+        robots: 'index, follow',
+        ogTitle: resolvedTitle,
+        ogDescription: resolvedDescription,
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: productCanonical,
+        ogType: 'website',
+        twitterCard: 'summary_large_image',
+        twitterTitle: resolvedTitle,
+        twitterDescription: resolvedDescription,
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
     if (appState === 'PUBLIC_B2C_BROWSE') {
       const browseTitle = 'Explore Textile Products — TexQtic';
       const browseDescription =
@@ -3223,36 +3313,9 @@ const App: React.FC = () => {
       return;
     }
 
-    if (appState === 'PUBLIC_PRODUCT_DETAIL') {
-      if (!publicProductSlugFromPath) {
-        clearPublicPageMeta();
-        return;
-      }
-      const productTitle = 'Textile Product Preview — TexQtic';
-      const productDescription =
-        'View this public-safe textile product preview on TexQtic. Discover materials, categories, and supply chain context from verified suppliers.';
-      const productCanonical = `${origin}/product/${publicProductSlugFromPath}`;
-      applyPublicPageMeta({
-        title: productTitle,
-        description: productDescription,
-        canonical: productCanonical,
-        robots: 'index, follow',
-        ogTitle: productTitle,
-        ogDescription: productDescription,
-        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
-        ogUrl: productCanonical,
-        ogType: 'website',
-        twitterCard: 'summary_large_image',
-        twitterTitle: productTitle,
-        twitterDescription: productDescription,
-        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
-      });
-      return;
-    }
-
     // All other app states: remove managed metadata tags
     clearPublicPageMeta();
-  }, [appState, publicCollectionSlugFromPath, publicCategorySlugFromPath, publicProductSlugFromPath]);
+  }, [appState, publicCollectionSlugFromPath, publicCategorySlugFromPath, publicProductSlugFromPath, publicProductDetailMeta]);
   useEffect(() => {
     if (appState !== 'PUBLIC_ENTRY') {
       setPublicEntryBootstrapPending(false);
@@ -7082,6 +7145,7 @@ const App: React.FC = () => {
           <PublicProductDetail
             nav={{ ...publicNavBase, activeSection: 'products' }}
             slug={publicProductSlugFromPath}
+            onProductMetaReady={setPublicProductDetailMeta}
             onBackToBrowse={() => {
               globalThis.window?.history.replaceState(null, '', '/');
               setAppState('PUBLIC_B2C_BROWSE');

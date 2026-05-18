@@ -1678,3 +1678,68 @@ No other files modified.
 | `/collections/unknown-slug` | `noindex, nofollow` | PASS |
 
 **Public/private metadata boundary:** No org_id, tenant ID, internal supplier IDs, publicPassportId, trustSignals, hasPassport, hasTraceabilityEvidence, product image URLs, pricing, inventory, RFQ/order/cart/wishlist/checkout language, buyer intent, AI/ranking/recommendation claims, or unsupported DPP/passport/trust/traceability/certification/origin/sustainability claims appeared in any metadata verified above.
+
+---
+
+## 26. B2C Product Detail Rich SEO — Stage 2b — Implementation — 2026-07-08
+
+**Unit:** B2C-PRODUCT-DETAIL-RICH-SEO-001
+**Status:** IMPLEMENTATION_COMPLETE_LOCAL_VALIDATION_PASS
+**Stage:** 2b (rich product metadata with found/notFound signal callback)
+
+### 26.1 Scope
+
+Upgraded Stage 2a generic `PUBLIC_PRODUCT_DETAIL` SEO arm in `App.tsx` to a signal-driven Stage 2b arm that responds to the actual product fetch result. `PublicProductDetail` was extended with an `onProductMetaReady` callback channel.
+
+| Route | AppState | Prior State (Stage 2a) | Implemented State (Stage 2b) |
+|---|---|---|---|
+| `/product/:slug` — loading | `PUBLIC_PRODUCT_DETAIL` | generic static `index, follow` | unchanged (generic static while fetch resolves) |
+| `/product/:slug` — found | `PUBLIC_PRODUCT_DETAIL` | generic static `index, follow` | rich `${name} — TexQtic Textile Products`; description from summary/productDesc (truncated 155 chars) |
+| `/product/:slug` — not-found | `PUBLIC_PRODUCT_DETAIL` | `index, follow` (incorrect) | `noindex, nofollow`, canonical → `/products`, title = `Product Not Found — TexQtic` |
+| `/products` | `PUBLIC_B2C_BROWSE` | `index, follow` static copy | unchanged |
+
+### 26.2 Files Changed
+
+| File | Change |
+|---|---|
+| `components/Public/PublicProductDetail.tsx` | Exported `PublicProductDetailMetaSignal` type; added `onProductMetaReady` prop; signal callbacks in all three fetch outcomes (not-slug, found, catch/notFound); updated dep array |
+| `App.tsx` | Updated import; added `publicProductDetailMeta` state; added reset useEffect; upgraded `PUBLIC_PRODUCT_DETAIL` SEO arm (loading/found/notFound three-state); added `publicProductDetailMeta` to dep array; passed `onProductMetaReady={setPublicProductDetailMeta}` to `<PublicProductDetail>` |
+
+### 26.3 Key Implementation Notes
+
+1. **State-back channel pattern:** `onProductMetaReady?: (meta: PublicProductDetailMetaSignal) => void` passed from `App.tsx` into `PublicProductDetail`. Component calls it when the fetch resolves. SEO useEffect in `App.tsx` re-runs on `publicProductDetailMeta` change.
+
+2. **Three-state SEO arm:**
+   - `null` (loading): generic Stage 2a fallback — crawler sees valid metadata immediately
+   - `type === 'notFound'`: `noindex, nofollow`, canonical → `/products` — fixes incorrect Stage 2a indexing of 404 product URLs
+   - `type === 'found'`: rich title from `name`; description from `summary` ?? `description` (both truncated to 155 chars) ?? static fallback copy
+
+3. **`ogType` constraint unchanged:** `'website'` only — `'product'` deferred to a separate `publicPageMeta.ts` utility update unit.
+
+4. **Reset useEffect:** `publicProductDetailMeta` reset to `null` on any `appState !== 'PUBLIC_PRODUCT_DETAIL'` transition to prevent stale metadata.
+
+5. **Public/private boundary:** Only `name`, `summary`, `description`, `category`, `material`, `fabricType`, `publicSupplierName` surfaced — all public-safe fields per `publicB2CService.ts` response contract.
+
+### 26.4 Validation Evidence
+
+- `pnpm exec tsc --noEmit` — **PASS** (exit code 0)
+- `git diff --name-only` — `App.tsx`, `components/Public/PublicProductDetail.tsx` only (allowlist confirmed)
+
+### 26.5 Explicit Deferrals
+
+- `ogType: 'product'` — requires separate `publicPageMeta.ts` utility extension unit
+- Product OG image — product images not available in public B2C surface at this stage
+- JSON-LD structured data (`Product`, `BreadcrumbList`) — post domain strategy decision
+- sitemap.xml, robots.txt — post domain strategy decision
+- `PUBLIC_TRUST_LANDING`, `PUBLIC_INDUSTRY_CLUSTER_LANDING`, `PUBLIC_AGGREGATOR` metadata — separate units
+- Page 11 inquiry, B2C inquiry handoff, authenticated continuation — separate units
+- Production verification — `B2C-PRODUCT-DETAIL-RICH-SEO-001-VERIFY-CLOSE`
+
+### 26.6 Recommended Next Unit
+
+`B2C-PRODUCT-DETAIL-RICH-SEO-001-VERIFY-CLOSE`
+
+### 26.7 Implementation Commit Reference
+
+- **Commit message:** `[TEXQTIC] public: implement B2C product detail rich SEO`
+- **Commit hash:** `a548225`
