@@ -1385,4 +1385,113 @@ B2CBrowse category chip link integration remains deferred. Converting filter-tog
 ### 22.6 Commit Reference
 
 - **Commit message:** `[TEXQTIC] public: implement B2C category story pages`
+- **Commit hash:** `7b786a751284e880cd83529fd8808aa7bf8cda00`
+
+---
+
+## 23. B2C Category Story Pages — Production Verification Close — 2026-05-18
+
+**Unit:** `B2C-PUBLIC-CATEGORY-STORY-PAGES-IMPLEMENTATION-001-VERIFY-CLOSE`
+**Status:** VERIFIED_COMPLETE
+**Verification date:** 2026-05-18
+**Implementation commit verified:** `7b786a751284e880cd83529fd8808aa7bf8cda00`
+**Base URL:** `https://app.texqtic.com`
+
+### 23.1 Routes Verified
+
+| Route | Result | Title | Canonical | Robots |
+|---|---|---|---|---|
+| `/products/category/garments` | PASS | Garments — Browse Textile Products \| TexQtic | `/products/category/garments` | `index, follow` |
+| `/products/category/home-textiles` | PASS | Home Textiles — Browse Textile Products \| TexQtic | `/products/category/home-textiles` | `index, follow` |
+| `/products/category/technical-textiles` | PASS | Technical Textiles — Browse Textile Products \| TexQtic | `/products/category/technical-textiles` | `index, follow` |
+| `/products/category/fabrics` | PASS | Fabrics — Browse Textile Products \| TexQtic | `/products/category/fabrics` | `index, follow` |
+| `/products/category/unknown-slug` | PASS | Category Unavailable — TexQtic | `/products` | `noindex, nofollow` |
+
+### 23.2 Known Category Route Checks (all four categories)
+
+- Page loads successfully
+- Category hero (heading, tagline, description) renders
+- Copy is public-safe — no private IDs, pricing, inventory, or supplier records visible
+- Product grid renders expected empty state ("No [Category] products are available for public discovery right now.") — correct given current catalog state
+- No RFQ / order / cart / wishlist / checkout / buyer-intent capture elements present
+- No D2C collection terminology or collection semantics
+- Trust band renders with "where available" / conditional language on all four pages
+- Trust signal chips: "Origin context where available", "Supplier trust signals where available", "Traceability signals where available", "Public-safe projection only"
+- No universal DPP/passport/certification/origin/sustainability assertions
+- Sign-in handoff renders as "Sign in to Continue" (no buy-intent semantics)
+- "List Your Products" links to `https://texqtic.com/request-access`
+- Public boundary disclosure footer renders on all four pages
+- No console errors on any page
+- Context band ("About [Category]") renders with appropriate copy
+- Search input renders with category-scoped placeholder
+
+### 23.3 Unknown Slug Fallback Checks
+
+- Safe unavailable state renders
+- Heading: "This category is not available for public discovery."
+- No private data exposed
+- "Browse All Products" button present for navigation back
+- Robots: `noindex, nofollow`
+- No console errors
+
+### 23.4 SEO Stage 1 Metadata (Garments — full; others confirmed title/canonical/robots)
+
+| Field | Value | Status |
+|---|---|---|
+| `<title>` | Category-specific title | PASS |
+| `meta[name="description"]` | Category-specific description | PASS |
+| `link[rel="canonical"]` | `/products/category/:slug` | PASS |
+| `meta[name="robots"]` | `index, follow` (known) / `noindex, nofollow` (unknown) | PASS |
+| `og:title` | Matches title | PASS |
+| `og:description` | Matches meta description | PASS |
+| `og:url` | Matches canonical | PASS |
+| `og:type` | `website` | PASS |
+| `og:image` | `/brand/texqtic-logo.png` | PASS |
+| `twitter:card` | `summary_large_image` | PASS |
+| `twitter:title` | Matches title | PASS |
+| `twitter:description` | Matches meta description | PASS |
+
+### 23.5 Neighbor-Path Smoke Checks
+
+| Route | Result | Notes |
+|---|---|---|
+| `/products` | PASS | B2C browse renders; category filter chips present |
+| `/collections` | PASS | Collection list renders; title correct |
+| `/collections/natural-fabric-stories` | PASS | Collection detail renders; trust copy conditional; no checkout/cart |
+| Backend `GET /api/health` | PASS | `{"status":"ok"}` |
+| `/product/:slug` | N/A | No known public product slug available at time of verification |
+| `/passport/:id` | N/A | No known public passport token available at time of verification |
+
+### 23.6 Public / Private Boundary Confirmation
+
+- No private supplier IDs, org IDs, tenant IDs, auth tokens, pricing, or inventory data appeared on any verified page
+- All pages render public-safe projections only
+- Public boundary disclosure footer present on all known category pages
+
+### 23.7 DPP / Passport / Trust Claim Confirmation
+
+- No universal DPP/passport/trust/traceability/certification/origin/sustainability claims appear
+- All trust language is conditional ("where available")
+- Trust signals are chip-format with explicit "where available" qualifiers
+
+### 23.8 Deferred Items (no change to deferred scope)
+
+1. B2C SEO metadata expansion beyond Stage 1 (sitemap, JSON-LD, robots.txt, per-category OG images)
+2. sitemap.xml implementation
+3. JSON-LD structured data
+4. robots.txt management
+5. Per-category hero OG images (deferred until image management approved)
+6. Page 11 inquiry
+7. B2C inquiry handoff
+8. Authenticated continuation for B2C category surfaces
+9. B2C browse chip deep-link to category pages (UX ambiguity deferred — filter vs. navigate; requires separate design unit)
+10. Category normalization risk: `p.category === config.segment` exact-match preserved per Finding 1 in design artifact; resolution deferred
+
+### 23.9 Recommended Next Unit
+
+`B2C-SEO-METADATA-EXPANSION-DESIGN-001`
+
+### 23.10 Verification Commit Reference
+
+- **Commit message:** `[TEXQTIC] governance: verify B2C category story pages`
 - **Commit hash:** (see git log)
