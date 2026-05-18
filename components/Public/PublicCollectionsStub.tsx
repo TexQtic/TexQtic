@@ -78,9 +78,14 @@ function CollectionCard({
         <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
           {collection.curatedContextLabel}
         </p>
-        <h2 className="text-lg font-semibold leading-snug text-[#0a2036]">
-          {collection.title}
-        </h2>
+        <a
+          href={`/collections/${encodeURIComponent(collection.publicSlug)}`}
+          className="block text-[#0a2036] hover:text-[#2f8094] transition-colors"
+        >
+          <h2 className="text-lg font-semibold leading-snug">
+            {collection.title}
+          </h2>
+        </a>
         <p className="text-sm leading-6 text-slate-600">{collection.summary}</p>
 
         {/* Taxonomy tags — public-safe only */}

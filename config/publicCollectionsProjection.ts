@@ -105,6 +105,13 @@ export interface PublicCollectionProjection {
   readonly summary: string;
   /** Alt text for hero visual placeholder. No evidence-backed claims. */
   readonly heroAlt: string;
+  /**
+   * Public-safe story body for the collection detail page.
+   * Copy-governed: no private metadata, no unsupported origin/certification/trust claims,
+   * no universal traceability assertions, no commerce semantics.
+   * Uses conditional language only for any trust/DPP references.
+   */
+  readonly storyBody: string;
   /** Approved product category tags. Values from PRODUCT_CATEGORIES in taxonomy config. */
   readonly categoryTags: readonly string[];
   /** Approved material tags. Values from MATERIAL_TYPES in taxonomy config. */
@@ -147,6 +154,8 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
     summary:
       'A curated public showcase of textile stories centred on natural fabrics — cotton, wool, linen, and silk — framed through supply-chain context and ecosystem positioning.',
     heroAlt: 'Natural fabric textile showcase',
+    storyBody:
+      'Natural fabrics — cotton, wool, linen, and silk — carry centuries of material heritage. This collection frames the supply-chain context behind these materials as they move through textile ecosystem participants: ginners, spinners, weavers, dyers, and finishers. Each story here is a public-safe conceptual framing of how natural fibres travel through a textile supply chain before reaching finished goods. TexQtic presents this context as ecosystem framing only — not as a certification, origin guarantee, or traceability assertion for any specific product or supplier. Where eligible products in this category include public trust or origin context, it appears conditionally and is product-scoped, not collection-level.',
     categoryTags: ['Fabric products'],
     materialTags: ['Cotton', 'Wool', 'Linen', 'Silk'],
     segmentTags: ['Fabrics'],
@@ -169,6 +178,8 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
     summary:
       'Public-safe ecosystem framing for finished garment supply chains — from yarn and fabric through to garment manufacturing context — without exposing private supplier or buyer records.',
     heroAlt: 'Garment supply chain context showcase',
+    storyBody:
+      'Finished garments are the result of layered supply-chain coordination — from yarn spinning through fabric production, cut-make-trim operations, and final finishing. This collection presents a public-safe ecosystem framing of the process steps and participant roles that characterise garment supply chains in the textile industry. It does not expose private supplier records, buyer workflows, or commercial terms. Where eligible products in this category include public trust or origin context, it appears as product-level conditional context only — not as a universal claim across the garment supply chain or any participant within it.',
     categoryTags: ['Finished garments', 'Fabric products', 'Yarn products'],
     materialTags: ['Cotton', 'Polyester', 'Blended materials'],
     segmentTags: ['Garments', 'Fabrics', 'Yarn & Spinning'],
@@ -191,6 +202,8 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
     summary:
       'A public-safe showcase of home textile product categories and the ecosystem participants — weavers, dyers, finishers, and manufacturers — that support this segment.',
     heroAlt: 'Home textiles showcase',
+    storyBody:
+      'Home textiles — bedding, towelling, furnishing fabrics, floor coverings, and decorative textiles — represent one of the most varied product categories in the textile industry. This collection frames the ecosystem participants and product category context around home textile manufacturing and supply, including the roles of weavers, dyers, finishers, and product manufacturers. It is a public-safe category showcase; it does not imply pricing, inventory, or sourcing availability for any specific product. Eligible products in this category may include public trust or origin context where available — appearing at product level only, not as a collection-wide claim.',
     categoryTags: ['Home textile products'],
     materialTags: ['Cotton', 'Linen', 'Blended materials'],
     segmentTags: ['Home Textiles'],
@@ -213,6 +226,8 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
     summary:
       'Public framing of the supporting service layer in textile ecosystems — testing, consulting, logistics, and other service roles that operate across segments.',
     heroAlt: 'Textile services ecosystem context',
+    storyBody:
+      'Textile ecosystem services — testing laboratories, sustainability consulting, logistics coordination, regulatory advisory, and related support roles — form the enabling layer beneath product supply chains. This collection frames the positioning and role of service participants in the textile ecosystem. It is a public-safe ecosystem context showcase. No specific service providers are named or implied; no private service records, commercial terms, or contact details are exposed. Service ecosystem context in this collection is conceptual framing only.',
     categoryTags: ['Textile services'],
     materialTags: [],
     segmentTags: ['Textile Services'],
@@ -235,6 +250,8 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
     summary:
       'Broad public-safe ecosystem framing for technical textile product categories — synthetic fibers, engineered materials, and the specialized manufacturing context around them.',
     heroAlt: 'Technical textiles ecosystem context',
+    storyBody:
+      'Technical textiles are engineered for functional performance rather than aesthetic application — covering categories from geotextiles and medical textiles through automotive, protective, and industrial applications. This collection presents a public-safe ecosystem framing for the technical textile product categories and the manufacturing context around them, including synthetic fibers, polyester-based products, and blended engineered materials. This is a conceptual category showcase; it does not include product-specific certification, compliance, or performance claims for any product or participant in the ecosystem.',
     categoryTags: ['Technical textile products'],
     materialTags: ['Synthetic fibers', 'Polyester', 'Blended materials'],
     segmentTags: ['Technical Textiles'],
@@ -283,4 +300,19 @@ export function getEligibleCollections(
   projections: readonly PublicCollectionProjection[],
 ): readonly PublicCollectionProjection[] {
   return projections.filter((c) => c.listState.availability === 'AVAILABLE');
+}
+
+/**
+ * Look up a single collection by its public slug.
+ * Returns the projection only if it exists and is AVAILABLE.
+ * Returns undefined for unknown slugs or unavailable collections (fail-closed).
+ * No internal gate failure reason is exposed via the return value.
+ */
+export function getCollectionBySlug(
+  slug: string,
+  projections: readonly PublicCollectionProjection[] = PUBLIC_COLLECTION_PROJECTIONS,
+): PublicCollectionProjection | undefined {
+  return projections.find(
+    (c) => c.publicSlug === slug && c.listState.availability === 'AVAILABLE',
+  );
 }

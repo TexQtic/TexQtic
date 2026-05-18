@@ -80,6 +80,11 @@ import { B2CBrowsePage } from './components/Public/B2CBrowse';
 import { PublicProductDetail } from './components/Public/PublicProductDetail';
 import { PublicCollectionsStub } from './components/Public/PublicCollectionsStub';
 import { PublicCollectionUnavailable } from './components/Public/PublicCollectionUnavailable';
+import { PublicCollectionDetail } from './components/Public/PublicCollectionDetail';
+import {
+  PUBLIC_COLLECTION_PROJECTIONS,
+  getCollectionBySlug,
+} from './config/publicCollectionsProjection';
 import { PublicPassport } from './components/Public/PublicPassport';
 import { PublicSupplierProfile } from './components/Public/PublicSupplierProfile';
 import { PublicReferralLanding } from './components/Public/PublicReferralLanding';
@@ -1962,6 +1967,7 @@ type AppState =
   | 'PUBLIC_B2C_BROWSE'
   | 'PUBLIC_AGGREGATOR'
   | 'PUBLIC_COLLECTIONS'
+  | 'PUBLIC_COLLECTION_DETAIL'
   | 'PUBLIC_COLLECTION_DETAIL_UNAVAILABLE'
   | 'PUBLIC_PRODUCT_DETAIL'
   | 'PUBLIC_PASSPORT'
@@ -2044,7 +2050,10 @@ const resolveInitialAppState = (): AppState => {
       /^\/collections(?:\/([a-z0-9-]+))?$/,
     );
     if (collectionPathMatch) {
-      return collectionPathMatch[1] ? 'PUBLIC_COLLECTION_DETAIL_UNAVAILABLE' : 'PUBLIC_COLLECTIONS';
+      const slug = collectionPathMatch[1];
+      if (!slug) return 'PUBLIC_COLLECTIONS';
+      const isApproved = getCollectionBySlug(slug, PUBLIC_COLLECTION_PROJECTIONS) !== undefined;
+      return isApproved ? 'PUBLIC_COLLECTION_DETAIL' : 'PUBLIC_COLLECTION_DETAIL_UNAVAILABLE';
     }
 
     // REFERRAL-005: Referral join landing — /join/:referral_code
@@ -2906,6 +2915,10 @@ const App: React.FC = () => {
 
     if (appState === 'PUBLIC_COLLECTIONS') {
       return 'TexQtic — Verified Textile Collections';
+    }
+
+    if (appState === 'PUBLIC_COLLECTION_DETAIL') {
+      return 'TexQtic — Verified Textile Collection';
     }
 
     if (appState === 'PUBLIC_COLLECTION_DETAIL_UNAVAILABLE') {
@@ -6714,6 +6727,42 @@ const App: React.FC = () => {
             onListYourProducts={openSupplierRequestAccess}
           />
         );
+      case 'PUBLIC_COLLECTION_DETAIL': {
+        const activeCollection = getCollectionBySlug(
+          publicCollectionSlugFromPath,
+          PUBLIC_COLLECTION_PROJECTIONS,
+        );
+        if (!activeCollection) {
+          // Fail-closed: slug no longer approved at render time — show safe fallback
+          return (
+            <PublicCollectionUnavailable
+              nav={{ ...publicNavBase, activeSection: 'collections' }}
+              collectionSlug={publicCollectionSlugFromPath}
+              onBackToCollections={() => {
+                globalThis.window?.history.replaceState(null, '', '/collections');
+                setAppState('PUBLIC_COLLECTIONS');
+              }}
+              onBrowseProducts={() => setAppState('PUBLIC_B2C_BROWSE')}
+              onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+              onExploreB2BNetwork={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+            />
+          );
+        }
+        return (
+          <PublicCollectionDetail
+            nav={{ ...publicNavBase, activeSection: 'collections' }}
+            collection={activeCollection}
+            onBackToCollections={() => {
+              globalThis.window?.history.replaceState(null, '', '/collections');
+              setAppState('PUBLIC_COLLECTIONS');
+            }}
+            onBrowseProducts={() => setAppState('PUBLIC_B2C_BROWSE')}
+            onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+            onExploreB2BNetwork={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+            onListYourProducts={openSupplierRequestAccess}
+          />
+        );
+      }
       case 'PUBLIC_COLLECTION_DETAIL_UNAVAILABLE':
         return (
           <PublicCollectionUnavailable
