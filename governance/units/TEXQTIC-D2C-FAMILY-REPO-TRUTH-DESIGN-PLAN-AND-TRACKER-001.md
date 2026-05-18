@@ -612,3 +612,161 @@ Preferred next sequence:
 - Planning/tracker only; no runtime changes.
 - No schema/API/OpenAPI/projection/migration/data changes are included in this unit.
 - This document is the canonical D2C family repo-truth tracker and phased implementation queue anchor.
+
+---
+
+## 17. D2C Public Collections Family — Closeout and Tracker Sync
+
+**Sync unit:** D2C-PUBLIC-COLLECTIONS-FAMILY-CLOSEOUT-AND-TRACKER-SYNC-001
+**Sync date:** 2026-05-18
+**Sync commit:** [TEXQTIC] governance: close d2c public collections slice
+
+---
+
+### 17.1 Completed Design and Governance Units
+
+The following design and governance units were completed after this tracker was initialized, advancing the D2C public collections family from stub-only to production-verified public-surface implementation.
+
+| Unit ID | Commit | Status | Notes |
+|---|---|---|---|
+| TEXQTIC-D2C-VERIFIED-TEXTILE-COLLECTIONS-STUBS-UNIT-001 | 22123b2 | CLOSED | Baseline stub sync; /collections + /collections/:slug safe unavailable verified |
+| D2C-COLLECTIONS-DATA-MODEL-DESIGN-001 | e069a22 | CLOSED | Collection data model and governance attributes designed |
+| COLLECTION-PASSPORT-TYPE-DISCRIMINATOR-DECISION-001 | 1cefa01 | CLOSED | Passport type discriminator decided; no collection-level passport in Phase 1 |
+| PUBLIC-COLLECTIONS-PROJECTION-DESIGN-001 | 38a7aff | CLOSED | Public-safe list projection contract designed |
+| PUBLIC-COLLECTION-DETAIL-PROJECTION-DESIGN-001 | f32e619 | CLOSED | Public-safe detail projection semantics and field boundaries designed |
+| D2C-ORIGIN-STORYTELLING-GOVERNANCE-001 | ed11a5d | CLOSED | Origin/artisan/sustainability storytelling governance defined with evidence gates |
+| D2C-EARLY-ACCESS-AUTH-HANDOFF-DESIGN-001 | 9ad893f | CLOSED | Bounded early-access and auth-handoff patterns designed for D2C |
+| D2C-COLLECTION-SEO-GOVERNANCE-001 | ad80be3 | CLOSED | D2C collection SEO governance rules defined |
+| PUBLIC-SEO-INFRASTRUCTURE-DECISION-001 | 7818429 | CLOSED | Public SEO infrastructure decision made; Stage 1 client-side metadata approach adopted |
+| INDUSTRY-CLUSTER-STATIC-CONFIG-001 | 4fde38e | CLOSED | Industry cluster static taxonomy config added; D2C vocabulary dependency met |
+| PUBLIC-DPP-COLLECTION-LINKING-DESIGN-001 | 36b612e | CLOSED | Collection-level DPP/trust linking rules designed; Phase 1 is conditional product context only |
+
+---
+
+### 17.2 Completed Implementation Units
+
+| Unit ID | Commit(s) | Status | Notes |
+|---|---|---|---|
+| PUBLIC-COLLECTIONS-PROJECTION-IMPLEMENTATION-001 | 5812d28 | VERIFIED_COMPLETE / CLOSED | /collections renders 5 approved public-safe collection cards from static projection |
+| PUBLIC-COLLECTION-DETAIL-PROJECTION-IMPLEMENTATION-001 | 49219995 | VERIFIED_COMPLETE / CLOSED | All 5 /collections/:slug routes render public-safe detail projection; unknown slug renders safe unavailable |
+| PUBLIC-COLLECTION-SEO-METADATA-IMPLEMENTATION-001 | 1e74da8 (impl) + c3f0072 (verification) | VERIFIED_COMPLETE / CLOSED | Stage 1 SEO metadata (title, description, robots, canonical, OG, Twitter Card) implemented for list, detail, and unavailable routes; verified in production |
+| PUBLIC-DPP-COLLECTION-LINKING-IMPLEMENTATION-001 | 4e1601e (impl) + d3896a2 (verification) | VERIFIED_COMPLETE / CLOSED — Phase 1 only | Phase 1 trustContextMode-driven conditional copy implemented; collectionHasTrustContext is fail-closed false; no collection-level passport or verification token |
+| D2C-EARLY-ACCESS-AUTH-HANDOFF-IMPLEMENTATION-001 | 58c0de8 | VERIFIED_COMPLETE / CLOSED | CTA metadata (label, action, intent, sourceSurface, authRequired) formalized in projection and components; detail CTA label sourced from projection; TENANT auth modal opens in-place on click; post-auth continuation deferred |
+
+---
+
+### 17.3 Updated Repo Truth (as of 2026-05-18)
+
+**Public routes and state machine:**
+- /collections → PUBLIC_COLLECTIONS → PublicCollectionsStub (renders 5 approved public-safe collection cards)
+- /collections/:slug → PUBLIC_COLLECTION_DETAIL (renders PublicCollectionDetail for known slugs)
+- /collections/:slug → PUBLIC_COLLECTION_DETAIL_UNAVAILABLE (renders PublicCollectionUnavailable for unknown slugs)
+- All three states are wired in App.tsx with `onSignIn: () => openSecondaryAuthenticatedEntry('TENANT')`
+
+**Collection data source:**
+- All 5 collections are static-config-only; no backend API, no server projection endpoint, no schema or migration
+- Source of truth: `config/publicCollectionsProjection.ts`
+- Approved slugs: natural-fabric-stories, garment-supply-chain-context, home-textiles-showcase, textile-services-ecosystem, technical-textiles-context
+
+**CTA metadata (as committed in 58c0de8):**
+- `PublicCollectionCta` interface includes: label, action (CtaAction), intent (CtaIntent), sourceSurface (CtaSourceSurface), authRequired: true
+- All 5 list records carry: `{ label: 'Continue after sign in', action: 'AUTH_CONTINUE', intent: 'COLLECTION_CONTINUATION', sourceSurface: 'COLLECTION_LIST', authRequired: true }`
+- `COLLECTION_DETAIL_CTA_GOVERNANCE` export constant (governance-only): `{ intent: 'COLLECTION_DETAIL_CONTINUATION', sourceSurface: 'COLLECTION_DETAIL', action: 'AUTH_CONTINUE', authRequired: true }`
+- Detail page primary CTA button uses `{collection.cta.label}` (projection-sourced)
+- Auth trigger: `openSecondaryAuthenticatedEntry('TENANT')` → TENANT modal in-place; URL stays on collection route; no /auth URL navigation
+
+**Trust context state (Phase 1):**
+- `trustContextMode: 'CONDITIONAL_PRODUCT_CONTEXT_ONLY'` in all 5 collection records
+- `collectionHasTrustContext: false` (fail-closed for all records in Phase 1)
+- No collection-level passport, no publicPassportId, no verification token at collection level
+- Trust copy: conditional, product-scoped framing only
+
+**SEO metadata state (Stage 1):**
+- List page: `robots: index, follow` + title + description + canonical + OG + Twitter Card
+- Detail pages: `robots: index, follow` + per-collection title + description + canonical + OG + Twitter Card
+- Unavailable pages: `robots: noindex, nofollow`
+- No auth governance fields (intent, sourceSurface, authRequired) appear in any meta tag
+- No JSON-LD, no sitemap, no structured data — deferred
+
+**Post-auth continuation:** NOT IMPLEMENTED (deferred to D2C-AUTHENTICATED-COLLECTION-CONTINUATION units)
+
+---
+
+### 17.4 Public / Private Boundary — Reaffirmed
+
+The following private and non-approved items remain absent from all public collection surfaces, confirmed by production verification:
+
+- No private tenant/org_id or internal identifiers
+- No supplier private records, documents, or pricing
+- No private inventory data
+- No RFQ, order, cart, wishlist, or checkout behavior
+- No buyer-intent capture forms or payloads
+- No collection-owned passport runtime
+- No raw publicPassportId at collection level
+- No public passport directory or collection-level trust claim
+- No DPP-backed collection-level verification assertion
+- No drops, ranking, recommendation, AI output, or aggregator language
+- No /auth URL navigation (auth remains modal in-place)
+- No post-auth continuation context (collectionSlug passthrough, returnTo) surfaced or captured
+
+---
+
+### 17.5 Close-Readiness Decision
+
+**CLOSE-READY — D2C public-surface slice only.**
+
+The following sub-slices are close-ready:
+- Public collections list (static projection, 5 cards, SEO Stage 1) ✅
+- Public collection detail (static projection, all 5 slugs, SEO Stage 1) ✅
+- Public collection unavailable (safe fallback, noindex) ✅
+- Phase 1 DPP/trust linking (conditional product context only, fail-closed) ✅
+- Auth handoff CTA metadata (label/action/intent/sourceSurface/authRequired formalized, modal in-place) ✅
+
+**NOT closed — the following remain deferred:**
+- D2C authenticated collection continuation (post-auth continuation, returnTo passthrough)
+- Collection sitemap and sitemap.xml indexing
+- JSON-LD / structured data for collection pages
+- Collection-owned passport (collection-level DPP / verification token)
+- Public-DPP collection linking Phase 2 (product-scoped passport refs, when available)
+- Dedicated OG image assets for collection pages
+- Supplier context positive verification for collection pages
+
+---
+
+### 17.6 Deferred / Future Units
+
+| Unit ID | Gate | Dependency |
+|---|---|---|
+| PUBLIC-COLLECTION-SITEMAP-INDEXING-DECISION-001 | Decision-gated | SEO-SITEMAP-METADATA-STRUCTURED-DATA-001 |
+| PUBLIC-COLLECTION-STRUCTURED-DATA-DECISION-001 | Decision-gated | Collection semantics decision; JSON-LD strategy decision |
+| D2C-AUTHENTICATED-COLLECTION-CONTINUATION-DESIGN-001 | Design-gated | D2C-EARLY-ACCESS-AUTH-HANDOFF-DESIGN-001 (done); post-auth returnTo/collectionSlug contract design required |
+| D2C-AUTHENTICATED-COLLECTION-CONTINUATION-IMPLEMENTATION-001 | Implementation-gated | D2C-AUTHENTICATED-COLLECTION-CONTINUATION-DESIGN-001 |
+| COLLECTION-PASSPORT-TOKEN-MODEL-DESIGN-001 | Decision-gated | Only if collection-owned passport becomes future scope; not currently approved |
+| PUBLIC-DPP-COLLECTION-LINKING-PHASE-2-DESIGN-001 | Data-limited | Only when product-scoped passport refs are available in projection data |
+| PUBLIC-COLLECTION-OG-IMAGE-ASSET-DECISION-001 | Decision-gated | Only if dedicated per-collection OG images are desired |
+| PUBLIC-COLLECTION-SUPPLIER-DATA-SEED-VERIFICATION-001 | Verification-gated | Only if supplier context should be positively verified against seed data |
+| D2C-COLLECTION-SEMANTICS-DECISION-001 | Decision-gated | Required before full D2C runtime; B2C-D2C boundary review |
+| B2C-D2C-BOUNDARY-DECISION-001 | Decision-gated | Required before full D2C runtime |
+| D2C-COLLECTION-STATIC-CONCEPT-COPY-ALIGNMENT-001 | Design-gated | D2C-COLLECTION-SEMANTICS-DECISION-001 required first |
+
+---
+
+### 17.7 Adjacent Findings
+
+No runtime defects or governance violations were identified during this sync.
+
+The following adjacent observations are recorded for future consideration:
+
+1. **Navigation section CTA in PublicCollectionDetail.tsx uses hardcoded "Sign in to Continue"**
+   - The navigation shortcut strip at the bottom of the detail page uses `<ActionButton label="Sign in to Continue" ...>` rather than projection-sourced copy.
+   - Classification: **design-gated** — the navigation strip is a shortcut row, not the primary auth CTA. Whether its label should come from projection is a design decision, not a defect.
+
+2. **COLLECTION_DETAIL_CTA_GOVERNANCE is exported but not yet consumed at runtime**
+   - The governance constant exists in `config/publicCollectionsProjection.ts` for future detail-level auth handoff intent/sourceSurface wiring.
+   - Classification: **implementation-ready** — no action needed until D2C-AUTHENTICATED-COLLECTION-CONTINUATION-DESIGN-001 is active.
+
+3. **SEO canonical for unavailable slug mirrors the bad slug path**
+   - `canonical: https://app.texqtic.com/collections/not-a-real-slug` — canonical follows the URL rather than pointing to a fallback root.
+   - Classification: **decision-gated** — whether unavailable slugs should carry a canonical at all (vs. none) is an SEO governance question deferred to PUBLIC-COLLECTION-SITEMAP-INDEXING-DECISION-001.
+
+No findings require immediate action. No findings represent public/private boundary violations.
