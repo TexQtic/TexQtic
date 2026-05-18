@@ -1576,3 +1576,60 @@ Field eligibility matrix for `PublicB2CProductDetail` defined in design artifact
 
 - **Commit message:** `[TEXQTIC] governance: design B2C SEO metadata expansion`
 - **Commit hash:** `c71c625`
+
+---
+
+## 25. B2C SEO Metadata Expansion — Implementation Close — 2026-07-07
+
+**Unit:** B2C-SEO-METADATA-EXPANSION-IMPLEMENTATION-001
+**Status:** IMPLEMENTATION_COMPLETE_LOCAL_VALIDATION_PASS
+**Stage:** 2a (slug-only generic metadata)
+
+### 25.1 Scope
+
+Implemented Stage 2a SEO metadata in App.tsx for:
+
+| Route | AppState | Prior State | Implemented State |
+|---|---|---|---|
+| `/products` | `PUBLIC_B2C_BROWSE` | `clearPublicPageMeta()` | `index, follow` — static copy |
+| `/product/:slug` (any slug) | `PUBLIC_PRODUCT_DETAIL` | `clearPublicPageMeta()` | `index, follow` — slug-only generic (Stage 2a) |
+
+All other states unchanged. D2C collection metadata and B2C category story metadata verified intact (typecheck pass).
+
+### 25.2 Files Changed
+
+| File | Change |
+|---|---|
+| `App.tsx` | Added `PUBLIC_B2C_BROWSE` and `PUBLIC_PRODUCT_DETAIL` arms in SEO useEffect; added `publicProductSlugFromPath` to deps array |
+
+No other files modified.
+
+### 25.3 Key Implementation Notes
+
+1. **`ogType` type constraint:** `PublicPageMetaInput.ogType` is typed as `'website'` only. The design artifact specified `ogType: 'product'` for product detail — this was corrected to `'website'` at implementation time to satisfy the type contract. `publicPageMeta.ts` was not modified (on forbidden list).
+
+2. **`publicProductSlugFromPath` guard:** Product detail arm applies `index, follow` metadata only when the slug is non-empty. If slug is empty/falsy, falls through to `clearPublicPageMeta()` as fail-closed default.
+
+3. **All metadata fields from design satisfied:** title, description, canonical, robots, ogTitle, ogDescription, ogImage (`PUBLIC_META_OG_FALLBACK_IMAGE`), ogUrl, ogType (`'website'`), twitterCard, twitterTitle, twitterDescription, twitterImage.
+
+### 25.4 Validation Evidence
+
+- `pnpm run typecheck` — **PASS** (no type errors in UI or server)
+- `git diff --name-only` — `App.tsx` only
+- Stage 2a known limitation (cannot distinguish found vs. not-found) — accepted per design decision in Section 24.2
+
+### 25.5 Explicit Deferrals (unchanged from design)
+
+- `PUBLIC_TRUST_LANDING`, `PUBLIC_INDUSTRY_CLUSTER_LANDING`, `PUBLIC_AGGREGATOR` metadata — out of scope for this unit
+- Stage 2b (`onProductMetaReady` callback, rich product metadata, not-found `noindex`) — `B2C-PRODUCT-DETAIL-RICH-SEO-001`
+- sitemap.xml, robots.txt, JSON-LD — post domain strategy decision
+- Production verification — `B2C-SEO-METADATA-EXPANSION-IMPLEMENTATION-001-VERIFY-CLOSE`
+
+### 25.6 Recommended Next Unit
+
+`B2C-SEO-METADATA-EXPANSION-IMPLEMENTATION-001-VERIFY-CLOSE` (production verification)
+
+### 25.7 Implementation Commit Reference
+
+- **Commit message:** `[TEXQTIC] public: implement B2C SEO metadata expansion`
+- **Commit hash:** TBD — to be filled after commit

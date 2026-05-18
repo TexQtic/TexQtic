@@ -3200,9 +3200,59 @@ const App: React.FC = () => {
       return;
     }
 
+    // B2C-SEO-METADATA-EXPANSION-IMPLEMENTATION-001: Stage 2a — B2C browse + product detail
+    if (appState === 'PUBLIC_B2C_BROWSE') {
+      const browseTitle = 'Explore Textile Products — TexQtic';
+      const browseDescription =
+        'Browse public-safe textile product previews across garments, home textiles, technical textiles, and fabrics on TexQtic.';
+      applyPublicPageMeta({
+        title: browseTitle,
+        description: browseDescription,
+        canonical: `${origin}/products`,
+        robots: 'index, follow',
+        ogTitle: browseTitle,
+        ogDescription: browseDescription,
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/products`,
+        ogType: 'website',
+        twitterCard: 'summary_large_image',
+        twitterTitle: browseTitle,
+        twitterDescription: browseDescription,
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
+    if (appState === 'PUBLIC_PRODUCT_DETAIL') {
+      if (!publicProductSlugFromPath) {
+        clearPublicPageMeta();
+        return;
+      }
+      const productTitle = 'Textile Product Preview — TexQtic';
+      const productDescription =
+        'View this public-safe textile product preview on TexQtic. Discover materials, categories, and supply chain context from verified suppliers.';
+      const productCanonical = `${origin}/product/${publicProductSlugFromPath}`;
+      applyPublicPageMeta({
+        title: productTitle,
+        description: productDescription,
+        canonical: productCanonical,
+        robots: 'index, follow',
+        ogTitle: productTitle,
+        ogDescription: productDescription,
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: productCanonical,
+        ogType: 'website',
+        twitterCard: 'summary_large_image',
+        twitterTitle: productTitle,
+        twitterDescription: productDescription,
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
     // All other app states: remove managed metadata tags
     clearPublicPageMeta();
-  }, [appState, publicCollectionSlugFromPath, publicCategorySlugFromPath]);
+  }, [appState, publicCollectionSlugFromPath, publicCategorySlugFromPath, publicProductSlugFromPath]);
   useEffect(() => {
     if (appState !== 'PUBLIC_ENTRY') {
       setPublicEntryBootstrapPending(false);
