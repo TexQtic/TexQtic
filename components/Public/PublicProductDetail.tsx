@@ -6,12 +6,27 @@ import {
 } from '../../services/publicB2CService';
 import { PublicNavbar, type PublicNavbarProps } from './PublicNavbar';
 
+// B2C-PRODUCT-DETAIL-RICH-SEO-001: minimal state-back channel for App-level SEO metadata
+export type PublicProductDetailMetaSignal =
+  | {
+      type: 'found';
+      name: string;
+      category: string | null;
+      material: string | null;
+      fabricType: string | null;
+      summary: string | null;
+      description: string | null;
+      publicSupplierName: string | null;
+    }
+  | { type: 'notFound' };
+
 interface PublicProductDetailProps {
   readonly slug: string;
   readonly onBackToBrowse: () => void;
   readonly onSignIn: () => void;
   readonly onViewSupplierProfile?: (supplierSlug: string) => void;
   readonly nav: PublicNavbarProps;
+  readonly onProductMetaReady?: (meta: PublicProductDetailMetaSignal) => void;
 }
 
 function RelatedProductCard({ product }: { readonly product: PublicB2CProductCard }) {
@@ -45,6 +60,7 @@ export function PublicProductDetail({
   onSignIn,
   onViewSupplierProfile,
   nav,
+  onProductMetaReady,
 }: PublicProductDetailProps) {
   const [product, setProduct] = useState<PublicB2CProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,6 +71,7 @@ export function PublicProductDetail({
       setProduct(null);
       setLoading(false);
       setNotFound(true);
+      onProductMetaReady?.({ type: 'notFound' });
       return;
     }
 
@@ -68,6 +85,16 @@ export function PublicProductDetail({
         if (!cancelled) {
           setProduct(data);
           setLoading(false);
+          onProductMetaReady?.({
+            type: 'found',
+            name: data.name,
+            category: data.category ?? null,
+            material: data.material ?? null,
+            fabricType: data.fabricType ?? null,
+            summary: data.summary ?? null,
+            description: data.description ?? null,
+            publicSupplierName: data.publicSupplierName ?? null,
+          });
         }
       })
       .catch((error: unknown) => {
@@ -78,13 +105,14 @@ export function PublicProductDetail({
               : undefined;
           setNotFound(status === 404);
           setLoading(false);
+          onProductMetaReady?.({ type: 'notFound' });
         }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, onProductMetaReady]);
 
   if (loading) {
     return (
