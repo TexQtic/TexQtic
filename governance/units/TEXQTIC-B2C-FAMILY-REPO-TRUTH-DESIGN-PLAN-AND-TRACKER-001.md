@@ -394,7 +394,7 @@ Also:
 - Repo truth:
   - Conditional hasPassport/publicPassportId is implemented.
 - Readiness:
-  - READY_FOR_SYNC
+  - COMPLETED — 2026-05-18
 - Dependencies:
   - DPP trust governance decisions
   - taxonomy claim rules
@@ -551,17 +551,17 @@ Status for this unit:
 
 ## 16. Next Recommended Units
 
-Preferred next sequence (updated 2026-05-18 after B2C-CATEGORY-TAXONOMY-ALIGNMENT-001 closure):
-1. B2C-DPP-PASSPORT-LINKAGE-SYNC-001
-2. B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001 (DESIGN_GATED — taxonomy alignment now complete)
-3. SEO-SITEMAP-METADATA-STRUCTURED-DATA-001 or B2C-SEO-METADATA-EXPANSION-DESIGN-001 depending on governance sequencing
-4. PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-DESIGN-001 or B2C-PUBLIC-INQUIRY-HANDOFF-DESIGN-001 depending on inquiry sequencing decision
+Preferred next sequence (updated 2026-05-18 after B2C-DPP-PASSPORT-LINKAGE-SYNC-001 closure):
+1. B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001 (DESIGN_GATED — taxonomy alignment now complete)
+2. SEO-SITEMAP-METADATA-STRUCTURED-DATA-001 or B2C-SEO-METADATA-EXPANSION-DESIGN-001 depending on governance sequencing
+3. PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-DESIGN-001 or B2C-PUBLIC-INQUIRY-HANDOFF-DESIGN-001 depending on inquiry sequencing decision
 
 Completed and no longer in queue:
 - TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001 — CLOSED (D2C public-surface slice production-verified 2026-05-18)
 - B2C-PUBLIC-BROWSE-BASELINE-SYNC-001 — COMPLETED 2026-05-18 (see section 17)
 - B2C-PRODUCT-DETAIL-BASELINE-SYNC-001 — COMPLETED 2026-05-18 (see section 18)
 - B2C-CATEGORY-TAXONOMY-ALIGNMENT-001 — COMPLETED 2026-05-18 (see section 19)
+- B2C-DPP-PASSPORT-LINKAGE-SYNC-001 — COMPLETED 2026-05-18 (see section 20)
 
 ## Governance Notes
 
@@ -1064,3 +1064,163 @@ Product detail tag rendering is raw passthrough from projection. No taxonomy nor
 
 - **Commit message:** `[TEXQTIC] public: align B2C category taxonomy`
 - **Commit hash:** 221e2bb
+
+---
+
+## 20. B2C DPP Passport Linkage Sync — 2026-05-18
+
+**Unit ID:** B2C-DPP-PASSPORT-LINKAGE-SYNC-001
+**Date:** 2026-05-18
+**Status:** GOVERNANCE_SYNC_COMPLETE
+**Authorized by:** Paresh
+**Commit:** [TEXQTIC] governance: sync B2C DPP passport linkage
+
+### 20.1 Objective
+
+Governance-sync audit of B2C trust, DPP, and passport linkage behavior in existing runtime. Confirm that all trust/passport language is conditional and availability-based, that `publicPassportId` is a public token and not an internal ID, and that no universal traceability or certification claims exist in B2C public surfaces. No runtime correction was needed; this unit is governance-only.
+
+### 20.2 Scope
+
+Files inspected (read-only):
+- `components/Public/PublicProductDetail.tsx` — full file
+- `components/Public/PublicPassport.tsx` — full component
+- `services/publicB2CService.ts` — full file
+- `server/src/services/publicB2CProjection.service.ts` — full service
+- `App.tsx` — passport route wiring section
+- `shared/contracts/openapi.tenant.json` — `hasPassport`, `publicPassportId`, `trustSignals` entries
+- `server/src/routes/public.ts` — `/api/public/b2c/products`, `/api/public/dpp/:publicPassportId` routes
+- `tests/e2e/dpp-passport-network.spec.ts` — DPP E2E test coverage for passport token integrity
+- `config/publicIndustryClusterTaxonomy.ts` — TRUST_LANGUAGE and LAYER_CLAIM_SAFETY vocabulary
+
+Governance file updated:
+- `governance/units/TEXQTIC-B2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001.md` — this file
+
+**No runtime files changed.**
+
+### 20.3 Repo-Truth Inspection Findings
+
+#### 20.3.1 Trust Signal Rendering — `PublicProductDetail.tsx`
+
+Trust section heading: "Trust, origin, and passport signals"
+
+Introductory copy: _"Where available, TexQtic connects product previews with public-safe trust, origin, traceability, or passport signals. Deeper records may require authenticated access."_ — explicitly qualified with "where available" ✅
+
+Trust signal chips: `product.trustSignals.map(signal => ...)` — array-driven from backend; no hardcoded universal claims ✅
+
+Passport availability badge: `product.hasPassport === true ? <span>Public passport available</span> : null` — conditional ✅
+
+Passport link: `product.hasPassport && product.publicPassportId ? <a href={`/passport/${product.publicPassportId}`}>View Trust & Origin Passport</a> : null` — double-conditional; both fields required ✅
+
+No `hasTraceabilityEvidence` claim in UI copy (used only by backend to gate trust signal content) ✅
+
+#### 20.3.2 Backend Projection Safety Gates — `publicB2CProjection.service.ts`
+
+`hasPassport` default: `false`. Set to `true` ONLY when `dpp_passport_states.status = 'PUBLISHED'` AND `public_token IS NOT NULL`.
+
+`publicPassportId` assignment: `passportRows[0].public_token` — the dedicated public token column, NOT the internal primary key.
+
+Response spread: `...(publicPassportId && { publicPassportId })` — `publicPassportId` only appears in response when non-null ✅
+
+`trustSignals` construction: starts with `['Public-safe projection only']`; adds `'Traceability evidence available'` only when `hasTraceabilityEvidence === true`. No universal sustainability, certification, or DPP maturity claims ✅
+
+Internal ID prohibition: `org.id` used only for DB lookups, never in output. Gate E enforced ✅
+
+Backend guarantee: `hasPassport === true` → `publicPassportId` is non-null (both set together). Frontend double-check is defense-in-depth, not a workaround ✅
+
+#### 20.3.3 `publicPassportId` Token Nature
+
+`publicPassportId` is the `public_token` UUID column in `dpp_passport_states` — a dedicated public-facing token, separate from the primary key (`id`). OpenAPI contract documents this explicitly: _"Public passport token suitable for /passport/{publicPassportId}; only present when hasPassport is true. This is a public token, not an internal ID."_
+
+E2E test `DPP-E2E-11` confirms: `GET /api/public/dpp/:publicPassportId` does NOT echo `publicPassportId` back in the response body (no reverse-mapping leak) ✅
+
+Route validation: `publicPassportId` must be a valid UUID (`z.string().uuid(...)`) ✅
+
+#### 20.3.4 `PublicPassport.tsx` Component Safety
+
+Accepts `publicPassportId` as the route prop (captured from `/passport/:id` in App.tsx) — no internal ID used ✅
+
+Fetches from `/api/public/dpp/${encodeURIComponent(publicPassportId)}` — correct public endpoint ✅
+
+Loading / not-found / error states all handled cleanly ✅
+
+`buildProductStory()` renders only: `manufacturerName`, `manufacturerJurisdiction`, `nodeType`, `batchId`, approved certification types. No internal IDs, org IDs, or private fields ✅
+
+`MATURITY_LABELS` uses bounded display language (`Verified local`, `Trade Ready`, `Certified`, `Export Ready`) without universal unsupported claims ✅
+
+QR code `payloadUrl` resolves to `/passport/${encodeURIComponent(publicPassportId)}` — public URL only ✅
+
+#### 20.3.5 Passport Route Wiring in App.tsx
+
+`/passport/:id` → `PUBLIC_PASSPORT` state → `PublicPassport` component with `publicPassportId={publicPassportIdFromPath}` ✅
+
+Route matched first (before auth-state routing) — QR-code and direct-link visitors bypass auth state entirely ✅
+
+`publicPassportIdFromPath` captured from URL via regex on mount; falls back to empty string (safe) ✅
+
+#### 20.3.6 OpenAPI Contract Alignment
+
+Contract field `publicPassportId`: `{ "type": "string", "nullable": true, "description": "Public passport token suitable for /passport/{publicPassportId}; only present when hasPassport is true. This is a public token, not an internal ID." }` — matches backend behavior ✅
+
+`hasPassport: boolean` ✅ `trustSignals: array` ✅ `hasTraceabilityEvidence: boolean` ✅
+
+#### 20.3.7 B2C / D2C Separation Confirmation
+
+`B2CBrowse.tsx` — no D2C collection service imports ✅
+`PublicProductDetail.tsx` — no D2C collection service imports ✅
+No D2C semantics (collection, story, early-access) bleed into B2C public surfaces ✅
+DPP JSON-LD context file (`public/dpp/v1/context.jsonld`) is present but not linked from B2C product detail surfaces ✅
+
+### 20.4 Assessment: Runtime Correction Required?
+
+**NO.** All trust/passport/DPP linkage behaviors are confirmed safe and consistent with governance doctrine.
+
+| Check | Result |
+|---|---|
+| Passport link requires both `hasPassport` AND `publicPassportId` | PASS |
+| Trust signals are array-driven, not universal claims | PASS |
+| "Where available" language present in trust section | PASS |
+| `publicPassportId` is a public token, not internal ID | PASS |
+| Backend gates `hasPassport`/`publicPassportId` together | PASS |
+| No universal traceability or DPP coverage claims | PASS |
+| No org_id / internal IDs on public surfaces | PASS |
+| B2C / D2C boundary clean | PASS |
+| OpenAPI contract matches runtime behavior | PASS |
+| E2E test coverage for passport token integrity | PASS |
+| `PublicPassport.tsx` uses public token, not internal ID | PASS |
+
+### 20.5 Governance Contracts Reviewed
+
+- `shared/contracts/openapi.tenant.json` — B2C product detail and DPP passport endpoints
+- `config/publicIndustryClusterTaxonomy.ts` — `TRUST_LANGUAGE`, `LAYER_CLAIM_SAFETY`, `FORBIDDEN_CLAIM_PATTERNS`
+- `AGENTS.md` — B2C public surface and trust governance rules
+- `copilot-instructions.md` — projection safety gates and public/private boundary rules
+
+### 20.6 Validation
+
+Governance-only sync — no runtime files changed. Runtime validation (`pnpm typecheck`) not required.
+
+Preflight:
+- `git diff --name-only` → no output (clean tree) ✅
+- `git status --short` → no output (clean tree) ✅
+
+### 20.7 Adjacent Findings
+
+**Finding 1: `hasTraceabilityEvidence` not surfaced in UI copy**
+- Backend sets `hasTraceabilityEvidence: true` when shared traceability nodes exist. The frontend `PublicProductDetail.tsx` does NOT render a dedicated "traceability evidence available" chip separate from the `trustSignals` array. Instead, the backend includes `'Traceability evidence available'` in the `trustSignals` array when the flag is true. This is the correct pattern — the UI surface is trust-signal-array-driven only.
+- Classification: confirmed correct pattern; no change needed.
+
+**Finding 2: `public/dpp/v1/context.jsonld` is present but not linked from B2C surfaces**
+- DPP JSON-LD context file exists in `public/dpp/v1/context.jsonld`. It is not referenced from B2C product detail, browse, or product detail pages. This is consistent with `PUBLIC-SEO-INFRASTRUCTURE-DECISION-001` deferral of structured data for B2C.
+- Classification: confirmed deferred; subject of future SEO/structured-data governance unit. No change needed.
+
+### 20.8 Next-Unit Recommendation
+
+**Primary next unit:** `B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001`
+- Precondition (`B2C-CATEGORY-TAXONOMY-ALIGNMENT-001`) is now met.
+- Design artifact for B2C category story IA and claim patterns.
+- No runtime implementation in this design unit.
+
+### 20.9 Commit Reference
+
+- **Commit message:** `[TEXQTIC] governance: sync B2C DPP passport linkage`
+- **Commit hash:** (see git log)
