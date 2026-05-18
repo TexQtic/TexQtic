@@ -86,5 +86,42 @@ export async function getPublicB2CProducts(
 export async function getPublicB2CProductBySlug(
   slug: string,
 ): Promise<PublicB2CProductDetail> {
-  return get<PublicB2CProductDetail>(`/api/public/b2c/products/${encodeURIComponent(slug)}`);
+  const controller = new AbortController();
+  const timeoutMs = 10000;
+  const timeoutId = globalThis.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(`/api/public/b2c/products/${encodeURIComponent(slug)}`, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+      signal: controller.signal,
+    });
+
+    if (response.status === 404) {
+      throw { status: 404, message: 'Product not found' };
+    }
+
+    if (!response.ok) {
+      throw { status: response.status, message: 'Unable to load product detail' };
+    }
+
+    const payload = (await response.json()) as
+      | PublicB2CProductDetail
+      | { success?: boolean; data?: PublicB2CProductDetail };
+
+    if (typeof payload === 'object' && payload !== null && 'data' in payload && payload.data) {
+      return payload.data;
+    }
+
+    return payload as PublicB2CProductDetail;
+  } catch (error: unknown) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw { status: 504, message: 'Product request timed out' };
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }

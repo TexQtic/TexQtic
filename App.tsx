@@ -6169,7 +6169,7 @@ const App: React.FC = () => {
                         onClick={() => scrollToPublicEntrySection('public-entry-d2c-preview')}
                         className="rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600 transition hover:bg-[#eff6f8] hover:text-[#0b2238]"
                       >
-                        Verified Drops
+                        Verified Textile Collections
                       </button>
                     </div>
 
@@ -6211,7 +6211,7 @@ const App: React.FC = () => {
                       onClick={() => scrollToPublicEntrySection('public-entry-d2c-preview')}
                       className="rounded-full border border-[#dbe6ea] bg-[#f8fbfc] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600"
                     >
-                      Verified Drops
+                      Verified Textile Collections
                     </button>
                   </div>
                 </nav>

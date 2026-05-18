@@ -52,12 +52,14 @@ export function PublicProductDetail({
 
   useEffect(() => {
     if (!slug) {
+      setProduct(null);
       setLoading(false);
       setNotFound(true);
       return;
     }
 
     let cancelled = false;
+    setProduct(null);
     setLoading(true);
     setNotFound(false);
 
@@ -86,10 +88,13 @@ export function PublicProductDetail({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f3f8fb] font-sans flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-[#2f8094]" />
-          <p className="text-sm text-slate-500">Loading product preview...</p>
+      <div className="min-h-screen bg-[#f3f8fb] font-sans">
+        <PublicNavbar {...nav} />
+        <div className="flex items-center justify-center px-6 py-16">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-[#2f8094]" />
+            <p className="text-sm text-slate-500">Loading product preview...</p>
+          </div>
         </div>
       </div>
     );
@@ -97,30 +102,33 @@ export function PublicProductDetail({
 
   if (!product || notFound) {
     return (
-      <div className="min-h-screen bg-[#f3f8fb] font-sans px-6 py-16">
-        <div className="mx-auto max-w-3xl rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-12 text-center shadow-[0_18px_50px_rgba(7,26,47,0.06)]">
-          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
-            Public Product Preview
-          </p>
-          <h1 className="mt-3 text-2xl font-semibold text-[#0a2036]">This public product preview is not available.</h1>
-          <p className="mt-4 text-sm leading-6 text-slate-500">
-            The product may not be published for public discovery, or its details may be available only through authenticated TexQtic workflows.
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <button
-              type="button"
-              onClick={onBackToBrowse}
-              className="inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#2f8094] transition hover:bg-[#eff6f8]"
-            >
-              Back to Product Browse
-            </button>
-            <button
-              type="button"
-              onClick={onSignIn}
-              className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
-            >
-              Sign in to Continue
-            </button>
+      <div className="min-h-screen bg-[#f3f8fb] font-sans">
+        <PublicNavbar {...nav} />
+        <div className="px-6 py-16">
+          <div className="mx-auto max-w-3xl rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-12 text-center shadow-[0_18px_50px_rgba(7,26,47,0.06)]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+              Public Product Preview
+            </p>
+            <h1 className="mt-3 text-2xl font-semibold text-[#0a2036]">This public product preview is not available.</h1>
+            <p className="mt-4 text-sm leading-6 text-slate-500">
+              The product may not be published for public discovery, or its details may be available only through authenticated TexQtic workflows.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <button
+                type="button"
+                onClick={onBackToBrowse}
+                className="inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#2f8094] transition hover:bg-[#eff6f8]"
+              >
+                Back to Product Browse
+              </button>
+              <button
+                type="button"
+                onClick={onSignIn}
+                className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+              >
+                Sign in to Continue
+              </button>
+            </div>
           </div>
         </div>
       </div>

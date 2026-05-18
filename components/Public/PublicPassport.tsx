@@ -137,17 +137,23 @@ export function PublicPassport({
 
   useEffect(() => {
     if (!publicPassportId) {
+      setPassport(null);
       setLoading(false);
       setNotFound(true);
       return;
     }
 
     let cancelled = false;
+    const controller = new AbortController();
+    const timeoutMs = 10000;
+    const timeoutId = globalThis.setTimeout(() => controller.abort(), timeoutMs);
+
+    setPassport(null);
     setLoading(true);
     setNotFound(false);
     setError(null);
 
-    fetch(`/api/public/dpp/${encodeURIComponent(publicPassportId)}`)
+    fetch(`/api/public/dpp/${encodeURIComponent(publicPassportId)}`, { signal: controller.signal })
       .then(async (res) => {
         if (cancelled) return;
         if (res.status === 404) {
@@ -166,15 +172,25 @@ export function PublicPassport({
           setLoading(false);
         }
       })
-      .catch(() => {
+      .catch((fetchError: unknown) => {
         if (!cancelled) {
+          if (fetchError instanceof DOMException && fetchError.name === 'AbortError') {
+            setError('Passport request timed out. Please try again later.');
+            setLoading(false);
+            return;
+          }
           setError('Unable to reach the passport service. Please check your connection.');
           setLoading(false);
         }
+      })
+      .finally(() => {
+        clearTimeout(timeoutId);
       });
 
     return () => {
       cancelled = true;
+      controller.abort();
+      clearTimeout(timeoutId);
     };
   }, [publicPassportId]);
 
@@ -182,11 +198,14 @@ export function PublicPassport({
     return (
       <div
         data-testid="public-passport-page"
-        className="min-h-screen bg-[#f3f8fb] font-sans flex flex-col items-center justify-center p-6"
+        className="min-h-screen bg-[#f3f8fb] font-sans"
       >
-        <div data-testid="public-passport-loading" className="text-center">
-          <div className="mx-auto mb-6 h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-[#2f8094]" />
-          <p className="text-sm text-slate-500">Loading passport…</p>
+        <PublicNavbar {...nav} />
+        <div className="flex flex-col items-center justify-center px-6 py-16">
+          <div data-testid="public-passport-loading" className="text-center">
+            <div className="mx-auto mb-6 h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-[#2f8094]" />
+            <p className="text-sm text-slate-500">Loading passport…</p>
+          </div>
         </div>
       </div>
     );
@@ -196,24 +215,39 @@ export function PublicPassport({
     return (
       <div
         data-testid="public-passport-page"
-        className="min-h-screen bg-[#f3f8fb] font-sans flex flex-col items-center justify-center p-6"
+        className="min-h-screen bg-[#f3f8fb] font-sans"
       >
-        <div data-testid="public-passport-error" className="text-center max-w-md">
-          <p className="text-lg font-semibold text-slate-800">
-            {notFound ? 'Passport not found' : 'Unable to load passport'}
-          </p>
-          <p className="mt-2 text-sm text-slate-500">
-            {notFound
-              ? 'This public passport does not exist or is no longer published.'
-              : error}
-          </p>
+        <PublicNavbar {...nav} />
+        <div className="flex flex-col items-center justify-center px-6 py-16">
+          <div data-testid="public-passport-error" className="text-center max-w-md">
+            <p className="text-lg font-semibold text-slate-800">
+              {notFound ? 'Passport not found' : 'Unable to load passport'}
+            </p>
+            <p className="mt-2 text-sm text-slate-500">
+              {notFound
+                ? 'This public passport does not exist or is no longer published.'
+                : error}
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   if (!passport) {
-    return null;
+    return (
+      <div data-testid="public-passport-page" className="min-h-screen bg-[#f3f8fb] font-sans">
+        <PublicNavbar {...nav} />
+        <div className="flex flex-col items-center justify-center px-6 py-16">
+          <div className="text-center max-w-md">
+            <p className="text-lg font-semibold text-slate-800">Passport not found</p>
+            <p className="mt-2 text-sm text-slate-500">
+              This public passport does not exist or is no longer published.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const maturity = MATURITY_LABELS[passport.passportMaturity] ?? MATURITY_LABELS.LOCAL_TRUST;
