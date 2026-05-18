@@ -376,7 +376,7 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
               {profile.taxonomy && (
                 <section className="rounded-2xl border border-[#d6e4e8] bg-white p-6 shadow-sm">
                   <h2 className="mb-4 text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
-                    Segment &amp; Role
+                    Segment & Role
                   </h2>
                   {profile.taxonomy.primarySegment && (
                     <div className="mb-3">

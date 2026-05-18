@@ -273,7 +273,7 @@ export function B2CBrowsePage({ onBack, onSignIn, nav }: B2CBrowsePageProps) {
         {!loading && !error && (
           <section className="mt-14 rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-10 shadow-[0_8px_28px_rgba(7,26,47,0.06)]">
             <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
-              Trust &amp; origin
+              Trust & origin
             </p>
             <h2 className="mt-2 text-xl font-semibold text-[#0a2036]">
               More than a product listing.
@@ -294,14 +294,14 @@ export function B2CBrowsePage({ onBack, onSignIn, nav }: B2CBrowsePageProps) {
                   key={label}
                   className="inline-flex items-center gap-1.5 rounded-full border border-[#d6e4e8] bg-[#f0f8fb] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2f8094]"
                 >
-                  <span aria-hidden="true">âœ“</span> {label}
+                  <span aria-hidden="true">✓</span> {label}
                 </span>
               ))}
             </div>
           </section>
         )}
 
-        {/* D2C bridge â€” positioning only */}
+        {/* D2C bridge - positioning only */}
         {!loading && !error && (
           <section className="mt-8 rounded-[32px] border border-[#d9e5ea] bg-[#071a2f] px-8 py-10">
             <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#7fd5de]">
@@ -317,7 +317,7 @@ export function B2CBrowsePage({ onBack, onSignIn, nav }: B2CBrowsePageProps) {
             </p>
             <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-600 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
               <span aria-hidden="true">[Protected]</span> Consumer launch pathways are part of TexQtic&apos;s public
-              attraction roadmap â€” coming soon
+              attraction roadmap - coming soon
             </p>
           </section>
         )}
