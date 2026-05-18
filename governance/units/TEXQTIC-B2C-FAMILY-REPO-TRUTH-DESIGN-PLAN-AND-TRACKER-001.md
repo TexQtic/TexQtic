@@ -1582,7 +1582,8 @@ Field eligibility matrix for `PublicB2CProductDetail` defined in design artifact
 ## 25. B2C SEO Metadata Expansion — Implementation Close — 2026-07-07
 
 **Unit:** B2C-SEO-METADATA-EXPANSION-IMPLEMENTATION-001
-**Status:** IMPLEMENTATION_COMPLETE_LOCAL_VALIDATION_PASS
+**Status:** VERIFIED_COMPLETE
+**Verification date:** 2026-05-18
 **Stage:** 2a (slug-only generic metadata)
 
 ### 25.1 Scope
@@ -1618,18 +1619,62 @@ No other files modified.
 - `git diff --name-only` — `App.tsx` only
 - Stage 2a known limitation (cannot distinguish found vs. not-found) — accepted per design decision in Section 24.2
 
-### 25.5 Explicit Deferrals (unchanged from design)
+### 25.5 Explicit Deferrals
 
 - `PUBLIC_TRUST_LANDING`, `PUBLIC_INDUSTRY_CLUSTER_LANDING`, `PUBLIC_AGGREGATOR` metadata — out of scope for this unit
 - Stage 2b (`onProductMetaReady` callback, rich product metadata, not-found `noindex`) — `B2C-PRODUCT-DETAIL-RICH-SEO-001`
 - sitemap.xml, robots.txt, JSON-LD — post domain strategy decision
-- Production verification — `B2C-SEO-METADATA-EXPANSION-IMPLEMENTATION-001-VERIFY-CLOSE`
+- `ogType` extension to support `'product'` in `PublicPageMetaInput` — separate utility update unit
+- Product not-found `noindex` — `B2C-PRODUCT-DETAIL-RICH-SEO-001`
+- Rich product metadata (name, description, supplier) — `B2C-PRODUCT-DETAIL-RICH-SEO-001`
+- Page 11 inquiry, B2C inquiry handoff, authenticated continuation — separate units
 
 ### 25.6 Recommended Next Unit
 
-`B2C-SEO-METADATA-EXPANSION-IMPLEMENTATION-001-VERIFY-CLOSE` (production verification)
+`B2C-PRODUCT-DETAIL-RICH-SEO-001`
 
 ### 25.7 Implementation Commit Reference
 
 - **Commit message:** `[TEXQTIC] public: implement B2C SEO metadata expansion`
 - **Commit hash:** `3f1001c`
+
+### 25.8 Production Verification Evidence (2026-05-18)
+
+**Deployment confirmation:** Production runtime behavior reflects Stage 2a implementation. Commit `3f1001c` confirmed deployed via runtime metadata correctness.
+
+**Backend health:** `GET https://app.texqtic.com/api/health` → `{"status":"ok"}` (HTTP 200)
+
+**Primary checks:**
+
+| Route | Check | Result |
+|---|---|---|
+| `/products` | `<title>` = `Explore Textile Products — TexQtic` | PASS |
+| `/products` | `<meta name="description">` = Stage 2a browse description | PASS |
+| `/products` | `<link rel="canonical">` = `https://app.texqtic.com/products` | PASS |
+| `/products` | `<meta name="robots">` = `index, follow` | PASS |
+| `/products` | OG + Twitter tags all present | PASS |
+| `/products` | `og:type` = `website` | PASS |
+| `/products` | Page renders normally | PASS |
+| `/products` | No console errors | PASS |
+| `/product/qa-b2c--qa-b2c-cotton-scarf-1ab8a85c10` | `<title>` = `Textile Product Preview — TexQtic` | PASS |
+| `/product/qa-b2c--qa-b2c-cotton-scarf-1ab8a85c10` | `<meta name="description">` = Stage 2a product description | PASS |
+| `/product/qa-b2c--qa-b2c-cotton-scarf-1ab8a85c10` | `<link rel="canonical">` ends with `/product/qa-b2c--qa-b2c-cotton-scarf-1ab8a85c10` | PASS |
+| `/product/qa-b2c--qa-b2c-cotton-scarf-1ab8a85c10` | `<meta name="robots">` = `index, follow` | PASS |
+| `/product/qa-b2c--qa-b2c-cotton-scarf-1ab8a85c10` | OG + Twitter tags all present | PASS |
+| `/product/qa-b2c--qa-b2c-cotton-scarf-1ab8a85c10` | `og:type` = `website` (per accepted constraint) | PASS |
+| `/product/qa-b2c--qa-b2c-cotton-scarf-1ab8a85c10` | No private data in metadata | PASS |
+| `/product/qa-b2c--qa-b2c-cotton-scarf-1ab8a85c10` | Page renders graceful not-found state (slug is QA seed; not published) | PASS |
+
+**Note:** The slug `qa-b2c--qa-b2c-cotton-scarf-1ab8a85c10` is a QA seed product that is not published in production. The component rendered the graceful not-available fallback. Stage 2a metadata was applied before the product fetch resolved — confirming the SEO useEffect fires correctly for this state. This is the accepted Stage 2a limitation (found vs. not-found cannot yet be distinguished).
+
+**Regression checks:**
+
+| Route | Expected robots | Result |
+|---|---|---|
+| `/products/category/garments` | `index, follow` | PASS |
+| `/products/category/unknown-slug` | `noindex, nofollow` | PASS |
+| `/collections` | `index, follow` | PASS |
+| `/collections/natural-fabric-stories` | `index, follow` | PASS |
+| `/collections/unknown-slug` | `noindex, nofollow` | PASS |
+
+**Public/private metadata boundary:** No org_id, tenant ID, internal supplier IDs, publicPassportId, trustSignals, hasPassport, hasTraceabilityEvidence, product image URLs, pricing, inventory, RFQ/order/cart/wishlist/checkout language, buyer intent, AI/ranking/recommendation claims, or unsupported DPP/passport/trust/traceability/certification/origin/sustainability claims appeared in any metadata verified above.
