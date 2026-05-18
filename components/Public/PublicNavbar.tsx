@@ -95,7 +95,10 @@ export function PublicNavbar({
   onRequestAccess,
 }: PublicNavbarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // eslint-disable-next-line no-undef
   const hamburgerRef = useRef<HTMLButtonElement>(null);
+  // eslint-disable-next-line no-undef
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const drawerId = 'public-nav-drawer';
 
   const navActions: Record<PublicNavSection, () => void> = {
@@ -107,6 +110,23 @@ export function PublicNavbar({
     trust: onGoTrust,
     aggregator: onGoAggregator,
   };
+
+  // Move focus into drawer when opened
+  useEffect(() => {
+    if (drawerOpen) {
+      closeButtonRef.current?.focus();
+    }
+  }, [drawerOpen]);
+
+  // Lock body scroll while drawer is open
+  useEffect(() => {
+    if (drawerOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [drawerOpen]);
 
   // Close drawer on Escape key
   useEffect(() => {
@@ -230,6 +250,7 @@ export function PublicNavbar({
                 loading="eager"
               />
               <button
+                ref={closeButtonRef}
                 type="button"
                 onClick={() => {
                   setDrawerOpen(false);
