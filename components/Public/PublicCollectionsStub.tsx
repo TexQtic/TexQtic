@@ -98,7 +98,7 @@ function CollectionCard({
         )}
 
         {/* Trust context — fail-closed in this phase */}
-        {collection.collectionHasTrustContext === false && (
+        {collection.trustContextMode === 'CONDITIONAL_PRODUCT_CONTEXT_ONLY' && (
           <p className="text-[11px] leading-5 text-slate-400">
             Eligible products may include public trust context where available.
           </p>

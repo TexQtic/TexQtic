@@ -57,6 +57,16 @@ export type CollectionStoryType =
   | 'ECOSYSTEM_SHOWCASE';
 
 /**
+ * Trust context mode for Phase status clarity.
+ * CONDITIONAL_PRODUCT_CONTEXT_ONLY = Phase 1 (default): conditional trust copy only.
+ *   No collection-level passport. Trust context is product-scoped where available.
+ *   No eligibleProductPassportRefs or collection-owned passport token.
+ * Evidence-gated modes (Phase 2+) are deferred until product-scoped passport refs
+ *   and publication gates are approved.
+ */
+export type CollectionTrustContextMode = 'CONDITIONAL_PRODUCT_CONTEXT_ONLY';
+
+/**
  * CTA action token for authenticated continuation.
  * Must not be transactional; no checkout/cart/RFQ/buyer-intent semantics.
  */
@@ -85,7 +95,8 @@ export interface PublicCollectionListState {
  *   PUBLIC_SAFE:    publicSlug, title, summary, heroAlt, categoryTags,
  *                   materialTags, segmentTags, collectionStoryType,
  *                   curatedContextLabel, cta, listState
- *   FAIL_CLOSED:    collectionHasTrustContext (always false in this phase)
+ *   FAIL_CLOSED:    collectionHasTrustContext (always false in this phase),
+ *                   trustContextMode (CONDITIONAL_PRODUCT_CONTEXT_ONLY in this phase)
  *   OMITTED:        heroImage URL (no public image hosting in this phase;
  *                   hero is rendered as visual placeholder)
  *   DEFERRED:       trustLabel, supplierContextLabel, eligibleProductPreview,
@@ -128,6 +139,12 @@ export interface PublicCollectionProjection {
    * Evidence-gated: requires live API projection + publication gate approval to set true.
    */
   readonly collectionHasTrustContext: false;
+  /**
+   * Trust context rendering mode. Explicit phase status indicator.
+   * CONDITIONAL_PRODUCT_CONTEXT_ONLY: conditional trust copy only; no product-scoped
+   *   passport links, no collection-owned passport token, no eligibleProductPassportRefs.
+   */
+  readonly trustContextMode: CollectionTrustContextMode;
   /** Non-transactional authenticated continuation CTA. */
   readonly cta: PublicCollectionCta;
   /** Availability and fallback state. */
@@ -162,6 +179,7 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
     collectionStoryType: 'MATERIAL_STORY',
     curatedContextLabel: 'Material showcase',
     collectionHasTrustContext: false,
+    trustContextMode: 'CONDITIONAL_PRODUCT_CONTEXT_ONLY',
     cta: {
       label: 'Continue after sign in',
       action: 'AUTH_CONTINUE',
@@ -186,6 +204,7 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
     collectionStoryType: 'PROCESS_STORY',
     curatedContextLabel: 'Supply chain showcase',
     collectionHasTrustContext: false,
+    trustContextMode: 'CONDITIONAL_PRODUCT_CONTEXT_ONLY',
     cta: {
       label: 'Continue after sign in',
       action: 'AUTH_CONTINUE',
@@ -210,6 +229,7 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
     collectionStoryType: 'CATEGORY_SHOWCASE',
     curatedContextLabel: 'Category showcase',
     collectionHasTrustContext: false,
+    trustContextMode: 'CONDITIONAL_PRODUCT_CONTEXT_ONLY',
     cta: {
       label: 'Continue after sign in',
       action: 'AUTH_CONTINUE',
@@ -234,6 +254,7 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
     collectionStoryType: 'ECOSYSTEM_SHOWCASE',
     curatedContextLabel: 'Ecosystem context',
     collectionHasTrustContext: false,
+    trustContextMode: 'CONDITIONAL_PRODUCT_CONTEXT_ONLY',
     cta: {
       label: 'Continue after sign in',
       action: 'AUTH_CONTINUE',
@@ -258,6 +279,7 @@ export const PUBLIC_COLLECTION_PROJECTIONS: readonly PublicCollectionProjection[
     collectionStoryType: 'CATEGORY_SHOWCASE',
     curatedContextLabel: 'Category showcase',
     collectionHasTrustContext: false,
+    trustContextMode: 'CONDITIONAL_PRODUCT_CONTEXT_ONLY',
     cta: {
       label: 'Continue after sign in',
       action: 'AUTH_CONTINUE',

@@ -176,7 +176,7 @@ export function PublicCollectionDetail({
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
             Trust &amp; origin context
           </p>
-          {collection.collectionHasTrustContext === false ? (
+          {collection.trustContextMode === 'CONDITIONAL_PRODUCT_CONTEXT_ONLY' && (
             <>
               <p className="mt-4 text-sm leading-6 text-slate-600">
                 Eligible products may include public trust context where available.
@@ -186,8 +186,13 @@ export function PublicCollectionDetail({
                 collection-level certification, collection-owned passport status, or a universal
                 claim about all products within this collection theme.
               </p>
+              <p className="mt-2 text-[11px] leading-5 text-slate-400">
+                No collection-level passport or verification token is currently available for this
+                collection. Unavailable trust context is not an error or gap — it reflects the
+                conditional, product-scoped nature of public trust signals on this platform.
+              </p>
             </>
-          ) : null}
+          )}
         </section>
 
         {/* Authenticated continuation CTA */}
