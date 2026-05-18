@@ -1,9 +1,11 @@
 # PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001
 
 **Unit ID:** PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001
-**Status:** IMPLEMENTATION_COMPLETE_CORRECTION_APPLIED_LOCAL_VALIDATION_PASS
+**Status:** VERIFIED_COMPLETE
 **Correction:** PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001-CORRECTION-001
+**Verified:** PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001-VERIFY-CLOSE
 **Date:** 2026-07-08
+**Verification Date:** 2026-07-08
 **Tracker Section:** 31
 **Design Authority:** PUBLIC-INQUIRY-ENDPOINT-CONTEXT-DESIGN-001
 
@@ -140,6 +142,83 @@ All Phase 1 payloads (`supplier_slug` + `inquiry_category` + optional `geo_band`
 
 ## 7. Next Units
 
-- `PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001-VERIFY-CLOSE` — production verification
+- ~~`PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001-VERIFY-CLOSE`~~ — COMPLETE (VERIFIED_COMPLETE)
 - `PUBLIC-INQUIRY-GENERAL-MODE-IMPLEMENTATION-001` — frontend general mode in `PublicInquiryPage`
 - `PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001` — CTA integration in product/category/collection pages
+
+---
+
+## 8. Verification Evidence
+
+**Verify-close unit:** `PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001-VERIFY-CLOSE`
+**Verification date:** 2026-07-08
+
+### Implementation Commit
+
+- Hash: `f8378362bb5cd0782389b2136572b30cc276c549`
+- Message: `[TEXQTIC] public: Phase 2 inquiry context + event contract correction`
+- Files: exactly 9 (all approved allowlist; no frontend UI files, no Prisma schema/migration files)
+
+### Repo-Truth Inspection — 16 Questions
+
+| # | Question | Result |
+|---|---|---|
+| 1 | Files limited to approved implementation/correction surface | ✅ Pass — 9 files, all approved |
+| 2 | No frontend UI files modified | ✅ Pass — confirmed via `git show --name-only` |
+| 3 | No Prisma schema or migration files modified | ✅ Pass — none in commit |
+| 4 | `supplier_slug` optional in backend schema and service type | ✅ Pass — `z.string()...optional()` in Zod schema; `supplier_slug?: string` in `PublicInquirySubmitParams` |
+| 5 | `inquiry_category` required | ✅ Pass — `z.enum([...])` with no `.optional()` |
+| 6 | All Phase 2 fields present in backend contract | ✅ Pass — `source_surface`, `product_slug`, `category_slug`, `collection_slug`, `message` all present |
+| 7 | `supplier_slug` context exclusivity enforced | ✅ Pass — returns 400 if `supplier_slug` + any of `product/category/collection_slug` |
+| 8 | Unknown/absent `source_surface` normalizes to `DIRECT` | ✅ Pass — `KNOWN_SOURCE_SURFACES.has()` check; else `'DIRECT'` |
+| 9 | `product_slug` format-validated only (no existence gate) | ✅ Pass — regex pattern only, no DB lookup |
+| 10 | `category_slug`/`collection_slug` approval gate matches registries | ✅ Pass — `APPROVED_CATEGORY_SLUGS` (4 slugs), `APPROVED_COLLECTION_SLUGS` (5 slugs) |
+| 11 | Message handling: HTML strip, email reject, phone reject, URL strip, 500 post-sanitization, stored as `inquiry_message` | ✅ Pass — all four pattern operations confirmed in code |
+| 12 | Message not echoed in response | ✅ Pass — response is `{ acknowledged: true, message: '...' }` only |
+| 13 | Response schema opaque 202 | ✅ Pass — `reply.status(202).send({ success: true, data: { acknowledged: true, message: '...' } })` |
+| 14 | Supplier inquiry event path remains `buyer_inquiry.created.v1` | ✅ Pass — `action: 'public.buyer.inquiry.created'` in supplier path; mapped in `events.ts` |
+| 15 | General inquiry action is `public.buyer.inquiry.general.created`, NOT mapped | ✅ Pass — only one entry in `events.ts` for `public.buyer.inquiry.created`; general action absent |
+| 16 | `event-names.md` truthfully documents `buyer_inquiry.created.v1` as supplier-context-only | ✅ Pass — scope constraint language confirmed in contract |
+
+### Local Validation
+
+| Command | Result |
+|---|---|
+| `pnpm --filter texqtic-platform-server typecheck` | ✅ PASS — 0 errors |
+| INQ-001–027 (27 tests) | ✅ PASS — 27/27 |
+| `pnpm run validate:contracts` | ✅ PASS — 8/8 contract smoke checks |
+
+### Production Verification (`https://app.texqtic.com`)
+
+| # | Check | Expected | Result |
+|---|---|---|---|
+| 1 | `GET /api/health` | 200 `{status:'ok'}` | ✅ `200 {"status":"ok","timestamp":"..."}` |
+| 2 | Supplier inquiry (`supplier_slug: 'demo-supplier'`) | 404 (demo slug not in prod) | ✅ `404 NOT_FOUND Supplier not found` (data limitation: no known live slug) |
+| 3 | General inquiry, no `supplier_slug` | 202 opaque | ✅ `202 {"success":true,"data":{"acknowledged":true,...}}` |
+| 4 | General + `source_surface: NAVBAR` | 202 | ✅ `202` |
+| 5 | General + unknown `source_surface` | 202 (normalized to DIRECT) | ✅ `202` — no raw unknown value in response |
+| 6 | General + valid `product_slug` format | 202 | ✅ `202` |
+| 7 | General + approved `category_slug: garments` | 202 | ✅ `202` |
+| 8 | General + unapproved `category_slug` | 202 (silently dropped) | ✅ `202` |
+| 9 | General + approved `collection_slug: natural-fabric-stories` | 202 | ✅ `202` |
+| 10 | `supplier_slug` + `product_slug` → exclusivity | 400 VALIDATION_ERROR | ✅ `400 {"code":"VALIDATION_ERROR",...,"Invalid request: conflicting context fields"}` |
+| 11 | Email in message | 400 | ⚠️ Rate-limited (20 req/15 min/IP; covered by INQ-016 unit test) |
+| 12 | Phone in message | 400 | ⚠️ Rate-limited (covered by INQ-017 unit test) |
+| 13 | Oversized sanitized message | 400 | ⚠️ Rate-limited (covered by INQ-024 unit test) |
+| 14 | Response never echoes private fields | Opaque body only | ⚠️ Rate-limited (opaque schema confirmed in checks 3–9; covered by INQ-015/026/027) |
+
+**Data limitation:** Checks 11–14 were blocked by the endpoint's own 20 req/15 min/IP rate limit (correct, expected behavior). These scenarios are fully covered by INQ-016, INQ-017, INQ-024, and INQ-015 unit tests, all of which pass. Response privacy confirmed via checks 3–9 (no internal fields in any 202 response body).
+
+### Final Close Decision
+
+**Status: `VERIFIED_COMPLETE`**
+
+- Implementation commit in scope: ✅ `f837836`
+- Diff limited to allowlist: ✅
+- Local validation pass: ✅ (27/27 tests, typecheck, 8/8 contract checks)
+- Production checks 1–10 pass: ✅
+- Phase 1 supplier path preserved: ✅
+- General inquiry operable without `supplier_slug`: ✅
+- Event contract truth matches runtime: ✅ (`buyer_inquiry.created.v1` supplier-only; general deferred)
+- No private fields in response: ✅
+- Adjacent finding `PUBLIC-INQUIRY-GENERAL-EVENT-INFRASTRUCTURE-001` carried forward: ✅

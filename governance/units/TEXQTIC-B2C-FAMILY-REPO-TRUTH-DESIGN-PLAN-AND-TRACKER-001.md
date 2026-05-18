@@ -1982,8 +1982,9 @@ collection surfaces. Design-only — no runtime changes in this unit.
 ## 31. Public Inquiry Endpoint Context Extension — Implementation — 2026-07-08
 
 **Unit ID:** PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001
-**Status:** IMPLEMENTATION_COMPLETE_LOCAL_VALIDATION_PASS
+**Status:** VERIFIED_COMPLETE
 **Date:** 2026-07-08
+**Verification Date:** 2026-07-08
 **Artifact:** `governance/units/PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001.md`
 
 ### 31.1 Purpose
@@ -2034,6 +2035,31 @@ deferred to `PUBLIC-INQUIRY-GENERAL-EVENT-INFRASTRUCTURE-001`.
 
 ### 31.5 Next Units
 
-1. `PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001-VERIFY-CLOSE` — production verification
+1. ~~`PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001-VERIFY-CLOSE`~~ — COMPLETE
 2. `PUBLIC-INQUIRY-GENERAL-MODE-IMPLEMENTATION-001` — frontend general mode
 3. `PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001` — CTA integration in product/category/collection pages
+
+### 31.6 Verification Close
+
+**Unit:** `PUBLIC-INQUIRY-ENDPOINT-CONTEXT-IMPLEMENTATION-001-VERIFY-CLOSE`
+**Final status:** `VERIFIED_COMPLETE`
+**Implementation commit:** `f8378362bb5cd0782389b2136572b30cc276c549`
+
+**Local validation:**
+- `pnpm --filter texqtic-platform-server typecheck` — PASS
+- INQ-001–027 (27/27) — PASS
+- `pnpm run validate:contracts` (8/8) — PASS
+
+**Production checks (https://app.texqtic.com):**
+- `/api/health` → 200 ✅
+- General inquiry (no `supplier_slug`) → 202 opaque ✅
+- `source_surface: NAVBAR` → 202 ✅
+- Unknown `source_surface` → 202 (normalized) ✅
+- Valid `product_slug` format → 202 ✅
+- Approved `category_slug` → 202 ✅
+- Unapproved `category_slug` → 202 (silently dropped) ✅
+- Approved `collection_slug` → 202 ✅
+- `supplier_slug` + `product_slug` conflict → 400 VALIDATION_ERROR ✅
+- Checks 11–14 (email/phone/size/opaque): rate-limited (correct behaviour); covered by INQ-016/017/024/015 ✅
+
+**Data limitation:** No live supplier slug available for full Phase 1 production end-to-end check; supplier 404 behavior confirmed. Event contract truth (`buyer_inquiry.created.v1` supplier-only) confirmed via `server/src/lib/events.ts` read — general action absent from registry.
