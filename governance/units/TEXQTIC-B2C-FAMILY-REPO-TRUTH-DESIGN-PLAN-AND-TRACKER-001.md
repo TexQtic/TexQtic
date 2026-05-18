@@ -1632,4 +1632,4 @@ No other files modified.
 ### 25.7 Implementation Commit Reference
 
 - **Commit message:** `[TEXQTIC] public: implement B2C SEO metadata expansion`
-- **Commit hash:** TBD — to be filled after commit
+- **Commit hash:** `3f1001c`

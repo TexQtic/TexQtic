@@ -156,4 +156,4 @@ if (appState === 'PUBLIC_PRODUCT_DETAIL') {
 ## 8. Commit Reference
 
 - **Commit message:** `[TEXQTIC] public: implement B2C SEO metadata expansion`
-- **Commit hash:** TBD — filled after commit
+- **Commit hash:** `3f1001c`
