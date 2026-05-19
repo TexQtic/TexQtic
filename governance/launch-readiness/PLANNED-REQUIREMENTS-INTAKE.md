@@ -114,6 +114,12 @@ All items are drawn from existing governance sources. No new classification is i
 | PRIT-019 | Supplier profile publication and indexability policy decision | MAIN | FAM-09 | GOVERNANCE_CLAIM_ONLY | PARKED | UNCONFIRMED | LAUNCH_DEPENDENCY | P2 |
 | PRIT-020 | CRM → Platform provisioning handoff (WEBHOOK-007) | CROSS_SYSTEM | FAM-22 | GOVERNANCE_CLAIM_ONLY | DESIGN_GATED | XDEP_ONLY | XDEP_DEPENDENCY | — |
 | PRIT-021 | CAE → CRM → Platform integration chain | CROSS_SYSTEM | FAM-24 | GOVERNANCE_CLAIM_ONLY | DESIGN_GATED | XDEP_ONLY | XDEP_DEPENDENCY | — |
+| PRIT-022 | PWA installability and offline shell strategy | MAIN | FAM-10 | USER_PLANNED_ONLY | USER_PLANNED_ONLY | PARESH_CONFIRMED_AS_PLANNED | P2_PILOT_ENABLER | P2 |
+| PRIT-023 | TexQtic CoWorker / AI Workbench foundation | MAIN | FAM-19 | USER_PLANNED_ONLY | USER_PLANNED_ONLY | PARESH_CONFIRMED_AS_PLANNED | POST_MVP | P3 |
+| PRIT-024 | China+1 Discovery Engine / RFQ matching strategy | MAIN | FAM-12 | USER_PLANNED_ONLY | USER_PLANNED_ONLY | PARESH_CONFIRMED_AS_PLANNED | POST_MVP | P3 |
+| PRIT-025 | AI Pricing Oracle | MAIN | FAM-19 | USER_PLANNED_ONLY | USER_PLANNED_ONLY | PARESH_CONFIRMED_AS_PLANNED | POST_MVP | P3 |
+| PRIT-026 | Collective Sustainability Certification Pool | MAIN | FAM-17 | USER_PLANNED_ONLY | USER_PLANNED_ONLY | PARESH_CONFIRMED_AS_PLANNED | POST_MVP | P3 |
+| PRIT-027 | Artisan IP and Heritage Commerce Layer | MAIN | FAM-02 | USER_PLANNED_ONLY | USER_PLANNED_ONLY | PARESH_CONFIRMED_AS_PLANNED | POST_MVP | P3 |
 
 ---
 
@@ -142,6 +148,12 @@ All items are drawn from existing governance sources. No new classification is i
 | PRIT-019 | DECISION-PARKING-LOT D-010 (P2, PARKED) | First real Surat supplier onboarded | NO | YES — Paresh decides publication policy | DECISION-PARKING-LOT.md | After first real supplier onboarded; SEO vs. privacy tradeoff |
 | PRIT-020 | LAUNCH-FAMILY-INDEX FAM-22 / BLOCKED.md WEBHOOK-007 (XDEP_ONLY) | WEBHOOK-007 design gate; CRM repo audit required | NO — CRM repo only | YES — integration contract decision | LAUNCH-FAMILY-INDEX.md | CRM repo audit; define WEBHOOK-007 contract; then main repo integration |
 | PRIT-021 | LAUNCH-FAMILY-INDEX FAM-24 (XDEP_ONLY) | TTP legal gate (HOLD_FOR_COUNSEL_FEEDBACK); CAE audit; CRM audit | NO — other repos only | YES — multi-repo integration design | LAUNCH-FAMILY-INDEX.md | After TTP legal gate and CAE repo audit |
+| PRIT-022 | Paresh-provided planned-feature document (PWA concept) | Needs design: web app manifest, service worker, HTTPS gate; auth/session implications for installed app; subscriber gating implications | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Review in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 |
+| PRIT-023 | Paresh-provided planned-feature document (TexQtic CoWorker concept) | Needs design: AI workbench foundation; non-autonomous execution boundary; skills layer; tenant-scoped memory; tool logging; action approval queue | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Review in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 |
+| PRIT-024 | Paresh-provided planned-feature document (7 Pillars — Pillar 3) | Needs design: China+1 discovery engine; AI-assisted RFQ matching; buyer discovery scope; relation to FAM-12 RFQ | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Review in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 |
+| PRIT-025 | Paresh-provided planned-feature document (7 Pillars — Pillar 4) | Data dependency: real platform transaction, lead-time, and rejection data required; design must precede implementation | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Review in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 |
+| PRIT-026 | Paresh-provided planned-feature document (7 Pillars — Pillar 5) | Needs design: certification pool model; DPP integration (FAM-05); supplier profile eligibility (FAM-09); potential AI document intelligence | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Review in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 |
+| PRIT-027 | Paresh-provided planned-feature document (7 Pillars — Pillar 6) | Needs design: artisan IP model; heritage commerce layer; relation to D2C collections (FAM-02); DPP and traceability (FAM-05, FAM-17) | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Review in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 |
 
 ---
 
@@ -190,14 +202,20 @@ priority before their family cycles may open.
 | PRIT-018 | Confirm: is commercial packaging needed before MVP launch or is pilot free? |
 | PRIT-019 | Confirm: should supplier profiles be indexed by default from day one, or only after Paresh opts in? |
 
-> **⬜ NO NEW PARESH-PLANNED ITEMS CAPTURED IN THIS UNIT**
+> **✅ PRIT-022 THROUGH PRIT-027 ADDED VIA TEXQTIC-PLANNED-FEATURES-DOCUMENT-INTAKE-001**
 >
-> All 21 intake rows in this document are drawn from existing governance sources:
-> `LAUNCH-FAMILY-INDEX.md`, `FUTURE-TODO-REGISTER.md`, and `DECISION-PARKING-LOT.md`.
-> No new Paresh-planned requirements were added in this intake pass.
+> Six new Paresh-planned requirements were added from three Paresh-provided planned-feature
+> documents: Progressive Web App / PWA concept, TexQtic CoWorker / AI Workbench concept, and
+> 7 Pillars of TexQtic concise version. These rows are intake-only staging entries. They
+> require Paresh review and family audit confirmation before any family cycle or implementation
+> work begins. DPP Passport (Pillar 1) and TexCredit / embedded finance (Pillar 2) are
+> already covered by FAM-05/D-001 and FAM-16/D-002 respectively; no duplicate rows created.
+> Seventh Pillar not present in provided artifact; no row created.
+>
+> See §13 for the full planned feature document intake section.
 >
 > **This intake queue is OPEN and ready for Paresh to add new requirements at any time.**
-> New items should be assigned the next available PRIT ID (PRIT-022 onwards).
+> Next available PRIT ID: PRIT-028.
 
 ---
 
@@ -270,17 +288,109 @@ classification before the relevant family cycle opens.
 
 | # | Check | Status |
 |---|---|---|
-| 1 | All 21 intake rows populated from governance sources | ✅ COMPLETE |
+| 1 | 27 intake rows populated (PRIT-001 through PRIT-027) | ✅ COMPLETE |
 | 2 | No new classification introduced beyond governance sources | ✅ CONFIRMED |
 | 3 | No implementation authorized by this document | ✅ CONFIRMED |
 | 4 | No CRM or CAE feature inventories in main repo | ✅ CONFIRMED — XDEP only |
-| 5 | No out-of-repo GTM items recorded | ✅ CONFIRMED — §8 lists exclusions |
+| 5 | No out-of-repo GTM items recorded | ✅ CONFIRMED — §8 and §13.5 list exclusions |
 | 6 | XDEP items properly scoped | ✅ CONFIRMED — PRIT-020, PRIT-021 |
-| 7 | "No new Paresh-planned items" notice recorded | ✅ §7 records this |
+| 7 | Paresh-planned items notice updated in §7 | ✅ §7 updated for PRIT-022–027 |
 | 8 | Items requiring Paresh confirmation listed | ✅ §10 |
 | 9 | Pre-existing unstaged M files documented | ✅ Header and §9 of unit artifact |
 | 10 | Document is additive-only; no source document rows changed | ✅ CONFIRMED |
 | 11 | Document registered in README.md hub read order | ✅ README.md updated in unit |
+| 12 | PRIT-022–027 added from Paresh-provided planned-feature documents | ✅ §13 added via TEXQTIC-PLANNED-FEATURES-DOCUMENT-INTAKE-001 |
+| 13 | DPP (Pillar 1) and TexCredit (Pillar 2) cross-referenced to existing governance | ✅ §13.4 — no duplicate rows |
+| 14 | Seventh Pillar absence noted; no row created | ✅ §13.6 |
+
+---
+
+---
+
+## §13 Paresh Planned Feature Document Intake — TEXQTIC-PLANNED-FEATURES-DOCUMENT-INTAKE-001
+
+**Unit:** `TEXQTIC-PLANNED-FEATURES-DOCUMENT-INTAKE-001`  
+**Date:** 2026-05-19  
+**Documents reviewed:** Paresh-provided planned-feature documents (provided as in-prompt context)  
+**Layer 0 posture at intake:** `HOLD_FOR_AUTHORIZATION` / `HOLD_FOR_COUNSEL_FEEDBACK` — UNCHANGED  
+
+---
+
+### §13.1 Source Documents Reviewed
+
+| # | Document | Provided As | Technical Features Extracted |
+|---|---|---|---|
+| 1 | Progressive Web App / PWA concept | Paresh-provided planned-feature document | One-codebase installability; web app manifest; service worker / app shell caching; HTTPS gate; auth/session implications for installed app; subscriber/tier gating implications; update/versioning behavior; offline/cache strategy; push notifications; Electron wrapper (later/conditional only) |
+| 2 | TexQtic CoWorker / AI Workbench concept | Paresh-provided planned-feature document | In-app AI assistant (first surface); skills layer; tenant-scoped memory; tool invocation logging; action approval queue; human-confirmed prepared actions; RFQ/DPP/profile completeness/support/governance prompt assistants; external channels later (WhatsApp, Slack, email, calendar); strict non-autonomous execution boundary |
+| 3 | 7 Pillars of TexQtic — concise version | Paresh-provided planned-feature document | Pillar 1: DPP Passport (→ cross-ref FAM-05/D-001); Pillar 2: TexCredit/embedded supply-chain finance (→ cross-ref FAM-16/D-002/TTP); Pillar 3: China+1 Discovery Engine/RFQ matching (→ PRIT-024); Pillar 4: AI Pricing Oracle (→ PRIT-025); Pillar 5: Collective Sustainability Certification Pool (→ PRIT-026); Pillar 6: Artisan IP and Heritage Commerce Layer (→ PRIT-027); Pillar 7: not present in provided artifact |
+
+---
+
+### §13.2 Intake Principle
+
+- **Parent rows only.** New PRIT rows capture the planned feature concept at the parent level. No sub-feature decomposition is performed at intake stage.
+- **No implementation authorization.** Recording a row here does not authorize design, implementation, or family cycle opening.
+- **No MVP/P0/P1 promotion.** All new rows carry conservative default classifications. Priority and launch class may be revised only in `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001`.
+- **Future family audit required.** Every new row requires a Family Opening Audit Gate before any implementation work begins.
+- **Conservative classification by default.** All new rows are `DESIGN_GATED` with `PARESH_CONFIRMED_AS_PLANNED` status.
+
+---
+
+### §13.3 New PRIT Rows — Summary
+
+| PRIT ID | Title | Primary Family | Related Families | Prov. Launch Class | Prov. Priority | Readiness |
+|---|---|---|---|---|---|---|
+| PRIT-022 | PWA installability and offline shell strategy | FAM-10 | FAM-06, FAM-11 | P2_PILOT_ENABLER | P2 | DESIGN_GATED |
+| PRIT-023 | TexQtic CoWorker / AI Workbench foundation | FAM-19 | FAM-10, FAM-12, FAM-05, FAM-09 | POST_MVP | P3 | DESIGN_GATED |
+| PRIT-024 | China+1 Discovery Engine / RFQ matching strategy | FAM-12 | FAM-19, FAM-09 | POST_MVP | P3 | DESIGN_GATED |
+| PRIT-025 | AI Pricing Oracle | FAM-19 | FAM-12, FAM-15, FAM-16 | POST_MVP | P3 | DESIGN_GATED |
+| PRIT-026 | Collective Sustainability Certification Pool | FAM-17 | FAM-05, FAM-09, FAM-19 | POST_MVP | P3 | DESIGN_GATED |
+| PRIT-027 | Artisan IP and Heritage Commerce Layer | FAM-02 (or future artisan family) | FAM-05, FAM-17, FAM-09 | POST_MVP | P3 | DESIGN_GATED |
+
+**Classification notes:**
+- PRIT-022 (PWA): Provisionally P2_PILOT_ENABLER because PWA installability could be valuable at the Surat pilot stage. Not P0/P1 — no launch blocking significance established at intake.
+- PRIT-023 (CoWorker): P3 default. Internal read-only assistant sub-feature may be reconsidered as a P2 pilot-enabler after Paresh review, but this cannot be classified here.
+- PRIT-025 (AI Pricing Oracle): Hard data dependency. Requires real platform transaction data, lead-time data, and quality rejection data. Cannot be designed or built until the platform has real usage.
+- PRIT-026 (Sustainability Pool): P3 default. May be reconsidered as P2 if Paresh chooses a certification-led pilot narrative.
+
+---
+
+### §13.4 Cross-Reference Notes — Existing Governance Coverage
+
+The following planned features from the user-provided documents are **already represented** by existing governance entries and **do not receive new PRIT rows**:
+
+| Planned Feature | Source Document | Existing Coverage | Action |
+|---|---|---|---|
+| DPP Passport (Pillar 1) | 7 Pillars — Pillar 1 | FAM-05 / D-001 (PARKED_DECISION; HOLD_FOR_PARESH_DECISION) | No new row. Cross-reference to FAM-05 and D-001. |
+| TexCredit / embedded supply-chain finance (Pillar 2) | 7 Pillars — Pillar 2 | FAM-16 / D-002 (TTP; HOLD_FOR_COUNSEL_FEEDBACK) | No new row. TexCredit is treated as part of or dependent on TexQtic Trust Pay / FAM-16 / D-002 unless Paresh later decides it is a separate product family. Cross-reference to FAM-16. |
+
+---
+
+### §13.5 Items Explicitly Excluded — Out-of-Repo Business / GTM / Revenue Narrative
+
+The following content from the user-provided documents was reviewed and excluded because it is business, GTM, market narrative, or revenue projection — not a repo technical requirement:
+
+- Market size claims and revenue projection figures
+- Investor pitch language and fundraising positioning
+- Competitive market analysis and positioning narrative
+- GTM battle plan language (90-day, city-specific outreach)
+- Commercial pricing projections (tier pricing, revenue targets)
+- Sales enablement scripts and field outreach copy
+- Pillar 7 of the 7 Pillars document: not present in the provided artifact; no row created
+
+---
+
+### §13.6 Seventh Pillar Note
+
+The 7 Pillars document provided by Paresh contained Pillars 1 through 6. **Pillar 7 was not present in the provided artifact.** No row was created for Pillar 7. Paresh should add PRIT-028 (or the next available ID) when Pillar 7 is defined and ready for intake.
+
+---
+
+### §13.7 Review Note
+
+**PRIT-022 through PRIT-027 must be reviewed in `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` before any family status, priority, or classification changes are made.**
+
+All items remain `DESIGN_GATED` with `PARESH_CONFIRMED_AS_PLANNED` confirmation status until the review unit confirms otherwise. No family cycle may open for any of these items based on this intake section alone.
 
 ---
 
@@ -289,3 +399,4 @@ classification before the relevant family cycle opens.
 | Date | Unit | Change |
 |---|---|---|
 | 2026-07-14 | TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-001 | Document created; PRIT-001 through PRIT-021 populated from governance sources; §6–§10 completed |
+| 2026-05-19 | TEXQTIC-PLANNED-FEATURES-DOCUMENT-INTAKE-001 | PRIT-022 through PRIT-027 added from Paresh-provided planned-feature documents (PWA, CoWorker, 7 Pillars); §13 added; §7 notice updated; §11 checklist updated to 27 rows |
