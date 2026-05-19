@@ -164,7 +164,7 @@ git status --short       → pre-existing unstaged M files unchanged
 
 ## §8 Commit Hash
 
-`[TO BE FILLED AFTER COMMIT]`
+`90ce26439fa0d972cf6e4f983e00d22a8684da3b`
 
 ---
 
