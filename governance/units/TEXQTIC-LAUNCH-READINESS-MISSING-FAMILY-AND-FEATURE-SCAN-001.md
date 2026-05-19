@@ -6,7 +6,7 @@
 **Layer 0 posture at close:** `HOLD_FOR_AUTHORIZATION` / `HOLD_FOR_COUNSEL_FEEDBACK` (UNCHANGED)
 **Predecessor unit:** `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001`
 **Successor unit:** `TEXQTIC-FIRST-FAMILY-CYCLE-SELECTION-001`
-**Commit hash:** `[TO BE BACKFILLED]`
+**Commit hash:** `8ec5515bb3ed4a0b568f0112a038951e12d2005c`
 **Created:** 2026-07-14
 **Closed:** 2026-07-14
 
@@ -314,7 +314,7 @@ Next available Risk ID: R-015. Next BS ID: BS-008. Next HD ID: HD-007 (all uncha
 
 ## §15 Commit Hash
 
-**`[TO BE BACKFILLED AFTER COMMIT]`**
+**`8ec5515bb3ed4a0b568f0112a038951e12d2005c`**
 
 ---
 
