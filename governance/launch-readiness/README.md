@@ -39,6 +39,7 @@ For current launch-planning context, read these documents in this order:
 9. **`TEAM-FUNDING-READINESS.md`** — team, funding, and operational readiness
 10. **`POST-MVP-ROADMAP.md`** — future phases beyond MVP launch
 11. **`PUBLIC-PAGES-SEO-EXPANSION-REGISTER.md`** — future public pages and SEO decisions
+12. **`PLANNED-REQUIREMENTS-INTAKE.md`** — intake queue for planned and deferred technical requirements; not implementation authority; planned items require Paresh confirmation and family audit before implementation
 
 ---
 
@@ -57,6 +58,7 @@ For current launch-planning context, read these documents in this order:
 | `TEAM-FUNDING-READINESS.md` | Team gaps; funding signals; operational readiness criteria |
 | `PUBLIC-PAGES-SEO-EXPANSION-REGISTER.md` | Future public pages; SEO gate per page; deferred SEO units |
 | `DECISION-PARKING-LOT.md` | Decisions not ready to make; trigger conditions; who decides |
+| `PLANNED-REQUIREMENTS-INTAKE.md` | Intake queue for planned/deferred technical requirements; not implementation authorization; items require Paresh confirmation + family audit before implementation |
 
 ---
 
