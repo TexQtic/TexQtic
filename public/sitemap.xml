@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TexQtic Public Sitemap — PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001
+
+  Authority:  PUBLIC-SEO-SITEMAP-ROBOTS-JSONLD-STRATEGY-DESIGN-001
+  Generated:  Static (maintained by scripts/generate-sitemap.ts)
+  Domain:     https://app.texqtic.com
+
+  URL budget:
+    1  — /products               (B2C browse root)
+    4  — /products/category/:slug (approved category story pages)
+    1  — /collections             (collection list)
+    5  — /collections/:slug       (AVAILABLE collection detail pages)
+    1  — /inquiry                 (public inquiry)
+   ──
+   12  total
+
+  GOVERNANCE:
+    - No query parameters in any <loc>.
+    - No private identifiers, org IDs, tenant IDs, or auth-gated paths.
+    - No /product/ (product detail), /supplier/, /passport/, /join/.
+    - No stub paths: /trust, /industries, /aggregator.
+    - Update this file (and the generation script) when:
+        a) A new B2C category page is added to config/publicB2CCategoryPages.ts
+        b) A collection changes availability to AVAILABLE in config/publicCollectionsProjection.ts
+        c) A new permanently-indexed public surface is approved.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- B2C browse root -->
+  <url>
+    <loc>https://app.texqtic.com/products</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- B2C category story pages — config/publicB2CCategoryPages.ts -->
+  <url>
+    <loc>https://app.texqtic.com/products/category/garments</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://app.texqtic.com/products/category/home-textiles</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://app.texqtic.com/products/category/technical-textiles</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://app.texqtic.com/products/category/fabrics</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Collection list -->
+  <url>
+    <loc>https://app.texqtic.com/collections</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- AVAILABLE collection detail pages — config/publicCollectionsProjection.ts -->
+  <url>
+    <loc>https://app.texqtic.com/collections/natural-fabric-stories</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://app.texqtic.com/collections/garment-supply-chain-context</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://app.texqtic.com/collections/home-textiles-showcase</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://app.texqtic.com/collections/textile-services-ecosystem</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://app.texqtic.com/collections/technical-textiles-context</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Public inquiry surface -->
+  <url>
+    <loc>https://app.texqtic.com/inquiry</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+</urlset>

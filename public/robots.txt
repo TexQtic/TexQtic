@@ -1,0 +1,29 @@
+# TexQtic — robots.txt
+#
+# Authority:  PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001
+# Domain:     https://app.texqtic.com
+#
+# Policy:
+#   - Allow public B2C acquisition surfaces only.
+#   - Disallow all API routes, auth-gated paths, supplier/tenant paths.
+#   - Stub app states (/trust, /industries, /aggregator) are disallowed
+#     here and served with noindex meta tags in App.tsx.
+#
+# Update this file when a new permanently-indexed public surface is approved
+# or a previously-disallowed path is promoted to public indexability.
+
+User-agent: *
+Allow: /products
+Allow: /products/category/
+Allow: /collections
+Allow: /inquiry
+
+Disallow: /api/
+Disallow: /passport/
+Disallow: /join/
+Disallow: /supplier/
+Disallow: /trust
+Disallow: /industries
+Disallow: /aggregator
+
+Sitemap: https://app.texqtic.com/sitemap.xml

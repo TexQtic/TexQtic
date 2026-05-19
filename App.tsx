@@ -3394,6 +3394,67 @@ const App: React.FC = () => {
       return;
     }
 
+    // PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001: stub state noindex guards
+    // These surfaces are not yet ready for public indexing.
+    // robots: 'noindex, nofollow' is applied here AND they are excluded from
+    // robots.txt (Disallow) and sitemap.xml as a defence-in-depth measure.
+    if (appState === 'PUBLIC_TRUST_LANDING') {
+      applyPublicPageMeta({
+        title: 'TexQtic — Trust & Origin Passport',
+        description: 'Trust and origin passport information — TexQtic.',
+        canonical: `${origin}/trust`,
+        robots: 'noindex, nofollow',
+        ogTitle: 'TexQtic — Trust & Origin Passport',
+        ogDescription: 'Trust and origin passport information — TexQtic.',
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/trust`,
+        ogType: 'website',
+        twitterCard: 'summary',
+        twitterTitle: 'TexQtic — Trust & Origin Passport',
+        twitterDescription: 'Trust and origin passport information — TexQtic.',
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
+    if (appState === 'PUBLIC_INDUSTRY_CLUSTER_LANDING') {
+      applyPublicPageMeta({
+        title: 'TexQtic — Textile Industry & Cluster Pages',
+        description: 'Textile industry and cluster pages — TexQtic.',
+        canonical: `${origin}/industries`,
+        robots: 'noindex, nofollow',
+        ogTitle: 'TexQtic — Textile Industry & Cluster Pages',
+        ogDescription: 'Textile industry and cluster pages — TexQtic.',
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/industries`,
+        ogType: 'website',
+        twitterCard: 'summary',
+        twitterTitle: 'TexQtic — Textile Industry & Cluster Pages',
+        twitterDescription: 'Textile industry and cluster pages — TexQtic.',
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
+    if (appState === 'PUBLIC_AGGREGATOR') {
+      applyPublicPageMeta({
+        title: 'TexQtic — Aggregator Preview',
+        description: 'Aggregator preview — TexQtic.',
+        canonical: `${origin}/aggregator`,
+        robots: 'noindex, nofollow',
+        ogTitle: 'TexQtic — Aggregator Preview',
+        ogDescription: 'Aggregator preview — TexQtic.',
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/aggregator`,
+        ogType: 'website',
+        twitterCard: 'summary',
+        twitterTitle: 'TexQtic — Aggregator Preview',
+        twitterDescription: 'Aggregator preview — TexQtic.',
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
     // All other app states: remove managed metadata tags
     clearPublicPageMeta();
   }, [appState, publicCollectionSlugFromPath, publicCategorySlugFromPath, publicProductSlugFromPath, publicProductDetailMeta]);

@@ -2374,4 +2374,61 @@ handling across all verified public pages. Design-only; no runtime changes in th
 ### 34.8 Design Commit Reference
 
 - **Commit message:** `[TEXQTIC] governance: design public SEO sitemap robots JSON-LD strategy`
-- **Commit hash:** (pending commit)
+- **Commit hash:** `f5c0075`
+
+---
+
+## Section 35 — PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001
+
+**Unit ID:** PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001
+**Status:** IMPLEMENTATION_COMPLETE
+**Date:** 2026-05-19
+**Artifact:** `governance/units/PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001.md`
+
+### 35.1 Scope
+
+Implements the static SEO infrastructure artefacts designed in Section 34:
+`public/sitemap.xml`, `public/robots.txt`, `scripts/generate-sitemap.ts`,
+sitemap discovery link in `index.html`, and noindex guards in App.tsx for three stub
+public routes (`/trust`, `/industries`, `/aggregator`). 25 Vitest tests added.
+
+### 35.2 Files Changed
+
+| File | Action |
+|---|---|
+| `public/sitemap.xml` | Created — 12 URLs, canonical origin `https://app.texqtic.com` |
+| `public/robots.txt` | Created — Allow public routes, Disallow stub/auth routes |
+| `scripts/generate-sitemap.ts` | Created — build-time regeneration script |
+| `index.html` | Modified — added `<link rel="sitemap" ...>` |
+| `App.tsx` | Modified — 3 stub state noindex guards in SEO useEffect |
+| `tests/frontend/seo-sitemap.test.ts` | Created — 25 tests, all pass |
+| `governance/units/PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001.md` | Created |
+| This tracker | Modified (Section 35 appended) |
+
+### 35.3 Validation
+
+| Check | Result |
+|---|---|
+| `pnpm exec tsc --noEmit` | PASS — exit 0, no errors |
+| `pnpm test:frontend` (seo-sitemap.test.ts) | 25 / 25 PASS |
+
+### 35.4 Defence-in-Depth (Stub Routes)
+
+Three layers applied to `/trust`, `/industries`, `/aggregator`:
+1. `robots.txt` `Disallow`
+2. `noindex, nofollow` robots meta via App.tsx `applyPublicPageMeta`
+3. Excluded from `sitemap.xml`
+
+### 35.5 Deferred from This Unit
+
+| Unit | Status |
+|---|---|
+| `PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001` | DEFERRED |
+| `PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001` | DEFERRED |
+| `PUBLIC-SEO-PRODUCT-SITEMAP-EXPANSION-001` | DEFERRED |
+| `PUBLIC-SEO-SUPPLIER-PROFILE-INDEXABILITY-001` | DEFERRED |
+
+### 35.6 Commit Reference
+
+- **Commit message:** `[TEXQTIC] public: add sitemap and robots SEO infrastructure`
+- **Commit hash:** (pending)
