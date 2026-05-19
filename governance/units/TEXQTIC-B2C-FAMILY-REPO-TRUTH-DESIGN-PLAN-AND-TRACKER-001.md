@@ -2545,3 +2545,69 @@ marker on all injected `<script type="application/ld+json">` tags.
 ### 37.3 Commit Reference
 
 - **Commit message:** `[TEXQTIC] public: add safe JSON-LD for public web pages`
+- **Commit hash:** `7f74a64`
+
+---
+
+## Section 38 — PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001-VERIFY-CLOSE
+
+**Unit ID:** PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001-VERIFY-CLOSE
+**Status:** VERIFIED_COMPLETE
+**Date:** 2026-05-19
+**Artifact:** `governance/units/PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001.md` (status updated)
+
+### 38.1 Scope
+
+Production and local verification of safe managed JSON-LD structured data for public web
+pages delivered in `PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001` (commit `7f74a64`).
+
+Verification scope:
+- Commit diff: 6 files only (App.tsx, publicPageMeta.ts, 2 test files, 2 governance files).
+  No backend, Prisma, OpenAPI, sitemap, or robots files in diff.
+- `utils/publicPageMeta.ts`: `JSONLD_MANAGED_ATTR`, `clearManagedJsonLd()`, `PublicJsonLdBlock`,
+  `JSON.stringify()` serialization, browser guard, no manual string concatenation.
+- `App.tsx`: 4 JSON-LD branches confirmed. No forbidden schema types. No private identifiers
+  (`org_id`, `supplier_id`, `tenant_id`, etc.) in any JSON-LD block.
+- TypeScript: `pnpm exec tsc --noEmit` → exit 0.
+- Full test suite: 218/218 pass (14 files).
+- Production browser verification (https://app.texqtic.com):
+  - `/api/health` → 200, `{"status":"ok"}`.
+  - `/products` → 1 JSON-LD `WebPage`, URL `https://app.texqtic.com/products`, `robots: index, follow`.
+  - `/products/category/garments` → 2 JSON-LD (`WebPage` + `BreadcrumbList`), breadcrumb chain
+    `Products → Garments`, no private IDs, `robots: index, follow`.
+  - `/products/category/unknown-slug-xyzzy` → 0 JSON-LD, `robots: noindex, nofollow`.
+  - `/collections` → 1 JSON-LD `CollectionPage`, URL clean, `robots: index, follow`.
+  - `/collections/natural-fabric-stories` → 2 JSON-LD (`WebPage` + `BreadcrumbList`),
+    breadcrumb chain `Collections → Natural Fabric Stories`, `robots: index, follow`.
+  - `/collections/unknown-collection-xyzzy` → 0 JSON-LD, `robots: noindex, nofollow`.
+  - `/inquiry` → 0 JSON-LD.
+  - `/trust` → 0 JSON-LD, `robots: noindex, nofollow`.
+  - `/industries` → 0 JSON-LD, `robots: noindex, nofollow`.
+  - `/aggregator` → 0 JSON-LD, `robots: noindex, nofollow`.
+  - SPA navigation cleanup: navigating from `/collections/natural-fabric-stories` to `/products`
+    via button click clears `WebPage + BreadcrumbList` (2 scripts) and replaces with
+    `WebPage` only (1 script). Stale JSON-LD removed by `clearManagedJsonLd()`.
+  - All managed scripts carry `data-texqtic-public-jsonld="true"` attribute.
+  - No `org_id`, `supplier_id`, `tenant_id`, or other private identifiers in production JSON-LD.
+  - No forbidden schema types (`Product`, `Offer`, `FAQPage`, etc.) present.
+  - `/sitemap.xml` → 200, exactly 12 canonical URLs, no product detail or private URLs.
+  - `/robots.txt` → 200, `Allow: /products, /products/category/, /collections, /inquiry`,
+    `Disallow: /api/, /trust, /industries, /aggregator`, `Sitemap:` directive present.
+
+### 38.2 Verification Outcome
+
+All 18 production checks PASS. All local checks PASS. No runtime corrections required.
+Implementation delivered exactly as designed in the JSON-LD strategy.
+
+### 38.3 Adjacent Findings (Deferred — Not Implemented)
+
+1. `PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001` — custom/apex domain canonical strategy.
+2. `PUBLIC-SEO-PRODUCT-SITEMAP-EXPANSION-001` — product detail URL inclusion in sitemap.
+3. `PUBLIC-SEO-PRODUCT-JSONLD-IMPLEMENTATION-001` — Product JSON-LD for product detail pages.
+4. `PUBLIC-SEO-SUPPLIER-PROFILE-INDEXABILITY-001` — supplier publication gate.
+5. `PUBLIC-SEO-SUPPLIER-JSONLD-IMPLEMENTATION-001` — supplier JSON-LD.
+
+### 38.4 Commit Reference
+
+- **Commit message:** `[TEXQTIC] governance: verify public SEO JSON-LD web types`
+- **Commit hash:** (pending — set after commit)

@@ -3,8 +3,9 @@
 
 **Unit ID:** PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001
 **Family:** B2C Public Surface / Public SEO Infrastructure
-**Status:** IMPLEMENTED
-**Verify-close unit:** `PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001-VERIFY-CLOSE` (pending)
+**Status:** VERIFIED_COMPLETE
+**Verify-close unit:** `PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001-VERIFY-CLOSE` (Section 38, tracker)
+**Verify-close date:** 2026-05-19
 **Date:** 2026-08-08
 **Authorized by:** Paresh
 **Artifact class:** Implementation unit
