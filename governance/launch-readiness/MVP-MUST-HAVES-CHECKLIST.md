@@ -102,7 +102,7 @@ For each dimension, the answer is:
 | I-1 | Inquiry form renders on public inquiry page | YES — `PRODUCTION_VERIFIED` | P0 | Inquiry Phase 1 closed |
 | I-2 | Inquiry submission saves to database | YES — `PRODUCTION_VERIFIED` | P0 | Inquiry Phase 1 closed |
 | I-3 | Inquiry context handoff (B2C → inquiry) works | YES — `PRODUCTION_VERIFIED` | P1 | Handoff unit closed |
-| I-4 | Inquiry notification reaches supplier/admin | NOT_ASSESSED | P0 | Email/notification wiring? |
+| I-4 | Minimum inquiry notification reaches supplier/admin | NOT_ASSESSED | P1 | MVP_CRITICAL. Minimum path only — not full messaging platform. Required before buyer-facing outreach / soft-launch inquiry promotion. Full platform remains POST_MVP/P3 per ROADMAP row 26. See PRIT-033, FTR-B2C-004. R-013 resolved by TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001. |
 | I-5 | Inquiry CRM visibility (tenant back office) | NOT_ASSESSED | P1 | — |
 | I-6 | No PII leaked in error or logging paths | NOT_ASSESSED | P0 | Security |
 
@@ -185,4 +185,5 @@ Overall readiness: NOT_ASSESSED
 | Date | Change | Who |
 |---|---|---|
 | 2026-05-19 | Skeleton created by TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-DESIGN-001 | Copilot/Design unit |
+| 2026-07-14 | I-4 reclassified P0→P1/MVP_CRITICAL; note added: minimum inquiry notification only; full messaging platform remains POST_MVP per ROADMAP row 26; R-013 resolved | TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001 |
 | — | (To be populated) | — |

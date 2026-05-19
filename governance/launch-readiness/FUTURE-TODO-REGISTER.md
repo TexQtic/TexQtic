@@ -84,6 +84,7 @@ Each item has:
 | FTR-B2C-001 | B2C–D2C boundary decision | Formal decision on where B2C discovery ends and D2C/collections begins for a single user journey | Design not started; deferred to B2C-D2C-BOUNDARY-DECISION-001 | B2C tracker | DESIGN_GATED | P2 | PILOT_REQUIRED | OPEN |
 | FTR-B2C-002 | Inquiry schema-governed expansion (Phase 3+) | Context-aware inquiry with structured form fields based on product category | Inquiry Phase 1+2 closed; Phase 3 expansion design pending | PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001 | DESIGN_GATED | P2 | LAUNCH_DEPENDENCY | OPEN |
 | FTR-B2C-003 | Supplier profile public pages | Individual supplier profile pages with SEO, curated product list, origin story | Design gates unresolved; supplier profile indexability pending | SEO sitemap unit | DESIGN_GATED | P2 | LAUNCH_DEPENDENCY | OPEN |
+| FTR-B2C-004 | Minimum inquiry notification loop (soft-launch prerequisite) | Minimum notification path so a buyer inquiry reaches supplier/admin/Paresh or approved operational recipient. Does not require full messaging platform. Required before buyer-facing outreach or public inquiry promotion. | R-013 resolved by split-scope classification; implementation future work; family assignment pending (FAM-03 or FAM-08) | TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001 | DESIGN_GATED | P1 | MVP_CRITICAL | OPEN |
 
 ---
 
@@ -143,6 +144,7 @@ Each item has:
 | 2026-05-19 | Skeleton created; known deferred items from recent closed units populated | Copilot/Design unit |
 | 2026-05-19 | PRIT confirmation notes added for FTR-LEGAL-002, FTR-LEGAL-003, FTR-OPS-001, FTR-OPS-002, FTR-OPS-003 (Paresh decisions via `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001`) | `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` |
 | 2026-05-19 | Added §13 commerce/subscription/payments future design units (5 units) from `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001`; §11 update history updated | `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
+| 2026-07-14 | Added FTR-B2C-004 (minimum inquiry notification loop, MVP_CRITICAL/P1); added to §12 Paresh confirmation notes | `TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001` |
 
 ---
 
@@ -158,6 +160,7 @@ Status fields in the register tables above are unchanged; these notes record the
 | FTR-OPS-001 | PRIT-013 | Confirmed MVP_CRITICAL/P1. Sentry or equivalent required before pilot go-live. Tooling selection confirmed acceptable at FAM-10 family cycle opening. | FAM-10 |
 | FTR-OPS-002 | PRIT-014 | Confirmed PILOT_REQUIRED/P2. Pilot load profile confirmed: 30–50 Surat pilot suppliers, 10–20 concurrent sessions baseline. | FAM-10 |
 | FTR-OPS-003 | PRIT-015 | Confirmed MVP_CRITICAL/P1. Format confirmed: Vercel + Supabase rollback runbook; feature-flag rollback path included. | FAM-10 |
+| FTR-B2C-004 | PRIT-033 | Confirmed MVP_CRITICAL/P1 per R-013 resolution (2026-07-14). Minimum inquiry notification required before buyer-facing outreach. Implementation family: FAM-03 or FAM-08 (Paresh to confirm at family selection). | FAM-03 or FAM-08 |
 
 ---
 

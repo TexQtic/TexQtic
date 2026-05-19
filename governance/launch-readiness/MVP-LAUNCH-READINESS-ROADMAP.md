@@ -82,7 +82,7 @@ pilot_readiness_surat: NOT_ASSESSED
 | 23 | Supplier profile indexability | NOT_ASSESSED | P2 | LAUNCH_DEPENDENCY | Deferred by sitemap unit |
 | 24 | Fulfillment/shipment/returns | NOT_ASSESSED | P3 | POST_MVP | Deferred family note |
 | 25 | Buyer-facing order/checkout | NOT_ASSESSED | P3 | POST_MVP | — |
-| 26 | Messaging/notifications | NOT_ASSESSED | P3 | POST_MVP | — |
+| 26 | Messaging/notifications (full platform) | NOT_ASSESSED | P3 | POST_MVP | Full/general multi-channel messaging platform only. **Minimum inquiry notification to supplier/admin is tracked separately as MVP_CRITICAL/P1** — see CHECKLIST I-4, PRIT-033, FTR-B2C-004. Resolved by TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001. |
 
 *All `NOT_ASSESSED` rows require inspection in `TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-POPULATION-001`.*
 
@@ -151,4 +151,5 @@ Qualitative assessment (no specific date, only readiness status):
 | Date | Change | Who |
 |---|---|---|
 | 2026-05-19 | Skeleton created by TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-DESIGN-001 | Copilot/Design unit |
+| 2026-07-14 | Row 26 note updated: full/general messaging platform remains POST_MVP/P3; minimum inquiry notification tracked separately as MVP_CRITICAL/P1; R-013 resolved | TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001 |
 | — | (To be populated) | — |
