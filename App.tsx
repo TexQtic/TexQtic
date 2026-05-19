@@ -3142,6 +3142,18 @@ const App: React.FC = () => {
         twitterTitle: listTitle,
         twitterDescription: listDescription,
         twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        jsonLd: hasEligible
+          ? [
+              {
+                '@context': 'https://schema.org',
+                '@type': 'CollectionPage',
+                name: listTitle,
+                description: listDescription,
+                url: `${origin}/collections`,
+                isPartOf: { '@type': 'WebSite', name: 'TexQtic', url: origin },
+              },
+            ]
+          : undefined,
       });
       return;
     }
@@ -3176,6 +3188,24 @@ const App: React.FC = () => {
           twitterTitle: detailTitle,
           twitterDescription: detailDescription,
           twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+          jsonLd: [
+            {
+              '@context': 'https://schema.org',
+              '@type': 'WebPage',
+              name: detailTitle,
+              description: detailDescription,
+              url: canonical,
+              isPartOf: { '@type': 'WebSite', name: 'TexQtic', url: origin },
+            },
+            {
+              '@context': 'https://schema.org',
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'Collections', item: `${origin}/collections` },
+                { '@type': 'ListItem', position: 2, name: collection.title, item: canonical },
+              ],
+            },
+          ],
         });
         return;
       }
@@ -3246,6 +3276,24 @@ const App: React.FC = () => {
           twitterTitle: categoryConfig.seoTitle,
           twitterDescription: categoryConfig.seoDescription,
           twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+          jsonLd: [
+            {
+              '@context': 'https://schema.org',
+              '@type': 'WebPage',
+              name: categoryConfig.seoTitle,
+              description: categoryConfig.seoDescription,
+              url: canonical,
+              isPartOf: { '@type': 'WebSite', name: 'TexQtic', url: origin },
+            },
+            {
+              '@context': 'https://schema.org',
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'Products', item: `${origin}/products` },
+                { '@type': 'ListItem', position: 2, name: categoryConfig.heroHeading, item: canonical },
+              ],
+            },
+          ],
         });
         return;
       }
@@ -3367,6 +3415,16 @@ const App: React.FC = () => {
         twitterTitle: browseTitle,
         twitterDescription: browseDescription,
         twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        jsonLd: [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebPage',
+            name: browseTitle,
+            description: browseDescription,
+            url: `${origin}/products`,
+            isPartOf: { '@type': 'WebSite', name: 'TexQtic', url: origin },
+          },
+        ],
       });
       return;
     }

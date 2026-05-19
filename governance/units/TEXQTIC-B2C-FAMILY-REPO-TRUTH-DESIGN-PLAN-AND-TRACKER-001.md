@@ -2511,3 +2511,37 @@ All checks PASS. No runtime corrections required. Governance artifact Section 4.
 
 - **Commit message:** `[TEXQTIC] governance: verify public SEO sitemap robots`
 - **Commit hash:** `2eb491a`
+
+---
+
+## Section 37 — PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001
+
+**Unit ID:** PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001
+**Status:** IMPLEMENTED
+**Date:** 2026-08-08
+**Artifact:** `governance/units/PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001.md`
+
+### 37.1 Scope
+
+Implementation of safe managed schema.org JSON-LD structured data for 4 public web page
+route types in the Vite SPA:
+
+- `PUBLIC_B2C_BROWSE` → `WebPage` block
+- `PUBLIC_B2C_CATEGORY_STORY` (known category) → `WebPage` + `BreadcrumbList`
+- `PUBLIC_COLLECTIONS` (eligible) → `CollectionPage` block
+- `PUBLIC_COLLECTION_DETAIL` (known) → `WebPage` + `BreadcrumbList`
+
+Extension to `utils/publicPageMeta.ts`: new `PublicJsonLdBlock` type, `jsonLd?` field in
+`PublicPageMetaInput`, `clearManagedJsonLd()` internal function, `JSONLD_MANAGED_ATTR`
+marker on all injected `<script type="application/ld+json">` tags.
+
+### 37.2 Test Coverage
+
+- `tests/frontend/public-page-meta.test.ts` — 10 utility tests (PJLD-001 – PJLD-008, PJLD-006b, PJLD-007b)
+- `tests/frontend/seo-jsonld.test.ts` — 20 acceptance tests (JLDT-001 – JLDT-020)
+- All 30 new tests PASS. Non-regression: `seo-sitemap.test.ts` 25/25 PASS.
+- TypeScript: `pnpm exec tsc --noEmit` exit 0.
+
+### 37.3 Commit Reference
+
+- **Commit message:** `[TEXQTIC] public: add safe JSON-LD for public web pages`

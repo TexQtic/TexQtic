@@ -1,16 +1,18 @@
 /**
- * Public Page Metadata Utility — Stage 1
+ * Public Page Metadata Utility — Stage 2
  *
  * Authority:  PUBLIC-SEO-INFRASTRUCTURE-DECISION-001 (Option E: repo-local DOM utility)
  *             D2C-COLLECTION-SEO-GOVERNANCE-001
+ *             PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001
  *
  * Purpose:
  *   Manages SEO <head> metadata (title, description, canonical, robots, Open Graph,
- *   Twitter Card) for D2C public collection surfaces only.
+ *   Twitter Card, JSON-LD structured data) for D2C public surfaces only.
  *
  * Design:
  *   - No external dependency. Direct DOM manipulation via document APIs.
- *   - All managed tags are marked with data-texqtic-public-meta="true".
+ *   - Managed meta/link tags are marked with data-texqtic-public-meta="true".
+ *   - Managed JSON-LD scripts are marked with data-texqtic-public-jsonld="true".
  *   - Idempotent: safe to call on every render cycle.
  *   - Fail-closed: browser guard prevents execution outside browser context.
  *
@@ -20,8 +22,15 @@
  *   - PUBLIC_COLLECTION_DETAIL_UNAVAILABLE surface
  *   - PUBLIC_B2C_CATEGORY_STORY surface (B2C-PUBLIC-CATEGORY-STORY-PAGES-IMPLEMENTATION-001)
  *
- * Deferred (out of Stage 1 scope):
- *   - JSON-LD / structured data
+ * Stage 2 additions (PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001):
+ *   - JSON-LD structured data: WebPage, CollectionPage, BreadcrumbList
+ *   - Optional jsonLd field on PublicPageMetaInput
+ *   - Managed JSON-LD scripts (data-texqtic-public-jsonld="true")
+ *   - Allowed schema.org types: WebPage, CollectionPage, BreadcrumbList, WebSite, ListItem
+ *   - Forbidden schema.org types: Product, Offer, AggregateRating, Review, Organization,
+ *     FAQPage, ContactPage (governance: D2C-COLLECTION-SEO-GOVERNANCE-001 §9)
+ *
+ * Deferred (out of current scope):
  *   - XML sitemap generation
  *   - robots.txt management
  *   - SSR/SSG/prerendering
@@ -39,8 +48,11 @@
 // Internals
 // ---------------------------------------------------------------------------
 
-/** Attribute that marks all tags managed by this utility for targeted cleanup. */
+/** Attribute that marks all meta/link tags managed by this utility for targeted cleanup. */
 const MANAGED_ATTR = 'data-texqtic-public-meta';
+
+/** Attribute that marks JSON-LD <script> tags managed by this utility. */
+const JSONLD_MANAGED_ATTR = 'data-texqtic-public-jsonld';
 
 /**
  * Find or create a <meta> tag identified by `identAttr`=`identValue` and
@@ -81,13 +93,28 @@ function setOrCreateLink(rel: string, hrefValue: string): void {
   el.setAttribute('href', hrefValue);
 }
 
+/** Remove all managed JSON-LD <script> tags from document.head. */
+function clearManagedJsonLd(): void {
+  document.head
+    .querySelectorAll(`script[${JSONLD_MANAGED_ATTR}]`)
+    .forEach((el) => el.remove());
+}
+
 // ---------------------------------------------------------------------------
 // Public API — Types
 // ---------------------------------------------------------------------------
 
 /**
+ * A flexible JSON-LD structured data block. Use only schema.org-approved types.
+ * Caller is responsible for governance compliance (see file header for allowed types).
+ * Serialised with JSON.stringify — all values must be JSON-serialisable.
+ */
+export type PublicJsonLdBlock = Record<string, unknown>;
+
+/**
  * Input shape for applyPublicPageMeta.
- * All fields are required; caller must supply safe, governance-compliant values.
+ * All meta/link fields are required; jsonLd is optional.
+ * Caller must supply safe, governance-compliant values for all fields.
  */
 export interface PublicPageMetaInput {
   /** Page title. Written to document.title and the managed <title>-level title. */
@@ -116,6 +143,14 @@ export interface PublicPageMetaInput {
   readonly twitterDescription: string;
   /** <meta name="twitter:image"> content. Empty string if no image available. */
   readonly twitterImage: string;
+  /**
+   * Optional JSON-LD structured data blocks.
+   * When provided, injected as managed <script type="application/ld+json"> tags.
+   * When absent or empty, any prior managed JSON-LD scripts are cleared.
+   * Allowed types: WebPage, CollectionPage, BreadcrumbList, WebSite, ListItem.
+   * Forbidden types: Product, Offer, AggregateRating, Review, Organization, FAQPage, ContactPage.
+   */
+  readonly jsonLd?: readonly PublicJsonLdBlock[];
 }
 
 // ---------------------------------------------------------------------------
@@ -188,6 +223,18 @@ export function applyPublicPageMeta(input: PublicPageMetaInput): void {
   setOrCreateMeta('name', 'twitter:title', 'content', input.twitterTitle);
   setOrCreateMeta('name', 'twitter:description', 'content', input.twitterDescription);
   setOrCreateMeta('name', 'twitter:image', 'content', input.twitterImage);
+
+  // JSON-LD structured data: always clear prior managed scripts, then inject new if provided
+  clearManagedJsonLd();
+  if (input.jsonLd) {
+    for (const block of input.jsonLd) {
+      const script = document.createElement('script');
+      script.setAttribute('type', 'application/ld+json');
+      script.setAttribute(JSONLD_MANAGED_ATTR, 'true');
+      script.textContent = JSON.stringify(block);
+      document.head.appendChild(script);
+    }
+  }
 }
 
 /**
@@ -206,4 +253,5 @@ export function clearPublicPageMeta(): void {
   document.head
     .querySelectorAll(`[${MANAGED_ATTR}]`)
     .forEach((el) => el.remove());
+  clearManagedJsonLd();
 }
