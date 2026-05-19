@@ -125,6 +125,17 @@ Each item has:
 
 ---
 
+## 10. Register — Soft Launch
+
+| ID | Title | Description | Reason Deferred | Deferred By | Readiness | Priority | Launch Class | Status |
+|---|---|---|---|---|---|---|---|---|
+| FTR-SL-001 | Soft-launch aggregator directory readiness design | Design unit to confirm public directory surface is complete for soft-launch promotion: supplier profile quality, completeness criteria, consent visibility, privacy stance. Gate before first real supplier profile goes live in promotion context. | Directory is PRODUCTION_VERIFIED (FAM-01) but no governance unit exists for soft-launch readiness criteria | `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` §21 | NOT_ASSESSED | P1 | MVP_CRITICAL | OPEN |
+| FTR-SL-002 | XDEP CAE + CRM + Main App soft-launch integration strategy | Cross-system design unit to confirm exact integration sequence when CAE (order/collection management) and CRM (relationship management) are brought into the soft-launch workflow. Defines handoff contracts, event streams, and integration preconditions. | CAE and CRM are separate repos; no formal integration contract exists for soft-launch phase; confirmed not a first-cohort blocker | `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` §21 | NOT_ASSESSED | P2 | PILOT_REQUIRED | OPEN |
+| FTR-SL-003 | Minimum inquiry notification loop implementation (FTR-B2C-004 implementation unit) | Implement the minimum notification path so a buyer inquiry reaches supplier/admin/Paresh via email or equivalent. Governs the specific implementation unit for FTR-B2C-004. Required before any buyer-facing outreach or public inquiry promotion. | Scope confirmed by R-013 resolution; implementation design not started | `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` §21; `TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001` (FTR-B2C-004) | NOT_ASSESSED | P1 | MVP_CRITICAL | OPEN |
+| FTR-SL-004 | Supplier inquiry inbox design (tenant dashboard) | Design and implement the tenant-dashboard surface where a supplier reviews, filters, and responds to buyer inquiries. Required before hard MVP launch (can follow soft launch with manual/email workaround for first cohort). | FAM-03 or FAM-08 family assignment pending; requires FAM-06 supplier auth first | `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` §21 | NOT_ASSESSED | P1 | MVP_CRITICAL | OPEN |
+
+---
+
 ## 10. Known Formerly Deferred Items (Resolved — for History)
 
 | ID | Title | Resolution | Closed By |
@@ -145,6 +156,7 @@ Each item has:
 | 2026-05-19 | PRIT confirmation notes added for FTR-LEGAL-002, FTR-LEGAL-003, FTR-OPS-001, FTR-OPS-002, FTR-OPS-003 (Paresh decisions via `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001`) | `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` |
 | 2026-05-19 | Added §13 commerce/subscription/payments future design units (5 units) from `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001`; §11 update history updated | `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
 | 2026-07-14 | Added FTR-B2C-004 (minimum inquiry notification loop, MVP_CRITICAL/P1); added to §12 Paresh confirmation notes | `TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001` |
+| 2026-05-19 | Added §10 soft-launch register (FTR-SL-001 through FTR-SL-004): aggregator directory readiness design, XDEP CAE+CRM integration strategy, minimum inquiry notification implementation, supplier inquiry inbox design | `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` |
 
 ---
 

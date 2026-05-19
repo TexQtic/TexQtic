@@ -448,3 +448,22 @@ incremental truth strategy. Those steps are mandatory and non-skippable — not 
 *Family index authored: 2026-05-19 — TexQtic governance corpus, `governance/launch-readiness/`, main branch.*
 *Unit: TEXQTIC-LAUNCH-FAMILY-INDEX-001. Recommended next unit: TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-001.*
 *Audit gate added: 2026-05-19 — `TEXQTIC-LAUNCH-FAMILY-INDEX-AUDIT-GATE-ADDENDUM-001`.*
+
+---
+
+## 13. Soft-Launch Strategy Note
+
+> **Authority:** `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` (2026-05-19)
+> **Status:** Informational addendum — does not override any family cycle status in §5/§6/§7/§8.
+
+### Relationship between this index and the soft-launch strategy
+
+`TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` defines a **network-building soft launch phase** that may proceed using unauthenticated surfaces (aggregator directory + public inquiry form) **before FAM-06 opens**. The following implications apply:
+
+| Principle | Detail |
+|---|---|
+| FAM-06 remains the recommended first full family cycle | Supplier auth (FAM-06) is required before any supplier-facing tenant dashboard is opened. Nothing in the soft-launch strategy changes FAM-06's status or priority. |
+| Soft launch uses only unauthenticated surfaces | The aggregator directory (FAM-01, `PRODUCTION_VERIFIED`) and public inquiry form are the only active surfaces during the network-building soft launch. No authenticated tenant, no cart, no checkout. |
+| Standalone units may precede FAM-06 | Legal pages (PRIT-034 → standalone unit) and inquiry notification loop (FTR-B2C-004 / FTR-SL-003) may be implemented before FAM-06 opens. These do not require a family cycle opening. |
+| CRM / CAE XDEP audit not required for first cohort | FAM-22 (CRM webhook) and FAM-24 (XDEP) integration design is deferred to FTR-SL-002 (P2 / PILOT_REQUIRED). First 5–10 soft-launch suppliers do not require CRM/CAE integration to be operational. |
+| This index is NOT the authority on soft-launch prerequisites | Read `SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY.md` §8–§10 checklists (S-1 through S-9, B-1 through B-7, A-1 through A-5) before promoting the directory or initiating buyer outreach. |

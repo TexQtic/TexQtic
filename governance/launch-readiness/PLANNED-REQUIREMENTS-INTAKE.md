@@ -194,9 +194,13 @@ in Paresh-authorized governance units or the LAUNCH-FAMILY-INDEX.
 | PRIT-009 | TEXQTIC-LAUNCH-READINESS-TECHNICAL-AUDIT-STRATEGY-001 via FTR-AUTH-001 | Deferred remainder confirmed by governance |
 | PRIT-010 | FTR-CP-001 (IMPLEMENTATION_READY) — boundary artifact exists | Confirmed-deferred; first to open when Layer 0 releases |
 | PRIT-032 | TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001 (Paresh session decision 2026-07-14) | P2 / PILOT_REQUIRED confirmed |
+| — | TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001 (Decision B) | Soft-launch context confirmed: P2 / not a soft-launch blocker; cart surface must remain inaccessible to buyers during soft launch; governance family assignment required at first cycle selection |
 | PRIT-033 | TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001 (Paresh session decision 2026-07-14) | MVP_CRITICAL / P1 confirmed; minimum inquiry notification scope included |
+| — | TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001 (Decision C) | Soft-launch context confirmed: FTR-B2C-004 (minimum notification loop) is a hard soft-launch blocker before buyer outreach; full tenant dashboard inquiry inbox is P1 for hard launch |
 | PRIT-034 | TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001 (Paresh session decision 2026-07-14) | MVP_CRITICAL / P1 confirmed |
+| — | TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001 (Decision D) | Soft-launch context confirmed: legal pages bundle is a hard prerequisite before any public buyer or supplier data collection; standalone unit may proceed before FAM-06 |
 | PRIT-035 | TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001 (Paresh session decision 2026-07-14) | P2 / PILOT_REQUIRED confirmed |
+| — | TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001 (Decision E) | Soft-launch context confirmed: not a first-cohort blocker (5–10 suppliers); required before broad soft-launch outreach; PRIT-034 cookie/consent stance must be decided first |
 
 **Classification confirmation note:** `PARESH_CONFIRMED` in this context means "the item is
 confirmed as a requirement that must be addressed." It does NOT mean the specific implementation
@@ -462,6 +466,7 @@ All items remain `DESIGN_GATED` with `PARESH_CONFIRMED_AS_PLANNED` confirmation 
 | 2026-05-19 | TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 | PRIT-011–019 Paresh decisions recorded; PRIT-022–027 reviewed as accepted planned features (DESIGN_GATED retained); §7 updated; §10 updated; §11 checklist rows 15–19 added; §14 review section added |
 | 2026-05-19 | TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 | PRIT-028–031 added from commerce/subscription/payments methodology design; §5A and §5B table updated; §7 updated (next PRIT ID: PRIT-032); §11 checklist rows 20–24 added; §15 section added |
 | 2026-07-14 | TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001 | PRIT-032–035 Paresh decisions confirmed; Part B launch classes updated from GOVERNANCE_CLAIM_ONLY to confirmed classes; PRIT-033 cross-referenced to minimum inquiry notification scope (FTR-B2C-004) |
+| 2026-05-19 | TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001 | §6 PRIT-032–035 confirmation rows extended with soft-launch strategic context (Decisions B–E): PRIT-032 P2/not-soft-launch-blocker; PRIT-033 FTR-B2C-004 hard soft-launch blocker before buyer outreach; PRIT-034 hard prerequisite before data collection; PRIT-035 P2/not-first-cohort-blocker |
 
 ---
 

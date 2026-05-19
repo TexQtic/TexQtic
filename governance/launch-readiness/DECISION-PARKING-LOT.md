@@ -270,7 +270,7 @@ Each entry has:
 ### D-015: Razorpay/Payment Gateway Platform Adoption Decision
 
 | Field | Value |
-|---|---|
+|---|—|
 | **Decision question** | Should TexQtic adopt Razorpay (or an alternative gateway) for payment processing? If yes, for which use cases (B2C checkout, D2C checkout, subscription billing, TTP-gated B2B, or some combination)? When in the product lifecycle is gateway integration appropriate? |
 | **Context** | No payment gateway integration exists anywhere in TexQtic. Razorpay is the candidate based on India market fit. Five candidate use cases are identified in `COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY.md §4.2`. All are blocked until seven prerequisites (§4.3) are satisfied, including D-012 (merchant-of-record), settlement model, counsel/CA review, refund policy, audit/logging requirements, PCI scope boundary, and KYC. |
 | **Why not ready** | All seven §4.3 prerequisites are unresolved. D-012 is the upstream hard gate. No counsel/CA review of payment gateway liability performed. |
@@ -280,6 +280,38 @@ Each entry has:
 | **Priority** | P2 — DESIGN_GATED until D-012 resolves |
 | **Status** | PARKED — NEEDS_PARESH_DECISION + NEEDS_COUNSEL_CA_REVIEW |
 | **PRIT cross-ref** | PRIT-029; source unit: `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
+
+---
+
+### D-016: Soft-Launch B2B Financial Boundary Confirmation
+
+| Field | Value |
+|---|---|
+| **Decision question** | Confirmed: Does the B2B no-platform-financial-transaction constitutional boundary (PRIT-030) extend to the soft launch period? May TexQtic facilitate supplier-to-buyer financial transactions via the platform during the soft-launch network-building phase? |
+| **Context** | B2B commerce surfaces in the repo contain no payment gateway integration. The soft-launch phase involves connecting real Surat supplier contacts with interested buyers via an aggregator directory surface and inquiry flow. No D2C or B2C commerce surface is activated during soft launch. | 
+| **Why this was parked** | It was possible that soft-launch network-building activities could be interpreted as requiring some minimal payment/transaction capability to be operational. This decision clarifies the boundary. |
+| **Trigger condition** | N/A — confirmed by governance. Reopen only if Paresh explicitly authorizes a payment/transaction surface for B2B during soft launch. |
+| **Impact of delaying** | N/A — decision is confirmed. |
+| **Who decided** | Paresh (via `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` Decision F) |
+| **Priority** | P1 — constitutional guardrail |
+| **Status** | CONFIRMED_BOUNDARY — Soft launch is strictly B2B inquiry facilitation only. No platform-held funds. No transaction commission. No checkout surface. The B2B financial boundary (PRIT-030) is in full effect during soft launch. |
+| **PRIT cross-ref** | PRIT-030; source unit: `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` §12 Decision F |
+
+---
+
+### D-017: Soft-Launch Provisioning Model (Free / Manual)
+
+| Field | Value |
+|---|---|
+| **Decision question** | Confirmed: What is the provisioning and pricing model for the first soft-launch cohort of 5–10 Surat suppliers? Are suppliers paying for TexQtic access during the network-building soft launch phase? |
+| **Context** | No subscription billing infrastructure exists (D-011 parked; FTU-COMM-001 parked). First family cycle (FAM-06) is not yet opened. Surat pilot suppliers will be personally known contacts of Paresh. |
+| **Why this was parked** | It was ambiguous whether the soft launch required a billing or provisioning system to be operational before inviting any real suppliers. |
+| **Trigger condition** | N/A — confirmed for soft-launch cohort. Reopen when scaling beyond first cohort or when self-serve upgrade path is required (D-011). |
+| **Impact of delaying** | N/A — decision is confirmed. |
+| **Who decided** | Paresh (via `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` Decision G) |
+| **Priority** | P2 |
+| **Status** | CONFIRMED — First soft-launch cohort (5–10 suppliers) will be provisioned manually by Paresh as operator at zero charge. No billing infrastructure required before first cohort. D-011 (subscription tier pricing) remains parked and is not a soft-launch blocker. |
+| **PRIT cross-ref** | PRIT-018, PRIT-028; source unit: `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` §12 Decision G |
 
 ---
 
@@ -301,3 +333,4 @@ Each entry has:
 | 2026-07-14 | Added D-010 (Supplier Profile Publication and Indexability Policy) — SEO pending work register sync | `PUBLIC-SEO-PENDING-WORK-REGISTER-SYNC-001` |
 | 2026-05-19 | Added PRIT cross-reference notes to D-005, D-008, D-010 based on Paresh decisions in `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` | `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` |
 | 2026-05-19 | Added D-011 through D-015 from commerce/subscription/payments methodology design unit | `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
+| 2026-05-19 | Added D-016 (B2B financial boundary soft-launch confirmation — CONFIRMED_BOUNDARY) and D-017 (free/manual provisioning model — CONFIRMED); both confirmed via `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` Decisions F and G | `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` |

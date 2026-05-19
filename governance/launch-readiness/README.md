@@ -42,6 +42,7 @@ For current launch-planning context, read these documents in this order:
 12. **`PLANNED-REQUIREMENTS-INTAKE.md`** — intake queue for planned and deferred technical requirements; not implementation authority; planned items require Paresh confirmation and family audit before implementation
 13. **`COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY.md`** — commerce, subscription, and payments methodology authority; **must be read before opening any B2C/D2C authenticated commerce, payment gateway, or commission-related family cycle**
 14. **`MISSING-FAMILY-AND-FEATURE-SCAN.md`** — pre–first-family-cycle scan of missing families, features, and guardrails; **read before opening `TEXQTIC-FIRST-FAMILY-CYCLE-SELECTION-001`**; governance scan only; not implementation authority; identifies PRIT-032–035 and risks R-013, R-014
+15. **`SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY.md`** — network-building soft launch strategy; defines soft launch vs hard MVP launch boundary; records Decisions A–G (R-013 resolved, PRIT-032–035 confirmed, B2B financial boundary confirmed, free/manual provisioning confirmed); **read before opening `TEXQTIC-FIRST-FAMILY-CYCLE-SELECTION-001`**
 
 ---
 
@@ -63,6 +64,7 @@ For current launch-planning context, read these documents in this order:
 | `PLANNED-REQUIREMENTS-INTAKE.md` | Intake queue for planned/deferred technical requirements; not implementation authorization; items require Paresh confirmation + family audit before implementation |
 | `COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY.md` | Commerce, subscription, and payments methodology authority; required reading before any B2C/D2C authenticated commerce or payment-related family cycle |
 | `MISSING-FAMILY-AND-FEATURE-SCAN.md` | Pre–first-family-cycle scan of missing families, features, and guardrails; identifies PRIT-032–035 and risks R-013/R-014; scan only, not implementation authority |
+| `SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY.md` | Network-building soft launch strategy; soft launch vs hard MVP launch boundary; Decisions A–G; minimum readiness checklists; CAE/CRM connectivity expectations; must-read before first family cycle selection |
 
 ---
 
