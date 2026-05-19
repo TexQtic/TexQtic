@@ -1,0 +1,141 @@
+# Future Todo Register
+
+**Hub:** `governance/launch-readiness/`
+**Status:** SKELETON — PENDING POPULATION
+**Population unit:** `TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-POPULATION-001`
+**Last updated:** 2026-05-19 (skeleton created)
+**Design authority:** `TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-DESIGN-001`
+
+---
+
+> **SKELETON NOTE**
+>
+> This register will be fully populated in `TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-POPULATION-001`.
+> The rows below represent known deferred items as of the skeleton date, sourced from
+> closed TECS governance units that explicitly deferred them.
+>
+> Status, priority, and owner fields require inspection before use as planning input.
+
+---
+
+## 1. Purpose
+
+This document is the single durable register for all deferred, parked, or "not now but don't
+forget" implementation items in TexQtic.
+
+It captures items that have been explicitly deferred by a governance unit with a reason, items that
+were out of scope for a recent unit but must be done before launch, and items that are confirmed
+post-MVP but worth capturing now so they are not lost.
+
+**This register does NOT:**
+- Open or authorize any implementation
+- Override Layer 0 sequencing
+- Replace the B2C or D2C family trackers for family-specific unit tracking
+
+---
+
+## 2. Register Schema
+
+Each item has:
+- **ID**: sequential; never reused
+- **Title**: short action-oriented label
+- **Description**: brief, specific
+- **Reason deferred**: why this was not done when it was first identified
+- **Deferred by (unit)**: which governance unit or decision deferred it
+- **Readiness class**: `DESIGN_GATED` / `IMPLEMENTATION_READY` / `BLOCKED` / `NOT_ASSESSED`
+- **Priority**: `P0` / `P1` / `P2` / `P3` / `P4`
+- **Launch class**: `LAUNCH_BLOCKER` / `MVP_CRITICAL` / `LAUNCH_DEPENDENCY` / `PILOT_REQUIRED` / `POST_MVP` / `WATCH_ITEM`
+- **Owner (unit family)**: which family/domain this belongs to
+- **Status**: `OPEN` (still deferred) / `PROMOTED` (moved to active unit) / `CANCELLED` (no longer needed)
+
+---
+
+## 3. Register — SEO / Public Surface
+
+| ID | Title | Description | Reason Deferred | Deferred By | Readiness | Priority | Launch Class | Status |
+|---|---|---|---|---|---|---|---|---|
+| FTR-SEO-001 | SEO domain canonical strategy | Decide and implement canonical URL strategy — apex domain vs. subdomain, www vs. non-www, cross-origin canonical handling | Requires domain decision first; deferred to `PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001` | PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001 | DESIGN_GATED | P1 | LAUNCH_DEPENDENCY | OPEN |
+| FTR-SEO-002 | Product detail sitemap expansion | Add individual product detail pages to sitemap.xml with dynamic slug generation | Not safe until canonical strategy is decided | PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001 | DESIGN_GATED | P2 | LAUNCH_DEPENDENCY | OPEN |
+| FTR-SEO-003 | Supplier profile indexability | Define indexability gate and sitemap inclusion for supplier profile pages | Deferred pending supplier profile completeness definition | PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001 | DESIGN_GATED | P2 | LAUNCH_DEPENDENCY | OPEN |
+| FTR-SEO-004 | /trust page SEO metadata | Trust landing page title, description, og: tags, canonical, JSON-LD | Stub route in place with noindex; content not ready | PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001 | DESIGN_GATED | P2 | PILOT_REQUIRED | OPEN |
+| FTR-SEO-005 | /industries page SEO metadata | Industry cluster landing page SEO implementation | Stub route in place with noindex; content not ready | PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001 | DESIGN_GATED | P2 | POST_MVP | OPEN |
+| FTR-SEO-006 | /aggregator page SEO metadata | Aggregator discovery page SEO implementation | Stub route in place with noindex; design not complete | PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001 | DESIGN_GATED | P3 | POST_MVP | OPEN |
+
+---
+
+## 4. Register — Network Commerce / TradeTrust Pay
+
+| ID | Title | Description | Reason Deferred | Deferred By | Readiness | Priority | Launch Class | Status |
+|---|---|---|---|---|---|---|---|---|
+| FTR-NC-001 | Award maker-checker E2E path | Implement two-call G-021 split flow: requestAward() → approveAward(). Design is complete. | TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001 design complete; implementation requires authorization | NC Phase 1 audit | IMPLEMENTATION_READY | P2 | LAUNCH_DEPENDENCY | OPEN |
+| FTR-NC-002 | Supplier quote feature flag activation (QD-6) | Lift QD-6 hold; activate `nc.procurement_pools.supplier_quotes.enabled` | Requires separate Paresh decision; QD-6 hold maintained | NC Phase 1 implementation sequence | BLOCKED | P2 | LAUNCH_DEPENDENCY | OPEN |
+| FTR-NC-003 | TradeTrust Pay design opening | Post-Phase-1 settlement direction. Requires counsel feedback on TTP-EXTERNAL-LEGAL-COUNSEL-PACKET-001 | HOLD_FOR_COUNSEL_FEEDBACK; legal packet upgraded and sent | NEXT-ACTION.md | BLOCKED | P2 | LAUNCH_DEPENDENCY | OPEN |
+| FTR-NC-004 | NC Phase 1 remote DB schema verification (G-021 tables) | Verify `pending_approvals` + `ApprovalSignature` tables in remote Supabase DB for G-021 maker-checker path | Blocked pending NC maker-checker implementation authorization | NC Phase 1 audit | BLOCKED | P2 | LAUNCH_DEPENDENCY | OPEN |
+
+---
+
+## 5. Register — Public Pages / B2C / D2C
+
+| ID | Title | Description | Reason Deferred | Deferred By | Readiness | Priority | Launch Class | Status |
+|---|---|---|---|---|---|---|---|---|
+| FTR-B2C-001 | B2C–D2C boundary decision | Formal decision on where B2C discovery ends and D2C/collections begins for a single user journey | Design not started; deferred to B2C-D2C-BOUNDARY-DECISION-001 | B2C tracker | DESIGN_GATED | P2 | PILOT_REQUIRED | OPEN |
+| FTR-B2C-002 | Inquiry schema-governed expansion (Phase 3+) | Context-aware inquiry with structured form fields based on product category | Inquiry Phase 1+2 closed; Phase 3 expansion design pending | PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001 | DESIGN_GATED | P2 | LAUNCH_DEPENDENCY | OPEN |
+| FTR-B2C-003 | Supplier profile public pages | Individual supplier profile pages with SEO, curated product list, origin story | Design gates unresolved; supplier profile indexability pending | SEO sitemap unit | DESIGN_GATED | P2 | LAUNCH_DEPENDENCY | OPEN |
+
+---
+
+## 6. Register — Auth / Onboarding
+
+| ID | Title | Description | Reason Deferred | Deferred By | Readiness | Priority | Launch Class | Status |
+|---|---|---|---|---|---|---|---|---|
+| FTR-AUTH-001 | Reused-existing-user onboarding path | Handle Supabase invites for users who already exist. Currently BOUNDED_DEFERRED_REMAINDER | Bounded deferral: confirmed out of scope for first launch wave; must be resolved before broader onboarding | Onboarding family closeout | DESIGN_GATED | P1 | MVP_CRITICAL | OPEN |
+| FTR-AUTH-002 | White label onboarding path | Tenant-branded invite and activation for WL Co scenario | WL Co hold REVIEW-UNKNOWN | BLOCKED.md | BLOCKED | P3 | POST_MVP | OPEN |
+
+---
+
+## 7. Register — Control Plane / Platform Ops
+
+| ID | Title | Description | Reason Deferred | Deferred By | Readiness | Priority | Launch Class | Status |
+|---|---|---|---|---|---|---|---|---|
+| FTR-CP-001 | Control plane tenant operations implementation | Implement bounded launch operator lane: tenant registry, tenant deep-dive, onboarding activation, impersonation entry, audit visibility | Awaiting Layer 0 authorization to open; boundary artifact exists | PLATFORM-OPS-LAUNCH-BOUNDARY-ARTIFACT-v1.md | IMPLEMENTATION_READY | P0 | MVP_CRITICAL | OPEN |
+
+---
+
+## 8. Register — Infrastructure / DevOps
+
+| ID | Title | Description | Reason Deferred | Deferred By | Readiness | Priority | Launch Class | Status |
+|---|---|---|---|---|---|---|---|---|
+| FTR-OPS-001 | Error monitoring / alerting setup | Sentry or equivalent for production error capture; structured log alerting | No dedicated infrastructure unit opened | — | NOT_ASSESSED | P1 | MVP_CRITICAL | OPEN |
+| FTR-OPS-002 | Performance budget / load testing | Define and test performance acceptable threshold for Surat pilot load | No dedicated unit; open item | — | NOT_ASSESSED | P2 | PILOT_REQUIRED | OPEN |
+| FTR-OPS-003 | Rollback procedure documentation | Document specific Vercel deploy rollback + DB migration rollback procedure | No dedicated documentation | — | NOT_ASSESSED | P1 | MVP_CRITICAL | OPEN |
+
+---
+
+## 9. Register — Legal / Compliance
+
+| ID | Title | Description | Reason Deferred | Deferred By | Readiness | Priority | Launch Class | Status |
+|---|---|---|---|---|---|---|---|---|
+| FTR-LEGAL-001 | TTP legal counsel feedback record | External counsel provides written feedback on upgraded TTP packet | Awaiting external counsel | NEXT-ACTION.md | BLOCKED | P2 | LAUNCH_DEPENDENCY | OPEN |
+| FTR-LEGAL-002 | Privacy/GDPR basics for public inquiry form | Ensure inquiry form submission includes required consent disclosure for EU + India contexts | No dedicated unit; open item | — | NOT_ASSESSED | P1 | MVP_CRITICAL | OPEN |
+| FTR-LEGAL-003 | Terms of service / platform agreement for supplier onboarding | Supplier must accept ToS on onboarding | No dedicated governance unit | — | NOT_ASSESSED | P1 | MVP_CRITICAL | OPEN |
+
+---
+
+## 10. Known Formerly Deferred Items (Resolved — for History)
+
+| ID | Title | Resolution | Closed By |
+|---|---|---|---|
+| HIST-001 | sitemap.xml + robots.txt | PRODUCTION_VERIFIED (2026-05-19) | PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001 |
+| HIST-002 | JSON-LD web type on public pages | PRODUCTION_VERIFIED | PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001 |
+| HIST-003 | B2C browse SEO metadata | PRODUCTION_VERIFIED | B2C SEO metadata units |
+| HIST-004 | NC Phase 1 feature flag production provisioning | PRODUCTION_VERIFIED (2026-06-02) | TEXQTIC-NC-PROD-FEATURE-FLAG-PROVISIONING-001 |
+| HIST-005 | RFQ issue Tx timeout fix | PRODUCTION_VERIFIED (2026-06-08) | TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-TX-TIMEOUT-FIX-001 |
+
+---
+
+## 11. Update History
+
+| Date | Change | Who |
+|---|---|---|
+| 2026-05-19 | Skeleton created; known deferred items from recent closed units populated | Copilot/Design unit |
+| — | (To be populated) | — |
