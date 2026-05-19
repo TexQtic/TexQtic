@@ -3,7 +3,7 @@
 **Hub version:** 1.0 — skeleton created by `TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-DESIGN-001`
 **Populated:** PENDING — see `TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-POPULATION-001`
 **Owner:** Paresh Patel (TexQtic founder)
-**Last updated:** 2026-05-19
+**Last updated:** 2026-07-14
 
 ---
 
@@ -41,6 +41,7 @@ For current launch-planning context, read these documents in this order:
 11. **`PUBLIC-PAGES-SEO-EXPANSION-REGISTER.md`** — future public pages and SEO decisions
 12. **`PLANNED-REQUIREMENTS-INTAKE.md`** — intake queue for planned and deferred technical requirements; not implementation authority; planned items require Paresh confirmation and family audit before implementation
 13. **`COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY.md`** — commerce, subscription, and payments methodology authority; **must be read before opening any B2C/D2C authenticated commerce, payment gateway, or commission-related family cycle**
+14. **`MISSING-FAMILY-AND-FEATURE-SCAN.md`** — pre–first-family-cycle scan of missing families, features, and guardrails; **read before opening `TEXQTIC-FIRST-FAMILY-CYCLE-SELECTION-001`**; governance scan only; not implementation authority; identifies PRIT-032–035 and risks R-013, R-014
 
 ---
 
@@ -61,6 +62,7 @@ For current launch-planning context, read these documents in this order:
 | `DECISION-PARKING-LOT.md` | Decisions not ready to make; trigger conditions; who decides |
 | `PLANNED-REQUIREMENTS-INTAKE.md` | Intake queue for planned/deferred technical requirements; not implementation authorization; items require Paresh confirmation + family audit before implementation |
 | `COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY.md` | Commerce, subscription, and payments methodology authority; required reading before any B2C/D2C authenticated commerce or payment-related family cycle |
+| `MISSING-FAMILY-AND-FEATURE-SCAN.md` | Pre–first-family-cycle scan of missing families, features, and guardrails; identifies PRIT-032–035 and risks R-013/R-014; scan only, not implementation authority |
 
 ---
 

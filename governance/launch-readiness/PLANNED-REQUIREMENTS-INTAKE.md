@@ -124,6 +124,10 @@ All items are drawn from existing governance sources. No new classification is i
 | PRIT-029 | Razorpay/payment gateway methodology for B2C/D2C commerce | MAIN | FAM-11 / future B2C-D2C commerce family | GOVERNANCE_CLAIM_ONLY | DESIGN_GATED | DESIGN_GATED | DESIGN_GATED | P2 |
 | PRIT-030 | B2B no-platform-financial-transaction boundary (guardrail) | MAIN | FAM-12 / FAM-16 | GOVERNANCE_CLAIM_ONLY | CONFIRMED_BOUNDARY | CONFIRMED_BOUNDARY | CONFIRMED_BOUNDARY | P1 |
 | PRIT-031 | Commission/deduction methodology across B2B/B2C/D2C | MAIN | FAM-11 / FAM-15 / FAM-16 | GOVERNANCE_CLAIM_ONLY | DESIGN_GATED | DESIGN_GATED | DESIGN_GATED | P2 |
+| PRIT-032 | Cart-as-intent buyer surface governance (ungoverned code exists in repo) | MAIN | FAM-01 / future buyer commerce family | GOVERNANCE_CLAIM_ONLY | SCAN_IDENTIFIED | NOT_ASSESSED | PARESH_REQUIRED | P2 |
+| PRIT-033 | Supplier inquiry response workflow — tenant dashboard inquiry inbox | MAIN | FAM-03 / FAM-08 (Paresh to decide) | GOVERNANCE_CLAIM_ONLY | SCAN_IDENTIFIED | NOT_ASSESSED | PARESH_REQUIRED | P1 |
+| PRIT-034 | Public legal pages bundle — privacy policy, terms page, cookie stance, DSAR path | MAIN | FAM-03 / standalone unit | GOVERNANCE_CLAIM_ONLY | SCAN_IDENTIFIED | NOT_ASSESSED | PARESH_REQUIRED | P1 |
+| PRIT-035 | Product analytics and funnel tracking infrastructure | MAIN | FAM-10 / FAM-01 / FAM-02 | GOVERNANCE_CLAIM_ONLY | SCAN_IDENTIFIED | NOT_ASSESSED | PARESH_REQUIRED | P2 |
 
 ---
 
@@ -162,6 +166,10 @@ All items are drawn from existing governance sources. No new classification is i
 | PRIT-029 | TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 (§4) | Razorpay/payment gateway prerequisites per methodology §4.3; no implementation until D-015 and §4.3 gates satisfied | NO | YES — D-015 (Razorpay/gateway); D-012 (merchant-of-record); counsel/CA review | DECISION-PARKING-LOT.md (D-012, D-015) | No implementation until D-015 + §4.3 prerequisites satisfied; DESIGN_GATED until then |
 | PRIT-030 | TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 (§5) | B2B no-platform-financial-transaction boundary is a CONFIRMED constitutional guardrail; no design gate needed — must be observed in all B2B family cycles (FAM-12, FAM-13, FAM-14, FAM-15, FAM-16) | NO | NO — confirmed boundary | COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY.md §5 | Enforce in FAM-12/FAM-15/FAM-16 family cycle openings; no implementation action needed until TTP gate clears |
 | PRIT-031 | TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 (§8) | Commission/deduction policy across B2B/B2C/D2C; all scenarios parked until D-012/D-013/D-014 resolve; no commission logic to implement until model decided | NO | YES — D-013, D-014 (commission policy) | DECISION-PARKING-LOT.md (D-013, D-014) | No commission/deduction implementation until D-013/D-014 resolved and Paresh authorizes |
+| PRIT-032 | MISSING-FAMILY-AND-FEATURE-SCAN.md (§6) — Cart.tsx, cartService.ts, MarketplaceCartSummary, CartSummariesPanel exist in repo; no governing family/PRIT/FTR/design unit | Code exists; scope ungoverned — FAM-01 or new buyer commerce family opening needed | YES — inspect Cart.tsx, cartService.ts scope at family opening | YES — Paresh to decide: what cart scope is authorized for Surat pilot? | MISSING-FAMILY-AND-FEATURE-SCAN.md | Confirm with Paresh at first family selection; assign to appropriate family cycle |
+| PRIT-033 | MISSING-FAMILY-AND-FEATURE-SCAN.md (§6) — inquiry submit writes to DB but no tenant-facing supplier inbox exists; no route, no UI, no PRIT/FTR previously | Depends on FAM-06 completing (supplier auth required for inbox) | YES — inspect tenant routes at FAM-03 or FAM-08 opening | YES — Paresh to decide: FAM-03 or FAM-08 as owning family? Minimum inbox scope for pilot? | MISSING-FAMILY-AND-FEATURE-SCAN.md | Confirm family assignment with Paresh at first family selection; address in that family cycle |
+| PRIT-034 | MISSING-FAMILY-AND-FEATURE-SCAN.md (§6) — no /privacy page, no /terms page, no cookie consent stance, no DSAR path in repo; D-5 MVP-MUST-HAVES NOT_ASSESSED P1 | Legal content requires Paresh/counsel approval; no tech gate for front-end pages; GDPR/DPDP stance needed for any analytics tooling (PRIT-035) | NO (standalone pages) | YES — Paresh + counsel: legal content, DPDP/GDPR stance, cookie/analytics consent approach | MISSING-FAMILY-AND-FEATURE-SCAN.md | Confirm with Paresh before or at FAM-03 cycle opening; can be standalone unit |
+| PRIT-035 | MISSING-FAMILY-AND-FEATURE-SCAN.md (§6) — no analytics service in repo; buyer_inquiry.created.v1 event defined but not emitted; no funnel tracking exists | Paresh must choose tooling; PRIT-034 (cookie consent stance) must be decided first if analytics captures PII | NO | YES — Paresh to decide tooling (GA4 / Mixpanel / Segment / PostHog / other) | MISSING-FAMILY-AND-FEATURE-SCAN.md | Confirm tooling with Paresh; infrastructure in FAM-10; event instrumentation in FAM-01/FAM-02/FAM-03 cycles |
 
 ---
 
@@ -212,8 +220,19 @@ See §14 for the full decision table. Summary:
 | PRIT-018 | Confirmed POST_MVP; pilot can launch free/manual; commercial packaging not required for MVP | POST_MVP_CONFIRMED |
 | PRIT-019 | Confirmed opt-in only during pilot; no default indexing of supplier profiles; policy direction partial | PARESH_CONFIRMED |
 
-**No UNCONFIRMED items remain in PRIT-011–019.** Next available PRIT ID: PRIT-032.
+**No UNCONFIRMED items remain in PRIT-011–019.** Next available PRIT ID: PRIT-036 (PRIT-032–035 added by MISSING-FAMILY-AND-FEATURE-SCAN-001, 2026-07-14).
 
+> **✅ PRIT-032 THROUGH PRIT-035 ADDED VIA TEXQTIC-LAUNCH-READINESS-MISSING-FAMILY-AND-FEATURE-SCAN-001 (2026-07-14)**
+>
+> Four new planned requirements were added from the missing-family-and-feature scan unit.
+> PRIT-032 records the cart-as-intent buyer surface (code exists in repo without governance).
+> PRIT-033 records the supplier inquiry response workflow / tenant dashboard inquiry inbox
+> (entirely missing from repo and all registers). PRIT-034 records the public legal pages
+> bundle (privacy policy page, terms page, cookie/analytics consent stance, DSAR path).
+> PRIT-035 records the product analytics and funnel tracking infrastructure (no analytics
+> service in repo). All four require Paresh confirmation before family cycle assignment.
+> Next available PRIT ID: PRIT-036.
+>
 > **✅ PRIT-028 THROUGH PRIT-031 ADDED VIA TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 (2026-05-19)**
 >
 > Four new planned requirements were added from the commerce/subscription/payments methodology
@@ -240,7 +259,7 @@ See §14 for the full decision table. Summary:
 > See §13 for the full planned feature document intake section.
 >
 > **This intake queue is OPEN and ready for Paresh to add new requirements at any time.**
-> Next available PRIT ID: PRIT-028.
+> Next available PRIT ID: PRIT-036.
 
 ---
 
