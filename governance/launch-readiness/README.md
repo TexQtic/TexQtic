@@ -175,3 +175,78 @@ The process is:
 CRM and CAE readiness are audited in their own repos. This hub records only cross-repo
 dependency status and main platform launch readiness. See
 `TEXQTIC-LAUNCH-READINESS-INCREMENTAL-TRUTH-STRATEGY-001` §9–§10 for the CRM/CAE separation rules.
+
+---
+
+## 11. Drift-Control Maintenance
+
+**Full rules:** `governance/units/TECS-LAUNCH-READINESS-HUB-DRIFT-CONTROL-ADDENDUM-001.md`  
+**Extends:** `TECS.md` §8  
+**Effective:** 2026-05-19
+
+The drift-control system ensures hub rows remain synchronized with actual repo truth as
+implementation cycles complete. The following rules are mandatory; they supersede the
+weaker update guidance in §6 where they conflict.
+
+### Evidence Required for Status Changes
+
+Every status-bearing hub row MUST carry mandatory evidence fields before its readiness status
+may advance. The minimum fields are:
+
+```
+status:                [STATUS_CODE]
+readiness:             [READINESS_CODE]
+priority:              [P0 / P1 / P2 / P3 / P4]
+evidence_level:        [PRODUCTION_CONFIRMED | TEST_CONFIRMED | REPO_CONFIRMED |
+                        GOVERNANCE_CLAIM_ONLY | USER_PLANNED_ONLY]
+evidence_source:       [unit ID or REPO_INSPECTION:<path> or XDEP_ONLY]
+last_verified_by_unit: [unit ID or PARESH_DIRECT]
+```
+
+A row without these fields is treated as `GOVERNANCE_CLAIM_ONLY` regardless of its `status` value.
+
+Evidence minimums:
+- `PRODUCTION_VERIFIED` → `PRODUCTION_CONFIRMED` from a verify-close unit
+- `VERIFIED_COMPLETE` / `LAUNCH_BLOCKER` → `TEST_CONFIRMED` or `REPO_CONFIRMED`
+- `LAUNCH_BLOCKER` / `MVP_CRITICAL` → `REPO_CONFIRMED` + Paresh confirmation
+- `PLANNED_NOT_IN_REPO` → `USER_PLANNED_ONLY` (intake required before implementation)
+
+### Verify-Close Hub-Sync Checklist
+
+Every TECS verify-close artifact must answer the mandatory hub-sync checklist (9 items).
+This checklist is defined in addendum §8 and governs which hub rows change, what evidence
+applies, and whether CRM/CAE or planned items have been correctly handled. The verify-close
+is not complete until the checklist is answered.
+
+### No Big-Bang Population
+
+Hub documents are populated incrementally — one family at a time — per the process defined
+in `TEXQTIC-LAUNCH-READINESS-INCREMENTAL-TRUTH-STRATEGY-001`. No single governance unit may
+populate all hub rows in a global pass unless explicitly scoped as a comprehensive hub
+population unit and allowlisted for all hub files.
+
+### CRM/CAE Separation — No Duplication
+
+CRM readiness truth lives in `TexQtic-CRM/governance/`.  
+CAE readiness truth lives in `TEXQTIC-CUSTOMER-ACQUISITION-ENGINE/governance/`.
+
+This hub records XDEP status only: dependency status + CRM/CAE audit unit ID. It does NOT
+inline CRM/CAE route, schema, or UI implementation details. Any hub row that contains such
+details must be reduced to an XDEP reference.
+
+### Planned Requirements Are Intake-First
+
+Requirements Paresh has communicated that are not yet in any repo must pass through
+`TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-001` before appearing in any hub row. Until confirmed:
+- They carry `readiness: PLANNED_NOT_IN_REPO` and `evidence_level: USER_PLANNED_ONLY`
+- They MUST NOT be designated `LAUNCH_BLOCKER`, `MVP_CRITICAL`, or `P0`/`P1`
+- They MUST NOT be implemented in any TECS unit
+
+### No Silent Drift
+
+When a hub row is discovered to be inconsistent with current repo truth, it must be either:
+- Corrected in the active unit (if hub file is in allowlist)
+- Recorded as `PENDING_HUB_UPDATE` in the verify-close report (if not allowlisted)
+
+Silent drift — leaving a known-incorrect row without recording it as pending — is a governance
+violation. The next unit allowlisted for the affected hub file must resolve it.

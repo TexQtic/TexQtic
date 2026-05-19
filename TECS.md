@@ -262,3 +262,72 @@ Include in every implementation report when UI is involved:
 ---
 
 *End of TECS v1.6*
+
+---
+
+## 8. Launch Readiness Hub Drift-Control Addendum (Pointer)
+
+**Authority:** `governance/units/TECS-LAUNCH-READINESS-HUB-DRIFT-CONTROL-ADDENDUM-001.md`  
+**Effective:** 2026-05-19
+
+This section extends the TECS OS lifecycle to cover mandatory hub-sync governance for
+`governance/launch-readiness/`. The full system is defined in the addendum unit above.
+The following rules are binding on every future TECS unit:
+
+### 8.1 Mandatory Rules
+
+1. **Opening prompt:** Every TECS unit opening prompt must include a Hub Impact Assessment
+   — answer `YES (list affected hub files)` or `NO_HUB_IMPACT_EXPECTED`.
+
+2. **Design prompt:** When a design artifact is produced, it must state expected hub impact:
+   which family rows or binary gates change on verify-close, and what evidence level will result.
+
+3. **Implementation:** Hub updates must be restricted to files explicitly in the allowlist.
+   No optimistic status advances — `PRODUCTION_VERIFIED` requires verify-close evidence.
+
+4. **Verify-close:** Every verify-close governance artifact MUST answer all 9 items of the
+   mandatory hub-sync checklist defined in addendum §8. The verify-close is not complete until
+   the checklist is answered and any pending hub updates are recorded.
+
+5. **Status changes require evidence:** A hub row may only advance readiness status when the
+   required evidence level is met (addendum §6). The minimum levels are:
+   - `PRODUCTION_VERIFIED` → requires `PRODUCTION_CONFIRMED` evidence
+   - `VERIFIED_COMPLETE` → requires `TEST_CONFIRMED` or `PRODUCTION_CONFIRMED`
+   - `REPO_IMPLEMENTED` → requires `REPO_CONFIRMED`
+   - `LAUNCH_BLOCKER` / `MVP_CRITICAL` → requires `REPO_CONFIRMED` + Paresh confirmation
+
+6. **CRM/CAE separation:** CRM and CAE readiness truth is not duplicated in the main repo hub.
+   Main repo hub rows for CRM/CAE carry XDEP status only (`evidence_source: XDEP_ONLY`).
+
+7. **Planned requirements are intake-first:** Planned items not yet in any repo must pass through
+   `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-001` before appearing as hub rows. They cannot become
+   `LAUNCH_BLOCKER` or `MVP_CRITICAL` on the basis of `USER_PLANNED_ONLY` evidence alone.
+
+8. **No silent drift:** When hub drift is detected, it must be corrected (if allowlisted) or
+   recorded as pending (if not allowlisted). Silent drift is a governance violation.
+
+### 8.2 Governance Commit Scope Extension
+
+TECS §6.1 requires governance commits to cover `governance/gap-register.md`,
+`governance/wave-*-board.md`, and `governance/wave-execution-log.md`. When a verify-close
+unit determines that hub updates are required (per §8.1 rule 4), the governance commit scope
+extends to include the affected `governance/launch-readiness/` files.
+
+Hub updates that require a separate allowlisted prompt MUST be flagged as pending in the
+verify-close report and resolved in the subsequent prompt's governance commit.
+
+### 8.3 Verify-Close Hub-Sync Checklist (Quick Reference)
+
+Full checklist text is in addendum §8. Items to answer in every verify-close artifact:
+
+```
+Q1. Did this unit change launch readiness truth? (YES / NO / PARTIAL)
+Q2. Which family or requirement changed?
+Q3. Which hub documents need to be updated?
+Q4. What evidence supports the update?
+Q5. Are CRM/CAE details at risk of being duplicated into the main hub?
+Q6. Are any planned items at risk of incorrect MVP promotion?
+Q7. Are any stale hub rows now superseded by this unit?
+Q8. If no hub update: record NO_HUB_UPDATE_REQUIRED with reason.
+Q9. Were hub files allowlisted? List files or record pending updates.
+```

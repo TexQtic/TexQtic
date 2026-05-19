@@ -724,4 +724,28 @@ This strategy unit is complete when ALL of the following are true:
 
 ---
 
+## 18. Drift-Control Enforcement Addendum Reference
+
+The principles in this strategy (incremental truth, CRM/CAE separation, planned requirements
+intake, no big-bang population) are enforced at the TECS OS level by:
+
+**`governance/units/TECS-LAUNCH-READINESS-HUB-DRIFT-CONTROL-ADDENDUM-001.md`**  
+**Extends:** `TECS.md` §8 — effective 2026-05-19
+
+That addendum translates the principles in this strategy into mandatory TECS lifecycle rules:
+
+| Strategy principle | Drift-control enforcement |
+|---|---|
+| Incremental, family-by-family (§5–§6) | Addendum §9 — family-cycle hub maintenance rule |
+| Planned requirements intake-first (§8) | Addendum §10 — planned requirements maintenance rule |
+| CRM audited separately (§9) | Addendum §11 — CRM/CAE hub maintenance rule |
+| CAE audited separately (§10) | Addendum §11 — CRM/CAE hub maintenance rule |
+| XDEP status only in main repo (§11) | Addendum §11.1 — XDEP-only enforcement |
+| No false repo truth from planning docs | Addendum §6 — evidence-level binding rules |
+
+All future population and maintenance work on `governance/launch-readiness/` must comply with
+both this strategy and the drift-control addendum.
+
+---
+
 *Strategy authored: 2026-05-19 — TexQtic governance corpus, `governance/units/`, main branch.*
