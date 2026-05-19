@@ -2284,3 +2284,94 @@ All CTAs use public slugs only — no internal IDs.
 **Artifact:** `governance/units/PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001.md` — created.
 
 **Status: `VERIFIED_COMPLETE`**
+
+---
+
+## Section 34 — PUBLIC-SEO-SITEMAP-ROBOTS-JSONLD-STRATEGY-DESIGN-001
+
+### 34.1 Unit Summary
+
+**Unit:** `PUBLIC-SEO-SITEMAP-ROBOTS-JSONLD-STRATEGY-DESIGN-001`
+**Type:** Design / Repo-truth planning
+**Status:** `DESIGN_COMPLETE`
+**Date:** 2026-05-19
+**Authorized by:** Paresh
+**Artifact:** `governance/units/PUBLIC-SEO-SITEMAP-ROBOTS-JSONLD-STRATEGY-DESIGN-001.md`
+**Prior deferred refs resolved:** `PUBLIC-SEO-INFRASTRUCTURE-DECISION-001 §7`, `D2C-COLLECTION-SEO-GOVERNANCE-001 §8.1`, tracker sections 24, 26, 33 sitemap/robots/JSON-LD deferrals.
+
+### 34.2 Objective
+
+Design the complete public SEO infrastructure for the now-complete public attraction surface.
+Covers `sitemap.xml`, `robots.txt`, JSON-LD structured data strategy, and canonical URL
+handling across all verified public pages. Design-only; no runtime changes in this unit.
+
+### 34.3 Repo-Truth Findings
+
+| Finding | Detail |
+|---|---|
+| `sitemap.xml` | DOES NOT EXIST anywhere in repo |
+| `robots.txt` | DOES NOT EXIST anywhere in repo |
+| JSON-LD (schema.org) | DOES NOT EXIST anywhere in repo |
+| DPP JSON-LD | `public/dpp/v1/context.jsonld` — vocabulary file only, not schema.org |
+| Vercel static serving | `"handle": "filesystem"` in `vercel.json` — static files in `public/` served before SPA catch-all |
+| SEO metadata | `utils/publicPageMeta.ts` Stage 1 — covers 9 public states (title, canonical, robots, OG, Twitter) |
+| Canonical base | `window.location.origin` at runtime; `https://app.texqtic.com` in production |
+| Category slug registry | `config/publicB2CCategoryPages.ts` — 4 approved slugs |
+| Collection slug registry | `config/publicCollectionsProjection.ts` — 5 AVAILABLE slugs |
+| Test coverage for SEO | None (sitemap, robots, JSON-LD, metadata DOM tests all absent) |
+
+### 34.4 Confirmed Indexable Routes (12)
+
+| Route | Canonical |
+|---|---|
+| `/products` | `https://app.texqtic.com/products` |
+| `/products/category/garments` | `https://app.texqtic.com/products/category/garments` |
+| `/products/category/home-textiles` | `https://app.texqtic.com/products/category/home-textiles` |
+| `/products/category/technical-textiles` | `https://app.texqtic.com/products/category/technical-textiles` |
+| `/products/category/fabrics` | `https://app.texqtic.com/products/category/fabrics` |
+| `/collections` | `https://app.texqtic.com/collections` |
+| `/collections/natural-fabric-stories` | `https://app.texqtic.com/collections/natural-fabric-stories` |
+| `/collections/garment-supply-chain-context` | `https://app.texqtic.com/collections/garment-supply-chain-context` |
+| `/collections/home-textiles-showcase` | `https://app.texqtic.com/collections/home-textiles-showcase` |
+| `/collections/textile-services-ecosystem` | `https://app.texqtic.com/collections/textile-services-ecosystem` |
+| `/collections/technical-textiles-context` | `https://app.texqtic.com/collections/technical-textiles-context` |
+| `/inquiry` | `https://app.texqtic.com/inquiry` |
+
+### 34.5 Key Design Decisions
+
+| Decision | Value |
+|---|---|
+| Sitemap approach | Static `public/sitemap.xml` — build-time script from static config registries |
+| Generation script | `scripts/generate-sitemap.ts` — reads `publicB2CCategoryPages.ts` + `publicCollectionsProjection.ts` |
+| Canonical base (static files) | `https://app.texqtic.com` (hardcoded; no `window.location.origin` at build time) |
+| Custom domain canonical | DEFERRED to `PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001` |
+| `/product/:slug` in sitemap | DEFERRED — no public product data in production |
+| `/supplier/:slug` in sitemap | DEFERRED — publication gate decision needed |
+| `/passport/:id` in sitemap | NEVER — private DPP ID in URL |
+| `robots.txt` disallows | `/api/`, `/passport/`, `/join/`, `/supplier/`, `/trust`, `/industries`, `/aggregator` |
+| JSON-LD | DEFERRED to `PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001` |
+| Stub pages noindex | `/trust`, `/industries`, `/aggregator` — add `noindex, nofollow` in implementation unit |
+| Query params in sitemap | Never — `/inquiry?...` excluded; only canonical `/inquiry` appears |
+| `<link rel="sitemap">` | Add to `index.html` in implementation unit |
+
+### 34.6 Implementation Plan (Bounded Units)
+
+| Unit | Scope | Status |
+|---|---|---|
+| `PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001` | Create `public/sitemap.xml`, `public/robots.txt`, `scripts/generate-sitemap.ts`; add sitemap link to `index.html`; stub state noindex; sitemap tests | NEXT |
+| `PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001` | Extend `utils/publicPageMeta.ts` with JSON-LD; `WebPage`+`BreadcrumbList` for collection/category detail | DEFERRED |
+| `PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001` | Decide canonical base; white-label domain impact; env-var strategy | DEFERRED |
+| `PUBLIC-SEO-PRODUCT-SITEMAP-EXPANSION-001` | Add product detail URLs to sitemap once public product data available | DEFERRED — blocked on product data |
+| `PUBLIC-SEO-SUPPLIER-PROFILE-INDEXABILITY-001` | Supplier profile publication gate + SEO + sitemap | DEFERRED |
+
+### 34.7 Carry-Forward Adjacent Findings (Do Not Implement Without New Prompt)
+
+- Product detail CTA production smoke — deferred; no public products in production
+- `PUBLIC-INQUIRY-GENERAL-EVENT-INFRASTRUCTURE-001` — general inquiry event emission still deferred
+- Stub pages (`/trust`, `/industries`, `/aggregator`) — noindex implementation deferred to Unit A above
+- `PUBLIC_ENTRY` / `AUTH` states — no robots directive; low risk; optional improvement
+
+### 34.8 Design Commit Reference
+
+- **Commit message:** `[TEXQTIC] governance: design public SEO sitemap robots JSON-LD strategy`
+- **Commit hash:** (pending commit)
