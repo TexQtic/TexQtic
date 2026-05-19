@@ -149,11 +149,29 @@ If a fact is already recorded in those locations, this hub references it — it 
 
 ---
 
-## 10. Design Authority
+## 10. Design and Planning Strategy Authority
 
 This hub was created by: `TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-DESIGN-001`
 
 Full design rationale, taxonomy definitions, update rules, ownership boundaries, and stop conditions
 are documented in that unit file.
 
-Population of all skeleton docs is governed by: `TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-POPULATION-001` (next recommended unit — not yet started).
+### Planning Strategy Artifacts (read before populating or amending this hub)
+
+| Artifact | Location | Purpose |
+|---|---|---|
+| `TEXQTIC-LAUNCH-READINESS-TECHNICAL-AUDIT-STRATEGY-001` | `governance/units/` | Taxonomies, classification codes, readiness codes, family registry, evidence levels — all IN FORCE |
+| `TEXQTIC-LAUNCH-READINESS-INCREMENTAL-TRUTH-STRATEGY-001` | `governance/units/` | **Execution process authority** — incremental, family-by-family population model; CRM/CAE separation rules; planned requirements intake |
+
+### How This Hub Is Populated
+
+Hub documents are populated **incrementally, family by family**, not in a single audit pass.
+The process is:
+
+1. `TEXQTIC-LAUNCH-FAMILY-INDEX-001` — family index with priority ordering (next unit)
+2. `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-001` — planned requirements confirmed with Paresh
+3. Family-local implementation cycles — one family at a time, with hub rows updated per cycle
+
+CRM and CAE readiness are audited in their own repos. This hub records only cross-repo
+dependency status and main platform launch readiness. See
+`TEXQTIC-LAUNCH-READINESS-INCREMENTAL-TRUTH-STRATEGY-001` §9–§10 for the CRM/CAE separation rules.

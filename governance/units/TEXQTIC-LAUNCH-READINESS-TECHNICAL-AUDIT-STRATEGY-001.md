@@ -886,3 +886,51 @@ After this strategy unit is committed, the following unit sequence is authorized
 ---
 
 *Strategy authored: 2026-07-14 — TexQtic governance corpus, `governance/units/`, main branch.*
+
+---
+
+## 26. Addendum: Execution Sequence Superseded by Incremental Truth Strategy
+
+**Addendum date:** 2026-05-19  
+**Superseding unit:** `TEXQTIC-LAUNCH-READINESS-INCREMENTAL-TRUTH-STRATEGY-001` (committed same session)
+
+### 26.1 What Is Superseded
+
+The following sections of this document are superseded by
+`TEXQTIC-LAUNCH-READINESS-INCREMENTAL-TRUTH-STRATEGY-001`:
+
+| Section | Title | Status |
+|---|---|---|
+| §22 | Audit Execution Sequence (35-step big-bang model) | SUPERSEDED |
+| §23 | Stop Conditions for the Audit Unit | SUPERSEDED (see §16 of new strategy) |
+| §24 | Completion Checklist | SUPERSEDED (see §17 of new strategy) |
+| §25 | Subsequent Units | SUPERSEDED (see §15 of new strategy) |
+
+### 26.2 What Remains in Force
+
+All taxonomies, classification codes, and domain definitions in this document remain
+authoritative and are referenced by the incremental truth strategy:
+
+| Section | Title | Status |
+|---|---|---|
+| §0–§1 | Operating constraints, purpose, scope | IN FORCE |
+| §2 | Pre-audit inspection sources (reference only; not for one-pass audit) | IN FORCE — per-family use |
+| §3 | Feature inventory strategy and intake form | IN FORCE |
+| §4 | Tracker audit strategy | IN FORCE |
+| §5–§7 | Main platform, CRM, and CAE audit categories | IN FORCE — per-family use |
+| §8 | Cross-repo dependency model | IN FORCE |
+| §9 | Family registry (FAM-01 through FAM-24) | IN FORCE |
+| §10 | MVP vs. post-MVP classification rules | IN FORCE |
+| §11 | Readiness status taxonomy | IN FORCE |
+| §12 | Priority taxonomy | IN FORCE |
+| §13 | Evidence level taxonomy | IN FORCE |
+| §14 | Technical-only repo-recording policy | IN FORCE (extended by new strategy §13–§14) |
+| §15 | Development priority taxonomy and sequencing rules | IN FORCE |
+| §16 | Integrated development plan structure | IN FORCE — created after sufficient family truth |
+| §17 | Proposed audit tracker structure | IN FORCE — created incrementally, not upfront |
+| §18–§21 | Handling rules (planned features, stale docs, verified units, pre-existing M files) | IN FORCE |
+
+### 26.3 Transition Rule
+
+Any future unit that references this strategy must read `TEXQTIC-LAUNCH-READINESS-INCREMENTAL-TRUTH-STRATEGY-001`
+as the execution process authority and treat this document as the taxonomy and classification authority.
