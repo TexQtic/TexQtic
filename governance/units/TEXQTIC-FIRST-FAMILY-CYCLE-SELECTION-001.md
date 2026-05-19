@@ -12,7 +12,7 @@
 | **Authored by** | Copilot — Governance Agent (Claude Sonnet 4.6) |
 | **Authorized by** | Paresh Patel |
 | **Layer 0 posture at time of execution** | HOLD_FOR_AUTHORIZATION + HOLD_FOR_COUNSEL_FEEDBACK |
-| **Commit hash** | TBD — backfill after primary commit |
+| **Commit hash** | `fc01aa80369903956120c6a983af57c08c0d9f8a` |
 
 ---
 
@@ -309,7 +309,7 @@ were not staged or modified.
 
 ## 19. Commit Hash
 
-**TBD** — backfill after primary commit lands.
+`fc01aa80369903956120c6a983af57c08c0d9f8a`
 
 Primary commit: `[TEXQTIC] governance: select first launch family cycle`
 
