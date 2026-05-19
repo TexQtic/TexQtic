@@ -2381,8 +2381,9 @@ handling across all verified public pages. Design-only; no runtime changes in th
 ## Section 35 — PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001
 
 **Unit ID:** PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001
-**Status:** IMPLEMENTATION_COMPLETE
+**Status:** VERIFIED_COMPLETE
 **Date:** 2026-05-19
+**Verification Date:** 2026-05-19
 **Artifact:** `governance/units/PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001.md`
 
 ### 35.1 Scope
@@ -2431,4 +2432,82 @@ Three layers applied to `/trust`, `/industries`, `/aggregator`:
 ### 35.6 Commit Reference
 
 - **Commit message:** `[TEXQTIC] public: add sitemap and robots SEO infrastructure`
-- **Commit hash:** (pending)
+- **Commit hash:** `9b69d88`
+- **Correction commit:** `f2b575a` — `[TEXQTIC] public: reconcile sitemap route set with repo truth` (governance doc Section 4.1 slug fix; runtime files unchanged)
+
+### 35.7 Next Units
+
+1. ~~`PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001-VERIFY-CLOSE`~~ — COMPLETE (VERIFIED_COMPLETE)
+2. `PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001` — NEXT
+3. `PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001` — DEFERRED
+4. `PUBLIC-SEO-PRODUCT-SITEMAP-EXPANSION-001` — DEFERRED (blocked on public product data in production)
+5. `PUBLIC-SEO-SUPPLIER-PROFILE-INDEXABILITY-001` — DEFERRED
+
+### 35.8 Verification Evidence
+
+**Verify-close unit:** `PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001-VERIFY-CLOSE`
+**Verification date:** 2026-05-19
+
+**Implementation commit:** `9b69d88` — 8 files, all allowlisted.
+**Correction commit:** `f2b575a` — governance artifact Section 4.1 only; runtime files unchanged.
+
+**Local validation:**
+- `node --import tsx scripts/generate-sitemap.ts` → Exit 0, 12 URLs written ✅
+- `git diff -- public/sitemap.xml` → no diff (script is deterministic) ✅
+- `pnpm exec tsc --noEmit` → PASS (exit 0, no errors) ✅
+- `pnpm test:frontend` (seo-sitemap.test.ts) → 25 / 25 PASS ✅
+
+**Production checks:**
+- `GET /api/health` → `{"status":"ok"}` ✅
+- `GET /sitemap.xml` → 200, valid XML, 12 `<loc>` entries, correct canonical origin ✅
+- All 12 expected URLs confirmed present in production sitemap ✅
+- Forbidden routes (`/trust`, `/industries`, `/aggregator`, `/api/`, `/passport/`, `/join/`, `/supplier/`) absent from sitemap ✅
+- No private IDs in any `<loc>` ✅
+- No query params in any `<loc>` ✅
+- `GET /robots.txt` → 200, all expected Allow/Disallow directives present ✅
+- `GET /` HTML → `<link rel="sitemap" type="application/xml" href="/sitemap.xml" />` present ✅
+- `/trust` robots meta → `noindex, nofollow` ✅
+- `/industries` robots meta → `noindex, nofollow` ✅
+- `/aggregator` robots meta → `noindex, nofollow` ✅
+- `/products` robots meta → `index, follow` ✅
+- `/products/category/garments` robots meta → `index, follow` ✅
+- `/collections` robots meta → `index, follow` ✅
+- `/collections/natural-fabric-stories` robots meta → `index, follow` ✅
+- `/inquiry` robots meta → `index, follow` ✅
+
+**Data limitations:** Product detail pages (`/product/:slug`) have no public data in production — not included in sitemap (by design, deferred to `PUBLIC-SEO-PRODUCT-SITEMAP-EXPANSION-001`).
+
+**Artifact:** `governance/units/PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001.md` — status updated to `VERIFIED_COMPLETE`.
+
+**Status: `VERIFIED_COMPLETE`**
+
+---
+
+## Section 36 — PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001-VERIFY-CLOSE
+
+**Unit ID:** PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001-VERIFY-CLOSE
+**Status:** VERIFIED_COMPLETE
+**Date:** 2026-05-19
+**Artifact:** `governance/units/PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001.md` (status updated)
+
+### 36.1 Scope
+
+Production and local verification of the static SEO infrastructure delivered in `PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001` (commit `9b69d88`) and its correction `f2b575a`.
+
+Verification scope:
+- Sitemap generation script determinism
+- Production sitemap URL set (12 canonical URLs, no forbidden/private routes)
+- Production robots.txt directives
+- `<link rel="sitemap">` in `index.html`
+- Noindex guards on 3 stub routes (`/trust`, `/industries`, `/aggregator`)
+- Indexable robots meta on 5 public routes (`/products`, `/products/category/garments`, `/collections`, `/collections/natural-fabric-stories`, `/inquiry`)
+- TypeScript typecheck and 25 Vitest unit tests
+
+### 36.2 Verification Outcome
+
+All checks PASS. No runtime corrections required. Governance artifact Section 4.1 (slug list) was corrected at `f2b575a` — this was a documentation error only; runtime files were always correct.
+
+### 36.3 Commit Reference
+
+- **Commit message:** `[TEXQTIC] governance: verify public SEO sitemap robots`
+- **Commit hash:** `2eb491a`
