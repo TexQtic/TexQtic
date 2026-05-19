@@ -2610,4 +2610,4 @@ Implementation delivered exactly as designed in the JSON-LD strategy.
 ### 38.4 Commit Reference
 
 - **Commit message:** `[TEXQTIC] governance: verify public SEO JSON-LD web types`
-- **Commit hash:** (pending — set after commit)
+- **Commit hash:** `623d97b`
