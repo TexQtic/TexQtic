@@ -185,6 +185,21 @@ Each entry has:
 
 ---
 
+### D-010: Supplier Profile Publication and Indexability Policy
+
+| Field | Value |
+|---|---|
+| **Decision question** | Under what conditions is a supplier's profile page publicly indexable? What publication consent gate is required? What minimum profile completeness must a supplier reach before their profile is publicly searchable? |
+| **Context** | `/supplier/:slug` route exists as a noindex stub. For this to become an SEO-indexed supplier directory, TexQtic needs a defined policy on: (1) does the supplier consent to being publicly searchable at onboarding; (2) what minimum profile fields trigger indexability; (3) what is the opt-out mechanism; (4) what privacy implications exist (GDPR, India DPDP). This is explicitly gated by `PUBLIC-SEO-SUPPLIER-PROFILE-INDEXABILITY-001` and `FTR-SEO-003`. |
+| **Why not ready** | No Surat pilot supplier has been onboarded. No supplier agreement language covers public profile consent. Supplier expectations about public discoverability have not been explored. |
+| **Trigger condition** | First real Surat pilot supplier is onboarded. Paresh discusses discoverability expectations with the supplier. Supplier agreement or onboarding flow is reviewed for consent capture. |
+| **Impact of delaying** | Cannot implement supplier profile SEO or indexable supplier directory. No supplier keyword coverage in organic search. Not a launch blocker — supplier directory is a LAUNCH_DEPENDENCY, not MVP_CRITICAL. |
+| **Who decides** | Paresh (product + legal policy decision; may require supplier consent review) |
+| **Priority** | P2 |
+| **Status** | PARKED |
+
+---
+
 ## 4. Decided Items (History)
 
 | ID | Decision question | Outcome | Decided | Date |
@@ -200,4 +215,4 @@ Each entry has:
 | Date | Change | Who |
 |---|---|---|
 | 2026-05-19 | Skeleton created; D-001 through D-009 populated from repo inspection of NEXT-ACTION.md, BLOCKED.md, and closed governance units | Copilot/Design unit |
-| — | (To be populated) | — |
+| 2026-07-14 | Added D-010 (Supplier Profile Publication and Indexability Policy) — SEO pending work register sync | `PUBLIC-SEO-PENDING-WORK-REGISTER-SYNC-001` |

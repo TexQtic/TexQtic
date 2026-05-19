@@ -92,8 +92,11 @@ before their specific SEO goals can be achieved.
 | SU-1 | `PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001` | Canonical URL strategy decision and implementation | PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001 | sitemap expansion, supplier profile indexing, domain redirect policy | P1 | NOT_OPENED |
 | SU-2 | `PUBLIC-SEO-PRODUCT-SITEMAP-EXPANSION-001` | Add individual product detail pages to sitemap | PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001 | Dynamic `/product/:slug` pages in sitemap | P2 | NOT_OPENED |
 | SU-3 | `PUBLIC-SEO-SUPPLIER-PROFILE-INDEXABILITY-001` | Define and implement supplier profile indexability gate | PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001 | `/supplier/:slug` public pages indexed | P2 | NOT_OPENED |
+| SU-4 | `PUBLIC-SEO-DOMAIN-CANONICAL-IMPLEMENTATION-001` | Implement canonical redirect policy, update canonical tags site-wide, and update sitemap.xml origin URL | `PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001` (SU-1 strategy outcome) | Correct canonical URL authority; no domain-split indexing | P1 | NOT_OPENED |
+| SU-5 | `PUBLIC-SEO-PRODUCT-DETAIL-JSONLD-EXPANSION-001` | Add safe JSON-LD structured data (Product/ItemList type) to individual product pages — no Offer, price, or inventory schema | PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001 (product data model not stable) | Rich result eligibility for individual product pages | P2 | NOT_OPENED |
+| SU-6 | `PUBLIC-SEO-SUPPLIER-JSONLD-IMPLEMENTATION-001` | Implement JSON-LD structured data for public supplier profile pages after indexability policy is defined | SU-3 indexability decision; supplier publication consent rules | Rich result eligibility for supplier directory pages | P2 | NOT_OPENED |
 
-**Dependencies:** SU-2 and SU-3 depend on SU-1. Do not open SU-2 or SU-3 before SU-1 is decided.
+**Dependencies:** SU-2, SU-3, and SU-4 all depend on SU-1. SU-5 depends on SU-1 and a stable product data model. SU-6 depends on SU-3 (indexability policy). Do not open SU-2, SU-3, or SU-4 before SU-1 is decided.
 
 ---
 
@@ -142,9 +145,34 @@ Confirm before any buyer-facing outreach:
 
 ---
 
+## 9. New Public Page SEO Entry Checklist
+
+This checklist is a **standing governance rule**. Every new public page added to the TexQtic
+platform MUST satisfy all 8 gates before the route is set to `index, follow` (removed from noindex).
+
+This checklist applies to any page added after the current baseline (§2). It does not retroactively
+change the status of existing PRODUCTION_VERIFIED pages (those were verified in their respective units).
+
+| Gate | Requirement | Notes |
+|---|---|---|
+| SEO-G1 | Route has a page-specific `<title>` tag | No generic fallback; unique per route |
+| SEO-G2 | Route has a page-specific `<meta name="description">` tag | Distinct, keyword-relevant; no generic fallback |
+| SEO-G3 | Route has a `<link rel="canonical">` tag with the correct canonical URL | Must use the canonical origin confirmed by SU-1 |
+| SEO-G4 | Route has `og:title`, `og:description`, `og:url` Open Graph meta tags | Required for social sharing; must match title/description |
+| SEO-G5 | Route has a `<meta name="robots">` tag with correct index/noindex intent | Must be explicit; no implicit fallback |
+| SEO-G6 | Route is correctly included in (or intentionally excluded from) `sitemap.xml` | New indexed pages must be added; new noindex stubs must be excluded |
+| SEO-G7 | Route is correctly ALLOW or DISALLOW in `robots.txt` | Confirm robots.txt directive matches index intent |
+| SEO-G8 | Route has appropriate JSON-LD structured data type markup | WebPage/CollectionPage/BreadcrumbList or domain-specific type as appropriate; must not include forbidden types (Offer, AggregateRating, Review, price, availability, inventory claims) |
+
+**Authority:** `PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001` + `PUBLIC-SEO-JSONLD-WEBTYPE-IMPLEMENTATION-001`.
+All 8 gates are mandatory. A governance unit implementing a new indexed public page must include
+a verification table confirming each gate passes before marking the unit `VERIFIED_COMPLETE`.
+
+---
+
 ## 8. Update History
 
 | Date | Change | Who |
 |---|---|---|
 | 2026-05-19 | Skeleton created; live pages from PROD-AUDIT-002 and sitemap unit; deferred units from sitemap unit close | Copilot/Design unit |
-| — | (To be populated) | — |
+| 2026-07-14 | Added SU-4 (canonical impl), SU-5 (product JSON-LD), SU-6 (supplier JSON-LD) to §5; updated dependency note; added §9 new public page SEO entry checklist (8 gates) | `PUBLIC-SEO-PENDING-WORK-REGISTER-SYNC-001` |
