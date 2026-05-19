@@ -327,7 +327,7 @@ family cycles.
 
 ## §20 Commit Hash
 
-`[TO BE BACKFILLED after commit]`
+`ecfb01e072614ea44b63826bb177035ae679b465`
 
 ---
 
