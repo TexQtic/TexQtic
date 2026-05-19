@@ -157,6 +157,7 @@ Each item has:
 | 2026-05-19 | Added §13 commerce/subscription/payments future design units (5 units) from `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001`; §11 update history updated | `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
 | 2026-07-14 | Added FTR-B2C-004 (minimum inquiry notification loop, MVP_CRITICAL/P1); added to §12 Paresh confirmation notes | `TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001` |
 | 2026-05-19 | Added §10 soft-launch register (FTR-SL-001 through FTR-SL-004): aggregator directory readiness design, XDEP CAE+CRM integration strategy, minimum inquiry notification implementation, supplier inquiry inbox design | `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` |
+| 2026-07-14 | Added §14 Register — Launch Family Cycle Opening Audit Units (FTR-FAM-001: FAM-06 opening audit, FTR-FAM-002: public legal pages bundle, FTR-FAM-003: inquiry notification minimum) | `TEXQTIC-FIRST-FAMILY-CYCLE-SELECTION-001` |
 
 ---
 
@@ -188,3 +189,16 @@ None of these units may open until their listed prerequisite decisions are resol
 | FTU-COMM-003 | B2C-D2C-CHECKOUT-PAYMENT-DESIGN-001 | Authenticated B2C/D2C checkout flow design: cart → checkout → payment → confirmation; downstream-auth boundary confirmed; gateway integration per FTU-COMM-002 | D-012 (merchant-of-record) resolved; Layer 0 authorization for B2C/D2C commerce cycle | PRIT-029, PRIT-031 | P2 | PARKED — DESIGN_GATED |
 | FTU-COMM-004 | COMMISSION-DEDUCTION-POLICY-DESIGN-001 | Commission model design: B2C commission rate, D2C commission rate, deduction timing, payout waterfall, supplier remittance terms, returns and refund handling | D-013 and D-014 resolved; D-012 resolved; counsel/CA review complete | PRIT-031 | P2 | PARKED — DESIGN_GATED |
 | FTU-COMM-005 | B2B-FINANCIAL-BOUNDARY-GUARDRAIL-001 | Formal guardrail enforcement unit: document and enforce B2B no-platform-financial-transaction boundary across FAM-12, FAM-13, FAM-14, FAM-15, FAM-16 family cycle openings | TTP legal counsel feedback received (FTR-LEGAL-001); Paresh authorization for FAM-16 scope | PRIT-030 | P1 | PARKED — HOLD_FOR_COUNSEL_FEEDBACK |
+
+---
+
+## 14. Register — Launch Family Cycle Opening Audit Units
+
+Units identified by `TEXQTIC-FIRST-FAMILY-CYCLE-SELECTION-001` as the immediate family-cycle opening audit units
+and standalone soft-launch prerequisite units required before the Surat pilot soft launch begins.
+
+| Unit ID | Unit Name | Description | Prerequisite | PRIT / FTR cross-ref | Priority | Status |
+|---|---|---|---|---|---|---|
+| FTR-FAM-001 | FAM-06-AUTH-SESSION-OPENING-REPO-TRUTH-AUDIT-001 | First full family cycle opening repo-truth audit: audit auth routes, session handling, reused-user edge case, org_id scoping, Fastify auth plugin chain, frontend auth context, feature flag behavior, noindex on tenant routes. Must produce family-local repo-truth note + gap register. | Layer 0 HOLD_FOR_AUTHORIZATION releases; explicit Paresh authorization | FTR-AUTH-001; LFINDEX §7 FAM-06; FIRST-FAMILY-CYCLE-SELECTION-001 | P0 | NOT_ASSESSED — HOLD_FOR_AUTHORIZATION |
+| FTR-FAM-002 | PUBLIC-LEGAL-PAGES-BUNDLE-001 | Standalone soft-launch prerequisite: privacy policy, terms of service, and any other mandatory legal pages required before any outreach, data collection, or buyer-facing promotion. No family audit required. Implement as standalone unit. | Layer 0 HOLD_FOR_AUTHORIZATION releases (or explicit Paresh authorization before L0 clears if timeline requires) | PRIT-034; Soft-Launch §Q17 S-1, §Q18 B-1, §Q19 A-5; FIRST-FAMILY-CYCLE-SELECTION-001 | P1 | NOT_ASSESSED — HOLD_FOR_AUTHORIZATION |
+| FTR-FAM-003 | INQUIRY-NOTIFICATION-MINIMUM-SOFT-LAUNCH-001 | Standalone soft-launch prerequisite: implement FTR-B2C-004/FTR-SL-003 minimum supplier notification loop for buyer inquiries. Not family-gated. R-013 RESOLVED via classification boundary. Must complete before buyer-facing outreach or directory promotion. | Layer 0 HOLD_FOR_AUTHORIZATION releases (or explicit Paresh authorization); FTR-SL-003 design complete | PRIT-033 Stage 1; FTR-B2C-004; FTR-SL-003; Soft-Launch §Q18 B-3; FIRST-FAMILY-CYCLE-SELECTION-001 | P1 | NOT_ASSESSED — HOLD_FOR_AUTHORIZATION |

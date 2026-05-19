@@ -315,6 +315,22 @@ Each entry has:
 
 ---
 
+### D-018: PRIT-033 Stage 2 Family Assignment (Supplier Inquiry Inbox)
+
+| Field | Value |
+|---|---|
+| **Decision question** | Is the full tenant-dashboard supplier inquiry inbox (Stage 2 of PRIT-033) assigned to FAM-03 (Buyer Inquiry and Response) or FAM-08 (Supplier Profile and Content)? |
+| **Context** | PRIT-033 split delivery was confirmed by `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` Decision C. Stage 1 (minimum inquiry notification, FTR-B2C-004 / FTR-SL-003) is a soft-launch prerequisite and a standalone unit. Stage 2 (full tenant-dashboard inquiry inbox) is MVP_CRITICAL/P1 for hard launch and requires FAM-06 supplier auth to be complete first. The family assignment of Stage 2 between FAM-03 and FAM-08 is pending auth architecture context from FAM-06. |
+| **Why not ready** | FAM-06 has not been opened yet. The inquiry inbox surface definition requires auth architecture context from the FAM-06 opening repo-truth audit to confirm whether it belongs to buyer-side (FAM-03) or supplier-profile-side (FAM-08). |
+| **Trigger condition** | FAM-06 opening repo-truth audit complete; auth architecture confirmed; Paresh reviews inquiry inbox scope and assigns Stage 2 to FAM-03 or FAM-08. |
+| **Impact of delaying** | Stage 2 supplier inquiry inbox cannot be scoped into a family cycle; PRIT-033 Stage 2 remains floating. Stage 1 (FTR-B2C-004 / FTR-SL-003) is unaffected and may proceed as a standalone unit. |
+| **Who decides** | Paresh |
+| **Priority** | P1 |
+| **Status** | PARKED — awaiting FAM-06 opening audit completion |
+| **PRIT cross-ref** | PRIT-033; source unit: `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` Decision C; `TEXQTIC-FIRST-FAMILY-CYCLE-SELECTION-001` |
+
+---
+
 ## 4. Decided Items (History)
 
 | ID | Decision question | Outcome | Decided | Date |
@@ -334,3 +350,4 @@ Each entry has:
 | 2026-05-19 | Added PRIT cross-reference notes to D-005, D-008, D-010 based on Paresh decisions in `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` | `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` |
 | 2026-05-19 | Added D-011 through D-015 from commerce/subscription/payments methodology design unit | `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
 | 2026-05-19 | Added D-016 (B2B financial boundary soft-launch confirmation — CONFIRMED_BOUNDARY) and D-017 (free/manual provisioning model — CONFIRMED); both confirmed via `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` Decisions F and G | `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` |
+| 2026-07-14 | Added D-018 (PRIT-033 Stage 2 supplier inquiry inbox family assignment — FAM-03 vs FAM-08, PARKED pending FAM-06 auth audit) | `TEXQTIC-FIRST-FAMILY-CYCLE-SELECTION-001` |
