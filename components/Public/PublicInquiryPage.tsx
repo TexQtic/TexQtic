@@ -34,6 +34,7 @@ import { PublicNavbar, type PublicNavbarProps } from './PublicNavbar';
 import {
   submitPublicInquiry,
   type PublicInquiryCategory,
+  type PublicInquirySourceSurface,
 } from '../../services/publicB2BService';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -45,6 +46,11 @@ export interface PublicInquiryPageProps {
   readonly nav: PublicNavbarProps;
   readonly onBack: () => void;
   readonly onSignIn: () => void;
+  // Context handoff — PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001
+  readonly productSlug?: string;
+  readonly categorySlug?: string;
+  readonly collectionSlug?: string;
+  readonly sourceSurface?: string;
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -78,21 +84,58 @@ function classifySubmitError(err: unknown): string {
   return 'We could not record your inquiry right now. Please try again.';
 }
 
+// ── Source surface resolution ─────────────────────────────────────────────────
+
+const VALID_SOURCE_SURFACES = new Set<string>([
+  'GENERAL_PUBLIC', 'SUPPLIER_PROFILE', 'PRODUCT_DETAIL', 'PRODUCT_BROWSE',
+  'CATEGORY_STORY', 'COLLECTION_DETAIL', 'COLLECTION_LIST',
+  'TRUST_LANDING', 'INDUSTRY_LANDING', 'NAVBAR', 'DIRECT', 'UNKNOWN',
+]);
+
+function resolveSourceSurface(raw: string | undefined): PublicInquirySourceSurface {
+  return raw && VALID_SOURCE_SURFACES.has(raw)
+    ? (raw as PublicInquirySourceSurface)
+    : 'GENERAL_PUBLIC';
+}
+
 // ── General inquiry form ──────────────────────────────────────────────────────
 // Phase 2: no supplier context — submits without supplier_slug.
-// source_surface: 'GENERAL_PUBLIC' — canonical value for /inquiry general mode.
+// source_surface: from prop or defaults to 'GENERAL_PUBLIC'.
+// Context handoff: productSlug / categorySlug / collectionSlug (priority order).
 
 interface GeneralInquiryFormProps {
   readonly onSuccess: () => void;
   readonly onError: (msg: string) => void;
+  readonly productSlug?: string;
+  readonly categorySlug?: string;
+  readonly collectionSlug?: string;
+  readonly sourceSurface?: string;
 }
 
-function GeneralInquiryForm({ onSuccess, onError }: GeneralInquiryFormProps) {
+function GeneralInquiryForm({
+  onSuccess,
+  onError,
+  productSlug,
+  categorySlug,
+  collectionSlug,
+  sourceSurface,
+}: GeneralInquiryFormProps) {
   const [category, setCategory] = useState<PublicInquiryCategory | ''>('');
   const [geoBand, setGeoBand] = useState('');
   const [volumeBand, setVolumeBand] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Context handoff: priority productSlug > categorySlug > collectionSlug
+  const contextField = productSlug
+    ? { product_slug: productSlug }
+    : categorySlug
+      ? { category_slug: categorySlug }
+      : collectionSlug
+        ? { collection_slug: collectionSlug }
+        : {};
+  const hasContext = Boolean(productSlug || categorySlug || collectionSlug);
+  const contextHintLabel = productSlug ? 'product' : categorySlug ? 'category' : 'collection';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +144,8 @@ function GeneralInquiryForm({ onSuccess, onError }: GeneralInquiryFormProps) {
     try {
       await submitPublicInquiry({
         inquiry_category: category,
-        source_surface: 'GENERAL_PUBLIC',
+        source_surface: resolveSourceSurface(sourceSurface),
+        ...contextField,
         ...(geoBand.trim() ? { geo_band: geoBand.trim().slice(0, 100) } : {}),
         ...(volumeBand.trim() ? { volume_band: volumeBand.trim().slice(0, 100) } : {}),
         ...(message.trim() ? { message: message.trim().slice(0, 2000) } : {}),
@@ -123,6 +167,11 @@ function GeneralInquiryForm({ onSuccess, onError }: GeneralInquiryFormProps) {
       <p className="mt-2 text-[14px] text-slate-500">
         Tell us what you are looking for. No account required.
       </p>
+      {hasContext && (
+        <p className="mt-1 text-[12px] text-[#2f8094]">
+          We&apos;ll include this {contextHintLabel} context with your inquiry.
+        </p>
+      )}
       <form onSubmit={handleSubmit} noValidate className="mt-6 flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">
           <label
@@ -408,6 +457,10 @@ export function PublicInquiryPage({
   nav,
   onBack,
   onSignIn,
+  productSlug,
+  categorySlug,
+  collectionSlug,
+  sourceSurface,
 }: PublicInquiryPageProps) {
   const isValidSlug = VALID_SLUG_RE.test(supplierSlug);
   const [mode, setMode] = useState<PageMode>(isValidSlug ? 'FORM' : 'NO_CONTEXT');
@@ -425,7 +478,14 @@ export function PublicInquiryPage({
       <PublicNavbar {...nav} />
       <main className="flex flex-1 flex-col items-center justify-center px-6 py-12">
         {mode === 'NO_CONTEXT' && (
-          <GeneralInquiryForm onSuccess={handleSuccess} onError={handleError} />
+          <GeneralInquiryForm
+            onSuccess={handleSuccess}
+            onError={handleError}
+            productSlug={productSlug}
+            categorySlug={categorySlug}
+            collectionSlug={collectionSlug}
+            sourceSurface={sourceSurface}
+          />
         )}
         {mode === 'FORM' && isValidSlug && (
           <InquiryForm

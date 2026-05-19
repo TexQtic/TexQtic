@@ -74,13 +74,22 @@ afterEach(() => {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function renderPage(supplierSlug: string) {
+function renderPage(
+  supplierSlug: string,
+  extra?: {
+    productSlug?: string;
+    categorySlug?: string;
+    collectionSlug?: string;
+    sourceSurface?: string;
+  },
+) {
   return render(
     <PublicInquiryPage
       supplierSlug={supplierSlug}
       nav={NAV_STUB}
       onBack={() => {}}
       onSignIn={() => {}}
+      {...extra}
     />,
   );
 }
@@ -465,5 +474,197 @@ describe('PublicInquiryPage', () => {
     await waitFor(() => {
       expect(screen.getByText(/do not include contact details/i)).toBeInTheDocument();
     });
+  });
+
+  // ── Phase 2: Context handoff tests ──────────────────────────────────────────
+
+  /**
+   * PII-021 — productSlug prop → payload includes product_slug.
+   */
+  it('PII-021 — productSlug prop → payload includes product_slug', async () => {
+    renderPage('', { productSlug: 'organic-cotton-tee', sourceSurface: 'PRODUCT_DETAIL' });
+
+    fireEvent.change(screen.getByLabelText(/Inquiry type/i), {
+      target: { value: 'GENERAL' },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Send inquiry/i }));
+    });
+
+    await waitFor(() => {
+      expect(publicB2BService.submitPublicInquiry).toHaveBeenCalledOnce();
+    });
+
+    const [payload] = vi.mocked(publicB2BService.submitPublicInquiry).mock.calls[0];
+    expect(payload.product_slug).toBe('organic-cotton-tee');
+    expect(payload.source_surface).toBe('PRODUCT_DETAIL');
+    expect(payload.supplier_slug).toBeUndefined();
+    expect(payload.category_slug).toBeUndefined();
+    expect(payload.collection_slug).toBeUndefined();
+  });
+
+  /**
+   * PII-022 — categorySlug prop → payload includes category_slug.
+   */
+  it('PII-022 — categorySlug prop → payload includes category_slug', async () => {
+    renderPage('', { categorySlug: 'garments', sourceSurface: 'CATEGORY_STORY' });
+
+    fireEvent.change(screen.getByLabelText(/Inquiry type/i), {
+      target: { value: 'SOURCING_INTENT' },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Send inquiry/i }));
+    });
+
+    await waitFor(() => {
+      expect(publicB2BService.submitPublicInquiry).toHaveBeenCalledOnce();
+    });
+
+    const [payload] = vi.mocked(publicB2BService.submitPublicInquiry).mock.calls[0];
+    expect(payload.category_slug).toBe('garments');
+    expect(payload.source_surface).toBe('CATEGORY_STORY');
+    expect(payload.product_slug).toBeUndefined();
+    expect(payload.collection_slug).toBeUndefined();
+  });
+
+  /**
+   * PII-023 — collectionSlug prop → payload includes collection_slug.
+   */
+  it('PII-023 — collectionSlug prop → payload includes collection_slug', async () => {
+    renderPage('', { collectionSlug: 'home-textiles-showcase', sourceSurface: 'COLLECTION_DETAIL' });
+
+    fireEvent.change(screen.getByLabelText(/Inquiry type/i), {
+      target: { value: 'GENERAL' },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Send inquiry/i }));
+    });
+
+    await waitFor(() => {
+      expect(publicB2BService.submitPublicInquiry).toHaveBeenCalledOnce();
+    });
+
+    const [payload] = vi.mocked(publicB2BService.submitPublicInquiry).mock.calls[0];
+    expect(payload.collection_slug).toBe('home-textiles-showcase');
+    expect(payload.source_surface).toBe('COLLECTION_DETAIL');
+    expect(payload.product_slug).toBeUndefined();
+    expect(payload.category_slug).toBeUndefined();
+  });
+
+  /**
+   * PII-024 — productSlug + categorySlug: productSlug wins (priority order).
+   */
+  it('PII-024 — productSlug wins over categorySlug (priority)', async () => {
+    renderPage('', {
+      productSlug: 'linen-shirt',
+      categorySlug: 'garments',
+      sourceSurface: 'PRODUCT_DETAIL',
+    });
+
+    fireEvent.change(screen.getByLabelText(/Inquiry type/i), {
+      target: { value: 'GENERAL' },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Send inquiry/i }));
+    });
+
+    await waitFor(() => {
+      expect(publicB2BService.submitPublicInquiry).toHaveBeenCalledOnce();
+    });
+
+    const [payload] = vi.mocked(publicB2BService.submitPublicInquiry).mock.calls[0];
+    expect(payload.product_slug).toBe('linen-shirt');
+    expect(payload.category_slug).toBeUndefined();
+  });
+
+  /**
+   * PII-025 — sourceSurface prop used in payload when valid.
+   */
+  it('PII-025 — valid sourceSurface prop used in payload', async () => {
+    renderPage('', { sourceSurface: 'COLLECTION_LIST' });
+
+    fireEvent.change(screen.getByLabelText(/Inquiry type/i), {
+      target: { value: 'GENERAL' },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Send inquiry/i }));
+    });
+
+    await waitFor(() => {
+      expect(publicB2BService.submitPublicInquiry).toHaveBeenCalledOnce();
+    });
+
+    const [payload] = vi.mocked(publicB2BService.submitPublicInquiry).mock.calls[0];
+    expect(payload.source_surface).toBe('COLLECTION_LIST');
+  });
+
+  /**
+   * PII-026 — unknown sourceSurface defaults to GENERAL_PUBLIC.
+   */
+  it('PII-026 — unknown sourceSurface defaults to GENERAL_PUBLIC', async () => {
+    renderPage('', { sourceSurface: 'INVALID_VALUE' });
+
+    fireEvent.change(screen.getByLabelText(/Inquiry type/i), {
+      target: { value: 'GENERAL' },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Send inquiry/i }));
+    });
+
+    await waitFor(() => {
+      expect(publicB2BService.submitPublicInquiry).toHaveBeenCalledOnce();
+    });
+
+    const [payload] = vi.mocked(publicB2BService.submitPublicInquiry).mock.calls[0];
+    expect(payload.source_surface).toBe('GENERAL_PUBLIC');
+  });
+
+  /**
+   * PII-027 — context hint shown when productSlug present.
+   */
+  it('PII-027 — context hint shown when productSlug present', () => {
+    renderPage('', { productSlug: 'organic-cotton-tee' });
+    expect(screen.getByText(/product context/i)).toBeInTheDocument();
+  });
+
+  /**
+   * PII-028 — context hint shown when categorySlug present.
+   */
+  it('PII-028 — context hint shown when categorySlug present', () => {
+    renderPage('', { categorySlug: 'garments' });
+    expect(screen.getByText(/category context/i)).toBeInTheDocument();
+  });
+
+  /**
+   * PII-029 — context hint shown when collectionSlug present.
+   */
+  it('PII-029 — context hint shown when collectionSlug present', () => {
+    renderPage('', { collectionSlug: 'home-textiles-showcase' });
+    expect(screen.getByText(/collection context/i)).toBeInTheDocument();
+  });
+
+  /**
+   * PII-030 — no context hint when no context props provided.
+   */
+  it('PII-030 — no context hint when no context props', () => {
+    renderPage('');
+    expect(screen.queryByText(/context with your inquiry/i)).toBeNull();
+  });
+
+  /**
+   * PII-031 — valid supplierSlug with productSlug → supplier form shown, no context hint.
+   */
+  it('PII-031 — valid supplierSlug wins; supplier form shown, no context hint', () => {
+    renderPage('acme-textiles', { productSlug: 'organic-cotton-tee' });
+    // Supplier form is shown (FORM mode, not NO_CONTEXT)
+    expect(screen.getByLabelText(/Inquiry type/i)).toBeInTheDocument();
+    // Context hint must not appear (supplier mode, not general form)
+    expect(screen.queryByText(/product context/i)).toBeNull();
   });
 });

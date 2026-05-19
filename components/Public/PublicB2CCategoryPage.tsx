@@ -460,6 +460,12 @@ function CategoryPageContent({ config, nav, onBack, onSignIn }: CategoryPageCont
                 Sign in to Continue
               </button>
               <a
+                href={`/inquiry?categorySlug=${encodeURIComponent(config.slug)}&sourceSurface=CATEGORY_STORY`}
+                className="inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#2f8094] transition hover:bg-[#eff6f8]"
+              >
+                Send a sourcing inquiry
+              </a>
+              <a
                 href="https://texqtic.com/request-access"
                 target="_blank"
                 rel="noopener noreferrer"

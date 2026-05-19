@@ -2223,6 +2223,40 @@ const App: React.FC = () => {
     }
     return '';
   });
+  // PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001:
+  // context slugs and source surface captured from query params on /inquiry load
+  const [publicInquiryProductSlugFromQuery] = useState<string>(() => {
+    if (globalThis.window !== undefined) {
+      const raw =
+        new URLSearchParams(globalThis.window.location.search).get('productSlug') ?? '';
+      return /^[a-z0-9-]+$/.test(raw) ? raw : '';
+    }
+    return '';
+  });
+  const [publicInquiryCategorySlugFromQuery] = useState<string>(() => {
+    if (globalThis.window !== undefined) {
+      const raw =
+        new URLSearchParams(globalThis.window.location.search).get('categorySlug') ?? '';
+      return /^[a-z0-9-]+$/.test(raw) ? raw : '';
+    }
+    return '';
+  });
+  const [publicInquiryCollectionSlugFromQuery] = useState<string>(() => {
+    if (globalThis.window !== undefined) {
+      const raw =
+        new URLSearchParams(globalThis.window.location.search).get('collectionSlug') ?? '';
+      return /^[a-z0-9-]+$/.test(raw) ? raw : '';
+    }
+    return '';
+  });
+  const [publicInquirySourceSurfaceFromQuery] = useState<string>(() => {
+    if (globalThis.window !== undefined) {
+      return (
+        new URLSearchParams(globalThis.window.location.search).get('sourceSurface') ?? ''
+      );
+    }
+    return '';
+  });
   // B2C-PUBLIC-CATEGORY-STORY-PAGES-IMPLEMENTATION-001:
   // category slug captured from /products/category/:slug pathname on load
   const [publicCategorySlugFromPath] = useState<string>(() => {
@@ -7249,6 +7283,10 @@ const App: React.FC = () => {
           <PublicInquiryPage
             nav={{ ...publicNavBase, activeSection: 'inquiry' }}
             supplierSlug={publicInquirySupplierSlugFromQuery}
+            productSlug={publicInquiryProductSlugFromQuery || undefined}
+            categorySlug={publicInquiryCategorySlugFromQuery || undefined}
+            collectionSlug={publicInquiryCollectionSlugFromQuery || undefined}
+            sourceSurface={publicInquirySourceSurfaceFromQuery || undefined}
             onBack={() => setAppState('PUBLIC_B2B_DISCOVERY')}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
           />
