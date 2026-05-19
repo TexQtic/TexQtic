@@ -219,7 +219,7 @@ Per TECS v1.6 §8 (TECS-LAUNCH-READINESS-HUB-DRIFT-CONTROL-ADDENDUM-001):
 
 ## §13 Commit Hash
 
-**Commit:** `[TO BE BACKFILLED]`
+**Commit:** `231c9c17cc12271c1a5036e0a70749ff0a7da160`
 **Message:** `[TEXQTIC] governance: create planned requirements intake`
 **Files:**
 - `governance/launch-readiness/PLANNED-REQUIREMENTS-INTAKE.md` (new)
