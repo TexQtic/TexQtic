@@ -75,18 +75,29 @@ All 12 checks passed before implementation began:
 ### 4.1 `public/sitemap.xml`
 
 Static XML sitemap served directly from Vercel before SPA catch-all. Contains 12 URLs:
-- `/products` — priority 0.9, weekly
-- `/products/category/plain-fabrics` — priority 0.8, weekly
-- `/products/category/specialty-fabrics` — priority 0.8, weekly
-- `/products/category/technical-textiles` — priority 0.8, weekly
-- `/products/category/sustainable-materials` — priority 0.8, weekly
-- `/collections` — priority 0.9, weekly
-- `/collections/plain-fabrics-b2c` — priority 0.8, weekly
-- `/collections/specialty-fabrics-b2c` — priority 0.8, weekly
-- `/collections/technical-textiles-b2c` — priority 0.8, weekly
-- `/collections/sustainable-materials-b2c` — priority 0.8, weekly
-- `/collections/active-wear-fabrics-b2c` — priority 0.8, weekly
-- `/inquiry` — priority 0.7, weekly
+- `/products` — priority 0.8, weekly
+- `/products/category/garments` — priority 0.7, weekly
+- `/products/category/home-textiles` — priority 0.7, weekly
+- `/products/category/technical-textiles` — priority 0.7, weekly
+- `/products/category/fabrics` — priority 0.7, weekly
+- `/collections` — priority 0.8, weekly
+- `/collections/natural-fabric-stories` — priority 0.7, weekly
+- `/collections/garment-supply-chain-context` — priority 0.7, weekly
+- `/collections/home-textiles-showcase` — priority 0.7, weekly
+- `/collections/textile-services-ecosystem` — priority 0.7, weekly
+- `/collections/technical-textiles-context` — priority 0.7, weekly
+- `/inquiry` — priority 0.5, monthly
+
+Category slugs are derived from `B2C_CATEGORY_PAGE_CONFIGS` in `config/publicB2CCategoryPages.ts`.
+Collection slugs are derived from `PUBLIC_COLLECTION_PROJECTIONS` in `config/publicCollectionsProjection.ts`
+filtered to `listState.availability === 'AVAILABLE'` (all 5 collections are AVAILABLE).
+
+> **Correction note (PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001-CORRECTION-001, 2026-05-19):**
+> The initial governance doc draft for this section incorrectly described the sitemap as
+> containing fabricated slugs (`plain-fabrics`, `specialty-fabrics`, `sustainable-materials`,
+> `-b2c`-suffixed collections). Those slugs were never in the config registries, never in
+> `scripts/generate-sitemap.ts`, and never in the committed `public/sitemap.xml`. The runtime
+> files were always correct; only this documentation section was wrong. Corrected above.
 
 Canonical origin: `https://app.texqtic.com`
 
