@@ -103,15 +103,15 @@ All items are drawn from existing governance sources. No new classification is i
 | PRIT-008 | FAM-15: Network Commerce — Invoices and Settlement family cycle | MAIN | FAM-15 | REPO_PARTIAL | NEEDS_REPO_INSPECTION | PARESH_CONFIRMED | PILOT_REQUIRED | P2 |
 | PRIT-009 | Reused-existing-user onboarding edge case handling | MAIN | FAM-06 | REPO_PARTIAL | DESIGN_GATED | PARESH_CONFIRMED | MVP_CRITICAL | P1 |
 | PRIT-010 | Control plane tenant operations (tenant list, inspect, activate) | MAIN | FAM-10 | REPO_PARTIAL | IMPLEMENTATION_READY | PARESH_CONFIRMED | MVP_CRITICAL | P0 |
-| PRIT-011 | Privacy/consent notice for public inquiry form | MAIN | FAM-03 | PLANNED_NOT_IN_REPO | NOT_ASSESSED | UNCONFIRMED | MVP_CRITICAL (provisional) | P1 |
-| PRIT-012 | Supplier ToS / platform agreement acceptance flow | MAIN | FAM-07 | PLANNED_NOT_IN_REPO | NOT_ASSESSED | UNCONFIRMED | MVP_CRITICAL (provisional) | P1 |
-| PRIT-013 | Error monitoring and alerting setup | MAIN | FAM-10 | PLANNED_NOT_IN_REPO | NOT_ASSESSED | UNCONFIRMED | MVP_CRITICAL (provisional) | P1 |
-| PRIT-014 | Performance budget / load testing before pilot go-live | MAIN | FAM-10 | PLANNED_NOT_IN_REPO | NOT_ASSESSED | UNCONFIRMED | PILOT_REQUIRED (provisional) | P2 |
-| PRIT-015 | Rollback procedure documentation for production deployments | MAIN | FAM-10 | PLANNED_NOT_IN_REPO | NOT_ASSESSED | UNCONFIRMED | MVP_CRITICAL (provisional) | P1 |
-| PRIT-016 | SEO domain canonical strategy decision (impacts sitemap, og:url, robots) | MAIN | FAM-04 | GOVERNANCE_CLAIM_ONLY | PARKED | UNCONFIRMED | LAUNCH_DEPENDENCY | P1 |
-| PRIT-017 | G-022 maker-checker decision for award flow completion | MAIN | FAM-13 | GOVERNANCE_CLAIM_ONLY | PARKED | UNCONFIRMED | LAUNCH_DEPENDENCY | P2 |
-| PRIT-018 | Subscription/commercial packaging tier decision | MAIN | FAM-11 | GOVERNANCE_CLAIM_ONLY | PARKED | UNCONFIRMED | POST_MVP (provisional) | P3 |
-| PRIT-019 | Supplier profile publication and indexability policy decision | MAIN | FAM-09 | GOVERNANCE_CLAIM_ONLY | PARKED | UNCONFIRMED | LAUNCH_DEPENDENCY | P2 |
+| PRIT-011 | Privacy/consent notice for public inquiry form | MAIN | FAM-03 | PLANNED_NOT_IN_REPO | NOT_ASSESSED | PARESH_CONFIRMED | MVP_CRITICAL | P1 |
+| PRIT-012 | Supplier ToS / platform agreement acceptance flow | MAIN | FAM-07 | PLANNED_NOT_IN_REPO | NOT_ASSESSED | PARESH_CONFIRMED | MVP_CRITICAL | P1 |
+| PRIT-013 | Error monitoring and alerting setup | MAIN | FAM-10 | PLANNED_NOT_IN_REPO | NOT_ASSESSED | PARESH_CONFIRMED | MVP_CRITICAL | P1 |
+| PRIT-014 | Performance budget / load testing before pilot go-live | MAIN | FAM-10 | PLANNED_NOT_IN_REPO | NOT_ASSESSED | PARESH_CONFIRMED | PILOT_REQUIRED | P2 |
+| PRIT-015 | Rollback procedure documentation for production deployments | MAIN | FAM-10 | PLANNED_NOT_IN_REPO | NOT_ASSESSED | PARESH_CONFIRMED | MVP_CRITICAL | P1 |
+| PRIT-016 | SEO domain canonical strategy decision (impacts sitemap, og:url, robots) | MAIN | FAM-04 | GOVERNANCE_CLAIM_ONLY | PARKED | PARESH_CONFIRMED | LAUNCH_DEPENDENCY | P1 |
+| PRIT-017 | G-022 maker-checker decision for award flow completion | MAIN | FAM-13 | GOVERNANCE_CLAIM_ONLY | PARKED | DEFERRED | LAUNCH_DEPENDENCY | P2 |
+| PRIT-018 | Subscription/commercial packaging tier decision | MAIN | FAM-11 | GOVERNANCE_CLAIM_ONLY | PARKED | POST_MVP_CONFIRMED | POST_MVP | P3 |
+| PRIT-019 | Supplier profile publication and indexability policy decision | MAIN | FAM-09 | GOVERNANCE_CLAIM_ONLY | PARKED | PARESH_CONFIRMED | LAUNCH_DEPENDENCY | P2 |
 | PRIT-020 | CRM → Platform provisioning handoff (WEBHOOK-007) | CROSS_SYSTEM | FAM-22 | GOVERNANCE_CLAIM_ONLY | DESIGN_GATED | XDEP_ONLY | XDEP_DEPENDENCY | — |
 | PRIT-021 | CAE → CRM → Platform integration chain | CROSS_SYSTEM | FAM-24 | GOVERNANCE_CLAIM_ONLY | DESIGN_GATED | XDEP_ONLY | XDEP_DEPENDENCY | — |
 | PRIT-022 | PWA installability and offline shell strategy | MAIN | FAM-10 | USER_PLANNED_ONLY | USER_PLANNED_ONLY | PARESH_CONFIRMED_AS_PLANNED | P2_PILOT_ENABLER | P2 |
@@ -148,12 +148,12 @@ All items are drawn from existing governance sources. No new classification is i
 | PRIT-019 | DECISION-PARKING-LOT D-010 (P2, PARKED) | First real Surat supplier onboarded | NO | YES — Paresh decides publication policy | DECISION-PARKING-LOT.md | After first real supplier onboarded; SEO vs. privacy tradeoff |
 | PRIT-020 | LAUNCH-FAMILY-INDEX FAM-22 / BLOCKED.md WEBHOOK-007 (XDEP_ONLY) | WEBHOOK-007 design gate; CRM repo audit required | NO — CRM repo only | YES — integration contract decision | LAUNCH-FAMILY-INDEX.md | CRM repo audit; define WEBHOOK-007 contract; then main repo integration |
 | PRIT-021 | LAUNCH-FAMILY-INDEX FAM-24 (XDEP_ONLY) | TTP legal gate (HOLD_FOR_COUNSEL_FEEDBACK); CAE audit; CRM audit | NO — other repos only | YES — multi-repo integration design | LAUNCH-FAMILY-INDEX.md | After TTP legal gate and CAE repo audit |
-| PRIT-022 | Paresh-provided planned-feature document (PWA concept) | Needs design: web app manifest, service worker, HTTPS gate; auth/session implications for installed app; subscriber gating implications | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Review in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 |
-| PRIT-023 | Paresh-provided planned-feature document (TexQtic CoWorker concept) | Needs design: AI workbench foundation; non-autonomous execution boundary; skills layer; tenant-scoped memory; tool logging; action approval queue | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Review in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 |
-| PRIT-024 | Paresh-provided planned-feature document (7 Pillars — Pillar 3) | Needs design: China+1 discovery engine; AI-assisted RFQ matching; buyer discovery scope; relation to FAM-12 RFQ | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Review in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 |
-| PRIT-025 | Paresh-provided planned-feature document (7 Pillars — Pillar 4) | Data dependency: real platform transaction, lead-time, and rejection data required; design must precede implementation | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Review in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 |
-| PRIT-026 | Paresh-provided planned-feature document (7 Pillars — Pillar 5) | Needs design: certification pool model; DPP integration (FAM-05); supplier profile eligibility (FAM-09); potential AI document intelligence | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Review in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 |
-| PRIT-027 | Paresh-provided planned-feature document (7 Pillars — Pillar 6) | Needs design: artisan IP model; heritage commerce layer; relation to D2C collections (FAM-02); DPP and traceability (FAM-05, FAM-17) | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Review in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 |
+| PRIT-022 | Paresh-provided planned-feature document (PWA concept) | Needs design: web app manifest, service worker, HTTPS gate; auth/session implications for installed app; subscriber gating implications | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Reviewed in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001; accepted as planned feature; DESIGN_GATED retained; no family cycle opened |
+| PRIT-023 | Paresh-provided planned-feature document (TexQtic CoWorker concept) | Needs design: AI workbench foundation; non-autonomous execution boundary; skills layer; tenant-scoped memory; tool logging; action approval queue | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Reviewed in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001; accepted as planned feature; DESIGN_GATED retained; no family cycle opened |
+| PRIT-024 | Paresh-provided planned-feature document (7 Pillars — Pillar 3) | Needs design: China+1 discovery engine; AI-assisted RFQ matching; buyer discovery scope; relation to FAM-12 RFQ | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Reviewed in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001; accepted as planned feature; DESIGN_GATED retained; no family cycle opened |
+| PRIT-025 | Paresh-provided planned-feature document (7 Pillars — Pillar 4) | Data dependency: real platform transaction, lead-time, and rejection data required; design must precede implementation | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Reviewed in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001; accepted as planned feature; DESIGN_GATED retained; no family cycle opened |
+| PRIT-026 | Paresh-provided planned-feature document (7 Pillars — Pillar 5) | Needs design: certification pool model; DPP integration (FAM-05); supplier profile eligibility (FAM-09); potential AI document intelligence | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Reviewed in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001; accepted as planned feature; DESIGN_GATED retained; no family cycle opened |
+| PRIT-027 | Paresh-provided planned-feature document (7 Pillars — Pillar 6) | Needs design: artisan IP model; heritage commerce layer; relation to D2C collections (FAM-02); DPP and traceability (FAM-05, FAM-17) | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Reviewed in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001; accepted as planned feature; DESIGN_GATED retained; no family cycle opened |
 
 ---
 
@@ -187,20 +187,24 @@ confirmed at each family cycle opening gate.
 
 ## §7 Unconfirmed Planned Requirements
 
-The following items require explicit Paresh confirmation of their classification, scope, or
-priority before their family cycles may open.
+**✅ PRIT-011 THROUGH PRIT-019 CONFIRMED via TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 (2026-05-19)**
 
-| PRIT ID | What Needs Confirmation |
-|---|---|
-| PRIT-011 | Confirm P1/MVP_CRITICAL classification for privacy/consent; confirm which family cycle handles this |
-| PRIT-012 | Confirm P1/MVP_CRITICAL; confirm if external counsel is needed for ToS wording |
-| PRIT-013 | Confirm tooling choice (e.g. Sentry, Datadog, custom); confirm P1/MVP_CRITICAL before go-live |
-| PRIT-014 | Confirm scope of load test (Surat pilot = 30–50 suppliers; what is test profile?) |
-| PRIT-015 | Confirm rollback procedure format (runbook? script? Vercel/Supabase specific?) |
-| PRIT-016 | Confirm domain strategy: will texqtic.com be primary, or will subdomain / marketing site be canonical? |
-| PRIT-017 | Confirm G-022 maker-checker decision: is the two-call split approved? (design artifact exists) |
-| PRIT-018 | Confirm: is commercial packaging needed before MVP launch or is pilot free? |
-| PRIT-019 | Confirm: should supplier profiles be indexed by default from day one, or only after Paresh opts in? |
+All items previously listed as UNCONFIRMED have been reviewed and Paresh decisions recorded.
+See §14 for the full decision table. Summary:
+
+| PRIT ID | Decision | Revised Status |
+|---|---|---|
+| PRIT-011 | Confirmed MVP_CRITICAL/P1; small privacy notice required before pilot go-live | PARESH_CONFIRMED |
+| PRIT-012 | Confirmed MVP_CRITICAL/P1; simplified pilot supplier agreement acceptable first | PARESH_CONFIRMED |
+| PRIT-013 | Confirmed MVP_CRITICAL/P1; Sentry or equivalent required before pilot | PARESH_CONFIRMED |
+| PRIT-014 | Confirmed PILOT_REQUIRED/P2; pilot load profile 30–50 suppliers, 10–20 concurrent | PARESH_CONFIRMED |
+| PRIT-015 | Confirmed MVP_CRITICAL/P1; format: Vercel + Supabase rollback runbook | PARESH_CONFIRMED |
+| PRIT-016 | Confirmed LAUNCH_DEPENDENCY/P1; canonical target PENDING_PARESH_DECISION (D-005 still PARKED) | PARESH_CONFIRMED |
+| PRIT-017 | Deferred; G-022 decision remains HOLD_FOR_PARESH_DECISION; D-007 still PARKED | DEFERRED |
+| PRIT-018 | Confirmed POST_MVP; pilot can launch free/manual; commercial packaging not required for MVP | POST_MVP_CONFIRMED |
+| PRIT-019 | Confirmed opt-in only during pilot; no default indexing of supplier profiles; policy direction partial | PARESH_CONFIRMED |
+
+**No UNCONFIRMED items remain in PRIT-011–019.** Next available PRIT ID: PRIT-028.
 
 > **✅ PRIT-022 THROUGH PRIT-027 ADDED VIA TEXQTIC-PLANNED-FEATURES-DOCUMENT-INTAKE-001**
 >
@@ -268,19 +272,20 @@ classification before the relevant family cycle opens.
 
 | PRIT ID | Title | Current Prov. Class | Paresh Question |
 |---|---|---|---|
-| PRIT-011 | Privacy/consent for inquiry form | MVP_CRITICAL (provisional) | Is this required before pilot go-live, or can a basic notice suffice initially? |
-| PRIT-012 | Supplier ToS/platform agreement | MVP_CRITICAL (provisional) | Is a formal ToS required at Surat pilot onboarding, or can a simplified agreement suffice? |
-| PRIT-013 | Error monitoring/alerting | MVP_CRITICAL (provisional) | Is a monitoring tool required before pilot, or is log-based alerting sufficient initially? |
-| PRIT-014 | Performance/load testing | PILOT_REQUIRED (provisional) | What is the performance threshold for Surat pilot? 50 concurrent users? 200? |
-| PRIT-015 | Rollback procedure documentation | MVP_CRITICAL (provisional) | Confirm format: informal runbook, formal ops playbook, or automated rollback script? |
-| PRIT-016 | SEO canonical domain strategy | LAUNCH_DEPENDENCY | Which domain is canonical? texqtic.com or a marketing subdomain? |
-| PRIT-017 | G-022 maker-checker decision | LAUNCH_DEPENDENCY | Confirm the two-call split design from TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001 |
-| PRIT-018 | Commercial packaging tier decision | POST_MVP (provisional) | Can Surat pilot launch with free/manual provisioning? Or is self-serve commercial gating needed at pilot? |
-| PRIT-019 | Supplier profile indexability policy | LAUNCH_DEPENDENCY | Should Surat supplier profiles be Google-indexed from pilot day one? Or opt-in only? |
+| PRIT-011 | Privacy/consent for inquiry form | MVP_CRITICAL | ✅ CONFIRMED — TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 (2026-05-19) |
+| PRIT-012 | Supplier ToS/platform agreement | MVP_CRITICAL | ✅ CONFIRMED — TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 (2026-05-19) |
+| PRIT-013 | Error monitoring/alerting | MVP_CRITICAL | ✅ CONFIRMED — TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 (2026-05-19) |
+| PRIT-014 | Performance/load testing | PILOT_REQUIRED | ✅ CONFIRMED — TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 (2026-05-19) |
+| PRIT-015 | Rollback procedure documentation | MVP_CRITICAL | ✅ CONFIRMED — TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 (2026-05-19) |
+| PRIT-016 | SEO canonical domain strategy | LAUNCH_DEPENDENCY | ✅ CONFIRMED as LAUNCH_DEPENDENCY — canonical domain target still PENDING_PARESH_DECISION; D-005 remains PARKED |
+| PRIT-017 | G-022 maker-checker decision | LAUNCH_DEPENDENCY | ✅ DEFERRED — G-022 HOLD_FOR_PARESH_DECISION unchanged; no FAM-13 cycle opened |
+| PRIT-018 | Commercial packaging tier decision | POST_MVP | ✅ CONFIRMED POST_MVP — pilot launches free/manual; commercial packaging not required for MVP |
+| PRIT-019 | Supplier profile indexability policy | LAUNCH_DEPENDENCY | ✅ CONFIRMED — opt-in only during Surat pilot; no default indexing; policy direction partial; D-010 remains PARKED |
 
-> **Action for Paresh:** Review the table above and confirm or revise each item's classification
-> before the relevant family cycle opens. No governance unit will classify these items as
-> `MVP_CRITICAL` or `LAUNCH_BLOCKER` based on this intake document alone.
+> **All PRIT-011–019 decisions recorded in `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` (2026-05-19).**
+> No further Paresh action required on these rows at this stage.
+> PRIT-016 canonical domain target and PRIT-017 G-022 design remain pending Paresh decision
+> but are now formally classified and tracked.
 
 ---
 
@@ -302,6 +307,11 @@ classification before the relevant family cycle opens.
 | 12 | PRIT-022–027 added from Paresh-provided planned-feature documents | ✅ §13 added via TEXQTIC-PLANNED-FEATURES-DOCUMENT-INTAKE-001 |
 | 13 | DPP (Pillar 1) and TexCredit (Pillar 2) cross-referenced to existing governance | ✅ §13.4 — no duplicate rows |
 | 14 | Seventh Pillar absence noted; no row created | ✅ §13.6 |
+| 15 | PRIT-011–019 Paresh decisions recorded in §14 | ✅ COMPLETE — TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 |
+| 16 | PRIT-022–027 reviewed; accepted as planned features; DESIGN_GATED retained | ✅ COMPLETE — §14.3 |
+| 17 | No family cycle opened by this review unit | ✅ CONFIRMED — §14.5 |
+| 18 | PRIT-017 deferred; G-022 hold unchanged | ✅ CONFIRMED — §14.2 |
+| 19 | PRIT-018 confirmed POST_MVP; commercial packaging not required at MVP | ✅ CONFIRMED — §14.2 |
 
 ---
 
@@ -400,3 +410,120 @@ All items remain `DESIGN_GATED` with `PARESH_CONFIRMED_AS_PLANNED` confirmation 
 |---|---|---|
 | 2026-07-14 | TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-001 | Document created; PRIT-001 through PRIT-021 populated from governance sources; §6–§10 completed |
 | 2026-05-19 | TEXQTIC-PLANNED-FEATURES-DOCUMENT-INTAKE-001 | PRIT-022 through PRIT-027 added from Paresh-provided planned-feature documents (PWA, CoWorker, 7 Pillars); §13 added; §7 notice updated; §11 checklist updated to 27 rows |
+| 2026-05-19 | TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 | PRIT-011–019 Paresh decisions recorded; PRIT-022–027 reviewed as accepted planned features (DESIGN_GATED retained); §7 updated; §10 updated; §11 checklist rows 15–19 added; §14 review section added |
+
+---
+
+## §14 Planned Requirements Intake Review — TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001
+
+**Unit:** `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001`
+**Review Date:** 2026-05-19
+**Authorized by:** Paresh Patel
+**Layer 0 posture:** `HOLD_FOR_AUTHORIZATION` / `HOLD_FOR_COUNSEL_FEEDBACK` — UNCHANGED
+
+---
+
+### §14.1 Review Summary
+
+This section records Paresh's explicit decisions on PRIT-011 through PRIT-019 (previously
+UNCONFIRMED) and the acceptance review of PRIT-022 through PRIT-027 (Paresh-planned features).
+
+**Review scope:**
+- PRIT-011–019: All 9 items reviewed; decisions recorded below.
+- PRIT-022–027: All 6 items reviewed; accepted as planned features; classifications retained.
+- No implementation authorized by this review.
+- No family cycle opened by this review.
+- Layer 0 posture unchanged.
+
+**Paresh decision basis:** Explicit decisions provided in `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` unit prompt (2026-05-19).
+
+---
+
+### §14.2 PRIT-011–019 Decision Table
+
+| PRIT ID | Title | Original Prov. Class | Paresh Decision | Revised Class | Notes | Destination Family |
+|---|---|---|---|---|---|---|
+| PRIT-011 | Privacy/consent notice for public inquiry form | MVP_CRITICAL (provisional) | **CONFIRMED MVP_CRITICAL/P1** | MVP_CRITICAL | Small privacy/consent notice required before pilot go-live; basic notice acceptable initially; may require counsel review for wording | FAM-03 |
+| PRIT-012 | Supplier ToS / platform agreement acceptance flow | MVP_CRITICAL (provisional) | **CONFIRMED MVP_CRITICAL/P1** | MVP_CRITICAL | Simplified pilot supplier agreement acceptable as first iteration; formal ToS review may follow post-pilot | FAM-07 |
+| PRIT-013 | Error monitoring and alerting setup | MVP_CRITICAL (provisional) | **CONFIRMED MVP_CRITICAL/P1** | MVP_CRITICAL | Sentry or equivalent required before pilot go-live; tooling choice confirmed acceptable at family cycle | FAM-10 |
+| PRIT-014 | Performance budget / load testing before pilot go-live | PILOT_REQUIRED (provisional) | **CONFIRMED PILOT_REQUIRED/P2** | PILOT_REQUIRED | Load test profile confirmed: 30–50 Surat pilot suppliers, 10–20 concurrent sessions baseline | FAM-10 |
+| PRIT-015 | Rollback procedure documentation | MVP_CRITICAL (provisional) | **CONFIRMED MVP_CRITICAL/P1** | MVP_CRITICAL | Format confirmed: Vercel + Supabase rollback runbook; feature-flag rollback path included | FAM-10 |
+| PRIT-016 | SEO domain canonical strategy decision | LAUNCH_DEPENDENCY | **CONFIRMED LAUNCH_DEPENDENCY/P1** | LAUNCH_DEPENDENCY | Confirmed as launch dependency; canonical domain target PENDING_PARESH_DECISION; D-005 remains PARKED until target decided; must decide before backlinks, press, or GSC submission | FAM-04 |
+| PRIT-017 | G-022 maker-checker decision for award flow | LAUNCH_DEPENDENCY | **DEFERRED** | LAUNCH_DEPENDENCY | G-022 HOLD_FOR_PARESH_DECISION UNCHANGED per BLOCKED.md; two-call split design exists but Paresh decision not yet given; D-007 remains PARKED; no FAM-13 cycle opened | FAM-13 |
+| PRIT-018 | Subscription / commercial packaging tier decision | POST_MVP (provisional) | **CONFIRMED POST_MVP/P3** | POST_MVP | Pilot can launch free/manual provisioning; self-serve commercial packaging not required for MVP; D-008 status remains PARKED (pending pilot data); commercial experiment after Surat proof pack | FAM-11 |
+| PRIT-019 | Supplier profile publication and indexability policy | LAUNCH_DEPENDENCY | **CONFIRMED LAUNCH_DEPENDENCY/P2** | LAUNCH_DEPENDENCY | Policy direction confirmed: opt-in only during Surat pilot; no default indexing of supplier profiles; policy partial — full supplier consent policy still pending; D-010 remains PARKED | FAM-09 |
+
+**Evidence level for all PRIT-011–019 decisions:** `PARESH_EXPLICIT_DECISION` — decisions provided by Paresh in unit prompt for `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001`.
+
+---
+
+### §14.3 PRIT-022–027 Review Table
+
+| PRIT ID | Title | Accepted as Planned Feature | Classification Retained | Implementation-Ready | Family Cycle Opened | Next Action |
+|---|---|---|---|---|---|---|
+| PRIT-022 | PWA installability and offline shell strategy | YES | P2_PILOT_ENABLER / DESIGN_GATED | NO | NO | Keep DESIGN_GATED; open FAM-10 cycle when Layer 0 releases and FAM-10 is sequenced |
+| PRIT-023 | TexQtic CoWorker / AI Workbench foundation | YES | POST_MVP / DESIGN_GATED | NO | NO | Keep DESIGN_GATED; open FAM-19 cycle post-MVP when Layer 0 and dependency chain allow |
+| PRIT-024 | China+1 Discovery Engine / RFQ matching strategy | YES | POST_MVP / DESIGN_GATED | NO | NO | Keep DESIGN_GATED; relates to FAM-12; requires FAM-12 E2E complete as prerequisite |
+| PRIT-025 | AI Pricing Oracle | YES | POST_MVP / DESIGN_GATED | NO | NO | Keep DESIGN_GATED; hard data dependency — requires real platform transaction data before design |
+| PRIT-026 | Collective Sustainability Certification Pool | YES | POST_MVP / DESIGN_GATED | NO | NO | Keep DESIGN_GATED; depends on FAM-05 DPP decision and FAM-09 supplier profile work |
+| PRIT-027 | Artisan IP and Heritage Commerce Layer | YES | POST_MVP / DESIGN_GATED | NO | NO | Keep DESIGN_GATED; relates to FAM-02 and FAM-17; post-MVP sequencing |
+
+**Summary:** All 6 planned feature rows accepted as-is. No classification changes. No family cycles opened. All remain `PARESH_CONFIRMED_AS_PLANNED` / `DESIGN_GATED`. These rows do not alter MVP launch readiness.
+
+---
+
+### §14.4 Pillar 7 Note
+
+**Pillar 7 of the TexQtic 7 Pillars was not present in the planned-feature document provided to this review unit.** No PRIT row exists for Pillar 7. No PRIT-028 was created in this review. Paresh should define Pillar 7 and submit it for intake when ready. The next available PRIT ID remains PRIT-028.
+
+---
+
+### §14.5 No Family Cycle Opened
+
+This review unit did NOT open any family implementation cycle. Decisions recorded here:
+- Confirm item classifications for future use at family cycle opening gates
+- Do NOT authorize any implementation work
+- Do NOT change the `HOLD_FOR_AUTHORIZATION` / `HOLD_FOR_COUNSEL_FEEDBACK` Layer 0 posture
+- Do NOT constitute a family opening audit gate
+
+**Every family listed in this intake queue still requires the Family Opening Audit Gate** (defined in `TEXQTIC-LAUNCH-FAMILY-INDEX-AUDIT-GATE-ADDENDUM-001`) before any family-local work begins.
+
+---
+
+### §14.6 Family Opening Audit Gate Reminder
+
+Per `TEXQTIC-LAUNCH-FAMILY-INDEX-AUDIT-GATE-ADDENDUM-001`, before any family implementation cycle opens:
+1. A family-local repo-truth audit must be performed.
+2. The audit unit must be created and committed.
+3. Paresh must explicitly authorize the family cycle opening.
+
+This applies to all families referenced by PRIT-011–027, regardless of their confirmed classification in this review.
+
+---
+
+### §14.7 PRIT-022–027 Do Not Alter MVP Launch Readiness
+
+None of PRIT-022 through PRIT-027 carry P0, P1, MVP_CRITICAL, or LAUNCH_BLOCKER classification. Their acceptance as planned features has no effect on the MVP launch critical path. MVP launch readiness is governed by PRIT-001–019 and the P0 family audit gates.
+
+---
+
+### §14.8 CRM and CAE Handling
+
+- PRIT-020 (CRM provisioning handoff / WEBHOOK-007): NOT reviewed in this unit; XDEP_ONLY posture unchanged.
+- PRIT-021 (CAE → CRM → Platform chain): NOT reviewed in this unit; XDEP_ONLY posture unchanged.
+- No CRM or CAE feature inventories are created or modified by this review.
+- No duplication risk with CRM/CAE governance.
+
+---
+
+### §14.9 No Implementation Performed
+
+This review is governance-only. Confirming:
+- No code changes made
+- No schema changes made
+- No migration files created
+- No route or API contract changes made
+- No event contract changes made
+- No OpenAPI contract changes made
+- No family audit performed
+- No runtime files staged or committed

@@ -122,6 +122,7 @@ Each entry has:
 | **Who decides** | Paresh |
 | **Priority** | P1 |
 | **Status** | PARKED |
+| **PRIT cross-ref** | PRIT-016 confirmed as LAUNCH_DEPENDENCY/P1 in `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` (2026-05-19). Canonical target PENDING_PARESH_DECISION. Must decide before backlinks, press mentions, or GSC submission. Status remains PARKED. |
 
 ---
 
@@ -167,6 +168,7 @@ Each entry has:
 | **Who decides** | Paresh |
 | **Priority** | P3 |
 | **Status** | PARKED |
+| **PRIT cross-ref** | PRIT-018 confirmed POST_MVP in `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` (2026-05-19). Pilot can launch free/manual provisioning. Self-serve commercial packaging not required for MVP. Status remains PARKED pending pilot proof pack. |
 
 ---
 
@@ -197,6 +199,7 @@ Each entry has:
 | **Who decides** | Paresh (product + legal policy decision; may require supplier consent review) |
 | **Priority** | P2 |
 | **Status** | PARKED |
+| **PRIT cross-ref** | PRIT-019 confirmed opt-in only during Surat pilot in `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` (2026-05-19). No default indexing of supplier profiles. Policy direction partial — full supplier consent policy still pending. Status remains PARKED. |
 
 ---
 
@@ -216,3 +219,4 @@ Each entry has:
 |---|---|---|
 | 2026-05-19 | Skeleton created; D-001 through D-009 populated from repo inspection of NEXT-ACTION.md, BLOCKED.md, and closed governance units | Copilot/Design unit |
 | 2026-07-14 | Added D-010 (Supplier Profile Publication and Indexability Policy) — SEO pending work register sync | `PUBLIC-SEO-PENDING-WORK-REGISTER-SYNC-001` |
+| 2026-05-19 | Added PRIT cross-reference notes to D-005, D-008, D-010 based on Paresh decisions in `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` | `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` |

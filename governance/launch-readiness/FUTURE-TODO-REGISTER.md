@@ -141,4 +141,19 @@ Each item has:
 | Date | Change | Who |
 |---|---|---|
 | 2026-05-19 | Skeleton created; known deferred items from recent closed units populated | Copilot/Design unit |
-| — | (To be populated) | — |
+| 2026-05-19 | PRIT confirmation notes added for FTR-LEGAL-002, FTR-LEGAL-003, FTR-OPS-001, FTR-OPS-002, FTR-OPS-003 (Paresh decisions via `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001`) | `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` |
+
+---
+
+## 12. PRIT Confirmation Notes (TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001)
+
+The following FTR items were confirmed by Paresh in `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` (2026-05-19).
+Status fields in the register tables above are unchanged; these notes record the Paresh decision context.
+
+| FTR ID | PRIT ID | Paresh Confirmation | Destination Family |
+|---|---|---|---|
+| FTR-LEGAL-002 | PRIT-011 | Confirmed MVP_CRITICAL/P1. Small privacy/consent notice required before pilot go-live. Basic notice acceptable as first iteration; may require counsel review for specific wording. | FAM-03 |
+| FTR-LEGAL-003 | PRIT-012 | Confirmed MVP_CRITICAL/P1. Simplified pilot supplier agreement acceptable as first iteration. Formal ToS review may follow post-pilot. External counsel may be needed for final wording. | FAM-07 |
+| FTR-OPS-001 | PRIT-013 | Confirmed MVP_CRITICAL/P1. Sentry or equivalent required before pilot go-live. Tooling selection confirmed acceptable at FAM-10 family cycle opening. | FAM-10 |
+| FTR-OPS-002 | PRIT-014 | Confirmed PILOT_REQUIRED/P2. Pilot load profile confirmed: 30–50 Surat pilot suppliers, 10–20 concurrent sessions baseline. | FAM-10 |
+| FTR-OPS-003 | PRIT-015 | Confirmed MVP_CRITICAL/P1. Format confirmed: Vercel + Supabase rollback runbook; feature-flag rollback path included. | FAM-10 |
