@@ -2072,9 +2072,10 @@ deferred to `PUBLIC-INQUIRY-GENERAL-EVENT-INFRASTRUCTURE-001`.
 
 **Unit:** `PUBLIC-INQUIRY-GENERAL-MODE-IMPLEMENTATION-001`
 **Type:** Frontend implementation
-**Status:** `COMPLETE`
-**Commit:** (pending)
-**Implementation date:** 2026-07-09
+**Status:** `VERIFIED_COMPLETE`
+**Commit:** `f4ee194916ccc7abb93697ba197bf4a870ad45ab`
+**Implementation date:** 2026-05-19
+**Verification date:** 2026-05-19
 **Authority design:** PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-DESIGN-001 / Phase 2
 
 ### 32.2 Objective
@@ -2135,5 +2136,28 @@ No backend changes. No `App.tsx` changes. No service changes (`services/publicB2
 
 ### 32.7 Next Units
 
-1. `PUBLIC-INQUIRY-GENERAL-MODE-IMPLEMENTATION-001-VERIFY-CLOSE` — production smoke + governance close
+1. ~~`PUBLIC-INQUIRY-GENERAL-MODE-IMPLEMENTATION-001-VERIFY-CLOSE`~~ — COMPLETE (VERIFIED_COMPLETE)
 2. `PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001` — CTA integration in product/category/collection pages
+
+### 32.8 Verification Evidence
+
+**Verify-close unit:** `PUBLIC-INQUIRY-GENERAL-MODE-IMPLEMENTATION-001-VERIFY-CLOSE`
+**Verification date:** 2026-05-19
+
+**Implementation commit:** `f4ee194916ccc7abb93697ba197bf4a870ad45ab` — 3 files, all allowlisted.
+
+**Local validation:** `pnpm typecheck` PASS (exit 0). PII-001–020: 20/20 PASS.
+
+**Production checks (selected):**
+- `GET /api/health` → `{"status":"ok"}` ✅
+- `/inquiry` (no slug) → general form "Share your sourcing interest" ✅
+- Submit without message → opaque success; form replaced ✅
+- Submit with message → no echo of message content ✅
+- `/inquiry/` trailing slash → general form; canonical = `/inquiry` ✅
+- SEO: title `Express Interest — TexQtic`, robots `index, follow` ✅
+- Invalid slug → general form ✅; valid slug format → supplier form ✅
+- handleRetry from error → correct mode (FORM for supplier, NO_CONTEXT for general) ✅
+
+**Artifact:** `governance/units/PUBLIC-INQUIRY-GENERAL-MODE-IMPLEMENTATION-001.md` — created.
+
+**Status: `VERIFIED_COMPLETE`**
