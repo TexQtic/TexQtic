@@ -2161,3 +2161,126 @@ No backend changes. No `App.tsx` changes. No service changes (`services/publicB2
 **Artifact:** `governance/units/PUBLIC-INQUIRY-GENERAL-MODE-IMPLEMENTATION-001.md` — created.
 
 **Status: `VERIFIED_COMPLETE`**
+
+---
+
+## Section 33 — PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001
+
+### 33.1 Unit Summary
+
+**Unit:** `PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001`
+**Type:** Frontend implementation
+**Status:** `VERIFIED_COMPLETE`
+**Commit:** `065ad24`
+**Implementation date:** 2026-05-19
+**Verification date:** 2026-05-19
+**Authority design:** PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-DESIGN-001 / Phase 2
+
+### 33.2 Objective
+
+Propagate sourcing context (product, category, or collection) from public discovery pages into the inquiry form via query-param handoff.
+
+Adds "Send a sourcing inquiry" CTAs to `PublicProductDetail`, `PublicB2CCategoryPage`, and `PublicCollectionDetail`; extends `App.tsx` to capture and pass the relevant query params to `PublicInquiryPage`; extends `PublicInquiryPage` to inject context into the payload, validate `sourceSurface` against an allowlist, and show a user-visible context hint.
+
+### 33.3 Allowlist
+
+| File | Action |
+|---|---|
+| `components/Public/PublicInquiryPage.tsx` | MODIFY |
+| `App.tsx` | MODIFY |
+| `components/Public/PublicProductDetail.tsx` | MODIFY |
+| `components/Public/PublicB2CCategoryPage.tsx` | MODIFY |
+| `components/Public/PublicCollectionDetail.tsx` | MODIFY |
+| `tests/frontend/public-inquiry-page.test.tsx` | MODIFY |
+
+No backend changes. `services/publicB2BService.ts` was already Phase 2-ready.
+
+### 33.4 Changes Made
+
+**`components/Public/PublicInquiryPage.tsx`**
+
+1. Added 4 optional props: `productSlug?`, `categorySlug?`, `collectionSlug?`, `sourceSurface?`.
+2. Added `VALID_SOURCE_SURFACES` 12-value allowlist + `resolveSourceSurface()` guard (unknown → `'GENERAL_PUBLIC'`).
+3. Added context priority logic: product > category > collection → `contextField` spread.
+4. Added `hasContext` + `contextHintLabel` for context hint rendering.
+5. Injected `...contextField` + `source_surface: resolveSourceSurface(sourceSurface)` into `submitPublicInquiry` call.
+6. Added context hint `<p>` (renders when `hasContext` in `GeneralInquiryForm` only; supplier form unchanged).
+
+**`App.tsx`**
+
+1. Added 4 new `useState` initializers frozen at mount: `publicInquiryProductSlugFromQuery`, `publicInquiryCategorySlugFromQuery`, `publicInquiryCollectionSlugFromQuery`, `publicInquirySourceSurfaceFromQuery`.
+2. Slug initializers apply `/^[a-z0-9-]+$/` validation (injection-safe).
+3. Expanded `PUBLIC_INQUIRY` case to pass all 4 new props to `PublicInquiryPage`.
+
+**CTA additions (3 files)**
+
+| File | CTA href pattern |
+|---|---|
+| `PublicProductDetail.tsx` | `/inquiry?productSlug=${encodeURIComponent(slug)}&sourceSurface=PRODUCT_DETAIL` |
+| `PublicB2CCategoryPage.tsx` | `/inquiry?categorySlug=${encodeURIComponent(config.slug)}&sourceSurface=CATEGORY_STORY` |
+| `PublicCollectionDetail.tsx` | `/inquiry?collectionSlug=${encodeURIComponent(collection.publicSlug)}&sourceSurface=COLLECTION_DETAIL` |
+
+All CTAs use public slugs only — no internal IDs.
+
+**`tests/frontend/public-inquiry-page.test.tsx`**
+
+- Updated `renderPage` helper to accept optional `extra` context props object.
+- Added PII-021 through PII-031 (11 new tests):
+  - PII-021: productSlug → `product_slug` in payload; `source_surface=PRODUCT_DETAIL`
+  - PII-022: categorySlug → `category_slug` in payload; `source_surface=CATEGORY_STORY`
+  - PII-023: collectionSlug → `collection_slug` in payload
+  - PII-024: productSlug + categorySlug → productSlug wins
+  - PII-025: valid sourceSurface used in payload
+  - PII-026: unknown sourceSurface → `'GENERAL_PUBLIC'`
+  - PII-027: productSlug → "product context" hint visible
+  - PII-028: categorySlug → "category context" hint visible
+  - PII-029: collectionSlug → "collection context" hint visible
+  - PII-030: no context props → no context hint
+  - PII-031: valid supplierSlug → supplier form; no context hint
+
+### 33.5 Governance Checks
+
+- Slug validation strips any value not matching `/^[a-z0-9-]+$/` — no arbitrary strings reach the payload.
+- `resolveSourceSurface` rejects unknown surfaces; falls back to `'GENERAL_PUBLIC'`.
+- `encodeURIComponent` on all CTA hrefs.
+- No internal IDs in any CTA href.
+- Success state opaque — no context field echoed back.
+- Supplier mode backward-compatible — Phase 1/2 tests PII-001–020 unchanged.
+
+### 33.6 Validation
+
+- `pnpm typecheck` — PASS (frontend + server)
+- PII-001 through PII-031 (31/31) — PASS
+
+### 33.7 Next Units
+
+1. ~~`PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001-VERIFY-CLOSE`~~ — COMPLETE (VERIFIED_COMPLETE)
+2. `PUBLIC-INQUIRY-GENERAL-EVENT-INFRASTRUCTURE-001` — deferred; define entity UUID strategy before wiring event emission
+
+### 33.8 Verification Evidence
+
+**Verify-close unit:** `PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001-VERIFY-CLOSE`
+**Verification date:** 2026-05-19
+
+**Implementation commit:** `065ad24` — 6 files, all allowlisted.
+
+**Local validation:** `pnpm typecheck` PASS (exit 0). PII-001–031: 31/31 PASS.
+
+**Production checks (selected):**
+- `GET /api/health` → `{"status":"ok"}` ✅
+- `/inquiry` → no context hint ✅
+- `/inquiry?productSlug=test-product&sourceSurface=PRODUCT_DETAIL` → "We'll include this **product** context" ✅
+- `/inquiry?categorySlug=garments&sourceSurface=CATEGORY_STORY` → "We'll include this **category** context" ✅
+- `/inquiry?collectionSlug=natural-fabric-stories&sourceSurface=COLLECTION_DETAIL` → "We'll include this **collection** context" ✅
+- Multi-context URL → product wins ✅
+- `supplierSlug=test-supplier&productSlug=test-product` → supplier form; no context hint ✅
+- Submit with category context → opaque success; no echo ✅
+- `/products/category/garments` CTA href → `/inquiry?categorySlug=garments&sourceSurface=CATEGORY_STORY` ✅
+- `/collections/natural-fabric-stories` CTA href → `/inquiry?collectionSlug=natural-fabric-stories&sourceSurface=COLLECTION_DETAIL` ✅
+- SEO canonical: `https://app.texqtic.com/inquiry` (no query params) ✅
+- Neighbor routes `/products`, `/collections` → load ✅
+- Product detail CTA: no public products in production — data limitation; covered by PII-021 ✅
+
+**Artifact:** `governance/units/PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001.md` — created.
+
+**Status: `VERIFIED_COMPLETE`**
