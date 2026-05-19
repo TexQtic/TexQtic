@@ -251,7 +251,7 @@ Pre-existing unstaged M files must remain unstaged:
 
 ## 8. Commit Hash
 
-**Commit hash:** `[TO BE FILLED AT COMMIT]`  
+**Commit hash:** `9a2b01594f873d4bed30482dd7cd81b9df09c060`  
 **Commit message:** `[TEXQTIC] governance: add family opening audit gate`
 
 **Files in commit:**
