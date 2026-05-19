@@ -29,15 +29,16 @@ It does not supersede or replace the live `LAUNCH-ACCELERATION-OVERLAY-001.md`.
 For current launch-planning context, read these documents in this order:
 
 1. **`README.md`** (this file) — what the hub is and what it is not
-2. **`MVP-LAUNCH-READINESS-ROADMAP.md`** — current family-level readiness matrix and critical path
-3. **`MVP-MUST-HAVES-CHECKLIST.md`** — binary launch checklist; what launch blocks on
-4. **`BLIND-SPOT-DEPENDENCY-RISK-REGISTER.md`** — risks and hidden dependencies
-5. **`FUTURE-TODO-REGISTER.md`** — deferred items with rationale
-6. **`DECISION-PARKING-LOT.md`** — open decisions not yet ready to make
-7. **`PILOT-READINESS-SURAT.md`** — Surat pilot proof cell readiness
-8. **`TEAM-FUNDING-READINESS.md`** — team, funding, and operational readiness
-9. **`POST-MVP-ROADMAP.md`** — future phases beyond MVP launch
-10. **`PUBLIC-PAGES-SEO-EXPANSION-REGISTER.md`** — future public pages and SEO decisions
+2. **`LAUNCH-FAMILY-INDEX.md`** — family sequencing navigation map; proposed cycle order; not a detailed audit
+3. **`MVP-LAUNCH-READINESS-ROADMAP.md`** — current family-level readiness matrix and critical path
+4. **`MVP-MUST-HAVES-CHECKLIST.md`** — binary launch checklist; what launch blocks on
+5. **`BLIND-SPOT-DEPENDENCY-RISK-REGISTER.md`** — risks and hidden dependencies
+6. **`FUTURE-TODO-REGISTER.md`** — deferred items with rationale
+7. **`DECISION-PARKING-LOT.md`** — open decisions not yet ready to make
+8. **`PILOT-READINESS-SURAT.md`** — Surat pilot proof cell readiness
+9. **`TEAM-FUNDING-READINESS.md`** — team, funding, and operational readiness
+10. **`POST-MVP-ROADMAP.md`** — future phases beyond MVP launch
+11. **`PUBLIC-PAGES-SEO-EXPANSION-REGISTER.md`** — future public pages and SEO decisions
 
 ---
 
@@ -46,6 +47,7 @@ For current launch-planning context, read these documents in this order:
 | File | Purpose |
 |---|---|
 | `README.md` (this file) | Folder index, usage rules, authority boundary |
+| `LAUNCH-FAMILY-INDEX.md` | Navigation map for family sequencing; proposed cycle order; not a detailed audit |
 | `MVP-LAUNCH-READINESS-ROADMAP.md` | Phase/status matrix; critical path to real tenants/users |
 | `MVP-MUST-HAVES-CHECKLIST.md` | Binary launch checklist; minimum acceptable production readiness |
 | `FUTURE-TODO-REGISTER.md` | All deferred implementation candidates; reason deferred; priority |
@@ -168,7 +170,7 @@ are documented in that unit file.
 Hub documents are populated **incrementally, family by family**, not in a single audit pass.
 The process is:
 
-1. `TEXQTIC-LAUNCH-FAMILY-INDEX-001` — family index with priority ordering (next unit)
+1. `TEXQTIC-LAUNCH-FAMILY-INDEX-001` — family index with priority ordering (COMPLETE — see `LAUNCH-FAMILY-INDEX.md`)
 2. `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-001` — planned requirements confirmed with Paresh
 3. Family-local implementation cycles — one family at a time, with hub rows updated per cycle
 
