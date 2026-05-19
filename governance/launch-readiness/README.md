@@ -252,3 +252,17 @@ When a hub row is discovered to be inconsistent with current repo truth, it must
 
 Silent drift — leaving a known-incorrect row without recording it as pending — is a governance
 violation. The next unit allowlisted for the affected hub file must resolve it.
+
+### Family Opening Audit Gate
+
+**Governing unit:** `TEXQTIC-LAUNCH-FAMILY-INDEX-AUDIT-GATE-ADDENDUM-001`  
+**Full rule text:** `LAUNCH-FAMILY-INDEX.md` §12
+
+Before opening any family implementation cycle, the Family Opening Audit Gate must be observed:
+
+1. Read the family's current index row in `LAUNCH-FAMILY-INDEX.md`.
+2. Perform a current-cycle family-local repo-truth inspection (routes, services, schema, frontend, tests, feature flags, blockers, prior unit evidence, production limitations).
+3. Produce a short family-local repo-truth note in the unit governance file before any design or implementation begins.
+
+**The family index row is not sufficient evidence to open a family cycle.** Steps 2 and 3 above are
+mandatory and non-skippable. Old trackers and hub rows may guide the inspection but cannot replace it.

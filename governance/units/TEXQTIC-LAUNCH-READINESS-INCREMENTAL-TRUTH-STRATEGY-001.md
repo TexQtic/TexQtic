@@ -205,6 +205,12 @@ Only one family cycle may be open at a time.
 
 ### Step 2 — Inspect Repo Truth for This Family
 
+> **MANDATORY — NON-SKIPPABLE GATE.**  
+> This step is required before any family work (design, implementation, audit, verification,
+> correction, governance close, or any other governed family-local work) may begin.  
+> See `LAUNCH-FAMILY-INDEX.md` §12 (Family Opening Audit Gate) and
+> `TEXQTIC-LAUNCH-FAMILY-INDEX-AUDIT-GATE-ADDENDUM-001` for the full binding rule text.
+
 For the selected family, inspect only the repos and files relevant to that family:
 - Main platform: routes, services, schema fields, frontend components, tests for this family
 - If the family is cross-system (e.g., FAM-22 CRM→Platform Handoff): inspect the

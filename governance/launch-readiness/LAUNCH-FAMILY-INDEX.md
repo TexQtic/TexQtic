@@ -325,5 +325,126 @@ This document is governed by:
 
 ---
 
+## 12. Family Opening Audit Gate
+
+**Status:** MANDATORY BINDING RULE — recorded per Paresh instruction, 2026-05-19  
+**Authority:** `TEXQTIC-LAUNCH-FAMILY-INDEX-AUDIT-GATE-ADDENDUM-001`  
+**Extends:** `TEXQTIC-LAUNCH-READINESS-INCREMENTAL-TRUTH-STRATEGY-001` §6 Steps 2–3
+
+> **This index is not sufficient evidence to open any family work.**
+>
+> Before any family is opened for implementation, design, audit, verification, correction,
+> governance close, or any other governed family-local work, that family MUST first undergo
+> a family-local repo-truth inspection.
+
+### Rule A — Index Navigation Does Not Authorize Work
+
+The Launch Family Index provides:
+
+- **Navigation** — a sequencing map and high-level status snapshot derived from governance artifacts
+- **Not authorization** — no family may begin governed work based on index rows alone
+
+A family's index status (`NOT_ASSESSED`, `PARTIALLY_IMPLEMENTED`, `DESIGN_GATED`, etc.) is a
+high-level indicator derived from governance document inspection. It is not a current repo-truth
+audit. It must not be treated as such.
+
+### Rule B — Mandatory Pre-Cycle Repo-Truth Inspection
+
+Before any family is opened for:
+
+- implementation
+- design
+- audit
+- verification
+- correction
+- governance close
+- or any other governed family-local work
+
+that family MUST first undergo a family-local repo-truth inspection as defined in
+`TEXQTIC-LAUNCH-READINESS-INCREMENTAL-TRUTH-STRATEGY-001` §6 Steps 2–3.
+
+### Rule C — Inspection Currency
+
+The inspection must be **current to the family cycle**. A prior inspection does not satisfy
+this requirement unless:
+
+- The cycle is being re-opened within 2 weeks, AND
+- No implementation changes have occurred to that family's routes, services, schema, or
+  frontend components since the prior inspection
+
+Prior inspection notes, old trackers (B2C tracker, D2C tracker, NC Phase 1 audit records),
+and hub rows may be used as starting points — but they **cannot replace** the current inspection.
+
+### Rule D — Inspection Coverage
+
+The inspection must verify, for the selected family:
+
+| Surface | What to verify |
+|---|---|
+| Routes | Present route handlers; auth middleware; `org_id` scoping; response shapes |
+| Services | Service layer implementations; DB query patterns; RLS assumptions |
+| Schema / Config | Prisma model fields; feature flags; config values relevant to this family |
+| Frontend components | Component presence; data flow; auth-gated surfaces; UI feature flags |
+| Tests | Existing test coverage; test pass/fail status; gaps |
+| Feature flags | Active flags; flag values in production; flag effects on this family |
+| Blockers | Layer 0 holds (`NEXT-ACTION.md`, `BLOCKED.md`); whether any hold directly applies |
+| Prior unit evidence | Which units closed covering this family; evidence level from those units |
+| Production / data | Real data vs. QA data; whether production-smoke has been run for this family |
+
+### Rule E — Family-Local Repo-Truth Note
+
+The inspection must produce a **short family-local repo-truth note** before design or
+implementation begins. This note lives in the family's unit governance file.
+
+The note must record:
+
+1. Current implemented state (with evidence level code)
+2. Gaps — what is missing, partial, or present only in design documents
+3. Evidence level (`PRODUCTION_CONFIRMED` / `TEST_CONFIRMED` / `REPO_CONFIRMED` / `GOVERNANCE_CLAIM_ONLY`)
+4. Active blockers for this family
+5. Known planned requirements for this family (whether or not already in repo)
+6. Whether CRM/CAE XDEP status applies to any requirement in this family
+
+### Rule F — Status Advancement Gate
+
+Family status may not advance from `NOT_ASSESSED` or `NEEDS_REPO_INSPECTION` to any higher
+readiness status without:
+
+1. A completed current-cycle family-local repo-truth inspection
+2. The family-local repo-truth note recorded in the unit governance file
+
+This gate applies even if:
+
+- The family was marked as done in a prior tracker
+- An old hub row suggests the family is already verified
+- A prior TECS unit closed covering part of this family
+
+### Rule G — CRM / CAE Families
+
+CRM families (FAM-20, FAM-21) must be audited in `TexQtic-CRM/governance/`.
+
+CAE families (FAM-23) must be audited in `TEXQTIC-CUSTOMER-ACQUISITION-ENGINE/governance/`.
+
+A CRM or CAE family cycle opened in the main repo violates the CRM/CAE separation rule.
+
+Cross-system families (FAM-22, FAM-24) may record only XDEP status and main-platform
+integration surfaces in the main repo.
+
+### Rule H — Authority Cross-References
+
+This audit gate formalizes as a binding hard gate the inspection steps already defined in the
+incremental truth strategy. Those steps are mandatory and non-skippable — not optional pre-work.
+
+| Referenced rule | Location |
+|---|---|
+| Step 2 — Inspect Repo Truth for This Family | `TEXQTIC-LAUNCH-READINESS-INCREMENTAL-TRUTH-STRATEGY-001` §6 Step 2 |
+| Step 3 — Record Current State | `TEXQTIC-LAUNCH-READINESS-INCREMENTAL-TRUTH-STRATEGY-001` §6 Step 3 |
+| Evidence level codes | `TEXQTIC-LAUNCH-READINESS-TECHNICAL-AUDIT-STRATEGY-001` §13 |
+| Hub drift-control rules | `TECS-LAUNCH-READINESS-HUB-DRIFT-CONTROL-ADDENDUM-001` §5–§9 |
+| Addendum unit | `TEXQTIC-LAUNCH-FAMILY-INDEX-AUDIT-GATE-ADDENDUM-001` |
+
+---
+
 *Family index authored: 2026-05-19 — TexQtic governance corpus, `governance/launch-readiness/`, main branch.*
 *Unit: TEXQTIC-LAUNCH-FAMILY-INDEX-001. Recommended next unit: TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-001.*
+*Audit gate added: 2026-05-19 — `TEXQTIC-LAUNCH-FAMILY-INDEX-AUDIT-GATE-ADDENDUM-001`.*

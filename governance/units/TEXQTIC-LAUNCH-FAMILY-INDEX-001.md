@@ -246,7 +246,7 @@ Post-commit:
 
 ## 11. Commit Hash
 
-**Commit hash:** [populated after commit — see git log]
+**Commit hash:** `eea02792be5eec99bed712bd237d71b0628996d0`
 **Commit message:** `[TEXQTIC] governance: create launch family index`
 
 **Files in commit:**
@@ -268,6 +268,37 @@ This intake unit precedes all family-local implementation cycles.
 **Note:** The intake unit is governance-only documentation. It does not authorize implementation.
 It requires Paresh to confirm or deny each planned requirement before it can be assigned to a
 family cycle row.
+
+---
+
+## 13. Paresh Acceptance Caveat Record
+
+**Status:** RECORDED — 2026-05-19  
+**Governing unit:** `TEXQTIC-LAUNCH-FAMILY-INDEX-AUDIT-GATE-ADDENDUM-001`
+
+Paresh accepted this family index with one binding caveat:
+
+> *Whenever a family is opened for implementation, design, audit, verification, correction,
+> or any other governed work, that family should always first be audited and repo truth for
+> that family verified.*
+
+This caveat has been formalized as the **Family Opening Audit Gate** and recorded across:
+
+| Location | What was added |
+|---|---|
+| `governance/launch-readiness/LAUNCH-FAMILY-INDEX.md` §12 | Full binding rule text (Rules A–H) |
+| `governance/units/TEXQTIC-LAUNCH-FAMILY-INDEX-AUDIT-GATE-ADDENDUM-001.md` | Unit governance artifact |
+| `governance/units/TEXQTIC-LAUNCH-READINESS-INCREMENTAL-TRUTH-STRATEGY-001.md` §6 Step 2 | Binding annotation added |
+| `governance/launch-readiness/README.md` §11 | Short pointer added |
+
+**Effect:** No family in this index may proceed to implementation, design, or any other governed
+family-local work without first completing a current-cycle family-local repo-truth inspection.
+The family index rows are navigation indicators only — they are not current repo-truth audits
+and must not be treated as such.
+
+**Enforcement:** Any agent or unit that opens a family cycle without first producing a
+family-local repo-truth note is in violation of the Family Opening Audit Gate
+(`LAUNCH-FAMILY-INDEX.md` §12, Rule F).
 
 ---
 
