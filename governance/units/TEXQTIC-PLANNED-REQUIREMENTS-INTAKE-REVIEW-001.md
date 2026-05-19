@@ -219,7 +219,7 @@ They must NEVER be staged or committed as part of this or any governance unit:
 
 ## §18 Commit Hash
 
-`[TO BE BACKFILLED after commit]`
+`78caf65`
 
 ---
 
