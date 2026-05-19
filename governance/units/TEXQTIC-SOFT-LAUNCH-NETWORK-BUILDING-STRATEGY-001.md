@@ -229,6 +229,8 @@ The following pre-existing modified files were intentionally not staged or touch
 
 **Commit message:** `[TEXQTIC] governance: define soft launch network building strategy`
 
+**Commit hash:** `594a46b`
+
 **Files staged:**
 - `governance/launch-readiness/SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY.md` (new)
 - `governance/units/TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001.md` (new)
