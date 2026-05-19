@@ -120,6 +120,10 @@ All items are drawn from existing governance sources. No new classification is i
 | PRIT-025 | AI Pricing Oracle | MAIN | FAM-19 | USER_PLANNED_ONLY | USER_PLANNED_ONLY | PARESH_CONFIRMED_AS_PLANNED | POST_MVP | P3 |
 | PRIT-026 | Collective Sustainability Certification Pool | MAIN | FAM-17 | USER_PLANNED_ONLY | USER_PLANNED_ONLY | PARESH_CONFIRMED_AS_PLANNED | POST_MVP | P3 |
 | PRIT-027 | Artisan IP and Heritage Commerce Layer | MAIN | FAM-02 | USER_PLANNED_ONLY | USER_PLANNED_ONLY | PARESH_CONFIRMED_AS_PLANNED | POST_MVP | P3 |
+| PRIT-028 | Subscription tier entitlement model (self-serve, post-MVP) | MAIN | FAM-11 | GOVERNANCE_CLAIM_ONLY | PARKED | PARESH_CONFIRMED_AS_PLANNED | POST_MVP | P2 |
+| PRIT-029 | Razorpay/payment gateway methodology for B2C/D2C commerce | MAIN | FAM-11 / future B2C-D2C commerce family | GOVERNANCE_CLAIM_ONLY | DESIGN_GATED | DESIGN_GATED | DESIGN_GATED | P2 |
+| PRIT-030 | B2B no-platform-financial-transaction boundary (guardrail) | MAIN | FAM-12 / FAM-16 | GOVERNANCE_CLAIM_ONLY | CONFIRMED_BOUNDARY | CONFIRMED_BOUNDARY | CONFIRMED_BOUNDARY | P1 |
+| PRIT-031 | Commission/deduction methodology across B2B/B2C/D2C | MAIN | FAM-11 / FAM-15 / FAM-16 | GOVERNANCE_CLAIM_ONLY | DESIGN_GATED | DESIGN_GATED | DESIGN_GATED | P2 |
 
 ---
 
@@ -154,6 +158,10 @@ All items are drawn from existing governance sources. No new classification is i
 | PRIT-025 | Paresh-provided planned-feature document (7 Pillars — Pillar 4) | Data dependency: real platform transaction, lead-time, and rejection data required; design must precede implementation | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Reviewed in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001; accepted as planned feature; DESIGN_GATED retained; no family cycle opened |
 | PRIT-026 | Paresh-provided planned-feature document (7 Pillars — Pillar 5) | Needs design: certification pool model; DPP integration (FAM-05); supplier profile eligibility (FAM-09); potential AI document intelligence | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Reviewed in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001; accepted as planned feature; DESIGN_GATED retained; no family cycle opened |
 | PRIT-027 | Paresh-provided planned-feature document (7 Pillars — Pillar 6) | Needs design: artisan IP model; heritage commerce layer; relation to D2C collections (FAM-02); DPP and traceability (FAM-05, FAM-17) | YES | NO | PLANNED-REQUIREMENTS-INTAKE.md | Reviewed in TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001; accepted as planned feature; DESIGN_GATED retained; no family cycle opened |
+| PRIT-028 | TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 (§3) | Subscription tier pricing, entitlement enforcement per plan, self-serve upgrade; pilot FREE/manual per PRIT-018; self-serve packaging deferred post-MVP | YES — FAM-11 cycle | YES — D-011 (tier pricing, billing cycle) | DECISION-PARKING-LOT.md (D-011) | Address in FAM-11 family cycle; D-011 must resolve for self-serve; pilot proceeds as FREE/operator-provisioned |
+| PRIT-029 | TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 (§4) | Razorpay/payment gateway prerequisites per methodology §4.3; no implementation until D-015 and §4.3 gates satisfied | NO | YES — D-015 (Razorpay/gateway); D-012 (merchant-of-record); counsel/CA review | DECISION-PARKING-LOT.md (D-012, D-015) | No implementation until D-015 + §4.3 prerequisites satisfied; DESIGN_GATED until then |
+| PRIT-030 | TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 (§5) | B2B no-platform-financial-transaction boundary is a CONFIRMED constitutional guardrail; no design gate needed — must be observed in all B2B family cycles (FAM-12, FAM-13, FAM-14, FAM-15, FAM-16) | NO | NO — confirmed boundary | COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY.md §5 | Enforce in FAM-12/FAM-15/FAM-16 family cycle openings; no implementation action needed until TTP gate clears |
+| PRIT-031 | TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 (§8) | Commission/deduction policy across B2B/B2C/D2C; all scenarios parked until D-012/D-013/D-014 resolve; no commission logic to implement until model decided | NO | YES — D-013, D-014 (commission policy) | DECISION-PARKING-LOT.md (D-013, D-014) | No commission/deduction implementation until D-013/D-014 resolved and Paresh authorizes |
 
 ---
 
@@ -204,7 +212,20 @@ See §14 for the full decision table. Summary:
 | PRIT-018 | Confirmed POST_MVP; pilot can launch free/manual; commercial packaging not required for MVP | POST_MVP_CONFIRMED |
 | PRIT-019 | Confirmed opt-in only during pilot; no default indexing of supplier profiles; policy direction partial | PARESH_CONFIRMED |
 
-**No UNCONFIRMED items remain in PRIT-011–019.** Next available PRIT ID: PRIT-028.
+**No UNCONFIRMED items remain in PRIT-011–019.** Next available PRIT ID: PRIT-032.
+
+> **✅ PRIT-028 THROUGH PRIT-031 ADDED VIA TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 (2026-05-19)**
+>
+> Four new planned requirements were added from the commerce/subscription/payments methodology
+> design unit. PRIT-028 records the subscription tier entitlement model (FAM-11, POST_MVP
+> self-serve; FREE at pilot per PRIT-018). PRIT-029 records the Razorpay/payment gateway
+> methodology (DESIGN_GATED; all prerequisites in methodology §4.3 must be satisfied first).
+> PRIT-030 records the B2B no-platform-financial-transaction guardrail as a CONFIRMED_BOUNDARY
+> (constitutional; no-money-movement policy confirmed). PRIT-031 records the commission/
+> deduction policy (DESIGN_GATED; D-013/D-014 must resolve first).
+>
+> See §15 for the full commerce/subscription/payments methodology section.
+>
 
 > **✅ PRIT-022 THROUGH PRIT-027 ADDED VIA TEXQTIC-PLANNED-FEATURES-DOCUMENT-INTAKE-001**
 >
@@ -312,6 +333,11 @@ classification before the relevant family cycle opens.
 | 17 | No family cycle opened by this review unit | ✅ CONFIRMED — §14.5 |
 | 18 | PRIT-017 deferred; G-022 hold unchanged | ✅ CONFIRMED — §14.2 |
 | 19 | PRIT-018 confirmed POST_MVP; commercial packaging not required at MVP | ✅ CONFIRMED — §14.2 |
+| 20 | PRIT-028–031 added from TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 | ✅ COMPLETE — §15 |
+| 21 | PRIT-030 confirmed as CONFIRMED_BOUNDARY (B2B no-money-movement guardrail) | ✅ CONFIRMED — §15.2 |
+| 22 | PRIT-029, PRIT-031 recorded as DESIGN_GATED pending parked decisions D-011 through D-015 | ✅ CONFIRMED — §15.3 |
+| 23 | Commerce methodology document created: COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY.md | ✅ CONFIRMED — see TLRH |
+| 24 | No implementation authorized by §15 or methodology document | ✅ CONFIRMED — planning only |
 
 ---
 
@@ -411,6 +437,7 @@ All items remain `DESIGN_GATED` with `PARESH_CONFIRMED_AS_PLANNED` confirmation 
 | 2026-07-14 | TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-001 | Document created; PRIT-001 through PRIT-021 populated from governance sources; §6–§10 completed |
 | 2026-05-19 | TEXQTIC-PLANNED-FEATURES-DOCUMENT-INTAKE-001 | PRIT-022 through PRIT-027 added from Paresh-provided planned-feature documents (PWA, CoWorker, 7 Pillars); §13 added; §7 notice updated; §11 checklist updated to 27 rows |
 | 2026-05-19 | TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 | PRIT-011–019 Paresh decisions recorded; PRIT-022–027 reviewed as accepted planned features (DESIGN_GATED retained); §7 updated; §10 updated; §11 checklist rows 15–19 added; §14 review section added |
+| 2026-05-19 | TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 | PRIT-028–031 added from commerce/subscription/payments methodology design; §5A and §5B table updated; §7 updated (next PRIT ID: PRIT-032); §11 checklist rows 20–24 added; §15 section added |
 
 ---
 
@@ -526,4 +553,102 @@ This review is governance-only. Confirming:
 - No event contract changes made
 - No OpenAPI contract changes made
 - No family audit performed
+- No runtime files staged or committed
+
+---
+
+## §15 Commerce, Subscription, and Payments Methodology — TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001
+
+**Unit:** `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001`
+**Date:** 2026-05-19
+**Layer 0 posture at authoring:** `HOLD_FOR_AUTHORIZATION` / `HOLD_FOR_COUNSEL_FEEDBACK` — UNCHANGED
+**Methodology document:** `governance/launch-readiness/COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY.md`
+
+---
+
+### §15.1 Overview
+
+This section records the addition of PRIT-028 through PRIT-031, derived from the commerce,
+subscription, and payments methodology design unit. These four new rows capture the planned
+requirements and confirmed guardrails established by the methodology document.
+
+---
+
+### §15.2 PRIT-028 — Subscription Tier Entitlement Model
+
+- **Confirmed decision (PRIT-018 cross-ref):** MVP pilot will use FREE tier, operator-provisioned
+  via control-plane admin flow. No self-serve subscription billing at pilot.
+- **Self-serve tier entitlement:** POST_MVP. Requires D-011 (tier pricing + billing cycle) to
+  resolve, plus counsel/CA review for India SaaS GST treatment and Razorpay KYC.
+- **Plan tier infrastructure:** Already exists (FREE/STARTER/PROFESSIONAL/ENTERPRISE) from
+  Subscription Slice 4A (2026-04-15). Entitlement enforcement per-tier is NOT yet implemented.
+- **FAM-11 impact:** FAM-11 family cycle must implement minimum commercial gating for pilot
+  (FREE tier, operator-assigned). Self-serve billing and upgrade flows are OUT OF SCOPE for FAM-11
+  pilot cycle unless Paresh explicitly authorizes post-MVP scope expansion.
+
+---
+
+### §15.3 PRIT-029 — Razorpay/Payment Gateway Methodology
+
+- **Current status:** No Razorpay or payment gateway integration exists anywhere in the platform.
+- **Candidate use cases (all DESIGN_GATED):** B2C checkout, D2C checkout, platform subscription
+  billing (self-serve), B2B TTP-gated flow.
+- **Prerequisites:** All seven prerequisites in methodology §4.3 must be satisfied before any
+  gateway integration. These include merchant-of-record decision (D-012), settlement model,
+  counsel/CA review, refund/cancellation policy, audit/logging requirements, PCI boundary
+  awareness, and Razorpay merchant account KYC.
+- **Implementation freeze:** No payment gateway SDK, API, webhook, or callback may be added
+  to any TexQtic service until Paresh authorizes and all §4.3 prerequisites are satisfied.
+
+---
+
+### §15.4 PRIT-030 — B2B No-Platform-Financial-Transaction Boundary (Guardrail)
+
+- **Status:** CONFIRMED_BOUNDARY (constitutional). No Paresh decision required — the boundary
+  is already confirmed by the no-money-movement policy in governance/control/NEXT-ACTION.md.
+- **What is confirmed:** TexQtic does not handle B2B financial transactions in MVP. No platform
+  escrow, no collecting buyer payment for supplier, no auto-commission deduction from B2B
+  transactions, no financial/lending/credit services.
+- **Path to B2B transaction enablement:** TTP legal gate must clear first (FAM-16); then TTP-
+  LEGAL-COUNSEL-FEEDBACK-RECORD-001 recorded; then Paresh authorization; then FAM-16 cycle.
+- **Enforcement:** All B2B family cycles (FAM-12, FAM-13, FAM-14, FAM-15, FAM-16) must record
+  compliance with this guardrail in their opening section.
+
+---
+
+### §15.5 PRIT-031 — Commission/Deduction Methodology
+
+- **Current status:** No commission policy exists for any TexQtic commerce surface.
+- **B2B:** No B2B transaction commission relevant in MVP (per PRIT-030 guardrail).
+- **B2C/D2C:** Commission model fully parked until D-012 (merchant-of-record) resolves.
+  A referral/platform model requires a different commission structure than a merchant-of-record
+  model. Both D-013 (B2C commission) and D-014 (D2C commission) are PARKED.
+- **Implementation freeze:** No commission calculation, deduction timing, or payout waterfall
+  may be implemented until D-013/D-014 resolve and Paresh authorizes.
+
+---
+
+### §15.6 Commerce Methodology Parked Decisions Added to DECISION-PARKING-LOT.md
+
+| Decision ID | Topic | Status |
+|---|---|---|
+| D-011 | Subscription tier pricing, entitlement model, self-serve billing | PARKED |
+| D-012 | B2C/D2C merchant-of-record and settlement model | PARKED |
+| D-013 | B2C commission/deduction policy | PARKED |
+| D-014 | D2C commission/deduction policy | PARKED |
+| D-015 | Razorpay/payment gateway platform adoption decision | PARKED |
+
+---
+
+### §15.7 No Implementation Performed
+
+This section is governance-only. Confirming:
+- No code changes made
+- No schema changes made
+- No migration files created
+- No route or API contract changes made
+- No event contract changes made
+- No OpenAPI contract changes made
+- No family audit performed
+- No payment gateway integration started
 - No runtime files staged or committed

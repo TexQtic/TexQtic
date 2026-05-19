@@ -9,7 +9,7 @@
 
 ## 1. Purpose
 
-This folder is the single durable home for TexQtic launch readiness planning.
+This folder is the **TexQtic Launch Readiness Hub (TLRH)** — the single durable home for TexQtic launch readiness planning.
 
 It captures what TexQtic must achieve before onboarding real tenants and users, what has been
 deferred and why, what might go wrong, what comes after a successful launch, how the Surat pilot
@@ -40,6 +40,7 @@ For current launch-planning context, read these documents in this order:
 10. **`POST-MVP-ROADMAP.md`** — future phases beyond MVP launch
 11. **`PUBLIC-PAGES-SEO-EXPANSION-REGISTER.md`** — future public pages and SEO decisions
 12. **`PLANNED-REQUIREMENTS-INTAKE.md`** — intake queue for planned and deferred technical requirements; not implementation authority; planned items require Paresh confirmation and family audit before implementation
+13. **`COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY.md`** — commerce, subscription, and payments methodology authority; **must be read before opening any B2C/D2C authenticated commerce, payment gateway, or commission-related family cycle**
 
 ---
 
@@ -59,6 +60,7 @@ For current launch-planning context, read these documents in this order:
 | `PUBLIC-PAGES-SEO-EXPANSION-REGISTER.md` | Future public pages; SEO gate per page; deferred SEO units |
 | `DECISION-PARKING-LOT.md` | Decisions not ready to make; trigger conditions; who decides |
 | `PLANNED-REQUIREMENTS-INTAKE.md` | Intake queue for planned/deferred technical requirements; not implementation authorization; items require Paresh confirmation + family audit before implementation |
+| `COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY.md` | Commerce, subscription, and payments methodology authority; required reading before any B2C/D2C authenticated commerce or payment-related family cycle |
 
 ---
 

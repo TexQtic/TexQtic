@@ -203,6 +203,86 @@ Each entry has:
 
 ---
 
+### D-011: Subscription Tier Pricing, Entitlement Model, and Self-Serve Billing
+
+| Field | Value |
+|---|---|
+| **Decision question** | What are the final tier boundaries, feature entitlements, and pricing for FREE/STARTER/PROFESSIONAL/ENTERPRISE plans? What is the self-serve upgrade/downgrade and billing cycle model? What is the grace period and deactivation policy? |
+| **Context** | Plan tier infrastructure (FREE/STARTER/PROFESSIONAL/ENTERPRISE) exists from Subscription Slice 4A (2026-04-15). However, no self-serve billing, upgrade flow, or enforcement per entitlement is implemented. Pilot launches with FREE tier, operator-provisioned. Self-serve commercial packaging is POST_MVP per PRIT-018 / PRIT-028. |
+| **Why not ready** | Paresh has not yet defined per-tier feature entitlement scope. Pricing for STARTER/PROFESSIONAL/ENTERPRISE not decided. India SaaS GST treatment requires counsel/CA input. Razorpay KYC for subscription billing overlaps with D-015. |
+| **Trigger condition** | Paresh defines pilot-to-production commercial packaging plan. Post-MVP only unless Paresh explicitly advances scope. |
+| **Impact of delaying** | FAM-11 self-serve billing cannot be implemented. Pilot proceeds as FREE/operator-assigned. No commercial impact at pilot launch. |
+| **Who decides** | Paresh (pricing + product decision); counsel/CA for India SaaS GST treatment |
+| **Priority** | P2 |
+| **Status** | PARKED |
+| **PRIT cross-ref** | PRIT-028 (subscription tier entitlement); source unit: `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
+
+---
+
+### D-012: B2C/D2C Merchant-of-Record and Settlement Model
+
+| Field | Value |
+|---|---|
+| **Decision question** | Is TexQtic the merchant-of-record for B2C and D2C transactions? Or does TexQtic operate as a marketplace/referral platform with the supplier as merchant-of-record? What is the settlement model — direct-to-supplier or via TexQtic pooled settlement? |
+| **Context** | B2C checkout boundary is confirmed as downstream-authenticated per `TEXQTIC-B2C-PUBLIC-BROWSE-CART-CHECKOUT-BOUNDARY-DECISION-v1.md`. However, who settles the payment and how is entirely unresolved. The merchant-of-record determination affects: legal entity structuring, Razorpay configuration, GST/TCS liability, refund handling, and platform liability exposure. |
+| **Why not ready** | No legal/accounting review of India ecommerce tax compliance (TCS under section 194-O, GST), India-specific merchant-of-record requirements, platform liability, or Razorpay settlement configuration performed. |
+| **Trigger condition** | Before ANY B2C or D2C checkout implementation begins. This is a hard prerequisite. |
+| **Impact of delaying** | B2C checkout, D2C commerce, FAM-15 (invoices/settlement), and FAM-11 commercial billing are all blocked until this is resolved. |
+| **Who decides** | Paresh + counsel/CA (legal/accounting decision; significant financial and regulatory implications) |
+| **Priority** | P1 — hard gate before B2C/D2C checkout implementation |
+| **Status** | PARKED — NEEDS_PARESH_DECISION + NEEDS_COUNSEL_CA_REVIEW |
+| **PRIT cross-ref** | PRIT-029, PRIT-031; source unit: `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
+
+---
+
+### D-013: B2C Commission/Deduction Policy
+
+| Field | Value |
+|---|---|
+| **Decision question** | Does TexQtic charge a commission on B2C transactions? If yes, what percentage, deduction timing, and payout waterfall? What is the policy for returns, refunds, and disputes? |
+| **Context** | No B2C commission policy exists anywhere in the platform. Referral model and merchant-of-record model imply very different commission structures. Decision is meaningless until D-012 (merchant-of-record) resolves. |
+| **Why not ready** | D-012 must resolve first. No supplier terms for commission have been created. |
+| **Trigger condition** | After D-012 resolves and B2C checkout design begins. |
+| **Impact of delaying** | No B2C commission logic can be built. Checkout can proceed without commission (pass-through) as an interim posture if Paresh authorizes. |
+| **Who decides** | Paresh (product and pricing decision); counsel/CA for contract terms and TDS/GST obligations |
+| **Priority** | P2 |
+| **Status** | PARKED — NEEDS_PARESH_DECISION + NEEDS_COUNSEL_CA_REVIEW |
+| **PRIT cross-ref** | PRIT-031; source unit: `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
+
+---
+
+### D-014: D2C Commission/Deduction Policy
+
+| Field | Value |
+|---|---|
+| **Decision question** | Does TexQtic charge a commission on D2C transactions? If yes, what percentage, deduction timing, and payout waterfall? How does this differ from B2C commission (if at all)? |
+| **Context** | D2C public surface is PRODUCTION_VERIFIED for collections browse. D2C authenticated commerce (post-auth cart/checkout) is deferred. Commission policy is meaningless until D-012 resolves. D2C may warrant a different commission model than B2C given artisan/heritage commerce context. |
+| **Why not ready** | D-012 must resolve first. D2C authenticated commerce cycle has not opened. |
+| **Trigger condition** | After D-012 resolves and D2C commerce family cycle is selected. |
+| **Impact of delaying** | No D2C commission logic can be built. D2C collections browse continues unaffected. |
+| **Who decides** | Paresh (product and pricing decision); counsel/CA for contract terms and TDS/GST obligations |
+| **Priority** | P2 |
+| **Status** | PARKED — NEEDS_PARESH_DECISION + NEEDS_COUNSEL_CA_REVIEW |
+| **PRIT cross-ref** | PRIT-031; source unit: `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
+
+---
+
+### D-015: Razorpay/Payment Gateway Platform Adoption Decision
+
+| Field | Value |
+|---|---|
+| **Decision question** | Should TexQtic adopt Razorpay (or an alternative gateway) for payment processing? If yes, for which use cases (B2C checkout, D2C checkout, subscription billing, TTP-gated B2B, or some combination)? When in the product lifecycle is gateway integration appropriate? |
+| **Context** | No payment gateway integration exists anywhere in TexQtic. Razorpay is the candidate based on India market fit. Five candidate use cases are identified in `COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY.md §4.2`. All are blocked until seven prerequisites (§4.3) are satisfied, including D-012 (merchant-of-record), settlement model, counsel/CA review, refund policy, audit/logging requirements, PCI scope boundary, and KYC. |
+| **Why not ready** | All seven §4.3 prerequisites are unresolved. D-012 is the upstream hard gate. No counsel/CA review of payment gateway liability performed. |
+| **Trigger condition** | All §4.3 prerequisites satisfied. Paresh authorizes gateway integration for a specific use case. |
+| **Impact of delaying** | No payment gateway integration. B2C/D2C checkout and subscription billing cannot proceed to implementation. |
+| **Who decides** | Paresh + counsel/CA (legal/accounting/regulatory decision) |
+| **Priority** | P2 — DESIGN_GATED until D-012 resolves |
+| **Status** | PARKED — NEEDS_PARESH_DECISION + NEEDS_COUNSEL_CA_REVIEW |
+| **PRIT cross-ref** | PRIT-029; source unit: `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
+
+---
+
 ## 4. Decided Items (History)
 
 | ID | Decision question | Outcome | Decided | Date |
@@ -220,3 +300,4 @@ Each entry has:
 | 2026-05-19 | Skeleton created; D-001 through D-009 populated from repo inspection of NEXT-ACTION.md, BLOCKED.md, and closed governance units | Copilot/Design unit |
 | 2026-07-14 | Added D-010 (Supplier Profile Publication and Indexability Policy) — SEO pending work register sync | `PUBLIC-SEO-PENDING-WORK-REGISTER-SYNC-001` |
 | 2026-05-19 | Added PRIT cross-reference notes to D-005, D-008, D-010 based on Paresh decisions in `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` | `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` |
+| 2026-05-19 | Added D-011 through D-015 from commerce/subscription/payments methodology design unit | `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |

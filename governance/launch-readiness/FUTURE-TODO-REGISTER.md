@@ -142,6 +142,7 @@ Each item has:
 |---|---|---|
 | 2026-05-19 | Skeleton created; known deferred items from recent closed units populated | Copilot/Design unit |
 | 2026-05-19 | PRIT confirmation notes added for FTR-LEGAL-002, FTR-LEGAL-003, FTR-OPS-001, FTR-OPS-002, FTR-OPS-003 (Paresh decisions via `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001`) | `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` |
+| 2026-05-19 | Added §13 commerce/subscription/payments future design units (5 units) from `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001`; §11 update history updated | `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
 
 ---
 
@@ -157,3 +158,18 @@ Status fields in the register tables above are unchanged; these notes record the
 | FTR-OPS-001 | PRIT-013 | Confirmed MVP_CRITICAL/P1. Sentry or equivalent required before pilot go-live. Tooling selection confirmed acceptable at FAM-10 family cycle opening. | FAM-10 |
 | FTR-OPS-002 | PRIT-014 | Confirmed PILOT_REQUIRED/P2. Pilot load profile confirmed: 30–50 Surat pilot suppliers, 10–20 concurrent sessions baseline. | FAM-10 |
 | FTR-OPS-003 | PRIT-015 | Confirmed MVP_CRITICAL/P1. Format confirmed: Vercel + Supabase rollback runbook; feature-flag rollback path included. | FAM-10 |
+
+---
+
+## 13. Commerce, Subscription, and Payments Future Design Units (TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001)
+
+The following future design units were identified and parked in the commerce/subscription/payments methodology design unit.
+None of these units may open until their listed prerequisite decisions are resolved.
+
+| Unit ID | Unit Name | Description | Prerequisite Decision | PRIT cross-ref | Priority | Status |
+|---|---|---|---|---|---|---|
+| FTU-COMM-001 | SUBSCRIPTION-TIER-ENTITLEMENT-DESIGN-001 | Define per-tier entitlement enforcement, self-serve upgrade/downgrade flows, billing cycle model, grace period, deactivation policy, India SaaS GST treatment | D-011 resolved by Paresh + counsel/CA; post-MVP only unless scope advanced | PRIT-028 | P2 | PARKED — POST_MVP |
+| FTU-COMM-002 | RAZORPAY-PAYMENT-GATEWAY-DESIGN-001 | Full gateway integration design: which surfaces, Razorpay API integration, webhook handling, refund flows, PCI boundary documentation, KYC, audit/logging | D-015 resolved; all 7 prerequisites in methodology §4.3 satisfied | PRIT-029 | P2 | PARKED — DESIGN_GATED |
+| FTU-COMM-003 | B2C-D2C-CHECKOUT-PAYMENT-DESIGN-001 | Authenticated B2C/D2C checkout flow design: cart → checkout → payment → confirmation; downstream-auth boundary confirmed; gateway integration per FTU-COMM-002 | D-012 (merchant-of-record) resolved; Layer 0 authorization for B2C/D2C commerce cycle | PRIT-029, PRIT-031 | P2 | PARKED — DESIGN_GATED |
+| FTU-COMM-004 | COMMISSION-DEDUCTION-POLICY-DESIGN-001 | Commission model design: B2C commission rate, D2C commission rate, deduction timing, payout waterfall, supplier remittance terms, returns and refund handling | D-013 and D-014 resolved; D-012 resolved; counsel/CA review complete | PRIT-031 | P2 | PARKED — DESIGN_GATED |
+| FTU-COMM-005 | B2B-FINANCIAL-BOUNDARY-GUARDRAIL-001 | Formal guardrail enforcement unit: document and enforce B2B no-platform-financial-transaction boundary across FAM-12, FAM-13, FAM-14, FAM-15, FAM-16 family cycle openings | TTP legal counsel feedback received (FTR-LEGAL-001); Paresh authorization for FAM-16 scope | PRIT-030 | P1 | PARKED — HOLD_FOR_COUNSEL_FEEDBACK |
