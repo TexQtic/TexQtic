@@ -78,8 +78,11 @@ live in production as of 2026-05-20.
 2. **Real supplier seeding** — At least 1 real Surat India textile supplier must be onboarded
    and seed ≥10 real products with complete metadata (name, description, image, category,
    material, fabricType) through all five B2C projection safety gates
-3. **QA data remediation** — Set QA org `publication_posture = PRIVATE_OR_AUTH_ONLY`
-   before any public buyer traffic is directed to browse pages
+3. ~~**QA data remediation** — Set QA org `publication_posture = PRIVATE_OR_AUTH_ONLY`
+   before any public buyer traffic is directed to browse pages~~ **DONE (2026-05-20) —
+   `TEXQTIC-NC-QA-B2C-PUBLIC-PROJECTION-QUARANTINE-001`**: QA B2C org
+   `publication_posture` set to `PRIVATE_OR_AUTH_ONLY`. Public browse now returns
+   `items:[], total:0`. QA product detail returns HTTP 404. QA records preserved.
 4. **HD-002 recheck** — Rerun this verification after real data is seeded
 
 ---
@@ -91,3 +94,12 @@ live in production as of 2026-05-20.
 | `BLIND-SPOT-DEPENDENCY-RISK-REGISTER.md` | HD-002 | OPEN → VERIFIED_FAIL |
 | `BLIND-SPOT-DEPENDENCY-RISK-REGISTER.md` | BS-001 | Evidence column updated with confirmation |
 | `NEXT-ACTION.md` | `last_closed_governance_unit` | Rotated to HD-002 |
+
+## Quarantine Follow-Up (2026-05-20)
+
+`TEXQTIC-NC-QA-B2C-PUBLIC-PROJECTION-QUARANTINE-001` — QUARANTINE_VERIFIED_COMPLETE
+
+QA B2C `publication_posture` set to `PRIVATE_OR_AUTH_ONLY` via Gate B (org-level).
+Public browse: `items:[], total:0`. Product detail: HTTP 404.
+QA tenant/org/products preserved — no records deleted.
+HD-002 remains VERIFIED_FAIL. Real supplier data still absent.
