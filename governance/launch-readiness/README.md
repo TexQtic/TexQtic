@@ -44,6 +44,7 @@ For current launch-planning context, read these documents in this order:
 14. **`MISSING-FAMILY-AND-FEATURE-SCAN.md`** — pre–first-family-cycle scan of missing families, features, and guardrails; **read before opening `TEXQTIC-FIRST-FAMILY-CYCLE-SELECTION-001`**; governance scan only; not implementation authority; identifies PRIT-032–035 and risks R-013, R-014
 15. **`SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY.md`** — network-building soft launch strategy; defines soft launch vs hard MVP launch boundary; records Decisions A–G (R-013 resolved, PRIT-032–035 confirmed, B2B financial boundary confirmed, free/manual provisioning confirmed); **read before opening `TEXQTIC-FIRST-FAMILY-CYCLE-SELECTION-001`**
 16. **`FIRST-FAMILY-CYCLE-SELECTION.md`** — formal selection of FAM-06 as first full family cycle; standalone soft-launch prerequisite queue (items a–e); next unit: `FAM-06-AUTH-SESSION-OPENING-REPO-TRUTH-AUDIT-001`; CRM/CAE XDEP handling; D-018 parked; **read before opening FAM-06 opening repo-truth audit unit**
+17. **`FAM-06-AUTH-SESSION-OPENING-REPO-TRUTH-AUDIT.md`** — completed FAM-06 family-opening repo-truth note; evidence-classified auth/session surface audit; gap register and follow-on unit guidance
 
 ---
 
@@ -67,6 +68,7 @@ For current launch-planning context, read these documents in this order:
 | `MISSING-FAMILY-AND-FEATURE-SCAN.md` | Pre–first-family-cycle scan of missing families, features, and guardrails; identifies PRIT-032–035 and risks R-013/R-014; scan only, not implementation authority |
 | `SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY.md` | Network-building soft launch strategy; soft launch vs hard MVP launch boundary; Decisions A–G; minimum readiness checklists; CAE/CRM connectivity expectations; must-read before first family cycle selection |
 | `FIRST-FAMILY-CYCLE-SELECTION.md` | Formal selection of FAM-06 as first full family cycle; standalone soft-launch prerequisite queue; CRM/CAE XDEP handling; D-018 parked; immediate next unit identified; selection only — no implementation opened |
+| `FAM-06-AUTH-SESSION-OPENING-REPO-TRUTH-AUDIT.md` | Completed FAM-06 family-opening repo-truth note; current-cycle inspection evidence for auth/session/opening gate and follow-on gaps |
 
 ---
 
