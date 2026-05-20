@@ -13,7 +13,7 @@
 | Starting tree status | CLEAN (main = origin/main) |
 | Decision | **QUARANTINE_VERIFIED_COMPLETE** |
 | Authority trigger | HD-002-REAL-PRODUCT-DATA-PRODUCTION-VERIFY-001 VERIFIED_FAIL |
-| Commit hash | `[BACKFILL]` |
+| Commit hash | `49aef2d4cd011a2ef1be7ab98613f067d34bbfee` |
 
 ---
 
