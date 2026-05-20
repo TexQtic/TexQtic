@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-06 (TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001 VERIFIED_COMPLETE: NC Phase 1 post-audit QA fixture baseline verified. Authorized first run exit 0. sourceType defect corrected. Idempotency confirmed (all SKIP). 186/186 integration PASS (6 files). Prior close: TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001 LEGAL_PACKET_UPGRADED: Canonical legal counsel packet upgraded for Unified Platform TTP + NC-TTP scope. §12–§25 added. Regulatory posture matrix, consent framework doctrine, partner routing legal gate, wording pack, disclaimer pack D-001–D-007, terms acceptance flow, privacy questions Q1–Q16, open legal questions O–Y, future packet map 8 HOLD. ttp_enabled=false UNCHANGED. Governance-only. Send upgraded packet to external legal counsel. Await TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001. Prior-prior close: TEXQTIC-TRADETRUST-PAY-ARCHITECTURE-DECISION-TERMS-LOCK-001 ARCHITECTURE_LOCK_COMPLETE.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-22 (BS-003-AUTH-PRIVATE-ROUTE-INDEXABILITY-VERIFY-001 PARTIAL: Auth/private route indexability verification — structural evidence strong, robots.txt gap documented, GSC evidence deferred. Follow-up units FU-001 (robots.txt update) and FU-002 (GSC check) required before VERIFIED_PASS. BS-003 OPEN → PARTIAL. FTR-AUTH-003 IMPLEMENTATION_READY → EVIDENCE_STRONG. Prior close: PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001 COMPLETE: BS-007 RESOLVED, D-005 CLOSED, Option F canonical lock confirmed.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -94,10 +94,28 @@ dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
 dpp_v3_design_status: OPTIONAL_POLISH
 prior_last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
 prior_last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-last_closed_governance_unit: PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001
-last_closed_governance_unit_status: STRATEGY_DEFINED (2026-07-22)
+last_closed_governance_unit: BS-003-AUTH-PRIVATE-ROUTE-INDEXABILITY-VERIFY-001
+last_closed_governance_unit_status: PARTIAL (2026-07-22)
 last_closed_governance_unit_date: 2026-07-22
 last_closed_governance_unit_note: >
+  BS-003-AUTH-PRIVATE-ROUTE-INDEXABILITY-VERIFY-001 PARTIAL (2026-07-22).
+  Verification-only unit. No source code changes.
+  BS-003 (Auth/tenant pages may be indexed) updated OPEN → PARTIAL.
+  FTR-AUTH-003 (Auth/private-route crawl exclusion verification) updated IMPLEMENTATION_READY → EVIDENCE_STRONG.
+  Structural evidence confirmed: no private content at auth URLs for unauthenticated visitors;
+  no link graph path from public pages to auth/private routes; no sitemap promotion;
+  SPA PUBLIC_ENTRY fallback confirmed live via browser for /dashboard and /control-plane.
+  Documented gap: 8 auth/private URL prefixes not in robots.txt Disallow list.
+  GSC production evidence deferred (requires authenticated sign-in outside scope).
+  Follow-up units required before VERIFIED_PASS:
+  FU-001: Add robots.txt Disallow for auth/private prefixes (before first backlink/press).
+  FU-002: GSC production crawl evidence verification.
+  Verification artifact: governance/launch-readiness/BS-003-AUTH-PRIVATE-ROUTE-INDEXABILITY-VERIFY.md.
+  Prior last closed governance unit: PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001.
+prior_last_closed_governance_unit: PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001
+prior_last_closed_governance_unit_status: STRATEGY_DEFINED (2026-07-22)
+prior_last_closed_governance_unit_date: 2026-07-22
+prior_last_closed_governance_unit_note: >
   PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001 STRATEGY_DEFINED (2026-07-22).
   Governance-only unit. No source code changes.
   D-005 (SEO Domain Canonical Strategy) CLOSED.
@@ -107,12 +125,9 @@ last_closed_governance_unit_note: >
   app.texqtic.com confirmed as canonical domain for all dynamic marketplace public pages.
   No redirect policy change required. Option F marketing repo lock (0bed542, 3246ca4, fa5d54e) satisfies trigger.
   Strategy artifact: governance/launch-readiness/PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY.md.
-  Next recommended SEO unit: BS-003-AUTH-PRIVATE-ROUTE-INDEXABILITY-VERIFY-001 (P0 launch gate).
-  No delivery unit opened. No implementation changes.
-prior_last_closed_governance_unit: TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001
-prior_last_closed_governance_unit_status: CONTROLLED_QA_ACTIVATION_VERIFIED_COMPLETE
-prior_last_closed_governance_unit_date: 2026-05-14
-prior_last_closed_governance_unit_note: >
+prior_last_closed_governance_unit_pre_prior: TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001
+prior_last_closed_governance_unit_pre_prior_status: CONTROLLED_QA_ACTIVATION_VERIFIED_COMPLETE
+prior_last_closed_governance_unit_pre_prior_date: 2026-05-14
   MC-5 E2E verified on production. Full award maker-checker flow confirmed.
   Maker 201, same-actor 409 MAKER_CHECKER_SAME_ACTOR, checker-approve 200 APPROVED, quote ACCEPTED.
   DB: pool=ACCEPTED, RFQ=ACCEPTED, quote=ACCEPTED, approval=APPROVED, signature decision=APPROVE, signer=b80f0cab.
