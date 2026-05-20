@@ -16,7 +16,7 @@
 | Starting branch | `main` |
 | Starting tree status | CLEAN (0 staged, 0 unstaged, 0 untracked) |
 | Decision | ROBOTS_GAP_CLOSED / GSC_PENDING |
-| Commit hash | TBD — updated after commit |
+| Commit hash | `978ea6f` — `[TEXQTIC] seo: disallow auth private routes in robots` |
 
 ---
 
@@ -306,7 +306,7 @@ Files confirmed NOT modified (read-only in this unit):
 
 ## 13. Commit Hash
 
-Commit: TBD — updated after commit
+Commit: `978ea6f` — `[TEXQTIC] seo: disallow auth private routes in robots`
 
 ---
 
