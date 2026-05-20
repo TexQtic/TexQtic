@@ -13,7 +13,7 @@
 | Starting tree status | CLEAN (main = origin/main) |
 | Decision | **PARTIAL — DOM extraction + structural validation PASS; no external tool report** |
 | Blind spot closed | BS-005 → PARTIAL (structural validation evidence; external GRT report deferred) |
-| Commit hash | `[BACKFILL]` |
+| Commit hash | `1bcced3` |
 
 ---
 
