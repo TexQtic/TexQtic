@@ -94,10 +94,25 @@ dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
 dpp_v3_design_status: OPTIONAL_POLISH
 prior_last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
 prior_last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-last_closed_governance_unit: TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001
-last_closed_governance_unit_status: CONTROLLED_QA_ACTIVATION_VERIFIED_COMPLETE
-last_closed_governance_unit_date: 2026-05-14
+last_closed_governance_unit: PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001
+last_closed_governance_unit_status: STRATEGY_DEFINED (2026-07-22)
+last_closed_governance_unit_date: 2026-07-22
 last_closed_governance_unit_note: >
+  PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001 STRATEGY_DEFINED (2026-07-22).
+  Governance-only unit. No source code changes.
+  D-005 (SEO Domain Canonical Strategy) CLOSED.
+  BS-007 (Live pages indexed under app.texqtic.com — canonical domain not decided) RESOLVED.
+  FTR-SEO-001 (SEO domain canonical strategy) promoted to STRATEGY_DEFINED.
+  FTR-SEO-007 (Canonical domain implementation) resolved — no redirect or sitemap origin change needed.
+  app.texqtic.com confirmed as canonical domain for all dynamic marketplace public pages.
+  No redirect policy change required. Option F marketing repo lock (0bed542, 3246ca4, fa5d54e) satisfies trigger.
+  Strategy artifact: governance/launch-readiness/PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY.md.
+  Next recommended SEO unit: BS-003-AUTH-PRIVATE-ROUTE-INDEXABILITY-VERIFY-001 (P0 launch gate).
+  No delivery unit opened. No implementation changes.
+prior_last_closed_governance_unit: TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001
+prior_last_closed_governance_unit_status: CONTROLLED_QA_ACTIVATION_VERIFIED_COMPLETE
+prior_last_closed_governance_unit_date: 2026-05-14
+prior_last_closed_governance_unit_note: >
   MC-5 E2E verified on production. Full award maker-checker flow confirmed.
   Maker 201, same-actor 409 MAKER_CHECKER_SAME_ACTOR, checker-approve 200 APPROVED, quote ACCEPTED.
   DB: pool=ACCEPTED, RFQ=ACCEPTED, quote=ACCEPTED, approval=APPROVED, signature decision=APPROVE, signer=b80f0cab.

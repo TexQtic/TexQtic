@@ -116,13 +116,13 @@ Each entry has:
 |---|---|
 | **Decision question** | What is the canonical URL strategy for TexQtic? (apex vs. www; subdomain routing; cross-environment canonical handling; redirect policy) |
 | **Context** | Explicitly deferred by `PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001`. Deferred unit: `PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001`. This decision gates product sitemap expansion and supplier profile indexability. |
-| **Why not ready** | Domain decision is pending. Without knowing the final production domain setup, canonical tags cannot be finalized. |
-| **Trigger condition** | Paresh confirms production domain setup (apex vs. www; any custom domain plan). |
-| **Impact of delaying** | SEO upside of dynamic product pages and supplier profiles is not realized. Live pages have canonical tags — this only affects expansion. |
-| **Who decides** | Paresh |
+| **Why not ready** | ~~Domain decision is pending. Without knowing the final production domain setup, canonical tags cannot be finalized.~~ |
+| **Trigger condition** | Paresh confirms production domain setup (apex vs. www; any custom domain plan). **SATISFIED** by Option F marketing repo lock: `MARKETING-APP-PUBLIC-PAGES-DOMAIN-SEPARATION-DECISION-LOCK-001` (commits 0bed542, 3246ca4, fa5d54e). Option F confirms `PLATFORM_APP_URL = https://app.texqtic.com` and establishes `app.texqtic.com` as the canonical platform app domain. |
+| **Impact of delaying** | ~~SEO upside of dynamic product pages and supplier profiles is not realized~~ — resolved. |
+| **Who decides** | Paresh — **Resolved via Option F lock.** |
 | **Priority** | P1 |
-| **Status** | PARKED |
-| **PRIT cross-ref** | PRIT-016 confirmed as LAUNCH_DEPENDENCY/P1 in `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` (2026-05-19). Canonical target PENDING_PARESH_DECISION. Must decide before backlinks, press mentions, or GSC submission. Status remains PARKED. |
+| **Status** | **CLOSED — STRATEGY_DEFINED (2026-07-22).** `app.texqtic.com` is the canonical domain for all dynamic marketplace public pages. `texqtic.com` is the separate marketing domain. No redirect policy change needed. Existing sitemap.xml, robots.txt, and canonical tag implementation confirmed correct under Option F by `PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001` repo-truth inspection. Strategy artifact: `governance/launch-readiness/PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY.md`. |
+| **PRIT cross-ref** | PRIT-016 confirmed as LAUNCH_DEPENDENCY/P1 in `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` (2026-05-19). Canonical target DECIDED: `app.texqtic.com`. Closed by `PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001` (2026-07-22). |
 
 ---
 
@@ -338,6 +338,7 @@ Each entry has:
 | HIST-D-001 | Should NC Phase 1 be production-audited before any further implementation? | YES — audit complete, QA seed reset complete | Paresh | 2026-07-06 |
 | HIST-D-002 | Should the NC Tx timeout fix be applied to production? | YES — applied and PRODUCTION_VERIFIED | Paresh | 2026-06-08 |
 | HIST-D-003 | Should nc.procurement_pools.feature_flag_gate be `=== false` not `!== true`? | YES — fixed in NC Phase 1 close | Paresh | 2026-06-02 |
+| HIST-D-004 | What is the canonical URL strategy for TexQtic? (D-005) | `app.texqtic.com` is the canonical domain for all dynamic marketplace public pages. No redirect policy needed. Existing sitemap.xml and canonical tags confirmed correct under Option F. | Option F marketing repo lock (`MARKETING-APP-PUBLIC-PAGES-DOMAIN-SEPARATION-DECISION-LOCK-001`) + `PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001` | 2026-07-22 |
 
 ---
 
@@ -351,3 +352,4 @@ Each entry has:
 | 2026-05-19 | Added D-011 through D-015 from commerce/subscription/payments methodology design unit | `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
 | 2026-05-19 | Added D-016 (B2B financial boundary soft-launch confirmation — CONFIRMED_BOUNDARY) and D-017 (free/manual provisioning model — CONFIRMED); both confirmed via `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` Decisions F and G | `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` |
 | 2026-07-14 | Added D-018 (PRIT-033 Stage 2 supplier inquiry inbox family assignment — FAM-03 vs FAM-08, PARKED pending FAM-06 auth audit) | `TEXQTIC-FIRST-FAMILY-CYCLE-SELECTION-001` |
+| 2026-07-22 | D-005 (SEO Domain Canonical Strategy) CLOSED: Option F marketing repo lock satisfies trigger condition; app.texqtic.com confirmed as canonical domain for all dynamic marketplace public pages; no redirect policy change needed; existing sitemap.xml, robots.txt, and canonical tag implementation confirmed correct by repo-truth inspection; strategy artifact created. HIST-D-004 added to Decided Items history. | `PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001` |
