@@ -500,3 +500,4 @@ indexed, confirm sitemap validated with correct 12-URL set
 | Date | Change | Who |
 |---|---|---|
 | 2026-07-22 | Initial verification artifact created — repo inspection + live browser verification; PARTIAL decision; gap documented; FU-001 robots.txt update required before backlink/press | `BS-003-AUTH-PRIVATE-ROUTE-INDEXABILITY-VERIFY-001` |
+| 2026-07-22 | FU-001-ROBOTS-TXT-AUTH-DISALLOW-UPDATE completed: 8 auth/private Disallow entries added to `public/robots.txt` (`/auth`, `/dashboard`, `/control-plane`, `/tenant`, `/workspace`, `/onboarding`, `/token-handler`, `/login`). robots.txt implementation gap CLOSED. BS-003 updated PARTIAL → PARTIAL (robots.txt gap closed; GSC production crawl evidence still pending). FU-002 (GSC evidence check) remains required for VERIFIED_PASS. | `FU-001-ROBOTS-TXT-AUTH-DISALLOW-UPDATE` |

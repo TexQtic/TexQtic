@@ -26,4 +26,14 @@ Disallow: /trust
 Disallow: /industries
 Disallow: /aggregator
 
+# Auth-gated and private routes — FU-001-ROBOTS-TXT-AUTH-DISALLOW-UPDATE (2026-07-22)
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /control-plane
+Disallow: /tenant
+Disallow: /workspace
+Disallow: /onboarding
+Disallow: /token-handler
+Disallow: /login
+
 Sitemap: https://app.texqtic.com/sitemap.xml
