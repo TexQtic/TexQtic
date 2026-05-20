@@ -321,3 +321,21 @@ Family implementation open-ready: `CONDITIONALLY YES`, subject to Layer 0 author
 ## 26. Final Output
 
 This document is the family-local repo-truth note required by the Family Opening Audit Gate for FAM-06.
+
+---
+
+## 27. Verify-Close Unit Cross-Reference
+
+Family cycle closed by: `FAM-06-AUTH-SESSION-IMPLEMENTATION-READINESS-VERIFY-CLOSE-001` (2026-07-22).
+
+Closure verdict: **VERIFIED_COMPLETE** — Evidence level: `TEST_CONFIRMED`.
+
+Key evidence confirmed in verify-close:
+- Backend tests: 60/60 PASS (`tests/auth-route-session.test.ts`)
+- Frontend tests: 74/74 PASS (`tests/frontend/auth-service-session.test.ts`)
+- G-06-001: CLOSED (backend test coverage)
+- G-06-002: CLOSED (frontend test coverage)
+- G-06-003: NON_BLOCKING_FOLLOWUP — registered as `FTR-AUTH-003`; tracked as `BS-003` in BLIND-SPOT register (P0 OPEN, pre-launch production crawl verification required)
+- No blocking defects found in code inspection or test execution
+
+LAUNCH-FAMILY-INDEX.md FAM-06 status updated: `NOT_ASSESSED` → `VERIFIED_COMPLETE`.

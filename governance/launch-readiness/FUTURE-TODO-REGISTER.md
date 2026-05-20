@@ -94,6 +94,7 @@ Each item has:
 |---|---|---|---|---|---|---|---|---|
 | FTR-AUTH-001 | Reused-existing-user onboarding path | Handle Supabase invites for users who already exist. Currently BOUNDED_DEFERRED_REMAINDER | Bounded deferral: confirmed out of scope for first launch wave; must be resolved before broader onboarding | Onboarding family closeout | DESIGN_GATED | P1 | MVP_CRITICAL | OPEN |
 | FTR-AUTH-002 | White label onboarding path | Tenant-branded invite and activation for WL Co scenario | WL Co hold REVIEW-UNKNOWN | BLOCKED.md | BLOCKED | P3 | POST_MVP | OPEN |
+| FTR-AUTH-003 | Auth/private-route crawl exclusion verification | Produce a dedicated verification artifact confirming that authenticated and private routes are excluded from search engine crawl (robots.txt coverage, `clearPublicPageMeta()` pattern, GSC production verification). Cross-referenced as G-06-003 (FAM-06) and BS-003 (BLIND-SPOT register, P0 OPEN). Required before first public backlink or press mention. | G-06-003 deferred as NON_BLOCKING_FOLLOWUP from `FAM-06-AUTH-SESSION-IMPLEMENTATION-READINESS-VERIFY-CLOSE-001`; code evidence confirmed (robots.txt disallows `/api/`, `/supplier/`, `/join/`, `/passport/`; App.tsx clearPublicPageMeta for non-public states); production crawl GSC check not yet run | FAM-06-AUTH-SESSION-IMPLEMENTATION-READINESS-VERIFY-CLOSE-001 | IMPLEMENTATION_READY | P2 | LAUNCH_DEPENDENCY | OPEN |
 
 ---
 
@@ -158,6 +159,7 @@ Each item has:
 | 2026-07-14 | Added FTR-B2C-004 (minimum inquiry notification loop, MVP_CRITICAL/P1); added to §12 Paresh confirmation notes | `TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001` |
 | 2026-05-19 | Added §10 soft-launch register (FTR-SL-001 through FTR-SL-004): aggregator directory readiness design, XDEP CAE+CRM integration strategy, minimum inquiry notification implementation, supplier inquiry inbox design | `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` |
 | 2026-07-14 | Added §14 Register — Launch Family Cycle Opening Audit Units (FTR-FAM-001: FAM-06 opening audit, FTR-FAM-002: public legal pages bundle, FTR-FAM-003: inquiry notification minimum) | `TEXQTIC-FIRST-FAMILY-CYCLE-SELECTION-001` |
+| 2026-07-22 | Added FTR-AUTH-003 (G-06-003 NON_BLOCKING_FOLLOWUP: auth/private-route crawl exclusion verification, LAUNCH_DEPENDENCY/P2) | `FAM-06-AUTH-SESSION-IMPLEMENTATION-READINESS-VERIFY-CLOSE-001` |
 
 ---
 
