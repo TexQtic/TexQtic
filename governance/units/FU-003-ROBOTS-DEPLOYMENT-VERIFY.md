@@ -13,7 +13,7 @@
 | Starting tree status | CLEAN (main = origin/main after push) |
 | Decision | **PASS — robots.txt DEPLOYED** |
 | Pending | `/auth/login` deindex pending re-crawl interval |
-| Commit hash | TBD (backfill required after commit) |
+| Commit hash | `85af226` — [TEXQTIC] governance: verify FU-001 robots.txt production deployment — pass |
 
 ---
 
@@ -251,4 +251,4 @@ files were created or modified in FU-003.
 
 | Date | Change | Who |
 |---|---|---|
-| 2026-05-20 | FU-003 created — deployment verified; live robots.txt confirmed with all 8 FU-001 Disallow entries; Stop Condition 5 resolved; committed as TBD | `FU-003-ROBOTS-DEPLOYMENT-VERIFY` |
+| 2026-05-20 | FU-003 created — deployment verified; live robots.txt confirmed with all 8 FU-001 Disallow entries; Stop Condition 5 resolved; committed as `85af226` | `FU-003-ROBOTS-DEPLOYMENT-VERIFY` |
