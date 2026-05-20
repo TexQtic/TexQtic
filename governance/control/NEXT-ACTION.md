@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-20 (FU-003-ROBOTS-DEPLOYMENT-VERIFY PASS: FU-001 robots.txt deployed to production; all 8 Disallow entries confirmed live; Stop Condition 5 resolved. /auth/login deindex pending re-crawl. BS-003 → ROBOTS_DEPLOYED_PENDING_RECRAWL / PARTIAL. FTR-AUTH-003 → ROBOTS_DEPLOYED / DEINDEX_PENDING. Next: FU-004-AUTH-LOGIN-DEINDEX-RECHECK.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-20 (BS-005-JSONLD-RICH-RESULTS-VALIDATION-001 PARTIAL: JSON-LD DOM extraction + structural validation PASS on all indexed public surfaces. No external GRT report — prevents VERIFIED_PASS. BS-005 → PARTIAL. Next: FU-004-AUTH-LOGIN-DEINDEX-RECHECK or FU-005-JSONLD-GRT-REPORT-001.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -94,24 +94,26 @@ dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
 dpp_v3_design_status: OPTIONAL_POLISH
 prior_last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
 prior_last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-last_closed_governance_unit: FU-003-ROBOTS-DEPLOYMENT-VERIFY
-last_closed_governance_unit_status: PASS (robots.txt deployed; SC-5 resolved; /auth/login deindex pending) (2026-05-20)
+last_closed_governance_unit: BS-005-JSONLD-RICH-RESULTS-VALIDATION-001
+last_closed_governance_unit_status: PARTIAL (JSON-LD structural validation PASS; no external GRT report) (2026-05-20)
 last_closed_governance_unit_date: 2026-05-20
 last_closed_governance_unit_note: >
-  FU-003-ROBOTS-DEPLOYMENT-VERIFY PASS (2026-05-20).
-  Deployment verification unit. No source code changes.
-  All commits pushed to origin/main (git push origin main). Vercel deployment triggered.
-  Live https://app.texqtic.com/robots.txt confirmed via browser: all 8 FU-001 Disallow entries
-  present (/auth, /dashboard, /control-plane, /tenant, /workspace, /onboarding, /token-handler,
-  /login). All pre-FU-001 entries intact. Stop Condition 5 (deployment gap) RESOLVED.
-  /auth/login?next=... URLs (3) remain indexed in DuckDuckGo — deindex pending re-crawl.
-  Content at indexed URLs: login form only (no private/tenant data). Risk: LOW.
-  BS-003 → ROBOTS_DEPLOYED_PENDING_RECRAWL / PARTIAL.
-  FTR-AUTH-003 → ROBOTS_DEPLOYED / DEINDEX_PENDING.
-  Next unit: FU-004-AUTH-LOGIN-DEINDEX-RECHECK (after re-crawl interval, days to weeks).
-  Prior last closed governance unit: FU-002-GSC-CRAWL-EVIDENCE-VERIFY.
-prior_last_closed_governance_unit: FU-002-GSC-CRAWL-EVIDENCE-VERIFY
-prior_last_closed_governance_unit_status: FAIL (stop conditions 4+5; /auth/login indexed; FU-001 undeployed) (2026-07-22)
+  BS-005-JSONLD-RICH-RESULTS-VALIDATION-001 PARTIAL (2026-05-20).
+  Verification-only unit. No source code changes.
+  Live DOM extraction via Playwright on https://app.texqtic.com confirmed JSON-LD injected
+  correctly on all indexed public surfaces: /collections (CollectionPage), /products (WebPage),
+  /products/category/garments (WebPage + BreadcrumbList), /collections/natural-fabric-stories
+  (WebPage + BreadcrumbList). All governance-allowed types present; all forbidden types absent.
+  JSON syntax valid. canonical URLs consistent. BreadcrumbList ListItem structure correct.
+  Noindex stub pages (/trust, /industries, /aggregator): noindex, no JSON-LD — correct.
+  /inquiry: index but no JSON-LD — by design.
+  /product/:slug (notFound): noindex, no JSON-LD — correct fail-closed behavior.
+  No Google Rich Results Test or Schema.org validator report captured — prevents VERIFIED_PASS.
+  Risk of external tool failure assessed as very low given structural quality.
+  BS-005 → PARTIAL. Next: FU-005-JSONLD-GRT-REPORT-001 (if GRT evidence required before campaign)
+  or FU-004-AUTH-LOGIN-DEINDEX-RECHECK (next auth crawl check after re-crawl interval).
+prior_last_closed_governance_unit: FU-003-ROBOTS-DEPLOYMENT-VERIFY
+prior_last_closed_governance_unit_status: PASS (robots.txt deployed; SC-5 resolved; /auth/login deindex pending) (2026-05-20)
 prior_last_closed_governance_unit_date: 2026-07-22
 prior_last_closed_governance_unit_note: >
   FU-002-GSC-CRAWL-EVIDENCE-VERIFY FAIL (2026-07-22).
