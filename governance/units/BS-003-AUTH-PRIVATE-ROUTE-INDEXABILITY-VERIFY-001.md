@@ -16,7 +16,7 @@
 | Starting branch | `main` |
 | Starting tree status | CLEAN (0 staged, 0 unstaged, 0 untracked) |
 | Decision | PARTIAL |
-| Commit hash | TBD — updated after commit |
+| Commit hash | `ea9de41` — `[TEXQTIC] governance: verify auth private route indexability` |
 
 ---
 
@@ -237,9 +237,7 @@ Files NOT modified (confirmed):
 
 ## 14. Commit Hash
 
-Commit: TBD — `[TEXQTIC] governance: verify auth private route indexability`
-
-*This field will be updated manually after commit.*
+Commit: `ea9de41` — `[TEXQTIC] governance: verify auth private route indexability`
 
 ---
 
