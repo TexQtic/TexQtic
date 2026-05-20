@@ -7,7 +7,7 @@
 **Date:** 2026-07-22
 **Owner:** Paresh Patel
 **Scope posture:** Governance-only close. Validation commands run. No runtime file modifications.
-**Commit:** (backfill after commit)
+**Commit:** `50cd5e9`
 
 ---
 
