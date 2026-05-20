@@ -94,34 +94,31 @@ dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
 dpp_v3_design_status: OPTIONAL_POLISH
 prior_last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
 prior_last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-last_closed_governance_unit: HD-001-SUPPLIER-INVITE-ONBOARDING-RESOLUTION-001
-last_closed_governance_unit_status: IMPLEMENTATION_COMPLETE (Invite-token flow email dispatch added; full flow structurally complete; runtime verification pending) (2026-05-20)
+last_closed_governance_unit: HD-001-SUPPLIER-INVITE-ONBOARDING-RUNTIME-VERIFY-001
+last_closed_governance_unit_status: VERIFIED_BLOCKED (HD-001 code fix correct; email delivery blocked by SMTP not configured in Vercel production; invite token live in DB until 2026-05-27) (2026-05-20)
 last_closed_governance_unit_date: 2026-05-20
 last_closed_governance_unit_note: >
+  HD-001-SUPPLIER-INVITE-ONBOARDING-RUNTIME-VERIFY-001 VERIFIED_BLOCKED (2026-05-20).
+  Runtime verification of HD-001 against production (https://app.texqtic.com).
+  Provisioning call: 201 OK. SHRADDHA INDUSTRIES (IN-GJ) provisioned.
+  orgId: 0ae549d7-b17b-4277-b9f6-f3e8c3a57e09. inviteId: ba4f0bb1-bbf2-4da5-b8fe-4aa69a110166.
+  Invite token returned in API response. Email NOT delivered to shraddhaind@gmail.com.
+  Root cause: SMTP_HOST/SMTP_USER/SMTP_PASS/SMTP_FROM not set in Vercel production.
+  email.service.ts isSmtpConfigured() returns false; returns SKIPPED_SMTP_UNCONFIGURED silently.
+  HD-001 code fix is correct and deployed. Blocker is infrastructure-only.
+  Invite record valid until 2026-05-27. New risk row HD-001-SMTP added to register.
+  Unblocking action: configure SMTP provider (Resend/SendGrid/Postmark/SES) in Vercel production.
+  After SMTP setup: re-provision + email verify + activation flow (Steps 5-8) required for VERIFIED_COMPLETE.
+prior_last_closed_governance_unit: HD-001-SUPPLIER-INVITE-ONBOARDING-RESOLUTION-001
+prior_last_closed_governance_unit_status: IMPLEMENTATION_COMPLETE (Invite-token flow email dispatch added; full flow structurally complete; runtime verification pending) (2026-05-20)
+prior_last_closed_governance_unit_date: 2026-05-20
+prior_last_closed_governance_unit_note: >
   HD-001-SUPPLIER-INVITE-ONBOARDING-RESOLUTION-001 IMPLEMENTATION_COMPLETE (2026-05-20).
   Root cause: APPROVED_ONBOARDING provisioning route never dispatched activation email.
   Fix: added best-effort sendInviteMemberEmail call (non-blocking) in
   server/src/routes/admin/tenantProvision.ts after audit log write.
-  Full invite-token flow structurally complete end-to-end:
-  App.tsx routing (?action=invite) → OnboardingFlow → POST /api/tenant/activate → JWT.
-  Reused-user path remains BOUNDED-DEFERRED-REMAINDER (new Surat suppliers unaffected).
-  No schema/migration/frontend/.env changes. No feature flags activated.
-  Runtime verification with a real Surat supplier email is final gate for VERIFIED_COMPLETE.
-prior_last_closed_governance_unit: TEXQTIC-NC-QA-B2C-PUBLIC-PROJECTION-QUARANTINE-001
-prior_last_closed_governance_unit_status: QUARANTINE_VERIFIED_COMPLETE (QA B2C Gate B closed; public browse items=[],total=0; QA records preserved) (2026-05-20)
-prior_last_closed_governance_unit_date: 2026-05-20
-prior_last_closed_governance_unit_note: >
-  FU-002-GSC-CRAWL-EVIDENCE-VERIFY FAIL (2026-07-22).
-  Verification-only unit. No source code changes.
-  DuckDuckGo public search confirmed: 3 /auth/login?next=... URL variants are indexed.
-  Content at indexed URLs: login form only (no private/tenant data exposed).
-  All other auth/private routes (dashboard, control-plane, tenant, workspace, onboarding,
-  token-handler, bare /login) confirmed NOT indexed. Sensitive-content phrases not indexed.
-  FU-001 not deployed: 7 commits local-only. Live robots.txt = pre-FU-001 version.
-  Stop Conditions 4 (auth URL indexed) + 5 (deployment gap) ACTIVE. No commit created.
-  BS-003 remains PARTIAL. FTR-AUTH-003 remains ROBOTS_GAP_CLOSED / PARTIAL.
-  Remediation: git push origin main (deploy FU-001) → re-crawl interval → FU-003 re-verify.
-  Prior last closed governance unit: FU-001-ROBOTS-TXT-AUTH-DISALLOW-UPDATE.
+  Full invite-token flow structurally complete end-to-end.
+  Reused-user path remains BOUNDED-DEFERRED-REMAINDER.
 prior_last_closed_governance_unit_pre_prior: TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001
 prior_last_closed_governance_unit_pre_prior_status: CONTROLLED_QA_ACTIVATION_VERIFIED_COMPLETE
 prior_last_closed_governance_unit_pre_prior_date: 2026-05-14
