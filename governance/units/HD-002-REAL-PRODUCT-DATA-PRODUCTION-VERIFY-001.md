@@ -14,7 +14,7 @@
 | Decision | **FAIL — Production B2C browse contains QA fixture data only; no real supplier product data present** |
 | Hidden dependency closed | HD-002 → VERIFIED_FAIL |
 | BS-001 impact | BS-001 CONFIRMED — QA data verified live in production |
-| Commit hash | `<TBD — backfilled after commit>` |
+| Commit hash | `3482b48` |
 
 ---
 
