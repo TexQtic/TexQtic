@@ -214,11 +214,16 @@ Finding J1 (`TEST_VERIFIED`): membership authorization contract tests exist and 
 Finding J2 (`TEST_VERIFIED`): tests include invite issuance/resend/revoke and role transition errors.
 - Evidence: `tests/membership-authz.test.ts` lines 128, 217, 354, 646, 687, 980+
 
-Finding J3 (`GAP_IDENTIFIED`): no dedicated backend integration test file for `server/src/routes/auth.ts` was found.
-- Evidence: route test discovery did not find `auth*.test.ts` under `server/src/routes/`.
+Finding J3 (`LOCATION_MISMATCH_CORRECTED`): the original J3 finding incorrectly reported no auth tests because it searched `server/src/routes/`. Auth integration tests exist in `server/src/__tests__/` (9 files: `auth-email-verification-enforcement`, `auth-rate-limit-enforcement`, `auth-refresh-concurrency`, `auth-refresh-performance`, `auth-wave2-readiness`, `gate-e-1-refresh-rotation`, `gate-e-2-cross-realm`, `gate-e-3-rate-limit`, `gate-e-4-audit`). All use `describe.skipIf(!hasDb)` guards; all require live Supabase DB.
+- Corrected by: `FAM-06-AUTH-SESSION-BACKEND-INTEGRATION-TEST-COVERAGE-001` (2026-07-21).
 
 Finding J4 (`GAP_IDENTIFIED`): no dedicated frontend test file directly covering `services/authService.ts` was found.
 - Evidence: no `*authService*.test*` file found.
+- Still open as G-06-002.
+
+Finding J5 (`TEST_VERIFIED`): DB-free pure-logic contract tests added for validation schema rejection contracts, token utility behaviors (`generateRefreshToken`, `hashRefreshToken`, `createRefreshSession`), rate-limit key hashing, IP parsing, cookie realm naming, and no-signup surface assertion.
+- Evidence: `tests/auth-route-session.test.ts` — 60 tests, all passing.
+- Added by: `FAM-06-AUTH-SESSION-BACKEND-INTEGRATION-TEST-COVERAGE-001` (2026-07-21).
 
 ---
 
@@ -234,8 +239,10 @@ It does not authorize implementation by itself.
 
 ## 18. Gap Register
 
-Gap G-06-001 (`P1`): missing dedicated backend auth route integration suite for `auth.ts`.
-- Suggested unit: `FAM-06-AUTH-SESSION-BACKEND-INTEGRATION-TEST-COVERAGE-001`.
+Gap G-06-001 (`CLOSED`): was "missing dedicated backend auth route integration suite for `auth.ts`".
+- Root cause: location mismatch — integration tests existed in `server/src/__tests__/`, not `server/src/routes/`.
+- Closed by: `FAM-06-AUTH-SESSION-BACKEND-INTEGRATION-TEST-COVERAGE-001` (2026-07-21).
+- Evidence: `tests/auth-route-session.test.ts` created — 60 DB-free pure-logic contract tests; J3 finding corrected.
 
 Gap G-06-002 (`P1`): missing dedicated frontend auth service/session suite for `authService.ts` and `apiClient.ts` auth branches.
 - Suggested unit: `FAM-06-AUTH-SESSION-FRONTEND-TEST-COVERAGE-001`.
