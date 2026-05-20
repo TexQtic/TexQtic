@@ -94,25 +94,21 @@ dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
 dpp_v3_design_status: OPTIONAL_POLISH
 prior_last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
 prior_last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-last_closed_governance_unit: TEXQTIC-NC-QA-B2C-PUBLIC-PROJECTION-QUARANTINE-001
-last_closed_governance_unit_status: QUARANTINE_VERIFIED_COMPLETE (QA B2C Gate B closed; public browse items=[],total=0; QA records preserved) (2026-05-20)
+last_closed_governance_unit: HD-001-SUPPLIER-INVITE-ONBOARDING-RESOLUTION-001
+last_closed_governance_unit_status: IMPLEMENTATION_COMPLETE (Invite-token flow email dispatch added; full flow structurally complete; runtime verification pending) (2026-05-20)
 last_closed_governance_unit_date: 2026-05-20
 last_closed_governance_unit_note: >
-  TEXQTIC-NC-QA-B2C-PUBLIC-PROJECTION-QUARANTINE-001 QUARANTINE_VERIFIED_COMPLETE (2026-05-20).
-  Verification + controlled DB mutation unit. No source code changes.
-  QA B2C org (slug=qa-b2c, legal_name=QA B2C, jurisdiction=US-CA) uniquely identified.
-  Gate B (org.publication_posture) selected as least-disruptive quarantine gate.
-  DB mutation: UPDATE organizations SET publication_posture = 'PRIVATE_OR_AUTH_ONLY'
-  WHERE slug = 'qa-b2c' AND legal_name = 'QA B2C' AND jurisdiction = 'US-CA' → UPDATE 1.
-  Public browse after: GET /api/public/b2c/products → HTTP 200, items:[], total:0.
-  Product detail after: GET /api/public/b2c/products/qa-b2c--qa-b2c-cotton-scarf-1ab8a85c10
-  → HTTP 404 NOT_FOUND.
-  QA tenant/org/3 products preserved — no records deleted. Authenticated access unaffected.
-  HD-002 remains VERIFIED_FAIL — real Surat India supplier data still absent.
-  BS-001 remains CONFIRMED — quarantine noted in evidence; real data gap unresolved.
-  No source/schema/migration/env/feature flag changes.
-prior_last_closed_governance_unit: HD-002-REAL-PRODUCT-DATA-PRODUCTION-VERIFY-001
-prior_last_closed_governance_unit_status: VERIFIED_FAIL (Production B2C browse: QA fixture data only; no real supplier data) (2026-05-20)
+  HD-001-SUPPLIER-INVITE-ONBOARDING-RESOLUTION-001 IMPLEMENTATION_COMPLETE (2026-05-20).
+  Root cause: APPROVED_ONBOARDING provisioning route never dispatched activation email.
+  Fix: added best-effort sendInviteMemberEmail call (non-blocking) in
+  server/src/routes/admin/tenantProvision.ts after audit log write.
+  Full invite-token flow structurally complete end-to-end:
+  App.tsx routing (?action=invite) → OnboardingFlow → POST /api/tenant/activate → JWT.
+  Reused-user path remains BOUNDED-DEFERRED-REMAINDER (new Surat suppliers unaffected).
+  No schema/migration/frontend/.env changes. No feature flags activated.
+  Runtime verification with a real Surat supplier email is final gate for VERIFIED_COMPLETE.
+prior_last_closed_governance_unit: TEXQTIC-NC-QA-B2C-PUBLIC-PROJECTION-QUARANTINE-001
+prior_last_closed_governance_unit_status: QUARANTINE_VERIFIED_COMPLETE (QA B2C Gate B closed; public browse items=[],total=0; QA records preserved) (2026-05-20)
 prior_last_closed_governance_unit_date: 2026-05-20
 prior_last_closed_governance_unit_note: >
   FU-002-GSC-CRAWL-EVIDENCE-VERIFY FAIL (2026-07-22).

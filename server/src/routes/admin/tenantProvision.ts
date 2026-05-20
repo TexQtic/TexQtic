@@ -25,6 +25,7 @@ import { provisionTenant, queryProvisioningStatus } from '../../services/tenantP
 import { normalizeTenantProvisionRequest } from '../../types/tenantProvision.types.js';
 import { prisma } from '../../db/prisma.js';
 import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
+import { sendInviteMemberEmail } from '../../services/email/email.service.js';
 
 /**
  * Request body schema — validated before service invocation.
@@ -327,6 +328,22 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
 
       // Return 201 Created with canonical org_id
       // NEVER echo password or internal DB internals
+
+      // HD-001: Best-effort first-owner activation email for APPROVED_ONBOARDING
+      if (
+        result.provisioningMode === 'APPROVED_ONBOARDING' &&
+        result.firstOwnerAccessPreparation?.inviteToken
+      ) {
+        void sendInviteMemberEmail(
+          result.firstOwnerAccessPreparation.email,
+          result.firstOwnerAccessPreparation.inviteToken,
+          result.organization.legalName,
+          { triggeredBy: 'admin', actorId: actorId }
+        ).catch(err => {
+          request.log.warn({ err }, '[APPROVED_ONBOARDING] First-owner activation email dispatch failed (non-blocking)');
+        });
+      }
+
       return sendSuccess(
         reply,
         {
