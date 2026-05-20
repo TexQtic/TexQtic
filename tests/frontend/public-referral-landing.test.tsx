@@ -146,7 +146,7 @@ describe('PublicReferralLanding (REFERRAL-005)', () => {
         onSignIn={() => {}}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: /back/i }));
+    fireEvent.click(screen.getByRole('button', { name: /explore texqtic/i }));
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
@@ -162,7 +162,7 @@ describe('PublicReferralLanding (REFERRAL-005)', () => {
         onSignIn={onSignIn}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: /sign in$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /sign in.*create account/i }));
     expect(onSignIn).toHaveBeenCalledTimes(1);
   });
 

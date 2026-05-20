@@ -535,7 +535,7 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
                 Send an inquiry
               </h2>
               <p className="mb-4 text-xs text-slate-500">
-                This captures high-level public interest only. Pricing, negotiation, and transactional workflows remain authenticated.
+                This captures high-level public interest only. Pricing and transactional workflows remain authenticated.
               </p>
 
               {inquiryStatus === 'success' ? (
