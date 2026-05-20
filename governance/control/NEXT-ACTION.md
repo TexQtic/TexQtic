@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-22 (FU-001-ROBOTS-TXT-AUTH-DISALLOW-UPDATE ROBOTS_GAP_CLOSED: 8 auth/private Disallow entries added to public/robots.txt; robots.txt implementation gap closed. BS-003 remains PARTIAL (GSC evidence pending FU-002). FTR-AUTH-003 EVIDENCE_STRONG → ROBOTS_GAP_CLOSED. Prior close: BS-003-AUTH-PRIVATE-ROUTE-INDEXABILITY-VERIFY-001 PARTIAL: structural evidence strong, robots.txt gap documented; FU-001 prescribed as required next step.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-22 (FU-002-GSC-CRAWL-EVIDENCE-VERIFY FAIL: /auth/login indexed (3 URLs); FU-001 not deployed — live robots.txt = pre-FU-001; stop conditions 4+5 active. Prior close: FU-001-ROBOTS-TXT-AUTH-DISALLOW-UPDATE ROBOTS_GAP_CLOSED: 8 auth/private Disallow entries added to public/robots.txt; robots.txt implementation gap closed. BS-003 remains PARTIAL. FTR-AUTH-003 remains ROBOTS_GAP_CLOSED/PARTIAL. Remediation: deploy FU-001, await re-crawl, run FU-003.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -94,10 +94,25 @@ dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
 dpp_v3_design_status: OPTIONAL_POLISH
 prior_last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
 prior_last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-last_closed_governance_unit: FU-001-ROBOTS-TXT-AUTH-DISALLOW-UPDATE
-last_closed_governance_unit_status: ROBOTS_GAP_CLOSED (2026-07-22)
+last_closed_governance_unit: FU-002-GSC-CRAWL-EVIDENCE-VERIFY
+last_closed_governance_unit_status: FAIL (stop conditions 4+5; /auth/login indexed; FU-001 undeployed) (2026-07-22)
 last_closed_governance_unit_date: 2026-07-22
 last_closed_governance_unit_note: >
+  FU-002-GSC-CRAWL-EVIDENCE-VERIFY FAIL (2026-07-22).
+  Verification-only unit. No source code changes.
+  DuckDuckGo public search confirmed: 3 /auth/login?next=... URL variants are indexed.
+  Content at indexed URLs: login form only (no private/tenant data exposed).
+  All other auth/private routes (dashboard, control-plane, tenant, workspace, onboarding,
+  token-handler, bare /login) confirmed NOT indexed. Sensitive-content phrases not indexed.
+  FU-001 not deployed: 7 commits local-only. Live robots.txt = pre-FU-001 version.
+  Stop Conditions 4 (auth URL indexed) + 5 (deployment gap) ACTIVE. No commit created.
+  BS-003 remains PARTIAL. FTR-AUTH-003 remains ROBOTS_GAP_CLOSED / PARTIAL.
+  Remediation: git push origin main (deploy FU-001) → re-crawl interval → FU-003 re-verify.
+  Prior last closed governance unit: FU-001-ROBOTS-TXT-AUTH-DISALLOW-UPDATE.
+prior_last_closed_governance_unit: FU-001-ROBOTS-TXT-AUTH-DISALLOW-UPDATE
+prior_last_closed_governance_unit_status: ROBOTS_GAP_CLOSED (2026-07-22)
+prior_last_closed_governance_unit_date: 2026-07-22
+prior_last_closed_governance_unit_note: >
   FU-001-ROBOTS-TXT-AUTH-DISALLOW-UPDATE ROBOTS_GAP_CLOSED (2026-07-22).
   Minimal implementation unit. Source change: public/robots.txt only.
   Added 8 Disallow entries: /auth, /dashboard, /control-plane, /tenant, /workspace,
@@ -106,18 +121,6 @@ last_closed_governance_unit_note: >
   FTR-AUTH-003 updated EVIDENCE_STRONG → ROBOTS_GAP_CLOSED.
   No other source/runtime/schema/migration files changed.
   Prior last closed governance unit: BS-003-AUTH-PRIVATE-ROUTE-INDEXABILITY-VERIFY-001.
-prior_last_closed_governance_unit: BS-003-AUTH-PRIVATE-ROUTE-INDEXABILITY-VERIFY-001
-prior_last_closed_governance_unit_status: PARTIAL (2026-07-22)
-prior_last_closed_governance_unit_date: 2026-07-22
-prior_last_closed_governance_unit_note: >
-  BS-003-AUTH-PRIVATE-ROUTE-INDEXABILITY-VERIFY-001 PARTIAL (2026-07-22).
-  Verification-only unit. No source code changes.
-  BS-003 (Auth/tenant pages may be indexed) updated OPEN → PARTIAL.
-  FTR-AUTH-003 updated IMPLEMENTATION_READY → EVIDENCE_STRONG.
-  Structural evidence confirmed: no private content at auth URLs; no link graph path; no sitemap promotion;
-  SPA PUBLIC_ENTRY fallback confirmed live. Documented gap: 8 auth/private prefixes not in robots.txt.
-  Follow-up: FU-001 (robots.txt update, now completed) and FU-002 (GSC check, still required).
-  Verification artifact: governance/launch-readiness/BS-003-AUTH-PRIVATE-ROUTE-INDEXABILITY-VERIFY.md.
 prior_last_closed_governance_unit_pre_prior: TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001
 prior_last_closed_governance_unit_pre_prior_status: CONTROLLED_QA_ACTIVATION_VERIFIED_COMPLETE
 prior_last_closed_governance_unit_pre_prior_date: 2026-05-14
