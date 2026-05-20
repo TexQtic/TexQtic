@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-20 (BS-005-JSONLD-RICH-RESULTS-VALIDATION-001 PARTIAL: JSON-LD DOM extraction + structural validation PASS on all indexed public surfaces. No external GRT report — prevents VERIFIED_PASS. BS-005 → PARTIAL. Next: FU-004-AUTH-LOGIN-DEINDEX-RECHECK or FU-005-JSONLD-GRT-REPORT-001.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-20 (HD-002-REAL-PRODUCT-DATA-PRODUCTION-VERIFY-001 VERIFIED_FAIL: Production B2C browse contains QA fixture data only. 1 QA storefront, 3 QA products, placeholder images. No real Surat India supplier data. Public buyer CTA traffic blocked until HD-001 + real product seeding resolved.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -94,27 +94,27 @@ dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
 dpp_v3_design_status: OPTIONAL_POLISH
 prior_last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
 prior_last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-last_closed_governance_unit: BS-005-JSONLD-RICH-RESULTS-VALIDATION-001
-last_closed_governance_unit_status: PARTIAL (JSON-LD structural validation PASS; no external GRT report) (2026-05-20)
+last_closed_governance_unit: HD-002-REAL-PRODUCT-DATA-PRODUCTION-VERIFY-001
+last_closed_governance_unit_status: VERIFIED_FAIL (Production B2C browse: QA fixture data only; no real supplier data) (2026-05-20)
 last_closed_governance_unit_date: 2026-05-20
 last_closed_governance_unit_note: >
-  BS-005-JSONLD-RICH-RESULTS-VALIDATION-001 PARTIAL (2026-05-20).
+  HD-002-REAL-PRODUCT-DATA-PRODUCTION-VERIFY-001 VERIFIED_FAIL (2026-05-20).
   Verification-only unit. No source code changes.
-  Live DOM extraction via Playwright on https://app.texqtic.com confirmed JSON-LD injected
-  correctly on all indexed public surfaces: /collections (CollectionPage), /products (WebPage),
-  /products/category/garments (WebPage + BreadcrumbList), /collections/natural-fabric-stories
-  (WebPage + BreadcrumbList). All governance-allowed types present; all forbidden types absent.
-  JSON syntax valid. canonical URLs consistent. BreadcrumbList ListItem structure correct.
-  Noindex stub pages (/trust, /industries, /aggregator): noindex, no JSON-LD — correct.
-  /inquiry: index but no JSON-LD — by design.
-  /product/:slug (notFound): noindex, no JSON-LD — correct fail-closed behavior.
-  No Google Rich Results Test or Schema.org validator report captured — prevents VERIFIED_PASS.
-  Risk of external tool failure assessed as very low given structural quality.
-  BS-005 → PARTIAL. Next: FU-005-JSONLD-GRT-REPORT-001 (if GRT evidence required before campaign)
-  or FU-004-AUTH-LOGIN-DEINDEX-RECHECK (next auth crawl check after re-crawl interval).
-prior_last_closed_governance_unit: FU-003-ROBOTS-DEPLOYMENT-VERIFY
-prior_last_closed_governance_unit_status: PASS (robots.txt deployed; SC-5 resolved; /auth/login deindex pending) (2026-05-20)
-prior_last_closed_governance_unit_date: 2026-07-22
+  Live production API verification at https://app.texqtic.com:
+  GET /api/public/b2c/products returns: 1 storefront entry ("QA B2C", jurisdiction US-CA),
+  3 products ("QA B2C Cotton Scarf", "QA B2C Linen Wrap", "QA B2C Silk Pocket Square"),
+  all with placehold.co images, null category/material/fabricType, test-copy descriptions
+  ("B2C browse proof item one."), and QA trust signal ("Public-safe projection only").
+  No real Surat India textile supplier or product present with B2C public projection posture.
+  BS-001 CONFIRMED: QA fixture set is live in production. Collections surface functional
+  (5 static-config editorial cards) but not backed by real product inventory.
+  Category pages render correctly but product grids empty (category: null on QA products).
+  Required path: HD-001 (supplier onboarding) → real product seeding → QA org remediation
+  → HD-002 recheck before any public buyer CTA traffic.
+  HD-002 → VERIFIED_FAIL.
+prior_last_closed_governance_unit: BS-005-JSONLD-RICH-RESULTS-VALIDATION-001
+prior_last_closed_governance_unit_status: PARTIAL (JSON-LD structural validation PASS; no external GRT report) (2026-05-20)
+prior_last_closed_governance_unit_date: 2026-05-20
 prior_last_closed_governance_unit_note: >
   FU-002-GSC-CRAWL-EVIDENCE-VERIFY FAIL (2026-07-22).
   Verification-only unit. No source code changes.
