@@ -18,7 +18,7 @@
 | Local ahead of origin | 7 commits — FU-001 (and prior commits) never pushed/deployed |
 | Decision | FAIL |
 | Stop conditions active | Condition 4 (auth URL indexed) + Condition 5 (live robots.txt lacks FU-001 entries) |
-| Commit hash | NOT COMMITTED — stop conditions prohibit commit |
+| Commit hash | `c611523` — [TEXQTIC] governance: record FU-002 auth crawl evidence fail |
 
 ---
 

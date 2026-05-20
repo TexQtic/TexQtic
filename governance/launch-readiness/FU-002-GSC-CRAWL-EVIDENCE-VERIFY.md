@@ -341,4 +341,4 @@ as defense-in-depth. Low priority given deployment of Disallow would be sufficie
 
 | Date | Change | Who |
 |---|---|---|
-| 2026-07-22 | FU-002 verification executed — DuckDuckGo public search checks completed; /auth/login indexed (3 URLs); live robots.txt deployment gap confirmed; FAIL decision recorded; stop conditions 4 + 5 active; no commit created | `FU-002-GSC-CRAWL-EVIDENCE-VERIFY` |
+| 2026-07-22 | FU-002 verification executed — DuckDuckGo public search checks completed; /auth/login indexed (3 URLs); live robots.txt deployment gap confirmed; FAIL decision recorded; stop conditions 4 + 5 active; committed as `c611523` | `FU-002-GSC-CRAWL-EVIDENCE-VERIFY` |
