@@ -219,7 +219,12 @@ Finding J3 (`LOCATION_MISMATCH_CORRECTED`): the original J3 finding incorrectly 
 
 Finding J4 (`GAP_IDENTIFIED`): no dedicated frontend test file directly covering `services/authService.ts` was found.
 - Evidence: no `*authService*.test*` file found.
-- Still open as G-06-002.
+- Closed as G-06-002 — see J6.
+
+Finding J6 (`TEST_VERIFIED`): DB-free frontend auth service/session contract tests added for `services/apiClient.ts` and `services/authService.ts`.
+- Evidence: `tests/frontend/auth-service-session.test.ts` — 74 tests, all passing.
+- Covers: APCL-001..032 (apiClient localStorage contract, APIError class, impersonation); APCL-033..039 (Bearer header enforcement, HTTP error shapes); AUTH-001..035 (login by realm, stale-clear, body shape, realm-hint header, token storage, payload normalization, resolvePublicEntryDescriptor, resolveTenantBySlug, resolveTenantsByEmail, isAuthenticatedFor, forgotPassword, resetPassword, verifyEmail, resendVerification, no-secret-leak).
+- Added by: `FAM-06-AUTH-SESSION-FRONTEND-TEST-COVERAGE-001` (2026-07-21).
 
 Finding J5 (`TEST_VERIFIED`): DB-free pure-logic contract tests added for validation schema rejection contracts, token utility behaviors (`generateRefreshToken`, `hashRefreshToken`, `createRefreshSession`), rate-limit key hashing, IP parsing, cookie realm naming, and no-signup surface assertion.
 - Evidence: `tests/auth-route-session.test.ts` — 60 tests, all passing.
@@ -244,8 +249,9 @@ Gap G-06-001 (`CLOSED`): was "missing dedicated backend auth route integration s
 - Closed by: `FAM-06-AUTH-SESSION-BACKEND-INTEGRATION-TEST-COVERAGE-001` (2026-07-21).
 - Evidence: `tests/auth-route-session.test.ts` created — 60 DB-free pure-logic contract tests; J3 finding corrected.
 
-Gap G-06-002 (`P1`): missing dedicated frontend auth service/session suite for `authService.ts` and `apiClient.ts` auth branches.
-- Suggested unit: `FAM-06-AUTH-SESSION-FRONTEND-TEST-COVERAGE-001`.
+Gap G-06-002 (`CLOSED`): was "missing dedicated frontend auth service/session suite for `authService.ts` and `apiClient.ts` auth branches".
+- Closed by: `FAM-06-AUTH-SESSION-FRONTEND-TEST-COVERAGE-001` (2026-07-21).
+- Evidence: `tests/frontend/auth-service-session.test.ts` — 74 DB-free frontend contract tests, all passing; J6 finding added.
 
 Gap G-06-003 (`P2`): no explicit verification artifact proving authenticated/private route crawl exclusion outside app metadata handling.
 - Suggested unit: include in later SEO/auth hardening verification.
