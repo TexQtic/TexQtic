@@ -26,9 +26,10 @@ Three B-series read-only scans have been completed:
   **4 supplier-supplied fields**. Everything else is system-generated or defaults.
 - **3 form fields are cosmetic dead-ends**: tenant-type selector (Step 3), subdomain (Step 2),
   and industry (Step 1). All are collected by the frontend but never reach a DB column.
-- **One critical operational discrepancy** is recorded in §6 — the invite URL format documented
-  in A4 (`?token=<token>`) is incomplete; the correct format requires `?token=<token>&action=invite`.
-  Without `action=invite`, the supplier lands in the password-reset handler, not the onboarding flow.
+- **One critical operational note** is recorded in §6 — the correct invite URL requires both the
+  `/accept-invite` path and the `&action=invite` parameter:
+  `https://app.texqtic.com/accept-invite?token=<inviteToken>&action=invite` (A2-verified; corrected in A4 commit `dbb33a5`).
+  Without `&action=invite`, the supplier lands in the password-reset handler, not the onboarding flow.
 - **`base_family`** is marked optional in the zod schema but is effectively required by normalization
   for APPROVED_ONBOARDING mode. A request missing both `base_family` and `tenant_category` will pass
   zod and then fail at normalization with a 400.
@@ -186,10 +187,10 @@ Minimum response fields to extract:
 ### Admin must deliver to supplier (1 action)
 
 ```
-Invite URL: https://app.texqtic.com/?token=<inviteToken>&action=invite
+Invite URL: https://app.texqtic.com/accept-invite?token=<inviteToken>&action=invite
 ```
 
-Both `?token=` and `&action=invite` are required. See §6 for the operational constraint.
+Both `?token=` and `&action=invite` are required, and the `/accept-invite` path is the A2-verified canonical form. See §6 for the full operational constraint.
 
 ### Supplier must supply at activation (4 fields, via form)
 
@@ -211,13 +212,13 @@ After these two calls: `organizations.status = 'ACTIVE'` and the supplier is ful
 
 ---
 
-## 6. Critical Invite URL Format — A4 Discrepancy
+## 6. Critical Invite URL Format — Operational Constraint
 
-The A4 synthesis document (`SOFT-LAUNCH-ONBOARDING-FLOW-MAP-001.md §9`) documents the invite URL as:
+The A2-verified source (`email.service.ts` line 263, aligned with A4 corrected commit `dbb33a5`) establishes the canonical invite URL as:
 
-> `https://app.texqtic.com/onboarding?token=<inviteToken>`
+> `https://app.texqtic.com/accept-invite?token=<inviteToken>&action=invite`
 
-**This format is operationally incomplete.** The App.tsx mount effect (line 3624–3633) requires:
+**Both the `/accept-invite` path and `&action=invite` parameter are required.** The App.tsx mount effect (line 3624–3633) requires:
 
 ```
 const token  = params.get('token');
@@ -234,15 +235,16 @@ Without `action=invite`, a URL containing only `?token=<value>` routes the suppl
 `TOKEN_HANDLER` state (the password-reset / email-verification screen), not to the onboarding form.
 The supplier sees a password-reset screen and the invite token is silently discarded.
 
-**Correct invite URL format:**
+**Correct invite URL format (A2-verified):**
 
 ```
-https://app.texqtic.com/?token=<64-char-hex>&action=invite
+https://app.texqtic.com/accept-invite?token=<inviteToken>&action=invite
 ```
 
-The Vercel `routes` config has a catch-all `"src": "/(.*)", "dest": "/index.html"` — so any path
-works (the SPA reads `window.location.search` on mount). The path itself is irrelevant; the
-`&action=invite` query parameter is mandatory.
+The `/accept-invite` path is the operationally established convention (source: `email.service.ts`
+line 263). While the Vercel catch-all routes any path to the SPA, the `/accept-invite` path
+is the canonical form for consistency with the email delivery implementation.
+The `&action=invite` query parameter is mandatory — without it the invite flow does not trigger.
 
 **Operational risk:** If Paresh constructs invite URLs without `&action=invite`, the supplier will
 experience what appears to be a password-reset screen when clicking the link. The invite token will
