@@ -92,14 +92,15 @@ Authorization: Bearer <SUPER_ADMIN JWT (Supabase Auth at app.texqtic.com)>
 | Invite token | `firstOwnerAccessPreparation.inviteToken` | Used to construct invite URL |
 | Invite expiry | `firstOwnerAccessPreparation.expiresAt` | 7-day TTL — invite must be delivered promptly |
 
-**Invite URL (mandatory format — both parameters required):**
+**Invite URL (mandatory format — both path and `&action=invite` parameter required):**
 ```
-https://app.texqtic.com/?token=<64-char-hex>&action=invite
+https://app.texqtic.com/accept-invite?token=<inviteToken>&action=invite
 ```
 
 > ⚠️ **Operational risk:** Without `&action=invite`, the supplier's browser routes to the
 > password-reset screen. The token is silently discarded. The invite TTL continues counting.
-> This has been confirmed in source (`App.tsx` mount effect).
+> Without the `/accept-invite` path, the token is also silently discarded.
+> Both constraints confirmed in source (`App.tsx` mount effect; `email.service.ts` line 263 — A2-verified).
 
 ---
 
@@ -341,7 +342,7 @@ They cannot be inferred from the codebase.
 | 3 | **`orchestrationReference` for each supplier** | Idempotency key; unique per org; required by provisioning API | e.g. `b2c-demo-001`, `surat-pilot-001`, `surat-pilot-002`, … |
 | 4 | **Pricing consent** — confirmation that real indicative wholesale prices from suppliers may be displayed publicly and without obfuscation | `publicPriceLabel` is shown raw to unauthenticated buyers. No price masking exists in current projection. | Explicit written confirmation per supplier |
 | 5 | **Product photograph URLs** — 5 real product images per supplier, publicly accessible on a CDN | `imageUrl` null renders a broken browse card. No image upload feature exists in the current catalog UI (TENANT-CATALOG-IMAGE-UPLOAD-GAP-001/002). Supplier must pre-host images. | Array of 5 absolute HTTPS URLs; JPEG/PNG; publicly accessible |
-| 6 | **Invite URL format acknowledgement** — confirmation that Paresh will use `?token=<hex>&action=invite` (not just `?token=<hex>`) | Without `&action=invite`, supplier hits the password-reset screen. Runtime operational risk with no platform-side safety net. | Verbal or written confirmation |
+| 6 | **Invite URL format acknowledgement** — confirmation that Paresh will use the canonical form `https://app.texqtic.com/accept-invite?token=<inviteToken>&action=invite` (both `/accept-invite` path and `&action=invite` param required) | Without `&action=invite`, supplier hits the password-reset screen. Without `/accept-invite` path, token is silently discarded. A2-verified canonical form (A4 commit `dbb33a5`, B4 commit `8b7bb0d`). | Verbal or written confirmation |
 | 7 | **GSTIN gate decision** — will Paresh require GSTIN verification before approving suppliers to `ACTIVE` status? | No platform enforcement exists for GSTIN-before-approval. This is an operator policy decision. | Decision: `GSTIN required` OR `GSTIN deferred for pilot` |
 
 ---
