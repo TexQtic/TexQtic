@@ -17,7 +17,7 @@ summarises all five; detail follows in §3–§7.
 
 | # | Path | Actors | Source status | Soft-launch suitability | MVP/90-day suitability |
 |---|---|---|---|---|---|
-| 1 | Manual / admin operator provisioning | Paresh (SUPER_ADMIN) | **IMPLEMENTED** (HD-001 VERIFIED) | ✅ Recommended — no blockers | ✅ Backup / manual fallback at any scale |
+| 1 | Manual / admin operator provisioning | Paresh (SUPER_ADMIN) | **IMPLEMENTED** — HD-001 code IMPLEMENTATION_COMPLETE (commit `7db2265`); email runtime VERIFIED_BLOCKED (SMTP env vars absent in Vercel production) | ✅ Recommended — no source-code blocker; `inviteToken` returned in 201 response for manual delivery; SMTP not required for Path 1 | ✅ Backup / manual fallback at any scale |
 | 2 | Marketing → CRM → Main App approval | CRM system, Paresh | **PARTIAL** — platform side ready; CRM operational config missing | ⚠️ Not required for Surat pilot | 🚨 Critical path — must complete before CRM-automated volume |
 | 3 | CAE-assisted supplier profile provisioning (WEBHOOK-007) | CAE / CRM, HMAC webhook | **IMPLEMENTED** (commit `6de5002`) — public profile only, no tenant login | ❌ Not required, not activated | ⚠️ Required once CAE acquisition pipeline goes live |
 | 4 | Supplier self-onboarding | Supplier (unaided) | **DOES NOT EXIST** — FAM-07 `NOT_ASSESSED` | ❌ Not available | 🚨 Critical path — requires FAM-07 full family cycle |
@@ -70,7 +70,7 @@ POST /api/control/tenants/:id/onboarding/activate-approved
 
 ## 3. Path 1 — Manual / Admin Operator Provisioning
 
-**Status: IMPLEMENTED — SOFT-LAUNCH RECOMMENDED PATH**
+**Status: IMPLEMENTED_WITH_MANUAL_WORKAROUND — HD-001 code IMPLEMENTATION_COMPLETE (commit `7db2265`); email runtime VERIFIED_BLOCKED (SMTP env vars absent in Vercel production) — SOFT-LAUNCH RECOMMENDED PATH via manual invite token delivery**
 
 ### Flow
 
@@ -89,9 +89,10 @@ POST /api/control/tenants/provision
 201 response → extract inviteToken (64-char hex)
         │
         ▼
-Paresh constructs invite link:
-  https://app.texqtic.com/onboarding?token=<inviteToken>
-  (or current frontend onboarding route)
+Paresh constructs invite link (A2-verified URL — both parameters required):
+  https://app.texqtic.com/accept-invite?token=<inviteToken>&action=invite
+  ⚠️ Without &action=invite the browser routes to the password-reset handler (App.tsx mount effect).
+  Without /accept-invite path the token is silently discarded.
         │
         ▼
 Paresh delivers link to supplier (email / WhatsApp)
@@ -119,7 +120,12 @@ Paresh runs 2-step admin review → ACTIVE
 | Admin JWT | Yes | SUPER_ADMIN role; obtained via Supabase Auth at app.texqtic.com |
 
 ### Blockers
-**None.** Everything required is implemented and production-verified (HD-001 VERIFIED).
+
+| Blocker | Blocking Path 1 (manual)? | Notes |
+|---|---|---|
+| HD-001-SMTP-INFRA-GAP-001 — SMTP env vars (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`) absent in Vercel production | **No** — `inviteToken` is returned in the provisioning 201 response; Paresh constructs and delivers the invite URL manually | SMTP is required only for automated email delivery; the code fix is correct (`IMPLEMENTATION_COMPLETE`); the delivery path is `VERIFIED_BLOCKED` by missing infrastructure |
+
+**Manual workaround for soft launch:** Extract `inviteToken` from the `firstOwnerAccessPreparation.inviteToken` field of the 201 response and deliver `https://app.texqtic.com/accept-invite?token=<inviteToken>&action=invite` to the supplier via WhatsApp or direct message. No SMTP required.
 
 ### Soft-Launch Suitability
 **✅ FULLY SUITABLE — Recommended path for Surat pilot (10–30 suppliers)**  
@@ -349,13 +355,13 @@ Steps:
 1. Paresh generates admin JWT at `app.texqtic.com`
 2. For each supplier: `POST /api/control/tenants/provision` (SUPER_ADMIN JWT, `APPROVED_ONBOARDING` mode)
 3. Extract `inviteToken` from 201 response
-4. Deliver `https://app.texqtic.com/onboarding?token=<inviteToken>` to supplier
+4. Deliver `https://app.texqtic.com/accept-invite?token=<inviteToken>&action=invite` to supplier (A2-verified URL; both `/accept-invite` path and `&action=invite` param are required)
 5. Supplier completes activation via invite link
 6. Paresh runs 2-step admin review (onboarding outcome → activate-approved)
 7. Supplier is live and `ACTIVE`
 
 Path 1 requires no external coordination, no new configuration, and no additional implementation.
-It is the only path with zero blockers today.
+No source-code blocker exists for Path 1. SMTP email delivery is VERIFIED_BLOCKED (HD-001-SMTP-INFRA-GAP-001) but does not block manual Path 1 — Paresh delivers the invite URL directly from the 201 response.
 
 ### MVP / 90-Day CRM-Automated Onboarding
 
