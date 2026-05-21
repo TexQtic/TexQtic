@@ -8,7 +8,7 @@
 **Date:** 2026-05-21
 **Owner:** Paresh Patel
 **Scope posture:** Governance-only inspection. No runtime file modifications. No test execution. No schema changes.
-**Commit:** (backfill after commit)
+**Commit:** `8c85a06`
 
 ---
 
