@@ -30,6 +30,10 @@ vi.mock('../db/prisma.js', () => ({
   },
 }));
 
+vi.mock('../config/index.js', () => ({
+  config: { ADMIN_NOTIFICATION_EMAIL: null as string | null },
+}));
+
 vi.mock('../services/email/email.service.js', () => ({
   sendBuyerInquiryAcknowledgementEmail: vi.fn(),
   sendSupplierInquiryNotificationEmail: vi.fn(),
@@ -64,6 +68,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import publicRoutes from '../routes/public.js';
+import { config } from '../config/index.js';
 import { getPublicB2BSupplierBySlug } from '../services/publicB2BProjection.service.js';
 import { writeAuditLog } from '../lib/auditLog.js';
 import { prisma } from '../db/prisma.js';
@@ -137,6 +142,9 @@ beforeEach(async () => {
   vi.mocked(sendBuyerInquiryAcknowledgementEmail).mockResolvedValue({ status: 'DEV_LOGGED' });
   vi.mocked(sendSupplierInquiryNotificationEmail).mockResolvedValue({ status: 'DEV_LOGGED' });
   vi.mocked(sendAdminInquiryAlertEmail).mockResolvedValue({ status: 'DEV_LOGGED' });
+
+  // Default: ADMIN_NOTIFICATION_EMAIL not configured
+  (config as { ADMIN_NOTIFICATION_EMAIL: string | null }).ADMIN_NOTIFICATION_EMAIL = null;
 });
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -745,5 +753,78 @@ describe('POST /api/public/inquiry/submit', () => {
     expect(sendBuyerInquiryAcknowledgementEmail).not.toHaveBeenCalled();
     expect(sendSupplierInquiryNotificationEmail).not.toHaveBeenCalled();
     expect(sendAdminInquiryAlertEmail).not.toHaveBeenCalled();
+  });
+
+  // ── Awaited dispatch tests (serverless lifecycle fix) ─────────────────────
+
+  /**
+   * INQ-034: General inquiry with buyer_email → buyer acknowledgement dispatched and
+   * awaited before 202 is returned.
+   * Verifies the dispatch executes synchronously relative to the response (not abandoned).
+   */
+  it('INQ-034: general inquiry with buyer_email → buyer acknowledgement dispatched before 202', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'GENERAL', buyer_email: 'buyer@example.com' },
+    });
+
+    expect(response.statusCode).toBe(202);
+    expect(sendBuyerInquiryAcknowledgementEmail).toHaveBeenCalledOnce();
+    expect(sendBuyerInquiryAcknowledgementEmail).toHaveBeenCalledWith(
+      'buyer@example.com',
+      expect.objectContaining({ inquiry_category: 'GENERAL' }),
+      expect.objectContaining({ triggeredBy: 'system' }),
+    );
+  });
+
+  /**
+   * INQ-035: General inquiry with ADMIN_NOTIFICATION_EMAIL configured →
+   * admin notification dispatched and awaited before 202 is returned.
+   */
+  it('INQ-035: general inquiry with ADMIN_NOTIFICATION_EMAIL → admin notification dispatched before 202', async () => {
+    (config as { ADMIN_NOTIFICATION_EMAIL: string | null }).ADMIN_NOTIFICATION_EMAIL = 'admin@texqtic.example';
+
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'SOURCING_INTENT' },
+    });
+
+    expect(response.statusCode).toBe(202);
+    expect(sendAdminInquiryAlertEmail).toHaveBeenCalledOnce();
+    expect(sendAdminInquiryAlertEmail).toHaveBeenCalledWith(
+      'admin@texqtic.example',
+      expect.objectContaining({ inquiry_category: 'SOURCING_INTENT' }),
+      expect.objectContaining({ triggeredBy: 'system' }),
+    );
+  });
+
+  /**
+   * INQ-036: Notification timeout (4 000 ms) fires → route still returns 202.
+   * Simulates a hanging SMTP call; the race guard must resolve the timeout and
+   * allow the response to proceed.
+   */
+  it('INQ-036: notification timeout fires → route still returns 202', async () => {
+    vi.useFakeTimers();
+
+    // Simulate a hanging SMTP call that never settles
+    vi.mocked(sendBuyerInquiryAcknowledgementEmail).mockImplementationOnce(
+      () => new Promise<never>(() => undefined),
+    );
+
+    const injectPromise = app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'GENERAL', buyer_email: 'buyer@example.com' },
+    });
+
+    // Advance fake clock past the 4 000 ms notification timeout
+    await vi.advanceTimersByTimeAsync(5000);
+
+    const response = await injectPromise;
+    expect(response.statusCode).toBe(202);
+
+    vi.useRealTimers();
   });
 });

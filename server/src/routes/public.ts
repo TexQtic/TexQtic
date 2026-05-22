@@ -1403,7 +1403,7 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
         fastify.log.warn({ err, supplier_slug }, '[buyer-inquiry] Event emission failed (non-blocking)');
       });
 
-      // Notification dispatch (FTR-B2C-004 / PRIT-033) — fire-and-forget, non-blocking.
+      // Notification dispatch (FTR-B2C-004 / PRIT-033) — awaited before response (serverless lifecycle safety).
       // Failures here must NEVER affect the 202 response.
       const _supplierOrgId = supplierResult.orgId;
       const _notifCtxSupplier: InquiryNotificationContext = {
@@ -1413,7 +1413,7 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
         geo_band,
         volume_band,
       };
-      void (async () => {
+      try {
         // Resolve supplier owner/admin email (best-effort; null if not found).
         const _ownerMembership = await prisma.membership.findFirst({
           where: { tenantId: _supplierOrgId, role: { in: ['OWNER', 'ADMIN'] } },
@@ -1450,7 +1450,11 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
           );
         }
 
-        await Promise.allSettled(_dispatches);
+        const _notificationTimeoutMs = 4000;
+        await Promise.race([
+          Promise.allSettled(_dispatches),
+          new Promise<void>(resolve => setTimeout(resolve, _notificationTimeoutMs)),
+        ]);
         fastify.log.info(
           {
             inquiry_category,
@@ -1462,9 +1466,9 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
           },
           '[buyer-inquiry] Supplier-path notification dispatch complete',
         );
-      })().catch((err: unknown) => {
+      } catch (err: unknown) {
         fastify.log.warn({ err, supplier_slug }, '[buyer-inquiry] Supplier-path notification dispatch failed (non-blocking)');
-      });
+      }
     } else {
       // ── General inquiry path (no supplier gate) ─────────────────────────────
       // realm: ADMIN, tenantId: null, entityId: null — audit trail preserved.
@@ -1497,14 +1501,14 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
         fastify.log.warn({ err }, '[buyer-inquiry] General inquiry event emission failed (non-blocking)');
       });
 
-      // Notification dispatch (FTR-B2C-004 / PRIT-033) — fire-and-forget, non-blocking.
+      // Notification dispatch (FTR-B2C-004 / PRIT-033) — awaited before response (serverless lifecycle safety).
       const _notifCtxGeneral: InquiryNotificationContext = {
         inquiry_category,
         source_surface,
         geo_band,
         volume_band,
       };
-      void (async () => {
+      try {
         const _dispatches: Array<Promise<unknown>> = [];
 
         if (buyer_email) {
@@ -1521,7 +1525,11 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
           );
         }
 
-        await Promise.allSettled(_dispatches);
+        const _notificationTimeoutMs = 4000;
+        await Promise.race([
+          Promise.allSettled(_dispatches),
+          new Promise<void>(resolve => setTimeout(resolve, _notificationTimeoutMs)),
+        ]);
         fastify.log.info(
           {
             inquiry_category,
@@ -1530,9 +1538,9 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
           },
           '[buyer-inquiry] General-path notification dispatch complete',
         );
-      })().catch((err: unknown) => {
+      } catch (err: unknown) {
         fastify.log.warn({ err }, '[buyer-inquiry] General-path notification dispatch failed (non-blocking)');
-      });
+      }
     }
 
     return reply.status(202).send({
