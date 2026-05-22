@@ -311,7 +311,7 @@ function InquiryForm({ supplierSlug, onSuccess, onError }: InquiryFormProps) {
     >
       <h2 className="text-xl font-semibold text-[#0a2036]">Express your interest</h2>
       <p className="mt-2 text-[14px] text-slate-500">
-        No account required. Your interest will be forwarded to the supplier for context.
+        No account required. Your inquiry will be recorded by TexQtic. The TexQtic team is notified and may coordinate next steps where appropriate.
       </p>
       <form onSubmit={handleSubmit} noValidate className="mt-6 flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">
@@ -416,8 +416,7 @@ function SuccessPanel({ onSignIn }: { onSignIn: () => void }) {
         Your interest has been recorded.
       </h2>
       <p className="mt-3 max-w-sm text-[15px] text-slate-600">
-        Your inquiry has been received. Create an account to follow up, track responses, and
-        connect with suppliers.
+        Your inquiry has been received. Create an account to continue with TexQtic and access authenticated platform workflows.
       </p>
       <button
         type="button"

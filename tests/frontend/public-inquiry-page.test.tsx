@@ -667,4 +667,40 @@ describe('PublicInquiryPage', () => {
     // Context hint must not appear (supplier mode, not general form)
     expect(screen.queryByText(/product context/i)).toBeNull();
   });
+
+  // ── Copy truthfulness tests (INQ-COPY-02 / INQ-COPY-24) ────────────────────
+
+  /**
+   * PII-032 — INQ-COPY-02: supplier-context InquiryForm does not claim inquiry
+   * will be "forwarded to the supplier".
+   */
+  it('PII-032 — INQ-COPY-02: supplier form does not claim "forwarded to the supplier"', () => {
+    const { container } = renderPage('acme-textiles');
+    const text = container.textContent ?? '';
+    expect(text).not.toMatch(/forwarded to the supplier/i);
+  });
+
+  /**
+   * PII-033 — INQ-COPY-24: SuccessPanel does not contain "track responses" or
+   * "connect with suppliers".
+   */
+  it('PII-033 — INQ-COPY-24: SuccessPanel has no "track responses" or "connect with suppliers"', async () => {
+    renderPage('acme-textiles');
+
+    fireEvent.change(screen.getByLabelText(/Inquiry type/i), {
+      target: { value: 'GENERAL' },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Send inquiry/i }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Your interest has been recorded/i)).toBeInTheDocument();
+    });
+
+    const text = document.body.textContent ?? '';
+    expect(text).not.toMatch(/track responses/i);
+    expect(text).not.toMatch(/connect with suppliers/i);
+  });
 });

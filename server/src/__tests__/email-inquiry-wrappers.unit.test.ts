@@ -131,4 +131,57 @@ describe('inquiry email wrappers', () => {
     const output = logSpy.mock.calls.map(args => String(args[0])).join(' ');
     expect(output).toMatch(/acme-textiles/);
   });
+
+  it('EML-009: buyer acknowledgement does NOT contain "track responses"', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await sendBuyerInquiryAcknowledgementEmail('buyer@example.com', {
+      inquiry_category: 'GENERAL',
+    });
+    const output = logSpy.mock.calls.map(args => String(args[0])).join(' ');
+    expect(output).not.toMatch(/track responses/i);
+  });
+
+  it('EML-010: buyer acknowledgement does NOT contain payment or order language', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await sendBuyerInquiryAcknowledgementEmail('buyer@example.com', {
+      inquiry_category: 'SOURCING_INTENT',
+    });
+    const output = logSpy.mock.calls.map(args => String(args[0])).join(' ');
+    expect(output).not.toMatch(/\bpayment\b/i);
+    expect(output).not.toMatch(/\border\b/i);
+    expect(output).not.toMatch(/guaranteed response/i);
+  });
+
+  it('EML-011: buyer acknowledgement text includes "recorded" and "TexQtic team"', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await sendBuyerInquiryAcknowledgementEmail('buyer@example.com', {
+      inquiry_category: 'GENERAL',
+    });
+    const output = logSpy.mock.calls.map(args => String(args[0])).join(' ');
+    expect(output).toMatch(/recorded/i);
+    expect(output).toMatch(/TexQtic team/i);
+  });
+
+  it('EML-012: admin alert includes public/pre-auth context note', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await sendAdminInquiryAlertEmail('admin@example.com', {
+      inquiry_category: 'GENERAL',
+      source_surface: 'DIRECT',
+    });
+    const output = logSpy.mock.calls.map(args => String(args[0])).join(' ');
+    expect(output).toMatch(/public\/pre-auth/i);
+  });
+
+  it('EML-013: supplier notification does NOT imply transaction or payment', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await sendSupplierInquiryNotificationEmail('supplier@example.com', {
+      inquiry_category: 'SOURCING_INTENT',
+      geo_band: 'EU',
+    });
+    const output = logSpy.mock.calls.map(args => String(args[0])).join(' ');
+    expect(output).not.toMatch(/\bpayment\b/i);
+    expect(output).not.toMatch(/\border\b/i);
+    expect(output).not.toMatch(/\bRFQ\b/i);
+    expect(output).not.toMatch(/buyer is ready to transact/i);
+  });
 });

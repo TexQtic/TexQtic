@@ -341,7 +341,7 @@ export async function sendSupplierInquiryNotificationEmail(
     `Inquiry type: ${category}.`,
     ...(ctx.geo_band ? [`Geo band: ${ctx.geo_band}.`] : []),
     ...(ctx.volume_band ? [`Volume band: ${ctx.volume_band}.`] : []),
-    'Log in to your TexQtic workspace to review and respond.',
+    'Log in to your TexQtic workspace to review the context and follow the current follow-up process.',
   ];
   return sendEmail(
     {
@@ -371,6 +371,7 @@ export async function sendAdminInquiryAlertEmail(
     ...(ctx.supplier_slug ? [`Supplier: ${ctx.supplier_slug}.`] : []),
     ...(ctx.geo_band ? [`Geo band: ${ctx.geo_band}.`] : []),
     ...(ctx.volume_band ? [`Volume band: ${ctx.volume_band}.`] : []),
+    'This is a public/pre-auth inquiry. Review context before follow-up.',
   ];
   return sendEmail(
     {
