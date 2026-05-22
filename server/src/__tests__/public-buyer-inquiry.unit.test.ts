@@ -24,7 +24,16 @@
 vi.mock('../db/prisma.js', () => ({
   prisma: {
     $transaction: vi.fn(),
+    membership: {
+      findFirst: vi.fn(),
+    },
   },
+}));
+
+vi.mock('../services/email/email.service.js', () => ({
+  sendBuyerInquiryAcknowledgementEmail: vi.fn(),
+  sendSupplierInquiryNotificationEmail: vi.fn(),
+  sendAdminInquiryAlertEmail: vi.fn(),
 }));
 
 vi.mock('../services/publicB2BProjection.service.js', () => ({
@@ -58,6 +67,11 @@ import publicRoutes from '../routes/public.js';
 import { getPublicB2BSupplierBySlug } from '../services/publicB2BProjection.service.js';
 import { writeAuditLog } from '../lib/auditLog.js';
 import { prisma } from '../db/prisma.js';
+import {
+  sendBuyerInquiryAcknowledgementEmail,
+  sendSupplierInquiryNotificationEmail,
+  sendAdminInquiryAlertEmail,
+} from '../services/email/email.service.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -114,6 +128,15 @@ beforeEach(async () => {
 
   // Default: writeAuditLog resolves successfully
   vi.mocked(writeAuditLog).mockResolvedValue(undefined);
+
+  // Default: membership.findFirst returns null (no supplier email resolved)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  vi.mocked(prisma.membership.findFirst as any).mockResolvedValue(null);
+
+  // Default: email service functions resolve with DEV_LOGGED
+  vi.mocked(sendBuyerInquiryAcknowledgementEmail).mockResolvedValue({ status: 'DEV_LOGGED' });
+  vi.mocked(sendSupplierInquiryNotificationEmail).mockResolvedValue({ status: 'DEV_LOGGED' });
+  vi.mocked(sendAdminInquiryAlertEmail).mockResolvedValue({ status: 'DEV_LOGGED' });
 });
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -590,5 +613,137 @@ describe('POST /api/public/inquiry/submit', () => {
     expect(entry.tenantId).toBeNull();
     expect(entry.entityId).toBeNull();
     expect(entry.action).toBe('public.buyer.inquiry.general.created');
+  });
+
+  // ── Notification loop tests (FTR-B2C-004 / PRIT-033) ──────────────────────
+
+  /**
+   * INQ-028: Supplier inquiry with buyer_email → acknowledgement dispatch attempted.
+   * Supplier email resolves → supplier notification dispatched.
+   */
+  it('INQ-028: supplier inquiry with buyer_email → buyer + supplier notifications dispatched', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(prisma.membership.findFirst as any).mockResolvedValueOnce({
+      user: { email: 'owner@acme-textiles.example' },
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: {
+        supplier_slug: 'acme-textiles',
+        inquiry_category: 'SOURCING_INTENT',
+        geo_band: 'South Asia',
+        buyer_email: 'buyer@example.com',
+      },
+    });
+
+    expect(response.statusCode).toBe(202);
+    expect(sendBuyerInquiryAcknowledgementEmail).toHaveBeenCalledOnce();
+    expect(sendBuyerInquiryAcknowledgementEmail).toHaveBeenCalledWith(
+      'buyer@example.com',
+      expect.objectContaining({ inquiry_category: 'SOURCING_INTENT', supplier_slug: 'acme-textiles' }),
+      expect.objectContaining({ triggeredBy: 'system' }),
+    );
+    expect(sendSupplierInquiryNotificationEmail).toHaveBeenCalledOnce();
+    expect(sendSupplierInquiryNotificationEmail).toHaveBeenCalledWith(
+      'owner@acme-textiles.example',
+      expect.objectContaining({ inquiry_category: 'SOURCING_INTENT' }),
+      expect.anything(),
+    );
+  });
+
+  /**
+   * INQ-029: Supplier inquiry without buyer_email → buyer notification NOT dispatched.
+   * 202 still returned.
+   */
+  it('INQ-029: no buyer_email → buyer acknowledgement not dispatched, still 202', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { supplier_slug: 'acme-textiles', inquiry_category: 'GENERAL' },
+    });
+
+    expect(response.statusCode).toBe(202);
+    expect(sendBuyerInquiryAcknowledgementEmail).not.toHaveBeenCalled();
+  });
+
+  /**
+   * INQ-030: Supplier email lookup fails (membership.findFirst rejects) → route still 202.
+   */
+  it('INQ-030: supplier email lookup fails → route still returns 202 (non-blocking)', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(prisma.membership.findFirst as any).mockRejectedValueOnce(new Error('db lookup failed'));
+
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: {
+        supplier_slug: 'acme-textiles',
+        inquiry_category: 'GENERAL',
+        buyer_email: 'buyer@example.com',
+      },
+    });
+
+    expect(response.statusCode).toBe(202);
+  });
+
+  /**
+   * INQ-031: Email service throws → route still returns 202 (non-blocking).
+   */
+  it('INQ-031: email service throws → route still returns 202 (non-blocking)', async () => {
+    vi.mocked(sendBuyerInquiryAcknowledgementEmail).mockRejectedValueOnce(new Error('SMTP failure'));
+
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: {
+        inquiry_category: 'GENERAL',
+        buyer_email: 'buyer@example.com',
+      },
+    });
+
+    expect(response.statusCode).toBe(202);
+  });
+
+  /**
+   * INQ-032: buyer_email field is NOT included in afterJson (transient only).
+   */
+  it('INQ-032: buyer_email is NOT persisted in afterJson', async () => {
+    await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: {
+        supplier_slug: 'acme-textiles',
+        inquiry_category: 'GENERAL',
+        buyer_email: 'buyer@example.com',
+      },
+    });
+
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    const [, entry] = vi.mocked(writeAuditLog).mock.calls[0];
+    const afterJson = entry.afterJson as Record<string, unknown>;
+    expect(afterJson).not.toHaveProperty('buyer_email');
+    expect(JSON.stringify(afterJson)).not.toContain('buyer@example.com');
+  });
+
+  /**
+   * INQ-033: Validation failure → notifications NOT dispatched, 400 returned.
+   */
+  it('INQ-033: validation failure → no notification dispatched, 400 returned', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: {
+        // missing required inquiry_category
+        supplier_slug: 'acme-textiles',
+        buyer_email: 'buyer@example.com',
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(sendBuyerInquiryAcknowledgementEmail).not.toHaveBeenCalled();
+    expect(sendSupplierInquiryNotificationEmail).not.toHaveBeenCalled();
+    expect(sendAdminInquiryAlertEmail).not.toHaveBeenCalled();
   });
 });

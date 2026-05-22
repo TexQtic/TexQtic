@@ -82,6 +82,17 @@ if (!_parsedFrontendUrl.success) {
   });
 }
 
-export const config = { ..._baseConfig, FRONTEND_URL: FRONTEND_URL_VALUE };
+// ADMIN_NOTIFICATION_EMAIL — non-fatal optional: invalid/missing → null, server continues.
+// Parsed outside envSchema (safeParse) so a malformed value never takes down the API.
+const _adminNotificationEmailRaw = process.env.ADMIN_NOTIFICATION_EMAIL?.trim();
+const _parsedAdminEmail = z.string().email().safeParse(_adminNotificationEmailRaw);
 
-export type Config = z.infer<typeof envSchema> & { FRONTEND_URL: string };
+if (_adminNotificationEmailRaw && !_parsedAdminEmail.success) {
+  console.warn('[config] ADMIN_NOTIFICATION_EMAIL invalid email format; admin notifications will be skipped');
+}
+
+const ADMIN_NOTIFICATION_EMAIL_VALUE = _parsedAdminEmail.success ? _parsedAdminEmail.data : null;
+
+export const config = { ..._baseConfig, FRONTEND_URL: FRONTEND_URL_VALUE, ADMIN_NOTIFICATION_EMAIL: ADMIN_NOTIFICATION_EMAIL_VALUE };
+
+export type Config = z.infer<typeof envSchema> & { FRONTEND_URL: string; ADMIN_NOTIFICATION_EMAIL: string | null };

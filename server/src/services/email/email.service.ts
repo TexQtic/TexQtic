@@ -276,3 +276,110 @@ export async function sendInviteMemberEmail(
     context
   );
 }
+
+// ---------------------------------------------------------------------------
+// Public inquiry notification wrappers (FTR-B2C-004 / PRIT-033)
+// ---------------------------------------------------------------------------
+
+/**
+ * Minimal context for inquiry notification emails.
+ * No buyer PII — only categorisation and surface data safe for transit.
+ */
+export interface InquiryNotificationContext {
+  inquiry_category: string;
+  source_surface?: string;
+  supplier_slug?: string;
+  geo_band?: string;
+  volume_band?: string;
+}
+
+/**
+ * Send a buyer acknowledgement email after a public inquiry is recorded.
+ * Template is plain and non-overpromising — does NOT claim the supplier has
+ * received or replied; does NOT imply guaranteed follow-up timeline.
+ */
+export async function sendBuyerInquiryAcknowledgementEmail(
+  to: string,
+  ctx: InquiryNotificationContext,
+  context: EmailContext = {}
+): Promise<EmailDispatchOutcome> {
+  const category = ctx.inquiry_category.replace(/_/g, ' ').toLowerCase();
+  const supplierLine = ctx.supplier_slug ? ` — supplier: ${ctx.supplier_slug}` : '';
+  return sendEmail(
+    {
+      to,
+      subject: 'We received your TexQtic inquiry',
+      html: [
+        '<p>Your inquiry has been recorded by TexQtic.</p>',
+        `<p>Inquiry type: ${category}${supplierLine}.</p>`,
+        '<p>The TexQtic team will review the request and coordinate next steps where appropriate.</p>',
+      ].join(''),
+      text: [
+        'Your inquiry has been recorded by TexQtic.',
+        `Inquiry type: ${category}${supplierLine}.`,
+        'The TexQtic team will review the request and coordinate next steps where appropriate.',
+      ].join('\n'),
+      metadata: { flow: 'buyer_inquiry_acknowledgement', inquiry_category: ctx.inquiry_category },
+    },
+    context
+  );
+}
+
+/**
+ * Send a supplier notification when public sourcing interest is received
+ * for their TexQtic profile. Avoids exposing unnecessary buyer PII.
+ * No transactional / order / payment implication.
+ */
+export async function sendSupplierInquiryNotificationEmail(
+  to: string,
+  ctx: InquiryNotificationContext,
+  context: EmailContext = {}
+): Promise<EmailDispatchOutcome> {
+  const category = ctx.inquiry_category.replace(/_/g, ' ').toLowerCase();
+  const lines = [
+    'New public sourcing interest received for your TexQtic profile.',
+    `Inquiry type: ${category}.`,
+    ...(ctx.geo_band ? [`Geo band: ${ctx.geo_band}.`] : []),
+    ...(ctx.volume_band ? [`Volume band: ${ctx.volume_band}.`] : []),
+    'Log in to your TexQtic workspace to review and respond.',
+  ];
+  return sendEmail(
+    {
+      to,
+      subject: 'New public sourcing interest for your TexQtic profile',
+      html: lines.map(l => `<p>${l}</p>`).join(''),
+      text: lines.join('\n'),
+      metadata: { flow: 'supplier_inquiry_notification', inquiry_category: ctx.inquiry_category },
+    },
+    context
+  );
+}
+
+/**
+ * Send an admin alert email when a new public inquiry is submitted.
+ * Includes enough context for operator follow-up; no full buyer PII.
+ */
+export async function sendAdminInquiryAlertEmail(
+  to: string,
+  ctx: InquiryNotificationContext,
+  context: EmailContext = {}
+): Promise<EmailDispatchOutcome> {
+  const lines = [
+    'New public inquiry submitted on TexQtic.',
+    `Category: ${ctx.inquiry_category}.`,
+    `Surface: ${ctx.source_surface ?? 'DIRECT'}.`,
+    ...(ctx.supplier_slug ? [`Supplier: ${ctx.supplier_slug}.`] : []),
+    ...(ctx.geo_band ? [`Geo band: ${ctx.geo_band}.`] : []),
+    ...(ctx.volume_band ? [`Volume band: ${ctx.volume_band}.`] : []),
+  ];
+  return sendEmail(
+    {
+      to,
+      subject: 'New public inquiry submitted — TexQtic',
+      html: lines.map(l => `<p>${l}</p>`).join(''),
+      text: lines.join('\n'),
+      metadata: { flow: 'admin_inquiry_alert', inquiry_category: ctx.inquiry_category },
+    },
+    context
+  );
+}

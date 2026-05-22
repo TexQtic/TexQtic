@@ -37,6 +37,13 @@ import { listPublicB2BSuppliers, getPublicB2BSupplierBySlug } from '../services/
 import { listPublicB2CProducts, getPublicB2CProductBySlug } from '../services/publicB2CProjection.service.js';
 import { APPROVED_CATEGORY_SLUGS } from '../config/publicB2CCategoryPageSlugs.js';
 import { APPROVED_COLLECTION_SLUGS } from '../config/publicCollectionSlugs.js';
+import {
+  sendBuyerInquiryAcknowledgementEmail,
+  sendSupplierInquiryNotificationEmail,
+  sendAdminInquiryAlertEmail,
+  type InquiryNotificationContext,
+} from '../services/email/email.service.js';
+import { config } from '../config/index.js';
 
 type PublicEntryKind = 'PLATFORM' | 'TENANT_SUBDOMAIN' | 'TENANT_CUSTOM_DOMAIN';
 type ResolutionSourceType =
@@ -1292,6 +1299,8 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     geo_band: z.string().min(1).max(100).optional(),
     volume_band: z.string().min(1).max(100).optional(),
     message: z.string().max(2000).optional(),
+    // Transient: used only for buyer acknowledgement email; never persisted in afterJson.
+    buyer_email: z.string().email().max(255).optional(),
   });
 
   fastify.post('/inquiry/submit', {
@@ -1314,6 +1323,7 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       geo_band,
       volume_band,
       message: rawMessage,
+      buyer_email,
     } = parseResult.data;
 
     // Context exclusivity: supplier_slug cannot coexist with product/category/collection context
@@ -1392,6 +1402,69 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       }).catch((err: unknown) => {
         fastify.log.warn({ err, supplier_slug }, '[buyer-inquiry] Event emission failed (non-blocking)');
       });
+
+      // Notification dispatch (FTR-B2C-004 / PRIT-033) — fire-and-forget, non-blocking.
+      // Failures here must NEVER affect the 202 response.
+      const _supplierOrgId = supplierResult.orgId;
+      const _notifCtxSupplier: InquiryNotificationContext = {
+        inquiry_category,
+        source_surface,
+        supplier_slug,
+        geo_band,
+        volume_band,
+      };
+      void (async () => {
+        // Resolve supplier owner/admin email (best-effort; null if not found).
+        const _ownerMembership = await prisma.membership.findFirst({
+          where: { tenantId: _supplierOrgId, role: { in: ['OWNER', 'ADMIN'] } },
+          orderBy: { role: 'desc' }, // 'OWNER' (O) > 'ADMIN' (A) alphabetically → OWNER preferred
+          include: { user: { select: { email: true } } },
+        });
+        const _supplierEmail = _ownerMembership?.user?.email ?? null;
+        if (!_supplierEmail) {
+          fastify.log.warn(
+            { supplier_slug, orgId: _supplierOrgId },
+            '[buyer-inquiry] Supplier owner/admin email not found; supplier notification skipped',
+          );
+        }
+
+        const _dispatches: Array<Promise<unknown>> = [];
+
+        if (buyer_email) {
+          _dispatches.push(
+            sendBuyerInquiryAcknowledgementEmail(buyer_email, _notifCtxSupplier, { triggeredBy: 'system' })
+              .catch((err: unknown) => fastify.log.warn({ err }, '[buyer-inquiry] Buyer acknowledgement failed (non-blocking)')),
+          );
+        }
+        if (_supplierEmail) {
+          _dispatches.push(
+            sendSupplierInquiryNotificationEmail(_supplierEmail, _notifCtxSupplier, { triggeredBy: 'system', tenantId: _supplierOrgId })
+              .catch((err: unknown) => fastify.log.warn({ err, orgId: _supplierOrgId }, '[buyer-inquiry] Supplier notification failed (non-blocking)')),
+          );
+        }
+        const _adminEmail = config.ADMIN_NOTIFICATION_EMAIL;
+        if (_adminEmail) {
+          _dispatches.push(
+            sendAdminInquiryAlertEmail(_adminEmail, _notifCtxSupplier, { triggeredBy: 'system' })
+              .catch((err: unknown) => fastify.log.warn({ err }, '[buyer-inquiry] Admin notification failed (non-blocking)')),
+          );
+        }
+
+        await Promise.allSettled(_dispatches);
+        fastify.log.info(
+          {
+            inquiry_category,
+            supplier_slug,
+            orgId: _supplierOrgId,
+            buyerEmailPresent: !!buyer_email,
+            supplierEmailResolved: !!_supplierEmail,
+            adminEmailConfigured: !!_adminEmail,
+          },
+          '[buyer-inquiry] Supplier-path notification dispatch complete',
+        );
+      })().catch((err: unknown) => {
+        fastify.log.warn({ err, supplier_slug }, '[buyer-inquiry] Supplier-path notification dispatch failed (non-blocking)');
+      });
     } else {
       // ── General inquiry path (no supplier gate) ─────────────────────────────
       // realm: ADMIN, tenantId: null, entityId: null — audit trail preserved.
@@ -1422,6 +1495,43 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
         });
       }).catch((err: unknown) => {
         fastify.log.warn({ err }, '[buyer-inquiry] General inquiry event emission failed (non-blocking)');
+      });
+
+      // Notification dispatch (FTR-B2C-004 / PRIT-033) — fire-and-forget, non-blocking.
+      const _notifCtxGeneral: InquiryNotificationContext = {
+        inquiry_category,
+        source_surface,
+        geo_band,
+        volume_band,
+      };
+      void (async () => {
+        const _dispatches: Array<Promise<unknown>> = [];
+
+        if (buyer_email) {
+          _dispatches.push(
+            sendBuyerInquiryAcknowledgementEmail(buyer_email, _notifCtxGeneral, { triggeredBy: 'system' })
+              .catch((err: unknown) => fastify.log.warn({ err }, '[buyer-inquiry] General buyer acknowledgement failed (non-blocking)')),
+          );
+        }
+        const _adminEmail = config.ADMIN_NOTIFICATION_EMAIL;
+        if (_adminEmail) {
+          _dispatches.push(
+            sendAdminInquiryAlertEmail(_adminEmail, _notifCtxGeneral, { triggeredBy: 'system' })
+              .catch((err: unknown) => fastify.log.warn({ err }, '[buyer-inquiry] General admin notification failed (non-blocking)')),
+          );
+        }
+
+        await Promise.allSettled(_dispatches);
+        fastify.log.info(
+          {
+            inquiry_category,
+            buyerEmailPresent: !!buyer_email,
+            adminEmailConfigured: !!_adminEmail,
+          },
+          '[buyer-inquiry] General-path notification dispatch complete',
+        );
+      })().catch((err: unknown) => {
+        fastify.log.warn({ err }, '[buyer-inquiry] General-path notification dispatch failed (non-blocking)');
       });
     }
 
