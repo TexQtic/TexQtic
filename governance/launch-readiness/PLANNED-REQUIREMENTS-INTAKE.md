@@ -128,6 +128,7 @@ All items are drawn from existing governance sources. No new classification is i
 | PRIT-033 | Supplier inquiry response workflow — tenant dashboard inquiry inbox | MAIN | FAM-03 / FAM-08 (Paresh to decide) | MVP_CRITICAL | PARESH_CONFIRMED | NOT_ASSESSED | PARESH_CONFIRMED (2026-07-14) | P1 |
 | PRIT-034 | Public legal pages bundle — privacy policy, terms page, cookie stance, DSAR path | MAIN | FAM-03 / standalone unit | MVP_CRITICAL | PARESH_CONFIRMED | NOT_ASSESSED | PARESH_CONFIRMED (2026-07-14) | P1 |
 | PRIT-035 | Product analytics and funnel tracking infrastructure | MAIN | FAM-10 / FAM-01 / FAM-02 | PILOT_REQUIRED | PARESH_CONFIRMED | NOT_ASSESSED | PARESH_CONFIRMED (2026-07-14) | P2 |
+| PRIT-036 | SMTP provider selection and Vercel production environment configuration (CU-02) | MAIN | FAM-10 / standalone ops unit | REPO_PARTIAL | BLIND-SPOT-DEPENDENCY-RISK-REGISTER / RT4-D | PARESH_DECISION_REQUIRED | LAUNCH_BLOCKER | P0 |
 
 ---
 
@@ -170,6 +171,7 @@ All items are drawn from existing governance sources. No new classification is i
 | PRIT-033 | MISSING-FAMILY-AND-FEATURE-SCAN.md (§6) — inquiry submit writes to DB but no tenant-facing supplier inbox exists; no route, no UI, no PRIT/FTR previously | Depends on FAM-06 completing (supplier auth required for inbox) | YES — inspect tenant routes at FAM-03 or FAM-08 opening | YES — Paresh to decide: FAM-03 or FAM-08 as owning family? Minimum inbox scope for pilot? | MISSING-FAMILY-AND-FEATURE-SCAN.md | Paresh confirmed MVP_CRITICAL/P1 (2026-07-14). **Minimum inquiry notification to supplier/admin is part of PRIT-033 scope** — see FTR-B2C-004. Family assignment to be confirmed at first family selection. |
 | PRIT-034 | MISSING-FAMILY-AND-FEATURE-SCAN.md (§6) — no /privacy page, no /terms page, no cookie consent stance, no DSAR path in repo; D-5 MVP-MUST-HAVES NOT_ASSESSED P1 | Legal content requires Paresh/counsel approval; no tech gate for front-end pages; GDPR/DPDP stance needed for any analytics tooling (PRIT-035) | NO (standalone pages) | YES — Paresh + counsel: legal content, DPDP/GDPR stance, cookie/analytics consent approach | MISSING-FAMILY-AND-FEATURE-SCAN.md | Confirm with Paresh before or at FAM-03 cycle opening; can be standalone unit |
 | PRIT-035 | MISSING-FAMILY-AND-FEATURE-SCAN.md (§6) — no analytics service in repo; buyer_inquiry.created.v1 event defined but not emitted; no funnel tracking exists | Paresh must choose tooling; PRIT-034 (cookie consent stance) must be decided first if analytics captures PII | NO | YES — Paresh to decide tooling (GA4 / Mixpanel / Segment / PostHog / other) | MISSING-FAMILY-AND-FEATURE-SCAN.md | Confirm tooling with Paresh; infrastructure in FAM-10; event instrumentation in FAM-01/FAM-02/FAM-03 cycles |
+| PRIT-036 | `BLIND-SPOT-DEPENDENCY-RISK-REGISTER.md` (HD-001-SMTP) + `SOFT-LAUNCH-RT4-D-FINAL-IMPLEMENTATION-PRIORITY-SYNTHESIS.md` (CU-02, T0-2, P0). email.service.ts code complete (G-012, nodemailer SMTP, generic — not Postmark-specific). All 4 SMTP env vars absent from Vercel production (confirmed 2026-05-20, HD-001-SMTP-INFRA-GAP-001). April 17, 2026 writeback stated Postmark was configured + SENT verified — STALE; discrepancy confirmed. Postmark external-recipient delivery was BLOCKED (provider review) as of Apr 17; current status unknown. | FTR-B2C-004 (PRIT-033) depends on SMTP being operational first. No code changes needed to unblock registered-user flows — ops-only action. | YES — email.service.ts, config/index.ts already inspected in SOFT-LAUNCH-F1-P1-SMTP-POSTMARK-REPO-TRUTH-DESIGN-PLAN; no further source inspection needed | YES — Paresh must: (1) check Postmark account review status, (2) select provider (Postmark / Resend / SendGrid / SES), (3) set 4 Vercel production env vars | `SOFT-LAUNCH-F1-P1-SMTP-POSTMARK-REPO-TRUTH-DESIGN-PLAN.md` | Paresh selects provider and sets SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_PORT in Vercel production. Redeploy. Then re-run HD-001 runtime verification steps 5–8. FTR-B2C-004 implementation (public inquiry notification loop) in separate governed unit after SMTP confirmed operational. |
 
 ---
 
@@ -228,7 +230,7 @@ See §14 for the full decision table. Summary:
 | PRIT-018 | Confirmed POST_MVP; pilot can launch free/manual; commercial packaging not required for MVP | POST_MVP_CONFIRMED |
 | PRIT-019 | Confirmed opt-in only during pilot; no default indexing of supplier profiles; policy direction partial | PARESH_CONFIRMED |
 
-**No UNCONFIRMED items remain in PRIT-011–019.** Next available PRIT ID: PRIT-036 (PRIT-032–035 added by MISSING-FAMILY-AND-FEATURE-SCAN-001, 2026-07-14).
+**No UNCONFIRMED items remain in PRIT-011–019.** Next available PRIT ID: PRIT-037 (PRIT-036 added by SOFT-LAUNCH-F1-P1-SMTP-POSTMARK-REPO-TRUTH-DESIGN-PLAN, 2026-07-14).
 
 > **✅ PRIT-032 THROUGH PRIT-035 ADDED VIA TEXQTIC-LAUNCH-READINESS-MISSING-FAMILY-AND-FEATURE-SCAN-001 (2026-07-14)**
 >
@@ -240,6 +242,19 @@ See §14 for the full decision table. Summary:
 > PRIT-035 records the product analytics and funnel tracking infrastructure (no analytics
 > service in repo). All four require Paresh confirmation before family cycle assignment.
 > Next available PRIT ID: PRIT-036.
+>
+> **✅ PRIT-036 ADDED VIA SOFT-LAUNCH-F1-P1-SMTP-POSTMARK-REPO-TRUTH-DESIGN-PLAN (2026-07-14)**
+>
+> PRIT-036 records the SMTP provider selection and Vercel production environment configuration
+> requirement (CU-02, T0-2 P0 per RT4-D synthesis). `email.service.ts` code is complete and
+> correct (G-012, nodemailer SMTP, generic — not Postmark-specific). All four SMTP env vars
+> (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`) are absent from Vercel production
+> (HD-001-SMTP-INFRA-GAP-001, confirmed 2026-05-20). Postmark was the provider as of April 17,
+> 2026 writeback (owned-domain SENT verified; external-recipient delivery BLOCKED by provider
+> review). April 17 evidence is STALE — requires re-verification. Current Postmark account review
+> status unknown. No source changes needed to unblock registered-user email flows — this is a
+> Paresh ops action only. FTR-B2C-004 public inquiry notification loop requires a separate governed
+> unit. Next available PRIT ID: PRIT-037.
 >
 > **✅ PRIT-028 THROUGH PRIT-031 ADDED VIA TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 (2026-05-19)**
 >
@@ -467,6 +482,7 @@ All items remain `DESIGN_GATED` with `PARESH_CONFIRMED_AS_PLANNED` confirmation 
 | 2026-05-19 | TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 | PRIT-028–031 added from commerce/subscription/payments methodology design; §5A and §5B table updated; §7 updated (next PRIT ID: PRIT-032); §11 checklist rows 20–24 added; §15 section added |
 | 2026-07-14 | TEXQTIC-NOTIFICATION-CLASSIFICATION-CONFLICT-RESOLUTION-001 | PRIT-032–035 Paresh decisions confirmed; Part B launch classes updated from GOVERNANCE_CLAIM_ONLY to confirmed classes; PRIT-033 cross-referenced to minimum inquiry notification scope (FTR-B2C-004) |
 | 2026-05-19 | TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001 | §6 PRIT-032–035 confirmation rows extended with soft-launch strategic context (Decisions B–E): PRIT-032 P2/not-soft-launch-blocker; PRIT-033 FTR-B2C-004 hard soft-launch blocker before buyer outreach; PRIT-034 hard prerequisite before data collection; PRIT-035 P2/not-first-cohort-blocker |
+| 2026-07-14 | SOFT-LAUNCH-F1-P1-SMTP-POSTMARK-REPO-TRUTH-DESIGN-PLAN | PRIT-036 added: SMTP provider selection and Vercel production env configuration (CU-02, T0-2 P0). email.service.ts code complete (G-012); all SMTP env vars absent from Vercel production (HD-001-SMTP-INFRA-GAP-001, confirmed 2026-05-20). Postmark was prior provider (April 17, 2026 writeback, stale). PRIT-036 is LAUNCH_BLOCKER P0 / PARESH_DECISION_REQUIRED. Next available PRIT ID updated to PRIT-037. |
 
 ---
 
