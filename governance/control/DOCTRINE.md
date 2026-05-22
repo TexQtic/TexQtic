@@ -2,8 +2,8 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Doctrine Version:** v1.13  
-**Last Updated:** 2026-04-21 (public market-access invariant alignment)  
+**Doctrine Version:** v1.14  
+**Last Updated:** 2026-05-22 (D-025 production-intent staged-activation rule added)  
 **Reset Ratification:** `governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md`  
 **Max Size:** 150 lines (structural gate)
 
@@ -132,6 +132,15 @@ Public surfaces may expose only public-safe discovery, qualified entry, and stru
 Authenticated surfaces own commerce, workflow, trade execution, governance actions, and tenant-admin continuity.
 white-label remains an overlay and capability, not a peer marketplace pillar; Aggregator remains a cross-family discovery, intelligence, and handoff capability, not a transaction owner or separate full admin office.
 Expansion of public surface area is lawful only when trust maturity, data quality, and governance readiness justify it.
+
+### D-025 — Production-Intent Staged-Activation Rule
+
+Every PRIT, feature, family unit, legal unit, public-app unit, directory unit, and implementation unit must be designed with production-launch architecture in mind, even when only part of the surface is activated at first.
+Staged implementation is allowed; feature gates, status labels, route discipline, limited activation, and scoped rollout are allowed.
+Disposable soft-launch shortcuts are prohibited when they would require immediate post-launch rework.
+Legal documentation must be production-launch ready in content model, route architecture, naming, versioning, and legal scope from the outset.
+Production-intent does NOT mean activating all features immediately; it does NOT authorize scope widening inside a bounded unit; each unit still requires TECS allowlists, repo-truth validation, completion checklist, and atomic commit discipline.
+If a production-correct architecture cannot be safely implemented in one unit, it must be split into bounded design, content, implementation, linkage, and verification packets.
 
 ---
 
