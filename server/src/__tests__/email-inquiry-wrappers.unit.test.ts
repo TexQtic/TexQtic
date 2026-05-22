@@ -44,6 +44,7 @@ import {
   EmailValidationError,
   type InquiryNotificationContext,
 } from '../services/email/email.service.js';
+import { buildInquiryEmailBodies } from '../services/email/email.templates.js';
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
@@ -183,5 +184,79 @@ describe('inquiry email wrappers', () => {
     expect(output).not.toMatch(/\border\b/i);
     expect(output).not.toMatch(/\bRFQ\b/i);
     expect(output).not.toMatch(/buyer is ready to transact/i);
+  });
+
+  // ── Branded template shell tests (EML-014 → EML-020) ────────────────────
+
+  it('EML-014: buildInquiryEmailBodies HTML includes logo img alt="TexQtic" when logoUrl supplied', () => {
+    const { html } = buildInquiryEmailBodies({
+      heading: 'Test heading',
+      lines: ['Line one.'],
+      logoUrl: 'https://app.texqtic.com/brand/texqtic-logo.png',
+    });
+    expect(html).toMatch(/alt="TexQtic"/i);
+    expect(html).toContain('https://app.texqtic.com/brand/texqtic-logo.png');
+  });
+
+  it('EML-015: buildInquiryEmailBodies uses text fallback and no img when logoUrl absent', () => {
+    const { html } = buildInquiryEmailBodies({
+      heading: 'Test heading',
+      lines: ['Line one.'],
+    });
+    expect(html).not.toMatch(/<img/i);
+    expect(html).toMatch(/TexQtic/);
+  });
+
+  it('EML-016: buildInquiryEmailBodies plain text includes heading and brand footer', () => {
+    const { text } = buildInquiryEmailBodies({
+      heading: 'Your inquiry has been received',
+      lines: ['Your inquiry has been recorded by TexQtic.'],
+    });
+    expect(text).toContain('Your inquiry has been received');
+    expect(text).toContain('TexQtic');
+    expect(text).toContain('Transactional notification');
+  });
+
+  it('EML-017: buildInquiryEmailBodies HTML escapes special chars in lines', () => {
+    const { html } = buildInquiryEmailBodies({
+      heading: 'Heading',
+      lines: ['Category: <script>alert(1)</script>.'],
+    });
+    expect(html).not.toContain('<script>');
+    expect(html).toContain('&lt;script&gt;');
+  });
+
+  it('EML-018: buyer acknowledgement plain text includes branding and no forbidden copy', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await sendBuyerInquiryAcknowledgementEmail('buyer@example.com', {
+      inquiry_category: 'GENERAL',
+    });
+    const output = logSpy.mock.calls.map(args => String(args[0])).join(' ');
+    expect(output).toMatch(/TexQtic/);
+    expect(output).not.toMatch(/track responses/i);
+    expect(output).not.toMatch(/connect with suppliers/i);
+    expect(output).not.toMatch(/forwarded to the supplier/i);
+  });
+
+  it('EML-019: admin alert plain text includes branding and pre-auth note', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await sendAdminInquiryAlertEmail('admin@example.com', {
+      inquiry_category: 'GENERAL',
+      source_surface: 'DIRECT',
+    });
+    const output = logSpy.mock.calls.map(args => String(args[0])).join(' ');
+    expect(output).toMatch(/TexQtic/);
+    expect(output).toMatch(/public\/pre-auth/i);
+  });
+
+  it('EML-020: supplier notification plain text includes branding and no payment claims', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await sendSupplierInquiryNotificationEmail('supplier@example.com', {
+      inquiry_category: 'SOURCING_INTENT',
+    });
+    const output = logSpy.mock.calls.map(args => String(args[0])).join(' ');
+    expect(output).toMatch(/TexQtic/);
+    expect(output).not.toMatch(/\bpayment\b/i);
+    expect(output).not.toMatch(/\border\b/i);
   });
 });

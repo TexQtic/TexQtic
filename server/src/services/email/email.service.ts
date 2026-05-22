@@ -18,6 +18,7 @@
 
 import nodemailer from 'nodemailer';
 import { config } from '../../config/index.js';
+import { buildInquiryEmailBodies } from './email.templates.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -305,20 +306,22 @@ export async function sendBuyerInquiryAcknowledgementEmail(
 ): Promise<EmailDispatchOutcome> {
   const category = ctx.inquiry_category.replace(/_/g, ' ').toLowerCase();
   const supplierLine = ctx.supplier_slug ? ` — supplier: ${ctx.supplier_slug}` : '';
+  const lines = [
+    'Your inquiry has been recorded by TexQtic.',
+    `Inquiry type: ${category}${supplierLine}.`,
+    'The TexQtic team will review the request and coordinate next steps where appropriate.',
+  ];
+  const { html, text } = buildInquiryEmailBodies({
+    heading: 'We received your TexQtic inquiry',
+    lines,
+    logoUrl: `${FRONTEND_URL}/brand/texqtic-logo.png`,
+  });
   return sendEmail(
     {
       to,
       subject: 'We received your TexQtic inquiry',
-      html: [
-        '<p>Your inquiry has been recorded by TexQtic.</p>',
-        `<p>Inquiry type: ${category}${supplierLine}.</p>`,
-        '<p>The TexQtic team will review the request and coordinate next steps where appropriate.</p>',
-      ].join(''),
-      text: [
-        'Your inquiry has been recorded by TexQtic.',
-        `Inquiry type: ${category}${supplierLine}.`,
-        'The TexQtic team will review the request and coordinate next steps where appropriate.',
-      ].join('\n'),
+      html,
+      text,
       metadata: { flow: 'buyer_inquiry_acknowledgement', inquiry_category: ctx.inquiry_category },
     },
     context
@@ -343,12 +346,17 @@ export async function sendSupplierInquiryNotificationEmail(
     ...(ctx.volume_band ? [`Volume band: ${ctx.volume_band}.`] : []),
     'Log in to your TexQtic workspace to review the context and follow the current follow-up process.',
   ];
+  const { html, text } = buildInquiryEmailBodies({
+    heading: 'New sourcing interest on your TexQtic profile',
+    lines,
+    logoUrl: `${FRONTEND_URL}/brand/texqtic-logo.png`,
+  });
   return sendEmail(
     {
       to,
       subject: 'New public sourcing interest for your TexQtic profile',
-      html: lines.map(l => `<p>${l}</p>`).join(''),
-      text: lines.join('\n'),
+      html,
+      text,
       metadata: { flow: 'supplier_inquiry_notification', inquiry_category: ctx.inquiry_category },
     },
     context
@@ -373,12 +381,17 @@ export async function sendAdminInquiryAlertEmail(
     ...(ctx.volume_band ? [`Volume band: ${ctx.volume_band}.`] : []),
     'This is a public/pre-auth inquiry. Review context before follow-up.',
   ];
+  const { html, text } = buildInquiryEmailBodies({
+    heading: 'New public inquiry',
+    lines,
+    logoUrl: `${FRONTEND_URL}/brand/texqtic-logo.png`,
+  });
   return sendEmail(
     {
       to,
       subject: 'New public inquiry submitted — TexQtic',
-      html: lines.map(l => `<p>${l}</p>`).join(''),
-      text: lines.join('\n'),
+      html,
+      text,
       metadata: { flow: 'admin_inquiry_alert', inquiry_category: ctx.inquiry_category },
     },
     context
