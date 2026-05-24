@@ -4,6 +4,17 @@ import {
   type PublicB2BSupplierEntry,
 } from '../../services/publicB2BService';
 import { PublicNavbar, type PublicNavbarProps } from './PublicNavbar';
+import {
+  getPublicReferenceB2BSuppliers,
+  type PublicReferenceB2BSupplier,
+} from '../../config/publicReferenceB2B';
+import {
+  LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY,
+  NOT_LIVE_COMMERCIAL_OFFER_COPY,
+  REFERENCE_SUPPLIER_PROFILE_LABEL,
+  ReferencePreviewBadge,
+  ReferencePreviewNotice,
+} from './ReferencePreviewNotice';
 
 interface B2BDiscoveryPageProps {
   readonly onBack: () => void;
@@ -86,7 +97,7 @@ const DISCOVERY_CATEGORIES: DiscoveryCategory[] = [
   },
 ];
 
-export function B2BDiscoveryPage({ onBack, onSignIn, onListBusiness, onViewProfile, nav }: B2BDiscoveryPageProps) {
+export function B2BDiscoveryPage({ onBack: _onBack, onSignIn, onListBusiness, onViewProfile, nav }: B2BDiscoveryPageProps) {
   const [items, setItems] = useState<PublicB2BSupplierEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +108,7 @@ export function B2BDiscoveryPage({ onBack, onSignIn, onListBusiness, onViewProfi
   const [certificationFilter, setCertificationFilter] = useState('all');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [resultsSection, setResultsSection] = useState<ScrollTarget | null>(null);
+  const referenceItems = useMemo(() => getPublicReferenceB2BSuppliers(), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -168,10 +180,14 @@ export function B2BDiscoveryPage({ onBack, onSignIn, onListBusiness, onViewProfi
     return Array.from(new Set(items.flatMap((supplier) => supplier.certificationTypes))).sort((left, right) => left.localeCompare(right));
   }, [items]);
 
+  const usingReferencePreview = !loading && !error && items.length === 0;
+  const displayItems: readonly (PublicB2BSupplierEntry | PublicReferenceB2BSupplier)[] =
+    usingReferencePreview ? referenceItems : items;
+
   const filteredItems = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    return items.filter((supplier) => {
+    return displayItems.filter((supplier) => {
       const categoryAliases = categoryFilter === 'all'
         ? []
         : CATEGORY_ALIASES[categoryFilter] ?? DISCOVERY_CATEGORIES.find((category) => category.value === categoryFilter)?.keywords ?? [];
@@ -219,7 +235,7 @@ export function B2BDiscoveryPage({ onBack, onSignIn, onListBusiness, onViewProfi
 
       return matchesQuery && matchesCategory && matchesRegion && matchesCapability && matchesCertification && matchesVerifiedOnly;
     });
-  }, [items, searchQuery, categoryFilter, regionFilter, capabilityFilter, certificationFilter, verifiedOnly]);
+  }, [displayItems, searchQuery, categoryFilter, regionFilter, capabilityFilter, certificationFilter, verifiedOnly]);
 
   const scrollToResults = () => {
     resultsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -252,16 +268,22 @@ export function B2BDiscoveryPage({ onBack, onSignIn, onListBusiness, onViewProfi
       <main className="mx-auto max-w-7xl px-6 py-10 lg:px-10 lg:py-12">
         <section className="rounded-[36px] border border-white/10 bg-[linear-gradient(135deg,_#071a2f_0%,_#0d2743_58%,_#123a57_100%)] p-8 text-white shadow-[0_30px_90px_rgba(7,26,47,0.28)] md:p-10">
           <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">
-            Public-safe textile ecosystem discovery
+            {usingReferencePreview ? 'Reference textile ecosystem discovery' : 'Public-safe textile ecosystem discovery'}
           </p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-[-0.03em] text-white md:text-5xl">
-            Discover trusted textile partners across the value chain.
+            {usingReferencePreview
+              ? 'Preview how textile supplier discovery can appear on TexQtic.'
+              : 'Discover trusted textile partners across the value chain.'}
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-7 text-slate-200 md:text-lg">
-            Explore public-safe profiles of suppliers, manufacturers, service providers, and textile ecosystem participants by category, capability, and region.
+            {usingReferencePreview
+              ? 'Explore clearly labeled reference supplier examples that show how public discovery cards, capability context, and profile pathways can appear before genuine businesses onboard.'
+              : 'Explore public-safe profiles of suppliers, manufacturers, service providers, and textile ecosystem participants by category, capability, and region.'}
           </p>
           <p className="mt-4 max-w-3xl text-sm font-medium leading-6 text-[#c9eaf0] md:text-base">
-            Public discovery creates confidence. Authenticated journeys enable deeper connection, comparison, and trade.
+            {usingReferencePreview
+              ? LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY
+              : 'Public discovery creates confidence. Authenticated journeys enable deeper connection, comparison, and trade.'}
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -463,6 +485,15 @@ export function B2BDiscoveryPage({ onBack, onSignIn, onListBusiness, onViewProfi
             </p>
           </div>
 
+          {usingReferencePreview && (
+            <div className="mt-6">
+              <ReferencePreviewNotice
+                label={REFERENCE_SUPPLIER_PROFILE_LABEL}
+                replacementCopy={LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY}
+              />
+            </div>
+          )}
+
           {loading && (
             <div className="flex items-center justify-center py-24">
               <div className="flex flex-col items-center gap-4">
@@ -483,10 +514,12 @@ export function B2BDiscoveryPage({ onBack, onSignIn, onListBusiness, onViewProfi
           {!loading && !error && filteredItems.length === 0 && (
             <div className="mt-6 rounded-[32px] border border-[#d9e5ea] bg-[#fbfdfe] px-8 py-16 text-center shadow-[0_18px_50px_rgba(7,26,47,0.06)]">
               <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
-                No public profiles match this view yet.
+                {usingReferencePreview ? 'No reference profiles match this view yet.' : 'No public profiles match this view yet.'}
               </p>
               <p className="mt-3 text-sm leading-6 text-slate-500">
-                Try clearing filters or use sign-in to continue to deeper connection and qualification flows.
+                {usingReferencePreview
+                  ? 'Try clearing filters to see the reference preview examples again.'
+                  : 'Try clearing filters or use sign-in to continue to deeper connection and qualification flows.'}
               </p>
             </div>
           )}
@@ -649,7 +682,7 @@ export function B2BDiscoveryPage({ onBack, onSignIn, onListBusiness, onViewProfi
 }
 
 interface SupplierCardProps {
-  readonly supplier: PublicB2BSupplierEntry;
+  readonly supplier: PublicB2BSupplierEntry | PublicReferenceB2BSupplier;
   readonly onViewProfile: (slug: string) => void;
   readonly onSignIn: () => void;
 }
@@ -657,21 +690,33 @@ interface SupplierCardProps {
 function SupplierCard({ supplier, onViewProfile, onSignIn }: SupplierCardProps) {
   const taxonomy = supplier.taxonomy;
   const previewItems = supplier.offeringPreview.slice(0, 3);
-  const trustBadge =
+  const isReferencePreview = 'isReferencePreview' in supplier && supplier.isReferencePreview;
+  let trustBadge = 'Public-safe profile';
+  if (isReferencePreview) {
+    trustBadge = REFERENCE_SUPPLIER_PROFILE_LABEL;
+  } else if (
     supplier.eligibilityPosture === 'PUBLICATION_ELIGIBLE'
     && (supplier.publicationPosture === 'B2B_PUBLIC' || supplier.publicationPosture === 'BOTH')
-      ? 'Public profile approved'
-      : 'Public-safe profile';
+  ) {
+    trustBadge = 'Public profile approved';
+  }
 
-  const summary = taxonomy?.primarySegment
-    ? `A ${supplier.orgType.toLowerCase()} participant with ${taxonomy.primarySegment.toLowerCase()} capability available for discovery.`
-    : `A public-safe ${supplier.orgType.toLowerCase()} participant available for discovery.`;
+  let summary = `A public-safe ${supplier.orgType.toLowerCase()} participant available for discovery.`;
+  if (isReferencePreview) {
+    summary = 'Reference preview of how a supplier profile can show category fit, capability context, and public-safe storytelling before a business publishes live discovery data.';
+  } else if (taxonomy?.primarySegment) {
+    summary = `A ${supplier.orgType.toLowerCase()} participant with ${taxonomy.primarySegment.toLowerCase()} capability available for discovery.`;
+  }
 
   return (
     <article className="rounded-[28px] border border-[#d9e5ea] bg-white p-6 shadow-[0_8px_28px_rgba(7,26,47,0.07)]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-[#2f8094]">{supplier.orgType}</p>
+          {isReferencePreview ? (
+            <ReferencePreviewBadge label={REFERENCE_SUPPLIER_PROFILE_LABEL} />
+          ) : (
+            <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-[#2f8094]">{supplier.orgType}</p>
+          )}
           <h3 className="mt-1 text-lg font-semibold leading-tight text-[#0a2036]">{supplier.legalName}</h3>
         </div>
         <span className="shrink-0 rounded-full border border-[#d6e4e8] bg-[#f0f8fb] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#2f8094]">
@@ -707,6 +752,12 @@ function SupplierCard({ supplier, onViewProfile, onSignIn }: SupplierCardProps) 
 
       <p className="mt-4 text-sm leading-6 text-slate-600">{summary}</p>
 
+      {isReferencePreview && (
+        <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#9a5a00]">
+          {NOT_LIVE_COMMERCIAL_OFFER_COPY}
+        </p>
+      )}
+
       {supplier.certificationTypes.length > 0 && (
         <div className="mt-4">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Certification summary</p>
@@ -733,7 +784,11 @@ function SupplierCard({ supplier, onViewProfile, onSignIn }: SupplierCardProps) 
                 className="min-w-[9rem] rounded-[18px] border border-[#d9e5ea] bg-[#f7fbfc] px-3 py-2"
               >
                 <p className="text-xs font-semibold text-[#0a2036]">{item.name}</p>
-                <p className="mt-1 text-[11px] leading-5 text-slate-500">MOQ {item.moq}</p>
+                {isReferencePreview ? (
+                  <p className="mt-1 text-[11px] leading-5 text-slate-500">Reference capability example</p>
+                ) : (
+                  <p className="mt-1 text-[11px] leading-5 text-slate-500">MOQ {item.moq}</p>
+                )}
               </div>
             ))}
           </div>
@@ -746,7 +801,7 @@ function SupplierCard({ supplier, onViewProfile, onSignIn }: SupplierCardProps) 
           onClick={() => onViewProfile(supplier.slug)}
           className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
         >
-          View Public Profile
+          {isReferencePreview ? 'View Reference Profile' : 'View Public Profile'}
         </button>
         <button
           type="button"

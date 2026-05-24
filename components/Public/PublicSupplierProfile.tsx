@@ -6,6 +6,13 @@ import {
   type PublicInquiryCategory,
 } from '../../services/publicB2BService';
 import { PublicNavbar, type PublicNavbarProps } from './PublicNavbar';
+import { getPublicReferenceB2BSupplierBySlug } from '../../config/publicReferenceB2B';
+import {
+  LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY,
+  NOT_LIVE_COMMERCIAL_OFFER_COPY,
+  REFERENCE_SUPPLIER_PROFILE_LABEL,
+  ReferencePreviewNotice,
+} from './ReferencePreviewNotice';
 
 // ROUTE-001 / GAP-ACQ-001
 // Public supplier profile page — unauthenticated, read-only.
@@ -23,7 +30,7 @@ interface PublicSupplierProfileProps {
 
 export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onRequestAccess, nav }: PublicSupplierProfileProps) {
   const [profile, setProfile] = useState<SupplierProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(slug));
   const [notFound, setNotFound] = useState(false);
 
   // INQUIRY-004: pre-auth inquiry form state
@@ -33,7 +40,7 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
   const [volumeBand, setVolumeBand] = useState('');
   const [inquiryStatus, setInquiryStatus] = useState<InquiryStatus>('idle');
 
-  async function handleInquirySubmit(e: React.FormEvent) {
+  async function handleInquirySubmit(e: React.SyntheticEvent) {
     e.preventDefault();
     if (!inquiryCategory) return;
     setInquiryStatus('submitting');
@@ -52,13 +59,19 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
 
   useEffect(() => {
     if (!slug) {
-      setNotFound(true);
-      setLoading(false);
       return;
     }
     let cancelled = false;
-    setLoading(true);
-    setNotFound(false);
+    const referenceProfile = getPublicReferenceB2BSupplierBySlug(slug);
+
+    void Promise.resolve().then(() => {
+      if (!cancelled) {
+        setLoading(true);
+        setNotFound(false);
+        setProfile(null);
+      }
+    });
+
     getPublicSupplierBySlug(slug, source)
       .then((data) => {
         if (!cancelled) {
@@ -72,18 +85,33 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
             typeof err === 'object' && err !== null && 'status' in err
               ? (err as { status?: number }).status
               : undefined;
-          setNotFound(status === 404);
+          if (status === 404 && referenceProfile) {
+            setProfile(referenceProfile);
+            setNotFound(false);
+          } else {
+            setNotFound(status === 404);
+          }
           setLoading(false);
         }
       });
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, source]);
 
-  const trustNotice = 'This public profile shows only information approved for public discovery. Connection, negotiation, pricing, documents, orders, and deeper business intelligence are available only through authenticated TexQtic workflows.';
+  const missingSlug = !slug;
+
+  const isReferencePreview =
+    typeof profile === 'object' && profile !== null && 'isReferencePreview' in profile && profile.isReferencePreview === true;
+
+  const trustNotice = isReferencePreview
+    ? 'This reference supplier profile illustrates how TexQtic can present public-safe business context before your business goes live. It is not a live commercial offer and it does not represent a genuine onboarded supplier.'
+    : 'This public profile shows only information approved for public discovery. Connection, negotiation, pricing, documents, orders, and deeper business intelligence are available only through authenticated TexQtic workflows.';
 
   const toPublicDiscoveryStatus = (eligibilityPosture: string, publicationPosture: string) => {
+    if (isReferencePreview) {
+      return REFERENCE_SUPPLIER_PROFILE_LABEL;
+    }
     if (eligibilityPosture === 'PUBLICATION_ELIGIBLE' && (publicationPosture === 'B2B_PUBLIC' || publicationPosture === 'BOTH')) {
       return 'Discoverable on TexQtic';
     }
@@ -91,6 +119,9 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
   };
 
   const toVisibilityLabel = (publicationPosture: string) => {
+    if (isReferencePreview) {
+      return 'Reference preview visibility';
+    }
     if (publicationPosture === 'BOTH') {
       return 'Public B2B and B2C visibility';
     }
@@ -101,6 +132,9 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
   };
 
   const toProfileSummary = (currentProfile: SupplierProfile) => {
+    if (isReferencePreview) {
+      return 'This reference supplier profile shows how TexQtic can frame capability, category, and textile ecosystem context before a business publishes genuine public discovery data.';
+    }
     if (currentProfile.taxonomy?.primarySegment) {
       return `A quick view of this participant's public role in the textile ecosystem. ${currentProfile.legalName} is currently discoverable through ${currentProfile.taxonomy.primarySegment.toLowerCase()} capability context.`;
     }
@@ -153,7 +187,7 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
       )}
 
       {/* Not found state */}
-      {!loading && notFound && (
+      {!loading && (notFound || missingSlug) && (
         <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
           <h2 className="mt-3 text-2xl font-semibold text-[#071a2f]">
             This supplier profile is not available.
@@ -183,7 +217,7 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
       )}
 
       {/* Error state (loaded but no profile and not 404) */}
-      {!loading && !notFound && !profile && (
+      {!loading && !notFound && !missingSlug && !profile && (
         <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
           <p className="text-sm font-semibold uppercase tracking-widest text-slate-500">
             Unable to load profile
@@ -202,19 +236,21 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
       )}
 
       {/* Profile content */}
-      {!loading && profile && (
+      {!loading && !missingSlug && profile && (
         <>
           {/* Hero */}
           <div className="bg-[#071a2f] px-6 py-12">
             <div className="mx-auto max-w-5xl">
               <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">
-                Public Textile Profile
+                {isReferencePreview ? REFERENCE_SUPPLIER_PROFILE_LABEL : 'Public Textile Profile'}
               </p>
               <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.02em] text-white md:text-4xl">
                 {profile.legalName}
               </h1>
               <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-200">
-                Explore public-safe business information, capability signals, and trust context for this TexQtic ecosystem participant.
+                {isReferencePreview
+                  ? 'Explore a clearly labeled reference supplier example that shows how public-safe business information and capability context can appear before genuine businesses onboard.'
+                  : 'Explore public-safe business information, capability signals, and trust context for this TexQtic ecosystem participant.'}
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
@@ -252,12 +288,25 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
           {/* Main content */}
           <main className="mx-auto max-w-5xl px-6 py-10">
             <section className="rounded-2xl border border-[#d9e5ea] bg-white p-6 shadow-sm">
+              {isReferencePreview && (
+                <div className="mb-6">
+                  <ReferencePreviewNotice
+                    label={REFERENCE_SUPPLIER_PROFILE_LABEL}
+                    replacementCopy={LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY}
+                  />
+                </div>
+              )}
               <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
                 Public trust notice
               </p>
               <p className="mt-3 text-sm leading-7 text-slate-600">
                 {trustNotice}
               </p>
+              {isReferencePreview && (
+                <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#9a5a00]">
+                  {NOT_LIVE_COMMERCIAL_OFFER_COPY}
+                </p>
+              )}
             </section>
 
             <section className="mt-6 rounded-2xl border border-[#d9e5ea] bg-white p-6 shadow-sm">
@@ -527,6 +576,7 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
             )}
 
             {/* INQUIRY-004: Pre-auth inquiry form (public-safe intent capture) */}
+            {!isReferencePreview && (
             <section
               className="mt-6 rounded-2xl border border-[#d6e4e8] bg-white p-6 shadow-sm"
               aria-label="Send an inquiry"
@@ -539,9 +589,9 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
               </p>
 
               {inquiryStatus === 'success' ? (
-                <p className="rounded-xl bg-[#effaf5] px-4 py-3 text-sm font-medium text-[#1a7a4a]" role="status">
+                <output className="block rounded-xl bg-[#effaf5] px-4 py-3 text-sm font-medium text-[#1a7a4a]" aria-live="polite">
                   Your inquiry has been received.
-                </p>
+                </output>
               ) : (
                 <form onSubmit={handleInquirySubmit} noValidate>
                   <div className="mb-3">
@@ -613,14 +663,19 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
                 </form>
               )}
             </section>
+            )}
 
             {/* Authenticated handoff panel */}
             <div className="mt-10 rounded-2xl border border-[#d6e4e8] bg-white p-8 text-center shadow-sm">
               <h2 className="text-xl font-semibold text-[#071a2f]">
-                Want to connect with this business?
+                {isReferencePreview
+                  ? 'Want to see how authenticated supplier workflows continue?'
+                  : 'Want to connect with this business?'}
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                Sign in to TexQtic to request a connection, continue sourcing workflows, or access authenticated business tools where available.
+                {isReferencePreview
+                  ? 'Sign in to see how authenticated supplier discovery, sourcing, and business workflows continue after this launch-preview experience.'
+                  : 'Sign in to TexQtic to request a connection, continue sourcing workflows, or access authenticated business tools where available.'}
               </p>
 
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">

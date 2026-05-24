@@ -6,6 +6,12 @@ import {
   type PublicCollectionProjection,
 } from '../../config/publicCollectionsProjection';
 import { PublicNavbar, type PublicNavbarProps } from './PublicNavbar';
+import {
+  LIVE_COLLECTIONS_REPLACE_COPY,
+  SAMPLE_COLLECTION_LABEL,
+  ReferencePreviewBadge,
+  ReferencePreviewNotice,
+} from './ReferencePreviewNotice';
 
 interface PublicCollectionsStubProps {
   readonly onBrowseProducts: () => void;
@@ -75,9 +81,12 @@ function CollectionCard({
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-6">
-        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
-          {collection.curatedContextLabel}
-        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <ReferencePreviewBadge label={SAMPLE_COLLECTION_LABEL} />
+          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+            {collection.curatedContextLabel}
+          </p>
+        </div>
         <a
           href={`/collections/${encodeURIComponent(collection.publicSlug)}`}
           className="block text-[#0a2036] hover:text-[#2f8094] transition-colors"
@@ -87,6 +96,9 @@ function CollectionCard({
           </h2>
         </a>
         <p className="text-sm leading-6 text-slate-600">{collection.summary}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9a5a00]">
+          Reference content for launch preview only.
+        </p>
 
         {/* Taxonomy tags — public-safe only */}
         {allTags.length > 0 && (
@@ -136,10 +148,10 @@ export function PublicCollectionsStub({
         {/* Hero */}
         <section className="rounded-[32px] bg-[#071a2f] px-8 py-10 text-white shadow-[0_18px_50px_rgba(7,26,47,0.12)]">
           <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">
-            Verified Textile Collections
+            Sample Textile Collections
           </p>
           <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.02em] md:text-4xl">
-            Public-safe curated textile collection stories and showcases.
+            Public-safe sample textile collection stories and showcases.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-200 md:text-base">
             TexQtic collections frame eligible textile stories, material context, and ecosystem positioning
@@ -147,9 +159,16 @@ export function PublicCollectionsStub({
             or product-owned passport detail.
           </p>
           <p className="mt-3 text-sm text-slate-300">
-            Public-safe showcase. Authenticated continuation after sign in.
+            Reference content for launch preview only.
           </p>
         </section>
+
+        <div className="mt-6">
+          <ReferencePreviewNotice
+            label={SAMPLE_COLLECTION_LABEL}
+            replacementCopy={LIVE_COLLECTIONS_REPLACE_COPY}
+          />
+        </div>
 
         {/* Boundary disclosure */}
         <section className="mt-6 rounded-[24px] border border-[#d9e5ea] bg-white px-6 py-5 shadow-[0_8px_24px_rgba(7,26,47,0.06)]">
@@ -167,11 +186,11 @@ export function PublicCollectionsStub({
               Collections
             </p>
             <p className="mt-4 text-sm leading-6 text-slate-600">
-              Verified Textile Collections are being prepared as public-safe curated story and showcase previews.
+              Sample Textile Collections are being prepared as public-safe curated story and showcase previews.
             </p>
           </section>
         ) : (
-          <section className="mt-8" aria-label="Verified Textile Collections">
+          <section className="mt-8" aria-label="Sample Textile Collections">
             <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
               Collections &middot; {eligibleCollections.length} available
             </p>

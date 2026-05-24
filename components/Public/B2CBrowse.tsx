@@ -5,6 +5,16 @@ import {
 } from '../../services/publicB2CService';
 import { PublicNavbar, type PublicNavbarProps } from './PublicNavbar';
 import { type IndustrySegment } from '../../config/publicIndustryClusterTaxonomy';
+import {
+  getPublicReferenceB2CProductPreviews,
+} from '../../config/publicReferenceB2C';
+import {
+  LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY,
+  NOT_LIVE_COMMERCIAL_OFFER_COPY,
+  REFERENCE_PRODUCT_PREVIEW_LABEL,
+  ReferencePreviewBadge,
+  ReferencePreviewNotice,
+} from './ReferencePreviewNotice';
 
 interface B2CBrowsePageProps {
   readonly onBack: () => void;
@@ -20,13 +30,14 @@ interface FlatProductItem {
   name: string;
   imageUrl: string | null;
   price: string | null;
-  moq: number;
+  moq: number | null;
   category: string | null;
   material: string | null;
   fabricType: string | null;
   supplierName: string;
   supplierSlug: string;
   jurisdiction: string;
+  isReferencePreview?: boolean;
 }
 
 function flattenStorefronts(storefronts: PublicB2CStorefrontEntry[]): FlatProductItem[] {
@@ -86,11 +97,10 @@ export function B2CBrowsePage({ onBack, onSignIn, nav }: B2CBrowsePageProps) {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const referenceProducts = useMemo(() => getPublicReferenceB2CProductPreviews(), []);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
     getPublicB2CProducts()
       .then((data) => {
         if (!cancelled) {
@@ -109,7 +119,11 @@ export function B2CBrowsePage({ onBack, onSignIn, nav }: B2CBrowsePageProps) {
     };
   }, []);
 
-  const allProducts = useMemo(() => flattenStorefronts(storefronts), [storefronts]);
+  const usingReferencePreview = !loading && !error && storefronts.length === 0;
+  const allProducts = useMemo(
+    () => (usingReferencePreview ? [...referenceProducts] : flattenStorefronts(storefronts)),
+    [referenceProducts, storefronts, usingReferencePreview],
+  );
 
   const filteredProducts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -145,17 +159,22 @@ export function B2CBrowsePage({ onBack, onSignIn, nav }: B2CBrowsePageProps) {
       <div className="bg-[#071a2f] px-6 py-14">
         <div className="mx-auto max-w-7xl">
           <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">
-            Public product discovery
+            {usingReferencePreview ? 'Reference product discovery' : 'Public product discovery'}
           </p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-[-0.02em] text-white md:text-5xl">
-            Browse textile products with trust behind them.
+            {usingReferencePreview
+              ? 'Preview how textile product discovery can appear on TexQtic.'
+              : 'Browse textile products with trust behind them.'}
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
-            Explore public-safe textile product previews across categories, materials, and commerce
-            pathways - from everyday products to textile ecosystem launches where available.
+            {usingReferencePreview
+              ? 'Explore clearly labeled reference product examples that show category, material, and supplier context before genuine products are published for public discovery.'
+              : 'Explore public-safe textile product previews across categories, materials, and commerce pathways - from everyday products to textile ecosystem launches where available.'}
           </p>
           <p className="mt-3 text-sm text-slate-400">
-            TexQtic connects product discovery with the textile ecosystem behind it.
+            {usingReferencePreview
+              ? LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY
+              : 'TexQtic connects product discovery with the textile ecosystem behind it.'}
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a
@@ -256,16 +275,26 @@ export function B2CBrowsePage({ onBack, onSignIn, nav }: B2CBrowsePageProps) {
         {/* Product grid */}
         {!loading && !error && (
           <div id="browse-grid">
+            {usingReferencePreview && (
+              <div className="mb-6">
+                <ReferencePreviewNotice
+                  label={REFERENCE_PRODUCT_PREVIEW_LABEL}
+                  replacementCopy={LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY}
+                />
+              </div>
+            )}
             {filteredProducts.length === 0 ? (
               <div className="rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-16 text-center shadow-[0_18px_50px_rgba(7,26,47,0.06)]">
                 <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
                   No results
                 </p>
                 <h2 className="mt-3 text-xl font-semibold text-[#0a2036]">
-                  No public products matched your search.
+                  {usingReferencePreview ? 'No reference products matched your search.' : 'No public products matched your search.'}
                 </h2>
                 <p className="mt-3 text-sm leading-6 text-slate-500">
-                  Try a different keyword or explore another textile category.
+                  {usingReferencePreview
+                    ? 'Try a different keyword or explore another reference textile category.'
+                    : 'Try a different keyword or explore another textile category.'}
                 </p>
                 {hasActiveFilter && (
                   <button
@@ -347,8 +376,9 @@ export function B2CBrowsePage({ onBack, onSignIn, nav }: B2CBrowsePageProps) {
               Ready to continue?
             </p>
             <h2 className="mt-3 text-xl font-semibold text-[#0a2036]">
-              Sign in to save products, continue checkout, request details, or access authenticated
-              buyer workflows.
+              {usingReferencePreview
+                ? 'Sign in to see how authenticated product workflows continue after launch-preview.'
+                : 'Sign in to save products, continue checkout, request details, or access authenticated buyer workflows.'}
             </h2>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <button
@@ -383,6 +413,7 @@ interface ProductCardProps {
 
 function ProductCard({ product, onSignIn }: ProductCardProps) {
   const tags = [product.category, product.material, product.fabricType].filter(Boolean) as string[];
+  const isReferencePreview = product.isReferencePreview === true;
 
   return (
     <article className="flex flex-col rounded-[28px] border border-[#d9e5ea] bg-white shadow-[0_8px_28px_rgba(7,26,47,0.07)] overflow-hidden">
@@ -404,6 +435,15 @@ function ProductCard({ product, onSignIn }: ProductCardProps) {
 
       {/* Body */}
       <div className="flex flex-1 flex-col p-5">
+        {isReferencePreview && (
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <ReferencePreviewBadge label={REFERENCE_PRODUCT_PREVIEW_LABEL} />
+            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#9a5a00]">
+              {NOT_LIVE_COMMERCIAL_OFFER_COPY}
+            </span>
+          </div>
+        )}
+
         {/* Tags */}
         {tags.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-1.5">
@@ -428,7 +468,7 @@ function ProductCard({ product, onSignIn }: ProductCardProps) {
             href={`/product/${encodeURIComponent(product.slug)}`}
             className="mt-3 inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-[#f8fbfc] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#2f8094] transition hover:bg-[#eff6f8]"
           >
-            View Product Preview
+            {isReferencePreview ? 'View Reference Preview' : 'View Product Preview'}
           </a>
         ) : null}
 
@@ -442,10 +482,8 @@ function ProductCard({ product, onSignIn }: ProductCardProps) {
 
         {/* Price / MOQ */}
         <div className="mt-3 flex items-center gap-3 text-[11px] font-medium text-slate-600">
-          {product.price !== null ? (
-            <span className="font-semibold text-[#2f8094]">{product.price}</span>
-          ) : null}
-          <span className="text-slate-400">MOQ {product.moq}</span>
+          {product.price ? <span className="font-semibold text-[#2f8094]">{product.price}</span> : null}
+          {product.moq ? <span className="text-slate-400">MOQ {product.moq}</span> : null}
         </div>
 
         {/* CTA */}

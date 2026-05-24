@@ -28,6 +28,12 @@
 import React from 'react';
 import { type PublicCollectionProjection } from '../../config/publicCollectionsProjection';
 import { PublicNavbar, type PublicNavbarProps } from './PublicNavbar';
+import {
+  LIVE_COLLECTIONS_REPLACE_COPY,
+  SAMPLE_COLLECTION_LABEL,
+  ReferencePreviewBadge,
+  ReferencePreviewNotice,
+} from './ReferencePreviewNotice';
 
 interface PublicCollectionDetailProps {
   readonly collection: PublicCollectionProjection;
@@ -113,9 +119,12 @@ export function PublicCollectionDetail({
             </span>
           </div>
 
-          <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">
-            {collection.curatedContextLabel}
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <ReferencePreviewBadge label={SAMPLE_COLLECTION_LABEL} tone="dark" />
+            <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">
+              {collection.curatedContextLabel}
+            </p>
+          </div>
           <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.02em] md:text-4xl">
             {collection.title}
           </h1>
@@ -123,9 +132,16 @@ export function PublicCollectionDetail({
             {collection.summary}
           </p>
           <p className="mt-3 text-sm text-slate-400">
-            Public-safe collection showcase. Authenticated continuation after sign in.
+            Reference content for launch preview only.
           </p>
         </section>
+
+        <div className="mt-6">
+          <ReferencePreviewNotice
+            label={SAMPLE_COLLECTION_LABEL}
+            replacementCopy={LIVE_COLLECTIONS_REPLACE_COPY}
+          />
+        </div>
 
         {/* Boundary disclosure */}
         <section className="mt-6 rounded-[24px] border border-[#d9e5ea] bg-white px-6 py-5 shadow-[0_8px_24px_rgba(7,26,47,0.06)]">

@@ -38,6 +38,17 @@ import {
   getCategoryPageBySlug,
   type PublicB2CCategoryPageConfig,
 } from '../../config/publicB2CCategoryPages';
+import {
+  getPublicReferenceB2CProductsByCategory,
+  type PublicReferenceB2CProductPreview,
+} from '../../config/publicReferenceB2C';
+import {
+  LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY,
+  NOT_LIVE_COMMERCIAL_OFFER_COPY,
+  REFERENCE_PRODUCT_PREVIEW_LABEL,
+  ReferencePreviewBadge,
+  ReferencePreviewNotice,
+} from './ReferencePreviewNotice';
 
 // ── props ──────────────────────────────────────────────────────────────────
 
@@ -56,13 +67,14 @@ interface FlatProductItem {
   name: string;
   imageUrl: string | null;
   price: string | null;
-  moq: number;
+  moq: number | null;
   category: string | null;
   material: string | null;
   fabricType: string | null;
   supplierName: string;
   supplierSlug: string;
   jurisdiction: string;
+  isReferencePreview?: boolean;
 }
 
 function flattenStorefronts(storefronts: PublicB2CStorefrontEntry[]): FlatProductItem[] {
@@ -125,6 +137,7 @@ function CategoryProductCard({ product, onSignIn }: ProductCardProps) {
   const tags = [product.category, product.material, product.fabricType].filter(
     Boolean,
   ) as string[];
+  const isReferencePreview = product.isReferencePreview === true;
 
   return (
     <article className="flex flex-col overflow-hidden rounded-[28px] border border-[#d9e5ea] bg-white shadow-[0_8px_28px_rgba(7,26,47,0.07)]">
@@ -146,6 +159,15 @@ function CategoryProductCard({ product, onSignIn }: ProductCardProps) {
       )}
 
       <div className="flex flex-1 flex-col p-5">
+        {isReferencePreview && (
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <ReferencePreviewBadge label={REFERENCE_PRODUCT_PREVIEW_LABEL} />
+            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#9a5a00]">
+              {NOT_LIVE_COMMERCIAL_OFFER_COPY}
+            </span>
+          </div>
+        )}
+
         {tags.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-1.5">
             {tags.map((tag) => (
@@ -168,7 +190,7 @@ function CategoryProductCard({ product, onSignIn }: ProductCardProps) {
             href={`/product/${encodeURIComponent(product.slug)}`}
             className="mt-3 inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-[#f8fbfc] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#2f8094] transition hover:bg-[#eff6f8]"
           >
-            View Product Preview
+            {isReferencePreview ? 'View Reference Preview' : 'View Product Preview'}
           </a>
         ) : null}
 
@@ -183,7 +205,7 @@ function CategoryProductCard({ product, onSignIn }: ProductCardProps) {
           {product.price !== null ? (
             <span className="font-semibold text-[#2f8094]">{product.price}</span>
           ) : null}
-          <span className="text-slate-400">MOQ {product.moq}</span>
+          {product.moq !== null ? <span className="text-slate-400">MOQ {product.moq}</span> : null}
         </div>
 
         <button
@@ -212,11 +234,13 @@ function CategoryPageContent({ config, nav, onBack, onSignIn }: CategoryPageCont
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const referenceProducts = useMemo(
+    () => getPublicReferenceB2CProductsByCategory(config.segment) as readonly PublicReferenceB2CProductPreview[],
+    [config.segment],
+  );
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
     getPublicB2CProducts()
       .then((data) => {
         if (!cancelled) {
@@ -240,10 +264,16 @@ function CategoryPageContent({ config, nav, onBack, onSignIn }: CategoryPageCont
   // Filter products by segment using exact-match logic, consistent with
   // B2CBrowse.tsx. See Finding 1 in B2C-PUBLIC-CATEGORY-STORY-PAGES-DESIGN-001
   // for productCategory normalization risk.
+  const realCategoryProducts = useMemo(() => {
+    return allProducts.filter((p) => p.category === config.segment);
+  }, [allProducts, config.segment]);
+
+  const usingReferencePreview = !loading && !error && realCategoryProducts.length === 0;
+
   const categoryProducts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return allProducts.filter((p) => {
-      if (p.category !== config.segment) return false;
+    const sourceProducts = usingReferencePreview ? referenceProducts : realCategoryProducts;
+    return sourceProducts.filter((p) => {
       if (!q) return true;
       return (
         p.name.toLowerCase().includes(q) ||
@@ -252,9 +282,20 @@ function CategoryPageContent({ config, nav, onBack, onSignIn }: CategoryPageCont
         p.supplierName.toLowerCase().includes(q)
       );
     });
-  }, [allProducts, searchQuery, config.segment]);
+  }, [realCategoryProducts, referenceProducts, searchQuery, usingReferencePreview]);
 
   const hasSearch = searchQuery.trim().length > 0;
+  let emptyStateTitle = `No ${config.heroHeading} products are available for public discovery right now.`;
+  let emptyStateDescription = 'This category may have products available in future. Browse all textile products to discover more.';
+
+  if (hasSearch) {
+    emptyStateTitle = usingReferencePreview
+      ? 'No reference products in this category matched your search.'
+      : 'No products in this category matched your search.';
+    emptyStateDescription = 'Try a different keyword or browse all products in this category.';
+  } else if (usingReferencePreview) {
+    emptyStateDescription = 'Reference examples appear here until genuine products are published for this category.';
+  }
 
   return (
     <div className="min-h-screen bg-[#f3f8fb] font-sans">
@@ -264,14 +305,16 @@ function CategoryPageContent({ config, nav, onBack, onSignIn }: CategoryPageCont
       <div className="bg-[#071a2f] px-6 py-14">
         <div className="mx-auto max-w-7xl">
           <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">
-            B2C category discovery
+            {usingReferencePreview ? 'Reference category discovery' : 'B2C category discovery'}
           </p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-[-0.02em] text-white md:text-5xl">
             {config.heroHeading}
           </h1>
           <p className="mt-3 text-lg font-medium text-[#a4e0e8]">{config.heroTagline}</p>
           <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
-            {config.heroDescription}
+            {usingReferencePreview
+              ? `${config.heroDescription} These examples are reference previews only and are clearly labeled until genuine products are published.`
+              : config.heroDescription}
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a
@@ -365,21 +408,21 @@ function CategoryPageContent({ config, nav, onBack, onSignIn }: CategoryPageCont
         {/* Product grid */}
         {!loading && !error && (
           <div id="category-browse-grid">
+            {usingReferencePreview && (
+              <div className="mb-6">
+                <ReferencePreviewNotice
+                  label={REFERENCE_PRODUCT_PREVIEW_LABEL}
+                  replacementCopy={LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY}
+                />
+              </div>
+            )}
             {categoryProducts.length === 0 ? (
               <div className="rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-16 text-center shadow-[0_18px_50px_rgba(7,26,47,0.06)]">
                 <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
                   No products
                 </p>
-                <h2 className="mt-3 text-xl font-semibold text-[#0a2036]">
-                  {hasSearch
-                    ? 'No products in this category matched your search.'
-                    : `No ${config.heroHeading} products are available for public discovery right now.`}
-                </h2>
-                <p className="mt-3 text-sm leading-6 text-slate-500">
-                  {hasSearch
-                    ? 'Try a different keyword or browse all products in this category.'
-                    : 'This category may have products available in future. Browse all textile products to discover more.'}
-                </p>
+                <h2 className="mt-3 text-xl font-semibold text-[#0a2036]">{emptyStateTitle}</h2>
+                <p className="mt-3 text-sm leading-6 text-slate-500">{emptyStateDescription}</p>
                 {hasSearch && (
                   <button
                     type="button"
@@ -488,6 +531,11 @@ function CategoryPageContent({ config, nav, onBack, onSignIn }: CategoryPageCont
             visible on this page. Individual product pages may include additional public context
             where available.
           </p>
+            {usingReferencePreview ? (
+              <p className="mt-2 max-w-2xl text-xs font-semibold uppercase tracking-[0.18em] text-[#9a5a00]">
+                {LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY}
+              </p>
+            ) : null}
         </section>
       </main>
     </div>

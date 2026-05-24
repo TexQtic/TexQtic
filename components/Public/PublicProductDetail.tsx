@@ -5,6 +5,13 @@ import {
   type PublicB2CProductDetail,
 } from '../../services/publicB2CService';
 import { PublicNavbar, type PublicNavbarProps } from './PublicNavbar';
+import { getPublicReferenceB2CProductDetailBySlug } from '../../config/publicReferenceB2C';
+import {
+  LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY,
+  NOT_LIVE_COMMERCIAL_OFFER_COPY,
+  REFERENCE_PRODUCT_PREVIEW_LABEL,
+  ReferencePreviewNotice,
+} from './ReferencePreviewNotice';
 
 // B2C-PRODUCT-DETAIL-RICH-SEO-001: minimal state-back channel for App-level SEO metadata
 export type PublicProductDetailMetaSignal =
@@ -54,6 +61,89 @@ function RelatedProductCard({ product }: { readonly product: PublicB2CProductCar
   );
 }
 
+interface ProductReferenceDisclosureProps {
+  readonly isReferencePreview: boolean;
+}
+
+function ProductReferenceDisclosure({ isReferencePreview }: ProductReferenceDisclosureProps) {
+  if (!isReferencePreview) {
+    return (
+      <section className="mt-6 rounded-[24px] border border-[#d9e5ea] bg-white px-6 py-5">
+        <p className="text-sm leading-6 text-slate-600">
+          This public product preview shows only information approved for public discovery. Checkout, saving, pricing continuity, supplier connection, documents, orders, and deeper product trust records are available only through authenticated TexQtic workflows.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <>
+      <div className="mt-6">
+        <ReferencePreviewNotice
+          label={REFERENCE_PRODUCT_PREVIEW_LABEL}
+          replacementCopy={LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY}
+        />
+      </div>
+      <section className="mt-6 rounded-[24px] border border-[#d9e5ea] bg-white px-6 py-5">
+        <p className="text-sm leading-6 text-slate-600">
+          This reference product preview shows how TexQtic can frame public-safe product storytelling before your business goes live. It is not a live commercial offer and it does not represent active inventory, checkout availability, or a confirmed commercial supply path.
+        </p>
+        <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#9a5a00]">
+          {NOT_LIVE_COMMERCIAL_OFFER_COPY}
+        </p>
+      </section>
+    </>
+  );
+}
+
+interface AuthenticatedContinuationPanelProps {
+  readonly isReferencePreview: boolean;
+  readonly slug: string;
+  readonly onSignIn: () => void;
+}
+
+function AuthenticatedContinuationPanel({
+  isReferencePreview,
+  slug,
+  onSignIn,
+}: AuthenticatedContinuationPanelProps) {
+  return (
+    <div className="rounded-[24px] border border-[#d9e5ea] bg-white p-6">
+      <h2 className="text-lg font-semibold text-[#0a2036]">Authenticated continuation</h2>
+      <p className="mt-3 text-sm leading-6 text-slate-600">
+        {isReferencePreview
+          ? 'Sign in to see how authenticated sourcing and product workflows continue after launch-preview.'
+          : 'Sign in to save this product, continue checkout, request details, or access authenticated buyer workflows.'}
+      </p>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={onSignIn}
+          className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white transition hover:bg-[#0d2743]"
+        >
+          Sign in to Continue
+        </button>
+        {!isReferencePreview && (
+          <a
+            href={`/inquiry?productSlug=${encodeURIComponent(slug)}&sourceSurface=PRODUCT_DETAIL`}
+            className="inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8094] transition hover:bg-[#eff6f8]"
+          >
+            Send a sourcing inquiry
+          </a>
+        )}
+        <a
+          href="https://texqtic.com/request-access"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8094] transition hover:bg-[#eff6f8]"
+        >
+          List Your Products
+        </a>
+      </div>
+    </div>
+  );
+}
+
 export function PublicProductDetail({
   slug,
   onBackToBrowse,
@@ -63,22 +153,25 @@ export function PublicProductDetail({
   onProductMetaReady,
 }: PublicProductDetailProps) {
   const [product, setProduct] = useState<PublicB2CProductDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(slug));
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     if (!slug) {
-      setProduct(null);
-      setLoading(false);
-      setNotFound(true);
       onProductMetaReady?.({ type: 'notFound' });
       return;
     }
 
     let cancelled = false;
-    setProduct(null);
-    setLoading(true);
-    setNotFound(false);
+    const referenceProduct = getPublicReferenceB2CProductDetailBySlug(slug);
+
+    void Promise.resolve().then(() => {
+      if (!cancelled) {
+        setProduct(null);
+        setLoading(true);
+        setNotFound(false);
+      }
+    });
 
     getPublicB2CProductBySlug(slug)
       .then((data) => {
@@ -103,9 +196,24 @@ export function PublicProductDetail({
             typeof error === 'object' && error !== null && 'status' in error
               ? (error as { status?: number }).status
               : undefined;
-          setNotFound(status === 404);
+          if (status === 404 && referenceProduct) {
+            setProduct(referenceProduct);
+            setNotFound(false);
+            onProductMetaReady?.({
+              type: 'found',
+              name: referenceProduct.name,
+              category: referenceProduct.category ?? null,
+              material: referenceProduct.material ?? null,
+              fabricType: referenceProduct.fabricType ?? null,
+              summary: referenceProduct.summary ?? null,
+              description: referenceProduct.description ?? null,
+              publicSupplierName: referenceProduct.publicSupplierName ?? null,
+            });
+          } else {
+            setNotFound(status === 404);
+            onProductMetaReady?.({ type: 'notFound' });
+          }
           setLoading(false);
-          onProductMetaReady?.({ type: 'notFound' });
         }
       });
 
@@ -113,6 +221,8 @@ export function PublicProductDetail({
       cancelled = true;
     };
   }, [slug, onProductMetaReady]);
+
+  const missingSlug = !slug;
 
   if (loading) {
     return (
@@ -128,7 +238,7 @@ export function PublicProductDetail({
     );
   }
 
-  if (!product || notFound) {
+  if (missingSlug || !product || notFound) {
     return (
       <div className="min-h-screen bg-[#f3f8fb] font-sans">
         <PublicNavbar {...nav} />
@@ -164,6 +274,8 @@ export function PublicProductDetail({
   }
 
   const hasSupplierProfile = Boolean(product.publicSupplierSlug);
+  const isReferencePreview =
+    typeof product === 'object' && product !== null && 'isReferencePreview' in product && product.isReferencePreview === true;
   const productStory =
     product.description ||
     product.summary ||
@@ -175,10 +287,14 @@ export function PublicProductDetail({
 
       <main className="mx-auto max-w-7xl px-6 py-10 lg:px-10">
         <section className="rounded-[32px] bg-[#071a2f] px-8 py-10 text-white">
-          <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">Public Product Preview</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">
+            {isReferencePreview ? REFERENCE_PRODUCT_PREVIEW_LABEL : 'Public Product Preview'}
+          </p>
           <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.02em] md:text-4xl">{product.name}</h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-200">
-            Explore public-safe product information, textile context, and trust signals before continuing through TexQtic.
+            {isReferencePreview
+              ? 'Explore a clearly labeled reference product example that shows how product context, supplier attribution, and authenticated continuation can appear before genuine products are published.'
+              : 'Explore public-safe product information, textile context, and trust signals before continuing through TexQtic.'}
           </p>
 
           <div className="mt-5 flex flex-wrap gap-2">
@@ -224,11 +340,7 @@ export function PublicProductDetail({
           ) : null}
         </section>
 
-        <section className="mt-6 rounded-[24px] border border-[#d9e5ea] bg-white px-6 py-5">
-          <p className="text-sm leading-6 text-slate-600">
-            This public product preview shows only information approved for public discovery. Checkout, saving, pricing continuity, supplier connection, documents, orders, and deeper product trust records are available only through authenticated TexQtic workflows.
-          </p>
-        </section>
+        <ProductReferenceDisclosure isReferencePreview={isReferencePreview} />
 
         <section className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
@@ -305,40 +417,16 @@ export function PublicProductDetail({
                   onClick={() => onViewSupplierProfile(product.publicSupplierSlug)}
                   className="mt-4 inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8094] transition hover:bg-[#eff6f8]"
                 >
-                  View Public Supplier Profile
+                  {isReferencePreview ? 'View Reference Supplier Profile' : 'View Public Supplier Profile'}
                 </button>
               ) : null}
             </div>
 
-            <div className="rounded-[24px] border border-[#d9e5ea] bg-white p-6">
-              <h2 className="text-lg font-semibold text-[#0a2036]">Authenticated continuation</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                Sign in to save this product, continue checkout, request details, or access authenticated buyer workflows.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={onSignIn}
-                  className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white transition hover:bg-[#0d2743]"
-                >
-                  Sign in to Continue
-                </button>
-                <a
-                  href={`/inquiry?productSlug=${encodeURIComponent(slug)}&sourceSurface=PRODUCT_DETAIL`}
-                  className="inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8094] transition hover:bg-[#eff6f8]"
-                >
-                  Send a sourcing inquiry
-                </a>
-                <a
-                  href="https://texqtic.com/request-access"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8094] transition hover:bg-[#eff6f8]"
-                >
-                  List Your Products
-                </a>
-              </div>
-            </div>
+            <AuthenticatedContinuationPanel
+              isReferencePreview={isReferencePreview}
+              slug={slug}
+              onSignIn={onSignIn}
+            />
 
             {product.relatedProducts.length > 0 ? (
               <div className="rounded-[24px] border border-[#d9e5ea] bg-white p-6">
