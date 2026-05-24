@@ -98,6 +98,12 @@ import { PublicAggregatorPreview } from './components/Public/PublicAggregatorPre
 import { PublicIndustryClusterLanding } from './components/Public/PublicIndustryClusterLanding';
 import { PublicB2CCategoryPage } from './components/Public/PublicB2CCategoryPage';
 import { PublicInquiryPage } from './components/Public/PublicInquiryPage';
+import {
+  LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY,
+  REFERENCE_PRODUCT_PREVIEW_LABEL,
+  REFERENCE_SUPPLIER_PROFILE_LABEL,
+  ReferencePreviewNotice,
+} from './components/Public/ReferencePreviewNotice';
 import { getCategoryPageBySlug as getB2CCategoryPageBySlug } from './config/publicB2CCategoryPages';
 import { getPlatformInsights } from './services/aiService';
 import {
@@ -6689,7 +6695,7 @@ const App: React.FC = () => {
                         onClick={() => scrollToPublicEntrySection('public-entry-d2c-preview')}
                         className="rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600 transition hover:bg-[#eff6f8] hover:text-[#0b2238]"
                       >
-                        Verified Textile Collections
+                        Sample Textile Collections
                       </button>
                     </div>
 
@@ -6731,7 +6737,7 @@ const App: React.FC = () => {
                       onClick={() => scrollToPublicEntrySection('public-entry-d2c-preview')}
                       className="rounded-full border border-[#dbe6ea] bg-[#f8fbfc] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600"
                     >
-                      Verified Textile Collections
+                      Sample Textile Collections
                     </button>
                   </div>
                 </nav>
@@ -6941,11 +6947,21 @@ const App: React.FC = () => {
                   comparison, and trade.
                 </p>
 
+                <div className="mt-6">
+                  <ReferencePreviewNotice
+                    label={REFERENCE_SUPPLIER_PROFILE_LABEL}
+                    replacementCopy={LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY}
+                  />
+                </div>
+
                 <div className="mt-8 rounded-[24px] border border-[#dce8eb] bg-[#f6fbfc] p-6">
-                  <p className="text-sm font-semibold text-[#0a2036]">Verified Fabric Manufacturer</p>
+                  <p className="text-sm font-semibold text-[#0a2036]">Reference supplier profile</p>
                   <p className="mt-2 text-sm text-slate-600">Surat, Gujarat</p>
                   <p className="mt-2 text-sm text-slate-600">Capabilities: Cotton fabric, weaving, dyeing, finishing</p>
-                  <p className="mt-2 text-sm text-slate-600">Trust Signals: Public profile approved</p>
+                  <p className="mt-2 text-sm text-slate-600">Trust Signals: Reference profile example</p>
+                  <p className="mt-2 text-sm font-semibold uppercase tracking-[0.18em] text-[#9a5a00]">
+                    Not a live commercial offer
+                  </p>
 
                   <div className="mt-5 flex flex-wrap gap-3">
                     <button
@@ -6953,7 +6969,7 @@ const App: React.FC = () => {
                       onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')}
                       className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
                     >
-                      View Public Profile
+                      View Reference Profile
                     </button>
                     <button
                       type="button"
@@ -6971,17 +6987,28 @@ const App: React.FC = () => {
                   Browse textile products with trust behind them
                 </h2>
                 <p className="mt-4 max-w-4xl text-base leading-7 text-slate-600">
-                  TexQtic&apos;s public consumer browse is designed to show products, storefronts, materials,
-                  pricing where approved, and trust signals - while checkout, orders, and account continuity
+                  TexQtic&apos;s public consumer browse is designed to show reference product previews,
+                  storefront context fields, and trust signals where approved - while checkout, orders,
+                  pricing continuity, and account continuity
                   remain protected inside authenticated journeys.
                 </p>
 
+                <div className="mt-6">
+                  <ReferencePreviewNotice
+                    label={REFERENCE_PRODUCT_PREVIEW_LABEL}
+                    replacementCopy={LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY}
+                  />
+                </div>
+
                 <div className="mt-8 rounded-[24px] border border-[#dce8eb] bg-[#f6fbfc] p-6">
-                  <p className="text-sm font-semibold text-[#0a2036]">Linen Summer Shirt</p>
+                  <p className="text-sm font-semibold text-[#0a2036]">Reference Linen Summer Shirt Preview</p>
                   <p className="mt-2 text-sm text-slate-600">Material: Linen blend</p>
-                  <p className="mt-2 text-sm text-slate-600">Storefront: Verified textile seller</p>
+                  <p className="mt-2 text-sm text-slate-600">Storefront: Reference textile seller preview</p>
                   <p className="mt-2 text-sm text-slate-600">Origin: Public-approved supply-chain story</p>
-                  <p className="mt-2 text-sm text-slate-600">Price: Public price where available</p>
+                  <p className="mt-2 text-sm text-slate-600">Price field: Example public price field - shown only where approved</p>
+                  <p className="mt-2 text-sm font-semibold uppercase tracking-[0.18em] text-[#9a5a00]">
+                    Not a live commercial offer
+                  </p>
 
                   <button
                     type="button"
@@ -6993,7 +7020,7 @@ const App: React.FC = () => {
                 </div>
 
                 <p className="mt-5 text-sm font-medium text-slate-700">
-                  Consumers do not just discover products - they discover the textile story behind them.
+                  Consumers can preview product storytelling here before authentic live catalog participation begins.
                 </p>
               </section>
 
