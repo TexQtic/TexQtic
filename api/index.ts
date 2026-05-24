@@ -29,6 +29,7 @@ import adminCartSummariesRoutes from '../server/src/routes/admin-cart-summaries.
 import aiRoutes from '../server/src/routes/ai.js';
 import impersonationRoutes from '../server/src/routes/admin/impersonation.js';
 import tenantProvisionRoutes from '../server/src/routes/admin/tenantProvision.js';
+import internalGovRoutes from '../server/src/routes/internal/index.js';
 
 /**
  * Type guard for Fastify-like error objects.
@@ -159,6 +160,8 @@ await fastify.register(aiRoutes, { prefix: '/api/ai' });
 // P0 — G-W3-ROUTING-001: impersonation + tenant provision routes (were missing from Vercel entrypoint)
 await fastify.register(impersonationRoutes, { prefix: '/api/control' });
 await fastify.register(tenantProvisionRoutes, { prefix: '/api/control' });
+// WEBHOOK-017 — Register protected internal routes on Vercel app-domain ingress.
+await fastify.register(internalGovRoutes);
 
 // Error handler
 fastify.setErrorHandler((error, _request, reply) => {
