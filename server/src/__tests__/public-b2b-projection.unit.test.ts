@@ -20,6 +20,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   listPublicB2BSuppliers,
+  getPublicB2BSupplierBySlug,
   type PublicB2BDiscoveryResponse,
 } from '../services/publicB2BProjection.service.js';
 
@@ -281,5 +282,45 @@ describe('listPublicB2BSuppliers', () => {
 
     const result = await listPublicB2BSuppliers({}, prisma);
     expect(result.items[0].hasTraceabilityEvidence).toBe(false);
+  });
+
+  // ── test 11: Gate E (sentinel) — organizations query includes is_qa_sentinel: false ──
+  it('passes is_qa_sentinel=false to the organizations query (Gate E sentinel)', async () => {
+    const orgRow = makeEligibleOrgRow();
+    const tenantRow = makeEligibleTenantRow();
+    const prisma = makeMockPrisma({ orgs: [orgRow], tenants: [tenantRow] });
+
+    await listPublicB2BSuppliers({}, prisma);
+
+    const mockTx = (prisma as unknown as { _mockTx: { organizations: { findMany: ReturnType<typeof vi.fn> } } })._mockTx;
+    expect(mockTx.organizations.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ is_qa_sentinel: false }),
+      }),
+    );
+  });
+});
+
+describe('getPublicB2BSupplierBySlug', () => {
+  // ── Gate E (sentinel) — organizations query includes is_qa_sentinel: false ──
+  it('passes is_qa_sentinel=false to the organizations query (Gate E sentinel)', async () => {
+    const orgRow = makeEligibleOrgRow();
+    const tenantRow = makeEligibleTenantRow();
+    const prisma = makeMockPrisma({ orgs: [orgRow], tenants: [tenantRow] });
+
+    await getPublicB2BSupplierBySlug('acme-ltd', prisma);
+
+    const mockTx = (prisma as unknown as { _mockTx: { organizations: { findMany: ReturnType<typeof vi.fn> } } })._mockTx;
+    expect(mockTx.organizations.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ is_qa_sentinel: false }),
+      }),
+    );
+  });
+
+  it('returns null when no eligible org matches the slug', async () => {
+    const prisma = makeMockPrisma({ orgs: [] });
+    const result = await getPublicB2BSupplierBySlug('unknown-slug', prisma);
+    expect(result).toBeNull();
   });
 });

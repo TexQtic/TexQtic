@@ -54,6 +54,9 @@ function makeMockPrisma(overrides: {
     catalogItem: {
       findMany: vi.fn().mockResolvedValue(catalogItems),
     },
+    dpp_passport_states: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
   };
 
   return {
@@ -332,6 +335,22 @@ describe('listPublicB2CProducts', () => {
     expect(preview.material).toBeNull();
     expect(preview.fabricType).toBeNull();
   });
+
+  // ── test 13: Gate E (sentinel) — organizations query includes is_qa_sentinel: false ──
+  it('passes is_qa_sentinel=false to the organizations query (Gate E sentinel)', async () => {
+    const orgRow = makeEligibleB2COrgRow();
+    const tenantRow = makeEligibleTenantRow();
+    const prisma = makeMockPrisma({ orgs: [orgRow], tenants: [tenantRow] });
+
+    await listPublicB2CProducts({}, prisma);
+
+    const mockTx = (prisma as unknown as { _mockTx: { organizations: { findMany: ReturnType<typeof vi.fn> } } })._mockTx;
+    expect(mockTx.organizations.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ is_qa_sentinel: false }),
+      }),
+    );
+  });
 });
 
 describe('getPublicB2CProductBySlug', () => {
@@ -393,5 +412,25 @@ describe('getPublicB2CProductBySlug', () => {
 
     const detail = await getPublicB2CProductBySlug('sunshine-store--organic-tote-bag-aaaaaaaaaa', prisma);
     expect(detail).toBeNull();
+  });
+
+  // ── Gate E (sentinel) — organizations query includes is_qa_sentinel: false ───────────
+  it('passes is_qa_sentinel=false to the organizations query (Gate E sentinel)', async () => {
+    const orgRow = makeEligibleB2COrgRow();
+    const tenantRow = makeEligibleTenantRow();
+    const prisma = makeMockPrisma({
+      orgs: [orgRow],
+      tenants: [tenantRow],
+      catalogItems: [makeB2CCatalogRow()],
+    });
+
+    await getPublicB2CProductBySlug('sunshine-store--organic-tote-bag-0000000000', prisma);
+
+    const mockTx = (prisma as unknown as { _mockTx: { organizations: { findMany: ReturnType<typeof vi.fn> } } })._mockTx;
+    expect(mockTx.organizations.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ is_qa_sentinel: false }),
+      }),
+    );
   });
 });

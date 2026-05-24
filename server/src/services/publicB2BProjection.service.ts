@@ -8,12 +8,13 @@
  * Slice:
  *   PUBLIC_B2B_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE
  *
- * FIVE PROJECTION SAFETY GATES (all must pass — fail = silently exclude):
+ * SIX PROJECTION SAFETY GATES (all must pass — fail = silently exclude):
  *   Gate A: tenant.publicEligibilityPosture === 'PUBLICATION_ELIGIBLE'
  *   Gate B: org.publication_posture IN ('B2B_PUBLIC', 'BOTH')
  *   Gate C: org.org_type === 'B2B'
  *   Gate D: org.status IN ('ACTIVE', 'VERIFICATION_APPROVED')
- *   Gate E: only allowed payload categories; prohibited fields NEVER in output
+ *   Gate E: org.is_qa_sentinel === false (QA/test sentinel orgs explicitly excluded)
+ *   Output gate: prohibited fields never appear in public payload
  *
  * PROHIBITED IN PUBLIC PAYLOAD (§C of design):
  *   price/pricing, org UUIDs, negotiation state, order/trade state,
@@ -144,6 +145,9 @@ export async function listPublicB2BSuppliers(
         org_type: ELIGIBLE_ORG_TYPE,
         status: { in: [...ELIGIBLE_ORG_STATUSES] },
         publication_posture: { in: [...PUBLICATION_POSTURE_PUBLIC] },
+        // Gate E (sentinel): QA/test orgs are always excluded from public projections.
+        // is_qa_sentinel is Boolean @default(false) — non-nullable, direct equality filter.
+        is_qa_sentinel: false,
         // Geo filter: jurisdiction exact match when provided
         ...(params.geo ? { jurisdiction: params.geo } : {}),
         // Segment filter: primary or secondary segment match
@@ -367,6 +371,8 @@ export async function getPublicB2BSupplierBySlug(
         org_type: ELIGIBLE_ORG_TYPE,
         status: { in: [...ELIGIBLE_ORG_STATUSES] },
         publication_posture: { in: [...PUBLICATION_POSTURE_PUBLIC] },
+        // Gate E (sentinel): QA/test orgs are always excluded from public projections.
+        is_qa_sentinel: false,
       },
       select: {
         id: true,
