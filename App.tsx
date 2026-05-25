@@ -2056,6 +2056,13 @@ const resolveInitialAppState = (): AppState => {
       return 'PUBLIC_SUPPLIER_PROFILE';
     }
 
+    if (
+      globalThis.window.location.pathname === '/b2b' ||
+      globalThis.window.location.pathname === '/b2b/'
+    ) {
+      return 'PUBLIC_B2B_DISCOVERY';
+    }
+
     const productPathMatch = globalThis.window.location.pathname.match(
       /^\/product\/([a-z0-9-]+)$/,
     );
@@ -6739,11 +6746,21 @@ const App: React.FC = () => {
   };
 
   const renderCurrentState = () => {
+    const navigateToPublicB2BDiscovery = () => {
+      globalThis.window?.history.replaceState(null, '', '/b2b');
+      setAppState('PUBLIC_B2B_DISCOVERY');
+    };
+
+    const navigateToPublicB2CBrowse = () => {
+      globalThis.window?.history.replaceState(null, '', '/products');
+      setAppState('PUBLIC_B2C_BROWSE');
+    };
+
     // Shared nav callbacks for all public surface render cases
     const publicNavBase = {
       onGoHome: () => { globalThis.window?.history.replaceState(null, '', '/'); setAppState('PUBLIC_ENTRY'); },
-      onGoB2B: () => setAppState('PUBLIC_B2B_DISCOVERY'),
-      onGoProducts: () => setAppState('PUBLIC_B2C_BROWSE'),
+      onGoB2B: navigateToPublicB2BDiscovery,
+      onGoProducts: navigateToPublicB2CBrowse,
       onGoCollections: () => { globalThis.window?.history.replaceState(null, '', '/collections'); setAppState('PUBLIC_COLLECTIONS'); },
       onGoIndustry: () => { globalThis.window?.history.replaceState(null, '', '/industries'); setAppState('PUBLIC_INDUSTRY_CLUSTER_LANDING'); },
       onGoTrust: () => { globalThis.window?.history.replaceState(null, '', '/trust'); setAppState('PUBLIC_TRUST_LANDING'); },
@@ -6773,14 +6790,14 @@ const App: React.FC = () => {
                     <div className="hidden lg:flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+                        onClick={navigateToPublicB2BDiscovery}
                         className="rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600 transition hover:bg-[#eff6f8] hover:text-[#0b2238]"
                       >
                         Explore B2B Network
                       </button>
                       <button
                         type="button"
-                        onClick={() => setAppState('PUBLIC_B2C_BROWSE')}
+                        onClick={navigateToPublicB2CBrowse}
                         className="rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600 transition hover:bg-[#eff6f8] hover:text-[#0b2238]"
                       >
                         Browse Products
@@ -6815,14 +6832,14 @@ const App: React.FC = () => {
                   <div className="mt-4 flex flex-wrap gap-2 lg:hidden">
                     <button
                       type="button"
-                      onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+                      onClick={navigateToPublicB2BDiscovery}
                       className="rounded-full border border-[#dbe6ea] bg-[#f8fbfc] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600"
                     >
                       Explore B2B
                     </button>
                     <button
                       type="button"
-                      onClick={() => setAppState('PUBLIC_B2C_BROWSE')}
+                      onClick={navigateToPublicB2CBrowse}
                       className="rounded-full border border-[#dbe6ea] bg-[#f8fbfc] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600"
                     >
                       Browse Products
@@ -6879,7 +6896,7 @@ const App: React.FC = () => {
                         type="button"
                         onClick={() => {
                           setNeutralEntryPathSelection('B2B');
-                          setAppState('PUBLIC_B2B_DISCOVERY');
+                          navigateToPublicB2BDiscovery();
                         }}
                         className="inline-flex items-center justify-center rounded-full bg-[#7fd5de] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#08233a] transition hover:bg-[#98e2e9]"
                       >
@@ -6889,7 +6906,7 @@ const App: React.FC = () => {
                         type="button"
                         onClick={() => {
                           setNeutralEntryPathSelection('B2C');
-                          setAppState('PUBLIC_B2C_BROWSE');
+                          navigateToPublicB2CBrowse();
                         }}
                         className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/8 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-white/14"
                       >
@@ -6988,12 +7005,12 @@ const App: React.FC = () => {
                         type="button"
                         onClick={() => {
                           if (card.action === 'B2B') {
-                            setAppState('PUBLIC_B2B_DISCOVERY');
+                            navigateToPublicB2BDiscovery();
                             return;
                           }
 
                           if (card.action === 'B2C') {
-                            setAppState('PUBLIC_B2C_BROWSE');
+                            navigateToPublicB2CBrowse();
                             return;
                           }
 
@@ -7061,7 +7078,7 @@ const App: React.FC = () => {
                   <div className="mt-5 flex flex-wrap gap-3">
                     <button
                       type="button"
-                      onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+                      onClick={navigateToPublicB2BDiscovery}
                       className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
                     >
                       View Reference Profile
@@ -7219,14 +7236,14 @@ const App: React.FC = () => {
                 <div className="mt-8 flex flex-wrap gap-3">
                   <button
                     type="button"
-                    onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+                    onClick={navigateToPublicB2BDiscovery}
                     className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
                   >
                     Explore B2B Network
                   </button>
                   <button
                     type="button"
-                    onClick={() => setAppState('PUBLIC_B2C_BROWSE')}
+                    onClick={navigateToPublicB2CBrowse}
                     className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
                   >
                     Browse Products
@@ -7339,7 +7356,7 @@ const App: React.FC = () => {
           <B2CBrowsePage
             nav={{ ...publicNavBase, activeSection: 'products' }}
             onBack={() => setAppState('PUBLIC_ENTRY')}
-            onExploreB2B={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+            onExploreB2B={navigateToPublicB2BDiscovery}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
           />
         );
@@ -7351,8 +7368,8 @@ const App: React.FC = () => {
               globalThis.window?.history.replaceState(null, '', '/');
               setAppState('PUBLIC_ENTRY');
             }}
-            onBrowseProducts={() => setAppState('PUBLIC_B2C_BROWSE')}
-            onExploreB2BNetwork={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+            onBrowseProducts={navigateToPublicB2CBrowse}
+            onExploreB2BNetwork={navigateToPublicB2BDiscovery}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
             onListYourProducts={openSupplierRequestAccess}
           />
@@ -7372,9 +7389,9 @@ const App: React.FC = () => {
                 globalThis.window?.history.replaceState(null, '', '/collections');
                 setAppState('PUBLIC_COLLECTIONS');
               }}
-              onBrowseProducts={() => setAppState('PUBLIC_B2C_BROWSE')}
+              onBrowseProducts={navigateToPublicB2CBrowse}
               onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
-              onExploreB2BNetwork={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+              onExploreB2BNetwork={navigateToPublicB2BDiscovery}
             />
           );
         }
@@ -7386,9 +7403,9 @@ const App: React.FC = () => {
               globalThis.window?.history.replaceState(null, '', '/collections');
               setAppState('PUBLIC_COLLECTIONS');
             }}
-            onBrowseProducts={() => setAppState('PUBLIC_B2C_BROWSE')}
+            onBrowseProducts={navigateToPublicB2CBrowse}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
-            onExploreB2BNetwork={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+            onExploreB2BNetwork={navigateToPublicB2BDiscovery}
             onListYourProducts={openSupplierRequestAccess}
           />
         );
@@ -7402,9 +7419,9 @@ const App: React.FC = () => {
               globalThis.window?.history.replaceState(null, '', '/collections');
               setAppState('PUBLIC_COLLECTIONS');
             }}
-            onBrowseProducts={() => setAppState('PUBLIC_B2C_BROWSE')}
+            onBrowseProducts={navigateToPublicB2CBrowse}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
-            onExploreB2BNetwork={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+            onExploreB2BNetwork={navigateToPublicB2BDiscovery}
           />
         );
       case 'PUBLIC_TRUST_LANDING':
@@ -7415,8 +7432,8 @@ const App: React.FC = () => {
               globalThis.window?.history.replaceState(null, '', '/');
               setAppState('PUBLIC_ENTRY');
             }}
-            onBrowseProducts={() => setAppState('PUBLIC_B2C_BROWSE')}
-            onExploreB2B={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+            onBrowseProducts={navigateToPublicB2CBrowse}
+            onExploreB2B={navigateToPublicB2BDiscovery}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
             onRequestAccess={openSupplierRequestAccess}
           />
@@ -7429,8 +7446,8 @@ const App: React.FC = () => {
               globalThis.window?.history.replaceState(null, '', '/');
               setAppState('PUBLIC_ENTRY');
             }}
-            onExploreB2B={() => setAppState('PUBLIC_B2B_DISCOVERY')}
-            onBrowseProducts={() => setAppState('PUBLIC_B2C_BROWSE')}
+            onExploreB2B={navigateToPublicB2BDiscovery}
+            onBrowseProducts={navigateToPublicB2CBrowse}
             onLearnAboutTrust={() => {
               globalThis.window?.history.replaceState(null, '', '/trust');
               setAppState('PUBLIC_TRUST_LANDING');
@@ -7453,10 +7470,9 @@ const App: React.FC = () => {
             }}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
             onExploreB2B={() => {
-              globalThis.window?.history.replaceState(null, '', '/');
-              setAppState('PUBLIC_B2B_DISCOVERY');
+              navigateToPublicB2BDiscovery();
             }}
-            onBrowseProducts={() => setAppState('PUBLIC_B2C_BROWSE')}
+            onBrowseProducts={navigateToPublicB2CBrowse}
             onLearnAboutTrust={() => {
               globalThis.window?.history.replaceState(null, '', '/trust');
               setAppState('PUBLIC_TRUST_LANDING');
@@ -7471,8 +7487,7 @@ const App: React.FC = () => {
             slug={publicProductSlugFromPath}
             onProductMetaReady={setPublicProductDetailMeta}
             onBackToBrowse={() => {
-              globalThis.window?.history.replaceState(null, '', '/');
-              setAppState('PUBLIC_B2C_BROWSE');
+              navigateToPublicB2CBrowse();
             }}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
             onViewSupplierProfile={(slug) => {
@@ -7487,8 +7502,7 @@ const App: React.FC = () => {
             nav={{ ...publicNavBase, activeSection: 'products' }}
             slug={publicCategorySlugFromPath}
             onBack={() => {
-              globalThis.window?.history.replaceState(null, '', '/');
-              setAppState('PUBLIC_B2C_BROWSE');
+              navigateToPublicB2CBrowse();
             }}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
           />
@@ -7514,7 +7528,7 @@ const App: React.FC = () => {
             nav={{ ...publicNavBase, activeSection: 'b2b' }}
             slug={publicSupplierSlugFromPath}
             source={publicSupplierSourceFromQuery || undefined}
-            onBack={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+            onBack={navigateToPublicB2BDiscovery}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
             onRequestAccess={openSupplierRequestAccess}
           />
@@ -7529,7 +7543,7 @@ const App: React.FC = () => {
             categorySlug={publicInquiryCategorySlugFromQuery || undefined}
             collectionSlug={publicInquiryCollectionSlugFromQuery || undefined}
             sourceSurface={publicInquirySourceSurfaceFromQuery || undefined}
-            onBack={() => setAppState('PUBLIC_B2B_DISCOVERY')}
+            onBack={navigateToPublicB2BDiscovery}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
           />
         );
