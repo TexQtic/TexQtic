@@ -3396,11 +3396,14 @@ const App: React.FC = () => {
         : productDesc
           ? truncateDesc(productDesc)
           : 'Public-safe textile product preview on TexQtic. Browse category, material, and supplier context for public discovery.';
+      const productDetailRobots = publicProductDetailMeta.isReferencePreview === true
+        ? 'noindex, nofollow'
+        : 'index, follow';
       applyPublicPageMeta({
         title: resolvedTitle,
         description: resolvedDescription,
         canonical: productCanonical,
-        robots: 'index, follow',
+        robots: productDetailRobots,
         ogTitle: resolvedTitle,
         ogDescription: resolvedDescription,
         ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,

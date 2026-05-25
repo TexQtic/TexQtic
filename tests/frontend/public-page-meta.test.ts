@@ -229,3 +229,50 @@ describe('DEC-004 contract — PUBLIC_ENTRY SEO posture', () => {
     expect(appSource).toContain('canonical: `${origin}/`,');
   });
 });
+
+describe('DEC-005 contract — conditional product slug indexability', () => {
+  it('PublicProductDetail meta signal distinguishes API live found vs reference fallback found', () => {
+    const detailSource = readFileSync(
+      resolve(process.cwd(), 'components', 'Public', 'PublicProductDetail.tsx'),
+      'utf8',
+    );
+
+    expect(detailSource).toContain('isReferencePreview?: boolean;');
+    expect(detailSource).toContain("type: 'found',");
+    expect(detailSource).toContain('isReferencePreview: false,');
+    expect(detailSource).toContain('isReferencePreview: true,');
+    expect(detailSource).toContain('if (status === 404 && referenceProduct) {');
+  });
+
+  it('App.tsx product SEO uses noindex for reference found and index for live found', () => {
+    const appSource = readFileSync(resolve(process.cwd(), 'App.tsx'), 'utf8');
+
+    expect(appSource).toContain("if (appState === 'PUBLIC_PRODUCT_DETAIL') {");
+    expect(appSource).toContain('const productDetailRobots = publicProductDetailMeta.isReferencePreview === true');
+    expect(appSource).toContain("? 'noindex, nofollow'");
+    expect(appSource).toContain(": 'index, follow';");
+    expect(appSource).toContain('robots: productDetailRobots,');
+  });
+
+  it('App.tsx product notFound branch remains noindex, nofollow', () => {
+    const appSource = readFileSync(resolve(process.cwd(), 'App.tsx'), 'utf8');
+
+    expect(appSource).toContain("if (publicProductDetailMeta.type === 'notFound') {");
+    expect(appSource).toContain("robots: 'noindex, nofollow',");
+  });
+
+  it('sitemap.xml remains without /product/:slug URLs', () => {
+    const sitemap = readFileSync(resolve(process.cwd(), 'public', 'sitemap.xml'), 'utf8');
+
+    expect(sitemap).not.toContain('https://app.texqtic.com/product/');
+  });
+
+  it('robots.txt remains unchanged for product-detail path directives', () => {
+    const robots = readFileSync(resolve(process.cwd(), 'public', 'robots.txt'), 'utf8');
+
+    expect(robots).toContain('Allow: /products');
+    expect(robots).toContain('Allow: /products/category/');
+    expect(robots).not.toContain('Allow: /product/');
+    expect(robots).not.toContain('Disallow: /product/');
+  });
+});

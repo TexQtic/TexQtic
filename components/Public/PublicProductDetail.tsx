@@ -17,6 +17,7 @@ import {
 export type PublicProductDetailMetaSignal =
   | {
       type: 'found';
+  isReferencePreview?: boolean;
       name: string;
       category: string | null;
       material: string | null;
@@ -180,6 +181,7 @@ export function PublicProductDetail({
           setLoading(false);
           onProductMetaReady?.({
             type: 'found',
+            isReferencePreview: false,
             name: data.name,
             category: data.category ?? null,
             material: data.material ?? null,
@@ -201,6 +203,7 @@ export function PublicProductDetail({
             setNotFound(false);
             onProductMetaReady?.({
               type: 'found',
+              isReferencePreview: true,
               name: referenceProduct.name,
               category: referenceProduct.category ?? null,
               material: referenceProduct.material ?? null,
