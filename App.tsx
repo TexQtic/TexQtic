@@ -6783,7 +6783,7 @@ const App: React.FC = () => {
                         onClick={openSupplierRequestAccess}
                         className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
                       >
-                        Join TexQtic
+                        Request Access
                       </button>
                     </div>
                   </div>
@@ -7219,7 +7219,7 @@ const App: React.FC = () => {
                     onClick={openSupplierRequestAccess}
                     className="inline-flex items-center justify-center rounded-full border border-[#d1dee3] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036]"
                   >
-                    Join TexQtic
+                    Request Access
                   </button>
                 </div>
               </section>
