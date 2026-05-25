@@ -20,6 +20,8 @@
  */
 
 import { describe, it, expect, afterEach } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
   applyPublicPageMeta,
   clearPublicPageMeta,
@@ -215,5 +217,15 @@ describe('clearPublicPageMeta — JSON-LD cleanup', () => {
 
     // Cleanup unmanaged sentinel
     sentinel?.remove();
+  });
+});
+
+describe('DEC-004 contract — PUBLIC_ENTRY SEO posture', () => {
+  it('App.tsx explicitly noindexes PUBLIC_ENTRY and sets root canonical', () => {
+    const appSource = readFileSync(resolve(process.cwd(), 'App.tsx'), 'utf8');
+
+    expect(appSource).toContain("if (appState === 'PUBLIC_ENTRY') {");
+    expect(appSource).toContain("robots: 'noindex, nofollow'");
+    expect(appSource).toContain('canonical: `${origin}/`,');
   });
 });

@@ -3590,6 +3590,27 @@ const App: React.FC = () => {
       return;
     }
 
+    // MAINAPP-PUBLIC-READINESS-001E-D4-P1 (DEC-004):
+    // Root app shell remains functional but must not be indexed during soft launch.
+    if (appState === 'PUBLIC_ENTRY') {
+      applyPublicPageMeta({
+        title: 'TexQtic Platform Entry',
+        description: 'TexQtic — verified textile platform for B2B discovery, public collection previews, and supply chain continuity.',
+        canonical: `${origin}/`,
+        robots: 'noindex, nofollow',
+        ogTitle: 'TexQtic Platform Entry',
+        ogDescription: 'TexQtic — verified textile platform.',
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/`,
+        ogType: 'website',
+        twitterCard: 'summary',
+        twitterTitle: 'TexQtic Platform Entry',
+        twitterDescription: 'TexQtic — verified textile platform.',
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
     // All other app states: remove managed metadata tags
     clearPublicPageMeta();
   }, [appState, publicCollectionSlugFromPath, publicCategorySlugFromPath, publicProductSlugFromPath, publicProductDetailMeta]);
