@@ -3,7 +3,7 @@
 **Hub:** `governance/launch-readiness/`
 **Status:** SKELETON — PENDING POPULATION
 **Population unit:** `TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-POPULATION-001`
-**Last updated:** 2026-05-25 (HIST-008–HIST-011 added through Unit 053; §15 repo-wise pending-unit register added; `TLRH-FUTURE-TODO-REPOWISE-PENDING-SYNC-002`. Prior: PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001 design artifact created: FTR-FAM-004 status → DESIGN_ARTIFACT_CREATED — HOLD_FOR_CONTENT_DRAFT. Prior: PRODUCTION-INTENT-STAGED-ACTIVATION-GOVERNANCE-SYNC-001: FTR-FAM-002 production-intent framing updated; FTR-FAM-004 added; HIST-007 added. Prior: email implementation truth sync — `TLRH-EMAIL-IMPLEMENTATION-SYNC-001`; FTR-B2C-004 PARTIAL; FTR-SL-003 PARTIAL; FTR-FAM-003 PARTIAL; HD-001-SMTP RESOLVED; new FTR-B2C-005, FTR-AUTH-004, FTR-OPS-004 added)
+**Last updated:** 2026-05-25 (HD-002 URL-state sync close recorded: `MAINAPP-PUBLIC-READINESS-001F-HD-002-P1` accepted at commit `30196c7`; `MAINAPP-PUBLIC-READINESS-001F-HD-002-VERIFY-PROD` completed; production smoke passed at `https://app.texqtic.com`; HD-002 marked `VERIFIED_COMPLETE`; adjacent candidate `MAINAPP-PUBLIC-NOTFOUND-SESSION-CHROME-VISIBILITY-CHECK` added as triage-only non-blocker; §15 repo-wise pending-unit register refreshed. Prior: HIST-008–HIST-011 added through Unit 053; §15 repo-wise pending-unit register added; `TLRH-FUTURE-TODO-REPOWISE-PENDING-SYNC-002`. Prior: PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001 design artifact created: FTR-FAM-004 status → DESIGN_ARTIFACT_CREATED — HOLD_FOR_CONTENT_DRAFT. Prior: PRODUCTION-INTENT-STAGED-ACTIVATION-GOVERNANCE-SYNC-001: FTR-FAM-002 production-intent framing updated; FTR-FAM-004 added; HIST-007 added. Prior: email implementation truth sync — `TLRH-EMAIL-IMPLEMENTATION-SYNC-001`; FTR-B2C-004 PARTIAL; FTR-SL-003 PARTIAL; FTR-FAM-003 PARTIAL; HD-001-SMTP RESOLVED; new FTR-B2C-005, FTR-AUTH-004, FTR-OPS-004 added)
 **Design authority:** `TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-DESIGN-001`
 
 ---
@@ -178,6 +178,7 @@ Each item has:
 | 2026-05-22 | FTR-FAM-002 updated: production-intent architecture framing added (D-025); status → PRODUCTION_INTENT_ARCHITECTURE_REQUIRED — HOLD_FOR_AUTHORIZATION. FTR-FAM-004 added: PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001 architecture design artifact. HIST-007 added. | `PRODUCTION-INTENT-STAGED-ACTIVATION-GOVERNANCE-SYNC-001` |
 | 2026-05-22 | FTR-FAM-004 updated: design artifact `PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001` created. Status → DESIGN_ARTIFACT_CREATED — HOLD_FOR_CONTENT_DRAFT. Next: PRODUCTION-LAUNCH-LEGAL-CONTENT-DRAFT-PRIT-034-002. | `PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001` |
 | 2026-05-25 | HIST-008–HIST-011 added: Gate E QA sentinel filter (PRODUCTION_VERIFIED), static reference preview layer (PRODUCTION_ACCEPTED), Marketing preview routing (PRODUCTION_ACCEPTED, cross-repo only), CRM provisioning observability (PRODUCTION_ACCEPTED, cross-repo only) — all through Unit 053. §15 repo-wise pending-unit register added: Main App, Marketing, CRM, and cross-repo/product governance pending units recorded from external tracker context. Buyer bridge remains BLOCKED. Live CRM smoke approval-gated. Tracker source: external GPT-maintained; no tracker/pending-units DOCX searched in repo. | `TLRH-FUTURE-TODO-REPOWISE-PENDING-SYNC-002` |
+| 2026-05-25 | HD-002 post-close sync: `MAINAPP-PUBLIC-READINESS-001F-HD-002-P1` accepted (commit `30196c7`), `MAINAPP-PUBLIC-READINESS-001F-HD-002-VERIFY-PROD` completed, and `MAINAPP-PUBLIC-READINESS-001F-HD-002` marked `VERIFIED_COMPLETE / CLOSED` in §15. Production verification summary recorded (direct `/b2b`, direct `/b2b/`, B2B nav URL sync, Products nav URL sync, unknown non-root fail-closed, `/discover` non-canonical, buyer bridge/CRM/provisioning inactive, Vitest PASS, typecheck PASS, no verification-time file changes). Added separate adjacent candidate `MAINAPP-PUBLIC-NOTFOUND-SESSION-CHROME-VISIBILITY-CHECK` (triage-gated non-blocker). Standing guardrails preserved under §15.5. | `TEXQTIC-TLRH-TRACKER-SYNC-AFTER-HD-002-CLOSE` |
 
 ---
 
@@ -236,6 +237,9 @@ through Unit 053. No tracker DOCX was searched in the repo.*
 
 | Unit / Topic | Repo | Status | Dependency / Guardrail | Note |
 |---|---|---|---|---|
+| MAINAPP-PUBLIC-READINESS-001F-HD-002-P1 — Stable /b2b URL + public nav URL-state sync | Main App | CLOSED — accepted | Close evidence: commit `30196c7` on `main` | Accepted implementation commit: `[TEXQTIC] frontend: add stable b2b route and sync public nav URLs` |
+| MAINAPP-PUBLIC-READINESS-001F-HD-002-VERIFY-PROD — production/Vercel URL smoke | Main App | COMPLETE — verified | Verification-only; no implementation changes authorized | Production smoke complete at `https://app.texqtic.com`: direct `/b2b` PASS, `/b2b/` PASS, B2B nav → `/b2b` PASS, Products nav → `/products` PASS, unknown non-root → Page Not Found PASS, `/discover` not canonical B2B PASS, buyer bridge/CRM/provisioning inactive PASS, focused Vitest PASS, typecheck PASS, no files changed during verification |
+| MAINAPP-PUBLIC-READINESS-001F-HD-002 — route hardening close decision | Main App | VERIFIED_COMPLETE — CLOSED | P1 + VERIFY-PROD both completed | HD-002 close accepted; no SEO/noindex/sitemap/robots, inquiry-flow, CRM/provisioning, or DB scope activated in close path |
 | FTR-B2C-005 — Supplier-context inquiry notification production runtime verification | Main App | verification-needed | Real supplier email required; buyer-bridge gate not yet cleared | Supplier-context path structurally implemented; not yet runtime-verified end-to-end in production |
 | FTR-AUTH-003 — Auth/private-route deindex confirmation (FU-004) | Main App | verification-needed | Await Google re-crawl post robots.txt deployment (2026-05-20) | `/auth/login` URLs currently indexed; deindex pending re-crawl; FU-004 required for VERIFIED_PASS |
 | FTR-CP-001 — Control plane tenant operations implementation | Main App | implementation-ready | Paresh explicit Layer 0 authorization required | Boundary artifact exists; implementation awaiting authorization to open |
@@ -244,6 +248,7 @@ through Unit 053. No tracker DOCX was searched in the repo.*
 | FTR-FAM-003 — Inquiry notification minimum (supplier-context path) | Main App | verification-needed | FTR-B2C-005 runtime verification gate | Buyer ack + admin alert production-verified; supplier-context path remains OPEN (see FTR-B2C-005) |
 | QA/test/sentinel data purge | Main App | pending | Required before any buyer-facing outreach or activation | All QA/test/sentinel rows must be removed from production surfaces before buyer bridge can be considered |
 | DB-backed demo/reference seeding activation | Main App | decision-gated | Explicit Paresh written authorization required | Must not be activated without explicit approval; remains deferred until authorized |
+| MAINAPP-PUBLIC-NOTFOUND-SESSION-CHROME-VISIBILITY-CHECK | Main App | candidate-triage | Triage-gated; not a closure blocker for HD-002 | Adjacent finding recorded separately: not-found screen showed Logout control in authenticated browser state. Likely surface: `App.tsx` + public/not-found shell components |
 
 ### 15.2 Marketing Pending Units
 
@@ -273,3 +278,13 @@ through Unit 053. No tracker DOCX was searched in the repo.*
 | FTR-SL-001 — Soft-launch aggregator directory readiness design | Main App | pending | No governance unit opened; required pre-outreach gate | Gate before first real supplier profile goes live in promotion context |
 | FTR-SL-002 — XDEP CAE + CRM + Main App integration strategy | Main App / CRM / CAE | pending | No formal integration contract; CAE and CRM are separate repos | First pilot cohort not yet blocked; required before broader soft-launch scaling |
 | TTP legal counsel feedback (FTR-LEGAL-001 / FTU-COMM-005) | All repos | pending | External counsel response pending | Blocks TradeTrust Pay direction and B2B financial guardrail enforcement |
+
+### 15.5 Standing Guardrails (Unchanged)
+
+| Guardrail | Status | Note |
+|---|---|---|
+| Buyer bridge activation | BLOCKED | Remains blocked; this HD-002 close does not authorize activation |
+| CRM live provisioning smoke | UNAUTHORIZED | Remains approval-gated; no additional smoke authorized without separate Paresh approval |
+| Reference/sample preview posture | PREVIEW_ONLY | Reference/sample previews remain preview-only and must not be represented as live supplier/product publication |
+| DB-backed demo/reference seeding | DEFERRED_APPROVAL_GATED | Remains deferred; requires separate explicit approval |
+| QA/test/sentinel exposure classification | RECLASSIFICATION_BLOCKED | Must not be reclassified as public demo/live content without separate policy decision |
