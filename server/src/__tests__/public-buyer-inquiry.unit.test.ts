@@ -525,9 +525,9 @@ describe('POST /api/public/inquiry/submit', () => {
   });
 
   /**
-   * INQ-023: Unknown source_surface → 202, afterJson source_surface normalized to 'DIRECT'.
+   * INQ-023: Unknown source_surface → 202, afterJson source_surface normalized to 'GENERAL_PUBLIC'.
    */
-  it('INQ-023: unknown source_surface → 202, source_surface DIRECT in afterJson', async () => {
+  it('INQ-023: unknown source_surface → 202, source_surface GENERAL_PUBLIC in afterJson', async () => {
     const response = await app.inject({
       method: 'POST',
       url: SUBMIT_URL,
@@ -537,7 +537,7 @@ describe('POST /api/public/inquiry/submit', () => {
     expect(writeAuditLog).toHaveBeenCalledOnce();
     const [, entry] = vi.mocked(writeAuditLog).mock.calls[0];
     const afterJson = entry.afterJson as Record<string, unknown>;
-    expect(afterJson.source_surface).toBe('DIRECT');
+    expect(afterJson.source_surface).toBe('GENERAL_PUBLIC');
   });
 
   /**
@@ -826,5 +826,35 @@ describe('POST /api/public/inquiry/submit', () => {
     expect(response.statusCode).toBe(202);
 
     vi.useRealTimers();
+  });
+
+  /**
+   * INQ-037: Message of exactly 500 chars (at-limit) → 202, accepted.
+   * Boundary test confirming the canonical limit is inclusive at 500.
+   */
+  it('INQ-037: message of exactly 500 chars (at-limit) → 202, accepted', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'GENERAL', message: 'A'.repeat(500) },
+    });
+    expect(response.statusCode).toBe(202);
+  });
+
+  /**
+   * INQ-038: Omitted source_surface → 202, afterJson source_surface defaults to 'GENERAL_PUBLIC'.
+   * Confirms the canonical default when no surface is provided by the client.
+   */
+  it('INQ-038: omitted source_surface → 202, source_surface GENERAL_PUBLIC in afterJson', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: SUBMIT_URL,
+      payload: { inquiry_category: 'GENERAL' },
+    });
+    expect(response.statusCode).toBe(202);
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    const [, entry] = vi.mocked(writeAuditLog).mock.calls[0];
+    const afterJson = entry.afterJson as Record<string, unknown>;
+    expect(afterJson.source_surface).toBe('GENERAL_PUBLIC');
   });
 });

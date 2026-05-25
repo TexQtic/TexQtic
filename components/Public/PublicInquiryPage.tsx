@@ -148,7 +148,7 @@ function GeneralInquiryForm({
         ...contextField,
         ...(geoBand.trim() ? { geo_band: geoBand.trim().slice(0, 100) } : {}),
         ...(volumeBand.trim() ? { volume_band: volumeBand.trim().slice(0, 100) } : {}),
-        ...(message.trim() ? { message: message.trim().slice(0, 2000) } : {}),
+        ...(message.trim() ? { message: message.trim().slice(0, 500) } : {}),
       });
       onSuccess();
     } catch (err) {
@@ -250,7 +250,7 @@ function GeneralInquiryForm({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Describe your sourcing interest or context."
-            maxLength={2000}
+            maxLength={500}
             rows={4}
             className="resize-none rounded-xl border border-[#d6e4e8] bg-[#f8fbfc] px-4 py-3 text-[14px] text-slate-800 placeholder:text-slate-400 focus:border-[#2f8094] focus:outline-none"
           />

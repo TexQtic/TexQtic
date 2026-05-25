@@ -1250,7 +1250,7 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
   //   • Context exclusivity: supplier_slug cannot coexist with product/category/collection context
   //   • message: PII-blocked (email/phone), HTML stripped, max 500 chars after sanitization
   //   • category_slug / collection_slug: fail-closed approval gate; unapproved slugs silently dropped
-  //   • source_surface: unknown values normalized to 'DIRECT'
+  //   • source_surface: unknown values normalized to 'GENERAL_PUBLIC'
   //   • Phase 1 payloads (supplier_slug required) remain fully backward-compatible
   //
   // No DB schema change: afterJson JSONB absorbs new context fields.
@@ -1298,7 +1298,7 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     collection_slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/).optional(),
     geo_band: z.string().min(1).max(100).optional(),
     volume_band: z.string().min(1).max(100).optional(),
-    message: z.string().max(2000).optional(),
+    message: z.string().max(500).optional(),
     // Transient: used only for buyer acknowledgement email; never persisted in afterJson.
     buyer_email: z.string().email().max(255).optional(),
   });
@@ -1353,10 +1353,10 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       }
     }
 
-    // Normalize source_surface; unknown values → 'DIRECT'
+    // Normalize source_surface; unknown values → 'GENERAL_PUBLIC'
     const source_surface = (rawSurface !== undefined && KNOWN_SOURCE_SURFACES.has(rawSurface))
       ? rawSurface
-      : 'DIRECT';
+      : 'GENERAL_PUBLIC';
 
     // Category / collection approval gate — fail-closed: unapproved slugs silently dropped
     const approvedCategorySlug = (category_slug !== undefined && APPROVED_CATEGORY_SLUGS.has(category_slug))
