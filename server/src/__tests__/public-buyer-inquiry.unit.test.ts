@@ -65,7 +65,9 @@ vi.mock('./internal/resolveDomain.js', () => ({
 // ─── Imports ─────────────────────────────────────────────────────────────────
 
 import Fastify, { type FastifyInstance } from 'fastify';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 import publicRoutes from '../routes/public.js';
 import { config } from '../config/index.js';
@@ -626,10 +628,11 @@ describe('POST /api/public/inquiry/submit', () => {
   // ── Notification loop tests (FTR-B2C-004 / PRIT-033) ──────────────────────
 
   /**
-   * INQ-028: Supplier inquiry with buyer_email → acknowledgement dispatch attempted.
-   * Supplier email resolves → supplier notification dispatched.
+   * INQ-028: buyer_email removed from endpoint schema.
+   * Legacy payload with buyer_email is silently stripped by Zod.
+   * Supplier notification still dispatched; buyer ack NOT dispatched.
    */
-  it('INQ-028: supplier inquiry with buyer_email → buyer + supplier notifications dispatched', async () => {
+  it('INQ-028: supplier inquiry (legacy buyer_email in payload) → supplier notified, buyer ack NOT dispatched', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(prisma.membership.findFirst as any).mockResolvedValueOnce({
       user: { email: 'owner@acme-textiles.example' },
@@ -647,12 +650,7 @@ describe('POST /api/public/inquiry/submit', () => {
     });
 
     expect(response.statusCode).toBe(202);
-    expect(sendBuyerInquiryAcknowledgementEmail).toHaveBeenCalledOnce();
-    expect(sendBuyerInquiryAcknowledgementEmail).toHaveBeenCalledWith(
-      'buyer@example.com',
-      expect.objectContaining({ inquiry_category: 'SOURCING_INTENT', supplier_slug: 'acme-textiles' }),
-      expect.objectContaining({ triggeredBy: 'system' }),
-    );
+    expect(sendBuyerInquiryAcknowledgementEmail).not.toHaveBeenCalled();
     expect(sendSupplierInquiryNotificationEmail).toHaveBeenCalledOnce();
     expect(sendSupplierInquiryNotificationEmail).toHaveBeenCalledWith(
       'owner@acme-textiles.example',
@@ -698,16 +696,17 @@ describe('POST /api/public/inquiry/submit', () => {
 
   /**
    * INQ-031: Email service throws → route still returns 202 (non-blocking).
+   * buyer_email removed from schema; sendSupplierInquiryNotificationEmail mock exercises the path.
    */
   it('INQ-031: email service throws → route still returns 202 (non-blocking)', async () => {
-    vi.mocked(sendBuyerInquiryAcknowledgementEmail).mockRejectedValueOnce(new Error('SMTP failure'));
+    vi.mocked(sendSupplierInquiryNotificationEmail).mockRejectedValueOnce(new Error('SMTP failure'));
 
     const response = await app.inject({
       method: 'POST',
       url: SUBMIT_URL,
       payload: {
+        supplier_slug: 'acme-textiles',
         inquiry_category: 'GENERAL',
-        buyer_email: 'buyer@example.com',
       },
     });
 
@@ -715,9 +714,10 @@ describe('POST /api/public/inquiry/submit', () => {
   });
 
   /**
-   * INQ-032: buyer_email field is NOT included in afterJson (transient only).
+   * INQ-032: buyer_email removed from schema — stripped by Zod, not persisted in afterJson,
+   * and sendBuyerInquiryAcknowledgementEmail is never called.
    */
-  it('INQ-032: buyer_email is NOT persisted in afterJson', async () => {
+  it('INQ-032: legacy buyer_email in payload — stripped by schema, not in afterJson, ack not dispatched', async () => {
     await app.inject({
       method: 'POST',
       url: SUBMIT_URL,
@@ -733,6 +733,7 @@ describe('POST /api/public/inquiry/submit', () => {
     const afterJson = entry.afterJson as Record<string, unknown>;
     expect(afterJson).not.toHaveProperty('buyer_email');
     expect(JSON.stringify(afterJson)).not.toContain('buyer@example.com');
+    expect(sendBuyerInquiryAcknowledgementEmail).not.toHaveBeenCalled();
   });
 
   /**
@@ -758,11 +759,10 @@ describe('POST /api/public/inquiry/submit', () => {
   // ── Awaited dispatch tests (serverless lifecycle fix) ─────────────────────
 
   /**
-   * INQ-034: General inquiry with buyer_email → buyer acknowledgement dispatched and
-   * awaited before 202 is returned.
-   * Verifies the dispatch executes synchronously relative to the response (not abandoned).
+   * INQ-034: General inquiry with legacy buyer_email in payload → buyer_email stripped by schema,
+   * sendBuyerInquiryAcknowledgementEmail NOT called, 202 returned.
    */
-  it('INQ-034: general inquiry with buyer_email → buyer acknowledgement dispatched before 202', async () => {
+  it('INQ-034: general inquiry with legacy buyer_email in payload → buyer ack NOT dispatched, 202', async () => {
     const response = await app.inject({
       method: 'POST',
       url: SUBMIT_URL,
@@ -770,12 +770,7 @@ describe('POST /api/public/inquiry/submit', () => {
     });
 
     expect(response.statusCode).toBe(202);
-    expect(sendBuyerInquiryAcknowledgementEmail).toHaveBeenCalledOnce();
-    expect(sendBuyerInquiryAcknowledgementEmail).toHaveBeenCalledWith(
-      'buyer@example.com',
-      expect.objectContaining({ inquiry_category: 'GENERAL' }),
-      expect.objectContaining({ triggeredBy: 'system' }),
-    );
+    expect(sendBuyerInquiryAcknowledgementEmail).not.toHaveBeenCalled();
   });
 
   /**
@@ -856,5 +851,25 @@ describe('POST /api/public/inquiry/submit', () => {
     const [, entry] = vi.mocked(writeAuditLog).mock.calls[0];
     const afterJson = entry.afterJson as Record<string, unknown>;
     expect(afterJson.source_surface).toBe('GENERAL_PUBLIC');
+  });
+});
+
+// ─── INQ-RL — Rate-limit regression guard (static source check) ───────────────
+
+describe('INQ-RL — /inquiry/submit rate-limit regression guard', () => {
+  const PUBLIC_ROUTE_PATH = path.resolve(__dirname, '../../src/routes/public.ts');
+  let src: string;
+
+  beforeAll(() => {
+    expect(fs.existsSync(PUBLIC_ROUTE_PATH), `public.ts not found: ${PUBLIC_ROUTE_PATH}`).toBe(true);
+    src = fs.readFileSync(PUBLIC_ROUTE_PATH, 'utf-8');
+  });
+
+  it('INQ-RL-01: /inquiry/submit route declares rateLimit with max: 20', () => {
+    expect(src).toMatch(/rateLimit\s*:\s*\{[\s\S]{0,60}max\s*:\s*20/);
+  });
+
+  it("INQ-RL-02: /inquiry/submit route declares timeWindow: '15 minutes'", () => {
+    expect(src).toContain("timeWindow: '15 minutes'");
   });
 });

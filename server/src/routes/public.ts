@@ -38,7 +38,6 @@ import { listPublicB2CProducts, getPublicB2CProductBySlug } from '../services/pu
 import { APPROVED_CATEGORY_SLUGS } from '../config/publicB2CCategoryPageSlugs.js';
 import { APPROVED_COLLECTION_SLUGS } from '../config/publicCollectionSlugs.js';
 import {
-  sendBuyerInquiryAcknowledgementEmail,
   sendSupplierInquiryNotificationEmail,
   sendAdminInquiryAlertEmail,
   type InquiryNotificationContext,
@@ -1299,8 +1298,6 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     geo_band: z.string().min(1).max(100).optional(),
     volume_band: z.string().min(1).max(100).optional(),
     message: z.string().max(500).optional(),
-    // Transient: used only for buyer acknowledgement email; never persisted in afterJson.
-    buyer_email: z.string().email().max(255).optional(),
   });
 
   fastify.post('/inquiry/submit', {
@@ -1323,7 +1320,6 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       geo_band,
       volume_band,
       message: rawMessage,
-      buyer_email,
     } = parseResult.data;
 
     // Context exclusivity: supplier_slug cannot coexist with product/category/collection context
@@ -1430,12 +1426,6 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
 
         const _dispatches: Array<Promise<unknown>> = [];
 
-        if (buyer_email) {
-          _dispatches.push(
-            sendBuyerInquiryAcknowledgementEmail(buyer_email, _notifCtxSupplier, { triggeredBy: 'system' })
-              .catch((err: unknown) => fastify.log.warn({ err }, '[buyer-inquiry] Buyer acknowledgement failed (non-blocking)')),
-          );
-        }
         if (_supplierEmail) {
           _dispatches.push(
             sendSupplierInquiryNotificationEmail(_supplierEmail, _notifCtxSupplier, { triggeredBy: 'system', tenantId: _supplierOrgId })
@@ -1460,7 +1450,6 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
             inquiry_category,
             supplier_slug,
             orgId: _supplierOrgId,
-            buyerEmailPresent: !!buyer_email,
             supplierEmailResolved: !!_supplierEmail,
             adminEmailConfigured: !!_adminEmail,
           },
@@ -1511,12 +1500,6 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       try {
         const _dispatches: Array<Promise<unknown>> = [];
 
-        if (buyer_email) {
-          _dispatches.push(
-            sendBuyerInquiryAcknowledgementEmail(buyer_email, _notifCtxGeneral, { triggeredBy: 'system' })
-              .catch((err: unknown) => fastify.log.warn({ err }, '[buyer-inquiry] General buyer acknowledgement failed (non-blocking)')),
-          );
-        }
         const _adminEmail = config.ADMIN_NOTIFICATION_EMAIL;
         if (_adminEmail) {
           _dispatches.push(
@@ -1533,7 +1516,6 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
         fastify.log.info(
           {
             inquiry_category,
-            buyerEmailPresent: !!buyer_email,
             adminEmailConfigured: !!_adminEmail,
           },
           '[buyer-inquiry] General-path notification dispatch complete',
