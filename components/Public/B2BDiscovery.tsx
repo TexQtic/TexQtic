@@ -625,7 +625,7 @@ export function B2BDiscoveryPage({ onBack: _onBack, onSignIn, onListBusiness, on
             Designed for safe public visibility
           </h2>
           <p className="mt-4 max-w-4xl text-base leading-7 text-slate-600">
-            Public B2B discovery only shows approved, public-safe business information. Private pricing, negotiation, documents, internal scores, CRM status, and operational details remain protected inside authenticated workflows.
+            Public B2B discovery only shows approved, public-safe business information. Private pricing, negotiation, documents, and detailed business data remain protected inside authenticated workflows.
           </p>
 
           <div className="mt-8 grid gap-5 md:grid-cols-3">

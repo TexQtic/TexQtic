@@ -158,11 +158,11 @@ export function PublicTrustLandingStub({
             />
             <SectionCard
               title="Protected operational workflows"
-              body="Compliance review, verification decisions, internal audit state, and supplier operations continue only after authenticated access."
+              body="Compliance review, verification decisions, audit records, and supplier operations continue only after authenticated access."
             />
             <SectionCard
-              title="Protected identity and tenant data"
-              body="Org IDs, tenant IDs, user IDs, internal passport identifiers, and private operational metadata remain out of public view."
+              title="Protected account and identity data"
+              body="Account credentials, user identities, and private platform records remain out of public view."
             />
           </div>
         </section>
