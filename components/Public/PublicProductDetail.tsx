@@ -113,7 +113,7 @@ function AuthenticatedContinuationPanel({
       <p className="mt-3 text-sm leading-6 text-slate-600">
         {isReferencePreview
           ? 'Sign in to see how authenticated sourcing and product workflows continue after launch-preview.'
-          : 'Sign in to save this product, continue checkout, request details, or access authenticated buyer workflows.'}
+          : 'Sign in to save this product, review sourcing details, or access authenticated buyer workflows.'}
       </p>
       <div className="mt-4 flex flex-wrap gap-3">
         <button

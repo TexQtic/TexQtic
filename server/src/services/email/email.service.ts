@@ -309,7 +309,7 @@ export async function sendBuyerInquiryAcknowledgementEmail(
   const lines = [
     'Your inquiry has been recorded by TexQtic.',
     `Inquiry type: ${category}${supplierLine}.`,
-    'The TexQtic team will review the request and coordinate next steps where appropriate.',
+    'The TexQtic team may follow up based on availability.',
   ];
   const { html, text } = buildInquiryEmailBodies({
     heading: 'We received your TexQtic inquiry',
@@ -344,7 +344,7 @@ export async function sendSupplierInquiryNotificationEmail(
     `Inquiry type: ${category}.`,
     ...(ctx.geo_band ? [`Geo band: ${ctx.geo_band}.`] : []),
     ...(ctx.volume_band ? [`Volume band: ${ctx.volume_band}.`] : []),
-    'Log in to your TexQtic workspace to review the context and follow the current follow-up process.',
+    'Log in to your TexQtic workspace to review the inquiry context.',
   ];
   const { html, text } = buildInquiryEmailBodies({
     heading: 'New sourcing interest on your TexQtic profile',

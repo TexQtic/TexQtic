@@ -7244,6 +7244,7 @@ const App: React.FC = () => {
           <B2CBrowsePage
             nav={{ ...publicNavBase, activeSection: 'products' }}
             onBack={() => setAppState('PUBLIC_ENTRY')}
+            onExploreB2B={() => setAppState('PUBLIC_B2B_DISCOVERY')}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
           />
         );

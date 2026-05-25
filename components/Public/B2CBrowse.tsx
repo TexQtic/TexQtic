@@ -18,6 +18,7 @@ import {
 
 interface B2CBrowsePageProps {
   readonly onBack: () => void;
+  readonly onExploreB2B?: () => void;
   readonly onSignIn: () => void;
   readonly nav: PublicNavbarProps;
 }
@@ -91,7 +92,7 @@ const CATEGORY_CARDS = B2C_CATEGORY_FILTER_VALUES.map((value) => ({
 
 // â”€â”€ page component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-export function B2CBrowsePage({ onBack, onSignIn, nav }: B2CBrowsePageProps) {
+export function B2CBrowsePage({ onBack, onExploreB2B, onSignIn, nav }: B2CBrowsePageProps) {
   const [storefronts, setStorefronts] = useState<PublicB2CStorefrontEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -185,7 +186,7 @@ export function B2CBrowsePage({ onBack, onSignIn, nav }: B2CBrowsePageProps) {
             </a>
             <button
               type="button"
-              onClick={onBack}
+              onClick={onExploreB2B ?? onBack}
               className="inline-flex items-center justify-center rounded-full border border-slate-600 px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-300 transition hover:border-slate-400 hover:text-white"
             >
               Explore B2B Network
@@ -378,7 +379,7 @@ export function B2CBrowsePage({ onBack, onSignIn, nav }: B2CBrowsePageProps) {
             <h2 className="mt-3 text-xl font-semibold text-[#0a2036]">
               {usingReferencePreview
                 ? 'Sign in to see how authenticated product workflows continue after launch-preview.'
-                : 'Sign in to save products, continue checkout, request details, or access authenticated buyer workflows.'}
+                : 'Sign in to save products, review sourcing details, or access authenticated buyer workflows.'}
             </h2>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <button
