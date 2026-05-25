@@ -655,6 +655,43 @@ The following future governance units are recommended and recorded in FUTURE-TOD
 
 ---
 
+---
+
+## §23 Network-Building State Update — Through Unit 053
+
+**Recorded:** 2026-05-25 — `TLRH-SOFT-LAUNCH-CROSSREPO-STATE-SYNC-004`
+
+### 1. Completed / accepted preview posture
+
+- App-side static reference previews are live and labeled.
+- Marketing preview routing is accepted for Home, Trust, Industries/Textiles, and Brands.
+- Brands secondary preview CTA is accepted through Unit 053.
+- CRM provisioning observability panel and timeline metadata are accepted for operator visibility.
+
+### 2. What this enables
+
+- Investor, partner, press, and early stakeholder preview of how TexQtic works.
+- Preview-only routing from texqtic.com to app.texqtic.com.
+- Public-safe reference discovery experience without claiming live supply.
+
+### 3. Still blocked / deferred
+
+- Buyer bridge remains blocked.
+- No active buyer inquiry path is authorized from reference preview surfaces.
+- QA/test/sentinel data remains blocked.
+- DB-backed demo/reference seeding remains deferred.
+- Legal/supplier-notification/real-data gates remain pending.
+- No additional live CRM provisioning smoke is authorized without explicit Paresh approval.
+
+### 4. Current soft-launch posture
+
+- Presentable for preview and storytelling.
+- Not ready for live buyer outreach.
+- Not ready to imply real supplier onboarding or live marketplace readiness.
+- Supplier onboarding and buyer inquiry activation require separate approval-gated units.
+
+---
+
 *Governance document only. No implementation authorization. No family cycle opened.*
 *Layer 0 posture unchanged: `HOLD_FOR_AUTHORIZATION` / `HOLD_FOR_COUNSEL_FEEDBACK`.*
-*Last updated: 2026-05-19 — `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001`*
+*Last updated: 2026-05-25 — `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001`, `TLRH-SOFT-LAUNCH-CROSSREPO-STATE-SYNC-004`*

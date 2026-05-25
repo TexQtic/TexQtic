@@ -3,7 +3,7 @@
 **Hub:** `governance/launch-readiness/`
 **Status:** SKELETON — PENDING POPULATION
 **Population unit:** `TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-POPULATION-001`
-**Last updated:** 2026-05-19 (skeleton created)
+**Last updated:** 2026-05-25 — `TLRH-PUBLIC-SEO-REFERENCE-PREVIEW-GUARDRAIL-SYNC-005A`
 **Design authority:** `TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-DESIGN-001`
 
 ---
@@ -176,3 +176,23 @@ a verification table confirming each gate passes before marking the unit `VERIFI
 |---|---|---|
 | 2026-05-19 | Skeleton created; live pages from PROD-AUDIT-002 and sitemap unit; deferred units from sitemap unit close | Copilot/Design unit |
 | 2026-07-14 | Added SU-4 (canonical impl), SU-5 (product JSON-LD), SU-6 (supplier JSON-LD) to §5; updated dependency note; added §9 new public page SEO entry checklist (8 gates) | `PUBLIC-SEO-PENDING-WORK-REGISTER-SYNC-001` |
+| 2026-05-25 | Added Reference Preview SEO Guardrail section; standing rule for future sitemap/indexability work | `TLRH-PUBLIC-SEO-REFERENCE-PREVIEW-GUARDRAIL-SYNC-005A` |
+
+---
+
+## Reference Preview SEO Guardrail — 2026-05-25
+
+**Recorded:** 2026-05-25 — `TLRH-PUBLIC-SEO-REFERENCE-PREVIEW-GUARDRAIL-SYNC-005A`
+
+Reference-preview pages (app-side static reference previews and Marketing preview routing) are public preview surfaces. They are static/config-backed and represent preview posture, not live commercial products or suppliers.
+
+**Rules for future sitemap / indexability work:**
+
+- Future sitemap expansion or indexability units must not accidentally promote reference-preview slugs as live commercial pages.
+- Before any sitemap expansion or indexability unit opens, verify how reference-preview slugs are handled.
+- Reference-preview slugs must either be excluded from sitemap/indexation, or be handled according to an explicitly approved SEO policy.
+- No reference-preview content should be described in SEO copy as live products, live suppliers, live inventory, verified marketplace supply, buyer-ready supply, or order-ready commercial offers.
+
+**Scope of this guardrail:**
+
+This is a standing guardrail for future SEO/page expansion work. It does not confirm that noindex is already fully implemented for reference-preview routes; that must be verified in a dedicated unit before it can be claimed.

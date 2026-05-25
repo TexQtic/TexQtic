@@ -129,6 +129,7 @@ All items are drawn from existing governance sources. No new classification is i
 | PRIT-034 | Public legal pages bundle — privacy policy, terms page, cookie stance, DSAR path | MAIN | FAM-03 / standalone unit | MVP_CRITICAL | PARESH_CONFIRMED | NOT_ASSESSED | PARESH_CONFIRMED (2026-07-14) | P1 |
 | PRIT-035 | Product analytics and funnel tracking infrastructure | MAIN | FAM-10 / FAM-01 / FAM-02 | PILOT_REQUIRED | PARESH_CONFIRMED | NOT_ASSESSED | PARESH_CONFIRMED (2026-07-14) | P2 |
 | PRIT-036 | SMTP provider selection and Vercel production environment configuration (CU-02) | MAIN | FAM-10 / standalone ops unit | PRODUCTION_VERIFIED | `SOFT-LAUNCH-F1-P1A-SMTP-POSTMARK-OPS-RUNTIME-VERIFY` | RESOLVED | RESOLVED | P0 (RESOLVED) |
+| PRIT-037 | Buyer bridge from reference preview: activation gate | MAIN | FAM-03 / standalone unit | GOVERNANCE_CLAIM_ONLY | PARKED | OPEN | P1 provisional | P1 |
 
 ---
 
@@ -172,6 +173,7 @@ All items are drawn from existing governance sources. No new classification is i
 | PRIT-034 | MISSING-FAMILY-AND-FEATURE-SCAN.md (§6) — no /privacy page, no /terms page, no cookie consent stance, no DSAR path in repo; D-5 MVP-MUST-HAVES NOT_ASSESSED P1 | Legal content requires Paresh/counsel approval; no tech gate for front-end pages; GDPR/DPDP stance needed for any analytics tooling (PRIT-035) | NO (standalone pages) | YES — Paresh + counsel: legal content, DPDP/GDPR stance, cookie/analytics consent approach | MISSING-FAMILY-AND-FEATURE-SCAN.md | Confirm with Paresh before or at FAM-03 cycle opening; can be standalone unit. **PRODUCTION-LAUNCH-FOUNDATION (2026-05-22) — `PRODUCTION-INTENT-STAGED-ACTIVATION-GOVERNANCE-SYNC-001`**: Legal documentation must be designed as production-launch ready in content model, route architecture, naming, versioning, and legal scope (D-025). Staged activation allowed; design must be production-correct from the start. Next: `PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001` — architecture design artifact before legal content drafting or implementation. **DESIGN_ARTIFACT_CREATED (2026-05-22) — `PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001`**: Canonical source-of-truth model (git-tracked markdown in texqtic.com marketing repo), route architecture (texqtic.com/legal/* as canonical host; app.texqtic.com links out), legal page hierarchy (12 first-wave documents L-001–L-012; 7 activation-gated groups), versioning model, surface-to-document mapping, inquiry/email truth boundary, demo/QA data boundary, review dependencies, and implementation sequence (PRIT-034-002 through PRIT-034-006) defined. Next: `PRODUCTION-LAUNCH-LEGAL-CONTENT-DRAFT-PRIT-034-002`. PRIT-034 remains OPEN — advances to DESIGN_ARTIFACT_CREATED. |
 | PRIT-035 | MISSING-FAMILY-AND-FEATURE-SCAN.md (§6) — no analytics service in repo; buyer_inquiry.created.v1 event defined but not emitted; no funnel tracking exists | Paresh must choose tooling; PRIT-034 (cookie consent stance) must be decided first if analytics captures PII | NO | YES — Paresh to decide tooling (GA4 / Mixpanel / Segment / PostHog / other) | MISSING-FAMILY-AND-FEATURE-SCAN.md | Confirm tooling with Paresh; infrastructure in FAM-10; event instrumentation in FAM-01/FAM-02/FAM-03 cycles |
 | PRIT-036 | `BLIND-SPOT-DEPENDENCY-RISK-REGISTER.md` (HD-001-SMTP) + `SOFT-LAUNCH-RT4-D-FINAL-IMPLEMENTATION-PRIORITY-SYNTHESIS.md` (CU-02, T0-2, P0). email.service.ts code complete (G-012, nodemailer SMTP, generic — not Postmark-specific). All 4 SMTP env vars absent from Vercel production (confirmed 2026-05-20, HD-001-SMTP-INFRA-GAP-001). April 17, 2026 writeback stated Postmark was configured + SENT verified — STALE; discrepancy confirmed. Postmark external-recipient delivery was BLOCKED (provider review) as of Apr 17; current status unknown. | FTR-B2C-004 (PRIT-033) depends on SMTP being operational first. No code changes needed to unblock registered-user flows — ops-only action. | YES — email.service.ts, config/index.ts already inspected in SOFT-LAUNCH-F1-P1-SMTP-POSTMARK-REPO-TRUTH-DESIGN-PLAN; no further source inspection needed | YES — Paresh must: (1) check Postmark account review status, (2) select provider (Postmark / Resend / SendGrid / SES), (3) set 4 Vercel production env vars | `SOFT-LAUNCH-F1-P1-SMTP-POSTMARK-REPO-TRUTH-DESIGN-PLAN.md` | **RESOLVED (2026-05-22)** — Postmark selected as SMTP provider. SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_PORT set in Vercel production. DKIM and return-path verified. Production email delivery confirmed (general inquiry buyer ack + admin alert runtime-delivered) via `SOFT-LAUNCH-F1-P1B-RV-ADMIN-EMAIL-ENV-VERIFY`. Minimum inquiry notification loop partially implemented (FTR-B2C-004 PARTIAL). HD-001-SMTP CLOSED. No further ops action required. |
+| PRIT-037 | DECISION-PARKING-LOT D-026 (PARKED — TRIGGER_CONDITIONS_NOT_MET) | All four D-026 trigger gates pending: (1) real supplier/product data readiness; (2) FTR-B2C-005 supplier-context inquiry notification readiness; (3) PRIT-034 legal/privacy/terms bundle deployed or accepted for launch scope; (4) explicit Paresh approval. | NO — governance gate only | YES — D-026; Paresh decision required | DECISION-PARKING-LOT.md (D-026) | No implementation until all four D-026 trigger conditions clear and Paresh explicitly approves buyer bridge activation. Reference previews remain preview-only. |
 
 ---
 
@@ -232,7 +234,7 @@ See §14 for the full decision table. Summary:
 | PRIT-018 | Confirmed POST_MVP; pilot can launch free/manual; commercial packaging not required for MVP | POST_MVP_CONFIRMED |
 | PRIT-019 | Confirmed opt-in only during pilot; no default indexing of supplier profiles; policy direction partial | PARESH_CONFIRMED |
 
-**No UNCONFIRMED items remain in PRIT-011–019.** Next available PRIT ID: PRIT-037 (PRIT-036 added by SOFT-LAUNCH-F1-P1-SMTP-POSTMARK-REPO-TRUTH-DESIGN-PLAN, 2026-07-14).
+**No UNCONFIRMED items remain in PRIT-011–019.** Next available PRIT ID: PRIT-038 (PRIT-037 added by TLRH-PRIT037-BUYER-BRIDGE-REQ-SYNC-003D, 2026-05-25).
 
 > **✅ PRIT-032 THROUGH PRIT-035 ADDED VIA TEXQTIC-LAUNCH-READINESS-MISSING-FAMILY-AND-FEATURE-SCAN-001 (2026-07-14)**
 >
@@ -266,6 +268,17 @@ See §14 for the full decision table. Summary:
 > both runtime-delivered. HD-001-SMTP CLOSED. FTR-B2C-004 minimum notification loop partially
 > implemented (buyer ack + admin alert production-verified; supplier-context path structurally
 > implemented but not production runtime verified — see FTR-B2C-005). PRIT-036 status: RESOLVED.
+>
+> **✅ PRIT-037 ADDED VIA TLRH-PRIT037-BUYER-BRIDGE-REQ-SYNC-003D (2026-05-25)**
+>
+> PRIT-037 records the buyer bridge from reference preview activation gate. Static app-side
+> reference previews and Marketing preview routing are production accepted through Unit 053
+> but remain preview-only. Buyer bridge activation is blocked pending all four D-026 trigger
+> conditions: (1) real supplier/product data readiness; (2) FTR-B2C-005 supplier-context
+> inquiry notification readiness; (3) PRIT-034 legal/privacy/terms bundle deployed or accepted
+> for launch scope; (4) explicit Paresh written approval. No implementation authorized.
+> Reference previews remain preview-only. No commercial supply implied.
+> Next available PRIT ID: PRIT-038.
 >
 > **✅ PRIT-028 THROUGH PRIT-031 ADDED VIA TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 (2026-05-19)**
 >
@@ -391,6 +404,7 @@ classification before the relevant family cycle opens.
 | 22 | PRIT-029, PRIT-031 recorded as DESIGN_GATED pending parked decisions D-011 through D-015 | ✅ CONFIRMED — §15.3 |
 | 23 | Commerce methodology document created: COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY.md | ✅ CONFIRMED — see TLRH |
 | 24 | No implementation authorized by §15 or methodology document | ✅ CONFIRMED — planning only |
+| 25 | PRIT-037 added: buyer bridge from reference preview activation gate (OPEN, P1 provisional); linked to D-026 (PARKED — TRIGGER_CONDITIONS_NOT_MET); no implementation authorized | ✅ COMPLETE — TLRH-PRIT037-BUYER-BRIDGE-REQ-SYNC-003D |
 
 ---
 
@@ -497,6 +511,7 @@ All items remain `DESIGN_GATED` with `PARESH_CONFIRMED_AS_PLANNED` confirmation 
 | 2026-05-22 | TLRH-EMAIL-IMPLEMENTATION-SYNC-001 | PRIT-036 resolved: Postmark SMTP operational in production; DKIM verified; buyer ack + admin alert runtime-delivered. PRIT-036 status updated → RESOLVED in §5A and §5B. PRIT-033 §5B next action updated to reflect minimum notification loop partially implemented (buyer ack + admin alert done; supplier-context pending). §7 resolved note added. |
 | 2026-05-22 | PRODUCTION-INTENT-STAGED-ACTIVATION-GOVERNANCE-SYNC-001 | PRIT-034 §5B Next Action updated: production-launch architecture framing confirmed; legal documentation must be designed production-launch ready from the start (D-025). §6 confirmation row added for PRIT-034. Next design artifact: PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001. |
 | 2026-05-22 | PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001 | PRIT-034 §5B Next Action updated: design artifact created; source-of-truth model, route architecture, legal page hierarchy, versioning, surface mapping, review dependencies, and implementation sequence defined. §6 confirmation row added. PRIT-034 remains OPEN — advances to DESIGN_ARTIFACT_CREATED. Next: PRODUCTION-LAUNCH-LEGAL-CONTENT-DRAFT-PRIT-034-002. |
+| 2026-05-25 | TLRH-PRIT037-BUYER-BRIDGE-REQ-SYNC-003D | PRIT-037 added: Buyer bridge from reference preview activation gate (OPEN, P1 provisional). Linked to DECISION-PARKING-LOT D-026 (PARKED — TRIGGER_CONDITIONS_NOT_MET). Reference previews remain preview-only; all four D-026 trigger conditions pending; no buyer inquiry path active; no commercial supply implied. Next available PRIT ID: PRIT-038. |
 
 ---
 

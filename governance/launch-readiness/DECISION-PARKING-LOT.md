@@ -331,6 +331,38 @@ Each entry has:
 
 ---
 
+### D-026: Reference Preview Buyer Bridge Activation
+
+| Field | Value |
+|---|---|
+| **Decision question** | Under what conditions should reference-preview surfaces become active buyer inquiry surfaces? |
+| **Context** | Static app-side reference previews and Marketing preview routing are production accepted through Unit 053, but they remain preview-only. Brands secondary preview CTA routes users to the app preview hub, not a live marketplace or buyer bridge. |
+| **Why not ready** | Real supplier/product data readiness, supplier-context inquiry notification readiness, legal/privacy/terms readiness, and explicit Paresh approval remain pending. |
+| **Trigger conditions** | 1. Real supplier/product data readiness approved. 2. Supplier-context inquiry notification readiness verified (FTR-B2C-005). 3. Legal/privacy/terms bundle deployed or explicitly accepted for launch scope (PRIT-034). 4. Paresh explicitly approves buyer bridge activation. |
+| **Impact of delaying** | Reference preview surfaces remain preview-only. No buyer inquiry path is active. No commercial supply is implied by current preview state. |
+| **Who decides** | Paresh |
+| **Priority** | P1 |
+| **Status** | PARKED — TRIGGER_CONDITIONS_NOT_MET |
+| **Cross-reference** | PRIT-037, FUTURE-TODO-REGISTER §15, external tracker through Unit 053 |
+
+---
+
+### D-027: Live CRM Provisioning Smoke Authorization
+
+| Field | Value |
+|---|---|
+| **Decision question** | Under what conditions is live CRM provisioning smoke — system-triggered provisioning events flowing from CRM to the platform — authorized? |
+| **Context** | CRM provisioning observability is production accepted through Unit 053 as cross-repo launch-readiness status. This means operator visibility and timeline metadata are accepted. It does not authorize live CRM-system-triggered provisioning mutations. The CRM → Platform integration path (WEBHOOK-007 / PRIT-020) remains design-gated. |
+| **Rule** | No additional live CRM provisioning smoke is authorized without explicit Paresh written approval. Observability and monitoring are permitted; live provisioning mutations are not. |
+| **Why not ready** | WEBHOOK-007 contract and PRIT-020 design gate are not cleared. Any CRM-triggered org creation, entitlement write, tenant mutation, provisioning event, or production smoke could create real operational side effects. |
+| **Trigger condition** | Paresh explicitly authorizes a specific, scoped live CRM provisioning smoke in writing after WEBHOOK-007 contract is defined and PRIT-020 design gate clears. |
+| **Who decides** | Paresh |
+| **Priority** | P1 |
+| **Status** | PARKED — APPROVAL_REQUIRED |
+| **Cross-reference** | PRIT-020, FUTURE-TODO-REGISTER §15.3, external tracker through Unit 053 |
+
+---
+
 ## 4. Decided Items (History)
 
 | ID | Decision question | Outcome | Decided | Date |
@@ -353,3 +385,5 @@ Each entry has:
 | 2026-05-19 | Added D-016 (B2B financial boundary soft-launch confirmation — CONFIRMED_BOUNDARY) and D-017 (free/manual provisioning model — CONFIRMED); both confirmed via `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` Decisions F and G | `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` |
 | 2026-07-14 | Added D-018 (PRIT-033 Stage 2 supplier inquiry inbox family assignment — FAM-03 vs FAM-08, PARKED pending FAM-06 auth audit) | `TEXQTIC-FIRST-FAMILY-CYCLE-SELECTION-001` |
 | 2026-07-22 | D-005 (SEO Domain Canonical Strategy) CLOSED: Option F marketing repo lock satisfies trigger condition; app.texqtic.com confirmed as canonical domain for all dynamic marketplace public pages; no redirect policy change needed; existing sitemap.xml, robots.txt, and canonical tag implementation confirmed correct by repo-truth inspection; strategy artifact created. HIST-D-004 added to Decided Items history. | `PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001` |
+| 2026-05-25 | Added D-026 (Reference Preview Buyer Bridge Activation — PARKED, TRIGGER_CONDITIONS_NOT_MET): static app-side reference previews and Marketing preview routing are production accepted through Unit 053 but remain preview-only; all four activation gates pending (real supplier/product data readiness, FTR-B2C-005 supplier-context notification, PRIT-034 legal/privacy/terms bundle, explicit Paresh approval). No buyer inquiry path is active; no commercial supply implied by current preview state. | `TLRH-DECISION-D026-BUYER-BRIDGE-SYNC-003A` |
+| 2026-05-25 | Added D-027 (Live CRM Provisioning Smoke Authorization — PARKED, APPROVAL_REQUIRED): CRM provisioning observability is production accepted through Unit 053 but does not authorize live CRM-system-triggered provisioning mutations; WEBHOOK-007 / PRIT-020 remain design-gated; no further live CRM provisioning smoke authorized without explicit Paresh written approval. | `TLRH-DECISION-D027-CRM-SMOKE-GATE-SYNC-003C` |

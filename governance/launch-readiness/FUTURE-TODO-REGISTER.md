@@ -3,7 +3,7 @@
 **Hub:** `governance/launch-readiness/`
 **Status:** SKELETON — PENDING POPULATION
 **Population unit:** `TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-POPULATION-001`
-**Last updated:** 2026-05-22 (PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001 design artifact created: FTR-FAM-004 status → DESIGN_ARTIFACT_CREATED — HOLD_FOR_CONTENT_DRAFT. Prior: PRODUCTION-INTENT-STAGED-ACTIVATION-GOVERNANCE-SYNC-001: FTR-FAM-002 production-intent framing updated; FTR-FAM-004 added; HIST-007 added. Prior: email implementation truth sync — `TLRH-EMAIL-IMPLEMENTATION-SYNC-001`; FTR-B2C-004 PARTIAL; FTR-SL-003 PARTIAL; FTR-FAM-003 PARTIAL; HD-001-SMTP RESOLVED; new FTR-B2C-005, FTR-AUTH-004, FTR-OPS-004 added)
+**Last updated:** 2026-05-25 (HIST-008–HIST-011 added through Unit 053; §15 repo-wise pending-unit register added; `TLRH-FUTURE-TODO-REPOWISE-PENDING-SYNC-002`. Prior: PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001 design artifact created: FTR-FAM-004 status → DESIGN_ARTIFACT_CREATED — HOLD_FOR_CONTENT_DRAFT. Prior: PRODUCTION-INTENT-STAGED-ACTIVATION-GOVERNANCE-SYNC-001: FTR-FAM-002 production-intent framing updated; FTR-FAM-004 added; HIST-007 added. Prior: email implementation truth sync — `TLRH-EMAIL-IMPLEMENTATION-SYNC-001`; FTR-B2C-004 PARTIAL; FTR-SL-003 PARTIAL; FTR-FAM-003 PARTIAL; HD-001-SMTP RESOLVED; new FTR-B2C-005, FTR-AUTH-004, FTR-OPS-004 added)
 **Design authority:** `TEXQTIC-LAUNCH-READINESS-PLANNING-HUB-DESIGN-001`
 
 ---
@@ -151,6 +151,10 @@ Each item has:
 | HIST-005 | RFQ issue Tx timeout fix | PRODUCTION_VERIFIED (2026-06-08) | TEXQTIC-NC-PHASE1-POOL-RFQ-ISSUE-TX-TIMEOUT-FIX-001 |
 | HIST-006 | FTR-B2C-004 / FTR-SL-003 minimum inquiry notification loop (buyer ack + admin alert paths) | PARTIAL — General inquiry buyer acknowledgement email + admin alert email runtime-verified in production (2026-05-22). Supplier-context path structurally implemented; not yet production runtime verified. See FTR-B2C-004 (PARTIAL), FTR-B2C-005 (OPEN). | F1-P1B chain + `SOFT-LAUNCH-F1-P1B-RV-ADMIN-EMAIL-ENV-VERIFY` + `SOFT-LAUNCH-F1-P6A-BRANDED-INQUIRY-EMAIL-TEMPLATE-SHELL` |
 | HIST-007 | Production-intent staged-activation rule (D-025) recorded in TECS Doctrine and TLRH | GOVERNANCE_SYNC_COMPLETE (2026-05-22) — D-025 added to DOCTRINE.md v1.14. FTR-FAM-002 updated to PRODUCTION_INTENT_ARCHITECTURE_REQUIRED. FTR-FAM-004 added (architecture design artifact before legal content). PRIT-034 §5B Next Action updated. BS-008 added (production shortcut risk, MITIGATED_BY_DOCTRINE). Unit artifact: `PRODUCTION-INTENT-STAGED-ACTIVATION-GOVERNANCE-SYNC-001`. | `PRODUCTION-INTENT-STAGED-ACTIVATION-GOVERNANCE-SYNC-001` |
+| HIST-008 | Gate E QA sentinel filter applied to public projections | PRODUCTION_VERIFIED (2026-05-25) — Gate E sentinel exclusion applied across public browse and discovery projections. Static-only reference-supplier rows cleanly excluded from all public surfaces. | `TLRH-FUTURE-TODO-REPOWISE-PENDING-SYNC-002` |
+| HIST-009 | Static reference preview layer production accepted | PRODUCTION_ACCEPTED (2026-05-25) — App-side static reference supplier/product preview layer accepted in production. Preview-only; not live commercial supply or live marketplace data. | `TLRH-FUTURE-TODO-REPOWISE-PENDING-SYNC-002` |
+| HIST-010 | Marketing preview routing production accepted through Unit 053 | PRODUCTION_ACCEPTED (2026-05-25) — Marketing preview routing accepted for Home, Trust, Industries/Textiles, and Brands pages. All routing remains preview-only. Cross-repo status only; Marketing repo artifacts only — no Marketing commits in Main App repo. | `TLRH-FUTURE-TODO-REPOWISE-PENDING-SYNC-002` |
+| HIST-011 | CRM provisioning observability production accepted | PRODUCTION_ACCEPTED (2026-05-25) — CRM provisioning observability panel and timeline metadata accepted in production. Cross-repo status only; CRM repo artifacts only — no CRM commits in Main App repo. | `TLRH-FUTURE-TODO-REPOWISE-PENDING-SYNC-002` |
 
 ---
 
@@ -173,6 +177,7 @@ Each item has:
 | 2026-05-22 | FTR-B2C-004 updated DESIGN_GATED/OPEN → PARTIAL: general inquiry buyer ack + admin alert runtime-verified in production (F1-P1B chain). Supplier-context notification path implemented but not production runtime verified. FTR-B2C-005 added (supplier-context verification). FTR-SL-003 and FTR-FAM-003 updated to PARTIAL accordingly. FTR-AUTH-004 added (auth email branded shell, F1-P6C scope). FTR-OPS-004 added (Postmark delivery webhook). HIST-006 added. | `TLRH-EMAIL-IMPLEMENTATION-SYNC-001` |
 | 2026-05-22 | FTR-FAM-002 updated: production-intent architecture framing added (D-025); status → PRODUCTION_INTENT_ARCHITECTURE_REQUIRED — HOLD_FOR_AUTHORIZATION. FTR-FAM-004 added: PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001 architecture design artifact. HIST-007 added. | `PRODUCTION-INTENT-STAGED-ACTIVATION-GOVERNANCE-SYNC-001` |
 | 2026-05-22 | FTR-FAM-004 updated: design artifact `PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001` created. Status → DESIGN_ARTIFACT_CREATED — HOLD_FOR_CONTENT_DRAFT. Next: PRODUCTION-LAUNCH-LEGAL-CONTENT-DRAFT-PRIT-034-002. | `PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001` |
+| 2026-05-25 | HIST-008–HIST-011 added: Gate E QA sentinel filter (PRODUCTION_VERIFIED), static reference preview layer (PRODUCTION_ACCEPTED), Marketing preview routing (PRODUCTION_ACCEPTED, cross-repo only), CRM provisioning observability (PRODUCTION_ACCEPTED, cross-repo only) — all through Unit 053. §15 repo-wise pending-unit register added: Main App, Marketing, CRM, and cross-repo/product governance pending units recorded from external tracker context. Buyer bridge remains BLOCKED. Live CRM smoke approval-gated. Tracker source: external GPT-maintained; no tracker/pending-units DOCX searched in repo. | `TLRH-FUTURE-TODO-REPOWISE-PENDING-SYNC-002` |
 
 ---
 
@@ -218,3 +223,53 @@ and standalone soft-launch prerequisite units required before the Surat pilot so
 | FTR-FAM-002 | PUBLIC-LEGAL-PAGES-BUNDLE-001 | Standalone soft-launch prerequisite: privacy policy, terms of service, and any other mandatory legal pages required before any outreach, data collection, or buyer-facing promotion. No family audit required. Implement as standalone unit. **PRODUCTION-INTENT REQUIRED (2026-05-22 — D-025)**: Legal documentation must be designed as production-launch ready in content model, route architecture, naming, versioning, and legal scope from the outset. Staged activation is allowed but design must be production-correct from the start. Architecture design artifact (`PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001`) must precede any legal content drafting or implementation. | Layer 0 HOLD_FOR_AUTHORIZATION releases (or explicit Paresh authorization before L0 clears if timeline requires) | PRIT-034; Soft-Launch §Q17 S-1, §Q18 B-1, §Q19 A-5; FIRST-FAMILY-CYCLE-SELECTION-001; D-025 | P1 | PRODUCTION_INTENT_ARCHITECTURE_REQUIRED — HOLD_FOR_AUTHORIZATION |
 | FTR-FAM-003 | INQUIRY-NOTIFICATION-MINIMUM-SOFT-LAUNCH-001 | Standalone soft-launch prerequisite: implement FTR-B2C-004/FTR-SL-003 minimum supplier notification loop for buyer inquiries. Not family-gated. R-013 RESOLVED via classification boundary. Must complete before buyer-facing outreach or directory promotion. | **PARTIALLY IMPLEMENTED (2026-05-22)**: Buyer ack + admin alert production-verified (F1-P1B chain). Branded email shell applied (F1-P6A). Supplier-context notification path implemented but NOT production runtime verified. See FTR-B2C-005. Remaining gate: FTR-B2C-005 (supplier-context runtime verification). | PRIT-033 Stage 1; FTR-B2C-004; FTR-SL-003; Soft-Launch §Q18 B-3; FIRST-FAMILY-CYCLE-SELECTION-001; F1-P1B chain; `SOFT-LAUNCH-F1-P6A-BRANDED-INQUIRY-EMAIL-TEMPLATE-SHELL` | P1 | PARTIAL |
 | FTR-FAM-004 | PRODUCTION-LAUNCH-LEGAL-ARCHITECTURE-PRIT-034-001 | Architecture design artifact for TexQtic legal documentation: define the production-grade content model, route architecture, naming conventions, versioning approach, and legal scope for privacy policy, terms of service, cookie stance, and DSAR path. Must be completed before any legal content drafting, route implementation, app linkage, or email footer legal links. Governed by D-025. **DESIGN_ARTIFACT_CREATED (2026-05-22)**: Source-of-truth model, route architecture (texqtic.com/legal/*), 12 first-wave documents (L-001–L-012), 7 gated groups, versioning model, and implementation sequence (PRIT-034-002 through PRIT-034-006) defined. Next: PRODUCTION-LAUNCH-LEGAL-CONTENT-DRAFT-PRIT-034-002. | Architecture design artifact must precede legal content, implementation, linkage. Layer 0 HOLD_FOR_AUTHORIZATION release (or explicit Paresh authorization). | PRIT-034; FTR-FAM-002; D-025; PRODUCTION-INTENT-STAGED-ACTIVATION-GOVERNANCE-SYNC-001 | P1 | DESIGN_ARTIFACT_CREATED (2026-05-22) — HOLD_FOR_CONTENT_DRAFT |
+
+---
+
+## 15. Repo-wise Pending Units — Cross-Repo Status (as of 2026-05-25)
+
+*Source: external GPT-maintained pending-units review (not a repo file). Recorded by
+`TLRH-FUTURE-TODO-REPOWISE-PENDING-SYNC-002`. Status reflects launch-readiness tracking
+through Unit 053. No tracker DOCX was searched in the repo.*
+
+### 15.1 Main App Pending Units
+
+| Unit / Topic | Repo | Status | Dependency / Guardrail | Note |
+|---|---|---|---|---|
+| FTR-B2C-005 — Supplier-context inquiry notification production runtime verification | Main App | verification-needed | Real supplier email required; buyer-bridge gate not yet cleared | Supplier-context path structurally implemented; not yet runtime-verified end-to-end in production |
+| FTR-AUTH-003 — Auth/private-route deindex confirmation (FU-004) | Main App | verification-needed | Await Google re-crawl post robots.txt deployment (2026-05-20) | `/auth/login` URLs currently indexed; deindex pending re-crawl; FU-004 required for VERIFIED_PASS |
+| FTR-CP-001 — Control plane tenant operations implementation | Main App | implementation-ready | Paresh explicit Layer 0 authorization required | Boundary artifact exists; implementation awaiting authorization to open |
+| FTR-FAM-001 — FAM-06 auth session family cycle opening audit | Main App | decision-gated | Layer 0 HOLD_FOR_AUTHORIZATION | First full family cycle audit; not yet authorized |
+| FTR-FAM-002 / FTR-FAM-004 — Legal pages bundle (architecture + content draft) | Main App | decision-gated | Paresh authorization for PRIT-034-002 content draft phase | Architecture artifact created (2026-05-22); next: PRIT-034-002 content draft requires explicit authorization |
+| FTR-FAM-003 — Inquiry notification minimum (supplier-context path) | Main App | verification-needed | FTR-B2C-005 runtime verification gate | Buyer ack + admin alert production-verified; supplier-context path remains OPEN (see FTR-B2C-005) |
+| QA/test/sentinel data purge | Main App | pending | Required before any buyer-facing outreach or activation | All QA/test/sentinel rows must be removed from production surfaces before buyer bridge can be considered |
+| DB-backed demo/reference seeding activation | Main App | decision-gated | Explicit Paresh written authorization required | Must not be activated without explicit approval; remains deferred until authorized |
+
+### 15.2 Marketing Pending Units
+
+*Recorded as cross-repo status only. No Marketing repo artifacts exist in this (Main App) repository.*
+
+| Unit / Topic | Repo | Status | Dependency / Guardrail | Note |
+|---|---|---|---|---|
+| Post-Unit-053 remaining Marketing routing scope | Marketing | pending | Preview-only guardrail; all routes remain preview-only | Marketing preview routing accepted through Unit 053 (Home, Trust, Industries/Textiles, Brands); any further Marketing units are Marketing-repo work only |
+| Marketing → Main App SEO / canonical integration (future) | Marketing / Main App | decision-gated | Not yet scoped; no active governance unit | Cross-repo SEO integration is future scope; not currently authorized |
+
+### 15.3 CRM Pending Units
+
+*Recorded as cross-repo status only. No CRM repo artifacts exist in this (Main App) repository.*
+
+| Unit / Topic | Repo | Status | Dependency / Guardrail | Note |
+|---|---|---|---|---|
+| Buyer bridge activation | CRM / Main App | decision-gated | All gates must clear: real supplier/product data, FTR-B2C-005, PRIT-034 legal bundle, supplier notification consent, QA/test/sentinel purge, Paresh explicit written approval | **BLOCKED** — do not imply near-term activation; no single gate cleared is sufficient to activate |
+| Live CRM provisioning smoke | CRM | decision-gated | Explicit Paresh written authorization required per smoke event | No additional live CRM provisioning smoke authorized without explicit written approval |
+| CRM → Main App soft-launch inquiry handoff (FTR-SL-002) | CRM / Main App | pending | No formal integration contract; first-cohort pilot not yet blocked | Cross-system integration strategy for soft-launch phase not yet designed |
+
+### 15.4 Cross-repo / Product Governance Pending Units
+
+| Unit / Topic | Repo | Status | Dependency / Guardrail | Note |
+|---|---|---|---|---|
+| PRIT-034-002 — Legal content draft | Main App | decision-gated | Paresh explicit authorization required to open content draft phase | Architecture artifact (FTR-FAM-004) complete; PRIT-034-002 is next; requires Layer 0 authorization |
+| Real supplier/product data onboarding | Main App / CRM | decision-gated | All buyer-bridge prerequisites must clear first | Cannot proceed until QA purge, legal bundle, supplier consent, and Paresh approval all obtained |
+| FTR-SL-001 — Soft-launch aggregator directory readiness design | Main App | pending | No governance unit opened; required pre-outreach gate | Gate before first real supplier profile goes live in promotion context |
+| FTR-SL-002 — XDEP CAE + CRM + Main App integration strategy | Main App / CRM / CAE | pending | No formal integration contract; CAE and CRM are separate repos | First pilot cohort not yet blocked; required before broader soft-launch scaling |
+| TTP legal counsel feedback (FTR-LEGAL-001 / FTU-COMM-005) | All repos | pending | External counsel response pending | Blocks TradeTrust Pay direction and B2B financial guardrail enforcement |

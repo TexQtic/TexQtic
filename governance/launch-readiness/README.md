@@ -248,6 +248,24 @@ This hub records XDEP status only: dependency status + CRM/CAE audit unit ID. It
 inline CRM/CAE route, schema, or UI implementation details. Any hub row that contains such
 details must be reduced to an XDEP reference.
 
+---
+
+## Tracker Recording Note — 2026-05-25
+
+*Source: external GPT-maintained tracker through Unit 053 (not a repo file). Recorded into
+selected TLRH hub docs via `TLRH-README-ROADMAP-CROSSREPO-SYNC-001`. The hub `Last updated`
+date in the header is a future-looking date; this note is appended without overwriting it.*
+
+**Cross-repo launch-readiness state through Unit 053:**
+
+- **Main App**: public discovery clean; Gate E QA sentinel exclusion production verified; static reference previews production accepted; app homepage reference language production accepted.
+- **Marketing**: preview routing production accepted for Home, Trust, Industries/Textiles, and Brands; Brands secondary preview CTA production accepted through Unit 053. All Marketing routing remains preview-only. Recorded here as cross-repo launch-readiness status only — no Marketing repo artifacts exist in this repo.
+- **CRM**: provisioning observability panel and timeline metadata production accepted. Recorded here as cross-repo launch-readiness status only — no CRM repo artifacts exist in this repo.
+- **Buyer bridge**: remains BLOCKED — prerequisite gates (real supplier/product data, FTR-B2C-005, PRIT-034 legal bundle, supplier notification consent, QA/test/sentinel data purge, Paresh explicit written approval) are all pending.
+- **QA/test/sentinel data**: remains blocked; must be resolved before any buyer-facing outreach.
+- **DB-backed demo/reference seeding**: remains deferred; not authorized without explicit approval.
+- **Live CRM provisioning smoke**: remains approval-gated; no new smoke authorized without explicit Paresh written authorization.
+
 ### Planned Requirements Are Intake-First
 
 Requirements Paresh has communicated that are not yet in any repo must pass through
