@@ -294,4 +294,25 @@ describe('App.tsx stub state noindex guards', () => {
       /appState === 'PUBLIC_AGGREGATOR'[\s\S]{0,150}applyPublicPageMeta[\s\S]{0,400}robots: 'noindex, nofollow'/;
     expect(pattern.test(content)).toBe(true);
   });
+
+  it('SSR-026 — App.tsx PUBLIC_PASSPORT arm contains robots: noindex, nofollow', () => {
+    const content = readAppTsx();
+    const pattern =
+      /appState === 'PUBLIC_PASSPORT'[\s\S]{0,150}applyPublicPageMeta[\s\S]{0,400}robots: 'noindex, nofollow'/;
+    expect(pattern.test(content)).toBe(true);
+  });
+
+  it('SSR-027 — App.tsx PUBLIC_REFERRAL_LANDING arm contains robots: noindex, nofollow', () => {
+    const content = readAppTsx();
+    const pattern =
+      /appState === 'PUBLIC_REFERRAL_LANDING'[\s\S]{0,150}applyPublicPageMeta[\s\S]{0,400}robots: 'noindex, nofollow'/;
+    expect(pattern.test(content)).toBe(true);
+  });
+
+  it('SSR-028 — App.tsx PUBLIC_NOT_FOUND arm contains robots: noindex, nofollow', () => {
+    const content = readAppTsx();
+    const pattern =
+      /appState === 'PUBLIC_NOT_FOUND'[\s\S]{0,150}applyPublicPageMeta[\s\S]{0,400}robots: 'noindex, nofollow'/;
+    expect(pattern.test(content)).toBe(true);
+  });
 });

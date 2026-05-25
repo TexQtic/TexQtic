@@ -1991,6 +1991,7 @@ type AppState =
   | 'PUBLIC_SUPPLIER_PROFILE'
   | 'PUBLIC_REFERRAL_LANDING'
   | 'PUBLIC_INQUIRY'
+  | 'PUBLIC_NOT_FOUND'
   | 'AUTH'
   | 'FORGOT_PASSWORD'
   | 'VERIFY_EMAIL'
@@ -2116,6 +2117,12 @@ const resolveInitialAppState = (): AppState => {
 
     if (token) {
       return 'TOKEN_HANDLER';
+    }
+
+    // C-FG-016: Any unrecognized path (not root) → explicit not-found surface with noindex
+    const unknownPathname = globalThis.window.location.pathname;
+    if (unknownPathname !== '/' && unknownPathname !== '') {
+      return 'PUBLIC_NOT_FOUND';
     }
   }
 
@@ -3037,6 +3044,10 @@ const App: React.FC = () => {
       return 'TexQtic Account Action';
     }
 
+    if (appState === 'PUBLIC_NOT_FOUND') {
+      return 'Page Not Found — TexQtic';
+    }
+
     if (appState === 'ONBOARDING') {
       return currentTenant ? joinDocumentTitle(currentTenant.name, 'TexQtic Onboarding') : 'TexQtic Onboarding';
     }
@@ -3514,6 +3525,66 @@ const App: React.FC = () => {
         twitterCard: 'summary',
         twitterTitle: 'TexQtic — Aggregator Preview',
         twitterDescription: 'Aggregator preview — TexQtic.',
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
+    // C-FG-013: Public passport — private DPP access surface, noindex
+    if (appState === 'PUBLIC_PASSPORT') {
+      applyPublicPageMeta({
+        title: 'Product Passport — TexQtic',
+        description: 'Digital product passport information — TexQtic.',
+        canonical: `${origin}/`,
+        robots: 'noindex, nofollow',
+        ogTitle: 'Product Passport — TexQtic',
+        ogDescription: 'Digital product passport information — TexQtic.',
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/`,
+        ogType: 'website',
+        twitterCard: 'summary',
+        twitterTitle: 'Product Passport — TexQtic',
+        twitterDescription: 'Digital product passport information — TexQtic.',
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
+    // C-FG-015: Referral join landing — private access surface, noindex
+    if (appState === 'PUBLIC_REFERRAL_LANDING') {
+      applyPublicPageMeta({
+        title: 'Join TexQtic — Referral Invitation',
+        description: 'You have been invited to join TexQtic. Complete your account setup to get started.',
+        canonical: `${origin}/`,
+        robots: 'noindex, nofollow',
+        ogTitle: 'Join TexQtic — Referral Invitation',
+        ogDescription: 'You have been invited to join TexQtic. Complete your account setup to get started.',
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/`,
+        ogType: 'website',
+        twitterCard: 'summary',
+        twitterTitle: 'Join TexQtic — Referral Invitation',
+        twitterDescription: 'You have been invited to join TexQtic.',
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
+    // C-FG-016: Unknown route not-found surface — noindex
+    if (appState === 'PUBLIC_NOT_FOUND') {
+      applyPublicPageMeta({
+        title: 'Page Not Found — TexQtic',
+        description: 'The page you are looking for could not be found. Explore TexQtic textile products, collections, and sourcing tools.',
+        canonical: `${origin}/`,
+        robots: 'noindex, nofollow',
+        ogTitle: 'Page Not Found — TexQtic',
+        ogDescription: 'The page you are looking for could not be found. Explore TexQtic textile products, collections, and sourcing tools.',
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/`,
+        ogType: 'website',
+        twitterCard: 'summary',
+        twitterTitle: 'Page Not Found — TexQtic',
+        twitterDescription: 'The page you are looking for could not be found.',
         twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
       });
       return;
@@ -7864,6 +7935,28 @@ const App: React.FC = () => {
                   Continue Shopping
                 </button>
               </div>
+            </div>
+          </div>
+        );
+      // C-FG-016: Unknown route not-found surface
+      case 'PUBLIC_NOT_FOUND':
+        return (
+          <div className="min-h-screen bg-[#f3f8fb] flex flex-col items-center justify-center p-6 font-sans">
+            <img src="/brand/texqtic-logo.png" alt="TexQtic" className="mb-8 h-10 w-auto" loading="eager" />
+            <div className="w-full max-w-md rounded-3xl border border-[#d9e5ea] bg-white px-8 py-12 text-center shadow-sm space-y-4">
+              <h1 className="text-2xl font-bold text-slate-900">Page Not Found</h1>
+              <p className="text-sm text-slate-500">
+                The page you are looking for could not be found.
+              </p>
+              <button
+                onClick={() => {
+                  globalThis.window?.history.replaceState(null, '', '/');
+                  setAppState('PUBLIC_ENTRY');
+                }}
+                className="w-full py-3 bg-[#071a2f] text-white rounded-full font-semibold text-sm hover:bg-[#0d2743] transition"
+              >
+                Go to Home
+              </button>
             </div>
           </div>
         );
