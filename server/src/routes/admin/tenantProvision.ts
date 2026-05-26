@@ -89,7 +89,8 @@ const legacyProvisionBodySchema = z.object({
   ...provisionIdentitySchemaShape,
 });
 
-const approvedOnboardingProvisionBodySchema = z.object({
+const approvedOnboardingProvisionBodySchema = z
+  .object({
   provisioningMode: z.literal('APPROVED_ONBOARDING'),
   orchestrationReference: z.string().trim().min(1).max(255),
   ...provisionIdentitySchemaShape,
@@ -103,7 +104,8 @@ const approvedOnboardingProvisionBodySchema = z.object({
     email: z.string().email('firstOwner.email must be a valid email address').toLowerCase(),
   }),
   approvedOnboardingMetadata: z.record(z.unknown()).optional(),
-});
+  })
+  .strip();
 
 function parseProvisionRequestBody(body: unknown) {
   if (

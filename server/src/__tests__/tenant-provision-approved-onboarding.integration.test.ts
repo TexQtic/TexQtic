@@ -143,7 +143,7 @@ vi.mock('../services/pricing/totals.service.js', () => ({
 }));
 
 vi.mock('../services/email/email.service.js', () => ({
-  sendInviteMemberEmail: vi.fn(),
+  sendInviteMemberEmail: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../lib/cacheInvalidateEmitter.js', () => ({
@@ -252,6 +252,11 @@ describe('approved-onboarding tenant provisioning route', () => {
     );
     expect(provisionTenantMock.mock.calls.at(-1)?.[0]).not.toHaveProperty('tenant_category');
     expect(provisionTenantMock.mock.calls.at(-1)?.[0]).not.toHaveProperty('is_white_label');
+    expect(provisionTenantMock.mock.calls.at(-1)?.[0]).toMatchObject({
+      approvedOnboardingMetadata: {
+        crmStatus: 'admin_approved',
+      },
+    });
 
     const body = response.json();
     expect(body.success).toBe(true);
@@ -284,6 +289,74 @@ describe('approved-onboarding tenant provisioning route', () => {
         invitePurpose: 'FIRST_OWNER_PREPARATION',
       })
     );
+  });
+
+  it('treats design-only top-level envelope fields as non-contract and does not promote them', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision',
+      payload: {
+        provisioningMode: 'APPROVED_ONBOARDING',
+        orchestrationReference: 'ocase_12345',
+        base_family: 'B2B',
+        aggregator_capability: false,
+        white_label_capability: false,
+        commercial_plan: 'PROFESSIONAL',
+        primary_segment_key: 'Yarn',
+        secondary_segment_keys: ['Weaving', 'Knitting'],
+        role_position_keys: ['manufacturer', 'trader'],
+        organization: {
+          legalName: 'Acme Textiles LLC',
+          displayName: 'Acme Textiles',
+          jurisdiction: 'US-DE',
+          registrationNumber: 'REG-123',
+        },
+        firstOwner: {
+          email: 'OWNER@ACME.TEST',
+        },
+        approvedOnboardingMetadata: {
+          crmStatus: 'admin_approved',
+          crmVerificationId: 'crm-verification-001',
+        },
+        crossSystemCorrelationId: 'xscid-001',
+        idempotencyKey: 'idem-001',
+        crmVerificationId: 'crm-verification-top-level-001',
+        partyType: 'supplier',
+        supplierProfileSection: {
+          supplierCode: 'SUP-001',
+        },
+        buyerProfileSection: {
+          buyerCode: 'BUY-001',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(provisionTenantMock).toHaveBeenCalledTimes(1);
+
+    const provisionRequest = provisionTenantMock.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(provisionRequest).toMatchObject({
+      provisioningMode: 'APPROVED_ONBOARDING',
+      orchestrationReference: 'ocase_12345',
+      firstOwner: { email: 'owner@acme.test' },
+      approvedOnboardingMetadata: {
+        crmStatus: 'admin_approved',
+        crmVerificationId: 'crm-verification-001',
+      },
+    });
+    expect(provisionRequest).not.toHaveProperty('crossSystemCorrelationId');
+    expect(provisionRequest).not.toHaveProperty('idempotencyKey');
+    expect(provisionRequest).not.toHaveProperty('crmVerificationId');
+    expect(provisionRequest).not.toHaveProperty('partyType');
+    expect(provisionRequest).not.toHaveProperty('supplierProfileSection');
+    expect(provisionRequest).not.toHaveProperty('buyerProfileSection');
+
+    const body = response.json();
+    expect(body.success).toBe(true);
+    expect(body.data).toMatchObject({
+      provisioningMode: 'APPROVED_ONBOARDING',
+      orchestrationReference: 'ocase_12345',
+    });
   });
 
   it('rejects conflicting canonical and legacy provisioning identity fields', async () => {
