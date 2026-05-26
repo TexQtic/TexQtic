@@ -3,6 +3,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 
 const {
   TEST_ADMIN_ID,
+  TEST_ADMIN_ROLE,
   TEST_TENANT_ID,
   FAKE_TX,
   prismaHolder,
@@ -30,6 +31,7 @@ const {
 
   return {
     TEST_ADMIN_ID: '11111111-1111-1111-1111-111111111111',
+    TEST_ADMIN_ROLE: { value: 'SUPER_ADMIN' as string },
     TEST_TENANT_ID: '22222222-2222-2222-2222-222222222222',
     FAKE_TX,
     prismaHolder,
@@ -42,11 +44,36 @@ vi.mock('../middleware/auth.js', () => ({
   adminAuthMiddleware: vi.fn((request: Record<string, unknown>, _reply: unknown, done: () => void) => {
     request.isAdmin = true;
     request.adminId = TEST_ADMIN_ID;
-    request.adminRole = 'SUPER_ADMIN';
+    request.adminRole = TEST_ADMIN_ROLE.value;
     done();
   }),
   requireAdminRole: vi.fn(
-    (_requiredRole: string) => (_request: unknown, _reply: unknown, done: () => void) => done(),
+    (...requiredRoles: string[]) =>
+      (request: Record<string, unknown>, reply: { code: (statusCode: number) => { send: (body: unknown) => void } }, done: () => void) => {
+        if (!request.isAdmin || !request.adminRole) {
+          reply.code(401).send({
+            success: false,
+            error: {
+              code: 'UNAUTHORIZED',
+              message: 'Admin authentication required',
+            },
+          });
+          return;
+        }
+
+        if (!requiredRoles.includes(String(request.adminRole))) {
+          reply.code(403).send({
+            success: false,
+            error: {
+              code: 'FORBIDDEN',
+              message: `Requires one of: ${requiredRoles.join(', ')}`,
+            },
+          });
+          return;
+        }
+
+        done();
+      },
   ),
 }));
 
@@ -100,11 +127,16 @@ async function buildServer(): Promise<FastifyInstance> {
   return server;
 }
 
+function setAdminRole(role: string): void {
+  TEST_ADMIN_ROLE.value = role;
+}
+
 describe('control onboarding outcome route', () => {
   let server: FastifyInstance;
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    setAdminRole('SUPER_ADMIN');
     prismaHolder.$transaction.mockImplementation(async (callback: (tx: typeof FAKE_TX) => Promise<unknown>) => callback(FAKE_TX));
     FAKE_TX.$executeRawUnsafe.mockResolvedValue(undefined);
     FAKE_TX.organizations.findMany.mockReset();
@@ -271,6 +303,127 @@ describe('control onboarding outcome route', () => {
       status: 'CLOSED',
       onboarding_status: 'CLOSED',
     });
+  });
+
+  it('activates an approved onboarding tenant and writes the activation audit entry', async () => {
+    FAKE_TX.organizations.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      legal_name: 'Acme Textiles',
+      status: 'VERIFICATION_APPROVED',
+    });
+    FAKE_TX.tenant.findUnique.mockResolvedValue({
+      status: 'INVITED',
+    });
+    FAKE_TX.organizations.update.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      legal_name: 'Acme Textiles',
+      status: 'ACTIVE',
+    });
+    FAKE_TX.tenant.update.mockResolvedValue({
+      status: 'ACTIVE',
+    });
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/onboarding/activate-approved`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(FAKE_TX.organizations.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: TEST_TENANT_ID },
+        data: { status: 'ACTIVE' },
+      }),
+    );
+    expect(FAKE_TX.tenant.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: TEST_TENANT_ID },
+        data: { status: 'ACTIVE' },
+      }),
+    );
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    expect(writeAuditLog).toHaveBeenCalledWith(
+      prismaHolder,
+      expect.objectContaining({
+        action: 'control.tenants.onboarding_activation.recorded',
+        entity: 'organization',
+        actorId: TEST_ADMIN_ID,
+        metadataJson: expect.objectContaining({
+          tenantId: TEST_TENANT_ID,
+          previousStatus: 'VERIFICATION_APPROVED',
+          nextStatus: 'ACTIVE',
+          previousTenantStatus: 'INVITED',
+          nextTenantStatus: 'ACTIVE',
+          transition: 'APPROVED_TO_ACTIVE',
+        }),
+      }),
+    );
+
+    expect(response.json().data.tenant).toEqual({
+      id: TEST_TENANT_ID,
+      name: 'Acme Textiles',
+      status: 'ACTIVE',
+    });
+  });
+
+  it('denies non-SUPER_ADMIN onboarding outcome mutation attempts', async () => {
+    setAdminRole('SUPPORT');
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/onboarding/outcome`,
+      payload: {
+        outcome: 'APPROVED',
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error).toEqual(
+      expect.objectContaining({
+        code: 'FORBIDDEN',
+      }),
+    );
+    expect(FAKE_TX.organizations.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('denies non-SUPER_ADMIN approved activation attempts', async () => {
+    setAdminRole('SUPPORT');
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/onboarding/activate-approved`,
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error).toEqual(
+      expect.objectContaining({
+        code: 'FORBIDDEN',
+      }),
+    );
+    expect(FAKE_TX.organizations.findUnique).not.toHaveBeenCalled();
+    expect(FAKE_TX.tenant.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('denies non-SUPER_ADMIN archive mutation attempts', async () => {
+    setAdminRole('SUPPORT');
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/archive`,
+      payload: {
+        expectedSlug: 'archive-me',
+        reason: 'Attempted by support role.',
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error).toEqual(
+      expect.objectContaining({
+        code: 'FORBIDDEN',
+      }),
+    );
+    expect(FAKE_TX.organizations.findUnique).not.toHaveBeenCalled();
+    expect(FAKE_TX.tenant.findUnique).not.toHaveBeenCalled();
   });
 
   it('blocks archive attempts for protected QA and review hold tenants', async () => {

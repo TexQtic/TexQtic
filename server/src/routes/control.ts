@@ -189,6 +189,43 @@ const requireSuperAdminReadAccess: preHandlerHookHandler = (
   done();
 };
 
+const requireSuperAdminRevokeAccess: preHandlerHookHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  if (!request.isAdmin || !request.adminId || !request.adminRole) {
+    sendUnauthorized(reply, 'Admin authentication required');
+    return;
+  }
+
+  const paramsSchema = z.object({
+    id: z.string().uuid('Invalid admin id format'),
+  });
+
+  const paramsResult = paramsSchema.safeParse(request.params);
+  if (!paramsResult.success) {
+    sendValidationError(reply, paramsResult.error.errors);
+    return;
+  }
+
+  const actorId = request.adminId;
+  const actorRole = request.adminRole;
+  const { id: targetAdminId } = paramsResult.data;
+
+  if (actorRole !== 'SUPER_ADMIN') {
+    await writeAuditLog(
+      prisma,
+      createAdminAudit(actorId, 'control.admin_access_registry.revoke.denied', 'admin_user', {
+        actorRole,
+        targetAdminId,
+        reason: 'ACTOR_NOT_SUPER_ADMIN',
+      })
+    );
+
+    sendForbidden(reply, 'Requires one of: SUPER_ADMIN');
+  }
+};
+
 const financeSupervisionEventTypeByOutcome = {
   VERIFIED: 'finance.record.verified',
   FOLLOW_UP_REQUIRED: 'finance.record.follow_up_required',
@@ -1677,7 +1714,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    * - no peer-SUPER_ADMIN revoke/remove
    * - immediate refresh-token invalidation
    */
-  fastify.delete('/admin-access-registry/:id', async (request, reply) => {
+  fastify.delete('/admin-access-registry/:id', { preHandler: requireSuperAdminRevokeAccess }, async (request, reply) => {
     if (!request.isAdmin || !request.adminId || !request.adminRole) {
       return sendUnauthorized(reply, 'Admin authentication required');
     }
@@ -1695,19 +1732,6 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     }
 
     const { id: targetAdminId } = paramsResult.data;
-
-    if (actorRole !== 'SUPER_ADMIN') {
-      await writeAuditLog(
-        prisma,
-        createAdminAudit(actorId, 'control.admin_access_registry.revoke.denied', 'admin_user', {
-          actorRole,
-          targetAdminId,
-          reason: 'ACTOR_NOT_SUPER_ADMIN',
-        })
-      );
-
-      return sendForbidden(reply, 'Requires one of: SUPER_ADMIN');
-    }
 
     if (targetAdminId === actorId) {
       await writeAuditLog(
