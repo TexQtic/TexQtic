@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TenantConfig, TenantStatus } from '../../types';
 import { activateApprovedOnboarding, archiveTenant } from '../../services/controlPlaneService';
+import { EmptyState, ErrorState } from '../shared';
 
 type TenantDetailsTabId = 'OVERVIEW' | 'PLAN' | 'FEATURES' | 'BILLING' | 'RISK' | 'AUDIT';
 
@@ -15,7 +16,10 @@ interface TenantDetailsTab {
 }
 
 interface TenantDetailsProps {
-  tenant: TenantConfig;
+  tenant: TenantConfig | null;
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
   onBack: () => void;
   onImpersonate: (tenant: TenantConfig) => void;
   onRunTtpEligibility?: (orgId: string) => void;
@@ -65,10 +69,18 @@ const buildControlPlaneIdentityPresentation = ({
   };
 };
 
-export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, onImpersonate, onRunTtpEligibility }) => {
+export const TenantDetails: React.FC<TenantDetailsProps> = ({
+  tenant,
+  loading = false,
+  error = null,
+  onRetry,
+  onBack,
+  onImpersonate,
+  onRunTtpEligibility,
+}) => {
   const [activeTab, setActiveTab] = useState<TenantDetailsTabId>('OVERVIEW');
-  const [tenantStatus, setTenantStatus] = useState<TenantStatus>(tenant.status);
-  const [onboardingStatus, setOnboardingStatus] = useState<string | null>(tenant.onboarding_status ?? null);
+  const [tenantStatus, setTenantStatus] = useState<TenantStatus>(tenant?.status ?? TenantStatus.ACTIVE);
+  const [onboardingStatus, setOnboardingStatus] = useState<string | null>(tenant?.onboarding_status ?? null);
   const [activationLoading, setActivationLoading] = useState(false);
   const [activationError, setActivationError] = useState<string | null>(null);
   const [activationNotice, setActivationNotice] = useState<string | null>(null);
@@ -77,6 +89,71 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
   const [archiveLoading, setArchiveLoading] = useState(false);
   const [archiveError, setArchiveError] = useState<string | null>(null);
   const [archiveNotice, setArchiveNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!tenant) {
+      return;
+    }
+
+    setTenantStatus(tenant.status);
+    setOnboardingStatus(tenant.onboarding_status ?? null);
+  }, [tenant]);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <button onClick={onBack} className="text-slate-500 hover:text-white transition">← Back</button>
+          <div className="h-4 w-px bg-slate-800"></div>
+          <h1 className="text-2xl font-bold text-white">Tenant Details</h1>
+        </div>
+        <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-8 text-sm text-slate-300">
+          Loading tenant details...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <button onClick={onBack} className="text-slate-500 hover:text-white transition">← Back</button>
+          <div className="h-4 w-px bg-slate-800"></div>
+          <h1 className="text-2xl font-bold text-white">Tenant Details</h1>
+        </div>
+        <ErrorState
+          error={{
+            status: 0,
+            message: error,
+            code: 'CONTROL_PLANE_TENANT_DETAIL_READ_FAILED',
+          }}
+          onRetry={onRetry}
+        />
+      </div>
+    );
+  }
+
+  if (!tenant) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <button onClick={onBack} className="text-slate-500 hover:text-white transition">← Back</button>
+          <div className="h-4 w-px bg-slate-800"></div>
+          <h1 className="text-2xl font-bold text-white">Tenant Details</h1>
+        </div>
+        <div className="rounded-xl border border-slate-800 bg-slate-900/50">
+          <EmptyState
+            icon="🏢"
+            title="Tenant not found"
+            message="The selected tenant could not be loaded from the control-plane read surface."
+            action={onRetry ? { label: 'Retry', onClick: onRetry } : undefined}
+          />
+        </div>
+      </div>
+    );
+  }
+
   const identityPresentation = buildControlPlaneIdentityPresentation({
     tenantCategory: tenant.tenant_category,
     fallbackType: tenant.type,
