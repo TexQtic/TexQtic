@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { TenantConfig, TenantStatus } from '../../types';
-import { activateApprovedOnboarding, archiveTenant, getTenantById } from '../../services/controlPlaneService';
+import { activateApprovedOnboarding, archiveTenant, getTenantById, recordOnboardingOutcome } from '../../services/controlPlaneService';
 import { EmptyState, ErrorState } from '../shared';
 import { ControlPlaneOrgMemberSummary, type ControlPlaneMembershipEntry } from './ControlPlaneOrgMemberSummary';
 
@@ -92,6 +92,11 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
   const [archiveNotice, setArchiveNotice] = useState<string | null>(null);
   const [membershipsData, setMembershipsData] = useState<ControlPlaneMembershipEntry[]>([]);
   const [membershipsLoading, setMembershipsLoading] = useState(false);
+  const [outcomeSelected, setOutcomeSelected] = useState<'APPROVED' | 'REJECTED' | 'NEEDS_MORE_INFO' | ''>('');
+  const [outcomeReason, setOutcomeReason] = useState('');
+  const [outcomeLoading, setOutcomeLoading] = useState(false);
+  const [outcomeError, setOutcomeError] = useState<string | null>(null);
+  const [outcomeNotice, setOutcomeNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!tenant) {
@@ -206,6 +211,9 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
   const isProtectedArchiveTarget = isProtectedTenantArchiveTarget(lifecycleTenant);
   const canEnterTenantContext = tenantStatus === TenantStatus.ACTIVE;
   const canActivateApproved = tenantStatus !== TenantStatus.CLOSED && onboardingStatus === 'VERIFICATION_APPROVED';
+  const canRecordOnboardingOutcome =
+    onboardingStatus === 'PENDING_VERIFICATION' ||
+    onboardingStatus === 'VERIFICATION_NEEDS_MORE_INFO';
   const canArchiveTenant =
     !isProtectedArchiveTarget &&
     tenantStatus !== TenantStatus.CLOSED &&
@@ -256,6 +264,43 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
       setArchiveError(error?.message || 'Failed to archive tenant.');
     } finally {
       setArchiveLoading(false);
+    }
+  };
+
+  const handleRecordOutcome = async () => {
+    if (!outcomeSelected) return;
+    setOutcomeLoading(true);
+    setOutcomeError(null);
+    setOutcomeNotice(null);
+    setActivationError(null);
+    setActivationNotice(null);
+    setArchiveError(null);
+    setArchiveNotice(null);
+
+    try {
+      const payload: { outcome: 'APPROVED' | 'REJECTED' | 'NEEDS_MORE_INFO'; reason?: string } = {
+        outcome: outcomeSelected,
+      };
+      if (outcomeReason.trim()) {
+        payload.reason = outcomeReason.trim();
+      }
+      await recordOnboardingOutcome(tenant.id, payload);
+      const nextStatus =
+        outcomeSelected === 'APPROVED'
+          ? 'VERIFICATION_APPROVED'
+          : outcomeSelected === 'REJECTED'
+            ? 'VERIFICATION_REJECTED'
+            : 'VERIFICATION_NEEDS_MORE_INFO';
+      setOnboardingStatus(nextStatus);
+      setOutcomeNotice(
+        `Onboarding outcome recorded: ${outcomeSelected}. Lifecycle status updated to ${nextStatus}.`,
+      );
+      setOutcomeSelected('');
+      setOutcomeReason('');
+    } catch (error: any) {
+      setOutcomeError(error?.message || 'Failed to record onboarding outcome.');
+    } finally {
+      setOutcomeLoading(false);
     }
   };
 
@@ -379,6 +424,53 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
               <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800">
                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Lifecycle Management</h3>
                 <div className="space-y-3">
+                  {canRecordOnboardingOutcome && (
+                    <div className="rounded border border-indigo-500/30 bg-indigo-500/10 p-4 space-y-3">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">
+                        Record Onboarding Outcome — SUPER_ADMIN
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        Record a bounded verification outcome. APPROVED advances the tenant to verification-approved state, enabling activation. REJECTED or NEEDS_MORE_INFO updates lifecycle status only.
+                      </div>
+                      <label className="block space-y-1">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Outcome Decision</span>
+                        <select
+                          value={outcomeSelected}
+                          onChange={e => setOutcomeSelected(e.target.value as 'APPROVED' | 'REJECTED' | 'NEEDS_MORE_INFO' | '')}
+                          className="w-full rounded border border-slate-700 bg-slate-950/80 px-3 py-2 text-sm text-slate-200 outline-none transition focus:border-indigo-500/60"
+                        >
+                          <option value="">Select outcome…</option>
+                          <option value="APPROVED">APPROVED — Advance to verification approved</option>
+                          <option value="REJECTED">REJECTED — Mark as verification rejected</option>
+                          <option value="NEEDS_MORE_INFO">NEEDS_MORE_INFO — Request additional information</option>
+                        </select>
+                      </label>
+                      <label className="block space-y-1">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                          Reason{' '}
+                          <span className="text-slate-600 font-normal normal-case tracking-normal">(required for REJECTED)</span>
+                        </span>
+                        <textarea
+                          value={outcomeReason}
+                          onChange={e => setOutcomeReason(e.target.value)}
+                          rows={2}
+                          className="w-full rounded border border-slate-700 bg-slate-950/80 px-3 py-2 text-sm text-slate-200 outline-none transition focus:border-indigo-500/60"
+                          placeholder="Document the reason for this outcome decision."
+                        />
+                      </label>
+                      <button
+                        onClick={handleRecordOutcome}
+                        disabled={
+                          !outcomeSelected ||
+                          (outcomeSelected === 'REJECTED' && !outcomeReason.trim()) ||
+                          outcomeLoading
+                        }
+                        className="w-full rounded bg-indigo-600 py-2 text-xs font-bold uppercase text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {outcomeLoading ? 'Recording Outcome...' : 'Record Onboarding Outcome'}
+                      </button>
+                    </div>
+                  )}
                   {canActivateApproved && (
                     <button
                       onClick={handleActivateApproved}
@@ -435,6 +527,16 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
                 {archiveNotice && (
                   <div className="mt-4 rounded border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
                     {archiveNotice}
+                  </div>
+                )}
+                {outcomeError && (
+                  <div className="mt-4 rounded border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
+                    {outcomeError}
+                  </div>
+                )}
+                {outcomeNotice && (
+                  <div className="mt-4 rounded border border-indigo-500/30 bg-indigo-500/10 px-3 py-2 text-xs text-indigo-300">
+                    {outcomeNotice}
                   </div>
                 )}
               </div>

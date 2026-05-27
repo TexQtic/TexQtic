@@ -165,6 +165,39 @@ export async function archiveTenant(
   return adminPost<ArchiveTenantResponse>(`/api/control/tenants/${tenantId}/archive`, payload);
 }
 
+// ==================== ONBOARDING OUTCOME ====================
+
+export type OnboardingOutcome = 'APPROVED' | 'REJECTED' | 'NEEDS_MORE_INFO';
+
+export interface RecordOnboardingOutcomeRequest {
+  outcome: OnboardingOutcome;
+  reason?: string;
+  notes?: string;
+}
+
+export interface RecordOnboardingOutcomeResponse {
+  tenant: {
+    id: string;
+    name: string;
+    status: string;
+  };
+}
+
+/**
+ * Record a bounded SUPER_ADMIN onboarding verification outcome for an eligible tenant.
+ * Accepted source statuses: PENDING_VERIFICATION, VERIFICATION_APPROVED, VERIFICATION_REJECTED, VERIFICATION_NEEDS_MORE_INFO.
+ * Outcome → next status: APPROVED → VERIFICATION_APPROVED | REJECTED → VERIFICATION_REJECTED | NEEDS_MORE_INFO → VERIFICATION_NEEDS_MORE_INFO.
+ */
+export async function recordOnboardingOutcome(
+  tenantId: string,
+  payload: RecordOnboardingOutcomeRequest,
+): Promise<RecordOnboardingOutcomeResponse> {
+  return adminPost<RecordOnboardingOutcomeResponse>(
+    `/api/control/tenants/${tenantId}/onboarding/outcome`,
+    payload,
+  );
+}
+
 // ==================== AUDIT LOGS ====================
 
 export interface AuditLog {
