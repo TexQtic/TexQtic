@@ -159,6 +159,7 @@ const impersonationRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.get<{ Params: { impersonationId: string } }>(
     '/impersonation/status/:impersonationId',
+    { preHandler: requireAdminRole('SUPER_ADMIN') },
     async (request, reply) => {
       try {
         if (!request.isAdmin || !request.adminId || !request.adminRole) {
