@@ -388,7 +388,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
           isWhiteLabel: true,
         },
         orderBy: { createdAt: 'desc' },
-      }),
+      }) as Array<{ id: string; slug: string; name: string; type: string; status: string; plan: string; isWhiteLabel: boolean }>,
       );
 
       if (launchFacingTenantRows.length === 0) {

@@ -6,7 +6,28 @@ import { defineConfig } from 'vitest/config';
 const DB_TIMEOUT_MS = parseInt(process.env.TEST_DB_TIMEOUT_MS ?? '15000');
 
 export default defineConfig({
+  // Allow Vite's file server to access files in the monorepo root.
+  // Required for root-level test files that use `/** @vitest-environment jsdom */`;
+  // without this, Vite blocks /@fs/ access to paths outside server/.
+  server: {
+    fs: {
+      allow: ['..'],
+    },
+  },
+  // Force a single vitest instance across the monorepo.
+  // Root node_modules/vitest and server/node_modules/vitest are two separate
+  // copies. @testing-library/jest-dom/vitest resolves `vitest` from the root
+  // copy (hoisted), so expect.extend registers on root's expect — not server's.
+  // dedupe forces Vite to always serve vitest from one canonical location so
+  // jest-dom's extend and the test-file expect are the same object.
+  resolve: {
+    dedupe: ['vitest'],
+  },
   test: {
+    // ── Setup ───────────────────────────────────────────────────────────────
+    // Register @testing-library/jest-dom custom matchers (toBeDisabled, etc.)
+    // for root-level .tsx tests run under server vitest with jsdom environment.
+    setupFiles: ['../tests/setupTests.ts'],
     // ── Concurrency ─────────────────────────────────────────────────────────
     // Run test files sequentially (Supabase PgBouncer session-mode cannot
     // handle parallel connections from multiple test workers).
