@@ -4,6 +4,7 @@ import { TenantConfig, TenantStatus } from '../../types';
 import { activateApprovedOnboarding, archiveTenant, getTenantById, recordOnboardingOutcome } from '../../services/controlPlaneService';
 import { EmptyState, ErrorState } from '../shared';
 import { ControlPlaneOrgMemberSummary, type ControlPlaneMembershipEntry } from './ControlPlaneOrgMemberSummary';
+import { TenantAuditLogSummary } from './TenantAuditLogSummary';
 
 type TenantDetailsTabId = 'OVERVIEW' | 'PLAN' | 'FEATURES' | 'BILLING' | 'RISK' | 'AUDIT';
 
@@ -360,7 +361,7 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
     { id: 'FEATURES', label: 'Feature Flags', state: 'LIMITED', note: 'Limited' },
     { id: 'BILLING', label: 'Billing Scope', state: 'LIMITED', note: 'Boundary' },
     { id: 'RISK', label: 'Risk & Compliance', state: 'PREVIEW', note: 'Preview' },
-    { id: 'AUDIT', label: 'Audit Log', state: 'SEPARATE', note: 'Separate' },
+    { id: 'AUDIT', label: 'Audit Log', state: 'LIMITED', note: 'Summary' },
   ];
 
   const renderTabContent = () => {
@@ -654,12 +655,7 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
           </div>
         );
       case 'AUDIT':
-        return renderTabNoticePanel({
-          title: 'Audit Scope',
-          state: 'Separate Surface',
-          message: 'Detailed audit review lives in the separate Audit Logs area.',
-          detail: 'This tenant deep-dive does not provide parity with the dedicated read-only audit surface.',
-        });
+        return <TenantAuditLogSummary tenantId={tenant.id} />;
       default:
         return null;
     }
