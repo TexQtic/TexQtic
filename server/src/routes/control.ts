@@ -32,6 +32,7 @@ import controlVpcRoutes from './control/vpc.js';
 import controlTtpRoutingStubRoutes from './control/ttp-routing-stubs.js';
 import controlTtpEnrollmentRoutes from './control/ttp-enrollments.js';
 import controlTtpScoreSnapshotRoutes from './control/ttp-score-snapshots.js';
+import { filterControlPlaneLaunchFacingTenantList } from '../config/controlPlaneTenantReadExclusions.js';
 
 // ── Admin context helper (G-004) ──────────────────────────────────────────────
 // Canonical replacement for withDbContextLegacy({ isAdmin: true }).
@@ -375,7 +376,8 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   fastify.get('/tenants', async (request, reply) => {
     const adminId = request.adminId ?? 'unknown';
     const { tenantRows, invitedTenantIds } = await withAdminContext(async tx => {
-      const tenantRows = await tx.tenant.findMany({
+      const launchFacingTenantRows = filterControlPlaneLaunchFacingTenantList(
+        await tx.tenant.findMany({
         select: {
           id: true,
           slug: true,
@@ -386,16 +388,17 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
           isWhiteLabel: true,
         },
         orderBy: { createdAt: 'desc' },
-      });
+      }),
+      );
 
-      if (tenantRows.length === 0) {
+      if (launchFacingTenantRows.length === 0) {
         return {
-          tenantRows,
+          tenantRows: launchFacingTenantRows,
           invitedTenantIds: [] as string[],
         };
       }
 
-      const tenantIds = tenantRows.map((tenant: { id: string }) => tenant.id);
+      const tenantIds = launchFacingTenantRows.map((tenant: { id: string }) => tenant.id);
       const pendingFirstOwnerPreparationInvites = await tx.invite.findMany({
         where: {
           tenantId: { in: tenantIds },
@@ -413,7 +416,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       );
 
       return {
-        tenantRows,
+        tenantRows: launchFacingTenantRows,
         invitedTenantIds: Array.from(invitedTenantIds),
       };
     });

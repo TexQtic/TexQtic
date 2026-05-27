@@ -23,6 +23,13 @@ import {
   getTenants,
   type Tenant,
 } from '../services/controlPlaneService';
+import {
+  CONTROL_PLANE_TENANT_READ_SIDE_HIDE_PRESERVED_NO_DELETE_SLUGS,
+  CONTROL_PLANE_TENANT_READ_SIDE_HIDE_APPROVED_SLUGS,
+  filterControlPlaneLaunchFacingTenantList,
+  getControlPlaneTenantReadSideHideGuardrailReport,
+  isControlPlaneTenantExcludedFromLaunchFacingList,
+} from '../server/src/config/controlPlaneTenantReadExclusions';
 
 const getTenantsMock = vi.mocked(getTenants);
 const getTenantByIdMock = vi.mocked(getTenantById);
@@ -231,5 +238,35 @@ describe('CONTROL-PLANE-TENANT-LIST-DETAIL-HARDENING-001 — TenantDetails read 
     expect(screen.getByText('Reinstate tenant')).toBeInTheDocument();
     expect(screen.getByText('Suspend tenant')).toBeInTheDocument();
     expect(screen.getByText('Delete tenant')).toBeInTheDocument();
+  });
+});
+
+describe('CONTROL-PLANE-TEST-TENANT-CLEANUP-READ-SIDE-HIDE-IMPLEMENTATION-001', () => {
+  it('excludes approved cleanup slugs from launch-facing list output', () => {
+    const approvedSlug = CONTROL_PLANE_TENANT_READ_SIDE_HIDE_APPROVED_SLUGS[0];
+    const preservedSlug = CONTROL_PLANE_TENANT_READ_SIDE_HIDE_PRESERVED_NO_DELETE_SLUGS[0];
+
+    const filtered = filterControlPlaneLaunchFacingTenantList([
+      makeTenant({ id: 'approved-id', slug: approvedSlug, name: 'Approved Hidden Tenant' }),
+      makeTenant({ id: 'preserved-id', slug: preservedSlug, name: 'Preserved Tenant' }),
+      makeTenant({ id: 'visible-id', slug: 'explicitly-visible-test-tenant', name: 'Visible Tenant' }),
+    ]);
+
+    expect(filtered.map(tenant => tenant.slug)).toEqual([
+      preservedSlug,
+      'explicitly-visible-test-tenant',
+    ]);
+    expect(isControlPlaneTenantExcludedFromLaunchFacingList(approvedSlug)).toBe(true);
+    expect(isControlPlaneTenantExcludedFromLaunchFacingList(preservedSlug)).toBe(false);
+  });
+
+  it('registry guardrails enforce exact count, uniqueness, and preserved overlap safety', () => {
+    const report = getControlPlaneTenantReadSideHideGuardrailReport();
+
+    expect(report.expectedApprovedCount).toBe(44);
+    expect(report.approvedCount).toBe(44);
+    expect(report.approvedUniqueCount).toBe(44);
+    expect(report.duplicateApprovedSlugs).toEqual([]);
+    expect(report.preservedOverlapSlugs).toEqual([]);
   });
 });
