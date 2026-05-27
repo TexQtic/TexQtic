@@ -1,0 +1,797 @@
+{
+  "metadata": {
+    "generatedAt": "2026-05-27T01:42:20.235Z",
+    "gitHead": "4254f42edc6b36058a3e80126a7494d5e3ea7fb9",
+    "mode": "post-check",
+    "unitId": "CONTROL-PLANE-TEST-TENANT-DELETE-EXECUTION-001",
+    "scriptVersion": "v1.0.0-approved-delete-gated"
+  },
+  "gates": {
+    "reviewArtifactExists": {
+      "ok": true,
+      "message": "review artifact found"
+    },
+    "approvalArtifactExists": {
+      "ok": true,
+      "message": "approval artifact found"
+    },
+    "exportJsonExists": {
+      "ok": true,
+      "message": "export json found"
+    },
+    "reviewEnum": {
+      "ok": true,
+      "message": "review enum ready"
+    },
+    "approvalEnum": {
+      "ok": true,
+      "message": "approval enum ready"
+    },
+    "approvedCount": {
+      "ok": true,
+      "message": "approved count=44"
+    },
+    "approvedUniqueCount": {
+      "ok": true,
+      "message": "approved unique count=44"
+    },
+    "overlapGuardrail": {
+      "ok": true,
+      "message": "no overlap with preserved groups"
+    },
+    "exportClassificationMatch": {
+      "ok": true,
+      "message": "totals={\"DELETE_POSSIBLE\":44,\"DELETE_BLOCKED\":3,\"DELETE_UNSUPPORTED\":0,\"PROTECTED_NO_ACTION\":10,\"AMBIGUOUS_NO_ACTION\":4}"
+    },
+    "approvedInDeletePossible": {
+      "ok": true,
+      "message": "approved subset matches DELETE_POSSIBLE only"
+    },
+    "approvedCurrentlyExist": {
+      "ok": true,
+      "message": "all approved slugs currently exist"
+    },
+    "dependencyDriftGate": {
+      "ok": true,
+      "message": "no dependency blockers detected"
+    }
+  },
+  "totals": {
+    "approvedSlugCount": 44,
+    "approvedUniqueCount": 44,
+    "approvedExistingCount": 44,
+    "approvedMissingCount": 0,
+    "blockedCount": 3,
+    "protectedCount": 9,
+    "ambiguousCount": 4,
+    "unsupportedCount": 0
+  },
+  "approvedMissingSlugs": [],
+  "preservedPrePresentSlugs": [
+    "acme-corp-live-verify",
+    "ops-casework-buyer-e13b66cb",
+    "ops-casework-seller-681cd6f6",
+    "qa-agg",
+    "qa-b2b",
+    "qa-b2c",
+    "qa-pend",
+    "qa-wl",
+    "shraddha-industries",
+    "test-tenant-f527b7d2-62e5-4593-92c3-69a807a99c0d-24aa7ecb",
+    "test-tenant-f527b7d2-62e5-4593-92c3-69a807a99c0d-97b96136",
+    "test-tenant-wave2-1774063117878",
+    "white-label-co",
+    "wl-verify-s1-20260328-0440",
+    "wl-verify-s1-20260328-0445",
+    "wl-verify-s1-20260328-0510"
+  ],
+  "preservedPreMissingSlugs": [],
+  "dependencyChecks": [
+    {
+      "slug": "activation-verify-2026-04-01-deep-dive-exec",
+      "tenantId": "518c0c98-c678-4cee-903c-0e73130840a5",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"518c0c98-c678-4cee-903c-0e73130840a5\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "activation-verify-2026-04-02-org-status-close-gate-exec",
+      "tenantId": "f2f6746a-3ae1-4e10-b7a4-34f5c40a24fa",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"f2f6746a-3ae1-4e10-b7a4-34f5c40a24fa\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "b2c-browse-proof-20260402080229",
+      "tenantId": "743c73aa-1b55-4560-a018-e8e554ca65f6",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"743c73aa-1b55-4560-a018-e8e554ca65f6\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-2c615571-e305-413f-aeac-4731a1b359c3-21245947",
+      "tenantId": "21245947-1b31-49a8-8e04-f69982cc24db",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"21245947-1b31-49a8-8e04-f69982cc24db\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-2c615571-e305-413f-aeac-4731a1b359c3-719592c3",
+      "tenantId": "719592c3-057f-4296-b97f-39b3ac8de691",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"719592c3-057f-4296-b97f-39b3ac8de691\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-2c615571-e305-413f-aeac-4731a1b359c3-aad3f4ef",
+      "tenantId": "aad3f4ef-db08-4852-81d0-eedb24e18ace",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"aad3f4ef-db08-4852-81d0-eedb24e18ace\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-365daeb5-1236-4129-85b5-76fa2c7c8233-092a4636",
+      "tenantId": "092a4636-9bd7-4b27-8a5a-81edf7a53d1c",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"092a4636-9bd7-4b27-8a5a-81edf7a53d1c\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-365daeb5-1236-4129-85b5-76fa2c7c8233-4cb0014e",
+      "tenantId": "4cb0014e-aa1d-4cdf-9f06-b8f401db7584",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"4cb0014e-aa1d-4cdf-9f06-b8f401db7584\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-365daeb5-1236-4129-85b5-76fa2c7c8233-f678ad58",
+      "tenantId": "f678ad58-a6d2-479e-a886-a441c84c9317",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"f678ad58-a6d2-479e-a886-a441c84c9317\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-59d5422e-53f8-4f6a-b023-b7ee85e8ad7c-1269c633",
+      "tenantId": "1269c633-8ba5-4bcc-867e-9cca634c33e0",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"1269c633-8ba5-4bcc-867e-9cca634c33e0\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-59d5422e-53f8-4f6a-b023-b7ee85e8ad7c-3df1138c",
+      "tenantId": "3df1138c-6e33-4b73-97a9-73f7b78ad0c4",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"3df1138c-6e33-4b73-97a9-73f7b78ad0c4\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-59d5422e-53f8-4f6a-b023-b7ee85e8ad7c-e30e20b3",
+      "tenantId": "e30e20b3-4349-48a1-9579-4b3b9ab86dfd",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"e30e20b3-4349-48a1-9579-4b3b9ab86dfd\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-92693230-db1b-464b-be30-27001e6f1075-1daa4fbc",
+      "tenantId": "1daa4fbc-bb46-4fef-a2d3-8d645784323f",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"1daa4fbc-bb46-4fef-a2d3-8d645784323f\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-92693230-db1b-464b-be30-27001e6f1075-4b7e9738",
+      "tenantId": "4b7e9738-57ea-4e14-9b56-2b5834c5a1f4",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"4b7e9738-57ea-4e14-9b56-2b5834c5a1f4\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-92693230-db1b-464b-be30-27001e6f1075-af635052",
+      "tenantId": "af635052-54f6-4fd6-86c0-5724197a1812",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"af635052-54f6-4fd6-86c0-5724197a1812\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-award-route-owner-7f7f1a07",
+      "tenantId": "7f7f1a07-85c1-490f-b688-8221f1caba06",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"7f7f1a07-85c1-490f-b688-8221f1caba06\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-award-route-supplier-e77ec63d",
+      "tenantId": "e77ec63d-7433-4338-854a-250941240148",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"e77ec63d-7433-4338-854a-250941240148\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-email-verification-1779163982162",
+      "tenantId": "9c222cb0-ec5b-414b-b0b3-35c73debb96f",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"9c222cb0-ec5b-414b-b0b3-35c73debb96f\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-fe163be8-a177-4847-bae2-030eb41cbcb6-2d974209",
+      "tenantId": "2d974209-24eb-418d-b236-bbca2e62c935",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"2d974209-24eb-418d-b236-bbca2e62c935\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-fe163be8-a177-4847-bae2-030eb41cbcb6-51206629",
+      "tenantId": "51206629-3af5-43b0-8fe3-080b1aad011f",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"51206629-3af5-43b0-8fe3-080b1aad011f\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-fe163be8-a177-4847-bae2-030eb41cbcb6-d3d6228d",
+      "tenantId": "d3d6228d-fb3e-4d5e-a08a-0f994a5db4bb",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"d3d6228d-fb3e-4d5e-a08a-0f994a5db4bb\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-fff6eb57-fac7-4587-8a35-6cac006f833b-254c8dfd",
+      "tenantId": "254c8dfd-c2f0-4bc8-bff1-2c29a2aa41da",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"254c8dfd-c2f0-4bc8-bff1-2c29a2aa41da\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-fff6eb57-fac7-4587-8a35-6cac006f833b-f49b0ca1",
+      "tenantId": "f49b0ca1-5688-412b-bda5-b79a67eab210",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"f49b0ca1-5688-412b-bda5-b79a67eab210\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-fff6eb57-fac7-4587-8a35-6cac006f833b-f638febf",
+      "tenantId": "f638febf-3d33-41bd-869c-f38c8b606933",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"f638febf-3d33-41bd-869c-f38c8b606933\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-ni-route-other-201518c0",
+      "tenantId": "201518c0-7f14-4df6-b9b6-ec5aa9041ea5",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"201518c0-7f14-4df6-b9b6-ec5aa9041ea5\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-ni-route-owner-5adce6d0",
+      "tenantId": "5adce6d0-75cd-4d84-a6a5-44d1687e1d45",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"5adce6d0-75cd-4d84-a6a5-44d1687e1d45\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-nll-other-43b6a714-2d3bf800",
+      "tenantId": "2d3bf800-5913-421d-a8c0-d081fa7b2a30",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"2d3bf800-5913-421d-a8c0-d081fa7b2a30\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-nll-other-f333d3c9-7cc7995d",
+      "tenantId": "7cc7995d-481d-4247-968b-43967722d1de",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"7cc7995d-481d-4247-968b-43967722d1de\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-nll-owner-43b6a714-320e600a",
+      "tenantId": "320e600a-91d4-4fec-9163-b36ea4a6e70b",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"320e600a-91d4-4fec-9163-b36ea4a6e70b\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-nll-owner-f333d3c9-3904418f",
+      "tenantId": "3904418f-3eb9-4a88-a0b9-a0af9703d2c5",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"3904418f-3eb9-4a88-a0b9-a0af9703d2c5\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-ns-comp-dup-member-1c37aa07",
+      "tenantId": "1c37aa07-4908-4ab8-a365-48ae28a19623",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"1c37aa07-4908-4ab8-a365-48ae28a19623\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-ns-member-org-9faafb2b",
+      "tenantId": "9faafb2b-bbb5-4014-a0dd-2348085acf42",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"9faafb2b-bbb5-4014-a0dd-2348085acf42\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-ns-prev-mat-member-1ba324dc",
+      "tenantId": "1ba324dc-9cf3-485f-b353-b31090015b77",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"1ba324dc-9cf3-485f-b353-b31090015b77\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-ns-prev-member-a5fbe6d8",
+      "tenantId": "a5fbe6d8-1385-4a9d-b042-79a4c72a97eb",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"a5fbe6d8-1385-4a9d-b042-79a4c72a97eb\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-ns-route-other-b33663d6",
+      "tenantId": "b33663d6-13a3-4e37-af13-152d1b04c81d",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"b33663d6-13a3-4e37-af13-152d1b04c81d\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-ns-route-owner-2c8611a0",
+      "tenantId": "2c8611a0-ebc5-4201-8d78-a7daeb834c21",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"2c8611a0-ebc5-4201-8d78-a7daeb834c21\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-rfq-read-other-094d5dde",
+      "tenantId": "094d5dde-e69e-41d6-b6d6-221eedac5cbb",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"094d5dde-e69e-41d6-b6d6-221eedac5cbb\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-rfq-read-owner-6b707770",
+      "tenantId": "6b707770-6b62-4438-8f7f-96e707aa713c",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"6b707770-6b62-4438-8f7f-96e707aa713c\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-rfq-route-other-9eae5cf5",
+      "tenantId": "9eae5cf5-5ea8-4d27-9590-02cbc66279cd",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"9eae5cf5-5ea8-4d27-9590-02cbc66279cd\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-rfq-route-owner-33416ed7",
+      "tenantId": "33416ed7-23f3-43eb-badd-24f3d14a1830",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"33416ed7-23f3-43eb-badd-24f3d14a1830\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-sri-other-ada20264",
+      "tenantId": "ada20264-ebf7-4aa4-9eef-a2c000e02fef",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"ada20264-ebf7-4aa4-9eef-a2c000e02fef\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-sri-owner-66a00c2f",
+      "tenantId": "66a00c2f-5979-49ba-960f-1d25e118aa3c",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"66a00c2f-5979-49ba-960f-1d25e118aa3c\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-sri-supplier-1-d51e0a13",
+      "tenantId": "d51e0a13-8c70-4373-ba7e-02229a131e25",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"d51e0a13-8c70-4373-ba7e-02229a131e25\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    },
+    {
+      "slug": "test-tenant-sri-supplier-2-00f18b4a",
+      "tenantId": "00f18b4a-d3b1-4912-bd02-82d5fb895643",
+      "reasoningLogCount": 0,
+      "tradeCount": 0,
+      "rfqCount": 0,
+      "rfqResponseCount": 0,
+      "traceabilityNodeCount": 0,
+      "dppEvidenceClaimCount": 0,
+      "invoiceCount": 0,
+      "escrowCount": 0,
+      "blockers": [],
+      "notes": [
+        "invoices:count_error:\nInvalid `delegate.count()` invocation in\nC:\\Users\\PARESH\\TexQtic\\server\\scripts\\control-plane\\tenant-delete-approved-tenants.ts:247:34\n\n  244   notes.push(`${modelName}:count_unavailable`);\n  245   return { value: 0, notes };\n  246 }\n→ 247 const value = await delegate.count({\n        select: {\n          _count: {\n            select: {\n              _all: true\n            }\n          }\n        },\n        where: {\n          seller_org_id: \"00f18b4a-d3b1-4912-bd02-82d5fb895643\",\n          ~~~~~~~~~~~~~\n      ?   AND?: invoicesWhereInput | invoicesWhereInput[],\n      ?   OR?: invoicesWhereInput[],\n      ?   NOT?: invoicesWhereInput | invoicesWhereInput[],\n      ?   id?: UuidFilter | String,\n      ?   org_id?: UuidFilter | String,\n      ?   buyer_org_id?: UuidFilter | String,\n      ?   trade_id?: UuidFilter | String,\n      ?   invoice_number?: StringFilter | String,\n      ?   invoice_date?: DateTimeFilter | DateTime,\n      ?   due_date?: DateTimeNullableFilter | DateTime | Null,\n      ?   currency?: StringFilter | String,\n      ?   gross_amount?: DecimalFilter | Decimal,\n      ?   lifecycle_state_id?: UuidFilter | String,\n      ?   document_url?: StringNullableFilter | String | Null,\n      ?   extraction_draft_id?: UuidNullableFilter | String | Null,\n      ?   notes?: StringNullableFilter | String | Null,\n      ?   created_by_user_id?: UuidNullableFilter | String | Null,\n      ?   created_at?: DateTimeFilter | DateTime,\n      ?   updated_at?: DateTimeFilter | DateTime,\n      ?   invoice_lifecycle_logs?: Invoice_lifecycle_logsListRelationFilter,\n      ?   organizations_invoices_buyer_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   users?: UserNullableScalarRelationFilter | UserWhereInput | Null,\n      ?   document_extraction_drafts?: DocumentExtractionDraftNullableScalarRelationFilter | DocumentExtractionDraftWhereInput | Null,\n      ?   lifecycle_states?: LifecycleStateScalarRelationFilter | LifecycleStateWhereInput,\n      ?   organizations_invoices_org_idToorganizations?: OrganizationsScalarRelationFilter | organizationsWhereInput,\n      ?   trades?: TradeScalarRelationFilter | TradeWhereInput,\n      ?   ttp_score_snapshots?: Ttp_score_snapshotsListRelationFilter,\n      ?   verified_payable_certificates?: Verified_payable_certificatesNullableScalarRelationFilter | verified_payable_certificatesWhereInput | Null\n        }\n      })\n\nUnknown argument `seller_org_id`. Available options are marked with ?."
+      ]
+    }
+  ],
+  "dependencyDriftUnsafeSlugs": [],
+  "overlapViolations": []
+}
