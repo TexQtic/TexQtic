@@ -1,8 +1,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { TenantConfig, TenantStatus } from '../../types';
-import { activateApprovedOnboarding, archiveTenant } from '../../services/controlPlaneService';
+import { activateApprovedOnboarding, archiveTenant, getTenantById } from '../../services/controlPlaneService';
 import { EmptyState, ErrorState } from '../shared';
+import { ControlPlaneOrgMemberSummary, type ControlPlaneMembershipEntry } from './ControlPlaneOrgMemberSummary';
 
 type TenantDetailsTabId = 'OVERVIEW' | 'PLAN' | 'FEATURES' | 'BILLING' | 'RISK' | 'AUDIT';
 
@@ -89,6 +90,8 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
   const [archiveLoading, setArchiveLoading] = useState(false);
   const [archiveError, setArchiveError] = useState<string | null>(null);
   const [archiveNotice, setArchiveNotice] = useState<string | null>(null);
+  const [membershipsData, setMembershipsData] = useState<ControlPlaneMembershipEntry[]>([]);
+  const [membershipsLoading, setMembershipsLoading] = useState(false);
 
   useEffect(() => {
     if (!tenant) {
@@ -98,6 +101,37 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
     setTenantStatus(tenant.status);
     setOnboardingStatus(tenant.onboarding_status ?? null);
   }, [tenant]);
+
+  useEffect(() => {
+    if (!tenant) {
+      setMembershipsData([]);
+      return;
+    }
+
+    let cancelled = false;
+    setMembershipsLoading(true);
+
+    (async () => {
+      try {
+        const response = await getTenantById(tenant.id);
+        if (!cancelled) {
+          setMembershipsData(response?.tenant?.memberships ?? []);
+        }
+      } catch {
+        if (!cancelled) {
+          setMembershipsData([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setMembershipsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tenant?.id]);
 
   if (loading) {
     return (
@@ -288,7 +322,8 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
     switch (activeTab) {
       case 'OVERVIEW':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in duration-300">
+          <div className="space-y-8 animate-in fade-in duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
               <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800">
                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Core Identity</h3>
@@ -426,6 +461,8 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
                  )}
               </div>
             </div>
+          </div>
+          <ControlPlaneOrgMemberSummary memberships={membershipsData} loading={membershipsLoading} />
           </div>
         );
       case 'PLAN':
