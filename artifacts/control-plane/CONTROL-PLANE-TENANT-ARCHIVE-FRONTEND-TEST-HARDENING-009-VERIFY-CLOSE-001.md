@@ -78,7 +78,7 @@ All validation passes. No product bug discovered. No test-setup failure.
 | Field | Value |
 |---|---|
 | Commit message | `test: cover tenant archive frontend guards` |
-| Commit hash | Pending at artifact creation; see final report. |
+| Commit hash | `025337086c9b8beeec0564327e16fb6e41da1bac` |
 
 ---
 
