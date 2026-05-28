@@ -6316,6 +6316,19 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'EMAIL_MISMATCH', 'Email does not match invite', 403);
       }
 
+      // B-01: Detect existing TexQtic account — sign-in-first flow.
+      // An existing user must sign in and accept the invite via the authenticated path.
+      // We MUST NOT issue a JWT or create a membership without credential validation.
+      const existingAccount = await prisma.user.findUnique({ where: { email: normalizedUserEmail } });
+      if (existingAccount) {
+        return sendError(
+          reply,
+          'EXISTING_USER_MUST_SIGN_IN',
+          'Existing TexQtic account found. Please sign in to accept this invite.',
+          409,
+        );
+      }
+
       // Hash password
       const passwordHash = await bcrypt.hash(userData.password, 10);
 
@@ -6389,6 +6402,16 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         const ownerExists = invite.tenant.memberships.some(membership => membership.role === 'OWNER');
         const resolvedRole = ownerExists ? invite.role : 'OWNER';
 
+        // B-02: Pre-check for duplicate membership before create to prevent P2002 → 500.
+        const existingMembership = await tx.membership.findFirst({
+          where: { userId: user.id, tenantId: invite.tenantId },
+        });
+        if (existingMembership) {
+          const err = new Error('Membership already exists') as Error & { _activationCode: string };
+          err._activationCode = 'ALREADY_MEMBER';
+          throw err;
+        }
+
         // Create membership (RLS will enforce tenant_id = org_id)
         const membership = await tx.membership.create({
           data: {
@@ -6461,6 +6484,14 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         },
       });
     } catch (error: unknown) {
+      // B-02: Map controlled duplicate-membership sentinel to 409
+      if (error instanceof Error && (error as Error & { _activationCode?: string })._activationCode === 'ALREADY_MEMBER') {
+        return sendError(reply, 'ALREADY_MEMBER', 'This user is already a member of this tenant.', 409);
+      }
+      // B-02: Map Prisma P2002 unique constraint on membership to 409 (race condition)
+      if (error instanceof Error && (error as Error & { code?: string }).code === 'P2002') {
+        return sendError(reply, 'ALREADY_MEMBER', 'This user is already a member of this tenant.', 409);
+      }
       fastify.log.error({ err: error }, '[Tenant Activation] Error');
       return sendError(reply, 'INTERNAL_ERROR', 'Activation failed', 500);
     }
@@ -6514,6 +6545,20 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         const dbContext = request.dbContext;
         if (!dbContext) {
           return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+        }
+
+        // S-01: Guard against duplicate pending invites for the same email and tenant.
+        const normalizedInviteEmail = email.trim().toLowerCase();
+        const pendingInvite = await prisma.invite.findFirst({
+          where: {
+            tenantId,
+            email: normalizedInviteEmail,
+            acceptedAt: null,
+            expiresAt: { gt: new Date() },
+          },
+        });
+        if (pendingInvite) {
+          return sendError(reply, 'INVITE_ALREADY_PENDING', 'A pending invite already exists for this email address.', 409);
         }
 
         const invite = await withDbContext(prisma, dbContext, async tx => {

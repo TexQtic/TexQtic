@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-07 (FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001 DESIGN_SYNTHESIS_COMPLETE. Bounded design synthesis complete. FAM-07D chosen as next candidate: credential bypass security fix (FTR-AUTH-001). LFI/FTR not modified. No implementation. Prior: LAYER0-FAM-07-AUTHORIZATION-RELEASE-001 GOVERNANCE_SYNC_COMPLETE.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-28 (FAM-07D1-TENANT-ONBOARDING-EXISTING-USER-BACKEND-SECURITY-CONTAINMENT-001 CLOSED. Backend security containment complete: B-01 EXISTING_USER_MUST_SIGN_IN, B-02 ALREADY_MEMBER, S-01 INVITE_ALREADY_PENDING. 10/10 tests PASS. Frontend follow-up required (FAM-07D2). LFI/FTR not modified. Prior: FAM-07C DESIGN_SYNTHESIS_COMPLETE.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,7 +15,7 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: HOLD_FOR_AUTHORIZATION
+active_delivery_unit: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
   TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001 AUDIT_COMPLETE (2026-07-05).
@@ -53,31 +53,29 @@ last_closed_unit_closure_basis: >
   Governance artifact created. Control files updated. tsc: 0 errors.
 last_closed_unit_prior: TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001
 last_closed_unit_prior_status: LEGAL_PACKET_UPGRADED_READY_FOR_COUNSEL (2026-07-06)
-next_candidate_unit: FAM-07D-TENANT-ONBOARDING-EXISTING-USER-INVITE-ACCEPTANCE-DESIGN-OR-IMPLEMENTATION-PREP-001
+next_candidate_unit: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001
 next_candidate_unit_status: >
-  BOUNDED_DESIGN_SYNTHESIS_COMPLETE (2026-07-07) — FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001
-  design synthesis complete. FAM-07D is the recommended next implementation prompt.
-  FAM-07D requires separate explicit Paresh authorization before implementation begins.
-  Design decision required from Paresh: Option A (sign-in-first flow) vs Option B (validate-password-inline)
-  for existing-user invite acceptance path (FTR-AUTH-001).
-  No schema migration, no SMTP dependency, no legal text dependency — implementation-ready.
-  TTP HOLD_FOR_COUNSEL_FEEDBACK applies to TTP track only — does not block FAM-07D.
-next_candidate_unit_date_installed: "2026-07-07"
+  HOLD_FOR_AUTHORIZATION (2026-05-28) — FAM-07D1 backend security containment CLOSED.
+  FAM-07D1 closed: B-01 (EXISTING_USER_MUST_SIGN_IN), B-02 (ALREADY_MEMBER), S-01 (INVITE_ALREADY_PENDING).
+  Backend now returns 409 EXISTING_USER_MUST_SIGN_IN for existing accounts on POST /api/tenant/activate.
+  Frontend must handle this code and present a sign-in redirect flow (Option A).
+  FAM-07D2 requires separate explicit Paresh authorization before implementation begins.
+  No schema migration, no SMTP dependency — frontend-only implementation.
+  TTP HOLD_FOR_COUNSEL_FEEDBACK applies to TTP track only — does not block FAM-07D2.
+next_candidate_unit_date_installed: "2026-05-28"
 next_candidate_unit_note: >
-  FAM-07D — Existing-User Invite Acceptance Security Fix (FTR-AUTH-001).
-  Security blocker B-01: credential bypass for existing users in POST /api/tenant/activate
-  (supplied password silently discarded without validation for existing User records).
-  Security blocker B-02: unhandled Prisma P2002 duplicate membership → generic 500 INTERNAL_ERROR.
-  S-01: no duplicate invite guard for (tenantId, email) pending invites.
-  Backend allowlist: server/src/routes/tenant.ts (only).
+  FAM-07D2 — Existing-User Invite Acceptance: Frontend Sign-in Redirect (FTR-AUTH-001 frontend leg).
+  FAM-07D1 (backend) CLOSED 2026-05-28. Frontend must now handle EXISTING_USER_MUST_SIGN_IN.
+  Required: detect 409 EXISTING_USER_MUST_SIGN_IN in OnboardingFlow.tsx activation path;
+  present user with sign-in prompt instead of generic error message; after sign-in,
+  re-invoke invite acceptance via authenticated accept-invite endpoint.
   Frontend allowlist: components/Onboarding/OnboardingFlow.tsx, App.tsx, services/tenantService.ts.
-  Test: server/src/__tests__/tenant-activate.integration.test.ts (new).
-  Validation: pnpm --filter server typecheck EXIT 0; pnpm --filter server lint clean;
-  existing invite/activation tests PASS.
-  Implementation gate: requires Paresh design decision (Option A vs B) and Type-A authorization.
-  Commit: fix(auth): resolve credential bypass and duplicate membership 500 in activation.
-  FAM-07E (ToS architecture) follows FAM-07D; IMPLEMENTATION-GATED_BY_FINAL_LEGAL_TEXT.
-  FAM-07F (test coverage) follows FAM-07D (tests depend on final route state).
+  Validation: pnpm --filter web typecheck EXIT 0; pnpm --filter web lint clean;
+  pnpm --filter server test — tenant-activate PASS (10/10).
+  Implementation gate: requires Paresh explicit authorization (Type-A).
+  Commit: feat(auth): handle EXISTING_USER_MUST_SIGN_IN redirect in onboarding flow.
+  FAM-07E (ToS architecture) follows FAM-07D2; IMPLEMENTATION-GATED_BY_FINAL_LEGAL_TEXT.
+  FAM-07F (test coverage) follows FAM-07D2 (tests depend on final route state).
   FAM-07H (SMTP) is infrastructure-only — Paresh action at any time, independent of code.
   Do NOT auto-open next unit without Paresh authorization.
   TTP track held separately: see prior_next_candidate_unit below.
@@ -122,17 +120,19 @@ dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
 dpp_v3_design_status: OPTIONAL_POLISH
 prior_last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
 prior_last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-last_closed_governance_unit: FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001
-last_closed_governance_unit_status: DESIGN_SYNTHESIS_COMPLETE (2026-07-07). FAM-07 bounded design synthesis complete. FAM-07D chosen as next candidate. Control pointer updated. LFI/FTR not modified. No implementation performed.
-last_closed_governance_unit_date: 2026-07-07
+last_closed_governance_unit: FAM-07D1-TENANT-ONBOARDING-EXISTING-USER-BACKEND-SECURITY-CONTAINMENT-001
+last_closed_governance_unit_status: CLOSED (2026-05-28). Backend security containment complete. B-01 EXISTING_USER_MUST_SIGN_IN, B-02 ALREADY_MEMBER, S-01 INVITE_ALREADY_PENDING. 10/10 tests PASS. tsc 0 errors. ESLint clean. Frontend follow-up required (FAM-07D2). LFI/FTR not modified.
+last_closed_governance_unit_date: 2026-05-28
 last_closed_governance_unit_note: >
-  FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001 DESIGN_SYNTHESIS_COMPLETE (2026-07-07).
-  Synthesized FAM-07A + FAM-07B evidence + TTP legal counsel design context.
-  Defined slices FAM-07D through FAM-07J. FTR-AUTH-001 design: Option A (sign-in-first) vs
-  Option B (validate-password-inline) — Paresh decision required. FTR-LEGAL-003:
-  DESIGN-READY_FOR_ARCHITECTURE + IMPLEMENTATION-GATED_BY_FINAL_LEGAL_TEXT.
-  HD-001: infrastructure-only (no code change). FTR-AUTH-004: ADJACENT/PILOT_REQUIRED/P2.
-  Hub impact: NO_HUB_UPDATE_REQUIRED (design synthesis only; no new repo-truth).
+  FAM-07D1-TENANT-ONBOARDING-EXISTING-USER-BACKEND-SECURITY-CONTAINMENT-001 CLOSED (2026-05-28).
+  Option A (sign-in-first) implemented. Three security vulnerabilities contained in server/src/routes/tenant.ts:
+  B-01: prisma.user.findUnique pre-check outside tx → 409 EXISTING_USER_MUST_SIGN_IN for existing accounts;
+  B-02: tx.membership.findFirst pre-check + P2002 outer catch → 409 ALREADY_MEMBER (not 500);
+  S-01: prisma.invite.findFirst pending guard → 409 INVITE_ALREADY_PENDING.
+  New test file: server/src/__tests__/tenant-activate.integration.test.ts (10 tests, all PASS).
+  tsc --noEmit server: 0 errors. ESLint: no violations. Commit: fix(auth).
+  FTR-AUTH-001 backend leg closed. Frontend follow-up (FAM-07D2) required for full user-facing fix.
+  Prior closed governance unit: FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001 (2026-07-07).
   LFI FAM-07 remains REPO_CONFIRMED. FTR-AUTH-001 remains DESIGN_GATED/OPEN.
   FTR-LEGAL-003 remains NOT_ASSESSED/OPEN. FAM-07 NOT advanced to VERIFIED_COMPLETE.
   Prior: LAYER0-FAM-07-AUTHORIZATION-RELEASE-001 GOVERNANCE_SYNC_COMPLETE (2026-05-28).
