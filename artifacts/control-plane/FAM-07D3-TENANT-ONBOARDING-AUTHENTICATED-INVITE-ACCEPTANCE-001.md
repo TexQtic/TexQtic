@@ -3,7 +3,7 @@
 **Unit ID:** FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001  
 **Family:** FAM-07 — Tenant Onboarding and Invite  
 **Status:** VERIFIED_COMPLETE  
-**Date:** 2026-07-07  
+**Date:** 2026-05-28  
 **Authorization:** Paresh Patel (prior session — FAM-07 bounded implementation unit, sign-in-first flow completion)  
 **Enum:** `FAM_07D3_AUTHENTICATED_INVITE_ACCEPTANCE_COMPLETE`
 

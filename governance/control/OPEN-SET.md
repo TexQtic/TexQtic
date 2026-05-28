@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-07 (FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001 CLOSED. POST /api/tenant/activate-authenticated implemented. FAM-07 sign-in-first flow end-to-end complete. FAM-07 NOT VERIFIED_COMPLETE. LFI/FTR not modified.)
+**Last Updated:** 2026-05-28 (FAM-07D3-VERIFY-CLOSE-AND-HUB-SYNC-001 COMPLETE. Date anomaly corrected (2026-07-07 → 2026-05-28). LFI FAM-07 → PARTIALLY_IMPLEMENTED. FTR-AUTH-001 → PARTIAL.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,7 +53,7 @@
 
 ## Operating Notes
 
-- FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001 VERIFIED_COMPLETE (2026-07-07).
+- FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001 VERIFIED_COMPLETE (2026-05-28).
   POST /api/tenant/activate-authenticated: inline JWT verify (bypasses tenantAuthMiddleware since
   invited users are not yet members), invite hash lookup, email match guard, duplicate membership
   guard, atomic transaction (membership + invite acceptedAt + audit log), resolveTenantSessionIdentity,

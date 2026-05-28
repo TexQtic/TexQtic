@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-07 (FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001 CLOSED. POST /api/tenant/activate-authenticated implemented. acceptAuthenticatedInvite service + App.tsx handleAuthSuccess trigger. 17/17 backend tests PASS, 12/12 frontend tests PASS. tsc EXIT 0. ESLint no new issues. FAM-07 sign-in-first flow COMPLETE. FAM-07E–FAM-07J NOT yet opened. FAM-07 NOT VERIFIED_COMPLETE. LFI/FTR not modified.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-28 (FAM-07D3-VERIFY-CLOSE-AND-HUB-SYNC-001 COMPLETE. Date anomaly corrected (2026-07-07 → 2026-05-28). LFI FAM-07 → PARTIALLY_IMPLEMENTED. FTR-AUTH-001 → PARTIAL. See artifacts/control-plane/FAM-07D3-VERIFY-CLOSE-AND-HUB-SYNC-001.md.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -18,16 +18,16 @@ product_delivery_priority: >-
 active_delivery_unit: FAM-07E-THROUGH-FAM-07J-REMAINING-UNITS-TBD
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  FAM-07D3 CLOSED (2026-07-07). POST /api/tenant/activate-authenticated implemented.
+  FAM-07D3 CLOSED (2026-05-28). POST /api/tenant/activate-authenticated implemented.
   FAM-07 sign-in-first flow is now end-to-end complete: D1 (backend security) → D2 (frontend
   redirect) → D3 (authenticated acceptance after sign-in). Remaining FAM-07 units: FAM-07E
   (ToS — gated by legal text), FAM-07F (test coverage), FAM-07G (auth hardening TBD),
   FAM-07H (SMTP infra), FAM-07J (INVITE_ALREADY_PENDING UX). None authorized for implementation.
   Do NOT auto-open next unit. FAM-07 NOT VERIFIED_COMPLETE.
 last_closed_unit: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
-last_closed_unit_status: VERIFIED_COMPLETE (2026-07-07)
+last_closed_unit_status: VERIFIED_COMPLETE (2026-05-28)
 last_closed_unit_runtime_verdict: >
-  FAM-07D3 authenticated invite acceptance (2026-07-07).
+  FAM-07D3 authenticated invite acceptance (2026-05-28). LFI/FTR updated by FAM-07D3-VERIFY-CLOSE-AND-HUB-SYNC-001.
   POST /api/tenant/activate-authenticated: inline JWT verify (no tenantAuthMiddleware), invite
   hash lookup, email match guard, duplicate membership guard, atomic tx (membership + invite +
   audit log), resolveTenantSessionIdentity, reply.tenantJwtSign. acceptAuthenticatedInvite
@@ -36,28 +36,28 @@ last_closed_unit_runtime_verdict: >
   (proceed); EMAIL_MISMATCH/INVALID_INVITE fail-close. 17/17 backend tests PASS
   (ACT-AUTH-001..ACT-AUTH-007). 12/12 frontend tests PASS (ACT-011, ACT-012 added).
   tsc --noEmit EXIT 0. ESLint: no new issues. No schema/migration/.env changes.
-  FAM-07 NOT VERIFIED_COMPLETE. LFI/FTR not modified.
+  FAM-07 NOT VERIFIED_COMPLETE. LFI/FTR updated by FAM-07D3-VERIFY-CLOSE-AND-HUB-SYNC-001 (2026-05-28).
 last_closed_unit_commits: "[TEXQTIC] auth: accept pending invite after authenticated sign-in (FAM-07D3)"
 last_closed_unit_closure_basis: >
   FAM-07D2 pendingInviteToken preservation consumed. Backend endpoint + frontend trigger +
   service function + tests written. 17/17 backend + 12/12 frontend tests PASS. tsc EXIT 0.
   ESLint: no new issues. Sign-in-first flow end-to-end complete.
 last_closed_unit_prior: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGN-IN-HANDOFF-001
-last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-07-07)
+last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-05-28)
 next_candidate_unit: FAM-07E-THROUGH-FAM-07J-REMAINING-TBD
 next_candidate_unit_status: HOLD_FOR_AUTHORIZATION
-next_candidate_unit_date_installed: "2026-07-07"
+next_candidate_unit_date_installed: "2026-05-28"
 next_candidate_unit_note: >
-  FAM-07D3 CLOSED (2026-07-07). Authenticated invite acceptance complete.
+  FAM-07D3 CLOSED (2026-05-28). Authenticated invite acceptance complete.
   FAM-07 remaining units: FAM-07E (ToS — IMPLEMENTATION-GATED_BY_FINAL_LEGAL_TEXT),
   FAM-07F (test coverage — follows final route state), FAM-07G (auth hardening TBD),
   FAM-07H (SMTP infra — infrastructure-only, Paresh action at any time),
   FAM-07J (INVITE_ALREADY_PENDING UX on membership invite surface — separate, deferred).
   None of these are authorized. TTP track held separately: see prior_next_candidate_unit below.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
-archived_candidate_fam07d3_status: CLOSED (2026-07-07)
+archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001
-archived_candidate_fam07d2_status: CLOSED (2026-07-07)
+archived_candidate_fam07d2_status: CLOSED (2026-05-28)
 prior_next_candidate_unit: HOLD_FOR_COUNSEL_FEEDBACK
 prior_next_candidate_unit_status: >
   HOLD_FOR_COUNSEL_FEEDBACK — No implementation packet may be opened until external legal counsel
