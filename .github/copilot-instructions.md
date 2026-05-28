@@ -3,8 +3,8 @@ CRITICAL: You are ALWAYS in “Safe-Write Mode”
 
 If any rule is violated, you MUST STOP and output only the TexQtic Blocker Report.
 
-0) Absolute Behavioral Override (NON-NEGOTIABLE)
-SAFE-WRITE MODE — ALWAYS ON
+0. Absolute Behavioral Override (NON-NEGOTIABLE)
+   SAFE-WRITE MODE — ALWAYS ON
 
 Allowlist Enforcement: You may edit ONLY files explicitly listed in the prompt’s ALLOWLIST (Modify).
 
@@ -20,12 +20,12 @@ Evidence Protocol: No claim is valid without raw terminal output (as specified).
 
 Stop-Loss: If blocked, do not guess. Output the Blocker Report and wait.
 
-1) TexQtic Repo Reality (Authoritative Context)
-Tech Stack (current)
+1. TexQtic Repo Reality (Authoritative Context)
+   Tech Stack (current)
 
 Monorepo: pnpm + Turbo
 
-Frontend: Next.js 15 / React 19
+Frontend: Vite + React 19 SPA (not file-based routing)
 
 Backend: Node 22 LTS preferred (Node 20 LTS acceptable; Node 24+ is NOT allowed unless explicitly approved)
 
@@ -72,7 +72,7 @@ Copilot MUST understand and respect the following URL roles:
 
 Used ONLY for:
 
-psql -f prisma/*.sql
+psql -f prisma/\*.sql
 
 Applying RLS policies
 
@@ -126,13 +126,13 @@ PRISMA EXECUTION RULES (NON-NEGOTIABLE)
 
 Prisma Command Matrix
 
-Command	Allowed	Conditions
-prisma db pull	✅	After SQL applied
-prisma generate	✅	After schema confirmed
-prisma migrate dev	❌	NEVER
-prisma migrate deploy	⚠️	ONLY with explicit approval
-prisma db push	❌	NEVER
-prisma studio	⚠️	Read-only inspection only
+Command Allowed Conditions
+prisma db pull ✅ After SQL applied
+prisma generate ✅ After schema confirmed
+prisma migrate dev ❌ NEVER
+prisma migrate deploy ⚠️ ONLY with explicit approval
+prisma db push ❌ NEVER
+prisma studio ⚠️ Read-only inspection only
 
 REQUIRED EXECUTION SEQUENCE (WHEN SQL IS INVOLVED)
 
@@ -193,11 +193,13 @@ Blocker Type:
 (Database URL / Prisma Migration / RLS Policy / Permission / Pooler Limitation)
 
 Evidence:
+
 - Command:
 - Error:
 - Affected table/policy:
 
 Required User Action:
+
 - [Explicit approval OR clarification]
 
 No further actions taken.
@@ -211,7 +213,7 @@ or connection URLs unless explicitly instructed.
 If a database action requires inference, retries, or alternative execution paths,
 you must STOP and emit a Database Execution Blocker report.
 
-2) Pre-Implementation Protocol (MANDATORY)
+2. Pre-Implementation Protocol (MANDATORY)
 
 Before implementing ANY change, you MUST:
 
@@ -240,7 +242,6 @@ Run exactly:
 git diff --name-only
 git status --short
 
-
 If ANY unexpected file is modified, STOP and report.
 
 C) Staging safety rule (prevents “accidental commit creep”)
@@ -255,8 +256,8 @@ You MUST ensure staged files contain ONLY allowlisted files.
 
 If not, STOP and fix staging (do NOT proceed).
 
-3) Secrets & Redaction (ZERO TOLERANCE)
-Forbidden to print (ever)
+3. Secrets & Redaction (ZERO TOLERANCE)
+   Forbidden to print (ever)
 
 .env contents (any line)
 
@@ -280,7 +281,7 @@ token: "<REDACTED>" (no length, no prefix)
 
 If any secret is printed, STOP immediately and output the Blocker Report noting a Secrets Leak.
 
-4) Governance Files (MANDATORY REVIEW — Only if applicable)
+4. Governance Files (MANDATORY REVIEW — Only if applicable)
 
 Governance files are located in /shared/contracts/.
 Only review the ones relevant to the prompt scope.
@@ -347,8 +348,8 @@ Applies if adding:
 tables/routes/domains
 control/tenant plane boundaries
 
-5) TexQtic Doctrine v1.4 Execution Rules (KEY)
-Atomic Commit Rule
+5. TexQtic Doctrine v1.4 Execution Rules (KEY)
+   Atomic Commit Rule
 
 One prompt = one atomic commit (unless the prompt explicitly allows multiple commits).
 No mixing “fix + feature” in the same commit.
@@ -360,7 +361,7 @@ No refactors, no formatting churn, no “cleanup.”
 No “Optimism Claims”
 Do not say “works” unless verification outputs are pasted.
 
-6) Verification & Evidence Protocol (MUST FOLLOW)
+6. Verification & Evidence Protocol (MUST FOLLOW)
 
 Each prompt will specify evidence requirements.
 If not specified, default minimum:
@@ -383,7 +384,7 @@ git show --stat HEAD
 
 If any proof cannot be produced, STOP and output Blocker Report.
 
-7) Stop-Loss Protocol (When to STOP)
+7. Stop-Loss Protocol (When to STOP)
 
 You MUST STOP immediately if:
 
@@ -396,30 +397,30 @@ You would need a second hypothesis / “try another approach”
 You feel tempted to refactor to “make it cleaner”
 When blocked: output the Blocker Report only.
 
-8) TexQtic Blocker Report Template (MANDATORY)
+8. TexQtic Blocker Report Template (MANDATORY)
 
 🛑 TEXQTIC EXECUTION BLOCKER DETECTED
 Task ID: <prompt-id>
 Status: Execution Halted
 
-1) Blocker
+1. Blocker
 
 Type: (Out-of-Scope File / Missing Dependency / Spec Ambiguity / Env Mismatch / Secrets Risk / Governance Conflict)
 Description: (precise, short)
 
-2) Technical Evidence
+2. Technical Evidence
 
 Command run: <exact command>
 Observed output: <key lines only>
 Location: <file:line OR endpoint>
 
-3) Allowed Options Within Current Scope
+3. Allowed Options Within Current Scope
 
 Option A: <within allowlist>
 Option B: <within allowlist>
 If none: No alternative within current constraints
 
-4) Required User Decision
+4. Required User Decision
 
 Choose exactly one:
 Expand allowlist: <files>
@@ -427,27 +428,27 @@ Approve dependency install: <package>
 Clarify spec: <question>
 Waiting for instruction.
 
-9) Commit Message Requirements (TexQtic)
+9. Commit Message Requirements (TexQtic)
 
 Commit message must be prompt-scoped and atomic:
 prompt-<id> <short description>
 Optional footer (only if asked):
 Governance review: PASS/FAIL/N/A lines
 
-10) TexQtic-Specific “Never Again” Rules (from incident history)
+10. TexQtic-Specific “Never Again” Rules (from incident history)
 
 Never embed DB URLs in psql commands in chat logs.
 Never use npx prisma if repo Prisma exists; use pnpm -C server exec prisma.
 Never create “temporary scripts” unless explicitly allowlisted.
 Never modify more than allowlisted files—even for “small fixes.”
-Never commit with pre-staged files; always verify staged set first.
-11) TexQtic Agent / Subagent Discipline
+Never commit with pre-staged files; always verify staged set first. 11) TexQtic Agent / Subagent Discipline
 
 For TexQtic work, the main Copilot agent remains the orchestrator and final decision-maker.
 
 Subagents may be used for audit, investigation, repo-truth inspection, validation, and scope-safety review. Subagents are read-only by default.
 
 Preferred subagent roles:
+
 - Governance evidence subagent: reads TLRH, Layer 0, and tracker files; reports authority, status, blockers, and closure requirements.
 - Repo-truth subagent: inspects current implementation and test surfaces; reports actual current behavior.
 - Validation subagent: runs or recommends validation commands and reports exact results.
@@ -457,6 +458,7 @@ Preferred subagent roles:
 Implementation work must use one editing agent unless a prompt explicitly authorizes otherwise. Subagents must not independently edit files, update trackers, commit, close parent units, advance family status, or broaden scope.
 
 Governance rules:
+
 - Do not edit Layer 0 files unless explicitly authorized.
 - Do not close FTR parent items or advance family status from bounded sub-unit work.
 - FUTURE-TODO-REGISTER.md is the canonical bounded closure-recording location when a prompt explicitly authorizes closure sync.
@@ -464,6 +466,7 @@ Governance rules:
 - Adjacent findings must be recorded separately and must not be merged into the active unit without explicit authorization.
 
 Every TexQtic prompt must preserve:
+
 - allowed files;
 - forbidden actions;
 - validation commands;
