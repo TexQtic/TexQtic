@@ -11,6 +11,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Fastify, { type FastifyInstance } from 'fastify';
 import fastifyJwt from '@fastify/jwt';
+import jwt from 'jsonwebtoken';
 
 const {
   tenantAuthMiddlewareMock,
@@ -54,6 +55,9 @@ const {
     },
     user: {
       findUnique: vi.fn(),
+    },
+    membership: {
+      findFirst: vi.fn(),
     },
   };
 
@@ -262,6 +266,12 @@ import tenantRoutes from '../routes/tenant.js';
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+const TEST_JWT_SECRET = 'tenant-jwt-test-secret-key-min-32-chars';
+
+function makeTestTenantToken(userId: string, tenantId: string, role: string): string {
+  return jwt.sign({ userId, tenantId, role }, TEST_JWT_SECRET, { expiresIn: '15m' });
+}
 
 const INVITE_TOKEN = 'test-invite-token-abc123';
 
@@ -603,6 +613,197 @@ describe('S-01 — duplicate pending invite guard on POST /api/tenant/membership
         where: expect.objectContaining({
           email: 'newmember@example.test',
         }),
+      }),
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// FAM-07D3 — POST /api/tenant/activate-authenticated
+// ---------------------------------------------------------------------------
+
+const AUTH_INVITE_TOKEN = 'auth-invite-test-token-abc123';
+
+const AUTH_INVITE = {
+  id:       'auth-invite-id-001',
+  tenantId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+  email:    'owner@example.test',
+  role:     'MEMBER',
+  tokenHash: 'computed-by-crypto-not-used-in-tests',
+  acceptedAt: null,
+  expiresAt: new Date(Date.now() + 86_400_000),
+  tenant: {
+    memberships: [{ role: 'OWNER' }],
+  },
+};
+
+const AUTH_USER = {
+  id:    TEST_USER_ID,
+  email: 'owner@example.test',
+};
+
+describe('FAM-07D3 — authenticated invite acceptance (POST /api/tenant/activate-authenticated)', () => {
+  let app: FastifyInstance;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    // Default: withDbContext calls cb with txMock (both the membership create call and resolveTenantSessionIdentity)
+    withDbContextMock.mockImplementation(async (_client: unknown, _ctx: unknown, cb: (tx: unknown) => Promise<unknown>) => cb(txMock));
+    txMock.$executeRawUnsafe.mockResolvedValue(undefined);
+    txMock.membership.create.mockResolvedValue({ id: 'auth-membership-id-001', role: 'MEMBER', tenantId: TEST_TENANT_ID, userId: TEST_USER_ID });
+    txMock.invite.update.mockResolvedValue({ id: 'auth-invite-id-001', acceptedAt: new Date() });
+    txMock.organizations.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      slug: 'test-org',
+      legal_name: 'Test Org',
+      status: 'ACTIVE',
+      org_type: 'B2B',
+      primary_segment_key: 'Yarn',
+      is_white_label: false,
+      plan: 'FREE',
+      secondary_segments: [],
+      role_positions: [],
+    });
+    app = await buildServer();
+  });
+
+  afterEach(async () => { await app.close(); });
+
+  it('ACT-AUTH-001: returns 401 when no Authorization header is provided', async () => {
+    const response = await app.inject({
+      method:  'POST',
+      url:     '/api/tenant/activate-authenticated',
+      payload: { inviteToken: AUTH_INVITE_TOKEN },
+    });
+
+    expect(response.statusCode).toBe(401);
+    const body = response.json();
+    expect(body.success).toBe(false);
+  });
+
+  it('ACT-AUTH-002: returns 401 when Authorization header contains an invalid JWT', async () => {
+    const response = await app.inject({
+      method:  'POST',
+      url:     '/api/tenant/activate-authenticated',
+      headers: { authorization: 'Bearer not-a-valid-jwt' },
+      payload: { inviteToken: AUTH_INVITE_TOKEN },
+    });
+
+    expect(response.statusCode).toBe(401);
+    const body = response.json();
+    expect(body.success).toBe(false);
+  });
+
+  it('ACT-AUTH-003: returns 404 INVALID_INVITE when invite is not found', async () => {
+    const authToken = makeTestTenantToken(TEST_USER_ID, TEST_TENANT_ID, 'OWNER');
+    prismaMock.invite.findFirst.mockResolvedValueOnce(null);
+
+    const response = await app.inject({
+      method:  'POST',
+      url:     '/api/tenant/activate-authenticated',
+      headers: { authorization: `Bearer ${authToken}` },
+      payload: { inviteToken: AUTH_INVITE_TOKEN },
+    });
+
+    expect(response.statusCode).toBe(404);
+    const body = response.json();
+    expect(body.error).toMatchObject({ code: 'INVALID_INVITE' });
+  });
+
+  it('ACT-AUTH-004: returns 403 EMAIL_MISMATCH when invite email differs from authenticated user email', async () => {
+    const authToken = makeTestTenantToken(TEST_USER_ID, TEST_TENANT_ID, 'OWNER');
+    prismaMock.invite.findFirst.mockResolvedValueOnce(AUTH_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce({ id: TEST_USER_ID, email: 'different@example.test' });
+
+    const response = await app.inject({
+      method:  'POST',
+      url:     '/api/tenant/activate-authenticated',
+      headers: { authorization: `Bearer ${authToken}` },
+      payload: { inviteToken: AUTH_INVITE_TOKEN },
+    });
+
+    expect(response.statusCode).toBe(403);
+    const body = response.json();
+    expect(body.error).toMatchObject({ code: 'EMAIL_MISMATCH' });
+  });
+
+  it('ACT-AUTH-005: returns 409 ALREADY_MEMBER when user is already a member of the invite tenant', async () => {
+    const authToken = makeTestTenantToken(TEST_USER_ID, TEST_TENANT_ID, 'OWNER');
+    prismaMock.invite.findFirst.mockResolvedValueOnce(AUTH_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce(AUTH_USER);
+    prismaMock.membership.findFirst.mockResolvedValueOnce({ id: 'existing-membership-id', role: 'MEMBER' });
+
+    const response = await app.inject({
+      method:  'POST',
+      url:     '/api/tenant/activate-authenticated',
+      headers: { authorization: `Bearer ${authToken}` },
+      payload: { inviteToken: AUTH_INVITE_TOKEN },
+    });
+
+    expect(response.statusCode).toBe(409);
+    const body = response.json();
+    expect(body.error).toMatchObject({ code: 'ALREADY_MEMBER' });
+  });
+
+  it('ACT-AUTH-006: success — creates membership, marks invite accepted, writes audit log, returns token', async () => {
+    const authToken = makeTestTenantToken(TEST_USER_ID, TEST_TENANT_ID, 'OWNER');
+    prismaMock.invite.findFirst.mockResolvedValueOnce(AUTH_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce(AUTH_USER);
+    prismaMock.membership.findFirst.mockResolvedValueOnce(null);
+
+    const response = await app.inject({
+      method:  'POST',
+      url:     '/api/tenant/activate-authenticated',
+      headers: { authorization: `Bearer ${authToken}` },
+      payload: { inviteToken: AUTH_INVITE_TOKEN },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.success).toBe(true);
+    expect(body.data).toMatchObject({
+      token:      expect.any(String),
+      user:       { id: TEST_USER_ID, email: 'owner@example.test' },
+      tenant:     expect.objectContaining({ id: TEST_TENANT_ID }),
+      membership: { role: 'MEMBER' },
+    });
+  });
+
+  it('ACT-AUTH-007: success — withDbContext is called; membership.create and invite.update are invoked', async () => {
+    const authToken = makeTestTenantToken(TEST_USER_ID, TEST_TENANT_ID, 'OWNER');
+    prismaMock.invite.findFirst.mockResolvedValueOnce(AUTH_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce(AUTH_USER);
+    prismaMock.membership.findFirst.mockResolvedValueOnce(null);
+
+    await app.inject({
+      method:  'POST',
+      url:     '/api/tenant/activate-authenticated',
+      headers: { authorization: `Bearer ${authToken}` },
+      payload: { inviteToken: AUTH_INVITE_TOKEN },
+    });
+
+    expect(withDbContextMock).toHaveBeenCalled();
+    expect(txMock.membership.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: TEST_USER_ID,
+          tenantId: TEST_TENANT_ID,
+          role: 'MEMBER',
+        }),
+      }),
+    );
+    expect(txMock.invite.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'auth-invite-id-001' },
+        data:  expect.objectContaining({ acceptedAt: expect.any(Date) }),
+      }),
+    );
+    expect(writeAuditLogMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: 'user.invite_accepted',
+        actorId: TEST_USER_ID,
+        tenantId: TEST_TENANT_ID,
       }),
     );
   });

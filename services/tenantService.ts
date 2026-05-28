@@ -65,6 +65,17 @@ export async function activateTenant(
   return post<ActivateTenantResponse>('/api/tenant/activate', request);
 }
 
+/**
+ * Accept a pending invite for an already-authenticated user.
+ * Called after sign-in when a pendingInviteToken is present.
+ * The response shape is identical to ActivateTenantResponse.
+ */
+export async function acceptAuthenticatedInvite(
+  request: { inviteToken: string }
+): Promise<ActivateTenantResponse> {
+  return post<ActivateTenantResponse>('/api/tenant/activate-authenticated', request);
+}
+
 // ==================== MEMBERSHIP ====================
 
 export interface MemberUser {

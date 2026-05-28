@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-07 (FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001 DESIGN_SYNTHESIS_COMPLETE. Bounded design synthesis complete. FAM-07D chosen as next candidate. LFI/FTR not modified. Prior: TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001 VERIFIED_COMPLETE.)
+**Last Updated:** 2026-07-07 (FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001 CLOSED. POST /api/tenant/activate-authenticated implemented. FAM-07 sign-in-first flow end-to-end complete. FAM-07 NOT VERIFIED_COMPLETE. LFI/FTR not modified.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,17 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001 VERIFIED_COMPLETE (2026-07-07).
+  POST /api/tenant/activate-authenticated: inline JWT verify (bypasses tenantAuthMiddleware since
+  invited users are not yet members), invite hash lookup, email match guard, duplicate membership
+  guard, atomic transaction (membership + invite acceptedAt + audit log), resolveTenantSessionIdentity,
+  reply.tenantJwtSign. acceptAuthenticatedInvite added to tenantService.ts. App.tsx handleAuthSuccess
+  TENANT path auto-triggers acceptance when pendingInviteToken present after sign-in; ALREADY_MEMBER
+  is soft error (proceed to workspace); EMAIL_MISMATCH and INVALID_INVITE fail-close.
+  17/17 backend tests PASS (ACT-AUTH-001..ACT-AUTH-007). 12/12 frontend tests PASS (ACT-011, ACT-012).
+  tsc EXIT 0. ESLint: no new issues. No schema/migration/.env changes. FAM-07 NOT VERIFIED_COMPLETE.
+  Artifact: artifacts/control-plane/FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001.md.
 
 - FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001 DESIGN_SYNTHESIS_COMPLETE (2026-07-07).
   Bounded design synthesis of FAM-07A (backend repo-truth) + FAM-07B (frontend/tests/runtime repo-truth)

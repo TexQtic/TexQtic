@@ -6498,6 +6498,184 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   });
 
   /**
+   * POST /api/tenant/activate-authenticated
+   * Accept a pending invite for an already-authenticated user.
+   *
+   * Auth: tenant JWT required (user must be signed in). Membership in the invite
+   * target tenant is NOT required — this endpoint creates that membership.
+   *
+   * Body: { inviteToken: string }
+   *
+   * Logic:
+   *   1. Verify tenant JWT → extract userId
+   *   2. Hash inviteToken (SHA-256)
+   *   3. Look up pending invite
+   *   4. Verify invite email matches authenticated user email
+   *   5. Guard: no duplicate membership
+   *   6. Create membership, mark invite accepted, write audit log (atomic)
+   *   7. Return new tenant JWT for invite.tenantId + tenant identity
+   */
+  fastify.post('/tenant/activate-authenticated', async (request, reply) => {
+    try {
+      // Step 1: Verify JWT — only validates token; does NOT require existing membership
+      try {
+        await request.tenantJwtVerify({ onlyCookie: false });
+      } catch {
+        return sendUnauthorized(reply, 'Invalid or expired token');
+      }
+
+      const jwtPayload = request.user as { userId?: string; tenantId?: string };
+      if (!jwtPayload.userId) {
+        return sendUnauthorized(reply, 'Invalid token payload');
+      }
+      const authenticatedUserId = jwtPayload.userId;
+
+      // Step 2: Parse body
+      const bodySchema = z.object({
+        inviteToken: z.string().min(1, 'Invite token is required'),
+      });
+      const parseResult = bodySchema.safeParse(request.body);
+      if (!parseResult.success) {
+        return sendValidationError(reply, parseResult.error.errors);
+      }
+      const { inviteToken } = parseResult.data;
+
+      // Step 3: Hash invite token and look up pending invite
+      const crypto = await import('node:crypto');
+      const tokenHash = crypto.createHash('sha256').update(inviteToken).digest('hex');
+
+      const invite = await prisma.invite.findFirst({
+        where: {
+          tokenHash,
+          acceptedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        include: {
+          tenant: {
+            include: { memberships: true },
+          },
+        },
+      });
+
+      if (!invite) {
+        return sendError(reply, 'INVALID_INVITE', 'Invite not found or expired', 404);
+      }
+
+      // Step 4: Look up authenticated user's email and compare with invite email
+      const authenticatedUser = await prisma.user.findUnique({
+        where: { id: authenticatedUserId },
+        select: { id: true, email: true },
+      });
+
+      if (!authenticatedUser) {
+        return sendUnauthorized(reply, 'Authenticated user not found');
+      }
+
+      const normalizedInviteEmail = invite.email.trim().toLowerCase();
+      const normalizedUserEmail = authenticatedUser.email.trim().toLowerCase();
+
+      if (normalizedInviteEmail !== normalizedUserEmail) {
+        return sendError(reply, 'EMAIL_MISMATCH', 'Your account email does not match the invite', 403);
+      }
+
+      // Step 5: Guard — no duplicate membership
+      const existingMembership = await prisma.membership.findFirst({
+        where: { userId: authenticatedUserId, tenantId: invite.tenantId },
+      });
+      if (existingMembership) {
+        return sendError(reply, 'ALREADY_MEMBER', 'You are already a member of this tenant.', 409);
+      }
+
+      // Step 6: Atomic transaction — create membership, mark invite, write audit log
+      const ownerExists = invite.tenant.memberships.some(m => m.role === 'OWNER');
+      const resolvedRole = ownerExists ? invite.role : 'OWNER';
+
+      const dbContext: DatabaseContext = {
+        orgId: invite.tenantId,
+        actorId: authenticatedUserId,
+        realm: 'tenant',
+        requestId: crypto.randomUUID(),
+      };
+
+      const membership = await withDbContext(prisma, dbContext, async tx => {
+        const created = await tx.membership.create({
+          data: {
+            userId: authenticatedUserId,
+            tenantId: invite.tenantId,
+            role: resolvedRole,
+          },
+        });
+
+        await tx.invite.update({
+          where: { id: invite.id },
+          data: { acceptedAt: new Date() },
+        });
+
+        await writeAuditLog(tx, {
+          tenantId: invite.tenantId,
+          realm: 'TENANT',
+          actorType: 'USER',
+          actorId: authenticatedUserId,
+          action: 'user.invite_accepted',
+          entity: 'membership',
+          entityId: created.id,
+          metadataJson: {
+            inviteId: invite.id,
+            role: resolvedRole,
+            firstOwnerActivated: !ownerExists,
+          },
+        });
+
+        return created;
+      });
+
+      // Step 7: Resolve tenant identity and issue new JWT for the invite tenant
+      const tenant = await resolveTenantSessionIdentity({
+        tenantId: invite.tenantId,
+        actorId: authenticatedUserId,
+        userRole: membership.role,
+      });
+
+      const token = await reply.tenantJwtSign({
+        userId: authenticatedUserId,
+        tenantId: invite.tenantId,
+        role: membership.role,
+      });
+
+      return sendSuccess(reply, {
+        token,
+        user: {
+          id: authenticatedUser.id,
+          email: authenticatedUser.email,
+        },
+        tenant: {
+          id: tenant.id,
+          name: tenant.name,
+          slug: tenant.slug,
+          type: tenant.type,
+          tenant_category: tenant.tenant_category,
+          primary_segment_key: tenant.primary_segment_key,
+          secondary_segment_keys: tenant.secondary_segment_keys,
+          role_position_keys: tenant.role_position_keys,
+          is_white_label: tenant.is_white_label,
+          status: tenant.status,
+          plan: tenant.plan,
+        },
+        membership: {
+          role: membership.role,
+        },
+      });
+    } catch (error: unknown) {
+      // Map P2002 race-condition to 409
+      if (error instanceof Error && (error as Error & { code?: string }).code === 'P2002') {
+        return sendError(reply, 'ALREADY_MEMBER', 'You are already a member of this tenant.', 409);
+      }
+      fastify.log.error({ err: error }, '[Authenticated Invite Accept] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Invite acceptance failed', 500);
+    }
+  });
+
+  /**
    * POST /api/tenant/memberships
    * Create/invite a new member to the tenant
    * Requires OWNER or ADMIN role

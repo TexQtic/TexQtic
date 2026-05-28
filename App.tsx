@@ -161,7 +161,7 @@ import { BuyerRfqListSurface, SupplierRfqInboxSurface } from './components/Tenan
 // TECS-B2B-BUYER-CATALOG-PDP-001 P-2: Buyer PDP surface shell
 import { CatalogPdpSurface } from './components/Tenant/CatalogPdpSurface';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
-import { activateTenant } from './services/tenantService';
+import { activateTenant, acceptAuthenticatedInvite } from './services/tenantService';
 import {
   getCurrentUser,
   resolvePublicEntryDescriptor,
@@ -4433,6 +4433,49 @@ const App: React.FC = () => {
     }
 
     setTenantRestorePending(false);
+
+    // FAM-07D3: If a pending invite token is preserved, accept it now that the user is authenticated
+    if (pendingInviteToken) {
+      try {
+        const inviteResult = await acceptAuthenticatedInvite({ inviteToken: pendingInviteToken });
+        setPendingInviteToken(null);
+        setToken(inviteResult.token, 'TENANT');
+        // Re-bootstrap with the invite tenant's JWT
+        try {
+          const invitedMe = await getCurrentUser(tenantBootstrapCurrentUserOptions);
+          const invitedTenant = buildTenantSnapshot(invitedMe.tenant);
+          if (invitedTenant) {
+            const inviteBootstrap = applyTenantBootstrapState(invitedTenant, invitedMe.role ?? null);
+            if (inviteBootstrap.nextState) {
+              setAppState(inviteBootstrap.nextState);
+              return;
+            }
+          }
+        } catch {
+          // Re-bootstrap after invite acceptance failed — fall through to existing nextState
+        }
+        setAppState(nextState);
+        return;
+      } catch (inviteErr) {
+        // Always clear the pending token to prevent looping
+        setPendingInviteToken(null);
+        const inviteErrCode = inviteErr instanceof APIError ? inviteErr.code : undefined;
+        if (inviteErrCode === 'ALREADY_MEMBER') {
+          // Already a member — proceed to existing workspace
+          setAppState(nextState);
+          return;
+        }
+        let blockedMessage = 'Invite acceptance failed. Please try signing in again or contact support.';
+        if (inviteErrCode === 'EMAIL_MISMATCH') {
+          blockedMessage = 'Invite email does not match your account. Please contact your administrator.';
+        } else if (inviteErrCode === 'INVALID_INVITE') {
+          blockedMessage = 'Your invite link has expired or is no longer valid. Please request a new invite.';
+        }
+        failClosedTenantBootstrap(blockedMessage);
+        return;
+      }
+    }
+
     setAppState(nextState);
   };
 

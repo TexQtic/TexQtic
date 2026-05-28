@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-07 (FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGN-IN-HANDOFF-001 CLOSED. Frontend sign-in-first UX implemented for EXISTING_USER_MUST_SIGN_IN and ALREADY_MEMBER codes. 10/10 frontend tests PASS. tsc EXIT 0. ESLint CLEAN. pendingInviteToken preserved. Authenticated post-login accept-invite endpoint STILL OPEN (FAM-07E/FAM-07G). FAM-07 NOT VERIFIED_COMPLETE. LFI/FTR not modified. Prior: FAM-07D1 CLOSED 2026-05-28.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-07 (FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001 CLOSED. POST /api/tenant/activate-authenticated implemented. acceptAuthenticatedInvite service + App.tsx handleAuthSuccess trigger. 17/17 backend tests PASS, 12/12 frontend tests PASS. tsc EXIT 0. ESLint no new issues. FAM-07 sign-in-first flow COMPLETE. FAM-07E–FAM-07J NOT yet opened. FAM-07 NOT VERIFIED_COMPLETE. LFI/FTR not modified.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,51 +15,47 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-07E-OR-FAM-07G-AUTHENTICATED-ACCEPT-INVITE-ENDPOINT-TBD
+active_delivery_unit: FAM-07E-THROUGH-FAM-07J-REMAINING-UNITS-TBD
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  FAM-07D2 CLOSED (2026-07-07). Frontend sign-in-first UX complete: EXISTING_USER_MUST_SIGN_IN
-  and ALREADY_MEMBER banners in OnboardingFlow.tsx. onExistingUserSignIn→setAppState('AUTH').
-  pendingInviteToken preserved for post-login reuse. 10/10 tests PASS. tsc EXIT 0.
-  REMAINING OPEN: authenticated post-login invite-acceptance endpoint does not yet exist.
-  When user reaches 'AUTH' state with pendingInviteToken present after sign-in redirect,
-  there is no path to complete the invite acceptance. This requires a new backend endpoint
-  (POST /api/tenant/activate-authenticated or equivalent) and a frontend trigger in App.tsx.
-  Next unit: FAM-07E or FAM-07G (tbd). Requires Paresh explicit authorization.
+  FAM-07D3 CLOSED (2026-07-07). POST /api/tenant/activate-authenticated implemented.
+  FAM-07 sign-in-first flow is now end-to-end complete: D1 (backend security) → D2 (frontend
+  redirect) → D3 (authenticated acceptance after sign-in). Remaining FAM-07 units: FAM-07E
+  (ToS — gated by legal text), FAM-07F (test coverage), FAM-07G (auth hardening TBD),
+  FAM-07H (SMTP infra), FAM-07J (INVITE_ALREADY_PENDING UX). None authorized for implementation.
   Do NOT auto-open next unit. FAM-07 NOT VERIFIED_COMPLETE.
-last_closed_unit: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGN-IN-HANDOFF-001
+last_closed_unit: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-07-07)
 last_closed_unit_runtime_verdict: >
-  FAM-07D2 frontend sign-in handoff (2026-07-07).
-  EXISTING_USER_MUST_SIGN_IN and ALREADY_MEMBER error codes from FAM-07D1 backend handled
-  in OnboardingFlow.tsx: amber banners shown, submit/back buttons hidden, sign-in CTA calls
-  onExistingUserSignIn. App.tsx navigates to 'AUTH' with pendingInviteToken preserved.
-  ACTIVATION_ERROR_CODES exported from services/tenantService.ts.
-  10/10 frontend unit tests PASS (ACT-001 to ACT-010). tsc --noEmit EXIT 0. ESLint CLEAN.
-  No backend changes. No schema/migration/.env changes. FAM-07 NOT VERIFIED_COMPLETE.
-last_closed_unit_commits: "[TEXQTIC] auth: frontend sign-in handoff for existing-user invite activation (FAM-07D2)"
+  FAM-07D3 authenticated invite acceptance (2026-07-07).
+  POST /api/tenant/activate-authenticated: inline JWT verify (no tenantAuthMiddleware), invite
+  hash lookup, email match guard, duplicate membership guard, atomic tx (membership + invite +
+  audit log), resolveTenantSessionIdentity, reply.tenantJwtSign. acceptAuthenticatedInvite
+  service function in tenantService.ts. App.tsx handleAuthSuccess TENANT path auto-triggers
+  invite acceptance when pendingInviteToken present after sign-in; ALREADY_MEMBER soft error
+  (proceed); EMAIL_MISMATCH/INVALID_INVITE fail-close. 17/17 backend tests PASS
+  (ACT-AUTH-001..ACT-AUTH-007). 12/12 frontend tests PASS (ACT-011, ACT-012 added).
+  tsc --noEmit EXIT 0. ESLint: no new issues. No schema/migration/.env changes.
+  FAM-07 NOT VERIFIED_COMPLETE. LFI/FTR not modified.
+last_closed_unit_commits: "[TEXQTIC] auth: accept pending invite after authenticated sign-in (FAM-07D3)"
 last_closed_unit_closure_basis: >
-  FAM-07D1 backend contract (EXISTING_USER_MUST_SIGN_IN, ALREADY_MEMBER HTTP 409) consumed.
-  Frontend sign-in-first UX implemented per design contract. 10/10 tests PASS. tsc EXIT 0. ESLint CLEAN.
-last_closed_unit_prior: TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001
-last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-07-06)
-next_candidate_unit: FAM-07E-OR-FAM-07G-AUTHENTICATED-ACCEPT-INVITE-ENDPOINT-TBD
+  FAM-07D2 pendingInviteToken preservation consumed. Backend endpoint + frontend trigger +
+  service function + tests written. 17/17 backend + 12/12 frontend tests PASS. tsc EXIT 0.
+  ESLint: no new issues. Sign-in-first flow end-to-end complete.
+last_closed_unit_prior: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGN-IN-HANDOFF-001
+last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-07-07)
+next_candidate_unit: FAM-07E-THROUGH-FAM-07J-REMAINING-TBD
 next_candidate_unit_status: HOLD_FOR_AUTHORIZATION
 next_candidate_unit_date_installed: "2026-07-07"
 next_candidate_unit_note: >
-  FAM-07D2 CLOSED (2026-07-07). Frontend sign-in-first UX complete.
-  REMAINING OPEN in FAM-07 family: authenticated post-login invite-acceptance endpoint.
-  When user reaches 'AUTH' state with pendingInviteToken present, there is no backend endpoint
-  to complete acceptance after sign-in. pendingInviteToken is preserved in App.tsx state.
-  Next unit must implement: POST /api/tenant/activate-authenticated (or equivalent) +
-  App.tsx auto-trigger after login when pendingInviteToken present.
-  Unit ID: FAM-07E or FAM-07G — to be determined by Paresh authorization.
-  FAM-07J (INVITE_ALREADY_PENDING UX on membership invite surface) — separate, deferred.
-  FAM-07E (ToS architecture): IMPLEMENTATION-GATED_BY_FINAL_LEGAL_TEXT.
-  FAM-07F (test coverage): follows final route state.
-  FAM-07H (SMTP): infrastructure-only, Paresh action at any time.
-  Do NOT auto-open next unit. FAM-07 NOT VERIFIED_COMPLETE.
-  TTP track held separately: see prior_next_candidate_unit below.
+  FAM-07D3 CLOSED (2026-07-07). Authenticated invite acceptance complete.
+  FAM-07 remaining units: FAM-07E (ToS — IMPLEMENTATION-GATED_BY_FINAL_LEGAL_TEXT),
+  FAM-07F (test coverage — follows final route state), FAM-07G (auth hardening TBD),
+  FAM-07H (SMTP infra — infrastructure-only, Paresh action at any time),
+  FAM-07J (INVITE_ALREADY_PENDING UX on membership invite surface — separate, deferred).
+  None of these are authorized. TTP track held separately: see prior_next_candidate_unit below.
+archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
+archived_candidate_fam07d3_status: CLOSED (2026-07-07)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001
 archived_candidate_fam07d2_status: CLOSED (2026-07-07)
 prior_next_candidate_unit: HOLD_FOR_COUNSEL_FEEDBACK

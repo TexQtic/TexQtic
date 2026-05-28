@@ -17,6 +17,8 @@
  *   ACT-008  Generic error: submitError message is shown (regression guard)
  *   ACT-009  Generic error: sign-in-first banner is NOT shown (no false positive)
  *   ACT-010  Validation gate fires before onComplete is called (missing fields guard)
+ *   ACT-011  acceptAuthenticatedInvite: calls POST to /api/tenant/activate-authenticated
+ *   ACT-012  acceptAuthenticatedInvite: returns response data on success
  */
 
 /** @vitest-environment jsdom */
@@ -27,7 +29,16 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ActivationFlow } from '../../components/Onboarding/OnboardingFlow';
-import { ACTIVATION_ERROR_CODES } from '../../services/tenantService';
+import { ACTIVATION_ERROR_CODES, acceptAuthenticatedInvite } from '../../services/tenantService';
+import * as apiClient from '../../services/apiClient';
+
+vi.mock('../../services/apiClient', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../services/apiClient')>();
+  return {
+    ...actual,
+    post: vi.fn(),
+  };
+});
 
 afterEach(() => {
   cleanup();
@@ -237,5 +248,36 @@ describe('Validation gate (step 4 required fields)', () => {
     expect(
       screen.getByText(/registration number and jurisdiction are required/i)
     ).toBeInTheDocument();
+  });
+});
+
+// ─── ACT-011 / ACT-012: acceptAuthenticatedInvite service function ────────────
+
+describe('acceptAuthenticatedInvite service', () => {
+  it('ACT-011: calls POST to /api/tenant/activate-authenticated with inviteToken', async () => {
+    vi.mocked(apiClient.post).mockResolvedValueOnce({
+      token: 'new-jwt', user: { id: 'u1', email: 'a@b.com' }, tenant: {}, membership: { role: 'MEMBER' },
+    });
+
+    await acceptAuthenticatedInvite({ inviteToken: 'test-token-123' });
+
+    expect(vi.mocked(apiClient.post)).toHaveBeenCalledWith(
+      '/api/tenant/activate-authenticated',
+      { inviteToken: 'test-token-123' }
+    );
+  });
+
+  it('ACT-012: returns response data from the API', async () => {
+    const fakeResponse = {
+      token: 'tenant-jwt-xyz',
+      user: { id: 'user-123', email: 'member@example.com' },
+      tenant: { id: 'tenant-abc', name: 'Test Corp', slug: 'test-corp', type: 'B2B', status: 'ACTIVE', plan: 'FREE' },
+      membership: { role: 'MEMBER' },
+    };
+    vi.mocked(apiClient.post).mockResolvedValueOnce(fakeResponse);
+
+    const result = await acceptAuthenticatedInvite({ inviteToken: 'invite-token-xyz' });
+
+    expect(result).toEqual(fakeResponse);
   });
 });
