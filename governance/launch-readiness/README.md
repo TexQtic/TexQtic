@@ -196,7 +196,11 @@ dependency status and main platform launch readiness. See
 
 **Full rules:** `governance/units/TECS-LAUNCH-READINESS-HUB-DRIFT-CONTROL-ADDENDUM-001.md`  
 **Extends:** `TECS.md` §8  
-**Effective:** 2026-05-19
+**Effective:** 2026-05-19  
+**FTR/LFI anti-drift rules (AR-001–AR-008):** addendum §20 — integrated by
+`LAUNCH-HUB-ANTI-DRIFT-RULE-INTEGRATION-001` (2026-07-15). Verify-close checklist now
+requires Q1–Q14 (Q10–Q14 added). Every verify-close that touches an FTR-mapped family
+must answer Q10–Q14 before the family may be declared VERIFIED_COMPLETE.
 
 The drift-control system ensures hub rows remain synchronized with actual repo truth as
 implementation cycles complete. The following rules are mandatory; they supersede the

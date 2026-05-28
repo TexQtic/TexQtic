@@ -294,7 +294,7 @@ not yet available, defer the update to the verify-close prompt.
 
 Every TECS verify-close prompt MUST answer the mandatory hub-sync checklist defined in §8 below.
 
-The verify-close prompt must NOT be considered complete until the hub-sync checklist is answered.
+The verify-close prompt must NOT be considered complete until the hub-sync checklist is answered (all 14 items — Q1–Q14).
 If hub updates are needed and the hub files are not in the allowlist, the verify-close report
 must explicitly flag the required updates as pending for a follow-on allowlisted prompt.
 
@@ -336,11 +336,34 @@ Q8. If no hub update is needed, record: NO_HUB_UPDATE_REQUIRED
 
 Q9. Were hub files allowlisted in this unit's allowlist?
     Answer: YES — list files / NO — list required updates as pending for next allowlisted prompt
+
+--- FTR/LFI Anti-Drift Extension (integrated by LAUNCH-HUB-ANTI-DRIFT-RULE-INTEGRATION-001) ---
+
+Q10. What FTR items are mapped to this family (from FUTURE-TODO-REGISTER.md)?
+     Answer: [List FTR IDs with → FAM-xx tag, or NONE]
+
+Q11. Are any mapped FTR items designated MVP_CRITICAL or LAUNCH_BLOCKER?
+     Answer: YES (list FTR IDs + current status) / NO
+
+Q12. For each mapped FTR item: what is its scope classification for this family?
+     Answer: [in-scope core / overlay / post-MVP / XDEP-only / unrelated] per FTR item
+
+Q13. Does LFI §7 action register surface all open MVP_CRITICAL and LAUNCH_BLOCKER overlay gates
+     for this family?
+     Answer: YES / NO (list gaps and record as pending if not allowlisted)
+
+Q14. Does LFI §9 MVP cutline correctly reflect the verified/open split for this family?
+     Answer: YES / NO (list discrepancy and record as pending if not allowlisted)
 ```
 
 **If Q3 lists hub files that are NOT in the unit's allowlist:** record them as pending required
 updates in the final report. They must be addressed in the next available governance unit.
 They must NOT be silently left as known drift.
+
+**If Q11 lists open MVP_CRITICAL or LAUNCH_BLOCKER FTR items** that are not already visible
+in LFI §7 for the affected family: record them as `PENDING_LFI_UPDATE` in the final report.
+They must be surfaced in the next allowlisted governance unit before the family may be
+declared VERIFIED_COMPLETE. This is the anti-drift enforcement gate (see §20).
 
 ---
 
@@ -614,7 +637,7 @@ The verify-close hub-sync checklist (§8 Q9) confirms that only allowlisted file
 | **Opening prompt** | Answer Hub Impact Assessment: `YES (list files)` or `NO_HUB_IMPACT_EXPECTED` |
 | **Design prompt** | Record expected hub impact: which rows change, what evidence level will result |
 | **Implementation** | Restrict hub updates to allowlisted files; no optimistic status advances |
-| **Verify-close** | Answer all 9 items of the verify-close hub-sync checklist (§8) |
+| **Verify-close** | Answer all 14 items of the verify-close hub-sync checklist (§8, Q1–Q14) |
 
 | Evidence level | Minimum required for... |
 |---|---|
@@ -630,6 +653,178 @@ The verify-close hub-sync checklist (§8 Q9) confirms that only allowlisted file
 | `HIGH` | Record as pending; resolve in next allowlisted governance unit |
 | `MEDIUM` | Record as pending review |
 | `LOW` | Add on next allowlisted touch |
+
+---
+
+## 20. FTR/LFI Cross-Reference Anti-Drift Rules (AR-001 through AR-008)
+
+**Integrated by:** `LAUNCH-HUB-ANTI-DRIFT-RULE-INTEGRATION-001` (2026-07-15)  
+**Authority:** `artifacts/control-plane/LAUNCH-HUB-FTR-LFI-CROSSWALK-RECONCILIATION-DESIGN-001.md` §10  
+**Carry-forward:** `artifacts/control-plane/LAUNCH-HUB-FTR-LFI-CROSSWALK-NORMALIZATION-APPLY-001.md` §8
+
+These rules govern the bidirectional integrity between `FUTURE-TODO-REGISTER.md` (FTR) and
+`LAUNCH-FAMILY-INDEX.md` (LFI). They extend and tighten the drift-control rules in §6–§14 above.
+All rules are binding on every future TECS unit that touches either the FTR or the LFI.
+
+---
+
+### AR-001 — FTR → FAM Mapping Tag Required
+
+Every item in `FUTURE-TODO-REGISTER.md` MUST carry a `→ FAM-xx` tag in its Description or Notes
+column, identifying which launch family (or families) the item maps to.
+
+**Rationale:** Without explicit FAM tags, FTR items become orphaned from family readiness context.
+Family verify-close units cannot answer Q10–Q14 correctly if FTR items carry no FAM mapping.
+
+**Enforcement:**
+- When a new FTR item is created, its FAM tag is mandatory (not optional).
+- When an existing FTR item is edited, the editor must verify or add a FAM tag.
+- If no family mapping applies (e.g., item is truly XDEP-only or fully post-launch), record
+  `→ XDEP-ONLY` or `→ POST-LAUNCH` explicitly to show the tag was considered.
+
+**Violation response:** Any FTR item without a `→ FAM-xx` tag is classified `DRIFT_RISK_OPEN`
+and must be resolved in the next allowlisted governance unit touching the FTR.
+
+---
+
+### AR-002 — Verified Family Must Carry Overlay Inventory Note
+
+Every family with status `VERIFIED_COMPLETE` in LFI MUST have an overlay inventory note
+in LFI §7 for that family, explicitly listing all open FTR overlay items (even if they
+are confirmed post-MVP or deferred).
+
+**Rationale:** A `VERIFIED_COMPLETE` status without a visible overlay inventory creates
+FALSE_COMPLETION_RISK — Paresh cannot know whether the family's core surface is verified
+but overlay items remain open.
+
+**Enforcement:**
+- At family verify-close time, the verify-close unit must answer Q10–Q14 (§8).
+- The LFI §7 note must surface: (a) open MVP_CRITICAL overlay items, (b) open PILOT_REQUIRED
+  overlay items, (c) confirmed post-MVP overlay items — with explicit status for each.
+- An LFI §7 note that says only "VERIFIED_COMPLETE" without overlay inventory is non-conforming.
+
+**Violation response:** Classify as drift severity `HIGH`; record as `PENDING_LFI_UPDATE`;
+resolve in next allowlisted governance unit.
+
+---
+
+### AR-003 — No Family Status Downgrade for Open Overlay Items
+
+Family status in LFI MUST NOT be downgraded (e.g., `VERIFIED_COMPLETE` → `IN_PROGRESS` or
+`NOT_STARTED`) solely because open FTR overlay items exist.
+
+**Rationale:** Overlay items do not retroactively un-verify a family's core surface. The
+distinction between core delivery and post-core overlay is constitutional — collapsing it
+creates confusion about what was verified and when.
+
+**Enforcement:**
+- A family's core status (verified/open/not-started) reflects the core surface audit.
+- Open overlay items appear in the overlay inventory note (§7), not as a status change.
+- The only valid reason to downgrade a family status is discovery that the core surface
+  was NOT actually verified (a core evidence gap, not an overlay gap).
+
+**Violation response:** Any proposed status downgrade must be explicitly justified with
+evidence of a core gap. Governance agents must not propose a downgrade based on overlay
+item discovery alone.
+
+---
+
+### AR-004 — MVP_CRITICAL and LAUNCH_BLOCKER FTR Items Must Be Visible in LFI
+
+Any FTR item with priority `MVP_CRITICAL` or `LAUNCH_BLOCKER` that is mapped to a verified
+or in-progress family MUST be surfaced in either LFI §7 (family action register) or LFI §9
+(MVP cutline) for that family.
+
+**Rationale:** These are the highest-risk items. If they are invisible in LFI, Paresh cannot
+see the real launch risk for that family at a glance. Q13 and Q14 enforce this rule at
+every verify-close.
+
+**Enforcement:**
+- Q13 and Q14 in the verify-close checklist (§8) are the runtime enforcement gate.
+- A verify-close unit that does not answer Q13 and Q14 is incomplete per this addendum.
+- If Q13 or Q14 reveals a gap, it must be recorded as `PENDING_LFI_UPDATE` and resolved
+  in the next allowlisted governance unit.
+
+**Violation response:** Classify as drift severity `HIGH` if MVP_CRITICAL; `CRITICAL` if
+LAUNCH_BLOCKER. Resolve before the family may be declared VERIFIED_COMPLETE.
+
+---
+
+### AR-005 — FTR Status Changes Must Answer the Family Impact Question
+
+Whenever a FTR item changes status (e.g., from OPEN to CLOSED, from DEFERRED to IN_SCOPE,
+or when a new MVP_CRITICAL designation is assigned), the governance unit making that change
+MUST explicitly answer:
+
+> **Does this FTR status change affect any LFI family row?**
+> If YES: which family, which §7 or §9 row, and what LFI update is required?
+> If NO: record `NO_LFI_IMPACT` explicitly.
+
+**Rationale:** FTR changes that silently affect family readiness are a primary source of
+FTR/LFI drift. The question must be asked at every FTR-touching unit, not discovered during
+a later crosswalk audit.
+
+**Enforcement:**
+- Add a `FTR Status Change — Family Impact Answer` section to any governance artifact
+  that modifies a FTR item status or priority.
+- Q5, Q11, Q13, Q14 in the verify-close checklist (§8) collectively enforce this at close.
+- A FTR status change without a family impact answer is classified `PENDING_CROSSWALK_CHECK`.
+
+---
+
+### AR-006 — Verify-Close Hub-Sync Checklist Extended with Q10–Q14
+
+The verify-close hub-sync checklist defined in §8 of this addendum is extended with
+Q10–Q14 as a mandatory FTR overlay gate inventory block. These five questions are not
+optional and may not be omitted from any verify-close artifact.
+
+**Implementation:** Q10–Q14 are already integrated into the §8 checklist code block
+by `LAUNCH-HUB-ANTI-DRIFT-RULE-INTEGRATION-001`. All future verify-close artifacts must
+answer Q1 through Q14 (not Q1 through Q9).
+
+**Backward compatibility:** Units closed before the integration of Q10–Q14 are not required
+to be re-opened. Q10–Q14 apply to all verify-close artifacts dated on or after 2026-07-15.
+
+---
+
+### AR-007 — CRM/CAE XDEP Hard Boundary
+
+No CRM or CAE implementation truth may be inlined into main repo LFI family rows.
+This rule is a strict extension of §11 (CRM/CAE Hub Maintenance Rule) applied specifically
+to LFI rows.
+
+**Enforcement:**
+- LFI rows for families with CRM/CAE dependencies must carry XDEP status only, citing
+  the CRM/CAE unit ID as `evidence_source`.
+- Q5 in the verify-close checklist (§8) is the runtime enforcement gate for this rule.
+- Any LFI row that contains verbatim CRM or CAE route paths, schema field names, or
+  implementation details is non-conforming and must be corrected.
+
+**Violation response:** Classify as drift type `CONTAMINATION_DRIFT` (see §1.2).
+Remove inline details; replace with XDEP reference. Record correction under Q7.
+
+---
+
+### AR-008 — Bidirectional Cross-Reference Discipline for New Items
+
+When any new FTR item is created OR when any new LFI verify-close row is written:
+
+**For new FTR items:**
+1. The FTR item must carry a `→ FAM-xx` tag (AR-001).
+2. The corresponding LFI §7 row for that family must be checked — if the FTR item meets
+   MVP_CRITICAL or LAUNCH_BLOCKER criteria, it must be surfaced in LFI §7 or §9 (AR-004).
+3. If the LFI file is not in the current unit's allowlist, record a `PENDING_LFI_UPDATE`.
+
+**For new LFI verify-close rows:**
+1. The verify-close unit must answer Q10–Q14 (AR-006).
+2. All open FTR items mapped to the family must be checked for MVP_CRITICAL/LAUNCH_BLOCKER
+   status and surfaced in the overlay inventory note (AR-002, AR-004).
+3. FTR items that are being implicitly closed by the family verify-close must have their
+   FTR row updated with `→ FAM-xx VERIFY_CLOSE_COVERED` in Description (if allowlisted).
+
+**Rationale:** New items without bidirectional cross-references are the primary vector for
+future drift. This rule makes cross-referencing mandatory at item creation time, not at
+later audit time.
 
 ---
 

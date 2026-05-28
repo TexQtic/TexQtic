@@ -285,8 +285,8 @@ The following rules are binding on every future TECS unit:
 3. **Implementation:** Hub updates must be restricted to files explicitly in the allowlist.
    No optimistic status advances — `PRODUCTION_VERIFIED` requires verify-close evidence.
 
-4. **Verify-close:** Every verify-close governance artifact MUST answer all 9 items of the
-   mandatory hub-sync checklist defined in addendum §8. The verify-close is not complete until
+4. **Verify-close:** Every verify-close governance artifact MUST answer all 14 items of the
+   mandatory hub-sync checklist defined in addendum §8 (Q1–Q14). The verify-close is not complete until
    the checklist is answered and any pending hub updates are recorded.
 
 5. **Status changes require evidence:** A hub row may only advance readiness status when the
@@ -321,13 +321,39 @@ verify-close report and resolved in the subsequent prompt's governance commit.
 Full checklist text is in addendum §8. Items to answer in every verify-close artifact:
 
 ```
-Q1. Did this unit change launch readiness truth? (YES / NO / PARTIAL)
-Q2. Which family or requirement changed?
-Q3. Which hub documents need to be updated?
-Q4. What evidence supports the update?
-Q5. Are CRM/CAE details at risk of being duplicated into the main hub?
-Q6. Are any planned items at risk of incorrect MVP promotion?
-Q7. Are any stale hub rows now superseded by this unit?
-Q8. If no hub update: record NO_HUB_UPDATE_REQUIRED with reason.
-Q9. Were hub files allowlisted? List files or record pending updates.
+Q1.  Did this unit change launch readiness truth? (YES / NO / PARTIAL)
+Q2.  Which family or requirement changed?
+Q3.  Which hub documents need to be updated?
+Q4.  What evidence supports the update?
+Q5.  Are CRM/CAE details at risk of being duplicated into the main hub?
+Q6.  Are any planned items at risk of incorrect MVP promotion?
+Q7.  Are any stale hub rows now superseded by this unit?
+Q8.  If no hub update: record NO_HUB_UPDATE_REQUIRED with reason.
+Q9.  Were hub files allowlisted? List files or record pending updates.
+--- FTR/LFI Anti-Drift Extension (Q10–Q14 mandatory from 2026-07-15) ---
+Q10. What FTR items are mapped to this family?
+Q11. Are any mapped FTR items MVP_CRITICAL or LAUNCH_BLOCKER?
+Q12. What is each mapped FTR item's scope classification for this family?
+Q13. Does LFI §7 surface all open MVP_CRITICAL/LAUNCH_BLOCKER overlay gates for this family?
+Q14. Does LFI §9 MVP cutline reflect the verified/open split for this family?
 ```
+
+### 8.4 FTR/LFI Anti-Drift Rules (AR-001 through AR-008)
+
+**Full rule text:** `governance/units/TECS-LAUNCH-READINESS-HUB-DRIFT-CONTROL-ADDENDUM-001.md` §20  
+**Integrated by:** `LAUNCH-HUB-ANTI-DRIFT-RULE-INTEGRATION-001` (2026-07-15)
+
+These eight rules govern FTR↔LFI bidirectional integrity and prevent FALSE_COMPLETION_RISK
+at verify-close time. They are binding on every future TECS unit that touches either the
+`FUTURE-TODO-REGISTER.md` (FTR) or the `LAUNCH-FAMILY-INDEX.md` (LFI).
+
+| Rule | Binding requirement |
+|---|---|
+| AR-001 | Every FTR item must carry a `→ FAM-xx` tag (or explicit `XDEP-ONLY`/`POST-LAUNCH`) |
+| AR-002 | Every `VERIFIED_COMPLETE` family must carry an overlay inventory note in LFI §7 |
+| AR-003 | Family status must NOT be downgraded solely because open FTR overlay items exist |
+| AR-004 | MVP_CRITICAL and LAUNCH_BLOCKER FTR items must be visible in LFI §7 or §9 |
+| AR-005 | Any FTR status change must answer the family impact question explicitly |
+| AR-006 | Verify-close checklist extended to Q14 (replaces former Q9 termination) |
+| AR-007 | CRM/CAE XDEP hard boundary applies to LFI rows — no inlining of CRM/CAE truth |
+| AR-008 | New FTR items and new LFI verify-close rows require bidirectional cross-referencing |
