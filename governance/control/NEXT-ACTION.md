@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-20 (QA B2C public projection quarantined — `TEXQTIC-NC-QA-B2C-PUBLIC-PROJECTION-QUARANTINE-001` QUARANTINE_VERIFIED_COMPLETE. Gate B closed: `publication_posture = PRIVATE_OR_AUTH_ONLY`. Public browse: `items:[], total:0`. QA records preserved. HD-002 remains VERIFIED_FAIL — real supplier data still absent.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-28 (LAYER0-FAM-07-AUTHORIZATION-RELEASE-001 GOVERNANCE_SYNC_COMPLETE. FAM-07 hub-sync applied. LFI §6 evidence upgraded NEEDS_REPO_INSPECTION → REPO_CONFIRMED. Next candidate: FAM-07-TENANT-ONBOARDING-BOUNDED-DESIGN-001. TTP HOLD_FOR_COUNSEL_FEEDBACK unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -53,14 +53,32 @@ last_closed_unit_closure_basis: >
   Governance artifact created. Control files updated. tsc: 0 errors.
 last_closed_unit_prior: TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001
 last_closed_unit_prior_status: LEGAL_PACKET_UPGRADED_READY_FOR_COUNSEL (2026-07-06)
-next_candidate_unit: HOLD_FOR_COUNSEL_FEEDBACK
+next_candidate_unit: FAM-07-TENANT-ONBOARDING-BOUNDED-DESIGN-001
 next_candidate_unit_status: >
+  BOUNDED_DESIGN_AUTHORIZED — FAM-07 bounded design may open upon separate explicit Paresh authorization.
+  Scope: design planning for reused-user onboarding path (FTR-AUTH-001, MVP_CRITICAL/P1) and
+  supplier ToS gate (FTR-LEGAL-003, MVP_CRITICAL/P1) within FAM-07 Tenant Onboarding family.
+  No source implementation, schema, migration, or runtime changes authorized.
+  TTP HOLD_FOR_COUNSEL_FEEDBACK applies to TTP track only — does not block FAM-07 bounded design.
+next_candidate_unit_date_installed: "2026-05-28"
+next_candidate_unit_note: >
+  FAM-07 Tenant Onboarding and Invite — bounded design unit.
+  Core FTR scope: FTR-AUTH-001 (reused-existing-user path, DESIGN_GATED, MVP_CRITICAL/P1),
+  FTR-LEGAL-003 (supplier ToS gate, NOT_ASSESSED, MVP_CRITICAL/P1, PRIT-012).
+  Adjacent: FTR-AUTH-004 (branded invite email, IMPLEMENTATION_READY, PILOT_REQUIRED/P2).
+  Out of scope: FTR-AUTH-002 (WL onboarding, POST_MVP/BLOCKED), SMTP infra, FAM-08+.
+  Infrastructure prerequisite noted: SMTP production configuration still required (HD-001 blocker).
+  Requires separate explicit Paresh authorization to open.
+  Do NOT auto-open next unit without Paresh authorization.
+  TTP track held separately: see prior_next_candidate_unit below.
+prior_next_candidate_unit: HOLD_FOR_COUNSEL_FEEDBACK
+prior_next_candidate_unit_status: >
   HOLD_FOR_COUNSEL_FEEDBACK — No implementation packet may be opened until external legal counsel
   provides written feedback on TTP-EXTERNAL-LEGAL-COUNSEL-PACKET-001.md (upgraded),
   that feedback is recorded in TTP-LEGAL-COUNSEL-FEEDBACK-RECORD-001, and Paresh issues
   explicit written authorization.
-next_candidate_unit_date_installed: "2026-07-06"
-next_candidate_unit_note: >
+prior_next_candidate_unit_date: "2026-07-06"
+prior_next_candidate_unit_note: >
   Post-Phase-1 finance/settlement design direction is TradeTrust Pay — NOT escrow-first OES.
   TradeTrust Pay scope: system-of-record, trade-state verification, payment-term maturity,
   payable visibility, external settlement confirmation, finance-readiness signals,
@@ -94,31 +112,33 @@ dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
 dpp_v3_design_status: OPTIONAL_POLISH
 prior_last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
 prior_last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-last_closed_governance_unit: HD-001-SUPPLIER-INVITE-ONBOARDING-RUNTIME-VERIFY-001
-last_closed_governance_unit_status: VERIFIED_BLOCKED (HD-001 code fix correct; email delivery blocked by SMTP not configured in Vercel production; invite token live in DB until 2026-05-27) (2026-05-20)
-last_closed_governance_unit_date: 2026-05-20
+last_closed_governance_unit: LAYER0-FAM-07-AUTHORIZATION-RELEASE-001
+last_closed_governance_unit_status: GOVERNANCE_SYNC_COMPLETE (2026-05-28). FAM-07 hub sync applied. LFI §6 evidence upgraded NEEDS_REPO_INSPECTION → REPO_CONFIRMED. Next candidate installed: FAM-07-TENANT-ONBOARDING-BOUNDED-DESIGN-001.
+last_closed_governance_unit_date: 2026-05-28
 last_closed_governance_unit_note: >
+  LAYER0-FAM-07-AUTHORIZATION-RELEASE-001 GOVERNANCE_SYNC_COMPLETE (2026-05-28).
+  Paresh-authorized narrow Layer 0 release for FAM-07 hub-sync and bounded-design preparation.
+  FAM-07 LFI §6 evidence level upgraded: NEEDS_REPO_INSPECTION → REPO_CONFIRMED.
+  Evidence source: FAM-07-TENANT-ONBOARDING-OPENING-REPO-TRUTH-AUDIT-001 (commit 402a609).
+  LFI §7 FAM-07 action register updated. LFI §9 MVP cutline row updated.
+  Authorization scope: governance synchronization only. No source/schema/config/test/runtime changes.
+  FAM-07-TENANT-ONBOARDING-BOUNDED-DESIGN-001 installed as next candidate.
+  Date-integrity finding: prior audit artifact (FAM-07-TENANT-ONBOARDING-OPENING-REPO-TRUTH-AUDIT-001)
+  contains future-dated entries (artifact date: 2026-07-23; FAM-06 close reference: 2026-07-22).
+  Correct date for all hub-sync entries in this release: 2026-05-28. Prior artifact not rewritten.
+  TTP HOLD_FOR_COUNSEL_FEEDBACK unchanged — applies to TTP implementation track only.
+  FTR-AUTH-001 and FTR-LEGAL-003 remain OPEN / MVP_CRITICAL — no implementation authorized.
+prior_last_closed_governance_unit: HD-001-SUPPLIER-INVITE-ONBOARDING-RUNTIME-VERIFY-001
+prior_last_closed_governance_unit_status: VERIFIED_BLOCKED (HD-001 code fix correct; email delivery blocked by SMTP not configured in Vercel production; invite token live in DB until 2026-05-27) (2026-05-20)
+prior_last_closed_governance_unit_date: 2026-05-20
+prior_last_closed_governance_unit_note: >
   HD-001-SUPPLIER-INVITE-ONBOARDING-RUNTIME-VERIFY-001 VERIFIED_BLOCKED (2026-05-20).
   Runtime verification of HD-001 against production (https://app.texqtic.com).
   Provisioning call: 201 OK. SHRADDHA INDUSTRIES (IN-GJ) provisioned.
-  orgId: 0ae549d7-b17b-4277-b9f6-f3e8c3a57e09. inviteId: ba4f0bb1-bbf2-4da5-b8fe-4aa69a110166.
   Invite token returned in API response. Email NOT delivered to shraddhaind@gmail.com.
   Root cause: SMTP_HOST/SMTP_USER/SMTP_PASS/SMTP_FROM not set in Vercel production.
-  email.service.ts isSmtpConfigured() returns false; returns SKIPPED_SMTP_UNCONFIGURED silently.
   HD-001 code fix is correct and deployed. Blocker is infrastructure-only.
-  Invite record valid until 2026-05-27. New risk row HD-001-SMTP added to register.
-  Unblocking action: configure SMTP provider (Resend/SendGrid/Postmark/SES) in Vercel production.
   After SMTP setup: re-provision + email verify + activation flow (Steps 5-8) required for VERIFIED_COMPLETE.
-prior_last_closed_governance_unit: HD-001-SUPPLIER-INVITE-ONBOARDING-RESOLUTION-001
-prior_last_closed_governance_unit_status: IMPLEMENTATION_COMPLETE (Invite-token flow email dispatch added; full flow structurally complete; runtime verification pending) (2026-05-20)
-prior_last_closed_governance_unit_date: 2026-05-20
-prior_last_closed_governance_unit_note: >
-  HD-001-SUPPLIER-INVITE-ONBOARDING-RESOLUTION-001 IMPLEMENTATION_COMPLETE (2026-05-20).
-  Root cause: APPROVED_ONBOARDING provisioning route never dispatched activation email.
-  Fix: added best-effort sendInviteMemberEmail call (non-blocking) in
-  server/src/routes/admin/tenantProvision.ts after audit log write.
-  Full invite-token flow structurally complete end-to-end.
-  Reused-user path remains BOUNDED-DEFERRED-REMAINDER.
 prior_last_closed_governance_unit_pre_prior: TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001
 prior_last_closed_governance_unit_pre_prior_status: CONTROLLED_QA_ACTIVATION_VERIFIED_COMPLETE
 prior_last_closed_governance_unit_pre_prior_date: 2026-05-14
