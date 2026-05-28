@@ -263,7 +263,7 @@ The proposed cycle order is derived from:
 | Family | Classification | Current Status |
 |---|---|---|
 | FAM-01 through FAM-04 | MVP_CRITICAL | VERIFIED_COMPLETE — already done |
-| FAM-06 Auth | LAUNCH_BLOCKER | NOT_ASSESSED — family cycle required |
+| FAM-06 Auth | LAUNCH_BLOCKER | VERIFIED_COMPLETE — family cycle closed 2026-07-22 |
 | FAM-07 Onboarding | LAUNCH_BLOCKER | NOT_ASSESSED — family cycle required |
 | FAM-08 Tenant Core | LAUNCH_BLOCKER | NOT_ASSESSED — family cycle required |
 | FAM-09 Supplier Profile | LAUNCH_BLOCKER | NOT_ASSESSED — family cycle required |
