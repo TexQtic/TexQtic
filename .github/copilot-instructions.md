@@ -441,3 +441,32 @@ Never use npx prisma if repo Prisma exists; use pnpm -C server exec prisma.
 Never create “temporary scripts” unless explicitly allowlisted.
 Never modify more than allowlisted files—even for “small fixes.”
 Never commit with pre-staged files; always verify staged set first.
+11) TexQtic Agent / Subagent Discipline
+
+For TexQtic work, the main Copilot agent remains the orchestrator and final decision-maker.
+
+Subagents may be used for audit, investigation, repo-truth inspection, validation, and scope-safety review. Subagents are read-only by default.
+
+Preferred subagent roles:
+- Governance evidence subagent: reads TLRH, Layer 0, and tracker files; reports authority, status, blockers, and closure requirements.
+- Repo-truth subagent: inspects current implementation and test surfaces; reports actual current behavior.
+- Validation subagent: runs or recommends validation commands and reports exact results.
+- Scope-safety subagent: checks changed files against allowlists and forbidden actions.
+- Adjacent-finding subagent: identifies out-of-scope issues without merging them into the active unit.
+
+Implementation work must use one editing agent unless a prompt explicitly authorizes otherwise. Subagents must not independently edit files, update trackers, commit, close parent units, advance family status, or broaden scope.
+
+Governance rules:
+- Do not edit Layer 0 files unless explicitly authorized.
+- Do not close FTR parent items or advance family status from bounded sub-unit work.
+- FUTURE-TODO-REGISTER.md is the canonical bounded closure-recording location when a prompt explicitly authorizes closure sync.
+- LAUNCH-FAMILY-INDEX.md is the family-status authority and must not be updated from bounded sub-unit closure unless a verified family-cycle close explicitly authorizes it.
+- Adjacent findings must be recorded separately and must not be merged into the active unit without explicit authorization.
+
+Every TexQtic prompt must preserve:
+- allowed files;
+- forbidden actions;
+- validation commands;
+- boundary safety confirmation;
+- final enum;
+- commit instruction when edits are authorized.
