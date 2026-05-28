@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-28 (LAYER0-FAM-07-AUTHORIZATION-RELEASE-001 GOVERNANCE_SYNC_COMPLETE. FAM-07 hub-sync applied. LFI §6 evidence upgraded NEEDS_REPO_INSPECTION → REPO_CONFIRMED. Next candidate: FAM-07-TENANT-ONBOARDING-BOUNDED-DESIGN-001. TTP HOLD_FOR_COUNSEL_FEEDBACK unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-07 (FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001 DESIGN_SYNTHESIS_COMPLETE. Bounded design synthesis complete. FAM-07D chosen as next candidate: credential bypass security fix (FTR-AUTH-001). LFI/FTR not modified. No implementation. Prior: LAYER0-FAM-07-AUTHORIZATION-RELEASE-001 GOVERNANCE_SYNC_COMPLETE.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -53,22 +53,32 @@ last_closed_unit_closure_basis: >
   Governance artifact created. Control files updated. tsc: 0 errors.
 last_closed_unit_prior: TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001
 last_closed_unit_prior_status: LEGAL_PACKET_UPGRADED_READY_FOR_COUNSEL (2026-07-06)
-next_candidate_unit: FAM-07-TENANT-ONBOARDING-BOUNDED-DESIGN-001
+next_candidate_unit: FAM-07D-TENANT-ONBOARDING-EXISTING-USER-INVITE-ACCEPTANCE-DESIGN-OR-IMPLEMENTATION-PREP-001
 next_candidate_unit_status: >
-  BOUNDED_DESIGN_AUTHORIZED — FAM-07 bounded design may open upon separate explicit Paresh authorization.
-  Scope: design planning for reused-user onboarding path (FTR-AUTH-001, MVP_CRITICAL/P1) and
-  supplier ToS gate (FTR-LEGAL-003, MVP_CRITICAL/P1) within FAM-07 Tenant Onboarding family.
-  No source implementation, schema, migration, or runtime changes authorized.
-  TTP HOLD_FOR_COUNSEL_FEEDBACK applies to TTP track only — does not block FAM-07 bounded design.
-next_candidate_unit_date_installed: "2026-05-28"
+  BOUNDED_DESIGN_SYNTHESIS_COMPLETE (2026-07-07) — FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001
+  design synthesis complete. FAM-07D is the recommended next implementation prompt.
+  FAM-07D requires separate explicit Paresh authorization before implementation begins.
+  Design decision required from Paresh: Option A (sign-in-first flow) vs Option B (validate-password-inline)
+  for existing-user invite acceptance path (FTR-AUTH-001).
+  No schema migration, no SMTP dependency, no legal text dependency — implementation-ready.
+  TTP HOLD_FOR_COUNSEL_FEEDBACK applies to TTP track only — does not block FAM-07D.
+next_candidate_unit_date_installed: "2026-07-07"
 next_candidate_unit_note: >
-  FAM-07 Tenant Onboarding and Invite — bounded design unit.
-  Core FTR scope: FTR-AUTH-001 (reused-existing-user path, DESIGN_GATED, MVP_CRITICAL/P1),
-  FTR-LEGAL-003 (supplier ToS gate, NOT_ASSESSED, MVP_CRITICAL/P1, PRIT-012).
-  Adjacent: FTR-AUTH-004 (branded invite email, IMPLEMENTATION_READY, PILOT_REQUIRED/P2).
-  Out of scope: FTR-AUTH-002 (WL onboarding, POST_MVP/BLOCKED), SMTP infra, FAM-08+.
-  Infrastructure prerequisite noted: SMTP production configuration still required (HD-001 blocker).
-  Requires separate explicit Paresh authorization to open.
+  FAM-07D — Existing-User Invite Acceptance Security Fix (FTR-AUTH-001).
+  Security blocker B-01: credential bypass for existing users in POST /api/tenant/activate
+  (supplied password silently discarded without validation for existing User records).
+  Security blocker B-02: unhandled Prisma P2002 duplicate membership → generic 500 INTERNAL_ERROR.
+  S-01: no duplicate invite guard for (tenantId, email) pending invites.
+  Backend allowlist: server/src/routes/tenant.ts (only).
+  Frontend allowlist: components/Onboarding/OnboardingFlow.tsx, App.tsx, services/tenantService.ts.
+  Test: server/src/__tests__/tenant-activate.integration.test.ts (new).
+  Validation: pnpm --filter server typecheck EXIT 0; pnpm --filter server lint clean;
+  existing invite/activation tests PASS.
+  Implementation gate: requires Paresh design decision (Option A vs B) and Type-A authorization.
+  Commit: fix(auth): resolve credential bypass and duplicate membership 500 in activation.
+  FAM-07E (ToS architecture) follows FAM-07D; IMPLEMENTATION-GATED_BY_FINAL_LEGAL_TEXT.
+  FAM-07F (test coverage) follows FAM-07D (tests depend on final route state).
+  FAM-07H (SMTP) is infrastructure-only — Paresh action at any time, independent of code.
   Do NOT auto-open next unit without Paresh authorization.
   TTP track held separately: see prior_next_candidate_unit below.
 prior_next_candidate_unit: HOLD_FOR_COUNSEL_FEEDBACK
@@ -112,11 +122,20 @@ dpp_launch_authorization: HOLD_FOR_PARESH_DECISION
 dpp_v3_design_status: OPTIONAL_POLISH
 prior_last_closed_unit: TECS-DPP-PASSPORT-NETWORK-025
 prior_last_closed_unit_status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-last_closed_governance_unit: LAYER0-FAM-07-AUTHORIZATION-RELEASE-001
-last_closed_governance_unit_status: GOVERNANCE_SYNC_COMPLETE (2026-05-28). FAM-07 hub sync applied. LFI §6 evidence upgraded NEEDS_REPO_INSPECTION → REPO_CONFIRMED. Next candidate installed: FAM-07-TENANT-ONBOARDING-BOUNDED-DESIGN-001.
-last_closed_governance_unit_date: 2026-05-28
+last_closed_governance_unit: FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001
+last_closed_governance_unit_status: DESIGN_SYNTHESIS_COMPLETE (2026-07-07). FAM-07 bounded design synthesis complete. FAM-07D chosen as next candidate. Control pointer updated. LFI/FTR not modified. No implementation performed.
+last_closed_governance_unit_date: 2026-07-07
 last_closed_governance_unit_note: >
-  LAYER0-FAM-07-AUTHORIZATION-RELEASE-001 GOVERNANCE_SYNC_COMPLETE (2026-05-28).
+  FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001 DESIGN_SYNTHESIS_COMPLETE (2026-07-07).
+  Synthesized FAM-07A + FAM-07B evidence + TTP legal counsel design context.
+  Defined slices FAM-07D through FAM-07J. FTR-AUTH-001 design: Option A (sign-in-first) vs
+  Option B (validate-password-inline) — Paresh decision required. FTR-LEGAL-003:
+  DESIGN-READY_FOR_ARCHITECTURE + IMPLEMENTATION-GATED_BY_FINAL_LEGAL_TEXT.
+  HD-001: infrastructure-only (no code change). FTR-AUTH-004: ADJACENT/PILOT_REQUIRED/P2.
+  Hub impact: NO_HUB_UPDATE_REQUIRED (design synthesis only; no new repo-truth).
+  LFI FAM-07 remains REPO_CONFIRMED. FTR-AUTH-001 remains DESIGN_GATED/OPEN.
+  FTR-LEGAL-003 remains NOT_ASSESSED/OPEN. FAM-07 NOT advanced to VERIFIED_COMPLETE.
+  Prior: LAYER0-FAM-07-AUTHORIZATION-RELEASE-001 GOVERNANCE_SYNC_COMPLETE (2026-05-28).
   Paresh-authorized narrow Layer 0 release for FAM-07 hub-sync and bounded-design preparation.
   FAM-07 LFI §6 evidence level upgraded: NEEDS_REPO_INSPECTION → REPO_CONFIRMED.
   Evidence source: FAM-07-TENANT-ONBOARDING-OPENING-REPO-TRUTH-AUDIT-001 (commit 402a609).

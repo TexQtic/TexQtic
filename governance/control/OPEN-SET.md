@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-28 (LAYER0-FAM-07-AUTHORIZATION-RELEASE-001 GOVERNANCE_SYNC_COMPLETE. FAM-07 LFI §6 evidence upgraded NEEDS_REPO_INSPECTION → REPO_CONFIRMED. Evidence source: FAM-07-TENANT-ONBOARDING-OPENING-REPO-TRUTH-AUDIT-001 (commit 402a609). Next candidate: FAM-07-TENANT-ONBOARDING-BOUNDED-DESIGN-001. TTP HOLD_FOR_COUNSEL_FEEDBACK unchanged. Prior: TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001 VERIFIED_COMPLETE.)
+**Last Updated:** 2026-07-07 (FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001 DESIGN_SYNTHESIS_COMPLETE. Bounded design synthesis complete. FAM-07D chosen as next candidate. LFI/FTR not modified. Prior: TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001 VERIFIED_COMPLETE.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,18 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001 DESIGN_SYNTHESIS_COMPLETE (2026-07-07).
+  Bounded design synthesis of FAM-07A (backend repo-truth) + FAM-07B (frontend/tests/runtime repo-truth)
+  + TTP legal counsel design-context inputs. 7 slices defined: FAM-07D (existing-user security fix,
+  BLOCKER, recommended next) through FAM-07J. FTR-AUTH-001: credential bypass B-01 confirmed
+  (existing-user password silently discarded); unhandled P2002 B-02 confirmed (membership.create 500).
+  Design decision required from Paresh: Option A (sign-in-first) vs Option B (validate-password-inline).
+  FTR-LEGAL-003: consent architecture designed (DESIGN-READY_FOR_ARCHITECTURE); implementation gated
+  by final legal text (IMPLEMENTATION-GATED_BY_FINAL_LEGAL_TEXT). HD-001: infrastructure-only
+  (Vercel SMTP env vars). Hub impact: NO_HUB_UPDATE_REQUIRED. LFI FAM-07 remains REPO_CONFIRMED.
+  FTR-AUTH-001/FTR-LEGAL-003 remain OPEN. FAM-07 NOT advanced to VERIFIED_COMPLETE.
+  Artifact: artifacts/control-plane/FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001.md.
 
 - LAYER0-FAM-07-AUTHORIZATION-RELEASE-001 GOVERNANCE_SYNC_COMPLETE (2026-05-28).
   Paresh-authorized narrow Layer 0 release for FAM-07 hub-sync and bounded-design preparation.
