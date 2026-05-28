@@ -104,7 +104,7 @@ Layer 0 Gate (YES/NO), Proposed Cycle Order.
 | FAM-07 | Tenant Onboarding and Invite | MAIN | NOT_ASSESSED | LAUNCH_BLOCKER | P0 | NO | 6 |
 | FAM-08 | Tenant Core Workspace | MAIN | NOT_ASSESSED | LAUNCH_BLOCKER | P0 | NO | 7 |
 | FAM-09 | Supplier Profile and Catalog | MAIN | NOT_ASSESSED | LAUNCH_BLOCKER | P0 | NO | 8 |
-| FAM-10 | Platform Ops and Control Plane | MAIN | NOT_ASSESSED | LAUNCH_BLOCKER | P0 | NO | 9 |
+| FAM-10 | Platform Ops and Control Plane | MAIN | VERIFIED_COMPLETE | LAUNCH_BLOCKER | P0 | NO | 9 |
 | FAM-11 | Subscription and Commercial Gating | MAIN | NOT_ASSESSED | P1_MVP_MUST_HAVE | P1 | NO | 10 |
 | FAM-12 | Network Commerce — RFQ and Pools | MAIN | PARTIALLY_IMPLEMENTED | PILOT_REQUIRED | P1 | NO | 11 |
 | FAM-13 | Network Commerce — Award Maker-Checker | MAIN | DESIGN_GATED | DESIGN_COMPLETE_BLOCKED | P2 | YES | 14 |
@@ -138,7 +138,7 @@ Last Verified Date, Next Review Trigger.
 | FAM-07 | Tenant Onboarding and Invite | NEEDS_REPO_INSPECTION | NEEDS_FAMILY_CYCLE | — | — | Family cycle open |
 | FAM-08 | Tenant Core Workspace | NEEDS_REPO_INSPECTION | NEEDS_FAMILY_CYCLE | — | — | Family cycle open |
 | FAM-09 | Supplier Profile and Catalog | NEEDS_REPO_INSPECTION | NEEDS_FAMILY_CYCLE | — | — | Family cycle open |
-| FAM-10 | Platform Ops and Control Plane | NEEDS_REPO_INSPECTION | NEEDS_FAMILY_CYCLE | — | — | Family cycle open |
+| FAM-10 | Platform Ops and Control Plane | PRODUCTION_CONFIRMED | FAM-10-PLATFORM-OPS-CONTROL-PLANE-PRODUCTION-VERIFY-CLOSE-001 | FAM-10-PLATFORM-OPS-CONTROL-PLANE-PRODUCTION-VERIFY-CLOSE-001 | 2026-05-28 | Review on control-plane route/auth/schema changes, admin impersonation changes, tenant provisioning changes, or public QA isolation changes. Production smoke 15/15 PASS. DEV-001 (archive guard 403) and DEV-002 (impersonation start 201) documented. |
 | FAM-11 | Subscription and Commercial Gating | NEEDS_REPO_INSPECTION | NEEDS_FAMILY_CYCLE | — | — | Family cycle open |
 | FAM-12 | Network Commerce — RFQ and Pools | TEST_CONFIRMED | TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001 | TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001 | 2026-07-06 | E2E verification after FAM-13 gate clears |
 | FAM-13 | Network Commerce — Award Maker-Checker | REPO_CONFIRMED | TEXQTIC-NC-PHASE1-POOL-RFQ-AWARD-MAKER-CHECKER-DESIGN-001 | TEXQTIC-NC-PROD-AWARD-MAKER-CHECKER-CONTROLLED-QA-ACTIVATION-001 | 2026-05-14 | Paresh decision on G-022 |
@@ -171,7 +171,7 @@ Columns: Family ID, Name, Next Action, Notes.
 | FAM-07 | Tenant Onboarding and Invite | Open family cycle; audit invite flow, onboarding state, control-plane visibility | Must-haves checklist §2 rows not assessed |
 | FAM-08 | Tenant Core Workspace | Open family cycle; audit tenant workspace, org_id isolation (constitutional), session persistence | org_id isolation is CONSTITUTIONAL — any weakening is a data isolation failure; must-haves §3 rows not assessed |
 | FAM-09 | Supplier Profile and Catalog | Open family cycle; audit supplier profile completeness for real Surat supplier data | Pre-existing unstaged M: `components/Public/PublicSupplierProfile.tsx` — do NOT stage in any family cycle without explicit allowlist |
-| FAM-10 | Platform Ops and Control Plane | Open family cycle; audit control routes, admin impersonation, tenant provisioning flow | Includes admin impersonation (LAUNCH_DEPENDENCY classification), control route health, provisioning gate |
+| FAM-10 | Platform Ops and Control Plane | **VERIFIED_COMPLETE** (2026-05-28) via `FAM-10-PLATFORM-OPS-CONTROL-PLANE-PRODUCTION-VERIFY-CLOSE-001`. Production smoke 15/15 PASS. All mutation surfaces PRODUCTION_CONFIRMED. DEV-001 (archive guard 403 not 409) and DEV-002 (impersonation start 201 not 200) documented as planning deviations; code behavior is correct. R-005 ACCEPTED_MVP_RISK (impersonation token revocation gap; 30-min TTL primary mechanism; unchanged). | Includes admin impersonation (LAUNCH_DEPENDENCY classification), control route health, provisioning gate. Production verified 2026-05-28. Commit: 979f838. |
 | FAM-11 | Subscription and Commercial Gating | Open family cycle after P0 families complete; confirm minimum gating logic for pilot tenants | P1_MVP_MUST_HAVE per strategy; minimum commercial gating version acceptable for Surat proof cell |
 | FAM-12 | Network Commerce — RFQ and Pools | NC Phase 1 AUDIT_COMPLETE; E2E blocked by FAM-13 (award maker-checker) gate; no new cycle until FAM-13 gate clears | 186/186 integration tests PASS; pools + RFQ + invite enabled in production; award path gated G-022; supplier quotes blocked QD-6 |
 | FAM-13 | Network Commerce — Award Maker-Checker | Await Paresh decision on G-022 (HOLD_FOR_PARESH_DECISION) before opening implementation cycle | Two-call G-021 split flow designed; pending_approvals + ApprovalSignature tables confirmed; no schema changes required before cycle |
@@ -267,7 +267,7 @@ The proposed cycle order is derived from:
 | FAM-07 Onboarding | LAUNCH_BLOCKER | NOT_ASSESSED — family cycle required |
 | FAM-08 Tenant Core | LAUNCH_BLOCKER | NOT_ASSESSED — family cycle required |
 | FAM-09 Supplier Profile | LAUNCH_BLOCKER | NOT_ASSESSED — family cycle required |
-| FAM-10 Control Plane | LAUNCH_BLOCKER | NOT_ASSESSED — family cycle required |
+| FAM-10 Control Plane | LAUNCH_BLOCKER | VERIFIED_COMPLETE — production verified 2026-05-28 |
 | FAM-11 Subscription Gating | P1_MVP_MUST_HAVE | NOT_ASSESSED — family cycle required |
 | FAM-12 RFQ and Pools | PILOT_REQUIRED | PARTIALLY_IMPLEMENTED — NC Phase 1 done |
 | FAM-15 Invoices | PILOT_REQUIRED | NOT_ASSESSED — family cycle required |
