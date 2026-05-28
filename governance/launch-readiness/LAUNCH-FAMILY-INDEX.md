@@ -130,7 +130,7 @@ Last Verified Date, Next Review Trigger.
 | ID | Name | Evid Level | Evid Source | Last Verified By | Last Date | Review Trigger |
 |---|---|---|---|---|---|---|
 | FAM-01 | B2C Public Browse and Product Detail | PRODUCTION_CONFIRMED | TEXQTIC-B2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001 | TEXQTIC-B2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001 | see B2C tracker | Real-data smoke test (BS-001) |
-| FAM-02 | D2C Public Collections | PRODUCTION_CONFIRMED | TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001 | TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001 | see D2C tracker | D2C SEO expansion (FTR-SEO-001) |
+| FAM-02 | D2C Public Collections | PRODUCTION_CONFIRMED | TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001 | TEXQTIC-D2C-FAMILY-REPO-TRUTH-DESIGN-PLAN-AND-TRACKER-001 | see D2C tracker | FTR-SEO-001 STRATEGY_DEFINED (canonical trigger satisfied); review on FTR-SEO-002 product detail sitemap expansion if/when authorized. |
 | FAM-03 | Inquiry Submission | PRODUCTION_CONFIRMED | PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001 | PUBLIC-INQUIRY-CONTEXT-HANDOFF-IMPLEMENTATION-001 | see inquiry units | Notification pipeline verification (BS-002) |
 | FAM-04 | SEO Infrastructure | PRODUCTION_CONFIRMED | PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001 | PUBLIC-SEO-SITEMAP-ROBOTS-IMPLEMENTATION-001 | see SEO units | FTR-SEO-001 STRATEGY_DEFINED (canonical trigger satisfied); review on FTR-SEO-002 sitemap expansion, FTR-SEO-003 supplier indexability, and FTR-SEO-008/009 JSON-LD expansion. |
 | FAM-05 | DPP Digital Product Passport | PRODUCTION_CONFIRMED | TECS-DPP-PASSPORT-NETWORK-PROD-AUDIT-002 | TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 | 2026-05-02 | Paresh launch-auth decision (D-001) |
@@ -163,7 +163,7 @@ Columns: Family ID, Name, Next Action, Notes.
 | ID | Name | Next Action | Notes |
 |---|---|---|---|
 | FAM-01 | B2C Public Browse and Product Detail | Maintain-only; run real-data smoke test (BS-001) before public outreach. Pre-outreach overlay gate: FTR-SL-001 (soft-launch aggregator directory readiness design, MVP_CRITICAL/OPEN) required alongside BS-001 before first real supplier profile goes live in promotion context. | Multiple B2C slices verified in production; QA data only; real Surat supplier data test needed |
-| FAM-02 | D2C Public Collections | Maintain-only; SEO expansion deferred (FTR-SEO-001, FTR-SEO-002) | D2C collections + detail + SEO metadata verified; CTA auth-handoff implemented; post-auth continuation deferred |
+| FAM-02 | D2C Public Collections | Maintain-only; canonical strategy resolved via FTR-SEO-001 STRATEGY_DEFINED. Remaining SEO expansion overlay: FTR-SEO-002 product detail sitemap expansion, if/when product-detail sitemap scope is authorized. | D2C collections + detail + SEO metadata verified; CTA auth-handoff implemented; post-auth continuation deferred |
 | FAM-03 | Inquiry Submission | Maintain-only. Inquiry submission core VERIFIED_COMPLETE. Open launch overlay gates (required before buyer-facing outreach): FTR-B2C-004 (notification loop, MVP_CRITICAL/PARTIAL), FTR-B2C-005 (supplier-context notification runtime verification, MVP_CRITICAL/OPEN), FTR-LEGAL-002 (privacy/GDPR consent notice for inquiry form, MVP_CRITICAL/OPEN, PRIT-011), FTR-SL-003 (minimum inquiry notification loop implementation, MVP_CRITICAL/PARTIAL). Phase 3+ overlay: FTR-B2C-002 (inquiry schema expansion, LAUNCH_DEPENDENCY/OPEN). | Phase 1+2 DB submission verified; notification pipeline not production-verified |
 | FAM-04 | SEO Infrastructure | Maintain-only. FTR-SEO-001 STRATEGY_DEFINED (Option F; no implementation change); FTR-SEO-007 STRATEGY_RESOLVED. Open overlay gates: FTR-SEO-002 (product detail sitemap expansion, LAUNCH_DEPENDENCY/OPEN), FTR-SEO-003 (supplier profile indexability, LAUNCH_DEPENDENCY/OPEN), FTR-SEO-008 (product detail JSON-LD expansion, LAUNCH_DEPENDENCY/OPEN), FTR-SEO-009 (supplier profile JSON-LD, LAUNCH_DEPENDENCY/OPEN). Validate JSON-LD externally (BS-005). | Sitemap + robots.txt + JSON-LD implemented; canonical domain strategy resolved (FTR-SEO-001 STRATEGY_DEFINED); rich results not externally validated |
 | FAM-05 | DPP Digital Product Passport | Await Paresh launch-auth decision (D-001, Decision Parking Lot) | Technically PRODUCTION_READY (PROD-AUDIT-002); launch auth HOLD_FOR_PARESH_DECISION; LAUNCH_GATE_CLOSED since 2026-05-02 |
@@ -205,7 +205,7 @@ The proposed cycle order is derived from:
 | Cycle | Family | Note |
 |---|---|---|
 | 1 | FAM-01 B2C Public Browse | Maintain-only; real-data smoke test pending |
-| 2 | FAM-02 D2C Public Collections | Maintain-only; SEO expansion deferred |
+| 2 | FAM-02 D2C Public Collections | Maintain-only; canonical strategy resolved; FTR-SEO-002 expansion pending auth |
 | 3 | FAM-03 Inquiry Submission | Maintain-only; notification pipeline verification pending |
 | 4 | FAM-04 SEO Infrastructure | Maintain-only; canonical domain decision deferred |
 
