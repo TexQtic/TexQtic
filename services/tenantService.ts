@@ -49,6 +49,12 @@ export interface ActivateTenantResponse {
   };
 }
 
+// Error codes returned by the activation endpoint (HTTP 409)
+export const ACTIVATION_ERROR_CODES = {
+  EXISTING_USER_MUST_SIGN_IN: 'EXISTING_USER_MUST_SIGN_IN',
+  ALREADY_MEMBER: 'ALREADY_MEMBER',
+} as const;
+
 /**
  * Activate a pre-provisioned tenant with invite token
  * Users cannot create tenants - they can only activate existing ones

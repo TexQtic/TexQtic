@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TenantType } from '../../types';
+import { ACTIVATION_ERROR_CODES } from '../../services/tenantService';
 
 interface ActivationFlowProps {
   onComplete: (_data: any) => void | Promise<void>;
@@ -8,16 +9,20 @@ interface ActivationFlowProps {
     orgName?: string;
     domain?: string;
   };
+  onExistingUserSignIn?: () => void;
 }
 
 export const ActivationFlow: React.FC<ActivationFlowProps> = ({
   onComplete,
   inviteToken,
   prefilledData,
+  onExistingUserSignIn,
 }) => {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [existingUserSignInRequired, setExistingUserSignInRequired] = useState(false);
+  const [alreadyMemberError, setAlreadyMemberError] = useState(false);
   const [formData, setFormData] = useState({
     orgName: prefilledData?.orgName || '',
     type: TenantType.B2B,
@@ -40,10 +45,18 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
 
     setSubmitting(true);
     setSubmitError(null);
+    setExistingUserSignInRequired(false);
+    setAlreadyMemberError(false);
     try {
       await onComplete(formData);
     } catch (err: any) {
-      setSubmitError(err?.message || 'Activation failed. Please try again.');
+      if (err?.code === ACTIVATION_ERROR_CODES.EXISTING_USER_MUST_SIGN_IN) {
+        setExistingUserSignInRequired(true);
+      } else if (err?.code === ACTIVATION_ERROR_CODES.ALREADY_MEMBER) {
+        setAlreadyMemberError(true);
+      } else {
+        setSubmitError(err?.message || 'Activation failed. Please try again.');
+      }
       setSubmitting(false);
     }
   };
@@ -275,7 +288,7 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
         )}
 
         <div className="flex justify-between pt-8">
-          {step > 1 && (
+          {step > 1 && !existingUserSignInRequired && !alreadyMemberError && (
             <button
               onClick={() => setStep(s => s - 1)}
               className="px-8 py-4 font-bold text-slate-500 hover:text-slate-800 transition"
@@ -285,20 +298,54 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
             </button>
           )}
           <div className="ml-auto space-y-3">
+            {existingUserSignInRequired && (
+              <div className="bg-amber-50 border border-amber-300 rounded-xl px-5 py-4 space-y-3 text-left max-w-md">
+                <p className="text-amber-900 text-sm font-semibold">Account already exists</p>
+                <p className="text-amber-800 text-sm">
+                  A TexQtic account already exists for this email address. Please sign in to accept this invite.
+                </p>
+                {onExistingUserSignIn && (
+                  <button
+                    onClick={onExistingUserSignIn}
+                    className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 transition"
+                  >
+                    Sign In to Accept Invite
+                  </button>
+                )}
+              </div>
+            )}
+            {alreadyMemberError && (
+              <div className="bg-amber-50 border border-amber-300 rounded-xl px-5 py-4 space-y-3 text-left max-w-md">
+                <p className="text-amber-900 text-sm font-semibold">Already a member</p>
+                <p className="text-amber-800 text-sm">
+                  This account is already a member of this workspace. Please sign in to continue.
+                </p>
+                {onExistingUserSignIn && (
+                  <button
+                    onClick={onExistingUserSignIn}
+                    className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 transition"
+                  >
+                    Sign In
+                  </button>
+                )}
+              </div>
+            )}
             {submitError && (
               <div className="text-red-600 text-sm bg-red-50 border border-red-200 px-4 py-2 rounded-lg text-right">
                 {submitError}
               </div>
             )}
-            <button
-              onClick={step === 4 ? handleComplete : next}
-              disabled={submitting}
-              className="px-12 py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-900/10 hover:opacity-90 transition uppercase text-xs tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {step < 4 && 'Continue'}
-              {step === 4 && !submitting && 'Submit Verification & Activate'}
-              {step === 4 && submitting && 'Activating...'}
-            </button>
+            {!existingUserSignInRequired && !alreadyMemberError && (
+              <button
+                onClick={step === 4 ? handleComplete : next}
+                disabled={submitting}
+                className="px-12 py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-900/10 hover:opacity-90 transition uppercase text-xs tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {step < 4 && 'Continue'}
+                {step === 4 && !submitting && 'Submit Verification & Activate'}
+                {step === 4 && submitting && 'Activating...'}
+              </button>
+            )}
           </div>
         </div>
       </div>

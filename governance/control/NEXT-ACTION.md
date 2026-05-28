@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-28 (FAM-07D1-TENANT-ONBOARDING-EXISTING-USER-BACKEND-SECURITY-CONTAINMENT-001 CLOSED. Backend security containment complete: B-01 EXISTING_USER_MUST_SIGN_IN, B-02 ALREADY_MEMBER, S-01 INVITE_ALREADY_PENDING. 10/10 tests PASS. Frontend follow-up required (FAM-07D2). LFI/FTR not modified. Prior: FAM-07C DESIGN_SYNTHESIS_COMPLETE.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-07 (FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGN-IN-HANDOFF-001 CLOSED. Frontend sign-in-first UX implemented for EXISTING_USER_MUST_SIGN_IN and ALREADY_MEMBER codes. 10/10 frontend tests PASS. tsc EXIT 0. ESLint CLEAN. pendingInviteToken preserved. Authenticated post-login accept-invite endpoint STILL OPEN (FAM-07E/FAM-07G). FAM-07 NOT VERIFIED_COMPLETE. LFI/FTR not modified. Prior: FAM-07D1 CLOSED 2026-05-28.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,70 +15,53 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001
+active_delivery_unit: FAM-07E-OR-FAM-07G-AUTHENTICATED-ACCEPT-INVITE-ENDPOINT-TBD
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  TEXQTIC-NC-PHASE1-CLOSE-AUDIT-001 AUDIT_COMPLETE (2026-07-05).
-  Phase 1 CPP close audit passed. tsc EXIT 0. prisma validate PASS.
-  185/185 tests PASS: P21 10/10 unit + 10/10 integration, P20 22/22, P19 12/12, P18 64/64, P17 67/67.
-  All 12 schema entities, 34 route handlers (7 files), 6 service files verified.
-  Security D-017-A (actor_admin_id absent) CONFIRMED. G-020 D-020-D (append-only) CONFIRMED.
-  Tenant isolation (orgId from JWT, non-leaking 404, dual-anchor invite/quote) CONFIRMED.
-  No-money-movement policy CONFIRMED. Feature flags 3 open / 3 false preserved.
-  No schema/migration/frontend/.env changes. No feature flags activated. No Packet 23 opened.
-  DPP HOLD_FOR_PARESH_DECISION UNCHANGED. G-022 HOLD_FOR_PARESH_DECISION UNCHANGED.
-  Phase 1 CPP implementation chain declared AUDIT_COMPLETE. Next work requires Paresh authorization.
-last_closed_unit: TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001
-last_closed_unit_status: VERIFIED_COMPLETE (2026-07-06)
+  FAM-07D2 CLOSED (2026-07-07). Frontend sign-in-first UX complete: EXISTING_USER_MUST_SIGN_IN
+  and ALREADY_MEMBER banners in OnboardingFlow.tsx. onExistingUserSignIn→setAppState('AUTH').
+  pendingInviteToken preserved for post-login reuse. 10/10 tests PASS. tsc EXIT 0.
+  REMAINING OPEN: authenticated post-login invite-acceptance endpoint does not yet exist.
+  When user reaches 'AUTH' state with pendingInviteToken present after sign-in redirect,
+  there is no path to complete the invite acceptance. This requires a new backend endpoint
+  (POST /api/tenant/activate-authenticated or equivalent) and a frontend trigger in App.tsx.
+  Next unit: FAM-07E or FAM-07G (tbd). Requires Paresh explicit authorization.
+  Do NOT auto-open next unit. FAM-07 NOT VERIFIED_COMPLETE.
+last_closed_unit: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGN-IN-HANDOFF-001
+last_closed_unit_status: VERIFIED_COMPLETE (2026-07-07)
 last_closed_unit_runtime_verdict: >
-  NC Phase 1 post-audit QA fixture normalization (2026-07-06).
-  New seed script created: server/scripts/qa/nc-phase1-qa-fixture-baseline.ts.
-  Authorization-gated (PARESH_AUTHORIZED=true). Idempotent. Covers P17–P20 entity chain:
-  NetworkPool, NetworkPoolMembership, NetworkPoolDemandLine, NetworkPoolDemandSnapshot,
-  NetworkPoolDemandSnapshotLine, NetworkPoolRfq, NetworkPoolRfqSupplierInvite,
-  NetworkInvoice, NetworkSettlementSplit. G-020 compliance: no lifecycle log rows.
-  Three schema corrections applied: (1) organizations row creation added to upsertQaTenant;
-  (2) invitedByUserId (not sentByUserId); (3) sourceLineRef + sourceRevisionNo (not lineRef).
-  tsc --noEmit server: 0 errors. No product implementation. No schema/migration/frontend/.env changes.
-  No feature flags activated. ttp_enabled=false UNCHANGED. HOLD_FOR_COUNSEL_FEEDBACK UNCHANGED.
-  VERIFIED_COMPLETE (2026-07-06): authorized first run exit 0, sourceType defect corrected
-  (sourceType: 'OWNER_DIRECT' added to NetworkPoolDemandSnapshotLine.create()), idempotency
-  confirmed (all SKIP, zero CREATE rows), P17–P21 integration tests 186/186 PASS (6 files, 1185s).
-  tsc --noEmit server: 0 errors. Prisma validate: PASS.
-last_closed_unit_commits: "chore(network-commerce): normalize post phase 1 qa fixtures"
+  FAM-07D2 frontend sign-in handoff (2026-07-07).
+  EXISTING_USER_MUST_SIGN_IN and ALREADY_MEMBER error codes from FAM-07D1 backend handled
+  in OnboardingFlow.tsx: amber banners shown, submit/back buttons hidden, sign-in CTA calls
+  onExistingUserSignIn. App.tsx navigates to 'AUTH' with pendingInviteToken preserved.
+  ACTIVATION_ERROR_CODES exported from services/tenantService.ts.
+  10/10 frontend unit tests PASS (ACT-001 to ACT-010). tsc --noEmit EXIT 0. ESLint CLEAN.
+  No backend changes. No schema/migration/.env changes. FAM-07 NOT VERIFIED_COMPLETE.
+last_closed_unit_commits: "[TEXQTIC] auth: frontend sign-in handoff for existing-user invite activation (FAM-07D2)"
 last_closed_unit_closure_basis: >
-  Repo-truth inspection confirmed no existing NC Phase 1 QA fixture seed script.
-  All P17–P21 integration tests use ephemeral fixtures — no static seed dependency.
-  Seed script created with auth gate, idempotency, and G-020 compliance.
-  Governance artifact created. Control files updated. tsc: 0 errors.
-last_closed_unit_prior: TEXQTIC-TRADETRUST-PAY-LEGAL-PACKET-UPGRADE-NC-SUPPLEMENT-001
-last_closed_unit_prior_status: LEGAL_PACKET_UPGRADED_READY_FOR_COUNSEL (2026-07-06)
-next_candidate_unit: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001
-next_candidate_unit_status: >
-  HOLD_FOR_AUTHORIZATION (2026-05-28) — FAM-07D1 backend security containment CLOSED.
-  FAM-07D1 closed: B-01 (EXISTING_USER_MUST_SIGN_IN), B-02 (ALREADY_MEMBER), S-01 (INVITE_ALREADY_PENDING).
-  Backend now returns 409 EXISTING_USER_MUST_SIGN_IN for existing accounts on POST /api/tenant/activate.
-  Frontend must handle this code and present a sign-in redirect flow (Option A).
-  FAM-07D2 requires separate explicit Paresh authorization before implementation begins.
-  No schema migration, no SMTP dependency — frontend-only implementation.
-  TTP HOLD_FOR_COUNSEL_FEEDBACK applies to TTP track only — does not block FAM-07D2.
-next_candidate_unit_date_installed: "2026-05-28"
+  FAM-07D1 backend contract (EXISTING_USER_MUST_SIGN_IN, ALREADY_MEMBER HTTP 409) consumed.
+  Frontend sign-in-first UX implemented per design contract. 10/10 tests PASS. tsc EXIT 0. ESLint CLEAN.
+last_closed_unit_prior: TEXQTIC-NC-PHASE1-POST-AUDIT-QA-SEED-RESET-001
+last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-07-06)
+next_candidate_unit: FAM-07E-OR-FAM-07G-AUTHENTICATED-ACCEPT-INVITE-ENDPOINT-TBD
+next_candidate_unit_status: HOLD_FOR_AUTHORIZATION
+next_candidate_unit_date_installed: "2026-07-07"
 next_candidate_unit_note: >
-  FAM-07D2 — Existing-User Invite Acceptance: Frontend Sign-in Redirect (FTR-AUTH-001 frontend leg).
-  FAM-07D1 (backend) CLOSED 2026-05-28. Frontend must now handle EXISTING_USER_MUST_SIGN_IN.
-  Required: detect 409 EXISTING_USER_MUST_SIGN_IN in OnboardingFlow.tsx activation path;
-  present user with sign-in prompt instead of generic error message; after sign-in,
-  re-invoke invite acceptance via authenticated accept-invite endpoint.
-  Frontend allowlist: components/Onboarding/OnboardingFlow.tsx, App.tsx, services/tenantService.ts.
-  Validation: pnpm --filter web typecheck EXIT 0; pnpm --filter web lint clean;
-  pnpm --filter server test — tenant-activate PASS (10/10).
-  Implementation gate: requires Paresh explicit authorization (Type-A).
-  Commit: feat(auth): handle EXISTING_USER_MUST_SIGN_IN redirect in onboarding flow.
-  FAM-07E (ToS architecture) follows FAM-07D2; IMPLEMENTATION-GATED_BY_FINAL_LEGAL_TEXT.
-  FAM-07F (test coverage) follows FAM-07D2 (tests depend on final route state).
-  FAM-07H (SMTP) is infrastructure-only — Paresh action at any time, independent of code.
-  Do NOT auto-open next unit without Paresh authorization.
+  FAM-07D2 CLOSED (2026-07-07). Frontend sign-in-first UX complete.
+  REMAINING OPEN in FAM-07 family: authenticated post-login invite-acceptance endpoint.
+  When user reaches 'AUTH' state with pendingInviteToken present, there is no backend endpoint
+  to complete acceptance after sign-in. pendingInviteToken is preserved in App.tsx state.
+  Next unit must implement: POST /api/tenant/activate-authenticated (or equivalent) +
+  App.tsx auto-trigger after login when pendingInviteToken present.
+  Unit ID: FAM-07E or FAM-07G — to be determined by Paresh authorization.
+  FAM-07J (INVITE_ALREADY_PENDING UX on membership invite surface) — separate, deferred.
+  FAM-07E (ToS architecture): IMPLEMENTATION-GATED_BY_FINAL_LEGAL_TEXT.
+  FAM-07F (test coverage): follows final route state.
+  FAM-07H (SMTP): infrastructure-only, Paresh action at any time.
+  Do NOT auto-open next unit. FAM-07 NOT VERIFIED_COMPLETE.
   TTP track held separately: see prior_next_candidate_unit below.
+archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001
+archived_candidate_fam07d2_status: CLOSED (2026-07-07)
 prior_next_candidate_unit: HOLD_FOR_COUNSEL_FEEDBACK
 prior_next_candidate_unit_status: >
   HOLD_FOR_COUNSEL_FEEDBACK — No implementation packet may be opened until external legal counsel

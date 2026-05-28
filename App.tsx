@@ -7664,6 +7664,10 @@ const App: React.FC = () => {
           <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
             <OnboardingFlow
               inviteToken={pendingInviteToken ?? undefined}
+              onExistingUserSignIn={() => {
+                // pendingInviteToken is intentionally preserved — not cleared here
+                setAppState('AUTH');
+              }}
               onComplete={async (formData: any) => {
                 if (pendingInviteToken) {
                   const raw = await activateTenant({
