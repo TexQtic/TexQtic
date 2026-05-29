@@ -808,3 +808,126 @@ describe('FAM-07D3 — authenticated invite acceptance (POST /api/tenant/activat
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// FAM-07G — T-MISS-01..T-MISS-04: New-user activation hardening tests
+// ---------------------------------------------------------------------------
+
+const HAPPY_PATH_ORG = {
+  id:                  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+  slug:                'test-org',
+  legal_name:          'Test Org',
+  status:              'PENDING_VERIFICATION',
+  org_type:            'B2B',
+  primary_segment_key: 'Yarn',
+  is_white_label:      false,
+  jurisdiction:        'IN-MH',
+  registration_no:     'REG-001',
+  plan:                'FREE',
+  secondary_segments:  [],
+  role_positions:      [],
+};
+
+describe('FAM-07G — POST /api/tenant/activate: response shape and write verification', () => {
+  let app: FastifyInstance;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    withDbContextMock.mockImplementation(async (_client: unknown, _ctx: unknown, cb: (tx: unknown) => Promise<unknown>) => cb(txMock));
+    txMock.$queryRaw.mockResolvedValue([{ org_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' }]);
+    txMock.$executeRawUnsafe.mockResolvedValue(undefined);
+    txMock.user.findUnique.mockResolvedValue(null);
+    txMock.user.create.mockResolvedValue({ id: TEST_USER_ID, email: 'owner@example.test' });
+    txMock.organizations.update.mockResolvedValue({
+      legal_name: 'Test Org', status: 'PENDING_VERIFICATION', org_type: 'B2B', is_white_label: false, plan: 'FREE',
+    });
+    txMock.organizations.findUnique.mockResolvedValue(HAPPY_PATH_ORG);
+    txMock.membership.findFirst.mockResolvedValue(null);
+    txMock.membership.create.mockResolvedValue({ role: 'OWNER' });
+    txMock.invite.update.mockResolvedValue({ acceptedAt: new Date() });
+    app = await buildServer();
+  });
+
+  afterEach(async () => { await app.close(); });
+
+  it('T-MISS-01: successful activation returns 200 with expected response shape', async () => {
+    prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+
+    const response = await app.inject({
+      method:  'POST',
+      url:     '/api/tenant/activate',
+      payload: BASE_ACTIVATE_PAYLOAD,
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.success).toBe(true);
+    expect(body.data).toMatchObject({
+      token:      expect.any(String),
+      user:       { id: expect.any(String), email: 'owner@example.test' },
+      tenant:     expect.objectContaining({ id: TEST_TENANT_ID, slug: expect.any(String) }),
+      membership: { role: expect.any(String) },
+    });
+  });
+
+  it('T-MISS-02: returns 403 EMAIL_MISMATCH when invite email does not match payload email', async () => {
+    prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
+
+    const response = await app.inject({
+      method:  'POST',
+      url:     '/api/tenant/activate',
+      payload: {
+        ...BASE_ACTIVATE_PAYLOAD,
+        userData: { email: 'different@example.test', password: 'ValidPass99' },
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    const body = response.json();
+    expect(body.error).toMatchObject({ code: 'EMAIL_MISMATCH' });
+    // B-01 user lookup must not have been reached
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('T-MISS-03: transaction writes include membership.create, invite.update(acceptedAt), and writeAuditLog', async () => {
+    prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+
+    await app.inject({
+      method:  'POST',
+      url:     '/api/tenant/activate',
+      payload: BASE_ACTIVATE_PAYLOAD,
+    });
+
+    expect(txMock.user.create).toHaveBeenCalled();
+    expect(txMock.membership.create).toHaveBeenCalled();
+    expect(txMock.invite.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'invite-id-0001' },
+        data:  expect.objectContaining({ acceptedAt: expect.any(Date) }),
+      }),
+    );
+    expect(writeAuditLogMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ action: 'user.activated' }),
+    );
+  });
+
+  it('T-MISS-04: organizations.update is called with status PENDING_VERIFICATION', async () => {
+    prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+
+    await app.inject({
+      method:  'POST',
+      url:     '/api/tenant/activate',
+      payload: BASE_ACTIVATE_PAYLOAD,
+    });
+
+    expect(txMock.organizations.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'PENDING_VERIFICATION' }),
+      }),
+    );
+  });
+});

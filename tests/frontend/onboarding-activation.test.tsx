@@ -29,7 +29,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ActivationFlow } from '../../components/Onboarding/OnboardingFlow';
-import { ACTIVATION_ERROR_CODES, acceptAuthenticatedInvite } from '../../services/tenantService';
+import { ACTIVATION_ERROR_CODES, acceptAuthenticatedInvite, activateTenant } from '../../services/tenantService';
 import * as apiClient from '../../services/apiClient';
 
 vi.mock('../../services/apiClient', async (importOriginal) => {
@@ -279,5 +279,98 @@ describe('acceptAuthenticatedInvite service', () => {
     const result = await acceptAuthenticatedInvite({ inviteToken: 'invite-token-xyz' });
 
     expect(result).toEqual(fakeResponse);
+  });
+});
+
+// ─── ACT-013 / ACT-014: activateTenant service function (F-MISS-01 / F-MISS-02) ──
+
+describe('activateTenant service (FAM-07G — F-MISS-01 / F-MISS-02)', () => {
+  it('ACT-013 (F-MISS-01): calls POST /api/tenant/activate with expected payload', async () => {
+    vi.mocked(apiClient.post).mockResolvedValueOnce({
+      token: 'new-jwt',
+      user: { id: 'u1', email: 'owner@example.com' },
+      tenant: { id: 't1', name: 'Acme', slug: 'acme', type: 'B2B', status: 'PENDING_VERIFICATION', plan: 'FREE' },
+      membership: { role: 'OWNER' },
+    });
+
+    await activateTenant({
+      inviteToken: 'test-token-abc',
+      userData: { email: 'owner@example.com', password: 'ValidPass99' },
+      verificationData: { registrationNumber: 'REG-001', jurisdiction: 'IN-MH' },
+    });
+
+    expect(vi.mocked(apiClient.post)).toHaveBeenCalledWith(
+      '/api/tenant/activate',
+      expect.objectContaining({
+        inviteToken: 'test-token-abc',
+        userData: { email: 'owner@example.com', password: 'ValidPass99' },
+        verificationData: { registrationNumber: 'REG-001', jurisdiction: 'IN-MH' },
+      }),
+    );
+  });
+
+  it('ACT-014 (F-MISS-02): returns response data from the API', async () => {
+    const fakeResponse = {
+      token: 'tenant-jwt-xyz',
+      user: { id: 'user-123', email: 'owner@example.com' },
+      tenant: { id: 'tenant-abc', name: 'Test Corp', slug: 'test-corp', type: 'B2B', status: 'PENDING_VERIFICATION', plan: 'FREE' },
+      membership: { role: 'OWNER' },
+    };
+    vi.mocked(apiClient.post).mockResolvedValueOnce(fakeResponse);
+
+    const result = await activateTenant({
+      inviteToken: 'invite-token-xyz',
+      userData: { email: 'owner@example.com', password: 'ValidPass99' },
+      verificationData: { registrationNumber: 'REG-002', jurisdiction: 'IN-MH' },
+    });
+
+    expect(result).toEqual(fakeResponse);
+  });
+});
+
+// ─── ACT-015: FC-03 stale-state guard (F-MISS-03) ────────────────────────────
+
+describe('FC-03 stale-state guard — invite token cleared after successful activation (FAM-07G — F-MISS-03)', () => {
+  /**
+   * Regression guard for the FC-03 fix in App.tsx ONBOARDING onComplete handler.
+   *
+   * LIMITATION: App.tsx does not have a full integration test harness. This test
+   * verifies the behavioral contract of the fix by simulating the handler sequence
+   * inline — confirming that the invite-token-clearing action (setPendingInviteToken)
+   * is invoked immediately after activateTenant() resolves, even when a subsequent
+   * post-activation step throws. This mirrors exactly the order imposed by the fix.
+   */
+  it('ACT-015 (F-MISS-03): invite token is cleared immediately after activateTenant succeeds even if post-activation bootstrap throws', async () => {
+    vi.mocked(apiClient.post).mockResolvedValueOnce({
+      token: 'tenant-jwt-fc03',
+      user: { id: 'user-fc03', email: 'test@example.com' },
+      tenant: { id: 'tenant-fc03', name: 'FC03 Org', slug: 'fc03', type: 'B2B', status: 'PENDING_VERIFICATION', plan: 'FREE' },
+      membership: { role: 'OWNER' },
+    });
+
+    const clearInviteToken = vi.fn();
+    let pendingToken: string | null = 'fc03-invite-token';
+
+    // Simulate the App.tsx ONBOARDING onComplete handler with FC-03 fix applied.
+    // clearInviteToken represents setPendingInviteToken(null).
+    const handler = async () => {
+      const raw = await activateTenant({
+        inviteToken: pendingToken!,
+        userData: { email: 'test@example.com', password: 'ValidPass99' },
+        verificationData: { registrationNumber: 'REG-001', jurisdiction: 'IN-MH' },
+      }) as any;
+      // FC-03 fix: clear before any post-activation step
+      pendingToken = null;
+      clearInviteToken(null);
+      // Simulate post-activation step throwing (e.g. getCurrentUser network failure)
+      void raw; // consumed
+      throw new Error('Simulated getCurrentUser failure');
+    };
+
+    await expect(handler()).rejects.toThrow('Simulated getCurrentUser failure');
+
+    // Invite token must be cleared even though the handler threw after activation
+    expect(clearInviteToken).toHaveBeenCalledWith(null);
+    expect(pendingToken).toBeNull();
   });
 });

@@ -7728,6 +7728,10 @@ const App: React.FC = () => {
                         jurisdiction: formData.jurisdiction,
                       },
                     }) as any;
+                    // FC-03 hardening: invite has been consumed — clear pending token
+                    // immediately, before any post-activation step that could throw.
+                    // Prevents permanent stale-invite-token state if bootstrap fails.
+                    setPendingInviteToken(null);
                     // Store JWT so all subsequent tenant API calls are authenticated
                     setToken(raw.token, 'TENANT');
 
@@ -7743,7 +7747,6 @@ const App: React.FC = () => {
                       throw new Error('Tenant activation descriptor could not be established.');
                     }
 
-                    setPendingInviteToken(null);
                     setAppState(bootstrapState.nextState);
                 } else {
                   setAppState('EXPERIENCE');
