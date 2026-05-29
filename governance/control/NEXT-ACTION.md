@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-28 (FAM-07D3-VERIFY-CLOSE-AND-HUB-SYNC-001 COMPLETE. Date anomaly corrected (2026-07-07 → 2026-05-28). LFI FAM-07 → PARTIALLY_IMPLEMENTED. FTR-AUTH-001 → PARTIAL. See artifacts/control-plane/FAM-07D3-VERIFY-CLOSE-AND-HUB-SYNC-001.md.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-29 (FAM-07G-VERIFY-CLOSE-AND-AUTH-PATH-HUB-SYNC-001 COMPLETE. FC-03 hardening verified. 21 backend + 15 frontend tests PASS. FTR-AUTH-001 remains PARTIAL. LFI FAM-07 remains PARTIALLY_IMPLEMENTED. See artifacts/control-plane/FAM-07G-VERIFY-CLOSE-AND-AUTH-PATH-HUB-SYNC-001.md.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -18,31 +18,31 @@ product_delivery_priority: >-
 active_delivery_unit: FAM-07E-THROUGH-FAM-07J-REMAINING-UNITS-TBD
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  FAM-07D3 CLOSED (2026-05-28). POST /api/tenant/activate-authenticated implemented.
-  FAM-07 sign-in-first flow is now end-to-end complete: D1 (backend security) → D2 (frontend
-  redirect) → D3 (authenticated acceptance after sign-in). Remaining FAM-07 units: FAM-07E
-  (ToS — gated by legal text), FAM-07F (test coverage), FAM-07G (auth hardening TBD),
-  FAM-07H (SMTP infra), FAM-07J (INVITE_ALREADY_PENDING UX). None authorized for implementation.
-  Do NOT auto-open next unit. FAM-07 NOT VERIFIED_COMPLETE.
-last_closed_unit: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
-last_closed_unit_status: VERIFIED_COMPLETE (2026-05-28)
+  FAM-07G VERIFY-CLOSE COMPLETE (2026-05-29, commit 6b4ebd30). FC-03 hardening in new-user
+  activation path VERIFIED. T-MISS-01..T-MISS-04 (backend) and F-MISS-01..F-MISS-03 (frontend)
+  test coverage VERIFIED. tsc EXIT 0. FTR-AUTH-001 remains PARTIAL (new-user Supabase invite
+  sub-path DESIGN_GATED/OPEN). FAM-07F+G complete. Remaining FAM-07 units: FAM-07E
+  (ToS — gated by legal text), FAM-07H (SMTP infra), FAM-07J (INVITE_ALREADY_PENDING UX).
+  None authorized for implementation. Do NOT auto-open next unit. FAM-07 NOT VERIFIED_COMPLETE.
+last_closed_unit: FAM-07G-VERIFY-CLOSE-AND-AUTH-PATH-HUB-SYNC-001
+last_closed_unit_status: VERIFIED_COMPLETE (2026-05-29)
 last_closed_unit_runtime_verdict: >
-  FAM-07D3 authenticated invite acceptance (2026-05-28). LFI/FTR updated by FAM-07D3-VERIFY-CLOSE-AND-HUB-SYNC-001.
-  POST /api/tenant/activate-authenticated: inline JWT verify (no tenantAuthMiddleware), invite
-  hash lookup, email match guard, duplicate membership guard, atomic tx (membership + invite +
-  audit log), resolveTenantSessionIdentity, reply.tenantJwtSign. acceptAuthenticatedInvite
-  service function in tenantService.ts. App.tsx handleAuthSuccess TENANT path auto-triggers
-  invite acceptance when pendingInviteToken present after sign-in; ALREADY_MEMBER soft error
-  (proceed); EMAIL_MISMATCH/INVALID_INVITE fail-close. 17/17 backend tests PASS
-  (ACT-AUTH-001..ACT-AUTH-007). 12/12 frontend tests PASS (ACT-011, ACT-012 added).
-  tsc --noEmit EXIT 0. ESLint: no new issues. No schema/migration/.env changes.
-  FAM-07 NOT VERIFIED_COMPLETE. LFI/FTR updated by FAM-07D3-VERIFY-CLOSE-AND-HUB-SYNC-001 (2026-05-28).
-last_closed_unit_commits: "[TEXQTIC] auth: accept pending invite after authenticated sign-in (FAM-07D3)"
+  FAM-07G FC-03 hardening verify-close (2026-05-29, commit 6b4ebd30). LFI/FTR updated by
+  FAM-07G-VERIFY-CLOSE-AND-AUTH-PATH-HUB-SYNC-001. FC-03 fix: setPendingInviteToken(null)
+  moved immediately after activateTenant() returns, before setToken and bootstrap steps.
+  Prevents stuck-retry state when bootstrap throws after invite consumed. T-MISS-01..T-MISS-04
+  (backend): 200 response shape, EMAIL_MISMATCH 403, transaction write verification,
+  PENDING_VERIFICATION org status. F-MISS-01..F-MISS-03 (frontend): activateTenant service call,
+  return value, FC-03 behavioral contract via inline simulation. 21/21 backend tests PASS.
+  15/15 frontend tests PASS. tsc --noEmit EXIT 0. No schema/migration/.env changes.
+  FAM-07 NOT VERIFIED_COMPLETE. FTR-AUTH-001 remains PARTIAL.
+last_closed_unit_commits: "[TEXQTIC] fix: harden new-user invite activation state (FAM-07G)"
 last_closed_unit_closure_basis: >
-  FAM-07D2 pendingInviteToken preservation consumed. Backend endpoint + frontend trigger +
-  service function + tests written. 17/17 backend + 12/12 frontend tests PASS. tsc EXIT 0.
-  ESLint: no new issues. Sign-in-first flow end-to-end complete.
-last_closed_unit_prior: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGN-IN-HANDOFF-001
+  FAM-07F audit artifact consumed. FC-03 source fix in App.tsx + T-MISS-01..04 backend +
+  F-MISS-01..03 frontend tests. 21/21 backend + 15/15 frontend tests PASS. tsc EXIT 0.
+  New-user activation path hardened. FTR-AUTH-001 PARTIAL — new-user Supabase invite
+  sub-path remains DESIGN_GATED.
+last_closed_unit_prior: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-05-28)
 next_candidate_unit: FAM-07E-THROUGH-FAM-07J-REMAINING-TBD
 next_candidate_unit_status: HOLD_FOR_AUTHORIZATION
