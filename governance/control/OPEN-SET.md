@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-30 (OPS-PROD-VERIFICATION-TOOLCHAIN-HUB-SYNC-001 COMPLETE. Production verification toolchain moved to READY. FAM-07H SMTP runtime retry is now unblocked as next candidate. HD-001 remains VERIFIED_BLOCKED pending runtime evidence. FAM-07 remains PARTIALLY_IMPLEMENTED.)
+**Last Updated:** 2026-05-30 (FAM-07H-SMTP-RUNTIME-VERIFY-CLOSE-HUB-SYNC-001 COMPLETE. FAM-07H runtime SMTP verification is production-confirmed. HD-001 moved from VERIFIED_BLOCKED to RUNTIME_CONFIRMED_CONFIGURED. FAM-07 remains PARTIALLY_IMPLEMENTED because FTR-LEGAL-003 is still MVP_CRITICAL/OPEN.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,18 @@
 
 ## Operating Notes
 
+- FAM-07H-SMTP-RUNTIME-VERIFY-CLOSE-HUB-SYNC-001 VERIFIED_COMPLETE (2026-05-30).
+  Governance sync consumed production runtime evidence from
+  `FAM-07H-SMTP-SAFE-VERIFICATION-TRIGGER-RUNTIME-003-AUTHENTICATED` (commit `d93cb720`).
+  Single controlled SMTP verification POST succeeded (`200`), with
+  `emailDelivery.status=SENT`, `SMTP_VERIFICATION_TRIGGER_EXECUTED`, and `EMAIL_SENT` observed in
+  bounded logs. Provider-safe proof captured with masked recipient `p***@texqtic.com`.
+  No auth material, SMTP secrets, invite tokens/URLs, or full email body recorded.
+  HD-001 is now RUNTIME_CONFIRMED_CONFIGURED (no longer VERIFIED_BLOCKED).
+  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. FAM-07 remains NOT VERIFIED_COMPLETE.
+  Next recommended unit: `FAM-07E-TOS-CONSENT-ARCHITECTURE-001`.
+  Artifact: artifacts/control-plane/FAM-07H-SMTP-RUNTIME-VERIFY-CLOSE-HUB-SYNC-001.md.
+
 - OPS-PROD-VERIFICATION-TOOLCHAIN-HUB-SYNC-001 VERIFIED_COMPLETE (2026-05-30).
   Governance-only sync consumed:
   - `OPS-PROD-VERIFICATION-TOOLCHAIN-READINESS-AUDIT-001` (blocked: `VERCEL_CLI_NOT_AVAILABLE`)
@@ -62,7 +74,8 @@
   Outcome: `PROD_VERIFICATION_TOOLCHAIN_READY` recorded in control-plane truth; retry unit
   `FAM-07H-SMTP-PRODUCTION-DELIVERY-RUNTIME-VERIFICATION-RETRY-001` is now valid and unblocked
   from toolchain perspective. No SMTP live-send was attempted in this sync.
-  HD-001 remains VERIFIED_BLOCKED until runtime retry captures masked delivery evidence.
+  This toolchain-ready state is now consumed by later FAM-07H runtime units.
+  HD-001 is no longer VERIFIED_BLOCKED after runtime-003 confirmation and hub sync.
   FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. FAM-07 remains NOT VERIFIED_COMPLETE.
   LFI/FTR unchanged in this unit (`NO_LFI_FTR_UPDATE_REQUIRED`).
   Artifact: artifacts/control-plane/OPS-PROD-VERIFICATION-TOOLCHAIN-HUB-SYNC-001.md.
@@ -98,7 +111,8 @@
   remains PARTIAL by governance convention; sign-in-first path remains verified (FAM-07D3);
   new-user activation hardening remains verified (FAM-07G); stale "Supabase invite sub-path"
   terminology removed from live hub surfaces. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
-  HD-001 remains VERIFIED_BLOCKED. FAM-07 remains NOT VERIFIED_COMPLETE.
+  HD-001 status is superseded by later FAM-07H runtime confirmation (RUNTIME_CONFIRMED_CONFIGURED).
+  FAM-07 remains NOT VERIFIED_COMPLETE.
   Artifact: artifacts/control-plane/FAM-07I-HUB-SYNC-FTR-AUTH-001-REMAINDER-TERMINOLOGY-RECONCILIATION-001.md.
 
 - FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001 DESIGN_SYNTHESIS_COMPLETE (2026-07-07).

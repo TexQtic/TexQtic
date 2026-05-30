@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-30 (OPS-PROD-VERIFICATION-TOOLCHAIN-HUB-SYNC-001 COMPLETE. Production verification toolchain now READY. FAM-07H SMTP runtime verification retry is unblocked as a valid next candidate. HD-001 remains VERIFIED_BLOCKED pending runtime retry evidence. FAM-07 remains PARTIALLY_IMPLEMENTED.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-30 (FAM-07H-SMTP-RUNTIME-VERIFY-CLOSE-HUB-SYNC-001 COMPLETE. HD-001 moved from VERIFIED_BLOCKED to RUNTIME_CONFIRMED_CONFIGURED based on production runtime evidence. FAM-07 remains PARTIALLY_IMPLEMENTED because FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,44 +15,41 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-07E-THROUGH-FAM-07J-REMAINING-UNITS-TBD
+active_delivery_unit: FAM-07E-TOS-CONSENT-ARCHITECTURE-001
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  FAM-07I HUB-SYNC COMPLETE (2026-05-30). FTR-AUTH-001 terminology reconciled: current flow is
-  app-level invite-token activation, not a Supabase invite sub-path. FTR-AUTH-001 remains PARTIAL
-  by governance convention. FAM-07G FC-03 hardening and coverage remain VERIFIED (21 backend + 15
-  frontend tests PASS; tsc EXIT 0). FAM-07F+G complete. Remaining FAM-07 units: FAM-07E
-  (ToS — gated by legal text), FAM-07H (SMTP infra), FAM-07J (INVITE_ALREADY_PENDING UX).
-  OPS-PROD-VERIFICATION-TOOLCHAIN-ENABLEMENT-001 confirms Vercel CLI availability/auth/linkage and
-  safe presence-only env/deployment/log checks. FAM-07H retry is now technically unblocked, but
-  remains authorization-gated. Do NOT auto-open next unit. FAM-07 NOT VERIFIED_COMPLETE.
-last_closed_unit: OPS-PROD-VERIFICATION-TOOLCHAIN-HUB-SYNC-001
+  FAM-07H runtime chain now complete: auth-path verification (`b56e43d5`) established
+  CONTROL_PLANE_BEARER_WITH_REALM_HINT as the required operator path, and runtime-003
+  (`d93cb720`) captured production-safe SMTP proof (single valid POST, HTTP 200,
+  `emailDelivery.status=SENT`, `SMTP_VERIFICATION_TRIGGER_EXECUTED`, `EMAIL_SENT`, provider-safe
+  message-id evidence). HD-001 moved from VERIFIED_BLOCKED to RUNTIME_CONFIRMED_CONFIGURED.
+  FTR-AUTH-001 remains PARTIAL by governance convention. FTR-AUTH-004 remains PILOT_REQUIRED/OPEN.
+  FTR-AUTH-002 remains POST_MVP/OPEN. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN, so FAM-07 is
+  still not VERIFIED_COMPLETE. Next recommended family slice: FAM-07E ToS consent architecture.
+last_closed_unit: FAM-07H-SMTP-RUNTIME-VERIFY-CLOSE-HUB-SYNC-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-05-30)
 last_closed_unit_runtime_verdict: >
-  Governance sync consumed OPS-PROD-VERIFICATION-TOOLCHAIN-READINESS-AUDIT-001 and
-  OPS-PROD-VERIFICATION-TOOLCHAIN-ENABLEMENT-001. Toolchain moved from
-  PROD_VERIFICATION_TOOLCHAIN_BLOCKED_VERCEL_CLI_MISSING to PROD_VERIFICATION_TOOLCHAIN_READY.
-  FAM-07H-SMTP-PRODUCTION-DELIVERY-RUNTIME-VERIFICATION-RETRY-001 is now a valid next candidate.
-  HD-001 remains VERIFIED_BLOCKED until live SMTP runtime delivery evidence is captured.
-  FAM-07 remains PARTIALLY_IMPLEMENTED and not VERIFIED_COMPLETE. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
-  No source/test/schema/config/env/runtime delivery changes were made.
-last_closed_unit_commits: "[TEXQTIC] governance: sync production verification toolchain readiness"
+  Governance sync consumed runtime confirmation from
+  FAM-07H-SMTP-SAFE-VERIFICATION-TRIGGER-RUNTIME-003-AUTHENTICATED (`d93cb720`).
+  Production SMTP verification is now runtime-confirmed/configured with one controlled send,
+  safe logs, and provider-side proof captured. HD-001 is no longer VERIFIED_BLOCKED.
+  FAM-07 remains PARTIALLY_IMPLEMENTED and not VERIFIED_COMPLETE because
+  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+last_closed_unit_commits: "docs(control-plane): record authenticated smtp trigger runtime verification"
 last_closed_unit_closure_basis: >
-  Control-plane pointer surfaces synchronized with toolchain readiness truth and retry posture.
-  No LFI/FTR row edits were required because no stale toolchain-blocked wording was present in
-  those files. HD-001 and FAM-07 launch-readiness truth were intentionally preserved.
-last_closed_unit_prior: FAM-07I-HUB-SYNC-FTR-AUTH-001-REMAINDER-TERMINOLOGY-RECONCILIATION-001
+  Control-plane pointer surfaces synchronized with runtime-confirmed SMTP truth and post-sync
+  family posture. LFI and control files now reflect HD-001 runtime confirmation while preserving
+  FAM-07 open status and FTR-LEGAL-003 as the remaining MVP-critical blocker.
+last_closed_unit_prior: FAM-07H-SMTP-SAFE-VERIFICATION-TRIGGER-RUNTIME-003-AUTHENTICATED
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-05-30)
-next_candidate_unit: FAM-07H-SMTP-PRODUCTION-DELIVERY-RUNTIME-VERIFICATION-RETRY-001
+next_candidate_unit: FAM-07E-TOS-CONSENT-ARCHITECTURE-001
 next_candidate_unit_status: HOLD_FOR_AUTHORIZATION
 next_candidate_unit_date_installed: "2026-05-30"
 next_candidate_unit_note: >
-  OPS-PROD-VERIFICATION-TOOLCHAIN-ENABLEMENT-001 confirms Vercel CLI installed (54.6.1),
-  authenticated identity (texqtic-connect), confirmed project scope (tex-qtic/texqtic),
-  presence-only SMTP env checks available, and deployment/log inspection available with
-  secret-safe handling. FAM-07H retry is now valid and unblocked from toolchain perspective.
-  Do NOT auto-open from pointer update; requires explicit Paresh authorization in a separate unit.
-  HD-001 remains VERIFIED_BLOCKED until runtime retry proves live delivery.
+  HD-001 SMTP runtime proof is captured and synchronized. Remaining MVP-critical
+  FAM-07 blocker is FTR-LEGAL-003 (supplier onboarding ToS/platform agreement).
+  Next unit should design/lock the legal consent architecture boundary without widening
+  into implementation until legal text and authorization are confirmed.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001
