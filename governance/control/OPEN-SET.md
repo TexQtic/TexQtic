@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-29 (FAM-07G-VERIFY-CLOSE-AND-AUTH-PATH-HUB-SYNC-001 COMPLETE. FC-03 hardening VERIFIED. FTR-AUTH-001 remains PARTIAL. LFI FAM-07 remains PARTIALLY_IMPLEMENTED.)
+**Last Updated:** 2026-05-30 (FAM-07I-HUB-SYNC-FTR-AUTH-001-REMAINDER-TERMINOLOGY-RECONCILIATION-001 COMPLETE. Stale FTR-AUTH-001 "Supabase invite sub-path DESIGN_GATED" wording removed. FTR-AUTH-001 remains PARTIAL. LFI FAM-07 remains PARTIALLY_IMPLEMENTED.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -72,10 +72,20 @@
   status. F-MISS-01..F-MISS-03 / ACT-013..ACT-015 (frontend): activateTenant service call, return
   value, FC-03 behavioral contract. 21/21 backend tests PASS. 15/15 frontend tests PASS.
   tsc EXIT 0. FAM-07F artifact date-correction included (footer 2026-06-01 → 2026-05-29).
-  FTR-AUTH-001 remains PARTIAL — new-user Supabase invite sub-path DESIGN_GATED/OPEN unchanged.
+  FTR-AUTH-001 remains PARTIAL — terminology reconciled by FAM-07I to app-level invite-token
+  activation flow (no remaining "Supabase invite sub-path DESIGN_GATED" wording).
   FAM-07 NOT VERIFIED_COMPLETE. FTR-LEGAL-003 MVP_CRITICAL/OPEN. HD-001 VERIFIED_BLOCKED.
   Remaining units (FAM-07E, FAM-07H, FAM-07J) HOLD_FOR_AUTHORIZATION.
   Artifact: artifacts/control-plane/FAM-07G-VERIFY-CLOSE-AND-AUTH-PATH-HUB-SYNC-001.md.
+
+- FAM-07I-HUB-SYNC-FTR-AUTH-001-REMAINDER-TERMINOLOGY-RECONCILIATION-001 VERIFIED_COMPLETE
+  (2026-05-30). Governance-only reconciliation unit consumed FAM-07I repo-truth audit and updated
+  FUTURE-TODO-REGISTER, LAUNCH-FAMILY-INDEX, NEXT-ACTION, and OPEN-SET. Outcome: FTR-AUTH-001
+  remains PARTIAL by governance convention; sign-in-first path remains verified (FAM-07D3);
+  new-user activation hardening remains verified (FAM-07G); stale "Supabase invite sub-path"
+  terminology removed from live hub surfaces. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  HD-001 remains VERIFIED_BLOCKED. FAM-07 remains NOT VERIFIED_COMPLETE.
+  Artifact: artifacts/control-plane/FAM-07I-HUB-SYNC-FTR-AUTH-001-REMAINDER-TERMINOLOGY-RECONCILIATION-001.md.
 
 - FAM-07C-TENANT-ONBOARDING-BOUNDED-DESIGN-SYNTHESIS-001 DESIGN_SYNTHESIS_COMPLETE (2026-07-07).
   Bounded design synthesis of FAM-07A (backend repo-truth) + FAM-07B (frontend/tests/runtime repo-truth)

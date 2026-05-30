@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-29 (FAM-07G-VERIFY-CLOSE-AND-AUTH-PATH-HUB-SYNC-001 COMPLETE. FC-03 hardening verified. 21 backend + 15 frontend tests PASS. FTR-AUTH-001 remains PARTIAL. LFI FAM-07 remains PARTIALLY_IMPLEMENTED. See artifacts/control-plane/FAM-07G-VERIFY-CLOSE-AND-AUTH-PATH-HUB-SYNC-001.md.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-30 (FAM-07I-HUB-SYNC-FTR-AUTH-001-REMAINDER-TERMINOLOGY-RECONCILIATION-001 COMPLETE. FTR-AUTH-001 terminology reconciled to app-level invite activation flow. Status remains PARTIAL. LFI FAM-07 remains PARTIALLY_IMPLEMENTED.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -18,32 +18,28 @@ product_delivery_priority: >-
 active_delivery_unit: FAM-07E-THROUGH-FAM-07J-REMAINING-UNITS-TBD
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  FAM-07G VERIFY-CLOSE COMPLETE (2026-05-29, commit 6b4ebd30). FC-03 hardening in new-user
-  activation path VERIFIED. T-MISS-01..T-MISS-04 (backend) and F-MISS-01..F-MISS-03 (frontend)
-  test coverage VERIFIED. tsc EXIT 0. FTR-AUTH-001 remains PARTIAL (new-user Supabase invite
-  sub-path DESIGN_GATED/OPEN). FAM-07F+G complete. Remaining FAM-07 units: FAM-07E
+  FAM-07I HUB-SYNC COMPLETE (2026-05-30). FTR-AUTH-001 terminology reconciled: current flow is
+  app-level invite-token activation, not a Supabase invite sub-path. FTR-AUTH-001 remains PARTIAL
+  by governance convention. FAM-07G FC-03 hardening and coverage remain VERIFIED (21 backend + 15
+  frontend tests PASS; tsc EXIT 0). FAM-07F+G complete. Remaining FAM-07 units: FAM-07E
   (ToS — gated by legal text), FAM-07H (SMTP infra), FAM-07J (INVITE_ALREADY_PENDING UX).
   None authorized for implementation. Do NOT auto-open next unit. FAM-07 NOT VERIFIED_COMPLETE.
-last_closed_unit: FAM-07G-VERIFY-CLOSE-AND-AUTH-PATH-HUB-SYNC-001
-last_closed_unit_status: VERIFIED_COMPLETE (2026-05-29)
+last_closed_unit: FAM-07I-HUB-SYNC-FTR-AUTH-001-REMAINDER-TERMINOLOGY-RECONCILIATION-001
+last_closed_unit_status: VERIFIED_COMPLETE (2026-05-30)
 last_closed_unit_runtime_verdict: >
-  FAM-07G FC-03 hardening verify-close (2026-05-29, commit 6b4ebd30). LFI/FTR updated by
-  FAM-07G-VERIFY-CLOSE-AND-AUTH-PATH-HUB-SYNC-001. FC-03 fix: setPendingInviteToken(null)
-  moved immediately after activateTenant() returns, before setToken and bootstrap steps.
-  Prevents stuck-retry state when bootstrap throws after invite consumed. T-MISS-01..T-MISS-04
-  (backend): 200 response shape, EMAIL_MISMATCH 403, transaction write verification,
-  PENDING_VERIFICATION org status. F-MISS-01..F-MISS-03 (frontend): activateTenant service call,
-  return value, FC-03 behavioral contract via inline simulation. 21/21 backend tests PASS.
-  15/15 frontend tests PASS. tsc --noEmit EXIT 0. No schema/migration/.env changes.
-  FAM-07 NOT VERIFIED_COMPLETE. FTR-AUTH-001 remains PARTIAL.
-last_closed_unit_commits: "[TEXQTIC] fix: harden new-user invite activation state (FAM-07G)"
+  FAM-07I hub-sync terminology reconciliation verify-close (2026-05-30). LFI/FTR/NEXT-ACTION/
+  OPEN-SET updated to remove stale "new-user Supabase invite sub-path DESIGN_GATED" wording.
+  Repo truth from FAM-07I audit applied: onboarding invite flow is app-level invite-token
+  activation; sign-in-first branch verified by FAM-07D3; FC-03 hardening verified by FAM-07G.
+  FTR-AUTH-001 status remains PARTIAL by governance convention. FAM-07 remains PARTIALLY_IMPLEMENTED.
+  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains VERIFIED_BLOCKED. No schema/migration/.env changes.
+last_closed_unit_commits: "[TEXQTIC] governance: reconcile FTR-AUTH-001 invite terminology (FAM-07I)"
 last_closed_unit_closure_basis: >
-  FAM-07F audit artifact consumed. FC-03 source fix in App.tsx + T-MISS-01..04 backend +
-  F-MISS-01..03 frontend tests. 21/21 backend + 15/15 frontend tests PASS. tsc EXIT 0.
-  New-user activation path hardened. FTR-AUTH-001 PARTIAL — new-user Supabase invite
-  sub-path remains DESIGN_GATED.
-last_closed_unit_prior: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
-last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-05-28)
+  FAM-07I repo-truth audit consumed. Stale FTR/LFI/control wording reconciled in-place.
+  FTR-AUTH-001 row aligned to app-level invite-token architecture while preserving PARTIAL status
+  and FAM-07 not-verified-complete posture. FTR-LEGAL-003 and HD-001 unchanged.
+last_closed_unit_prior: FAM-07G-VERIFY-CLOSE-AND-AUTH-PATH-HUB-SYNC-001
+last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-05-29)
 next_candidate_unit: FAM-07E-THROUGH-FAM-07J-REMAINING-TBD
 next_candidate_unit_status: HOLD_FOR_AUTHORIZATION
 next_candidate_unit_date_installed: "2026-05-28"
