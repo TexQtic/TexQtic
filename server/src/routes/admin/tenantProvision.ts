@@ -165,9 +165,23 @@ function tokenMatchesConfiguredHash(token: string, expectedHash: string): boolea
 }
 
 const SAFE_SMTP_VERIFICATION_APPROVED_RECIPIENT = 'paresh@texqtic.com';
+const CONSENT_RUNTIME_QA_MODE = 'FAM_07E5_CONSENT_RUNTIME_PATH';
 
 const smtpVerificationTriggerBodySchema = z.object({
   recipient: z.string().email('recipient must be a valid email address').toLowerCase(),
+});
+
+const consentRuntimePathBodySchema = z.object({
+  qaMode: z.literal(CONSENT_RUNTIME_QA_MODE),
+  orchestrationReference: z.string().trim().min(1).max(255),
+  organization: z.object({
+    legalName: z.string().trim().min(2).max(500),
+    displayName: z.string().trim().min(2).max(200).optional(),
+    jurisdiction: z.string().trim().min(2).max(100),
+    registrationNumber: z.string().trim().min(1).max(200).optional(),
+  }),
+  approvedOnboardingMetadata: z.record(z.unknown()).optional(),
+  sendInviteEmail: z.boolean().optional(),
 });
 
 function maskEmailAddress(email: string): string {
@@ -177,6 +191,18 @@ function maskEmailAddress(email: string): string {
   }
 
   return `${localPart.charAt(0)}***@${domain}`;
+}
+
+function maskSlug(slug: string): string {
+  if (slug.length <= 4) {
+    return '***';
+  }
+
+  return `${slug.slice(0, 3)}***${slug.slice(-1)}`;
+}
+
+function isQaOrgName(value: string): boolean {
+  return /qa|test/i.test(value);
 }
 
 /**
@@ -394,6 +420,162 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
       }
 
       // Re-throw all other errors for Fastify's global error handler
+      throw error;
+    }
+  });
+
+  /**
+   * POST /tenants/provision/consent-runtime-path
+   *
+   * Deterministic, SUPER_ADMIN-only, QA-scoped helper for FAM-07E consent runtime verification.
+   * Produces an APPROVED_ONBOARDING first-owner invite state without returning invite token or URL.
+   */
+  fastify.post('/tenants/provision/consent-runtime-path', {
+    preHandler: (request, reply, done) => {
+      void Promise.resolve(adminAuthMiddleware(request, reply))
+        .then(() => {
+          if (reply.sent) {
+            return;
+          }
+
+          return requireSuperAdmin(request, reply);
+        })
+        .then(() => done())
+        .catch(done);
+    },
+  }, async (request, reply) => {
+    if (!request.isAdmin || !request.adminId) {
+      return sendError(reply, 'FORBIDDEN', 'Super admin context required for deterministic consent runtime path', 403);
+    }
+
+    const parseBody = consentRuntimePathBodySchema.safeParse(request.body);
+    if (!parseBody.success) {
+      return sendValidationError(reply, parseBody.error.errors);
+    }
+
+    const {
+      orchestrationReference,
+      organization,
+      approvedOnboardingMetadata,
+      sendInviteEmail,
+    } = parseBody.data;
+
+    if (!isQaOrgName(organization.legalName)) {
+      return sendError(
+        reply,
+        'QA_RUNTIME_GUARD_REJECTED',
+        'Organization legalName must include QA or TEST marker for this deterministic runtime path',
+        422
+      );
+    }
+
+    try {
+      const result = await provisionTenant(
+        {
+          provisioningMode: 'APPROVED_ONBOARDING',
+          orchestrationReference,
+          base_family: 'B2B',
+          aggregator_capability: false,
+          white_label_capability: false,
+          commercial_plan: 'FREE',
+          primary_segment_key: null,
+          secondary_segment_keys: [],
+          role_position_keys: [],
+          organization,
+          firstOwner: {
+            email: SAFE_SMTP_VERIFICATION_APPROVED_RECIPIENT,
+          },
+          approvedOnboardingMetadata: approvedOnboardingMetadata
+            ? {
+                ...approvedOnboardingMetadata,
+                qaMode: CONSENT_RUNTIME_QA_MODE,
+                deterministicRuntimePath: true,
+              }
+            : {
+                qaMode: CONSENT_RUNTIME_QA_MODE,
+                deterministicRuntimePath: true,
+              },
+        },
+        {
+          requestId: request.id ?? randomUUID(),
+          adminActorId: request.adminId,
+        }
+      );
+
+      const shouldSendInviteEmail = sendInviteEmail ?? true;
+      let inviteEmailDeliveryStatus: 'NOT_ATTEMPTED' | 'SENT' | 'SKIPPED_SMTP_UNCONFIGURED' | 'DEV_LOGGED' | 'FAILED_FATAL' = 'NOT_ATTEMPTED';
+
+      if (
+        shouldSendInviteEmail &&
+        result.provisioningMode === 'APPROVED_ONBOARDING' &&
+        result.firstOwnerAccessPreparation?.inviteToken
+      ) {
+        try {
+          const inviteEmailDelivery = await sendInviteMemberEmail(
+            SAFE_SMTP_VERIFICATION_APPROVED_RECIPIENT,
+            result.firstOwnerAccessPreparation.inviteToken,
+            result.organization.legalName,
+            { triggeredBy: 'admin', actorId: request.adminId }
+          );
+          inviteEmailDeliveryStatus = inviteEmailDelivery.status;
+        } catch {
+          inviteEmailDeliveryStatus = 'FAILED_FATAL';
+        }
+      }
+
+      await writeAuditLog(
+        prisma,
+        createAdminAudit(request.adminId, 'control.tenants.provisioned_consent_runtime_path', 'tenant', {
+          orgId: result.orgId,
+          slug: result.slug,
+          orchestrationReference: result.orchestrationReference,
+          provisioningMode: result.provisioningMode,
+          inviteId: result.firstOwnerAccessPreparation?.inviteId ?? null,
+          invitePurpose: result.firstOwnerAccessPreparation?.invitePurpose ?? null,
+          qaMode: CONSENT_RUNTIME_QA_MODE,
+          runtimePathReady: Boolean(result.firstOwnerAccessPreparation),
+          inviteEmailDeliveryStatus,
+        })
+      );
+
+      return sendSuccess(reply, {
+        qaMode: CONSENT_RUNTIME_QA_MODE,
+        runtimePathReady: Boolean(result.firstOwnerAccessPreparation),
+        tenant: {
+          orgId: result.orgId,
+          slugMasked: maskSlug(result.slug),
+          organizationStatus: result.organization.status,
+        },
+        firstOwnerPreparation: result.firstOwnerAccessPreparation
+          ? {
+              inviteId: result.firstOwnerAccessPreparation.inviteId,
+              invitePurpose: result.firstOwnerAccessPreparation.invitePurpose,
+              recipientMasked: maskEmailAddress(result.firstOwnerAccessPreparation.email),
+              expiresAt: result.firstOwnerAccessPreparation.expiresAt.toISOString(),
+              activationState: 'INVITE_PENDING',
+            }
+          : null,
+        activation: {
+          activateNewUserPath: '/api/tenant/activate',
+          activateAuthenticatedPath: '/api/tenant/activate-authenticated',
+          legalStatusExpected: 'LEGAL_PENDING',
+        },
+        inviteEmailDelivery: {
+          attempted: shouldSendInviteEmail,
+          status: inviteEmailDeliveryStatus,
+        },
+      }, 201);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+
+      if (
+        err.message.includes('Unique constraint') ||
+        ('code' in err && (err as { code: string }).code === 'P2002')
+      ) {
+        const { code, message } = resolveP2002ConflictCode(err);
+        return sendError(reply, code, message, 409);
+      }
+
       throw error;
     }
   });

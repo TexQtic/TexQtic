@@ -11,6 +11,7 @@ const {
   provisionTenantMock,
   queryProvisioningStatusMock,
   sendEmailMock,
+  sendInviteMemberEmailMock,
   writeAuditLogMock,
   createAdminAuditMock,
   withDbContextMock,
@@ -30,6 +31,7 @@ const {
   provisionTenantMock: vi.fn(),
   queryProvisioningStatusMock: vi.fn(),
   sendEmailMock: vi.fn(),
+  sendInviteMemberEmailMock: vi.fn().mockResolvedValue({ status: 'SENT' }),
   writeAuditLogMock: vi.fn().mockResolvedValue(undefined),
   createAdminAuditMock: vi.fn().mockReturnValue({}),
   withDbContextMock: vi.fn(),
@@ -146,7 +148,7 @@ vi.mock('../services/pricing/totals.service.js', () => ({
 
 vi.mock('../services/email/email.service.js', () => ({
   sendEmail: sendEmailMock,
-  sendInviteMemberEmail: vi.fn().mockResolvedValue({ status: 'SENT' }),
+  sendInviteMemberEmail: sendInviteMemberEmailMock,
 }));
 
 vi.mock('../lib/cacheInvalidateEmitter.js', () => ({
@@ -601,6 +603,136 @@ describe('approved-onboarding tenant provisioning route', () => {
     expect(response.statusCode).toBe(403);
     expect(provisionTenantMock).not.toHaveBeenCalled();
     expect(writeAuditLogMock).not.toHaveBeenCalled();
+  });
+
+  it('creates a deterministic QA consent runtime path envelope without exposing invite token or URL', async () => {
+    provisionTenantMock.mockResolvedValueOnce({
+      provisioningMode: 'APPROVED_ONBOARDING',
+      orgId: 'tenant-uuid-0000-0000-0000-000000000002',
+      slug: 'qa-consent-runtime-org',
+      userId: null,
+      membershipId: null,
+      orchestrationReference: 'ocase_qa_runtime_001',
+      organization: {
+        legalName: 'QA Consent Runtime Org',
+        jurisdiction: 'IN-GJ',
+        registrationNumber: 'QA-REG-001',
+        status: 'VERIFICATION_APPROVED',
+      },
+      firstOwnerAccessPreparation: {
+        artifactType: 'PLATFORM_INVITE',
+        inviteId: 'invite-uuid-qa-0000-0000-000000000001',
+        invitePurpose: 'FIRST_OWNER_PREPARATION',
+        email: 'paresh@texqtic.com',
+        role: 'OWNER',
+        expiresAt: new Date('2026-06-07T00:00:00.000Z'),
+        inviteToken: 'qa-runtime-invite-token-should-not-surface',
+      },
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision/consent-runtime-path',
+      payload: {
+        qaMode: 'FAM_07E5_CONSENT_RUNTIME_PATH',
+        orchestrationReference: 'ocase_qa_runtime_001',
+        organization: {
+          legalName: 'QA Consent Runtime Org',
+          displayName: 'QA Runtime Org',
+          jurisdiction: 'IN-GJ',
+          registrationNumber: 'QA-REG-001',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(provisionTenantMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provisioningMode: 'APPROVED_ONBOARDING',
+        orchestrationReference: 'ocase_qa_runtime_001',
+        base_family: 'B2B',
+        aggregator_capability: false,
+        white_label_capability: false,
+        commercial_plan: 'FREE',
+        firstOwner: {
+          email: 'paresh@texqtic.com',
+        },
+      }),
+      expect.objectContaining({
+        adminActorId: 'admin-uuid-1',
+      })
+    );
+    expect(sendInviteMemberEmailMock).toHaveBeenCalledTimes(1);
+
+    const body = response.json();
+    expect(body.success).toBe(true);
+    expect(body.data.runtimePathReady).toBe(true);
+    expect(body.data).toMatchObject({
+      qaMode: 'FAM_07E5_CONSENT_RUNTIME_PATH',
+      tenant: {
+        orgId: 'tenant-uuid-0000-0000-0000-000000000002',
+        organizationStatus: 'VERIFICATION_APPROVED',
+      },
+      firstOwnerPreparation: {
+        inviteId: 'invite-uuid-qa-0000-0000-000000000001',
+        invitePurpose: 'FIRST_OWNER_PREPARATION',
+        recipientMasked: 'p***@texqtic.com',
+        activationState: 'INVITE_PENDING',
+      },
+      activation: {
+        activateNewUserPath: '/api/tenant/activate',
+        activateAuthenticatedPath: '/api/tenant/activate-authenticated',
+        legalStatusExpected: 'LEGAL_PENDING',
+      },
+    });
+    expect(body.data).not.toHaveProperty('inviteToken');
+    expect(body.data).not.toHaveProperty('inviteUrl');
+    expect(JSON.stringify(body.data)).not.toContain('qa-runtime-invite-token-should-not-surface');
+    expect(JSON.stringify(body.data)).not.toContain('authorization');
+    expect(JSON.stringify(body.data)).not.toContain('cookie');
+    expect(JSON.stringify(body.data)).not.toContain('jwt');
+  });
+
+  it('rejects deterministic path when legalName is not QA-scoped', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision/consent-runtime-path',
+      payload: {
+        qaMode: 'FAM_07E5_CONSENT_RUNTIME_PATH',
+        orchestrationReference: 'ocase_qa_runtime_002',
+        organization: {
+          legalName: 'Acme Production Org',
+          jurisdiction: 'IN-GJ',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(422);
+    expect(provisionTenantMock).not.toHaveBeenCalled();
+
+    const body = response.json();
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe('QA_RUNTIME_GUARD_REJECTED');
+  });
+
+  it('rejects deterministic path requests from non-admin callers', async () => {
+    adminAuthMiddlewareMock.mockImplementationOnce(async (_req: unknown) => undefined);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision/consent-runtime-path',
+      payload: {
+        qaMode: 'FAM_07E5_CONSENT_RUNTIME_PATH',
+        orchestrationReference: 'ocase_qa_runtime_003',
+        organization: {
+          legalName: 'QA Runtime Blocked Org',
+          jurisdiction: 'IN-GJ',
+        },
+      },
+    });
+
+    expect([401, 403]).toContain(response.statusCode);
+    expect(provisionTenantMock).not.toHaveBeenCalled();
   });
 
   it('rejects smtp verification trigger requests from non-admin callers', async () => {
