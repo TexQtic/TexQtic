@@ -158,12 +158,13 @@ describe('FAM-07E1 — contract validators', () => {
   });
 });
 
-describe('FAM-07E1 — activation behavior not wired in this unit', () => {
-  it('does not introduce consent enforcement error codes into activation routes', () => {
+describe('FAM-07E1/FAM-07E2 — scaffold remains legal-pending and non-final', () => {
+  it('keeps activation consent wiring scaffold-only without legal-final completion claims', () => {
     const tenantRoute = fs.readFileSync(TENANT_ROUTE_PATH, 'utf-8');
-    expect(tenantRoute).not.toContain('CONSENT_REQUIRED');
-    expect(tenantRoute).not.toContain('CONSENT_VERSION_MISMATCH');
-    expect(tenantRoute).not.toContain('CONSENT_HASH_MISMATCH');
-    expect(tenantRoute).not.toContain('CONSENT_SOURCE_MISMATCH');
+    expect(tenantRoute).toContain('CONSENT_REQUIRED');
+    expect(tenantRoute).toContain('CONSENT_NOT_ACCEPTED');
+    expect(tenantRoute).toContain('CONSENT_POLICY_UNAVAILABLE');
+    expect(tenantRoute).toContain("legalStatus !== 'LEGAL_PENDING'");
+    expect(tenantRoute).not.toContain('LEGAL_APPROVED_FINALIZATION');
   });
 });

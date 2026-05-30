@@ -69,6 +69,11 @@ import {
   sendUnauthorized,
 } from '../utils/response.js';
 import {
+  consentAcceptanceSchema,
+  type ConsentAcceptance,
+  type LegalConsentSourceFlow,
+} from '../lib/legalConsentContracts.js';
+import {
   canonicalizeTenantPlan,
   withDbContext,
   withOrgAdminContext,
@@ -162,6 +167,255 @@ function resolveItemCatalogVisibilityForRoute(
     return 'APPROVED_BUYER_ONLY';
   }
   return policy;
+}
+
+type ConsentScaffoldValidationFailureCode =
+  | 'CONSENT_REQUIRED'
+  | 'CONSENT_METADATA_MISSING'
+  | 'CONSENT_VERSION_MISMATCH'
+  | 'CONSENT_HASH_MISMATCH'
+  | 'CONSENT_SOURCE_MISMATCH'
+  | 'CONSENT_NOT_ACCEPTED'
+  | 'CONSENT_POLICY_UNAVAILABLE';
+
+type ConsentScaffoldValidationResult =
+  | { ok: true; consent: ConsentAcceptance | null }
+  | {
+      ok: false;
+      code: ConsentScaffoldValidationFailureCode;
+      message: string;
+      statusCode: number;
+    };
+
+type ConsentPolicyExpectation = {
+  agreementVersion: string | null;
+  agreementHash: string | null;
+  agreementSourceUrl: string | null;
+};
+
+const CONSENT_METADATA_REDACTION_KEY_PATTERN = /(token|secret|password|auth|jwt|invite)/i;
+
+function isConsentScaffoldEnforced(): boolean {
+  return process.env.FAM07_CONSENT_SCAFFOLD_ENFORCE === 'true';
+}
+
+function getConsentPolicyExpectation(): ConsentPolicyExpectation {
+  const normalize = (value: string | undefined): string | null => {
+    const trimmed = value?.trim();
+    return trimmed && trimmed.length > 0 ? trimmed : null;
+  };
+
+  return {
+    agreementVersion: normalize(process.env.CONSENT_SCAFFOLD_EXPECTED_VERSION),
+    agreementHash: normalize(process.env.CONSENT_SCAFFOLD_EXPECTED_HASH),
+    agreementSourceUrl: normalize(process.env.CONSENT_SCAFFOLD_EXPECTED_SOURCE_URL),
+  };
+}
+
+function sanitizeConsentMetadataJson(input: unknown): Prisma.InputJsonObject | undefined {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return undefined;
+  }
+
+  const sanitize = (value: unknown, depth: number): Prisma.InputJsonValue | undefined => {
+    if (depth > 5) return undefined;
+    if (value === null) return undefined;
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return value;
+
+    if (Array.isArray(value)) {
+      const sanitizedArray = value
+        .map(entry => sanitize(entry, depth + 1))
+        .filter((entry): entry is Prisma.InputJsonValue => entry !== undefined);
+      return sanitizedArray;
+    }
+
+    if (typeof value === 'object') {
+      const record = value as Record<string, unknown>;
+      const sanitizedObject: Record<string, Prisma.InputJsonValue> = {};
+
+      for (const [key, entryValue] of Object.entries(record)) {
+        if (CONSENT_METADATA_REDACTION_KEY_PATTERN.test(key)) {
+          continue;
+        }
+
+        const sanitizedValue = sanitize(entryValue, depth + 1);
+        if (sanitizedValue !== undefined) {
+          sanitizedObject[key] = sanitizedValue;
+        }
+      }
+
+      return sanitizedObject as Prisma.InputJsonObject;
+    }
+
+    return undefined;
+  };
+
+  const sanitized = sanitize(input, 0);
+  if (!sanitized || typeof sanitized !== 'object' || Array.isArray(sanitized)) {
+    return undefined;
+  }
+  return sanitized as Prisma.InputJsonObject;
+}
+
+function validateConsentScaffoldPayload(input: {
+  consent: unknown;
+  expectedSourceFlow: LegalConsentSourceFlow;
+}): ConsentScaffoldValidationResult {
+  if (input.consent === undefined || input.consent === null) {
+    if (!isConsentScaffoldEnforced()) {
+      return { ok: true, consent: null };
+    }
+
+    return {
+      ok: false,
+      code: 'CONSENT_REQUIRED',
+      message: 'Consent payload is required for this activation path.',
+      statusCode: 400,
+    };
+  }
+
+  const parsed = consentAcceptanceSchema.safeParse(input.consent);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      code: 'CONSENT_METADATA_MISSING',
+      message: 'Consent payload is missing required scaffold metadata.',
+      statusCode: 400,
+    };
+  }
+
+  const consent = parsed.data;
+
+  if (!consent.accepted) {
+    return {
+      ok: false,
+      code: 'CONSENT_NOT_ACCEPTED',
+      message: 'Consent must be explicitly accepted in scaffold mode.',
+      statusCode: 409,
+    };
+  }
+
+  if (consent.legalStatus !== 'LEGAL_PENDING') {
+    return {
+      ok: false,
+      code: 'CONSENT_POLICY_UNAVAILABLE',
+      message: 'Only LEGAL_PENDING consent status is available in scaffold mode.',
+      statusCode: 409,
+    };
+  }
+
+  if (consent.sourceFlow !== input.expectedSourceFlow) {
+    return {
+      ok: false,
+      code: 'CONSENT_SOURCE_MISMATCH',
+      message: `Consent source flow mismatch for this activation path. Expected ${input.expectedSourceFlow}.`,
+      statusCode: 409,
+    };
+  }
+
+  const policy = getConsentPolicyExpectation();
+
+  if (policy.agreementVersion && consent.agreementVersion !== policy.agreementVersion) {
+    return {
+      ok: false,
+      code: 'CONSENT_VERSION_MISMATCH',
+      message: 'Consent agreement version does not match current scaffold policy.',
+      statusCode: 409,
+    };
+  }
+
+  if (policy.agreementHash && consent.agreementHash !== policy.agreementHash) {
+    return {
+      ok: false,
+      code: 'CONSENT_HASH_MISMATCH',
+      message: 'Consent agreement hash does not match current scaffold policy.',
+      statusCode: 409,
+    };
+  }
+
+  if (policy.agreementSourceUrl && consent.agreementSourceUrl !== policy.agreementSourceUrl) {
+    return {
+      ok: false,
+      code: 'CONSENT_SOURCE_MISMATCH',
+      message: 'Consent agreement source URL does not match current scaffold policy.',
+      statusCode: 409,
+    };
+  }
+
+  return { ok: true, consent };
+}
+
+async function recordLegalPendingConsentScaffold(input: {
+  tx: Prisma.TransactionClient;
+  orgId: string;
+  tenantId: string;
+  actorUserId: string;
+  consent: ConsentAcceptance;
+}): Promise<void> {
+  const acceptedAt = new Date(input.consent.acceptedAt);
+  const reviewedAt = input.consent.reviewedAt ? new Date(input.consent.reviewedAt) : null;
+  const metadataJson = sanitizeConsentMetadataJson(input.consent.metadataJson);
+
+  const snapshot = await input.tx.legalConsentSnapshot.upsert({
+    where: {
+      orgId_actorUserId_agreementType: {
+        orgId: input.orgId,
+        actorUserId: input.actorUserId,
+        agreementType: input.consent.agreementType,
+      },
+    },
+    create: {
+      orgId: input.orgId,
+      tenantId: input.tenantId,
+      actorUserId: input.actorUserId,
+      agreementType: input.consent.agreementType,
+      agreementVersion: input.consent.agreementVersion,
+      agreementHash: input.consent.agreementHash,
+      agreementSourceUrl: input.consent.agreementSourceUrl,
+      legalStatus: 'LEGAL_PENDING',
+      sourceFlow: input.consent.sourceFlow,
+      acceptedAt,
+      reviewedAt,
+      correlationId: input.consent.correlationId ?? null,
+      requestId: input.consent.requestId ?? null,
+      metadataJson,
+    },
+    update: {
+      tenantId: input.tenantId,
+      agreementVersion: input.consent.agreementVersion,
+      agreementHash: input.consent.agreementHash,
+      agreementSourceUrl: input.consent.agreementSourceUrl,
+      legalStatus: 'LEGAL_PENDING',
+      sourceFlow: input.consent.sourceFlow,
+      acceptedAt,
+      reviewedAt,
+      correlationId: input.consent.correlationId ?? null,
+      requestId: input.consent.requestId ?? null,
+      metadataJson,
+    },
+  });
+
+  await input.tx.legalConsentEvent.create({
+    data: {
+      snapshotId: snapshot.id,
+      orgId: input.orgId,
+      tenantId: input.tenantId,
+      actorUserId: input.actorUserId,
+      agreementType: input.consent.agreementType,
+      agreementVersion: input.consent.agreementVersion,
+      agreementHash: input.consent.agreementHash,
+      agreementSourceUrl: input.consent.agreementSourceUrl,
+      legalStatus: 'LEGAL_PENDING',
+      sourceFlow: input.consent.sourceFlow,
+      eventType: 'ACCEPTED_PENDING',
+      acceptedAt,
+      reviewedAt,
+      correlationId: input.consent.correlationId ?? null,
+      requestId: input.consent.requestId ?? null,
+      metadataJson,
+    },
+  });
 }
 /**
  * Wraps a Prisma TransactionClient as PrismaClient for services that require
@@ -6275,6 +6529,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           registrationNumber: z.string().trim().min(1, 'Registration number is required'),
           jurisdiction: z.string().trim().min(1, 'Jurisdiction is required'),
         }),
+        consent: z.unknown().optional(),
       });
 
       const parseResult = bodySchema.safeParse(request.body);
@@ -6282,7 +6537,15 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendValidationError(reply, parseResult.error.errors);
       }
 
-      const { inviteToken, userData, tenantData, verificationData } = parseResult.data;
+      const { inviteToken, userData, tenantData, verificationData, consent } = parseResult.data;
+
+      const consentValidation = validateConsentScaffoldPayload({
+        consent,
+        expectedSourceFlow: 'ACTIVATE_NEW_USER',
+      });
+      if (!consentValidation.ok) {
+        return sendError(reply, consentValidation.code, consentValidation.message, consentValidation.statusCode);
+      }
 
       // Hash the invite token to look it up
       const crypto = await import('node:crypto');
@@ -6421,6 +6684,16 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           },
         });
 
+        if (consentValidation.consent) {
+          await recordLegalPendingConsentScaffold({
+            tx,
+            orgId: invite.tenantId,
+            tenantId: invite.tenantId,
+            actorUserId: user.id,
+            consent: consentValidation.consent,
+          });
+        }
+
         // Mark invite as accepted (RLS-enforced update)
         await tx.invite.update({
           where: { id: invite.id },
@@ -6533,12 +6806,21 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       // Step 2: Parse body
       const bodySchema = z.object({
         inviteToken: z.string().min(1, 'Invite token is required'),
+        consent: z.unknown().optional(),
       });
       const parseResult = bodySchema.safeParse(request.body);
       if (!parseResult.success) {
         return sendValidationError(reply, parseResult.error.errors);
       }
-      const { inviteToken } = parseResult.data;
+      const { inviteToken, consent } = parseResult.data;
+
+      const consentValidation = validateConsentScaffoldPayload({
+        consent,
+        expectedSourceFlow: 'ACTIVATE_AUTHENTICATED_INVITE',
+      });
+      if (!consentValidation.ok) {
+        return sendError(reply, consentValidation.code, consentValidation.message, consentValidation.statusCode);
+      }
 
       // Step 3: Hash invite token and look up pending invite
       const crypto = await import('node:crypto');
@@ -6605,6 +6887,16 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             role: resolvedRole,
           },
         });
+
+        if (consentValidation.consent) {
+          await recordLegalPendingConsentScaffold({
+            tx,
+            orgId: invite.tenantId,
+            tenantId: invite.tenantId,
+            actorUserId: authenticatedUserId,
+            consent: consentValidation.consent,
+          });
+        }
 
         await tx.invite.update({
           where: { id: invite.id },

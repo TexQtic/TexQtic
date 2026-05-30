@@ -44,6 +44,12 @@ const {
       findFirst: vi.fn(),
       create: vi.fn(),
     },
+    legalConsentSnapshot: {
+      upsert: vi.fn(),
+    },
+    legalConsentEvent: {
+      create: vi.fn(),
+    },
     invite: {
       update: vi.fn(),
     },
@@ -642,6 +648,29 @@ const AUTH_USER = {
   email: 'owner@example.test',
 };
 
+const LEGAL_PENDING_CONSENT_NEW_USER = {
+  agreementType: 'PLATFORM_TERMS',
+  agreementVersion: 'scaffold-v1',
+  agreementHash: 'hash-scaffold-v1',
+  agreementSourceUrl: 'https://example.test/legal/scaffold-v1',
+  legalStatus: 'LEGAL_PENDING',
+  sourceFlow: 'ACTIVATE_NEW_USER',
+  accepted: true,
+  acceptedAt: '2026-05-30T09:30:00.000Z',
+  correlationId: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+  requestId: 'req-consent-scaffold-001',
+  metadataJson: {
+    safeNote: 'scaffold-consent',
+    inviteToken: 'must-not-persist',
+    authSecret: 'must-not-persist',
+  },
+};
+
+const LEGAL_PENDING_CONSENT_AUTHENTICATED = {
+  ...LEGAL_PENDING_CONSENT_NEW_USER,
+  sourceFlow: 'ACTIVATE_AUTHENTICATED_INVITE',
+};
+
 describe('FAM-07D3 — authenticated invite acceptance (POST /api/tenant/activate-authenticated)', () => {
   let app: FastifyInstance;
 
@@ -806,6 +835,212 @@ describe('FAM-07D3 — authenticated invite acceptance (POST /api/tenant/activat
         tenantId: TEST_TENANT_ID,
       }),
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// FAM-07E2 — LEGAL_PENDING activation consent scaffold contract wiring
+// ---------------------------------------------------------------------------
+
+describe('FAM-07E2 — activation consent scaffold (LEGAL_PENDING only)', () => {
+  let app: FastifyInstance;
+  const originalConsentEnforce = process.env.FAM07_CONSENT_SCAFFOLD_ENFORCE;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    process.env.FAM07_CONSENT_SCAFFOLD_ENFORCE = 'false';
+
+    withDbContextMock.mockImplementation(async (_client: unknown, _ctx: unknown, cb: (tx: unknown) => Promise<unknown>) => cb(txMock));
+    txMock.$queryRaw.mockResolvedValue([{ org_id: TEST_TENANT_ID }]);
+    txMock.$executeRawUnsafe.mockResolvedValue(undefined);
+    txMock.user.findUnique.mockResolvedValue(null);
+    txMock.user.create.mockResolvedValue({ id: TEST_USER_ID, email: 'owner@example.test' });
+    txMock.organizations.update.mockResolvedValue({
+      legal_name: 'Test Org', status: 'PENDING_VERIFICATION', org_type: 'B2B', is_white_label: false, plan: 'FREE',
+    });
+    txMock.organizations.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      slug: 'test-org',
+      legal_name: 'Test Org',
+      status: 'PENDING_VERIFICATION',
+      org_type: 'B2B',
+      primary_segment_key: 'Yarn',
+      is_white_label: false,
+      jurisdiction: 'IN-MH',
+      registration_no: 'REG-001',
+      plan: 'FREE',
+      secondary_segments: [],
+      role_positions: [],
+    });
+    txMock.membership.findFirst.mockResolvedValue(null);
+    txMock.membership.create.mockResolvedValue({ id: 'membership-consent-001', role: 'OWNER', tenantId: TEST_TENANT_ID, userId: TEST_USER_ID });
+    txMock.invite.update.mockResolvedValue({ acceptedAt: new Date() });
+    txMock.legalConsentSnapshot.upsert.mockResolvedValue({ id: 'consent-snapshot-001' });
+    txMock.legalConsentEvent.create.mockResolvedValue({ id: 'consent-event-001' });
+
+    app = await buildServer();
+  });
+
+  afterEach(async () => {
+    await app.close();
+    if (originalConsentEnforce === undefined) {
+      delete process.env.FAM07_CONSENT_SCAFFOLD_ENFORCE;
+    } else {
+      process.env.FAM07_CONSENT_SCAFFOLD_ENFORCE = originalConsentEnforce;
+    }
+  });
+
+  it('E2-CONSENT-001: existing activation path still succeeds without consent when scaffold enforcement is disabled', async () => {
+    prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate',
+      payload: BASE_ACTIVATE_PAYLOAD,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(txMock.legalConsentSnapshot.upsert).not.toHaveBeenCalled();
+    expect(txMock.legalConsentEvent.create).not.toHaveBeenCalled();
+  });
+
+  it('E2-CONSENT-002: new-user activation accepts LEGAL_PENDING consent and records sanitized snapshot/event', async () => {
+    prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate',
+      payload: {
+        ...BASE_ACTIVATE_PAYLOAD,
+        consent: LEGAL_PENDING_CONSENT_NEW_USER,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(txMock.legalConsentSnapshot.upsert).toHaveBeenCalledTimes(1);
+    expect(txMock.legalConsentEvent.create).toHaveBeenCalledTimes(1);
+
+    expect(txMock.legalConsentSnapshot.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          legalStatus: 'LEGAL_PENDING',
+          sourceFlow: 'ACTIVATE_NEW_USER',
+          agreementType: 'PLATFORM_TERMS',
+          metadataJson: expect.objectContaining({ safeNote: 'scaffold-consent' }),
+        }),
+      }),
+    );
+
+    const snapshotCall = txMock.legalConsentSnapshot.upsert.mock.calls[0][0];
+    expect(snapshotCall.create.metadataJson).not.toHaveProperty('inviteToken');
+    expect(snapshotCall.create.metadataJson).not.toHaveProperty('authSecret');
+
+    expect(txMock.legalConsentEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          legalStatus: 'LEGAL_PENDING',
+          sourceFlow: 'ACTIVATE_NEW_USER',
+          eventType: 'ACCEPTED_PENDING',
+        }),
+      }),
+    );
+  });
+
+  it('E2-CONSENT-003: authenticated invite acceptance accepts LEGAL_PENDING consent and records scaffold event', async () => {
+    const authToken = makeTestTenantToken(TEST_USER_ID, TEST_TENANT_ID, 'OWNER');
+    prismaMock.invite.findFirst.mockResolvedValueOnce(AUTH_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce(AUTH_USER);
+    prismaMock.membership.findFirst.mockResolvedValueOnce(null);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate-authenticated',
+      headers: { authorization: `Bearer ${authToken}` },
+      payload: {
+        inviteToken: AUTH_INVITE_TOKEN,
+        consent: LEGAL_PENDING_CONSENT_AUTHENTICATED,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(txMock.legalConsentSnapshot.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          legalStatus: 'LEGAL_PENDING',
+          sourceFlow: 'ACTIVATE_AUTHENTICATED_INVITE',
+        }),
+      }),
+    );
+    expect(txMock.legalConsentEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          legalStatus: 'LEGAL_PENDING',
+          sourceFlow: 'ACTIVATE_AUTHENTICATED_INVITE',
+          eventType: 'ACCEPTED_PENDING',
+        }),
+      }),
+    );
+  });
+
+  it('E2-CONSENT-004: missing consent returns CONSENT_REQUIRED when scaffold enforcement is enabled', async () => {
+    process.env.FAM07_CONSENT_SCAFFOLD_ENFORCE = 'true';
+
+    prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate',
+      payload: BASE_ACTIVATE_PAYLOAD,
+    });
+
+    expect(response.statusCode).toBe(400);
+    const body = response.json();
+    expect(body.error).toMatchObject({ code: 'CONSENT_REQUIRED' });
+    expect(withDbContextMock).not.toHaveBeenCalled();
+  });
+
+  it('E2-CONSENT-005: non-LEGAL_PENDING consent payload is rejected with CONSENT_POLICY_UNAVAILABLE', async () => {
+    prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate',
+      payload: {
+        ...BASE_ACTIVATE_PAYLOAD,
+        consent: {
+          ...LEGAL_PENDING_CONSENT_NEW_USER,
+          legalStatus: 'LEGAL_APPROVED',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(409);
+    const body = response.json();
+    expect(body.error).toMatchObject({ code: 'CONSENT_POLICY_UNAVAILABLE' });
+    expect(withDbContextMock).not.toHaveBeenCalled();
+  });
+
+  it('E2-CONSENT-006: source-flow mismatch returns CONSENT_SOURCE_MISMATCH', async () => {
+    const authToken = makeTestTenantToken(TEST_USER_ID, TEST_TENANT_ID, 'OWNER');
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate-authenticated',
+      headers: { authorization: `Bearer ${authToken}` },
+      payload: {
+        inviteToken: AUTH_INVITE_TOKEN,
+        consent: LEGAL_PENDING_CONSENT_NEW_USER,
+      },
+    });
+
+    expect(response.statusCode).toBe(409);
+    const body = response.json();
+    expect(body.error).toMatchObject({ code: 'CONSENT_SOURCE_MISMATCH' });
+    expect(prismaMock.invite.findFirst).not.toHaveBeenCalled();
   });
 });
 
