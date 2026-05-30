@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-30 (FAM-07H-SMTP-RUNTIME-VERIFY-CLOSE-HUB-SYNC-001 COMPLETE. FAM-07H runtime SMTP verification is production-confirmed. HD-001 moved from VERIFIED_BLOCKED to RUNTIME_CONFIRMED_CONFIGURED. FAM-07 remains PARTIALLY_IMPLEMENTED because FTR-LEGAL-003 is still MVP_CRITICAL/OPEN.)
+**Last Updated:** 2026-05-30 (LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001 COMPLETE. Legal approval remains a launch/legal-closure gate, not a development-stop gate. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED. FAM-07 remains PARTIALLY_IMPLEMENTED because FTR-LEGAL-003 is still MVP_CRITICAL/OPEN.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,18 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001 VERIFIED_COMPLETE (2026-05-30).
+  Governance posture synchronized to LEGAL-GATED development continuation model from
+  `LEGAL-GATED-DEVELOPMENT-CONTINUATION-MODEL-001` (commit `47043ff9`).
+  Four-lane operating model is now canonical for legal-sensitive families:
+  DEV_CONTINUES, LEGAL_PENDING, LAUNCH_GATED, LEGAL_APPROVED_FINALIZATION.
+  Interpretation rule: legal approval gates launch/legal closure, not all safe development.
+  FAM-07 remains NOT VERIFIED_COMPLETE. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  Next recommended unit: `FAM-07E-LEGAL-GATED-CONSENT-SCAFFOLD-DESIGN-001`.
+  Cross-family applicability: FAM-07, FAM-12/FAM-13 legal-commercial overlays,
+  FAM-16 counsel-gated tracks, and other FTR legal/compliance overlays.
+  Artifact: artifacts/control-plane/LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001.md.
 
 - FAM-07H-SMTP-RUNTIME-VERIFY-CLOSE-HUB-SYNC-001 VERIFIED_COMPLETE (2026-05-30).
   Governance sync consumed production runtime evidence from

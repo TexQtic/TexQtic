@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-30 (FAM-07H-SMTP-RUNTIME-VERIFY-CLOSE-HUB-SYNC-001 COMPLETE. HD-001 moved from VERIFIED_BLOCKED to RUNTIME_CONFIRMED_CONFIGURED based on production runtime evidence. FAM-07 remains PARTIALLY_IMPLEMENTED because FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-30 (LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001 COMPLETE. Legal approval remains a launch/legal-closure gate, not a development-stop gate. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED. FAM-07 remains PARTIALLY_IMPLEMENTED because FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,41 +15,36 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-07E-TOS-CONSENT-ARCHITECTURE-001
-active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
+active_delivery_unit: LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001
+active_delivery_unit_status: VERIFIED_COMPLETE
 active_delivery_unit_note: >
-  FAM-07H runtime chain now complete: auth-path verification (`b56e43d5`) established
-  CONTROL_PLANE_BEARER_WITH_REALM_HINT as the required operator path, and runtime-003
-  (`d93cb720`) captured production-safe SMTP proof (single valid POST, HTTP 200,
-  `emailDelivery.status=SENT`, `SMTP_VERIFICATION_TRIGGER_EXECUTED`, `EMAIL_SENT`, provider-safe
-  message-id evidence). HD-001 moved from VERIFIED_BLOCKED to RUNTIME_CONFIRMED_CONFIGURED.
-  FTR-AUTH-001 remains PARTIAL by governance convention. FTR-AUTH-004 remains PILOT_REQUIRED/OPEN.
-  FTR-AUTH-002 remains POST_MVP/OPEN. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN, so FAM-07 is
-  still not VERIFIED_COMPLETE. Next recommended family slice: FAM-07E ToS consent architecture.
-last_closed_unit: FAM-07H-SMTP-RUNTIME-VERIFY-CLOSE-HUB-SYNC-001
+  Legal-gated development continuation posture installed from
+  LEGAL-GATED-DEVELOPMENT-CONTINUATION-MODEL-001 (`47043ff9`) and synchronized to Layer 0.
+  Development may continue under LEGAL_PENDING controls; legal approval gates launch/legal closure.
+  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN and FAM-07 remains not VERIFIED_COMPLETE.
+last_closed_unit: LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-05-30)
 last_closed_unit_runtime_verdict: >
-  Governance sync consumed runtime confirmation from
-  FAM-07H-SMTP-SAFE-VERIFICATION-TRIGGER-RUNTIME-003-AUTHENTICATED (`d93cb720`).
-  Production SMTP verification is now runtime-confirmed/configured with one controlled send,
-  safe logs, and provider-side proof captured. HD-001 is no longer VERIFIED_BLOCKED.
-  FAM-07 remains PARTIALLY_IMPLEMENTED and not VERIFIED_COMPLETE because
-  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
-last_closed_unit_commits: "docs(control-plane): record authenticated smtp trigger runtime verification"
+  Governance sync confirms launch-readiness operating model: LEGAL-GATED LAUNCH.
+  Development is allowed to continue across legal-sensitive families where final legal package
+  is pending, provided LEGAL_PENDING and LAUNCH_GATED controls are explicit.
+  FTR-LEGAL-003 remains OPEN, HD-001 remains RUNTIME_CONFIRMED_CONFIGURED,
+  and FAM-07 remains not VERIFIED_COMPLETE.
+last_closed_unit_commits: "[TEXQTIC] governance: sync legal-gated development model"
 last_closed_unit_closure_basis: >
-  Control-plane pointer surfaces synchronized with runtime-confirmed SMTP truth and post-sync
-  family posture. LFI and control files now reflect HD-001 runtime confirmation while preserving
-  FAM-07 open status and FTR-LEGAL-003 as the remaining MVP-critical blocker.
+  Control-plane pointer and launch-readiness hub language synchronized to legal-gated development
+  continuation posture. This removes stale interpretation that legal pending implies development-stop,
+  while preserving unchanged closure truth: FTR-LEGAL-003 remains MVP_CRITICAL/OPEN and
+  FAM-07 remains not VERIFIED_COMPLETE.
 last_closed_unit_prior: FAM-07H-SMTP-SAFE-VERIFICATION-TRIGGER-RUNTIME-003-AUTHENTICATED
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-05-30)
-next_candidate_unit: FAM-07E-TOS-CONSENT-ARCHITECTURE-001
+next_candidate_unit: FAM-07E-LEGAL-GATED-CONSENT-SCAFFOLD-DESIGN-001
 next_candidate_unit_status: HOLD_FOR_AUTHORIZATION
 next_candidate_unit_date_installed: "2026-05-30"
 next_candidate_unit_note: >
-  HD-001 SMTP runtime proof is captured and synchronized. Remaining MVP-critical
-  FAM-07 blocker is FTR-LEGAL-003 (supplier onboarding ToS/platform agreement).
-  Next unit should design/lock the legal consent architecture boundary without widening
-  into implementation until legal text and authorization are confirmed.
+  Legal-gated continuation model is now synchronized. Next unit should design legal-agnostic
+  consent scaffolding for FAM-07 so development can continue while final legal package remains
+  pending. Launch/legal closure remains gated by FTR-LEGAL-003 finalization and verification.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001

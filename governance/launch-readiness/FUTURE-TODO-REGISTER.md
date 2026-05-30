@@ -127,7 +127,7 @@ Each item has:
 |---|---|---|---|---|---|---|---|---|
 | FTR-LEGAL-001 | TTP legal counsel feedback record | External counsel provides written feedback on upgraded TTP packet | Awaiting external counsel | NEXT-ACTION.md | BLOCKED | P2 | LAUNCH_DEPENDENCY | OPEN |
 | FTR-LEGAL-002 | Privacy/GDPR basics for public inquiry form | Ensure inquiry form submission includes required consent disclosure for EU + India contexts → FAM-03 (legal/privacy overlay for inquiry form; PRIT-011) | No dedicated unit; open item | — | NOT_ASSESSED | P1 | MVP_CRITICAL | OPEN |
-| FTR-LEGAL-003 | Terms of service / platform agreement for supplier onboarding | Supplier must accept ToS on onboarding → FAM-07 (supplier onboarding legal overlay; PRIT-012) | No dedicated governance unit | — | NOT_ASSESSED | P1 | MVP_CRITICAL | OPEN |
+| FTR-LEGAL-003 | Terms of service / platform agreement for supplier onboarding | Supplier must accept ToS on onboarding → FAM-07 (supplier onboarding legal overlay; PRIT-012). This item is a legal launch/closure gate and must remain OPEN until final legal package authority is approved and verified. | Legal package (text/version/hash/source/actor policy) pending. Under legal-gated continuation model, this gate blocks legal closure and launch claims, not all development/scaffolding continuation. | LEGAL-GATED-DEVELOPMENT-CONTINUATION-MODEL-001 / LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001 | NOT_ASSESSED | P1 | MVP_CRITICAL | OPEN |
 
 ---
 
@@ -166,6 +166,7 @@ Each item has:
 
 | Date | Change | Who |
 |---|---|---|
+| 2026-05-30 | Legal-gated development governance sync applied: FTR-LEGAL-003 wording clarified as legal launch/closure gate (MVP_CRITICAL/OPEN unchanged). Explicit rule recorded that legal pending blocks closure/launch claims, not all safe development continuation. Cross-family applicability established for legal-sensitive lanes (for example FAM-07, FAM-12/FAM-13 overlays, FAM-16 counsel-gated tracks). | `LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001` |
 | 2026-05-19 | Skeleton created; known deferred items from recent closed units populated | Copilot/Design unit |
 | 2026-05-19 | PRIT confirmation notes added for FTR-LEGAL-002, FTR-LEGAL-003, FTR-OPS-001, FTR-OPS-002, FTR-OPS-003 (Paresh decisions via `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001`) | `TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001` |
 | 2026-05-19 | Added §13 commerce/subscription/payments future design units (5 units) from `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001`; §11 update history updated | `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
