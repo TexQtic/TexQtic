@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-30 (FAM-07I-HUB-SYNC-FTR-AUTH-001-REMAINDER-TERMINOLOGY-RECONCILIATION-001 COMPLETE. FTR-AUTH-001 terminology reconciled to app-level invite activation flow. Status remains PARTIAL. LFI FAM-07 remains PARTIALLY_IMPLEMENTED.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-30 (OPS-PROD-VERIFICATION-TOOLCHAIN-HUB-SYNC-001 COMPLETE. Production verification toolchain now READY. FAM-07H SMTP runtime verification retry is unblocked as a valid next candidate. HD-001 remains VERIFIED_BLOCKED pending runtime retry evidence. FAM-07 remains PARTIALLY_IMPLEMENTED.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -23,33 +23,36 @@ active_delivery_unit_note: >
   by governance convention. FAM-07G FC-03 hardening and coverage remain VERIFIED (21 backend + 15
   frontend tests PASS; tsc EXIT 0). FAM-07F+G complete. Remaining FAM-07 units: FAM-07E
   (ToS — gated by legal text), FAM-07H (SMTP infra), FAM-07J (INVITE_ALREADY_PENDING UX).
-  None authorized for implementation. Do NOT auto-open next unit. FAM-07 NOT VERIFIED_COMPLETE.
-last_closed_unit: FAM-07I-HUB-SYNC-FTR-AUTH-001-REMAINDER-TERMINOLOGY-RECONCILIATION-001
+  OPS-PROD-VERIFICATION-TOOLCHAIN-ENABLEMENT-001 confirms Vercel CLI availability/auth/linkage and
+  safe presence-only env/deployment/log checks. FAM-07H retry is now technically unblocked, but
+  remains authorization-gated. Do NOT auto-open next unit. FAM-07 NOT VERIFIED_COMPLETE.
+last_closed_unit: OPS-PROD-VERIFICATION-TOOLCHAIN-HUB-SYNC-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-05-30)
 last_closed_unit_runtime_verdict: >
-  FAM-07I hub-sync terminology reconciliation verify-close (2026-05-30). LFI/FTR/NEXT-ACTION/
-  OPEN-SET updated to remove stale "new-user Supabase invite sub-path DESIGN_GATED" wording.
-  Repo truth from FAM-07I audit applied: onboarding invite flow is app-level invite-token
-  activation; sign-in-first branch verified by FAM-07D3; FC-03 hardening verified by FAM-07G.
-  FTR-AUTH-001 status remains PARTIAL by governance convention. FAM-07 remains PARTIALLY_IMPLEMENTED.
-  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains VERIFIED_BLOCKED. No schema/migration/.env changes.
-last_closed_unit_commits: "[TEXQTIC] governance: reconcile FTR-AUTH-001 invite terminology (FAM-07I)"
+  Governance sync consumed OPS-PROD-VERIFICATION-TOOLCHAIN-READINESS-AUDIT-001 and
+  OPS-PROD-VERIFICATION-TOOLCHAIN-ENABLEMENT-001. Toolchain moved from
+  PROD_VERIFICATION_TOOLCHAIN_BLOCKED_VERCEL_CLI_MISSING to PROD_VERIFICATION_TOOLCHAIN_READY.
+  FAM-07H-SMTP-PRODUCTION-DELIVERY-RUNTIME-VERIFICATION-RETRY-001 is now a valid next candidate.
+  HD-001 remains VERIFIED_BLOCKED until live SMTP runtime delivery evidence is captured.
+  FAM-07 remains PARTIALLY_IMPLEMENTED and not VERIFIED_COMPLETE. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  No source/test/schema/config/env/runtime delivery changes were made.
+last_closed_unit_commits: "[TEXQTIC] governance: sync production verification toolchain readiness"
 last_closed_unit_closure_basis: >
-  FAM-07I repo-truth audit consumed. Stale FTR/LFI/control wording reconciled in-place.
-  FTR-AUTH-001 row aligned to app-level invite-token architecture while preserving PARTIAL status
-  and FAM-07 not-verified-complete posture. FTR-LEGAL-003 and HD-001 unchanged.
-last_closed_unit_prior: FAM-07G-VERIFY-CLOSE-AND-AUTH-PATH-HUB-SYNC-001
-last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-05-29)
-next_candidate_unit: FAM-07E-THROUGH-FAM-07J-REMAINING-TBD
+  Control-plane pointer surfaces synchronized with toolchain readiness truth and retry posture.
+  No LFI/FTR row edits were required because no stale toolchain-blocked wording was present in
+  those files. HD-001 and FAM-07 launch-readiness truth were intentionally preserved.
+last_closed_unit_prior: FAM-07I-HUB-SYNC-FTR-AUTH-001-REMAINDER-TERMINOLOGY-RECONCILIATION-001
+last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-05-30)
+next_candidate_unit: FAM-07H-SMTP-PRODUCTION-DELIVERY-RUNTIME-VERIFICATION-RETRY-001
 next_candidate_unit_status: HOLD_FOR_AUTHORIZATION
-next_candidate_unit_date_installed: "2026-05-28"
+next_candidate_unit_date_installed: "2026-05-30"
 next_candidate_unit_note: >
-  FAM-07D3 CLOSED (2026-05-28). Authenticated invite acceptance complete.
-  FAM-07 remaining units: FAM-07E (ToS — IMPLEMENTATION-GATED_BY_FINAL_LEGAL_TEXT),
-  FAM-07F (test coverage — follows final route state), FAM-07G (auth hardening TBD),
-  FAM-07H (SMTP infra — infrastructure-only, Paresh action at any time),
-  FAM-07J (INVITE_ALREADY_PENDING UX on membership invite surface — separate, deferred).
-  None of these are authorized. TTP track held separately: see prior_next_candidate_unit below.
+  OPS-PROD-VERIFICATION-TOOLCHAIN-ENABLEMENT-001 confirms Vercel CLI installed (54.6.1),
+  authenticated identity (texqtic-connect), confirmed project scope (tex-qtic/texqtic),
+  presence-only SMTP env checks available, and deployment/log inspection available with
+  secret-safe handling. FAM-07H retry is now valid and unblocked from toolchain perspective.
+  Do NOT auto-open from pointer update; requires explicit Paresh authorization in a separate unit.
+  HD-001 remains VERIFIED_BLOCKED until runtime retry proves live delivery.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001

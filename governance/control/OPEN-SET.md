@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-30 (FAM-07I-HUB-SYNC-FTR-AUTH-001-REMAINDER-TERMINOLOGY-RECONCILIATION-001 COMPLETE. Stale FTR-AUTH-001 "Supabase invite sub-path DESIGN_GATED" wording removed. FTR-AUTH-001 remains PARTIAL. LFI FAM-07 remains PARTIALLY_IMPLEMENTED.)
+**Last Updated:** 2026-05-30 (OPS-PROD-VERIFICATION-TOOLCHAIN-HUB-SYNC-001 COMPLETE. Production verification toolchain moved to READY. FAM-07H SMTP runtime retry is now unblocked as next candidate. HD-001 remains VERIFIED_BLOCKED pending runtime evidence. FAM-07 remains PARTIALLY_IMPLEMENTED.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,20 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- OPS-PROD-VERIFICATION-TOOLCHAIN-HUB-SYNC-001 VERIFIED_COMPLETE (2026-05-30).
+  Governance-only sync consumed:
+  - `OPS-PROD-VERIFICATION-TOOLCHAIN-READINESS-AUDIT-001` (blocked: `VERCEL_CLI_NOT_AVAILABLE`)
+  - `OPS-PROD-VERIFICATION-TOOLCHAIN-ENABLEMENT-001` (ready: CLI 54.6.1, authenticated identity,
+    confirmed `tex-qtic/texqtic` scope, presence-only SMTP env checks available, deployment/log
+    inspection available with secret-safe handling)
+  Outcome: `PROD_VERIFICATION_TOOLCHAIN_READY` recorded in control-plane truth; retry unit
+  `FAM-07H-SMTP-PRODUCTION-DELIVERY-RUNTIME-VERIFICATION-RETRY-001` is now valid and unblocked
+  from toolchain perspective. No SMTP live-send was attempted in this sync.
+  HD-001 remains VERIFIED_BLOCKED until runtime retry captures masked delivery evidence.
+  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. FAM-07 remains NOT VERIFIED_COMPLETE.
+  LFI/FTR unchanged in this unit (`NO_LFI_FTR_UPDATE_REQUIRED`).
+  Artifact: artifacts/control-plane/OPS-PROD-VERIFICATION-TOOLCHAIN-HUB-SYNC-001.md.
 
 - FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001 VERIFIED_COMPLETE (2026-05-28).
   POST /api/tenant/activate-authenticated: inline JWT verify (bypasses tenantAuthMiddleware since
