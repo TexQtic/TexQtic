@@ -99,29 +99,29 @@ Q14. MVP cutline integrity preserved?
 
 ## 8. AR-001 through AR-008 Compliance
 
-AR-001: FTR row family mapping retained.
-- Pass. FTR-AUTH-001 continues to carry -> FAM-07 mapping.
+AR-001 (Every FTR item must carry a family tag): PASS.
+- FTR-AUTH-001 remains explicitly mapped with -> FAM-07 in FUTURE-TODO-REGISTER.
 
-AR-002: No improper family completion promotion.
-- Pass. FAM-07 remains not VERIFIED_COMPLETE.
+AR-002 (Every VERIFIED_COMPLETE family must carry an overlay inventory note in LFI §7): N/A.
+- FAM-07 is not VERIFIED_COMPLETE in this unit; rule not triggered for FAM-07.
 
-AR-003: No forced family downgrade from overlay noise.
-- Pass. Family status unchanged.
+AR-003 (Do not downgrade a verified family solely because overlay items remain open): PASS.
+- No family downgrade occurred; FAM-07 remained PARTIALLY_IMPLEMENTED.
 
-AR-004: MVP-critical overlays remain visible.
-- Pass. FTR-LEGAL-003 and HD-001 remain explicit.
+AR-004 (MVP_CRITICAL and LAUNCH_BLOCKER FTR items must be visible in LFI §7 or §9): PASS.
+- FTR-AUTH-001, FTR-LEGAL-003, and HD-001 remain visible on FAM-07 LFI surfaces.
 
-AR-005: No cross-system contamination.
-- Pass. No CRM/CAE details introduced.
+AR-005 (Any FTR status change must answer whether it affects an LFI family row): PASS.
+- This unit preserved FTR-AUTH-001 status as PARTIAL and explicitly synchronized LFI FAM-07 wording.
 
-AR-006: No unverified status inflation.
-- Pass. No OPEN->VERIFIED_COMPLETE promotion performed.
+AR-006 (Verify-close checklist is Q1-Q14; Q10-Q14 are mandatory overlay-gate inventory): PASS.
+- Q1-Q14 are present in this artifact; Q10-Q14 inventory and visibility checks are included.
 
-AR-007: Row-level terminology aligned to repo truth.
-- Pass. Stale Supabase sub-path terminology removed.
+AR-007 (CRM/CAE XDEP boundary is hard; no inlining CRM/CAE implementation truth into main repo hub): PASS.
+- No CRM/CAE implementation truth was introduced in this normalization.
 
-AR-008: Safe-write boundary and minimal diff preserved.
-- Pass. Only allowlisted governance files changed.
+AR-008 (New FTR items and new LFI verify-close rows require bidirectional cross-referencing): PASS.
+- This unit created no new FTR items; existing FTR/LFI references remain cross-linked to the FAM-07I artifact and related prior artifacts.
 
 ## 9. Commands and Results
 
@@ -150,4 +150,4 @@ AR-008: Safe-write boundary and minimal diff preserved.
 
 ## 11. Final Enum
 
-FAM_07I_HUB_SYNC_COMPLETE_FTR_AUTH_001_TERMINOLOGY_RECONCILED_REMAINS_PARTIAL
+FAM_07I_HUB_SYNC_COMPLETE_FTR_AUTH_001_REMAINS_PARTIAL
