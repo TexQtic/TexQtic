@@ -12,6 +12,47 @@ import { tenantDelete, tenantGet, tenantPost, tenantPut, tenantPatch } from './t
 
 // ==================== ACTIVATION ====================
 
+export type ScaffoldConsentSourceFlow =
+  | 'ACTIVATE_NEW_USER'
+  | 'ACTIVATE_AUTHENTICATED_INVITE';
+
+export interface ScaffoldConsentPayload {
+  agreementType: 'PLATFORM_TERMS' | 'SUPPLIER_ONBOARDING_TERMS' | 'PRIVACY_NOTICE_ACK';
+  agreementVersion: string;
+  agreementHash: string;
+  agreementSourceUrl: string;
+  legalStatus: 'LEGAL_PENDING';
+  sourceFlow: ScaffoldConsentSourceFlow;
+  accepted: boolean;
+  acceptedAt: string;
+  metadataJson?: Record<string, unknown>;
+}
+
+const CONSENT_SCAFFOLD_PLACEHOLDER_VERSION = 'PENDING_FINAL_LEGAL_PACKAGE';
+const CONSENT_SCAFFOLD_PLACEHOLDER_HASH = 'PENDING_FINAL_LEGAL_PACKAGE';
+const CONSENT_SCAFFOLD_PLACEHOLDER_SOURCE =
+  '/legal/pending-final-legal-package';
+
+export function buildLegalPendingScaffoldConsent(
+  sourceFlow: ScaffoldConsentSourceFlow,
+): ScaffoldConsentPayload {
+  return {
+    agreementType: 'PLATFORM_TERMS',
+    agreementVersion: CONSENT_SCAFFOLD_PLACEHOLDER_VERSION,
+    agreementHash: CONSENT_SCAFFOLD_PLACEHOLDER_HASH,
+    agreementSourceUrl: CONSENT_SCAFFOLD_PLACEHOLDER_SOURCE,
+    legalStatus: 'LEGAL_PENDING',
+    sourceFlow,
+    accepted: true,
+    acceptedAt: new Date().toISOString(),
+    metadataJson: {
+      scaffoldMode: true,
+      legalCheckpointState: 'LEGAL_PENDING',
+      legalApprovalState: 'NOT_LEGAL_APPROVED',
+    },
+  };
+}
+
 export interface ActivateTenantRequest {
   inviteToken: string;
   userData: {
@@ -26,6 +67,7 @@ export interface ActivateTenantRequest {
     registrationNumber: string;
     jurisdiction: string;
   };
+  consent?: ScaffoldConsentPayload;
 }
 
 export interface ActivateTenantResponse {
@@ -71,7 +113,7 @@ export async function activateTenant(
  * The response shape is identical to ActivateTenantResponse.
  */
 export async function acceptAuthenticatedInvite(
-  request: { inviteToken: string }
+  request: { inviteToken: string; consent?: ScaffoldConsentPayload }
 ): Promise<ActivateTenantResponse> {
   return post<ActivateTenantResponse>('/api/tenant/activate-authenticated', request);
 }

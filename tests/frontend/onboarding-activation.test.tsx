@@ -29,7 +29,12 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ActivationFlow } from '../../components/Onboarding/OnboardingFlow';
-import { ACTIVATION_ERROR_CODES, acceptAuthenticatedInvite, activateTenant } from '../../services/tenantService';
+import {
+  ACTIVATION_ERROR_CODES,
+  acceptAuthenticatedInvite,
+  activateTenant,
+  buildLegalPendingScaffoldConsent,
+} from '../../services/tenantService';
 import * as apiClient from '../../services/apiClient';
 
 vi.mock('../../services/apiClient', async (importOriginal) => {
@@ -75,6 +80,10 @@ async function fillAndSubmit() {
   fireEvent.change(screen.getByLabelText(/jurisdiction/i), {
     target: { value: 'India' },
   });
+  const consentCheckbox = screen.queryByRole('checkbox');
+  if (consentCheckbox && !(consentCheckbox as HTMLInputElement).checked) {
+    fireEvent.click(consentCheckbox);
+  }
   fireEvent.click(screen.getByRole('button', { name: /submit verification/i }));
 }
 
@@ -251,6 +260,63 @@ describe('Validation gate (step 4 required fields)', () => {
   });
 });
 
+describe('FAM-07E3 frontend consent checkpoint scaffold', () => {
+  it('ACT-016: displays LEGAL_PENDING and NOT LEGAL-APPROVED scaffold labels', () => {
+    renderAtStep4({ onComplete: vi.fn().mockResolvedValue(undefined) });
+
+    expect(screen.getAllByText(/LEGAL_PENDING/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/NOT LEGAL-APPROVED/i)).toBeInTheDocument();
+    expect(screen.queryByText(/legally binding/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/final legal approval complete/i)).not.toBeInTheDocument();
+  });
+
+  it('ACT-017: requires scaffold acknowledgment before submit', async () => {
+    const onComplete = vi.fn().mockResolvedValue(undefined);
+
+    renderAtStep4({ onComplete });
+    fireEvent.change(screen.getByLabelText(/registration number/i), {
+      target: { value: 'REG-001' },
+    });
+    fireEvent.change(screen.getByLabelText(/jurisdiction/i), {
+      target: { value: 'India' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /submit verification/i }));
+
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(screen.getByText(/LEGAL_PENDING consent checkpoint/i)).toBeInTheDocument();
+  });
+
+  it('ACT-018: submits LEGAL_PENDING consent payload from onboarding flow', async () => {
+    const onComplete = vi.fn().mockResolvedValue(undefined);
+
+    renderAtStep4({ onComplete });
+
+    fireEvent.change(screen.getByLabelText(/registration number/i), {
+      target: { value: 'REG-001' },
+    });
+    fireEvent.change(screen.getByLabelText(/jurisdiction/i), {
+      target: { value: 'India' },
+    });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: /submit verification/i }));
+
+    await waitFor(() => {
+      expect(onComplete).toHaveBeenCalledTimes(1);
+    });
+
+    const payload = onComplete.mock.calls[0][0];
+    expect(payload.consent).toMatchObject({
+      legalStatus: 'LEGAL_PENDING',
+      sourceFlow: 'ACTIVATE_NEW_USER',
+      agreementVersion: 'PENDING_FINAL_LEGAL_PACKAGE',
+      agreementHash: 'PENDING_FINAL_LEGAL_PACKAGE',
+      agreementSourceUrl: '/legal/pending-final-legal-package',
+      accepted: true,
+    });
+    expect(payload.consent.legalStatus).not.toBe('LEGAL_APPROVED');
+  });
+});
+
 // ─── ACT-011 / ACT-012: acceptAuthenticatedInvite service function ────────────
 
 describe('acceptAuthenticatedInvite service', () => {
@@ -279,6 +345,20 @@ describe('acceptAuthenticatedInvite service', () => {
     const result = await acceptAuthenticatedInvite({ inviteToken: 'invite-token-xyz' });
 
     expect(result).toEqual(fakeResponse);
+  });
+
+  it('ACT-019: forwards optional scaffold consent payload for authenticated invite acceptance', async () => {
+    vi.mocked(apiClient.post).mockResolvedValueOnce({
+      token: 'new-jwt', user: { id: 'u1', email: 'a@b.com' }, tenant: {}, membership: { role: 'MEMBER' },
+    });
+
+    const consent = buildLegalPendingScaffoldConsent('ACTIVATE_AUTHENTICATED_INVITE');
+    await acceptAuthenticatedInvite({ inviteToken: 'test-token-123', consent });
+
+    expect(vi.mocked(apiClient.post)).toHaveBeenCalledWith(
+      '/api/tenant/activate-authenticated',
+      { inviteToken: 'test-token-123', consent },
+    );
   });
 });
 
@@ -325,6 +405,33 @@ describe('activateTenant service (FAM-07G — F-MISS-01 / F-MISS-02)', () => {
     });
 
     expect(result).toEqual(fakeResponse);
+  });
+
+  it('ACT-020: accepts optional LEGAL_PENDING scaffold consent on activation payload shape', async () => {
+    vi.mocked(apiClient.post).mockResolvedValueOnce({
+      token: 'tenant-jwt-xyz',
+      user: { id: 'user-123', email: 'owner@example.com' },
+      tenant: { id: 'tenant-abc', name: 'Test Corp', slug: 'test-corp', type: 'B2B', status: 'PENDING_VERIFICATION', plan: 'FREE' },
+      membership: { role: 'OWNER' },
+    });
+
+    const consent = buildLegalPendingScaffoldConsent('ACTIVATE_NEW_USER');
+    await activateTenant({
+      inviteToken: 'invite-token-xyz',
+      userData: { email: 'owner@example.com', password: 'ValidPass99' },
+      verificationData: { registrationNumber: 'REG-002', jurisdiction: 'IN-MH' },
+      consent,
+    });
+
+    expect(vi.mocked(apiClient.post)).toHaveBeenCalledWith(
+      '/api/tenant/activate',
+      expect.objectContaining({
+        consent: expect.objectContaining({
+          legalStatus: 'LEGAL_PENDING',
+          sourceFlow: 'ACTIVATE_NEW_USER',
+        }),
+      }),
+    );
   });
 });
 

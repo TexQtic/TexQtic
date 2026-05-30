@@ -161,7 +161,11 @@ import { BuyerRfqListSurface, SupplierRfqInboxSurface } from './components/Tenan
 // TECS-B2B-BUYER-CATALOG-PDP-001 P-2: Buyer PDP surface shell
 import { CatalogPdpSurface } from './components/Tenant/CatalogPdpSurface';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
-import { activateTenant, acceptAuthenticatedInvite } from './services/tenantService';
+import {
+  activateTenant,
+  acceptAuthenticatedInvite,
+  buildLegalPendingScaffoldConsent,
+} from './services/tenantService';
 import {
   getCurrentUser,
   resolvePublicEntryDescriptor,
@@ -4437,7 +4441,10 @@ const App: React.FC = () => {
     // FAM-07D3: If a pending invite token is preserved, accept it now that the user is authenticated
     if (pendingInviteToken) {
       try {
-        const inviteResult = await acceptAuthenticatedInvite({ inviteToken: pendingInviteToken });
+        const inviteResult = await acceptAuthenticatedInvite({
+          inviteToken: pendingInviteToken,
+          consent: buildLegalPendingScaffoldConsent('ACTIVATE_AUTHENTICATED_INVITE'),
+        });
         setPendingInviteToken(null);
         setToken(inviteResult.token, 'TENANT');
         // Re-bootstrap with the invite tenant's JWT
@@ -7727,6 +7734,7 @@ const App: React.FC = () => {
                         registrationNumber: formData.registrationNumber,
                         jurisdiction: formData.jurisdiction,
                       },
+                      consent: formData.consent,
                     }) as any;
                     // FC-03 hardening: invite has been consumed — clear pending token
                     // immediately, before any post-activation step that could throw.

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { TenantType } from '../../types';
 import { ACTIVATION_ERROR_CODES } from '../../services/tenantService';
 
+const CONSENT_SCAFFOLD_ENABLED = import.meta.env.VITE_FAM07_CONSENT_SCAFFOLD_ENABLED !== 'false';
+
 interface ActivationFlowProps {
   onComplete: (_data: any) => void | Promise<void>;
   inviteToken?: string;
@@ -33,6 +35,7 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
     password: '',
     registrationNumber: '',
     jurisdiction: '',
+    consentAcknowledged: false,
   });
 
   const next = () => setStep(s => s + 1);
@@ -43,12 +46,38 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
       return;
     }
 
+    if (CONSENT_SCAFFOLD_ENABLED && !formData.consentAcknowledged) {
+      setSubmitError('Please acknowledge the LEGAL_PENDING consent checkpoint before activation.');
+      return;
+    }
+
     setSubmitting(true);
     setSubmitError(null);
     setExistingUserSignInRequired(false);
     setAlreadyMemberError(false);
     try {
-      await onComplete(formData);
+      const submissionPayload = {
+        ...formData,
+        consent: CONSENT_SCAFFOLD_ENABLED
+          ? {
+              agreementType: 'PLATFORM_TERMS',
+              agreementVersion: 'PENDING_FINAL_LEGAL_PACKAGE',
+              agreementHash: 'PENDING_FINAL_LEGAL_PACKAGE',
+              agreementSourceUrl: '/legal/pending-final-legal-package',
+              legalStatus: 'LEGAL_PENDING',
+              sourceFlow: 'ACTIVATE_NEW_USER',
+              accepted: true,
+              acceptedAt: new Date().toISOString(),
+              metadataJson: {
+                scaffoldMode: true,
+                legalCheckpointState: 'LEGAL_PENDING',
+                legalApprovalState: 'NOT_LEGAL_APPROVED',
+              },
+            }
+          : undefined,
+      };
+
+      await onComplete(submissionPayload);
     } catch (err: any) {
       if (err?.code === ACTIVATION_ERROR_CODES.EXISTING_USER_MUST_SIGN_IN) {
         setExistingUserSignInRequired(true);
@@ -284,6 +313,31 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
                 Your workspace opens in pending-verification mode until approval is recorded.
               </p>
             </div>
+            {CONSENT_SCAFFOLD_ENABLED && (
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">
+                  Consent Checkpoint (Scaffold)
+                </p>
+                <p className="text-sm text-slate-700">
+                  Status: <strong>LEGAL_PENDING</strong> (<strong>NOT LEGAL-APPROVED</strong>)
+                </p>
+                <p className="text-xs text-slate-500">
+                  Final legal package is pending. This checkpoint records scaffold acknowledgment only and
+                  does not represent final legal approval.
+                </p>
+                <label className="flex items-start gap-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={formData.consentAcknowledged}
+                    onChange={e => setFormData({ ...formData, consentAcknowledged: e.target.checked })}
+                    className="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span>
+                    I acknowledge this LEGAL_PENDING scaffold checkpoint for activation.
+                  </span>
+                </label>
+              </div>
+            )}
           </div>
         )}
 
