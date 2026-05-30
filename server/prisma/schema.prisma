@@ -41,6 +41,8 @@ model Tenant {
   domains                  TenantDomain[]
   featureOverrides         TenantFeatureOverride[]
   trades                   Trade[]
+  legalConsentSnapshots    LegalConsentSnapshot[]
+  legalConsentEvents       LegalConsentEvent[]
 
   @@map("tenants")
 }
@@ -88,6 +90,8 @@ model User {
   refreshTokens            RefreshToken[]
   rfqSupplierResponses     RfqSupplierResponse[]    @relation("rfq_response_created_by_user")
   rfqsCreated              Rfq[]                    @relation("rfq_created_by_user")
+  legalConsentSnapshots    LegalConsentSnapshot[]
+  legalConsentEvents       LegalConsentEvent[]
 
   @@map("users")
 }
@@ -1081,6 +1085,8 @@ model organizations {
   certifications                                                                                     Certification[]
   documentEmbeddings                                                                                 DocumentEmbedding[]
   dppEvidenceClaims                                                                                  DppEvidenceClaim[]
+  legalConsentSnapshots                                                                              LegalConsentSnapshot[]
+  legalConsentEvents                                                                                 LegalConsentEvent[]
   dpp_evidence_items                                                                                 dpp_evidence_items[]
   dpp_passport_states                                                                                dpp_passport_states[]
   dpp_product_details                                                                                dpp_product_details[]
@@ -2385,6 +2391,71 @@ model NetworkSettlementSplit {
   @@map("network_settlement_splits")
 }
 
+model LegalConsentSnapshot {
+  id                String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId             String                   @map("org_id") @db.Uuid
+  tenantId          String?                  @map("tenant_id") @db.Uuid
+  actorUserId       String                   @map("actor_user_id") @db.Uuid
+  agreementType     LegalConsentAgreementType @map("agreement_type")
+  agreementVersion  String                   @map("agreement_version") @db.VarChar(120)
+  agreementHash     String                   @map("agreement_hash") @db.VarChar(256)
+  agreementSourceUrl String                  @map("agreement_source_url") @db.VarChar(1024)
+  legalStatus       LegalConsentStatus       @default(LEGAL_PENDING) @map("legal_status")
+  sourceFlow        LegalConsentSourceFlow   @map("source_flow")
+  acceptedAt        DateTime?                @map("accepted_at") @db.Timestamptz(6)
+  reviewedAt        DateTime?                @map("reviewed_at") @db.Timestamptz(6)
+  correlationId     String?                  @map("correlation_id") @db.Uuid
+  requestId         String?                  @map("request_id") @db.VarChar(100)
+  metadataJson      Json?                    @map("metadata_json")
+  createdAt         DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
+  actorUser         User                     @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+  org               organizations            @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tenant            Tenant?                  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  events            LegalConsentEvent[]
+
+  @@unique([orgId, actorUserId, agreementType], map: "legal_consent_snapshot_identity_unique")
+  @@index([tenantId], map: "idx_legal_consent_snapshots_tenant_id")
+  @@index([legalStatus], map: "idx_legal_consent_snapshots_legal_status")
+  @@index([sourceFlow], map: "idx_legal_consent_snapshots_source_flow")
+  @@index([updatedAt(sort: Desc)], map: "idx_legal_consent_snapshots_updated_at")
+  @@map("legal_consent_snapshots")
+}
+
+model LegalConsentEvent {
+  id                 String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  snapshotId         String?                  @map("snapshot_id") @db.Uuid
+  orgId              String                   @map("org_id") @db.Uuid
+  tenantId           String?                  @map("tenant_id") @db.Uuid
+  actorUserId        String?                  @map("actor_user_id") @db.Uuid
+  agreementType      LegalConsentAgreementType @map("agreement_type")
+  agreementVersion   String                   @map("agreement_version") @db.VarChar(120)
+  agreementHash      String                   @map("agreement_hash") @db.VarChar(256)
+  agreementSourceUrl String                   @map("agreement_source_url") @db.VarChar(1024)
+  legalStatus        LegalConsentStatus       @map("legal_status")
+  sourceFlow         LegalConsentSourceFlow   @map("source_flow")
+  eventType          LegalConsentEventType    @map("event_type")
+  acceptedAt         DateTime?                @map("accepted_at") @db.Timestamptz(6)
+  reviewedAt         DateTime?                @map("reviewed_at") @db.Timestamptz(6)
+  correlationId      String?                  @map("correlation_id") @db.Uuid
+  requestId          String?                  @map("request_id") @db.VarChar(100)
+  metadataJson       Json?                    @map("metadata_json")
+  occurredAt         DateTime                 @default(now()) @map("occurred_at") @db.Timestamptz(6)
+  createdAt          DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  actorUser          User?                    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  org                organizations            @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  snapshot           LegalConsentSnapshot?    @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
+  tenant             Tenant?                  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([snapshotId], map: "idx_legal_consent_events_snapshot_id")
+  @@index([orgId, occurredAt(sort: Desc)], map: "idx_legal_consent_events_org_occurred_at")
+  @@index([tenantId, occurredAt(sort: Desc)], map: "idx_legal_consent_events_tenant_occurred_at")
+  @@index([actorUserId], map: "idx_legal_consent_events_actor_user_id")
+  @@index([agreementType, occurredAt(sort: Desc)], map: "idx_legal_consent_events_agreement_type")
+  @@index([eventType, occurredAt(sort: Desc)], map: "idx_legal_consent_events_event_type")
+  @@map("legal_consent_events")
+}
+
 enum TenantType {
   B2B
   B2C
@@ -2479,4 +2550,40 @@ enum RfqStatus {
   CLOSED
 
   @@map("rfq_status")
+}
+
+enum LegalConsentStatus {
+  LEGAL_PENDING
+  LEGAL_APPROVED
+  SUPERSEDED
+
+  @@map("legal_consent_status")
+}
+
+enum LegalConsentSourceFlow {
+  ACTIVATE_NEW_USER
+  ACTIVATE_AUTHENTICATED_INVITE
+  ADMIN_REVIEW
+
+  @@map("legal_consent_source_flow")
+}
+
+enum LegalConsentAgreementType {
+  PLATFORM_TERMS
+  SUPPLIER_ONBOARDING_TERMS
+  PRIVACY_NOTICE_ACK
+
+  @@map("legal_consent_agreement_type")
+}
+
+enum LegalConsentEventType {
+  CHECKPOINT_PRESENTED
+  ACCEPTED_PENDING
+  ACCEPTED_FINAL
+  SUPERSEDED
+  RECONSENT_REQUIRED
+  RECONSENT_COMPLETED
+  GATE_REJECTED
+
+  @@map("legal_consent_event_type")
 }
