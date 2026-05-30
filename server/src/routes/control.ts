@@ -447,8 +447,8 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     const { id } = request.params as { id: string };
     const adminId = request.adminId ?? 'unknown';
 
-    const tenantRecord = await withAdminContext(async tx => {
-      return await tx.tenant.findUnique({
+    const tenantDetailBundle = await withAdminContext(async tx => {
+      const tenantRecord = await tx.tenant.findUnique({
         where: { id },
         include: {
           domains: true,
@@ -467,14 +467,66 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
           },
         },
       });
+
+      if (!tenantRecord) {
+        return null;
+      }
+
+      const [consentSnapshots, consentEvents] = await Promise.all([
+        tx.legalConsentSnapshot.findMany({
+          where: { orgId: id },
+          orderBy: [{ updatedAt: 'desc' }],
+          take: 1,
+          select: {
+            id: true,
+            actorUserId: true,
+            agreementType: true,
+            agreementVersion: true,
+            legalStatus: true,
+            sourceFlow: true,
+            acceptedAt: true,
+            reviewedAt: true,
+            updatedAt: true,
+          },
+        }),
+        tx.legalConsentEvent.findMany({
+          where: { orgId: id },
+          orderBy: [{ occurredAt: 'desc' }],
+          take: 10,
+          select: {
+            id: true,
+            actorUserId: true,
+            agreementType: true,
+            agreementVersion: true,
+            legalStatus: true,
+            sourceFlow: true,
+            eventType: true,
+            acceptedAt: true,
+            reviewedAt: true,
+            occurredAt: true,
+          },
+        }),
+      ]);
+
+      return {
+        tenantRecord,
+        consentSnapshots,
+        consentEvents,
+      };
     });
 
-    if (!tenantRecord) {
+    if (!tenantDetailBundle) {
       return reply.code(404).send({
         success: false,
         error: { code: 'NOT_FOUND', message: 'Tenant not found' },
       });
     }
+
+    const { tenantRecord, consentSnapshots, consentEvents } = tenantDetailBundle;
+    const latestConsentSnapshot = consentSnapshots[0] ?? null;
+    const hasLegalApprovedRecord =
+      latestConsentSnapshot?.legalStatus === 'LEGAL_APPROVED' ||
+      consentEvents.some(event => event.legalStatus === 'LEGAL_APPROVED');
 
     const [organizationStatuses, organizationIdentities] = await Promise.all([
       readOrganizationStatuses([tenantRecord.id]),
@@ -487,6 +539,12 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         organizationIdentities.get(tenantRecord.id) ?? null,
       ),
       onboarding_status: organizationStatuses.get(tenantRecord.id) ?? null,
+      consent_scaffold_observability: {
+        has_records: Boolean(latestConsentSnapshot) || consentEvents.length > 0,
+        has_legal_approved_record: hasLegalApprovedRecord,
+        latest_snapshot: latestConsentSnapshot,
+        recent_events: consentEvents,
+      },
     });
 
     await writeAuditLog(prisma, createAdminAudit(adminId, 'control.tenants.read_one', 'tenant', { tenantId: id }));

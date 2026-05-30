@@ -47,6 +47,33 @@ export interface Tenant {
     memberships: number;
     auditLogs: number;
   };
+  consent_scaffold_observability?: {
+    has_records: boolean;
+    has_legal_approved_record: boolean;
+    latest_snapshot: {
+      id: string;
+      actorUserId: string;
+      agreementType: string;
+      agreementVersion: string;
+      legalStatus: string;
+      sourceFlow: string;
+      acceptedAt: string | null;
+      reviewedAt: string | null;
+      updatedAt: string;
+    } | null;
+    recent_events: Array<{
+      id: string;
+      actorUserId: string | null;
+      agreementType: string;
+      agreementVersion: string;
+      legalStatus: string;
+      sourceFlow: string;
+      eventType: string;
+      acceptedAt: string | null;
+      reviewedAt: string | null;
+      occurredAt: string;
+    }>;
+  };
 }
 
 export interface TenantDomain {

@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { TenantConfig, TenantStatus } from '../../types';
-import { activateApprovedOnboarding, archiveTenant, getTenantById, recordOnboardingOutcome } from '../../services/controlPlaneService';
+import { activateApprovedOnboarding, archiveTenant, getTenantById, recordOnboardingOutcome, type TenantDetailResponse } from '../../services/controlPlaneService';
 import { EmptyState, ErrorState } from '../shared';
 import { ControlPlaneOrgMemberSummary, type ControlPlaneMembershipEntry } from './ControlPlaneOrgMemberSummary';
 import { TenantAuditLogSummary } from './TenantAuditLogSummary';
@@ -26,6 +26,8 @@ interface TenantDetailsProps {
   onImpersonate: (tenant: TenantConfig) => void;
   onRunTtpEligibility?: (orgId: string) => void;
 }
+
+type TenantConsentScaffoldObservability = NonNullable<TenantDetailResponse['tenant']['consent_scaffold_observability']>;
 
 interface ControlPlaneIdentityPresentation {
   baseFamilyOrInternalCategory: string;
@@ -71,6 +73,19 @@ const buildControlPlaneIdentityPresentation = ({
   };
 };
 
+const formatConsentObservabilityDate = (value: string | null | undefined): string => {
+  if (!value) {
+    return 'Not recorded';
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toLocaleString();
+};
+
 export const TenantDetails: React.FC<TenantDetailsProps> = ({
   tenant,
   loading = false,
@@ -93,6 +108,9 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
   const [archiveNotice, setArchiveNotice] = useState<string | null>(null);
   const [membershipsData, setMembershipsData] = useState<ControlPlaneMembershipEntry[]>([]);
   const [membershipsLoading, setMembershipsLoading] = useState(false);
+  const [consentObservability, setConsentObservability] = useState<TenantConsentScaffoldObservability | null>(
+    tenant?.consent_scaffold_observability ?? null,
+  );
   const [outcomeSelected, setOutcomeSelected] = useState<'APPROVED' | 'REJECTED' | 'NEEDS_MORE_INFO' | ''>('');
   const [outcomeReason, setOutcomeReason] = useState('');
   const [outcomeLoading, setOutcomeLoading] = useState(false);
@@ -111,6 +129,7 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
   useEffect(() => {
     if (!tenant) {
       setMembershipsData([]);
+      setConsentObservability(null);
       return;
     }
 
@@ -122,10 +141,12 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
         const response = await getTenantById(tenant.id);
         if (!cancelled) {
           setMembershipsData(response?.tenant?.memberships ?? []);
+          setConsentObservability(response?.tenant?.consent_scaffold_observability ?? null);
         }
       } catch {
         if (!cancelled) {
           setMembershipsData([]);
+          setConsentObservability(null);
         }
       } finally {
         if (!cancelled) {
@@ -220,6 +241,9 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
     tenantStatus !== TenantStatus.CLOSED &&
     archiveReason.trim().length > 0 &&
     archiveSlugConfirmation.trim().toLowerCase() === tenant.slug.trim().toLowerCase();
+  const consentSnapshot = consentObservability?.latest_snapshot ?? null;
+  const consentEvents = consentObservability?.recent_events ?? [];
+  const hasLegalApprovedConsent = Boolean(consentObservability?.has_legal_approved_record);
 
   const handleActivateApproved = async () => {
     setActivationLoading(true);
@@ -425,6 +449,73 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
               <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800">
                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Lifecycle Management</h3>
                 <div className="space-y-3">
+                  <div className="rounded border border-amber-500/30 bg-amber-500/10 p-4 space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-amber-200">
+                        Consent Scaffold Observability
+                      </div>
+                      {consentSnapshot?.legalStatus === 'LEGAL_PENDING' && (
+                        <span className="rounded border border-amber-500/40 bg-amber-500/20 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-200">
+                          LEGAL_PENDING
+                        </span>
+                      )}
+                      <span className={`rounded border px-2 py-1 text-[10px] font-bold uppercase tracking-widest ${
+                        hasLegalApprovedConsent
+                          ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
+                          : 'border-rose-500/40 bg-rose-500/10 text-rose-200'
+                      }`}>
+                        {hasLegalApprovedConsent ? 'LEGAL_APPROVED RECORD PRESENT' : 'NOT LEGAL-APPROVED'}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-300">
+                      Control-plane read surface only. This scaffold does not represent final legal approval authority.
+                    </div>
+
+                    {!consentObservability?.has_records && (
+                      <div className="rounded border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-300">
+                        No consent scaffold records are available for this tenant yet.
+                      </div>
+                    )}
+
+                    {consentSnapshot && (
+                      <div className="rounded border border-slate-700 bg-slate-950/70 px-3 py-3 text-xs text-slate-300">
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">
+                          Latest Snapshot
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          <div>Agreement: <span className="text-slate-100">{consentSnapshot.agreementType}</span></div>
+                          <div>Version: <span className="text-slate-100">{consentSnapshot.agreementVersion}</span></div>
+                          <div>Source Flow: <span className="text-slate-100">{consentSnapshot.sourceFlow}</span></div>
+                          <div>Status: <span className="text-slate-100">{consentSnapshot.legalStatus}</span></div>
+                          <div>Accepted At: <span className="text-slate-100">{formatConsentObservabilityDate(consentSnapshot.acceptedAt)}</span></div>
+                          <div>Reviewed At: <span className="text-slate-100">{formatConsentObservabilityDate(consentSnapshot.reviewedAt)}</span></div>
+                          <div className="md:col-span-2">Updated At: <span className="text-slate-100">{formatConsentObservabilityDate(consentSnapshot.updatedAt)}</span></div>
+                        </div>
+                      </div>
+                    )}
+
+                    {consentEvents.length > 0 && (
+                      <div className="rounded border border-slate-700 bg-slate-950/70 px-3 py-3 text-xs text-slate-300 space-y-2">
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                          Recent Consent Events
+                        </div>
+                        <div className="space-y-2">
+                          {consentEvents.map(event => (
+                            <div
+                              key={event.id}
+                              className="rounded border border-slate-800 bg-slate-950/60 px-2 py-2"
+                            >
+                              <div className="text-slate-100 font-semibold">{event.eventType}</div>
+                              <div className="text-slate-400">
+                                {event.legalStatus} • {event.sourceFlow} • v{event.agreementVersion}
+                              </div>
+                              <div className="text-slate-500">{formatConsentObservabilityDate(event.occurredAt)}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   {canRecordOnboardingOutcome && (
                     <div className="rounded border border-indigo-500/30 bg-indigo-500/10 p-4 space-y-3">
                       <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">

@@ -23,6 +23,12 @@ const {
     invite: {
       findMany: vi.fn(),
     },
+    legalConsentSnapshot: {
+      findMany: vi.fn(),
+    },
+    legalConsentEvent: {
+      findMany: vi.fn(),
+    },
   };
 
   const prismaHolder = {
@@ -146,6 +152,8 @@ describe('control onboarding outcome route', () => {
     FAKE_TX.tenant.findUnique.mockReset();
     FAKE_TX.tenant.update.mockReset();
     FAKE_TX.invite.findMany.mockReset();
+    FAKE_TX.legalConsentSnapshot.findMany.mockReset();
+    FAKE_TX.legalConsentEvent.findMany.mockReset();
     server = await buildServer();
   });
 
@@ -475,6 +483,8 @@ describe('control tenant read routes', () => {
     FAKE_TX.tenant.findUnique.mockReset();
     FAKE_TX.tenant.update.mockReset();
     FAKE_TX.invite.findMany.mockReset();
+    FAKE_TX.legalConsentSnapshot.findMany.mockReset();
+    FAKE_TX.legalConsentEvent.findMany.mockReset();
     server = await buildServer();
   });
 
@@ -514,6 +524,8 @@ describe('control tenant read routes', () => {
         updated_at: new Date('2026-04-20T00:00:00.000Z'),
       },
     ]);
+    FAKE_TX.legalConsentSnapshot.findMany.mockResolvedValue([]);
+    FAKE_TX.legalConsentEvent.findMany.mockResolvedValue([]);
 
     const response = await server.inject({
       method: 'GET',
@@ -584,6 +596,8 @@ describe('control tenant read routes', () => {
         updated_at: new Date('2026-04-20T00:00:00.000Z'),
       },
     ]);
+    FAKE_TX.legalConsentSnapshot.findMany.mockResolvedValue([]);
+    FAKE_TX.legalConsentEvent.findMany.mockResolvedValue([]);
 
     const response = await server.inject({
       method: 'GET',
@@ -609,7 +623,129 @@ describe('control tenant read routes', () => {
         plan: 'ENTERPRISE',
         isWhiteLabel: true,
         onboarding_status: 'ACTIVE',
+        consent_scaffold_observability: {
+          has_records: false,
+          has_legal_approved_record: false,
+          latest_snapshot: null,
+          recent_events: [],
+        },
       }),
     );
+  });
+
+  it('returns consent scaffold observability from org-scoped snapshot and event reads', async () => {
+    FAKE_TX.tenant.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      slug: 'qa-wl',
+      name: 'QA WL',
+      type: 'B2C',
+      status: 'ACTIVE',
+      plan: 'ENTERPRISE',
+      isWhiteLabel: true,
+      createdAt: '2026-04-08T12:47:02.651Z',
+      updatedAt: '2026-04-09T03:15:56.119Z',
+      domains: [],
+      branding: null,
+      aiBudget: null,
+      memberships: [],
+    });
+    FAKE_TX.organizations.findMany.mockResolvedValueOnce([
+      {
+        id: TEST_TENANT_ID,
+        status: 'ACTIVE',
+      },
+    ]);
+    FAKE_TX.organizations.findMany.mockResolvedValueOnce([
+      {
+        id: TEST_TENANT_ID,
+        slug: 'qa-wl',
+        legal_name: 'QA WL',
+        status: 'ACTIVE',
+        org_type: 'B2C',
+        primary_segment_key: null,
+        is_white_label: true,
+        jurisdiction: 'AE',
+        registration_no: null,
+        risk_score: 0,
+        plan: 'ENTERPRISE',
+        secondary_segments: [],
+        role_positions: [],
+        created_at: new Date('2026-04-20T00:00:00.000Z'),
+        updated_at: new Date('2026-04-20T00:00:00.000Z'),
+      },
+    ]);
+    FAKE_TX.legalConsentSnapshot.findMany.mockResolvedValue([
+      {
+        id: 'snapshot-1',
+        actorUserId: '33333333-3333-3333-3333-333333333333',
+        agreementType: 'TERMS_OF_USE',
+        agreementVersion: 'scaffold-v1',
+        legalStatus: 'LEGAL_PENDING',
+        sourceFlow: 'ACTIVATE_NEW_USER',
+        acceptedAt: null,
+        reviewedAt: null,
+        updatedAt: '2026-05-30T10:00:00.000Z',
+      },
+    ]);
+    FAKE_TX.legalConsentEvent.findMany.mockResolvedValue([
+      {
+        id: 'event-1',
+        actorUserId: '33333333-3333-3333-3333-333333333333',
+        agreementType: 'TERMS_OF_USE',
+        agreementVersion: 'scaffold-v1',
+        legalStatus: 'LEGAL_PENDING',
+        sourceFlow: 'ACTIVATE_NEW_USER',
+        eventType: 'CAPTURED',
+        acceptedAt: null,
+        reviewedAt: null,
+        occurredAt: '2026-05-30T10:00:00.000Z',
+      },
+    ]);
+
+    const response = await server.inject({
+      method: 'GET',
+      url: `/api/control/tenants/${TEST_TENANT_ID}`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(FAKE_TX.legalConsentSnapshot.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { orgId: TEST_TENANT_ID },
+      }),
+    );
+    expect(FAKE_TX.legalConsentEvent.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { orgId: TEST_TENANT_ID },
+      }),
+    );
+    expect(response.json().data.tenant.consent_scaffold_observability).toEqual({
+      has_records: true,
+      has_legal_approved_record: false,
+      latest_snapshot: {
+        id: 'snapshot-1',
+        actorUserId: '33333333-3333-3333-3333-333333333333',
+        agreementType: 'TERMS_OF_USE',
+        agreementVersion: 'scaffold-v1',
+        legalStatus: 'LEGAL_PENDING',
+        sourceFlow: 'ACTIVATE_NEW_USER',
+        acceptedAt: null,
+        reviewedAt: null,
+        updatedAt: '2026-05-30T10:00:00.000Z',
+      },
+      recent_events: [
+        {
+          id: 'event-1',
+          actorUserId: '33333333-3333-3333-3333-333333333333',
+          agreementType: 'TERMS_OF_USE',
+          agreementVersion: 'scaffold-v1',
+          legalStatus: 'LEGAL_PENDING',
+          sourceFlow: 'ACTIVATE_NEW_USER',
+          eventType: 'CAPTURED',
+          acceptedAt: null,
+          reviewedAt: null,
+          occurredAt: '2026-05-30T10:00:00.000Z',
+        },
+      ],
+    });
   });
 });
