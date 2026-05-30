@@ -25,7 +25,7 @@ import { provisionTenant, queryProvisioningStatus } from '../../services/tenantP
 import { normalizeTenantProvisionRequest } from '../../types/tenantProvision.types.js';
 import { prisma } from '../../db/prisma.js';
 import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
-import { sendInviteMemberEmail } from '../../services/email/email.service.js';
+import { sendEmail, sendInviteMemberEmail } from '../../services/email/email.service.js';
 
 /**
  * Request body schema — validated before service invocation.
@@ -162,6 +162,21 @@ function extractBearerToken(authorizationHeader: string | string[] | undefined):
 function tokenMatchesConfiguredHash(token: string, expectedHash: string): boolean {
   const actualHash = createHash('sha256').update(token).digest('hex');
   return timingSafeEqual(Buffer.from(actualHash, 'utf8'), Buffer.from(expectedHash, 'utf8'));
+}
+
+const SAFE_SMTP_VERIFICATION_APPROVED_RECIPIENT = 'paresh@texqtic.com';
+
+const smtpVerificationTriggerBodySchema = z.object({
+  recipient: z.string().email('recipient must be a valid email address').toLowerCase(),
+});
+
+function maskEmailAddress(email: string): string {
+  const [localPart, domain] = email.split('@');
+  if (!localPart || !domain) {
+    return '***';
+  }
+
+  return `${localPart.charAt(0)}***@${domain}`;
 }
 
 /**
@@ -466,6 +481,102 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
     }
 
     return sendSuccess(reply, result, 200);
+  });
+
+  /**
+   * POST /tenants/smtp-verification-trigger
+   *
+   * SUPER_ADMIN-only controlled SMTP verification seam for HD-001 runtime verification.
+   * Safety constraints:
+   * - recipient allowlist locked to approved verification target
+   * - exactly one send attempt per request
+   * - no invite token/link generation
+   * - response is a masked evidence envelope only
+   */
+  fastify.post('/tenants/smtp-verification-trigger', {
+    preHandler: (request, reply, done) => {
+      void Promise.resolve(adminAuthMiddleware(request, reply))
+        .then(() => {
+          if (reply.sent) {
+            return;
+          }
+
+          return requireSuperAdmin(request, reply);
+        })
+        .then(() => done())
+        .catch(done);
+    },
+  }, async (request, reply) => {
+    if (!request.isAdmin || !request.adminId) {
+      return sendError(reply, 'FORBIDDEN', 'Super admin context required for SMTP verification trigger', 403);
+    }
+
+    const parseBody = smtpVerificationTriggerBodySchema.safeParse(request.body);
+    if (!parseBody.success) {
+      return sendValidationError(reply, parseBody.error.errors);
+    }
+
+    const { recipient } = parseBody.data;
+    if (recipient !== SAFE_SMTP_VERIFICATION_APPROVED_RECIPIENT) {
+      return sendError(
+        reply,
+        'SMTP_VERIFICATION_RECIPIENT_NOT_ALLOWED',
+        'Recipient is not allowlisted for SMTP verification trigger',
+        403
+      );
+    }
+
+    const verificationId = request.id ?? randomUUID();
+    const timestamp = new Date().toISOString();
+    const maskedRecipient = maskEmailAddress(recipient);
+
+    let sendAttempted = false;
+    let emailDeliveryStatus: 'DEV_LOGGED' | 'SKIPPED_SMTP_UNCONFIGURED' | 'SENT' | 'FAILED_FATAL' = 'FAILED_FATAL';
+
+    try {
+      if (sendAttempted) {
+        return sendError(reply, 'SMTP_VERIFICATION_DUPLICATE_SEND_ATTEMPT', 'Duplicate send attempt blocked', 500);
+      }
+
+      sendAttempted = true;
+      const emailDelivery = await sendEmail(
+        {
+          to: recipient,
+          subject: 'TexQtic SMTP Verification Trigger',
+          text: 'This is a controlled SMTP verification email for HD-001 runtime verification. No activation token or invite URL is included.',
+          metadata: {
+            flow: 'smtp_verification_trigger',
+            verificationId,
+          },
+        },
+        {
+          triggeredBy: 'admin',
+          actorId: request.adminId,
+        }
+      );
+
+      emailDeliveryStatus = emailDelivery.status;
+    } catch {
+      emailDeliveryStatus = 'FAILED_FATAL';
+    }
+
+    request.log.info({
+      event: 'SMTP_VERIFICATION_TRIGGER_EXECUTED',
+      verificationId,
+      recipientMasked: maskedRecipient,
+      emailDeliveryStatus,
+      timestamp,
+    });
+
+    return sendSuccess(reply, {
+      verificationId,
+      timestamp,
+      recipientMasked: maskedRecipient,
+      emailDelivery: {
+        status: emailDeliveryStatus,
+      },
+      sendAttempted,
+    }, 200);
   });
 };
 

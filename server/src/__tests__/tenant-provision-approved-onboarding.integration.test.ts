@@ -10,6 +10,7 @@ const {
   databaseContextMiddlewareMock,
   provisionTenantMock,
   queryProvisioningStatusMock,
+  sendEmailMock,
   writeAuditLogMock,
   createAdminAuditMock,
   withDbContextMock,
@@ -28,6 +29,7 @@ const {
   databaseContextMiddlewareMock: vi.fn(async (_req: unknown) => undefined),
   provisionTenantMock: vi.fn(),
   queryProvisioningStatusMock: vi.fn(),
+  sendEmailMock: vi.fn(),
   writeAuditLogMock: vi.fn().mockResolvedValue(undefined),
   createAdminAuditMock: vi.fn().mockReturnValue({}),
   withDbContextMock: vi.fn(),
@@ -143,7 +145,8 @@ vi.mock('../services/pricing/totals.service.js', () => ({
 }));
 
 vi.mock('../services/email/email.service.js', () => ({
-  sendInviteMemberEmail: vi.fn().mockResolvedValue(undefined),
+  sendEmail: sendEmailMock,
+  sendInviteMemberEmail: vi.fn().mockResolvedValue({ status: 'SENT' }),
 }));
 
 vi.mock('../lib/cacheInvalidateEmitter.js', () => ({
@@ -598,6 +601,111 @@ describe('approved-onboarding tenant provisioning route', () => {
     expect(response.statusCode).toBe(403);
     expect(provisionTenantMock).not.toHaveBeenCalled();
     expect(writeAuditLogMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects smtp verification trigger requests from non-admin callers', async () => {
+    adminAuthMiddlewareMock.mockImplementationOnce(async (_req: unknown) => undefined);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/smtp-verification-trigger',
+      payload: {
+        recipient: 'paresh@texqtic.com',
+      },
+    });
+
+    expect([401, 403]).toContain(response.statusCode);
+    expect(sendEmailMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects smtp verification trigger recipients outside the allowlist and does not send', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/smtp-verification-trigger',
+      payload: {
+        recipient: 'other@texqtic.com',
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(sendEmailMock).not.toHaveBeenCalled();
+
+    const body = response.json();
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe('SMTP_VERIFICATION_RECIPIENT_NOT_ALLOWED');
+  });
+
+  it('accepts the approved recipient, masks it in response, and attempts exactly one send', async () => {
+    sendEmailMock.mockResolvedValueOnce({ status: 'SENT' });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/smtp-verification-trigger',
+      payload: {
+        recipient: 'PARESH@TEXQTIC.COM',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(sendEmailMock).toHaveBeenCalledTimes(1);
+
+    const body = response.json();
+    expect(body.success).toBe(true);
+    expect(body.data).toMatchObject({
+      recipientMasked: 'p***@texqtic.com',
+      emailDelivery: {
+        status: 'SENT',
+      },
+      sendAttempted: true,
+    });
+    expect(body.data).toHaveProperty('verificationId');
+    expect(body.data).toHaveProperty('timestamp');
+    expect(body.data).not.toHaveProperty('inviteToken');
+    expect(body.data).not.toHaveProperty('inviteUrl');
+    expect(body.data).not.toHaveProperty('authorization');
+    expect(body.data).not.toHaveProperty('headers');
+  });
+
+  it('surfaces SKIPPED_SMTP_UNCONFIGURED safely in the verification response envelope', async () => {
+    sendEmailMock.mockResolvedValueOnce({ status: 'SKIPPED_SMTP_UNCONFIGURED' });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/smtp-verification-trigger',
+      payload: {
+        recipient: 'paresh@texqtic.com',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(sendEmailMock).toHaveBeenCalledTimes(1);
+
+    const body = response.json();
+    expect(body.success).toBe(true);
+    expect(body.data.emailDelivery).toEqual({ status: 'SKIPPED_SMTP_UNCONFIGURED' });
+    expect(body.data.recipientMasked).toBe('p***@texqtic.com');
+  });
+
+  it('surfaces send failures safely as FAILED_FATAL without leaking internals', async () => {
+    sendEmailMock.mockRejectedValueOnce(new Error('smtp auth failed for user=secret-user'));
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/smtp-verification-trigger',
+      payload: {
+        recipient: 'paresh@texqtic.com',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(sendEmailMock).toHaveBeenCalledTimes(1);
+
+    const body = response.json();
+    expect(body.success).toBe(true);
+    expect(body.data.emailDelivery).toEqual({ status: 'FAILED_FATAL' });
+    expect(body.data.recipientMasked).toBe('p***@texqtic.com');
+    expect(JSON.stringify(body)).not.toContain('secret-user');
+    expect(JSON.stringify(body)).not.toContain('smtp auth failed');
   });
 });
 
