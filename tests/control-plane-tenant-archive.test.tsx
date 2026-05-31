@@ -89,6 +89,52 @@ function stubMembershipsEmpty() {
   });
 }
 
+// ─── 0. Missing membership status hardening ──────────────────────────────────
+
+describe('HARDENING-K8 — member summary missing status safety', () => {
+  beforeEach(() => {
+    getTenantByIdMock.mockReset();
+    archiveTenantMock.mockReset();
+    getTenantByIdMock.mockResolvedValue({
+      tenant: {
+        id: 'tenant-arc-001',
+        slug: 'bridge-textiles',
+        name: 'Bridge Textiles',
+        type: 'B2B',
+        status: 'ACTIVE',
+        plan: 'PROFESSIONAL',
+        onboarding_status: 'ACTIVE',
+        memberships: [
+          {
+            id: 'membership-no-status',
+            role: 'OWNER',
+            user: {
+              id: 'user-1',
+              email: 'owner@bridge-textiles.test',
+              emailVerified: true,
+            },
+          },
+        ],
+      },
+    });
+  });
+
+  it('renders tenant details without crashing when membership status is absent', async () => {
+    render(
+      <TenantDetails
+        tenant={makeTenantConfig()}
+        onBack={() => undefined}
+        onImpersonate={() => undefined}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('owner@bridge-textiles.test')).toBeInTheDocument();
+      expect(screen.getByText(/Not specified/i)).toBeInTheDocument();
+    });
+  });
+});
+
 // ─── 1. Guard — button disabled when reason is empty (T-ARC-001) ──────────────
 
 describe('HARDENING-009 — T-ARC-001: reason empty disables archive button', () => {

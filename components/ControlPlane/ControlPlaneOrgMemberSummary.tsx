@@ -15,13 +15,29 @@ import React from 'react';
 export interface ControlPlaneMembershipEntry {
   id: string;
   role: string;
-  status: string;
+  status?: string | null;
   user: {
     id: string;
     email: string;
     emailVerified: boolean;
   };
 }
+
+const resolveMembershipStatusPresentation = (status: string | null | undefined) => {
+  const normalized = status?.trim().toUpperCase() ?? '';
+
+  if (!normalized) {
+    return {
+      isActive: false,
+      label: 'Not specified',
+    };
+  }
+
+  return {
+    isActive: normalized === 'ACTIVE',
+    label: normalized,
+  };
+};
 
 interface ControlPlaneOrgMemberSummaryProps {
   memberships?: ControlPlaneMembershipEntry[];
@@ -78,40 +94,44 @@ export const ControlPlaneOrgMemberSummary: React.FC<ControlPlaneOrgMemberSummary
         Member visibility only. No invite, revoke, or role-change actions are available from this surface.
       </div>
       <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">
-        {memberships.length} member{memberships.length !== 1 ? 's' : ''} on record
+        {memberships.length} member{memberships.length === 1 ? '' : 's'} on record
       </div>
       <div className="space-y-2">
-        {memberships.map(membership => (
-          <div
-            key={membership.id}
-            className="rounded border border-slate-800 bg-slate-950/40 px-3 py-3"
-          >
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="font-mono text-slate-200">{membership.user.email}</span>
-              {membership.user.emailVerified ? (
-                <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-emerald-300">
-                  Verified
+        {memberships.map(membership => {
+          const statusPresentation = resolveMembershipStatusPresentation(membership.status);
+
+          return (
+            <div
+              key={membership.id}
+              className="rounded border border-slate-800 bg-slate-950/40 px-3 py-3"
+            >
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="font-mono text-slate-200">{membership.user.email}</span>
+                {membership.user.emailVerified ? (
+                  <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-emerald-300">
+                    Verified
+                  </span>
+                ) : (
+                  <span className="rounded border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-amber-300">
+                    Unverified
+                  </span>
+                )}
+                <span className="rounded border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-slate-300">
+                  {membership.role}
                 </span>
-              ) : (
-                <span className="rounded border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-amber-300">
-                  Unverified
+                <span
+                  className={`rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
+                    statusPresentation.isActive
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                      : 'border-slate-700 bg-slate-900/60 text-slate-400'
+                  }`}
+                >
+                  {statusPresentation.label}
                 </span>
-              )}
-              <span className="rounded border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-slate-300">
-                {membership.role}
-              </span>
-              <span
-                className={`rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
-                  membership.status.toUpperCase() === 'ACTIVE'
-                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                    : 'border-slate-700 bg-slate-900/60 text-slate-400'
-                }`}
-              >
-                {membership.status}
-              </span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <div className="mt-3 text-[10px] uppercase tracking-widest text-slate-500">
         Read-only — no membership management from this surface.

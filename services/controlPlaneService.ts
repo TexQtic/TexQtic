@@ -106,7 +106,7 @@ export interface TenantDetailResponse {
     memberships?: Array<{
       id: string;
       role: string;
-      status: string;
+      status?: string | null;
       user: {
         id: string;
         email: string;
