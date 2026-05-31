@@ -3,6 +3,7 @@
 ## 1) Unit ID and Mode
 - Unit: FAM-07E5N-HANDOFF-ORGANIZATIONS-PERMISSION-REMEDIATION-AND-RERUN-001
 - Mode: TECS Safe-Write repo-truth diagnosis + narrow remediation + bounded runtime rerun
+- Execution date: 2026-05-31
 
 ## 2) Branch and HEAD
 - Branch: main
