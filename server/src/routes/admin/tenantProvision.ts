@@ -26,6 +26,7 @@ import { normalizeTenantProvisionRequest } from '../../types/tenantProvision.typ
 import { prisma } from '../../db/prisma.js';
 import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
 import { sendEmail, sendInviteMemberEmail } from '../../services/email/email.service.js';
+import { activateConsentRuntimeInviteById } from '../tenant.js';
 
 /**
  * Request body schema — validated before service invocation.
@@ -182,6 +183,14 @@ const consentRuntimePathBodySchema = z.object({
   }),
   approvedOnboardingMetadata: z.record(z.unknown()).optional(),
   sendInviteEmail: z.boolean().optional(),
+});
+
+const consentRuntimeActivationHandoffBodySchema = z.object({
+  qaMode: z.literal(CONSENT_RUNTIME_QA_MODE),
+  inviteId: z.string().uuid('inviteId must be a valid UUID'),
+  orgId: z.string().uuid('orgId must be a valid UUID').optional(),
+  orchestrationReference: z.string().trim().min(1).max(255).optional(),
+  consent: z.unknown(),
 });
 
 function maskEmailAddress(email: string): string {
@@ -578,6 +587,78 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
 
       throw error;
     }
+  });
+
+  /**
+   * POST /tenants/provision/consent-runtime-path/activate-handoff
+   *
+   * SUPER_ADMIN-only QA runtime handoff that activates a pending
+   * FIRST_OWNER_PREPARATION invite by safe identifiers only.
+   * Never accepts or returns raw invite token or invite URL.
+   */
+  fastify.post('/tenants/provision/consent-runtime-path/activate-handoff', {
+    preHandler: (request, reply, done) => {
+      void Promise.resolve(adminAuthMiddleware(request, reply))
+        .then(() => {
+          if (reply.sent) {
+            return;
+          }
+
+          return requireSuperAdmin(request, reply);
+        })
+        .then(() => done())
+        .catch(done);
+    },
+  }, async (request, reply) => {
+    if (!request.isAdmin || !request.adminId) {
+      return sendError(reply, 'FORBIDDEN', 'Super admin context required for consent runtime activation handoff', 403);
+    }
+
+    const parseBody = consentRuntimeActivationHandoffBodySchema.safeParse(request.body);
+    if (!parseBody.success) {
+      return sendValidationError(reply, parseBody.error.errors);
+    }
+
+    const {
+      qaMode,
+      inviteId,
+      orgId,
+      orchestrationReference,
+      consent,
+    } = parseBody.data;
+
+    if (!orgId && !orchestrationReference) {
+      return sendError(reply, 'MISSING_PARAMETERS', 'One of orgId or orchestrationReference is required.', 400);
+    }
+
+    const handoffResult = await activateConsentRuntimeInviteById({
+      qaMode,
+      inviteId,
+      orgId,
+      orchestrationReference,
+      consent,
+      adminActorId: request.adminId,
+      requestId: request.id,
+    });
+
+    if (!handoffResult.ok) {
+      return sendError(reply, handoffResult.code, handoffResult.message, handoffResult.statusCode);
+    }
+
+    await writeAuditLog(
+      prisma,
+      createAdminAudit(request.adminId, 'control.tenants.consent_runtime_handoff_activated', 'invite', {
+        qaMode,
+        orgId: handoffResult.receipt.orgId,
+        inviteId: handoffResult.receipt.inviteId,
+        activationState: handoffResult.receipt.activationState,
+        legalStatus: handoffResult.receipt.legalStatus,
+        consentSnapshotId: handoffResult.receipt.consentSnapshot.id,
+        consentEventId: handoffResult.receipt.consentEvent.id,
+      })
+    );
+
+    return sendSuccess(reply, handoffResult.receipt, 200);
   });
 
   /**

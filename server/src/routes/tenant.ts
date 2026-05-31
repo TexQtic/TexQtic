@@ -187,6 +187,54 @@ type ConsentScaffoldValidationResult =
       statusCode: number;
     };
 
+type ConsentRuntimeActivationHandoffFailureCode =
+  | ConsentScaffoldValidationFailureCode
+  | 'INVITE_NOT_FOUND'
+  | 'INVITE_PURPOSE_MISMATCH'
+  | 'INVITE_NOT_PENDING'
+  | 'TARGET_MISMATCH'
+  | 'QA_RUNTIME_GUARD_REJECTED'
+  | 'ALREADY_MEMBER'
+  | 'MISSING_PARAMETERS'
+  | 'INTERNAL_ERROR';
+
+type ConsentRuntimeActivationHandoffResult =
+  | {
+      ok: true;
+      receipt: {
+        activationCompleted: true;
+        orgId: string;
+        inviteId: string;
+        recipientMasked: string;
+        activationState: 'INVITE_ACCEPTED';
+        legalStatus: 'LEGAL_PENDING';
+        legalPosture: 'SCAFFOLD_ONLY';
+        consentSourceFlow: LegalConsentSourceFlow;
+        membership: {
+          id: string;
+          role: string;
+        };
+        consentSnapshot: {
+          present: true;
+          id: string;
+        };
+        consentEvent: {
+          present: true;
+          id: string;
+        };
+        timestamps: {
+          acceptedAt: string;
+          processedAt: string;
+        };
+      };
+    }
+  | {
+      ok: false;
+      code: ConsentRuntimeActivationHandoffFailureCode;
+      message: string;
+      statusCode: number;
+    };
+
 type ConsentPolicyExpectation = {
   agreementVersion: string | null;
   agreementHash: string | null;
@@ -256,6 +304,23 @@ function sanitizeConsentMetadataJson(input: unknown): Prisma.InputJsonObject | u
     return undefined;
   }
   return sanitized as Prisma.InputJsonObject;
+}
+
+function maskEmailForSafeReceipt(email: string): string {
+  const [localPart, domain] = email.split('@');
+  if (!localPart || !domain) {
+    return '***';
+  }
+
+  return `${localPart.charAt(0)}***@${domain}`;
+}
+
+function isQaRuntimeLabel(value: string | null | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+
+  return /qa|test/i.test(value);
 }
 
 function validateConsentScaffoldPayload(input: {
@@ -352,7 +417,7 @@ async function recordLegalPendingConsentScaffold(input: {
   tenantId: string;
   actorUserId: string;
   consent: ConsentAcceptance;
-}): Promise<void> {
+}): Promise<{ snapshotId: string; eventId: string }> {
   const acceptedAt = new Date(input.consent.acceptedAt);
   const reviewedAt = input.consent.reviewedAt ? new Date(input.consent.reviewedAt) : null;
   const metadataJson = sanitizeConsentMetadataJson(input.consent.metadataJson);
@@ -396,7 +461,7 @@ async function recordLegalPendingConsentScaffold(input: {
     },
   });
 
-  await input.tx.legalConsentEvent.create({
+  const event = await input.tx.legalConsentEvent.create({
     data: {
       snapshotId: snapshot.id,
       orgId: input.orgId,
@@ -416,6 +481,285 @@ async function recordLegalPendingConsentScaffold(input: {
       metadataJson,
     },
   });
+
+  return {
+    snapshotId: snapshot.id,
+    eventId: event.id,
+  };
+}
+
+export async function activateConsentRuntimeInviteById(input: {
+  qaMode: string;
+  inviteId: string;
+  orgId?: string;
+  orchestrationReference?: string;
+  consent: unknown;
+  adminActorId: string;
+  requestId?: string;
+}): Promise<ConsentRuntimeActivationHandoffResult> {
+  if (!input.orgId && !input.orchestrationReference) {
+    return {
+      ok: false,
+      code: 'MISSING_PARAMETERS',
+      message: 'One of orgId or orchestrationReference is required.',
+      statusCode: 400,
+    };
+  }
+
+  const consentValidation = validateConsentScaffoldPayload({
+    consent: input.consent,
+    expectedSourceFlow: 'ACTIVATE_AUTHENTICATED_INVITE',
+  });
+  if (!consentValidation.ok) {
+    return consentValidation;
+  }
+
+  if (!consentValidation.consent) {
+    return {
+      ok: false,
+      code: 'CONSENT_REQUIRED',
+      message: 'Consent payload is required for this activation path.',
+      statusCode: 400,
+    };
+  }
+  const validatedConsent = consentValidation.consent;
+
+  const invite = await prisma.invite.findUnique({
+    where: { id: input.inviteId },
+    include: {
+      tenant: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          externalOrchestrationRef: true,
+          memberships: {
+            select: {
+              role: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!invite) {
+    return {
+      ok: false,
+      code: 'INVITE_NOT_FOUND',
+      message: 'Invite not found for the provided inviteId.',
+      statusCode: 404,
+    };
+  }
+
+  if (invite.invitePurpose !== 'FIRST_OWNER_PREPARATION') {
+    return {
+      ok: false,
+      code: 'INVITE_PURPOSE_MISMATCH',
+      message: 'Invite purpose must be FIRST_OWNER_PREPARATION for runtime handoff.',
+      statusCode: 409,
+    };
+  }
+
+  if (invite.acceptedAt || invite.expiresAt <= new Date()) {
+    return {
+      ok: false,
+      code: 'INVITE_NOT_PENDING',
+      message: 'Invite is not pending and cannot be activated by handoff.',
+      statusCode: 409,
+    };
+  }
+
+  if (input.orgId && invite.tenantId !== input.orgId) {
+    return {
+      ok: false,
+      code: 'TARGET_MISMATCH',
+      message: 'inviteId does not match the provided orgId target.',
+      statusCode: 409,
+    };
+  }
+
+  const resolvedOrchestrationRef = invite.externalOrchestrationRef ?? invite.tenant.externalOrchestrationRef ?? null;
+  if (input.orchestrationReference && resolvedOrchestrationRef !== input.orchestrationReference) {
+    return {
+      ok: false,
+      code: 'TARGET_MISMATCH',
+      message: 'inviteId does not match the provided orchestrationReference target.',
+      statusCode: 409,
+    };
+  }
+
+  const orgIdentity = await prisma.organizations.findUnique({
+    where: { id: invite.tenantId },
+    select: {
+      legal_name: true,
+      status: true,
+    },
+  });
+
+  if (!isQaRuntimeLabel(invite.tenant.name) && !isQaRuntimeLabel(orgIdentity?.legal_name)) {
+    return {
+      ok: false,
+      code: 'QA_RUNTIME_GUARD_REJECTED',
+      message: 'Runtime handoff requires QA/TEST scoped tenant target.',
+      statusCode: 422,
+    };
+  }
+
+  const normalizedInviteEmail = invite.email.trim().toLowerCase();
+  const dbContext: DatabaseContext = {
+    orgId: invite.tenantId,
+    actorId: input.adminActorId,
+    realm: 'tenant',
+    requestId: input.requestId ?? randomUUID(),
+  };
+
+  try {
+    const processed = await withDbContext(prisma, dbContext, async tx => {
+      let user = await tx.user.findUnique({
+        where: { email: normalizedInviteEmail },
+        select: { id: true, email: true },
+      });
+
+      if (!user) {
+        const passwordHash = await bcrypt.hash(randomUUID(), 10);
+        user = await tx.user.create({
+          data: {
+            email: normalizedInviteEmail,
+            passwordHash,
+            emailVerified: true,
+            emailVerifiedAt: new Date(),
+          },
+          select: { id: true, email: true },
+        });
+      }
+
+      await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
+      await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
+
+      await tx.organizations.update({
+        where: { id: invite.tenantId },
+        data: {
+          status: 'PENDING_VERIFICATION',
+        },
+      });
+
+      await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'tenant', true)`);
+      await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'false', true)`);
+
+      const ownerExists = invite.tenant.memberships.some(membership => membership.role === 'OWNER');
+      const resolvedRole = ownerExists ? invite.role : 'OWNER';
+
+      const existingMembership = await tx.membership.findFirst({
+        where: {
+          userId: user.id,
+          tenantId: invite.tenantId,
+        },
+      });
+      if (existingMembership) {
+        return {
+          error: {
+            code: 'ALREADY_MEMBER' as const,
+            message: 'Invite target user is already a member of this tenant.',
+            statusCode: 409,
+          },
+        };
+      }
+
+      const membership = await tx.membership.create({
+        data: {
+          userId: user.id,
+          tenantId: invite.tenantId,
+          role: resolvedRole,
+        },
+      });
+
+      const scaffoldArtifacts = await recordLegalPendingConsentScaffold({
+        tx,
+        orgId: invite.tenantId,
+        tenantId: invite.tenantId,
+        actorUserId: user.id,
+        consent: validatedConsent,
+      });
+
+      const acceptedInvite = await tx.invite.update({
+        where: { id: invite.id },
+        data: { acceptedAt: new Date() },
+        select: { acceptedAt: true },
+      });
+
+      await writeAuditLog(tx, {
+        tenantId: invite.tenantId,
+        realm: 'TENANT',
+        actorType: 'ADMIN',
+        actorId: input.adminActorId,
+        action: 'control.consent_runtime_handoff_activated',
+        entity: 'invite',
+        entityId: invite.id,
+        metadataJson: {
+          qaMode: input.qaMode,
+          invitePurpose: invite.invitePurpose,
+          role: resolvedRole,
+          legalStatus: 'LEGAL_PENDING',
+          sourceFlow: validatedConsent.sourceFlow,
+          firstOwnerActivated: !ownerExists,
+        },
+      });
+
+      return {
+        user,
+        membership,
+        scaffoldArtifacts,
+        acceptedInvite,
+      };
+    });
+
+    if ('error' in processed && processed.error) {
+      return {
+        ok: false,
+        code: processed.error.code,
+        message: processed.error.message,
+        statusCode: processed.error.statusCode,
+      };
+    }
+
+    return {
+      ok: true,
+      receipt: {
+        activationCompleted: true,
+        orgId: invite.tenantId,
+        inviteId: invite.id,
+        recipientMasked: maskEmailForSafeReceipt(normalizedInviteEmail),
+        activationState: 'INVITE_ACCEPTED',
+        legalStatus: 'LEGAL_PENDING',
+        legalPosture: 'SCAFFOLD_ONLY',
+        consentSourceFlow: consentValidation.consent.sourceFlow,
+        membership: {
+          id: processed.membership.id,
+          role: processed.membership.role,
+        },
+        consentSnapshot: {
+          present: true,
+          id: processed.scaffoldArtifacts.snapshotId,
+        },
+        consentEvent: {
+          present: true,
+          id: processed.scaffoldArtifacts.eventId,
+        },
+        timestamps: {
+          acceptedAt: processed.acceptedInvite.acceptedAt?.toISOString() ?? new Date().toISOString(),
+          processedAt: new Date().toISOString(),
+        },
+      },
+    };
+  } catch {
+    return {
+      ok: false,
+      code: 'INTERNAL_ERROR',
+      message: 'Runtime handoff activation failed.',
+      statusCode: 500,
+    };
+  }
 }
 /**
  * Wraps a Prisma TransactionClient as PrismaClient for services that require

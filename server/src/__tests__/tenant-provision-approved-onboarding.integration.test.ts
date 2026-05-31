@@ -39,6 +39,13 @@ const {
   prismaMock: {
     invite: {
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    organizations: {
+      findUnique: vi.fn(),
+    },
+    user: {
+      findUnique: vi.fn(),
     },
   },
   txMock: {
@@ -57,6 +64,13 @@ const {
     },
     membership: {
       findMany: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+    },
+    legalConsentSnapshot: {
+      upsert: vi.fn(),
+    },
+    legalConsentEvent: {
       create: vi.fn(),
     },
     invite: {
@@ -65,6 +79,25 @@ const {
     },
   },
 }));
+
+const LEGAL_PENDING_CONSENT_RUNTIME_HANDOFF = {
+  agreementType: 'PLATFORM_TERMS',
+  agreementVersion: 'scaffold-v1',
+  agreementHash: 'hash-v1',
+  agreementSourceUrl: 'https://app.texqtic.com/legal/scaffold-v1',
+  legalStatus: 'LEGAL_PENDING',
+  sourceFlow: 'ACTIVATE_AUTHENTICATED_INVITE',
+  accepted: true,
+  acceptedAt: '2026-06-01T00:00:00.000Z',
+  metadataJson: {
+    safeNote: 'runtime-handoff',
+    inviteToken: 'must-not-persist',
+    authorization: 'must-not-persist',
+  },
+};
+
+const E5F_RUNTIME_INVITE_ID = '11111111-1111-4111-8111-111111111111';
+const E5F_RUNTIME_ORG_ID = '22222222-2222-4222-8222-222222222222';
 
 vi.mock('../middleware/auth.js', () => ({
   adminAuthMiddleware: adminAuthMiddlewareMock,
@@ -174,6 +207,14 @@ describe('approved-onboarding tenant provisioning route', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+
+    adminAuthMiddlewareMock.mockImplementation(async (req: unknown) => {
+      const request = req as Record<string, unknown>;
+      request.isAdmin = true;
+      request.adminId = 'admin-uuid-1';
+      request.adminRole = 'SUPER_ADMIN';
+    });
+    requireAdminRoleMock.mockImplementation(() => async () => undefined);
 
     provisionTenantMock.mockResolvedValue({
       provisioningMode: 'APPROVED_ONBOARDING',
@@ -733,6 +774,343 @@ describe('approved-onboarding tenant provisioning route', () => {
 
     expect([401, 403]).toContain(response.statusCode);
     expect(provisionTenantMock).not.toHaveBeenCalled();
+  });
+
+  it('activates deterministic runtime invite by safe identifiers and returns a non-secret receipt', async () => {
+    prismaMock.invite.findUnique.mockResolvedValueOnce({
+      id: E5F_RUNTIME_INVITE_ID,
+      tenantId: E5F_RUNTIME_ORG_ID,
+      email: 'paresh@texqtic.com',
+      role: 'OWNER',
+      invitePurpose: 'FIRST_OWNER_PREPARATION',
+      acceptedAt: null,
+      expiresAt: new Date('2026-06-07T00:00:00.000Z'),
+      externalOrchestrationRef: 'ocase_qa_runtime_001',
+      tenant: {
+        id: E5F_RUNTIME_ORG_ID,
+        name: 'QA Consent Runtime Org',
+        slug: 'qa-consent-runtime-org',
+        externalOrchestrationRef: 'ocase_qa_runtime_001',
+        memberships: [],
+      },
+    });
+    prismaMock.organizations.findUnique.mockResolvedValueOnce({
+      legal_name: 'QA Consent Runtime Org',
+      status: 'VERIFICATION_APPROVED',
+    });
+
+    withDbContextMock.mockImplementationOnce(async (_client, _dbContext, callback) => callback(txMock as never));
+    txMock.user.findUnique.mockResolvedValueOnce(null);
+    txMock.user.create.mockResolvedValueOnce({
+      id: 'user-uuid-runtime-0000-0000-000000000001',
+      email: 'paresh@texqtic.com',
+    });
+    txMock.organizations.update.mockResolvedValueOnce({
+      legal_name: 'QA Consent Runtime Org',
+      status: 'PENDING_VERIFICATION',
+      org_type: 'B2B',
+      is_white_label: false,
+      plan: 'FREE',
+    });
+    txMock.membership.findFirst.mockResolvedValueOnce(null);
+    txMock.membership.create.mockResolvedValueOnce({
+      id: 'membership-runtime-0000-0000-000000000001',
+      role: 'OWNER',
+    });
+    txMock.legalConsentSnapshot.upsert.mockResolvedValueOnce({ id: 'consent-snapshot-runtime-001' });
+    txMock.legalConsentEvent.create.mockResolvedValueOnce({ id: 'consent-event-runtime-001' });
+    txMock.invite.update.mockResolvedValueOnce({ acceptedAt: new Date('2026-06-01T00:00:01.000Z') });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision/consent-runtime-path/activate-handoff',
+      payload: {
+        qaMode: 'FAM_07E5_CONSENT_RUNTIME_PATH',
+        inviteId: E5F_RUNTIME_INVITE_ID,
+        orgId: E5F_RUNTIME_ORG_ID,
+        orchestrationReference: 'ocase_qa_runtime_001',
+        consent: LEGAL_PENDING_CONSENT_RUNTIME_HANDOFF,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(txMock.legalConsentSnapshot.upsert).toHaveBeenCalledTimes(1);
+    expect(txMock.legalConsentEvent.create).toHaveBeenCalledTimes(1);
+    expect(txMock.invite.update).toHaveBeenCalledWith({
+      where: { id: E5F_RUNTIME_INVITE_ID },
+      data: { acceptedAt: expect.any(Date) },
+      select: { acceptedAt: true },
+    });
+
+    const body = response.json();
+    expect(body.success).toBe(true);
+    expect(body.data).toMatchObject({
+      activationCompleted: true,
+      orgId: E5F_RUNTIME_ORG_ID,
+      inviteId: E5F_RUNTIME_INVITE_ID,
+      recipientMasked: 'p***@texqtic.com',
+      activationState: 'INVITE_ACCEPTED',
+      legalStatus: 'LEGAL_PENDING',
+      legalPosture: 'SCAFFOLD_ONLY',
+      consentSourceFlow: 'ACTIVATE_AUTHENTICATED_INVITE',
+      consentSnapshot: {
+        present: true,
+        id: 'consent-snapshot-runtime-001',
+      },
+      consentEvent: {
+        present: true,
+        id: 'consent-event-runtime-001',
+      },
+    });
+    expect(body.data).toHaveProperty('timestamps');
+    expect(body.data).not.toHaveProperty('inviteToken');
+    expect(body.data).not.toHaveProperty('inviteUrl');
+    expect(body.data).not.toHaveProperty('tokenHash');
+    expect(JSON.stringify(body.data)).not.toContain('must-not-persist');
+    expect(JSON.stringify(body.data)).not.toContain('authorization');
+    expect(JSON.stringify(body.data)).not.toContain('cookie');
+    expect(JSON.stringify(body.data)).not.toContain('jwt');
+  });
+
+  it('rejects runtime handoff requests from non-admin callers', async () => {
+    adminAuthMiddlewareMock.mockImplementationOnce(async (_req: unknown) => undefined);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision/consent-runtime-path/activate-handoff',
+      payload: {
+        qaMode: 'FAM_07E5_CONSENT_RUNTIME_PATH',
+        inviteId: E5F_RUNTIME_INVITE_ID,
+        orgId: E5F_RUNTIME_ORG_ID,
+        consent: LEGAL_PENDING_CONSENT_RUNTIME_HANDOFF,
+      },
+    });
+
+    expect([401, 403]).toContain(response.statusCode);
+  });
+
+  it('rejects runtime handoff requests from non-SUPER_ADMIN callers', async () => {
+    await app.close();
+
+    adminAuthMiddlewareMock.mockImplementation(async (req: unknown) => {
+      const request = req as Record<string, unknown>;
+      request.isAdmin = true;
+      request.adminId = 'admin-uuid-1';
+      request.adminRole = 'ANALYST';
+    });
+    requireAdminRoleMock.mockImplementation((() => async (_request: unknown, reply: { code: (statusCode: number) => { send: (payload: unknown) => void } }) => {
+      reply.code(403).send({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'SUPER_ADMIN role required',
+        },
+      });
+    }) as any);
+
+    app = Fastify({ logger: false });
+    await app.register(tenantProvisionRoutes, { prefix: '/api/control' });
+    await app.ready();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision/consent-runtime-path/activate-handoff',
+      payload: {
+        qaMode: 'FAM_07E5_CONSENT_RUNTIME_PATH',
+        inviteId: E5F_RUNTIME_INVITE_ID,
+        orgId: E5F_RUNTIME_ORG_ID,
+        consent: LEGAL_PENDING_CONSENT_RUNTIME_HANDOFF,
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(prismaMock.invite.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('rejects runtime handoff requests with invalid qaMode', async () => {
+    adminAuthMiddlewareMock.mockImplementationOnce(async (req: unknown) => {
+      const request = req as Record<string, unknown>;
+      request.isAdmin = true;
+      request.adminId = 'admin-uuid-1';
+      request.adminRole = 'SUPER_ADMIN';
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision/consent-runtime-path/activate-handoff',
+      payload: {
+        qaMode: 'WRONG_MODE',
+        inviteId: E5F_RUNTIME_INVITE_ID,
+        orgId: E5F_RUNTIME_ORG_ID,
+        consent: LEGAL_PENDING_CONSENT_RUNTIME_HANDOFF,
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(prismaMock.invite.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('rejects runtime handoff for non-QA targets', async () => {
+    prismaMock.invite.findUnique.mockResolvedValueOnce({
+      id: E5F_RUNTIME_INVITE_ID,
+      tenantId: E5F_RUNTIME_ORG_ID,
+      email: 'paresh@texqtic.com',
+      role: 'OWNER',
+      invitePurpose: 'FIRST_OWNER_PREPARATION',
+      acceptedAt: null,
+      expiresAt: new Date('2026-06-07T00:00:00.000Z'),
+      externalOrchestrationRef: 'ocase_qa_runtime_001',
+      tenant: {
+        id: E5F_RUNTIME_ORG_ID,
+        name: 'Acme Production Org',
+        slug: 'acme-production-org',
+        externalOrchestrationRef: 'ocase_qa_runtime_001',
+        memberships: [],
+      },
+    });
+    prismaMock.organizations.findUnique.mockResolvedValueOnce({
+      legal_name: 'Acme Production Org',
+      status: 'VERIFICATION_APPROVED',
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision/consent-runtime-path/activate-handoff',
+      payload: {
+        qaMode: 'FAM_07E5_CONSENT_RUNTIME_PATH',
+        inviteId: E5F_RUNTIME_INVITE_ID,
+        orgId: E5F_RUNTIME_ORG_ID,
+        orchestrationReference: 'ocase_qa_runtime_001',
+        consent: LEGAL_PENDING_CONSENT_RUNTIME_HANDOFF,
+      },
+    });
+
+    expect(response.statusCode).toBe(422);
+    const body = response.json();
+    expect(body.error.code).toBe('QA_RUNTIME_GUARD_REJECTED');
+  });
+
+  it('rejects runtime handoff when invite purpose is not FIRST_OWNER_PREPARATION', async () => {
+    prismaMock.invite.findUnique.mockResolvedValueOnce({
+      id: E5F_RUNTIME_INVITE_ID,
+      tenantId: E5F_RUNTIME_ORG_ID,
+      email: 'paresh@texqtic.com',
+      role: 'OWNER',
+      invitePurpose: 'TEAM_MEMBER',
+      acceptedAt: null,
+      expiresAt: new Date('2026-06-07T00:00:00.000Z'),
+      externalOrchestrationRef: 'ocase_qa_runtime_001',
+      tenant: {
+        id: E5F_RUNTIME_ORG_ID,
+        name: 'QA Consent Runtime Org',
+        slug: 'qa-consent-runtime-org',
+        externalOrchestrationRef: 'ocase_qa_runtime_001',
+        memberships: [],
+      },
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision/consent-runtime-path/activate-handoff',
+      payload: {
+        qaMode: 'FAM_07E5_CONSENT_RUNTIME_PATH',
+        inviteId: E5F_RUNTIME_INVITE_ID,
+        orgId: E5F_RUNTIME_ORG_ID,
+        consent: LEGAL_PENDING_CONSENT_RUNTIME_HANDOFF,
+      },
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json().error.code).toBe('INVITE_PURPOSE_MISMATCH');
+  });
+
+  it('rejects runtime handoff when invite is not pending', async () => {
+    prismaMock.invite.findUnique.mockResolvedValueOnce({
+      id: E5F_RUNTIME_INVITE_ID,
+      tenantId: E5F_RUNTIME_ORG_ID,
+      email: 'paresh@texqtic.com',
+      role: 'OWNER',
+      invitePurpose: 'FIRST_OWNER_PREPARATION',
+      acceptedAt: new Date('2026-06-01T00:00:00.000Z'),
+      expiresAt: new Date('2026-06-07T00:00:00.000Z'),
+      externalOrchestrationRef: 'ocase_qa_runtime_001',
+      tenant: {
+        id: E5F_RUNTIME_ORG_ID,
+        name: 'QA Consent Runtime Org',
+        slug: 'qa-consent-runtime-org',
+        externalOrchestrationRef: 'ocase_qa_runtime_001',
+        memberships: [],
+      },
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision/consent-runtime-path/activate-handoff',
+      payload: {
+        qaMode: 'FAM_07E5_CONSENT_RUNTIME_PATH',
+        inviteId: E5F_RUNTIME_INVITE_ID,
+        orgId: E5F_RUNTIME_ORG_ID,
+        consent: LEGAL_PENDING_CONSENT_RUNTIME_HANDOFF,
+      },
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json().error.code).toBe('INVITE_NOT_PENDING');
+  });
+
+  it('rejects runtime handoff when orgId/orchestrationReference do not match invite target', async () => {
+    prismaMock.invite.findUnique.mockResolvedValueOnce({
+      id: E5F_RUNTIME_INVITE_ID,
+      tenantId: E5F_RUNTIME_ORG_ID,
+      email: 'paresh@texqtic.com',
+      role: 'OWNER',
+      invitePurpose: 'FIRST_OWNER_PREPARATION',
+      acceptedAt: null,
+      expiresAt: new Date('2026-06-07T00:00:00.000Z'),
+      externalOrchestrationRef: 'ocase_qa_runtime_001',
+      tenant: {
+        id: E5F_RUNTIME_ORG_ID,
+        name: 'QA Consent Runtime Org',
+        slug: 'qa-consent-runtime-org',
+        externalOrchestrationRef: 'ocase_qa_runtime_001',
+        memberships: [],
+      },
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision/consent-runtime-path/activate-handoff',
+      payload: {
+        qaMode: 'FAM_07E5_CONSENT_RUNTIME_PATH',
+        inviteId: E5F_RUNTIME_INVITE_ID,
+        orgId: '33333333-3333-4333-8333-333333333333',
+        orchestrationReference: 'ocase_qa_runtime_001',
+        consent: LEGAL_PENDING_CONSENT_RUNTIME_HANDOFF,
+      },
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json().error.code).toBe('TARGET_MISMATCH');
+  });
+
+  it('rejects attempted LEGAL_APPROVED handoff payloads', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision/consent-runtime-path/activate-handoff',
+      payload: {
+        qaMode: 'FAM_07E5_CONSENT_RUNTIME_PATH',
+        inviteId: E5F_RUNTIME_INVITE_ID,
+        orgId: E5F_RUNTIME_ORG_ID,
+        consent: {
+          ...LEGAL_PENDING_CONSENT_RUNTIME_HANDOFF,
+          legalStatus: 'LEGAL_APPROVED',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json().error.code).toBe('CONSENT_POLICY_UNAVAILABLE');
+    expect(prismaMock.invite.findUnique).not.toHaveBeenCalled();
   });
 
   it('rejects smtp verification trigger requests from non-admin callers', async () => {
