@@ -616,6 +616,9 @@ export async function activateConsentRuntimeInviteById(input: {
 
   try {
     const processed = await withDbContext(prisma, dbContext, async tx => {
+      await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
+      await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
+
       let user = await tx.user.findUnique({
         where: { email: normalizedInviteEmail },
         select: { id: true, email: true },
@@ -633,9 +636,6 @@ export async function activateConsentRuntimeInviteById(input: {
           select: { id: true, email: true },
         });
       }
-
-      await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
-      await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
 
       await tx.organizations.update({
         where: { id: invite.tenantId },
@@ -6961,6 +6961,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           );
         }
 
+        await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
+        await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
+
         // Create or find user
         let user = await tx.user.findUnique({
           where: { email: normalizedUserEmail },
@@ -6974,9 +6977,6 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             emailVerifiedAt: new Date(),
           },
         });
-
-        await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
-        await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
 
         const updatedOrg = await tx.organizations.update({
           where: { id: invite.tenantId },
