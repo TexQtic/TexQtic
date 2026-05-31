@@ -526,7 +526,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     const latestConsentSnapshot = consentSnapshots[0] ?? null;
     const hasLegalApprovedRecord =
       latestConsentSnapshot?.legalStatus === 'LEGAL_APPROVED' ||
-      consentEvents.some(event => event.legalStatus === 'LEGAL_APPROVED');
+      consentEvents.some((event: { legalStatus: string | null }) => event.legalStatus === 'LEGAL_APPROVED');
 
     const [organizationStatuses, organizationIdentities] = await Promise.all([
       readOrganizationStatuses([tenantRecord.id]),
