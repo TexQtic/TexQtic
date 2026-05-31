@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-30 (LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001 COMPLETE. Legal approval remains a launch/legal-closure gate, not a development-stop gate. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED. FAM-07 remains PARTIALLY_IMPLEMENTED because FTR-LEGAL-003 is still MVP_CRITICAL/OPEN.)
+**Last Updated:** 2026-05-31 (FAM-07K14-CONTROL-PLANE-PROVISION-FORM-LANE-MINIMAL-HUB-SYNC-001 COMPLETE. K-lane evidence chain synchronized through K13. FAM-07 remains PARTIALLY_IMPLEMENTED because FTR-LEGAL-003 is still MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,16 @@
 
 ## Operating Notes
 
+- FAM-07K14-CONTROL-PLANE-PROVISION-FORM-LANE-MINIMAL-HUB-SYNC-001 VERIFIED_COMPLETE (2026-05-31).
+  Minimal governance pointer sync consumed K-lane stabilization chain through K13:
+  K8 hardening/test confirmation, K9 stale active-tab failure evidence,
+  K10 stale-bundle diagnosis, K11 fresh-runtime verification, K12 evidence sync,
+  and K13 next-action selection.
+  FAM-07 remains NOT VERIFIED_COMPLETE. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.
+  Next recommended unit: FAM-07L1-CONTROL-PLANE-LEGAL-GATE-NEXT-ACTION-DESIGN-001.
+  Artifact: artifacts/control-plane/FAM-07K14-CONTROL-PLANE-PROVISION-FORM-LANE-MINIMAL-HUB-SYNC-001.md.
+
 - FAM-07E5P-CONSENT-SCAFFOLD-RUNTIME-PROOF-HUB-SYNC-001 VERIFIED_COMPLETE (2026-05-31).
   Governance sync consumed E5O runtime proof and recorded bounded legal-gated truth for
   FAM-07 consent scaffold path: whoami 200 (super-admin true), helper 201 (runtimePathReady true),
@@ -62,8 +72,8 @@
   No legal-final state was created and no legal-final authority was inferred.
   FAM-07 remains NOT VERIFIED_COMPLETE. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
   HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.
-  Next recommended unit: FAM-07K-CONTROL-PLANE-PROVISION-FORM-DYNAMICITY-AUDIT-001 (separate lane,
-  no auto-merge into E5P).
+  Historical next recommended unit at E5P close was FAM-07K-CONTROL-PLANE-PROVISION-FORM-DYNAMICITY-AUDIT-001;
+  that recommendation has been consumed and superseded by K14 lane sync.
   Artifact: artifacts/control-plane/FAM-07E5P-CONSENT-SCAFFOLD-RUNTIME-PROOF-HUB-SYNC-001.md.
 
 - LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001 VERIFIED_COMPLETE (2026-05-30).

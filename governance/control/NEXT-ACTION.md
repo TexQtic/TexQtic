@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-31 (FAM-07E5P-CONSENT-SCAFFOLD-RUNTIME-PROOF-HUB-SYNC-001 COMPLETE. E5O runtime proof confirms LEGAL_PENDING consent scaffold persistence path in production-safe evidence. FAM-07 remains PARTIALLY_IMPLEMENTED. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-31 (FAM-07K14-CONTROL-PLANE-PROVISION-FORM-LANE-MINIMAL-HUB-SYNC-001 COMPLETE. K-lane evidence chain is synchronized through K13. FAM-07 remains PARTIALLY_IMPLEMENTED/TEST_CONFIRMED. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,39 +15,39 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-07E5P-CONSENT-SCAFFOLD-RUNTIME-PROOF-HUB-SYNC-001
+active_delivery_unit: FAM-07K14-CONTROL-PLANE-PROVISION-FORM-LANE-MINIMAL-HUB-SYNC-001
 active_delivery_unit_status: VERIFIED_COMPLETE
 active_delivery_unit_note: >
-  Governance sync consumed E5O runtime proof and recorded that consent scaffold persistence
-  succeeds in LEGAL_PENDING posture in live runtime evidence (whoami 200, helper 201,
-  safe handoff 200, tenant detail 200 with scaffold observability records).
+  Minimal hub sync consumed stabilized FAM-07 K-lane evidence through K13:
+  K8 frontend hardening/test confirmation, K9 stale-tab runtime failure evidence,
+  K10 stale-bundle parity diagnosis, K11 fresh-runtime verification, K12 evidence-chain sync,
+  and K13 next-action selection.
   FTR-LEGAL-003 remains MVP_CRITICAL/OPEN and FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit: FAM-07E5P-CONSENT-SCAFFOLD-RUNTIME-PROOF-HUB-SYNC-001
+last_closed_unit: FAM-07K14-CONTROL-PLANE-PROVISION-FORM-LANE-MINIMAL-HUB-SYNC-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-05-31)
 last_closed_unit_runtime_verdict: >
-  E5O runtime proof is confirmed for consent scaffold LEGAL_PENDING path only.
-  Proven: activationCompleted true, legalStatus LEGAL_PENDING, consentSnapshot.present true,
-  consentEvent.present true, and tenant-detail observability has_records true with
-  ACCEPTED_PENDING event.
+  K-lane runtime interpretation is synchronized and bounded:
+  K9 stale active-tab failure evidence is retained as stale-bundle context,
+  not current-source failure evidence after K10 diagnosis and K11 fresh-runtime pass.
   Not proven: LEGAL_APPROVED/legal-final authority or FTR-LEGAL-003 closure.
   FTR-LEGAL-003 remains OPEN, HD-001 remains RUNTIME_CONFIRMED_CONFIGURED,
   and FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit_commits: "docs(governance): sync FAM-07E5 runtime proof"
+last_closed_unit_commits: "docs(governance): sync FAM-07 provision lane evidence"
 last_closed_unit_closure_basis: >
-  Layer 0 pointer and launch-readiness hub synchronized with bounded runtime-proof chain E5O->E5P.
-  Consent scaffold runtime persistence is confirmed in LEGAL_PENDING posture without advancing
-  legal-final authority. Closure truth preserved: FTR-LEGAL-003 remains MVP_CRITICAL/OPEN and
-  FAM-07 remains not VERIFIED_COMPLETE.
+  Layer 0 pointer and launch-readiness hub synchronized with bounded K-lane chain K8->K13.
+  Control-plane provision/archive member-summary seam is stabilized and reflected in hub pointers
+  without advancing legal-final authority. Closure truth preserved: FTR-LEGAL-003 remains
+  MVP_CRITICAL/OPEN and FAM-07 remains not VERIFIED_COMPLETE.
 last_closed_unit_prior: LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-05-30)
-next_candidate_unit: FAM-07K-CONTROL-PLANE-PROVISION-FORM-DYNAMICITY-AUDIT-001
+next_candidate_unit: FAM-07L1-CONTROL-PLANE-LEGAL-GATE-NEXT-ACTION-DESIGN-001
 next_candidate_unit_status: HOLD_FOR_AUTHORIZATION
 next_candidate_unit_date_installed: "2026-05-31"
 next_candidate_unit_note: >
-  E5 runtime-proof hub sync is complete. Next recommended bounded unit remains separate from
-  consent scaffold closure scope: FAM-07K provision form dynamicity/dropdown visibility audit.
-  No automatic merge with E5P. Legal-final closure remains gated by FTR-LEGAL-003 final legal
-  package authority (text/version/hash/source/actor/re-consent policy) and verification.
+  K-lane evidence synchronization through K13 is complete. Next recommended bounded unit shifts
+  to legal-gate lane design: FAM-07L1-CONTROL-PLANE-LEGAL-GATE-NEXT-ACTION-DESIGN-001.
+  No automatic merge with prior lanes. Legal-final closure remains gated by FTR-LEGAL-003 final
+  legal package authority (text/version/hash/source/actor/re-consent policy) and verification.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001
