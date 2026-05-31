@@ -15,6 +15,8 @@ interface TenantRegistryProps {
   onImpersonate: (tenant: TenantConfig) => void;
 }
 
+type ProvisionTenantCategory = 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL';
+
 interface ControlPlaneIdentityPresentation {
   baseFamilyOrInternalCategory: string;
   capabilityOrOverlayPosture: string;
@@ -59,6 +61,66 @@ const buildControlPlaneIdentityPresentation = ({
   };
 };
 
+const resolveCanonicalPreviewFromProvisionForm = (form: {
+  plan: '' | CommercialPlan;
+  tenant_category: ProvisionTenantCategory;
+  is_white_label: boolean;
+}) => {
+  const baseFamily: 'B2B' | 'B2C' | 'INTERNAL' =
+    form.tenant_category === 'AGGREGATOR' ? 'INTERNAL' : form.tenant_category;
+  const aggregatorCapability = form.tenant_category === 'AGGREGATOR';
+
+  return {
+    runtimeCategory: form.tenant_category,
+    baseFamily,
+    aggregatorCapability,
+    whiteLabelCapability: form.is_white_label,
+    commercialPlan: form.plan,
+  };
+};
+
+const PROVISION_CATEGORY_GUIDANCE: Record<ProvisionTenantCategory, string> = {
+  AGGREGATOR:
+    'Aggregator runtime category maps to INTERNAL base family with aggregator capability enabled.',
+  B2B: 'B2B runtime category keeps B2B base-family semantics for tenant onboarding.',
+  B2C: 'B2C runtime category keeps B2C base-family semantics for tenant onboarding.',
+  INTERNAL:
+    'INTERNAL runtime category keeps INTERNAL base-family semantics for internal workspaces.',
+};
+
+const PROVISION_PLAN_GUIDANCE: Record<CommercialPlan, string> = {
+  FREE: 'FREE keeps the provisioning contract minimal for initial onboarding.',
+  STARTER: 'STARTER enables standard packaged onboarding for early operating tenants.',
+  PROFESSIONAL:
+    'PROFESSIONAL is suited for sustained operating usage and broader packaged coverage.',
+  ENTERPRISE: 'ENTERPRISE is intended for advanced packaged coverage and governance-heavy rollout.',
+};
+
+const getProvisionCategoryGuidance = (tenantCategory: ProvisionTenantCategory) => {
+  return PROVISION_CATEGORY_GUIDANCE[tenantCategory] ?? 'Runtime category guidance is not available.';
+};
+
+const getProvisionPlanGuidance = (plan: '' | CommercialPlan) => {
+  return plan
+    ? PROVISION_PLAN_GUIDANCE[plan]
+    : 'Select a commercial plan to preview packaged-plan guidance.';
+};
+
+const getProvisionWhiteLabelGuidance = (
+  isWhiteLabel: boolean,
+  tenantCategory: ProvisionTenantCategory,
+) => {
+  if (!isWhiteLabel) {
+    return 'White-label overlay is disabled. Standard TexQtic branding posture applies.';
+  }
+
+  if (tenantCategory === 'AGGREGATOR') {
+    return 'White-label overlay is enabled on top of aggregator runtime posture.';
+  }
+
+  return 'White-label overlay is enabled on top of the selected base/runtime posture.';
+};
+
 export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   lifecycleView,
   onSelectTenant,
@@ -75,7 +137,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     primaryAdminEmail: '',
     primaryAdminPassword: '',
     plan: '' as '' | CommercialPlan,
-    tenant_category: 'B2B' as 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL',
+    tenant_category: 'B2B' as ProvisionTenantCategory,
     is_white_label: false,
   });
   const [provisionLoading, setProvisionLoading] = useState(false);
@@ -87,6 +149,14 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   } | null>(null);
   const [detailLoadingTenantId, setDetailLoadingTenantId] = useState<string | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
+
+  const provisionCanonicalPreview = resolveCanonicalPreviewFromProvisionForm(provisionForm);
+  const provisionCategoryGuidance = getProvisionCategoryGuidance(provisionForm.tenant_category);
+  const provisionPlanGuidance = getProvisionPlanGuidance(provisionForm.plan);
+  const provisionWhiteLabelGuidance = getProvisionWhiteLabelGuidance(
+    provisionForm.is_white_label,
+    provisionForm.tenant_category,
+  );
 
   type TenantSelectionConfig = TenantConfig & {
     createdAt?: string;
@@ -560,7 +630,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                   </div>
                 )}
                 <div className="space-y-1">
-                  <label htmlFor="prov-org-name" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                  <label htmlFor="prov-org-name" className="text-[10px] font-bold uppercase text-slate-700 tracking-widest">
                     Org Name *
                   </label>
                   <input
@@ -573,7 +643,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label htmlFor="prov-owner-email" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                  <label htmlFor="prov-owner-email" className="text-[10px] font-bold uppercase text-slate-700 tracking-widest">
                     Owner Email *
                   </label>
                   <input
@@ -587,7 +657,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label htmlFor="prov-owner-pwd" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                  <label htmlFor="prov-owner-pwd" className="text-[10px] font-bold uppercase text-slate-700 tracking-widest">
                     Owner Password *
                   </label>
                   <input
@@ -602,7 +672,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label htmlFor="prov-plan" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                  <label htmlFor="prov-plan" className="text-[10px] font-bold uppercase text-slate-700 tracking-widest">
                     Commercial Plan *
                   </label>
                   <select
@@ -615,7 +685,9 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                         plan: e.target.value as '' | CommercialPlan,
                       }))
                     }
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    className={`w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 ${
+                      provisionForm.plan ? 'text-slate-900' : 'text-slate-500'
+                    }`}
                   >
                     <option value="" disabled>
                       Select canonical plan
@@ -625,13 +697,16 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                     <option value="PROFESSIONAL">PROFESSIONAL</option>
                     <option value="ENTERPRISE">ENTERPRISE</option>
                   </select>
-                  <p className="text-[11px] leading-5 text-slate-500">
+                  <p className="text-[11px] leading-5 text-slate-600">
                     Commercial plan controls packaging only; it does not define base family,
                     runtime posture, or overlay posture.
                   </p>
+                  <p className="text-[11px] leading-5 text-slate-700" data-testid="provision-plan-selected-value">
+                    Selected: {provisionForm.plan || 'No plan selected'}
+                  </p>
                 </div>
                 <div className="space-y-1">
-                  <label htmlFor="prov-tenant-category" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                  <label htmlFor="prov-tenant-category" className="text-[10px] font-bold uppercase text-slate-700 tracking-widest">
                     Current Runtime Category Input *
                   </label>
                   <select
@@ -642,23 +717,26 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                       setProvisionForm(f => ({
                         ...f,
                         tenant_category: e.target.value as
-                          | 'AGGREGATOR'
-                          | 'B2B'
-                          | 'B2C'
-                          | 'INTERNAL',
+                          ProvisionTenantCategory,
                       }))
                     }
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="B2B">B2B - base family</option>
                     <option value="B2C">B2C - base family</option>
                     <option value="AGGREGATOR">AGGREGATOR - current aggregator workspace posture</option>
                     <option value="INTERNAL">INTERNAL - internal category</option>
                   </select>
-                  <p className="text-[11px] leading-5 text-slate-500">
+                  <p className="text-[11px] leading-5 text-slate-600">
                     This preserves the current persisted and runtime category input used by the
                     existing provisioning contract. It does not, by itself, express the full
                     base-family, capability, and overlay model.
+                  </p>
+                  <p
+                    className="text-[11px] leading-5 text-slate-700"
+                    data-testid="provision-category-selected-value"
+                  >
+                    Selected: {provisionForm.tenant_category}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -670,14 +748,63 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                       onChange={e => setProvisionForm(f => ({ ...f, is_white_label: e.target.checked }))}
                       className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                    <label htmlFor="prov-is-white-label" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                    <label htmlFor="prov-is-white-label" className="text-[10px] font-bold uppercase text-slate-700 tracking-widest">
                       White-label Overlay Posture
                     </label>
                   </div>
-                  <p className="text-[11px] leading-5 text-slate-500">
+                  <p className="text-[11px] leading-5 text-slate-600">
                     Apply white-label branding as an overlay in addition to the selected runtime
                     category input. It does not replace the selected category.
                   </p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-2">
+                  <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-700">
+                    Canonical Provisioning Preview
+                  </h3>
+                  <p className="text-[11px] leading-5 text-slate-700" data-testid="provision-category-guidance">
+                    {provisionCategoryGuidance}
+                  </p>
+                  <p className="text-[11px] leading-5 text-slate-700" data-testid="provision-plan-guidance">
+                    {provisionPlanGuidance}
+                  </p>
+                  <p
+                    className="text-[11px] leading-5 text-slate-700"
+                    data-testid="provision-white-label-guidance"
+                  >
+                    {provisionWhiteLabelGuidance}
+                  </p>
+                  <div className="grid grid-cols-1 gap-2 text-[11px] text-slate-800">
+                    <div>
+                      <span className="font-semibold text-slate-700">Runtime category:</span>{' '}
+                      <span data-testid="provision-preview-runtime-category">
+                        {provisionCanonicalPreview.runtimeCategory}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-slate-700">Base family:</span>{' '}
+                      <span data-testid="provision-preview-base-family">
+                        {provisionCanonicalPreview.baseFamily}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-slate-700">Commercial plan:</span>{' '}
+                      <span data-testid="provision-preview-commercial-plan">
+                        {provisionCanonicalPreview.commercialPlan || 'Not selected'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-slate-700">Aggregator capability:</span>{' '}
+                      <span data-testid="provision-preview-aggregator-capability">
+                        {provisionCanonicalPreview.aggregatorCapability ? 'Enabled' : 'Disabled'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-slate-700">White-label capability:</span>{' '}
+                      <span data-testid="provision-preview-white-label-capability">
+                        {provisionCanonicalPreview.whiteLabelCapability ? 'Enabled' : 'Disabled'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 <div className="flex gap-4 pt-2">
                   <button

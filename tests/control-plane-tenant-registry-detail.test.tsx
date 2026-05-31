@@ -21,6 +21,7 @@ import { TenantStatus, type TenantConfig } from '../types';
 import {
   getTenantById,
   getTenants,
+  provisionTenant,
   type Tenant,
 } from '../services/controlPlaneService';
 import {
@@ -33,6 +34,7 @@ import {
 
 const getTenantsMock = vi.mocked(getTenants);
 const getTenantByIdMock = vi.mocked(getTenantById);
+const provisionTenantMock = vi.mocked(provisionTenant);
 
 afterEach(() => {
   cleanup();
@@ -88,6 +90,7 @@ describe('CONTROL-PLANE-TENANT-LIST-DETAIL-HARDENING-001 — TenantRegistry read
   beforeEach(() => {
     getTenantsMock.mockReset();
     getTenantByIdMock.mockReset();
+    provisionTenantMock.mockReset();
   });
 
   it('renders loading first and then tenant rows on successful read', async () => {
@@ -177,6 +180,141 @@ describe('CONTROL-PLANE-TENANT-LIST-DETAIL-HARDENING-001 — TenantRegistry read
     });
 
     expect(onSelectTenant).not.toHaveBeenCalled();
+  });
+});
+
+describe('FAM-07K1 — Provision New Tenant modal dynamicity', () => {
+  beforeEach(() => {
+    getTenantsMock.mockReset();
+    getTenantByIdMock.mockReset();
+    provisionTenantMock.mockReset();
+    getTenantsMock.mockResolvedValue({ tenants: [makeTenant()] });
+  });
+
+  it('opens provision modal and renders selected-value clarity for plan and category', async () => {
+    render(
+      <TenantRegistry
+        lifecycleView="ACTIVE"
+        onSelectTenant={() => undefined}
+        onImpersonate={() => undefined}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Provision New Tenant' })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Provision New Tenant' }));
+
+    expect(screen.getByRole('heading', { name: 'Provision New Tenant' })).toBeInTheDocument();
+    expect(screen.getByTestId('provision-category-selected-value')).toHaveTextContent('Selected: B2B');
+    expect(screen.getByTestId('provision-plan-selected-value')).toHaveTextContent('Selected: No plan selected');
+
+    fireEvent.change(screen.getByLabelText('Commercial Plan *'), {
+      target: { value: 'PROFESSIONAL' },
+    });
+
+    expect(screen.getByTestId('provision-plan-selected-value')).toHaveTextContent('Selected: PROFESSIONAL');
+    expect(screen.getByTestId('provision-preview-commercial-plan')).toHaveTextContent('PROFESSIONAL');
+  });
+
+  it('updates guidance and canonical preview deterministically for category, plan, and white-label', async () => {
+    render(
+      <TenantRegistry
+        lifecycleView="ACTIVE"
+        onSelectTenant={() => undefined}
+        onImpersonate={() => undefined}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Provision New Tenant' })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Provision New Tenant' }));
+
+    fireEvent.change(screen.getByLabelText('Current Runtime Category Input *'), {
+      target: { value: 'AGGREGATOR' },
+    });
+    fireEvent.change(screen.getByLabelText('Commercial Plan *'), {
+      target: { value: 'ENTERPRISE' },
+    });
+    fireEvent.click(screen.getByLabelText('White-label Overlay Posture'));
+
+    expect(screen.getByTestId('provision-category-guidance')).toHaveTextContent(
+      'Aggregator runtime category maps to INTERNAL base family with aggregator capability enabled.',
+    );
+    expect(screen.getByTestId('provision-plan-guidance')).toHaveTextContent(
+      'ENTERPRISE is intended for advanced packaged coverage and governance-heavy rollout.',
+    );
+    expect(screen.getByTestId('provision-white-label-guidance')).toHaveTextContent(
+      'White-label overlay is enabled on top of aggregator runtime posture.',
+    );
+
+    expect(screen.getByTestId('provision-preview-runtime-category')).toHaveTextContent('AGGREGATOR');
+    expect(screen.getByTestId('provision-preview-base-family')).toHaveTextContent('INTERNAL');
+    expect(screen.getByTestId('provision-preview-commercial-plan')).toHaveTextContent('ENTERPRISE');
+    expect(screen.getByTestId('provision-preview-aggregator-capability')).toHaveTextContent('Enabled');
+    expect(screen.getByTestId('provision-preview-white-label-capability')).toHaveTextContent('Enabled');
+  });
+
+  it('submits using existing provision service payload shape', async () => {
+    provisionTenantMock.mockResolvedValueOnce({
+      orgId: 'org-123',
+      slug: 'acme-provisioned',
+      userId: 'user-123',
+      membershipId: 'membership-123',
+    });
+
+    render(
+      <TenantRegistry
+        lifecycleView="ACTIVE"
+        onSelectTenant={() => undefined}
+        onImpersonate={() => undefined}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Provision New Tenant' })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Provision New Tenant' }));
+
+    fireEvent.change(screen.getByLabelText('Org Name *'), {
+      target: { value: 'Acme Provisioned Org' },
+    });
+    fireEvent.change(screen.getByLabelText('Owner Email *'), {
+      target: { value: 'owner@acme.example' },
+    });
+    fireEvent.change(screen.getByLabelText('Owner Password *'), {
+      target: { value: 'secret123' },
+    });
+    fireEvent.change(screen.getByLabelText('Commercial Plan *'), {
+      target: { value: 'STARTER' },
+    });
+    fireEvent.change(screen.getByLabelText('Current Runtime Category Input *'), {
+      target: { value: 'B2C' },
+    });
+    fireEvent.click(screen.getByLabelText('White-label Overlay Posture'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Provision Tenant' }));
+
+    await waitFor(() => {
+      expect(provisionTenantMock).toHaveBeenCalledTimes(1);
+    });
+
+    expect(provisionTenantMock).toHaveBeenCalledWith({
+      orgName: 'Acme Provisioned Org',
+      primaryAdminEmail: 'owner@acme.example',
+      primaryAdminPassword: 'secret123',
+      plan: 'STARTER',
+      tenant_category: 'B2C',
+      is_white_label: true,
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Tenant provisioned/i)).toBeInTheDocument();
+    });
   });
 });
 
