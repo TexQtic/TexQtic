@@ -77,6 +77,7 @@ import {
   canonicalizeTenantPlan,
   withDbContext,
   withOrgAdminContext,
+  type DbContextTransactionOptions,
   type DatabaseContext,
   getOrganizationIdentity,
   OrganizationNotFoundError,
@@ -138,6 +139,12 @@ type InviteEmailDeliveryStatus = EmailDispatchOutcome['status'] | 'FAILED_NON_FA
 interface InviteEmailDeliveryOutcome {
   status: InviteEmailDeliveryStatus;
 }
+
+const SAFE_HANDOFF_TX_OPTIONS: DbContextTransactionOptions = {
+  // Safe handoff can cross 5s under production latency; keep bounded but above default.
+  timeoutMs: 20_000,
+  maxWaitMs: 5_000,
+};
 
 function failedInviteEmailDeliveryOutcome(): InviteEmailDeliveryOutcome {
   return { status: 'FAILED_NON_FATAL' };
@@ -614,6 +621,8 @@ export async function activateConsentRuntimeInviteById(input: {
     requestId: input.requestId ?? randomUUID(),
   };
 
+  const bootstrapPasswordHash = await bcrypt.hash(randomUUID(), 10);
+
   try {
     const processed = await withDbContext(prisma, dbContext, async tx => {
       await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
@@ -625,11 +634,10 @@ export async function activateConsentRuntimeInviteById(input: {
       });
 
       if (!user) {
-        const passwordHash = await bcrypt.hash(randomUUID(), 10);
         user = await tx.user.create({
           data: {
             email: normalizedInviteEmail,
-            passwordHash,
+            passwordHash: bootstrapPasswordHash,
             emailVerified: true,
             emailVerifiedAt: new Date(),
           },
@@ -712,7 +720,7 @@ export async function activateConsentRuntimeInviteById(input: {
         scaffoldArtifacts,
         acceptedInvite,
       };
-    });
+    }, SAFE_HANDOFF_TX_OPTIONS);
 
     if ('error' in processed && processed.error) {
       return {

@@ -12,7 +12,7 @@
  */
 
 import type { FastifyRequest } from 'fastify';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, Prisma } from '@prisma/client';
 import type { TenantPlan } from '../types/index.js';
 import { randomUUID } from 'node:crypto';
 
@@ -39,6 +39,12 @@ export interface DatabaseContext {
 
   /** Optional role array (future RBAC) */
   roles?: string[];
+}
+
+export interface DbContextTransactionOptions {
+  maxWaitMs?: number;
+  timeoutMs?: number;
+  isolationLevel?: Prisma.TransactionIsolationLevel;
 }
 
 /**
@@ -130,7 +136,8 @@ export function buildContextFromRequest(req: FastifyRequest): DatabaseContext {
 export async function withDbContext<T>(
   prisma: PrismaClient,
   context: DatabaseContext,
-  callback: (tx: any) => Promise<T>
+  callback: (tx: any) => Promise<T>,
+  txOptions?: DbContextTransactionOptions,
 ): Promise<T> {
   // Validate context completeness (fail-fast)
   if (!context.orgId) {
@@ -180,6 +187,10 @@ export async function withDbContext<T>(
 
     // Run user callback with transaction client
     return callback(tx);
+  }, {
+    maxWait: txOptions?.maxWaitMs,
+    timeout: txOptions?.timeoutMs,
+    isolationLevel: txOptions?.isolationLevel,
   });
 }
 
