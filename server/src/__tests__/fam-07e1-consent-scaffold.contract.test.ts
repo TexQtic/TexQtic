@@ -16,6 +16,10 @@ const MIGRATION_PATH = path.join(
   SERVER_ROOT,
   'prisma/migrations/20260537000000_fam_07e1_consent_scaffold_contract/migration.sql',
 );
+const REMEDIATION_MIGRATION_PATH = path.join(
+  SERVER_ROOT,
+  'prisma/migrations/20260539000000_fam_07e5j_consent_scaffold_runtime_grants/migration.sql',
+);
 const TENANT_ROUTE_PATH = path.join(SERVER_ROOT, 'src/routes/tenant.ts');
 
 function extractModelBlock(schema: string, modelName: string): string {
@@ -93,6 +97,27 @@ describe('FAM-07E1 — migration scaffold exists and is contract-aligned', () =>
 
   it('keeps legal-pending posture available by default', () => {
     expect(sql).toContain("DEFAULT 'LEGAL_PENDING'");
+  });
+});
+
+describe('FAM-07E5J — runtime grant remediation exists and is minimal', () => {
+  let remediationSql: string;
+
+  beforeAll(() => {
+    expect(fs.existsSync(REMEDIATION_MIGRATION_PATH)).toBe(true);
+    remediationSql = fs.readFileSync(REMEDIATION_MIGRATION_PATH, 'utf-8');
+  });
+
+  it('grants required table privileges to texqtic_app for scaffold writes and reads', () => {
+    expect(remediationSql).toMatch(/GRANT\s+SELECT,\s*INSERT,\s*UPDATE\s+ON\s+public\.legal_consent_snapshots\s+TO\s+texqtic_app;/i);
+    expect(remediationSql).toMatch(/GRANT\s+SELECT,\s*INSERT\s+ON\s+public\.legal_consent_events\s+TO\s+texqtic_app;/i);
+  });
+
+  it('does not introduce schema or legal-final behavior changes', () => {
+    expect(remediationSql).not.toContain('CREATE TABLE');
+    expect(remediationSql).not.toContain('ALTER TABLE public.legal_consent_snapshots');
+    expect(remediationSql).not.toContain('ALTER TABLE public.legal_consent_events');
+    expect(remediationSql).not.toContain('LEGAL_APPROVED_FINALIZATION');
   });
 });
 
