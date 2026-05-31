@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-30 (LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001 COMPLETE. Legal approval remains a launch/legal-closure gate, not a development-stop gate. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED. FAM-07 remains PARTIALLY_IMPLEMENTED because FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-31 (FAM-07E5P-CONSENT-SCAFFOLD-RUNTIME-PROOF-HUB-SYNC-001 COMPLETE. E5O runtime proof confirms LEGAL_PENDING consent scaffold persistence path in production-safe evidence. FAM-07 remains PARTIALLY_IMPLEMENTED. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,36 +15,39 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001
+active_delivery_unit: FAM-07E5P-CONSENT-SCAFFOLD-RUNTIME-PROOF-HUB-SYNC-001
 active_delivery_unit_status: VERIFIED_COMPLETE
 active_delivery_unit_note: >
-  Legal-gated development continuation posture installed from
-  LEGAL-GATED-DEVELOPMENT-CONTINUATION-MODEL-001 (`47043ff9`) and synchronized to Layer 0.
-  Development may continue under LEGAL_PENDING controls; legal approval gates launch/legal closure.
+  Governance sync consumed E5O runtime proof and recorded that consent scaffold persistence
+  succeeds in LEGAL_PENDING posture in live runtime evidence (whoami 200, helper 201,
+  safe handoff 200, tenant detail 200 with scaffold observability records).
   FTR-LEGAL-003 remains MVP_CRITICAL/OPEN and FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit: LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001
-last_closed_unit_status: VERIFIED_COMPLETE (2026-05-30)
+last_closed_unit: FAM-07E5P-CONSENT-SCAFFOLD-RUNTIME-PROOF-HUB-SYNC-001
+last_closed_unit_status: VERIFIED_COMPLETE (2026-05-31)
 last_closed_unit_runtime_verdict: >
-  Governance sync confirms launch-readiness operating model: LEGAL-GATED LAUNCH.
-  Development is allowed to continue across legal-sensitive families where final legal package
-  is pending, provided LEGAL_PENDING and LAUNCH_GATED controls are explicit.
+  E5O runtime proof is confirmed for consent scaffold LEGAL_PENDING path only.
+  Proven: activationCompleted true, legalStatus LEGAL_PENDING, consentSnapshot.present true,
+  consentEvent.present true, and tenant-detail observability has_records true with
+  ACCEPTED_PENDING event.
+  Not proven: LEGAL_APPROVED/legal-final authority or FTR-LEGAL-003 closure.
   FTR-LEGAL-003 remains OPEN, HD-001 remains RUNTIME_CONFIRMED_CONFIGURED,
   and FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit_commits: "[TEXQTIC] governance: sync legal-gated development model"
+last_closed_unit_commits: "docs(governance): sync FAM-07E5 runtime proof"
 last_closed_unit_closure_basis: >
-  Control-plane pointer and launch-readiness hub language synchronized to legal-gated development
-  continuation posture. This removes stale interpretation that legal pending implies development-stop,
-  while preserving unchanged closure truth: FTR-LEGAL-003 remains MVP_CRITICAL/OPEN and
+  Layer 0 pointer and launch-readiness hub synchronized with bounded runtime-proof chain E5O->E5P.
+  Consent scaffold runtime persistence is confirmed in LEGAL_PENDING posture without advancing
+  legal-final authority. Closure truth preserved: FTR-LEGAL-003 remains MVP_CRITICAL/OPEN and
   FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit_prior: FAM-07H-SMTP-SAFE-VERIFICATION-TRIGGER-RUNTIME-003-AUTHENTICATED
+last_closed_unit_prior: LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-05-30)
-next_candidate_unit: FAM-07E-LEGAL-GATED-CONSENT-SCAFFOLD-DESIGN-001
+next_candidate_unit: FAM-07K-CONTROL-PLANE-PROVISION-FORM-DYNAMICITY-AUDIT-001
 next_candidate_unit_status: HOLD_FOR_AUTHORIZATION
-next_candidate_unit_date_installed: "2026-05-30"
+next_candidate_unit_date_installed: "2026-05-31"
 next_candidate_unit_note: >
-  Legal-gated continuation model is now synchronized. Next unit should design legal-agnostic
-  consent scaffolding for FAM-07 so development can continue while final legal package remains
-  pending. Launch/legal closure remains gated by FTR-LEGAL-003 finalization and verification.
+  E5 runtime-proof hub sync is complete. Next recommended bounded unit remains separate from
+  consent scaffold closure scope: FAM-07K provision form dynamicity/dropdown visibility audit.
+  No automatic merge with E5P. Legal-final closure remains gated by FTR-LEGAL-003 final legal
+  package authority (text/version/hash/source/actor/re-consent policy) and verification.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001

@@ -53,6 +53,19 @@
 
 ## Operating Notes
 
+- FAM-07E5P-CONSENT-SCAFFOLD-RUNTIME-PROOF-HUB-SYNC-001 VERIFIED_COMPLETE (2026-05-31).
+  Governance sync consumed E5O runtime proof and recorded bounded legal-gated truth for
+  FAM-07 consent scaffold path: whoami 200 (super-admin true), helper 201 (runtimePathReady true),
+  safe handoff 200 (activationCompleted true, legalStatus LEGAL_PENDING, consentSnapshot.present true,
+  consentEvent.present true), tenant-detail 200 (consent observability has_records true,
+  latest legal status LEGAL_PENDING, recent event ACCEPTED_PENDING).
+  No legal-final state was created and no legal-final authority was inferred.
+  FAM-07 remains NOT VERIFIED_COMPLETE. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.
+  Next recommended unit: FAM-07K-CONTROL-PLANE-PROVISION-FORM-DYNAMICITY-AUDIT-001 (separate lane,
+  no auto-merge into E5P).
+  Artifact: artifacts/control-plane/FAM-07E5P-CONSENT-SCAFFOLD-RUNTIME-PROOF-HUB-SYNC-001.md.
+
 - LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001 VERIFIED_COMPLETE (2026-05-30).
   Governance posture synchronized to LEGAL-GATED development continuation model from
   `LEGAL-GATED-DEVELOPMENT-CONTINUATION-MODEL-001` (commit `47043ff9`).
