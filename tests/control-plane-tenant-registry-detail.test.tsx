@@ -207,8 +207,13 @@ describe('FAM-07K1 — Provision New Tenant modal dynamicity', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Provision New Tenant' }));
 
     expect(screen.getByRole('heading', { name: 'Provision New Tenant' })).toBeInTheDocument();
+    expect(screen.getByTestId('provision-modal-panel')).toHaveClass('max-h-[90vh]');
+    expect(screen.getByTestId('provision-modal-scroll-area')).toHaveClass('overflow-y-auto');
     expect(screen.getByTestId('provision-category-selected-value')).toHaveTextContent('Selected: B2B');
     expect(screen.getByTestId('provision-plan-selected-value')).toHaveTextContent('Selected: No plan selected');
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Provision Tenant' })).toBeInTheDocument();
+    expect(screen.getByText('Canonical Provisioning Preview')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Commercial Plan *'), {
       target: { value: 'PROFESSIONAL' },
