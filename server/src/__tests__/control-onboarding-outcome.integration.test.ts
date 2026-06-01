@@ -766,4 +766,86 @@ describe('control tenant read routes', () => {
       ],
     });
   });
+
+  it('FAM-07L11: coexistence — consent records present AND authority absent simultaneously', async () => {
+    // Diagonal scenario: has_records=true (consent records exist) but
+    // authority_record.present=false (authority file still absent).
+    // Proves the two concerns are independent and both surface correctly in
+    // the same response — the authority gate is not bypassed by record presence.
+    FAKE_TX.tenant.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      slug: 'coexistence-tenant',
+      name: 'Coexistence Tenant',
+      type: 'B2B',
+      status: 'ACTIVE',
+      plan: 'PROFESSIONAL',
+      isWhiteLabel: false,
+      createdAt: '2026-06-01T00:00:00.000Z',
+      updatedAt: '2026-06-01T00:00:00.000Z',
+      domains: [],
+      branding: null,
+      aiBudget: null,
+      memberships: [],
+    });
+    FAKE_TX.organizations.findMany.mockResolvedValueOnce([
+      { id: TEST_TENANT_ID, status: 'ACTIVE' },
+    ]);
+    FAKE_TX.organizations.findMany.mockResolvedValueOnce([
+      {
+        id: TEST_TENANT_ID,
+        slug: 'coexistence-tenant',
+        legal_name: 'Coexistence Tenant',
+        status: 'ACTIVE',
+        org_type: 'B2B',
+        primary_segment_key: null,
+        is_white_label: false,
+        jurisdiction: 'AE',
+        registration_no: null,
+        risk_score: 0,
+        plan: 'PROFESSIONAL',
+        secondary_segments: [],
+        role_positions: [],
+        created_at: new Date('2026-06-01T00:00:00.000Z'),
+        updated_at: new Date('2026-06-01T00:00:00.000Z'),
+      },
+    ]);
+    // Consent records ARE present (has_records must be true)
+    FAKE_TX.legalConsentSnapshot.findMany.mockResolvedValue([
+      {
+        id: 'coexistence-snapshot-1',
+        actorUserId: '44444444-4444-4444-4444-444444444444',
+        agreementType: 'TERMS_OF_USE',
+        agreementVersion: 'scaffold-v1',
+        legalStatus: 'LEGAL_PENDING',
+        sourceFlow: 'ACTIVATE_NEW_USER',
+        acceptedAt: null,
+        reviewedAt: null,
+        updatedAt: '2026-06-01T08:00:00.000Z',
+      },
+    ]);
+    FAKE_TX.legalConsentEvent.findMany.mockResolvedValue([]);
+
+    const response = await server.inject({
+      method: 'GET',
+      url: `/api/control/tenants/${TEST_TENANT_ID}`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    const observability = response.json().data.tenant.consent_scaffold_observability;
+
+    // Consent records are present
+    expect(observability.has_records).toBe(true);
+    expect(observability.has_legal_approved_record).toBe(false);
+    expect(observability.latest_snapshot).not.toBeNull();
+    expect(observability.latest_snapshot.id).toBe('coexistence-snapshot-1');
+
+    // Authority file is absent — the two concerns are independent
+    expect(observability.authority_record.present).toBe(false);
+    expect(observability.authority_record.legal_approved_transition_allowed).toBe(false);
+    expect(observability.authority_record.blocking_reason_code).toBe('AUTHORITY_FILE_ABSENT');
+
+    // authority_record must be nested under consent_scaffold_observability,
+    // not a top-level sibling on the tenant response
+    expect(response.json().data.tenant).not.toHaveProperty('authority_record');
+  });
 });
