@@ -58,6 +58,91 @@
             "type": "string",
             "enum": ["FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"],
             "description": "Canonical commercial plan identity metadata. This field does not by itself imply full entitlement completeness."
+          },
+          "consent_scaffold_observability": {
+            "type": "object",
+            "nullable": true,
+            "description": "Legal consent scaffold diagnostic surface. Present only on detail endpoint (GET /api/control/tenants/{id}). Absent on list endpoint. Contains legal authority diagnostic for the supplier onboarding terms package.",
+            "properties": {
+              "has_records": {
+                "type": "boolean",
+                "description": "True when at least one consent snapshot or consent event record exists for this tenant."
+              },
+              "has_legal_approved_record": {
+                "type": "boolean",
+                "description": "True when at least one consent record exists with legal_approved_transition_allowed=true."
+              },
+              "latest_snapshot": {
+                "type": "object",
+                "nullable": true,
+                "description": "Most recent consent snapshot record, or null if none exists."
+              },
+              "recent_events": {
+                "type": "array",
+                "items": { "type": "object" },
+                "description": "Recent consent event records (newest-first). Empty array when no events exist."
+              },
+              "authority_record": {
+                "type": "object",
+                "nullable": false,
+                "description": "Legal authority diagnostic. present=false with blocking_reason_code=AUTHORITY_FILE_ABSENT while governance/legal/fam-07/supplier-onboarding-terms-authority.json is absent. legal_approved_transition_allowed=false blocks consent scaffold activation.",
+                "properties": {
+                  "present": {
+                    "type": "boolean",
+                    "description": "True when the authority file exists and is parseable."
+                  },
+                  "status": {
+                    "type": "string",
+                    "nullable": true,
+                    "enum": [
+                      "DRAFT",
+                      "APPROVED_FOR_RUNTIME",
+                      "SUPERSEDED",
+                      "REVOKED",
+                      null
+                    ],
+                    "description": "Authority file status field. Null when authority file is absent or unparseable."
+                  },
+                  "package_version": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Semantic version of the legal package. Null when authority file is absent."
+                  },
+                  "source_url": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Canonical URL of the authority document source. Null when authority file is absent."
+                  },
+                  "env_match": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "True when CONSENT_SCAFFOLD_EXPECTED_ENV matches RUNTIME_ENV. Null when authority file is absent."
+                  },
+                  "legal_approved_transition_allowed": {
+                    "type": "boolean",
+                    "description": "True only when authority file is present, status=APPROVED_FOR_RUNTIME, and env_match=true. False in all other cases including AUTHORITY_FILE_ABSENT."
+                  },
+                  "blocking_reason_code": {
+                    "type": "string",
+                    "nullable": true,
+                    "enum": [
+                      "AUTHORITY_FILE_ABSENT",
+                      "AUTHORITY_FILE_PARSE_ERROR",
+                      "AUTHORITY_FIELD_MISSING",
+                      "AUTHORITY_FIELD_INVALID",
+                      "AUTHORITY_FIELD_LENGTH_EXCEEDED",
+                      "AUTHORITY_STATUS_DRAFT",
+                      "AUTHORITY_STATUS_SUPERSEDED",
+                      "AUTHORITY_STATUS_REVOKED",
+                      "AUTHORITY_ENV_MISMATCH",
+                      null
+                    ],
+                    "description": "Machine-readable reason code explaining why legal_approved_transition_allowed=false. Null when no blocking condition applies (i.e. transition is allowed)."
+                  }
+                },
+                "required": ["present", "legal_approved_transition_allowed"]
+              }
+            }
           }
         }
       },
