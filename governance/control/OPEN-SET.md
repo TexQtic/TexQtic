@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-01 (FAM-07L13B-LEGAL-AUTHORITY-TRACKER-STALENESS-SYNC-001 COMPLETE. L-lane L11–L13 completion synchronized. L11: coexistence test (180387ce). L12: legal authority input checklist (43dc42d2). L13: human-facing handoff packet (4246fe08). Legal inputs pending. FAM-07 remains PARTIALLY_IMPLEMENTED. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
+**Last Updated:** 2026-06-01 (FAM-07L13C-LEGAL-AUTHORITY-HUMAN-HOLD-TRACKER-SYNC-001 COMPLETE. L13A hold recorded (33fd8bf7). Hold state: HOLD_FOR_HUMAN_LEGAL_INPUTS. FAM-07 remains PARTIALLY_IMPLEMENTED. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,19 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- FAM-07L13C-LEGAL-AUTHORITY-HUMAN-HOLD-TRACKER-SYNC-001 COMPLETE (2026-06-01).
+  Governance tracker sync records the FAM-07 human-review hold state established by L13A
+  (33fd8bf7). Hold state: HOLD_FOR_HUMAN_LEGAL_INPUTS.
+  L13A created the 16-section hold artifact documenting three-party responsibility matrix:
+  legal counsel (§7, §10), Paresh/founder (§8, §11, §12), technical/operator (§9, §10 coordination).
+  Hold exit criteria (8 conditions) and L14 gate conditions defined. 23 blocked actions enumerated.
+  Legal gate unchanged: authority file absent, present=false, AUTHORITY_FILE_ABSENT,
+  legal_approved_transition_allowed=false. No runtime mutation. No legal authority created.
+  FAM-07 remains NOT VERIFIED_COMPLETE. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.
+  FAM-07L14 remains blocked until L13A §12 exit criteria satisfied and Paresh Authorization 2 issued.
+  Artifact: artifacts/control-plane/FAM-07L13C-LEGAL-AUTHORITY-HUMAN-HOLD-TRACKER-SYNC-001.md.
 
 - FAM-07L13B-LEGAL-AUTHORITY-TRACKER-STALENESS-SYNC-001 COMPLETE (2026-06-01).
   Governance tracker sync advanced all three Layer 0 governance pointer files from L10-stale

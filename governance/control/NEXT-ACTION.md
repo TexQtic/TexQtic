@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-01 (FAM-07L13B-LEGAL-AUTHORITY-TRACKER-STALENESS-SYNC-001 COMPLETE. L-lane L11–L13 completion synchronized. L11: coexistence test (180387ce). L12: legal authority input checklist (43dc42d2). L13: human-facing legal authority handoff packet (4246fe08). Legal inputs still pending. FAM-07 remains PARTIALLY_IMPLEMENTED. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-01 (FAM-07L13C-LEGAL-AUTHORITY-HUMAN-HOLD-TRACKER-SYNC-001 COMPLETE. L13A hold recorded (33fd8bf7). Hold state: HOLD_FOR_HUMAN_LEGAL_INPUTS. FAM-07 remains PARTIALLY_IMPLEMENTED. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,45 +15,48 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-07L13B-LEGAL-AUTHORITY-TRACKER-STALENESS-SYNC-001
+active_delivery_unit: FAM-07L13C-LEGAL-AUTHORITY-HUMAN-HOLD-TRACKER-SYNC-001
 active_delivery_unit_status: VERIFIED_COMPLETE
 active_delivery_unit_note: >
-  L13B governance tracker sync advanced all three Layer 0 governance pointer files
-  from L10-stale posture (still pointing to L11 as next candidate) to reflect L-lane
-  L11–L13 completion and pending-inputs hold posture. L11 (180387ce): DB-free coexistence
-  test for has_records=true + AUTHORITY_FILE_ABSENT. L12 (43dc42d2): technical legal authority
-  input checklist artifact. L13 (4246fe08): human-facing legal authority pending-inputs
-  handoff packet. No runtime mutation. No legal authority created.
-  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN and FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit: FAM-07L13-LEGAL-AUTHORITY-PENDING-INPUTS-HANDOFF-PACKET-001
+  L13C governance tracker sync records the FAM-07 human-review hold state established
+  by L13A (33fd8bf7). L13A created the hold artifact formally recording
+  HOLD_FOR_HUMAN_LEGAL_INPUTS posture while legal counsel, Paresh, and technical parties
+  complete the L13 packet inputs. No runtime mutation. No legal authority created.
+  No legal-final state advanced. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  FAM-07 remains not VERIFIED_COMPLETE.
+last_closed_unit: FAM-07L13A-LEGAL-AUTHORITY-PENDING-INPUTS-HUMAN-REVIEW-HOLD-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-06-01)
 last_closed_unit_runtime_verdict: >
-  L13 human-facing handoff packet created: 18-section fillable collection template extracting
-  the L12 technical checklist into counsel and founder collection forms. Legal gate unchanged:
-  authority file absent, present=false, blocking_reason_code=AUTHORITY_FILE_ABSENT,
-  legal_approved_transition_allowed=false. No runtime mutation performed. No legal authority
-  created. No legal-final state advanced. FTR-LEGAL-003 remains OPEN.
-  HD-001 remains RUNTIME_CONFIRMED_CONFIGURED. FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit_commits: "docs(fam-07): create legal authority input handoff packet"
+  L13A human-review hold artifact created (33fd8bf7): 16-section hold document formally
+  recording HOLD_FOR_HUMAN_LEGAL_INPUTS posture. Three-party responsibility matrix
+  documented: legal counsel (§7, §10), Paresh/founder (§8, §11, §12), technical/operator
+  (§9, §10 coordination). Hold exit criteria (8 conditions) and L14 gate conditions
+  defined. 23 explicitly blocked actions enumerated. Legal gate unchanged: authority file
+  absent, present=false, blocking_reason_code=AUTHORITY_FILE_ABSENT,
+  legal_approved_transition_allowed=false. No runtime mutation. No legal authority created.
+  FTR-LEGAL-003 remains OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.
+  FAM-07 remains not VERIFIED_COMPLETE.
+last_closed_unit_commits: "docs(fam-07): record legal authority human review hold"
 last_closed_unit_closure_basis: >
-  Human-facing legal authority pending-inputs handoff packet created covering legal counsel
-  input form (§7), founder authorization form (§8), technical metadata confirmation (§9),
-  source/version/hash evidence form (§10), re-consent policy form (§11), runtime alignment
-  form (§12), and completion checklist gating FAM-07L14 (§13). No legal authority created.
+  Human-review hold artifact created recording HOLD_FOR_HUMAN_LEGAL_INPUTS posture.
+  Pending inputs: legal counsel §7 (document identity, approval identity, consent copy)
+  and §10 (hash/version/source); Paresh §8 (Auth 1/2/3), §11 (re-consent policy),
+  §12 (runtime/env alignment). No legal authority created.
   FTR-LEGAL-003 remains MVP_CRITICAL/OPEN and FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit_prior: FAM-07L12-LEGAL-AUTHORITY-INPUT-CHECKLIST-ARTIFACT-001
+last_closed_unit_prior: FAM-07L13B-LEGAL-AUTHORITY-TRACKER-STALENESS-SYNC-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-01)
-next_candidate_unit: FAM-07L13A-LEGAL-AUTHORITY-PENDING-INPUTS-HUMAN-REVIEW-HOLD-001
-next_candidate_unit_status: READY_AFTER_L13B
+next_candidate_unit: HOLD_FOR_HUMAN_LEGAL_INPUTS
+next_candidate_unit_status: HOLD_ACTIVE
 next_candidate_unit_date_installed: "2026-06-01"
 next_candidate_unit_note: >
-  L13B tracker sync is complete. L-lane L11–L13 completion is now synchronized.
-  The L13 human-facing handoff packet (4246fe08) must be completed by Paresh and/or
-  external legal counsel before FAM-07L14 may open. Next recommended bounded unit:
-  FAM-07L13A — human-review / pending-inputs hold unit to record the hold state
-  while legal and founder inputs are being collected. FAM-07L14 must NOT open until
-  the L13 packet §13 completion checklist is confirmed and Paresh issues
-  Authorization 2 (§8.1 of the L13 packet). No legal authority creation authorized.
+  L13A human-review hold is recorded and active (33fd8bf7). Current FAM-07 posture:
+  HOLD_FOR_HUMAN_LEGAL_INPUTS. The L13 packet remains the active human-facing collection
+  vehicle. FAM-07L14 is blocked until all of the following: (1) L13 packet §7 (legal
+  counsel form) complete; (2) Paresh Authorization 2 (§8.1) explicitly issued in writing;
+  (3) L13 packet §10 (source/version/hash evidence) complete; (4) L13 packet §11 (re-consent
+  policy) complete; (5) L13 packet §12 (runtime/env alignment) complete; (6) no stale
+  tracker contradiction exists. No legal authority creation authorized.
+  No L14 opening authorized.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001
