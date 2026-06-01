@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-31 (FAM-07K14-CONTROL-PLANE-PROVISION-FORM-LANE-MINIMAL-HUB-SYNC-001 COMPLETE. K-lane evidence chain synchronized through K13. FAM-07 remains PARTIALLY_IMPLEMENTED because FTR-LEGAL-003 is still MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
+**Last Updated:** 2026-06-01 (FAM-07L10-LEGAL-AUTHORITY-LANE-GOVERNANCE-TRACKER-SYNC-001 COMPLETE. L-lane legal authority technical foundation chain (L1–L8) synchronized. L9 next-action selection complete. FAM-07 remains PARTIALLY_IMPLEMENTED because FTR-LEGAL-003 is still MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,22 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- FAM-07L10-LEGAL-AUTHORITY-LANE-GOVERNANCE-TRACKER-SYNC-001 VERIFIED_COMPLETE (2026-06-01).
+  Governance tracker sync corrected 8-unit stale pointer posture across all three Layer 0
+  governance files (NEXT-ACTION.md, OPEN-SET.md, LAUNCH-FAMILY-INDEX.md) that still pointed to
+  K14/L1 as active/next after L1–L8 completion. L-lane legal authority technical foundation
+  chain: L1 (f163bacb) legal-gate design, L2 (6e819d75) authority model, L3 (be0e23d1)
+  creation correctly blocked, L4 (6172bfc3) technical foundation design, L5 (9cb27c64)
+  legalPackageAuthority.ts loader + 18 tests, L6 (ec501e02) nested authority_record shape,
+  L7 (8f911e8e) runtime verification of absent-authority diagnostic, L8 (b4e4213c) OpenAPI
+  contract sync. L9 (3e066447) selected L10 tracker sync after confirming tracker staleness.
+  No runtime mutation. No legal authority created. No legal-final state advanced.
+  Legal gate unchanged: authority file absent, present=false, AUTHORITY_FILE_ABSENT.
+  FAM-07 remains NOT VERIFIED_COMPLETE. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.
+  Next recommended unit: FAM-07L11-CONSENT-RECORDS-ABSENT-AUTHORITY-COEXISTENCE-TEST-001.
+  Artifact: artifacts/control-plane/FAM-07L10-LEGAL-AUTHORITY-LANE-GOVERNANCE-TRACKER-SYNC-001.md.
 
 - FAM-07K14-CONTROL-PLANE-PROVISION-FORM-LANE-MINIMAL-HUB-SYNC-001 VERIFIED_COMPLETE (2026-05-31).
   Minimal governance pointer sync consumed K-lane stabilization chain through K13:

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-31 (FAM-07K14-CONTROL-PLANE-PROVISION-FORM-LANE-MINIMAL-HUB-SYNC-001 COMPLETE. K-lane evidence chain is synchronized through K13. FAM-07 remains PARTIALLY_IMPLEMENTED/TEST_CONFIRMED. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-01 (FAM-07L10-LEGAL-AUTHORITY-LANE-GOVERNANCE-TRACKER-SYNC-001 COMPLETE. L-lane legal authority technical foundation chain (L1–L8) synchronized. L9 next-action selection complete. FAM-07 remains PARTIALLY_IMPLEMENTED/TEST_CONFIRMED. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,39 +15,40 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-07K14-CONTROL-PLANE-PROVISION-FORM-LANE-MINIMAL-HUB-SYNC-001
+active_delivery_unit: FAM-07L10-LEGAL-AUTHORITY-LANE-GOVERNANCE-TRACKER-SYNC-001
 active_delivery_unit_status: VERIFIED_COMPLETE
 active_delivery_unit_note: >
-  Minimal hub sync consumed stabilized FAM-07 K-lane evidence through K13:
-  K8 frontend hardening/test confirmation, K9 stale-tab runtime failure evidence,
-  K10 stale-bundle parity diagnosis, K11 fresh-runtime verification, K12 evidence-chain sync,
-  and K13 next-action selection.
+  L10 governance tracker sync advanced all three Layer 0 governance pointer files
+  from K14/L1-stale posture to reflect L-lane (L1–L8) legal authority technical foundation
+  completion and L9 next-action selection. No runtime mutation. No legal authority created.
   FTR-LEGAL-003 remains MVP_CRITICAL/OPEN and FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit: FAM-07K14-CONTROL-PLANE-PROVISION-FORM-LANE-MINIMAL-HUB-SYNC-001
-last_closed_unit_status: VERIFIED_COMPLETE (2026-05-31)
+last_closed_unit: FAM-07L9-SAFE-NONLEGAL-FAM07-NEXT-ACTION-SELECTION-001
+last_closed_unit_status: VERIFIED_COMPLETE (2026-06-01)
 last_closed_unit_runtime_verdict: >
-  K-lane runtime interpretation is synchronized and bounded:
-  K9 stale active-tab failure evidence is retained as stale-bundle context,
-  not current-source failure evidence after K10 diagnosis and K11 fresh-runtime pass.
-  Not proven: LEGAL_APPROVED/legal-final authority or FTR-LEGAL-003 closure.
+  L9 planning and selection unit confirmed: L8 artifact present, nested authority_record
+  shape confirmed in control-plane OpenAPI contract, tenant contract clean, authority file absent,
+  legal gate blocked at AUTHORITY_FILE_ABSENT. No runtime mutation performed.
+  L1–L8 legal authority technical foundation chain complete. Tracker staleness (8 units,
+  K14/L1-stale) identified and L10 tracker sync selected as next unit.
   FTR-LEGAL-003 remains OPEN, HD-001 remains RUNTIME_CONFIRMED_CONFIGURED,
   and FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit_commits: "docs(governance): sync FAM-07 provision lane evidence"
+last_closed_unit_commits: "docs(fam-07): select safe nonlegal next action"
 last_closed_unit_closure_basis: >
-  Layer 0 pointer and launch-readiness hub synchronized with bounded K-lane chain K8->K13.
-  Control-plane provision/archive member-summary seam is stabilized and reflected in hub pointers
-  without advancing legal-final authority. Closure truth preserved: FTR-LEGAL-003 remains
-  MVP_CRITICAL/OPEN and FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit_prior: LAUNCH-LEGAL-GATED-DEVELOPMENT-GOVERNANCE-SYNC-001
-last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-05-30)
-next_candidate_unit: FAM-07L1-CONTROL-PLANE-LEGAL-GATE-NEXT-ACTION-DESIGN-001
-next_candidate_unit_status: HOLD_FOR_AUTHORIZATION
-next_candidate_unit_date_installed: "2026-05-31"
+  Safe nonlegal next action selected after confirming L1–L8 technical foundation chain complete.
+  Governance tracker staleness (8 units / K14/L1-stale posture) identified as highest-priority
+  safe non-legal work item. L10 tracker sync selected. No legal authority created.
+  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN and FAM-07 remains not VERIFIED_COMPLETE.
+last_closed_unit_prior: FAM-07L8-CONTROL-PLANE-LEGAL-AUTHORITY-OPENAPI-CONTRACT-SYNC-001
+last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-01)
+next_candidate_unit: FAM-07L11-CONSENT-RECORDS-ABSENT-AUTHORITY-COEXISTENCE-TEST-001
+next_candidate_unit_status: READY_AFTER_L10
+next_candidate_unit_date_installed: "2026-06-01"
 next_candidate_unit_note: >
-  K-lane evidence synchronization through K13 is complete. Next recommended bounded unit shifts
-  to legal-gate lane design: FAM-07L1-CONTROL-PLANE-LEGAL-GATE-NEXT-ACTION-DESIGN-001.
-  No automatic merge with prior lanes. Legal-final closure remains gated by FTR-LEGAL-003 final
-  legal package authority (text/version/hash/source/actor/re-consent policy) and verification.
+  L10 tracker sync is complete. L1–L8 legal authority technical foundation chain is confirmed.
+  Next recommended bounded unit: FAM-07L11 — integration test coverage for the
+  has_records=true + authority_record.present=false + AUTHORITY_FILE_ABSENT coexistence scenario.
+  Tests only; no runtime mutation, no legal authority creation. Legal-final closure remains
+  gated by FTR-LEGAL-003 final legal package authority and verification.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001
