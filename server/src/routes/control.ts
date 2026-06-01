@@ -564,12 +564,9 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         has_legal_approved_record: hasLegalApprovedRecord,
         latest_snapshot: latestConsentSnapshot,
         recent_events: consentEvents,
+        // authority_record nested here per L4 canonical design (FAM-07L6 alignment).
+        authority_record: authorityRecordDiagnostic,
       },
-      // authority_record is a sibling field (not nested inside consent_scaffold_observability)
-      // to preserve existing integration test assertions on consent_scaffold_observability.
-      // Future: move inside consent_scaffold_observability when
-      // control-onboarding-outcome.integration.test.ts is updated (FAM-07L6 pre-work).
-      authority_record: authorityRecordDiagnostic,
     });
 
     await writeAuditLog(prisma, createAdminAudit(adminId, 'control.tenants.read_one', 'tenant', { tenantId: id }));

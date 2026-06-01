@@ -628,6 +628,15 @@ describe('control tenant read routes', () => {
           has_legal_approved_record: false,
           latest_snapshot: null,
           recent_events: [],
+          authority_record: {
+            present: false,
+            status: null,
+            package_version: null,
+            source_url: null,
+            env_match: null,
+            legal_approved_transition_allowed: false,
+            blocking_reason_code: 'AUTHORITY_FILE_ABSENT',
+          },
         },
       }),
     );
@@ -721,6 +730,15 @@ describe('control tenant read routes', () => {
     expect(response.json().data.tenant.consent_scaffold_observability).toEqual({
       has_records: true,
       has_legal_approved_record: false,
+      authority_record: {
+        present: false,
+        status: null,
+        package_version: null,
+        source_url: null,
+        env_match: null,
+        legal_approved_transition_allowed: false,
+        blocking_reason_code: 'AUTHORITY_FILE_ABSENT',
+      },
       latest_snapshot: {
         id: 'snapshot-1',
         actorUserId: '33333333-3333-3333-3333-333333333333',
