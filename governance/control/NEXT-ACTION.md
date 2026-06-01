@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-01 (FAM-07L10-LEGAL-AUTHORITY-LANE-GOVERNANCE-TRACKER-SYNC-001 COMPLETE. L-lane legal authority technical foundation chain (L1–L8) synchronized. L9 next-action selection complete. FAM-07 remains PARTIALLY_IMPLEMENTED/TEST_CONFIRMED. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-01 (FAM-07L13B-LEGAL-AUTHORITY-TRACKER-STALENESS-SYNC-001 COMPLETE. L-lane L11–L13 completion synchronized. L11: coexistence test (180387ce). L12: legal authority input checklist (43dc42d2). L13: human-facing legal authority handoff packet (4246fe08). Legal inputs still pending. FAM-07 remains PARTIALLY_IMPLEMENTED. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,40 +15,45 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-07L10-LEGAL-AUTHORITY-LANE-GOVERNANCE-TRACKER-SYNC-001
+active_delivery_unit: FAM-07L13B-LEGAL-AUTHORITY-TRACKER-STALENESS-SYNC-001
 active_delivery_unit_status: VERIFIED_COMPLETE
 active_delivery_unit_note: >
-  L10 governance tracker sync advanced all three Layer 0 governance pointer files
-  from K14/L1-stale posture to reflect L-lane (L1–L8) legal authority technical foundation
-  completion and L9 next-action selection. No runtime mutation. No legal authority created.
+  L13B governance tracker sync advanced all three Layer 0 governance pointer files
+  from L10-stale posture (still pointing to L11 as next candidate) to reflect L-lane
+  L11–L13 completion and pending-inputs hold posture. L11 (180387ce): DB-free coexistence
+  test for has_records=true + AUTHORITY_FILE_ABSENT. L12 (43dc42d2): technical legal authority
+  input checklist artifact. L13 (4246fe08): human-facing legal authority pending-inputs
+  handoff packet. No runtime mutation. No legal authority created.
   FTR-LEGAL-003 remains MVP_CRITICAL/OPEN and FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit: FAM-07L9-SAFE-NONLEGAL-FAM07-NEXT-ACTION-SELECTION-001
+last_closed_unit: FAM-07L13-LEGAL-AUTHORITY-PENDING-INPUTS-HANDOFF-PACKET-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-06-01)
 last_closed_unit_runtime_verdict: >
-  L9 planning and selection unit confirmed: L8 artifact present, nested authority_record
-  shape confirmed in control-plane OpenAPI contract, tenant contract clean, authority file absent,
-  legal gate blocked at AUTHORITY_FILE_ABSENT. No runtime mutation performed.
-  L1–L8 legal authority technical foundation chain complete. Tracker staleness (8 units,
-  K14/L1-stale) identified and L10 tracker sync selected as next unit.
-  FTR-LEGAL-003 remains OPEN, HD-001 remains RUNTIME_CONFIRMED_CONFIGURED,
-  and FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit_commits: "docs(fam-07): select safe nonlegal next action"
+  L13 human-facing handoff packet created: 18-section fillable collection template extracting
+  the L12 technical checklist into counsel and founder collection forms. Legal gate unchanged:
+  authority file absent, present=false, blocking_reason_code=AUTHORITY_FILE_ABSENT,
+  legal_approved_transition_allowed=false. No runtime mutation performed. No legal authority
+  created. No legal-final state advanced. FTR-LEGAL-003 remains OPEN.
+  HD-001 remains RUNTIME_CONFIRMED_CONFIGURED. FAM-07 remains not VERIFIED_COMPLETE.
+last_closed_unit_commits: "docs(fam-07): create legal authority input handoff packet"
 last_closed_unit_closure_basis: >
-  Safe nonlegal next action selected after confirming L1–L8 technical foundation chain complete.
-  Governance tracker staleness (8 units / K14/L1-stale posture) identified as highest-priority
-  safe non-legal work item. L10 tracker sync selected. No legal authority created.
+  Human-facing legal authority pending-inputs handoff packet created covering legal counsel
+  input form (§7), founder authorization form (§8), technical metadata confirmation (§9),
+  source/version/hash evidence form (§10), re-consent policy form (§11), runtime alignment
+  form (§12), and completion checklist gating FAM-07L14 (§13). No legal authority created.
   FTR-LEGAL-003 remains MVP_CRITICAL/OPEN and FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit_prior: FAM-07L8-CONTROL-PLANE-LEGAL-AUTHORITY-OPENAPI-CONTRACT-SYNC-001
+last_closed_unit_prior: FAM-07L12-LEGAL-AUTHORITY-INPUT-CHECKLIST-ARTIFACT-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-01)
-next_candidate_unit: FAM-07L11-CONSENT-RECORDS-ABSENT-AUTHORITY-COEXISTENCE-TEST-001
-next_candidate_unit_status: READY_AFTER_L10
+next_candidate_unit: FAM-07L13A-LEGAL-AUTHORITY-PENDING-INPUTS-HUMAN-REVIEW-HOLD-001
+next_candidate_unit_status: READY_AFTER_L13B
 next_candidate_unit_date_installed: "2026-06-01"
 next_candidate_unit_note: >
-  L10 tracker sync is complete. L1–L8 legal authority technical foundation chain is confirmed.
-  Next recommended bounded unit: FAM-07L11 — integration test coverage for the
-  has_records=true + authority_record.present=false + AUTHORITY_FILE_ABSENT coexistence scenario.
-  Tests only; no runtime mutation, no legal authority creation. Legal-final closure remains
-  gated by FTR-LEGAL-003 final legal package authority and verification.
+  L13B tracker sync is complete. L-lane L11–L13 completion is now synchronized.
+  The L13 human-facing handoff packet (4246fe08) must be completed by Paresh and/or
+  external legal counsel before FAM-07L14 may open. Next recommended bounded unit:
+  FAM-07L13A — human-review / pending-inputs hold unit to record the hold state
+  while legal and founder inputs are being collected. FAM-07L14 must NOT open until
+  the L13 packet §13 completion checklist is confirmed and Paresh issues
+  Authorization 2 (§8.1 of the L13 packet). No legal authority creation authorized.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001

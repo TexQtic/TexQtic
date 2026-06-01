@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-01 (FAM-07L10-LEGAL-AUTHORITY-LANE-GOVERNANCE-TRACKER-SYNC-001 COMPLETE. L-lane legal authority technical foundation chain (L1–L8) synchronized. L9 next-action selection complete. FAM-07 remains PARTIALLY_IMPLEMENTED because FTR-LEGAL-003 is still MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
+**Last Updated:** 2026-06-01 (FAM-07L13B-LEGAL-AUTHORITY-TRACKER-STALENESS-SYNC-001 COMPLETE. L-lane L11–L13 completion synchronized. L11: coexistence test (180387ce). L12: legal authority input checklist (43dc42d2). L13: human-facing handoff packet (4246fe08). Legal inputs pending. FAM-07 remains PARTIALLY_IMPLEMENTED. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,25 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- FAM-07L13B-LEGAL-AUTHORITY-TRACKER-STALENESS-SYNC-001 COMPLETE (2026-06-01).
+  Governance tracker sync advanced all three Layer 0 governance pointer files from L10-stale
+  posture (pointing to L11 as next candidate) to reflect L-lane L11–L13 completion and
+  pending-inputs hold posture.
+  L11 (180387ce): DB-free coexistence test — has_records=true + authority_record.present=false +
+  AUTHORITY_FILE_ABSENT scenario; 2 new tests added to server/src/__tests__/ suite.
+  L12 (43dc42d2): technical legal authority input checklist — 17-section artifact enumerating all
+  required legal/product/founder/technical inputs before authority-file creation may proceed.
+  L13 (4246fe08): human-facing legal authority pending-inputs handoff packet — 18-section
+  fillable collection template for Paresh and external legal counsel.
+  Legal gate unchanged: authority file absent, present=false, AUTHORITY_FILE_ABSENT,
+  legal_approved_transition_allowed=false. No runtime mutation. No legal authority created.
+  FAM-07 remains NOT VERIFIED_COMPLETE. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.
+  Next recommended unit: FAM-07L13A-LEGAL-AUTHORITY-PENDING-INPUTS-HUMAN-REVIEW-HOLD-001
+  (human-review / pending-inputs hold while L13 packet is being completed by humans).
+  FAM-07L14 must NOT open until L13 packet §13 checklist is confirmed and Paresh issues
+  Authorization 2 (§8.1). Artifact: artifacts/control-plane/FAM-07L13B-LEGAL-AUTHORITY-TRACKER-STALENESS-SYNC-001.md.
 
 - FAM-07L10-LEGAL-AUTHORITY-LANE-GOVERNANCE-TRACKER-SYNC-001 VERIFIED_COMPLETE (2026-06-01).
   Governance tracker sync corrected 8-unit stale pointer posture across all three Layer 0
