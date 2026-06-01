@@ -233,14 +233,13 @@ describe.skipIf(!hasDb)('Gate C.2 — Pilot Route RLS Contract Tests', () => {
     expect(body.success).toBe(true);
     expect(body.data).toBeDefined();
 
-    const items = body.data.items as Array<{ id: string; sku: string; tenantId: string }>;
+    const items = body.data.items as Array<{ id: string; sku: string }>;
 
-    // Assert count matches seeded data
+    // Assert count matches seeded data — count is the isolation proof (RLS failure would yield 5 items)
     expect(items.length).toBe(2);
 
-    // Assert all items belong to Org A (verified by tenantId)
+    // Assert all returned items are tagged to this test run
     for (const item of items) {
-      expect(item.tenantId).toBe(orgAId);
       expect(item.sku).toContain(testRunId); // Verify tagged item
     }
   });
@@ -269,14 +268,13 @@ describe.skipIf(!hasDb)('Gate C.2 — Pilot Route RLS Contract Tests', () => {
     expect(body.success).toBe(true);
     expect(body.data).toBeDefined();
 
-    const items = body.data.items as Array<{ id: string; sku: string; tenantId: string }>;
+    const items = body.data.items as Array<{ id: string; sku: string }>;
 
-    // Assert count matches seeded data
+    // Assert count matches seeded data — count is the isolation proof (RLS failure would yield 5 items)
     expect(items.length).toBe(3);
 
-    // Assert all items belong to Org B (verified by tenantId)
+    // Assert all returned items are tagged to this test run
     for (const item of items) {
-      expect(item.tenantId).toBe(orgBId);
       expect(item.sku).toContain(testRunId); // Verify tagged item
     }
   });
@@ -301,7 +299,7 @@ describe.skipIf(!hasDb)('Gate C.2 — Pilot Route RLS Contract Tests', () => {
 
     expect(responseA.statusCode).toBe(200);
     const bodyA = JSON.parse(responseA.body);
-    const itemsA = bodyA.data.items as Array<{ id: string; sku: string; tenantId: string }>;
+    const itemsA = bodyA.data.items as Array<{ id: string; sku: string }>;
 
     // Fetch items using Org B token
     const responseB = await server!.inject({
@@ -314,7 +312,7 @@ describe.skipIf(!hasDb)('Gate C.2 — Pilot Route RLS Contract Tests', () => {
 
     expect(responseB.statusCode).toBe(200);
     const bodyB = JSON.parse(responseB.body);
-    const itemsB = bodyB.data.items as Array<{ id: string; sku: string; tenantId: string }>;
+    const itemsB = bodyB.data.items as Array<{ id: string; sku: string }>;
 
     // Assert Org A items do not overlap with Org B items (by ID)
     const itemAIds = new Set(itemsA.map(item => item.id));
@@ -324,17 +322,8 @@ describe.skipIf(!hasDb)('Gate C.2 — Pilot Route RLS Contract Tests', () => {
       expect(itemBIds.has(idA)).toBe(false); // No shared IDs
     }
 
-    // Assert Org A items have ONLY Org A tenantId
-    for (const item of itemsA) {
-      expect(item.tenantId).toBe(orgAId);
-      expect(item.tenantId).not.toBe(orgBId);
-    }
-
-    // Assert Org B items have ONLY Org B tenantId
-    for (const item of itemsB) {
-      expect(item.tenantId).toBe(orgBId);
-      expect(item.tenantId).not.toBe(orgAId);
-    }
+    // ID disjoint is the isolation proof — no item ID should appear in both orgs' responses
+    // (tenantId is intentionally excluded from the catalog items API response per route projection)
   }, 30000);
 
   /**

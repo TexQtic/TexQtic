@@ -1081,6 +1081,7 @@ function mapBuyerRfqListItem(rfq: BuyerRfqListRow) {
     item_name: rfq.catalogItem.name,
     item_sku: rfq.catalogItem.sku,
     quantity: rfq.quantity,
+    supplier_org_id: rfq.supplierOrgId,
     created_at: rfq.createdAt,
     updated_at: rfq.updatedAt,
     requirement_title: rfq.requirementTitle ?? null,
@@ -1099,6 +1100,7 @@ function mapBuyerRfqListItem(rfq: BuyerRfqListRow) {
 function mapBuyerRfqResponse(response: BuyerRfqResponseRow) {
   return {
     id: response.id,
+    supplier_org_id: response.supplierOrgId,
     message: response.message,
     submitted_at: response.submittedAt,
     created_at: response.createdAt,
