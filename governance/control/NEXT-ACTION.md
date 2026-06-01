@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-01 (FAM-07L13C-LEGAL-AUTHORITY-HUMAN-HOLD-TRACKER-SYNC-001 COMPLETE. L13A hold recorded (33fd8bf7). Hold state: HOLD_FOR_HUMAN_LEGAL_INPUTS. FAM-07 remains PARTIALLY_IMPLEMENTED. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-01 (LAUNCH-READINESS-NONLEGAL-POINTER-SYNC-001 COMPLETE. FAM-08 selected as next nonlegal candidate (41f3336e). FAM-07 remains PARTIALLY_IMPLEMENTED. HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,48 +15,58 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-07L13C-LEGAL-AUTHORITY-HUMAN-HOLD-TRACKER-SYNC-001
+active_delivery_unit: LAUNCH-READINESS-NONLEGAL-POINTER-SYNC-001
 active_delivery_unit_status: VERIFIED_COMPLETE
 active_delivery_unit_note: >
-  L13C governance tracker sync records the FAM-07 human-review hold state established
-  by L13A (33fd8bf7). L13A created the hold artifact formally recording
-  HOLD_FOR_HUMAN_LEGAL_INPUTS posture while legal counsel, Paresh, and technical parties
-  complete the L13 packet inputs. No runtime mutation. No legal authority created.
-  No legal-final state advanced. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
-  FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit: FAM-07L13A-LEGAL-AUTHORITY-PENDING-INPUTS-HUMAN-REVIEW-HOLD-001
-last_closed_unit_status: VERIFIED_COMPLETE (2026-06-01)
+  Layer 0 governance pointer sync installs FAM-08-TENANT-CORE-WORKSPACE-OPENING-REPO-TRUTH-AUDIT-001
+  as the next nonlegal launch-readiness candidate. Selection authority:
+  LAUNCH-READINESS-NONLEGAL-NEXT-PACKET-SELECTION-001 (commit 41f3336e; final enum
+  LAUNCH_READINESS_NONLEGAL_NEXT_PACKET_SELECTED). FAM-08 selected: P0 / LAUNCH_BLOCKER /
+  NOT_ASSESSED / no legal dependency / read-only opening audit / cycle 7. FAM-07 hold
+  preserved: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. Authority file absent.
+  legal_approved_transition_allowed=false. FAM-07L14 blocked. No runtime mutation.
+  No legal authority created. No legal-final state advanced. FTR-LEGAL-003 remains
+  MVP_CRITICAL/OPEN. FAM-07 remains not VERIFIED_COMPLETE.
+  HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.
+last_closed_unit: LAUNCH-READINESS-NONLEGAL-NEXT-PACKET-SELECTION-001
+last_closed_unit_status: VERIFIED_COMPLETE (2026-07-01)
 last_closed_unit_runtime_verdict: >
-  L13A human-review hold artifact created (33fd8bf7): 16-section hold document formally
-  recording HOLD_FOR_HUMAN_LEGAL_INPUTS posture. Three-party responsibility matrix
-  documented: legal counsel (§7, §10), Paresh/founder (§8, §11, §12), technical/operator
-  (§9, §10 coordination). Hold exit criteria (8 conditions) and L14 gate conditions
-  defined. 23 explicitly blocked actions enumerated. Legal gate unchanged: authority file
-  absent, present=false, blocking_reason_code=AUTHORITY_FILE_ABSENT,
-  legal_approved_transition_allowed=false. No runtime mutation. No legal authority created.
-  FTR-LEGAL-003 remains OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.
+  Nonlegal launch-readiness selection artifact created (41f3336e): 25-section read-only
+  repo audit selecting FAM-08-TENANT-CORE-WORKSPACE-OPENING-REPO-TRUTH-AUDIT-001 as
+  primary selection (P0 / LAUNCH_BLOCKER / NOT_ASSESSED / no legal dependency). Inspected
+  all 24 families, full FTR register, MVP checklist, pilot readiness, 15 public app states,
+  16 public components, public service layer. No source mutation. No legal authority created.
+  FAM-07 hold preserved. FTR-LEGAL-003 remains OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.
   FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit_commits: "docs(fam-07): record legal authority human review hold"
+last_closed_unit_commits: "docs(launch): select next nonlegal readiness packet"
 last_closed_unit_closure_basis: >
-  Human-review hold artifact created recording HOLD_FOR_HUMAN_LEGAL_INPUTS posture.
-  Pending inputs: legal counsel §7 (document identity, approval identity, consent copy)
-  and §10 (hash/version/source); Paresh §8 (Auth 1/2/3), §11 (re-consent policy),
-  §12 (runtime/env alignment). No legal authority created.
-  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN and FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit_prior: FAM-07L13B-LEGAL-AUTHORITY-TRACKER-STALENESS-SYNC-001
+  Read-only repo audit confirmed FAM-08 as P0/LAUNCH_BLOCKER/NOT_ASSESSED with no legal
+  dependency. Full candidate evaluation matrix (A through E) recorded. Artifact:
+  artifacts/launch-readiness/LAUNCH-READINESS-NONLEGAL-NEXT-PACKET-SELECTION-001.md.
+  No legal authority created. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  FAM-07 remains not VERIFIED_COMPLETE.
+last_closed_unit_prior: FAM-07L13C-LEGAL-AUTHORITY-HUMAN-HOLD-TRACKER-SYNC-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-01)
-next_candidate_unit: HOLD_FOR_HUMAN_LEGAL_INPUTS
-next_candidate_unit_status: HOLD_ACTIVE
-next_candidate_unit_date_installed: "2026-06-01"
+fam07_hold_preservation: >
+  FAM-07 legal hold preserved through this pointer sync. L13A (33fd8bf7): hold recorded.
+  L13C (ee6252d9): tracker sync complete. HOLD_FOR_HUMAN_LEGAL_INPUTS active.
+  L13 packet remains the active human-facing collection vehicle for FAM-07.
+  FAM-07L14 blocked until: L13 §7 (legal counsel) complete; Paresh Auth 2 (§8.1) in writing;
+  L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
+  L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
+  No legal authority creation authorized. No L14 opening authorized.
+next_candidate_unit: FAM-08-TENANT-CORE-WORKSPACE-OPENING-REPO-TRUTH-AUDIT-001
+next_candidate_unit_status: READY_AFTER_POINTER_SYNC
+next_candidate_unit_date_installed: "2026-07-01"
 next_candidate_unit_note: >
-  L13A human-review hold is recorded and active (33fd8bf7). Current FAM-07 posture:
-  HOLD_FOR_HUMAN_LEGAL_INPUTS. The L13 packet remains the active human-facing collection
-  vehicle. FAM-07L14 is blocked until all of the following: (1) L13 packet §7 (legal
-  counsel form) complete; (2) Paresh Authorization 2 (§8.1) explicitly issued in writing;
-  (3) L13 packet §10 (source/version/hash evidence) complete; (4) L13 packet §11 (re-consent
-  policy) complete; (5) L13 packet §12 (runtime/env alignment) complete; (6) no stale
-  tracker contradiction exists. No legal authority creation authorized.
-  No L14 opening authorized.
+  Read-only opening repo-truth audit for FAM-08 Tenant Core Workspace (P0 / LAUNCH_BLOCKER).
+  Scope: tenant workspace routing and session, org_id isolation (constitutional), feature
+  flag provisioning, subscription metadata, admin settings surface. Output: single governance
+  artifact mapping current state vs. MVP checklist §3 (T-1 to T-6). Proposed unit name:
+  FAM-08-TENANT-CORE-WORKSPACE-OPENING-REPO-TRUTH-AUDIT-001. This is a read-only audit;
+  it does NOT implement workspace changes, does NOT weaken org_id isolation, and does NOT
+  touch auth/session source code. FAM-07L14 remains blocked (HOLD_FOR_HUMAN_LEGAL_INPUTS).
+  FAM-09 is the recommended follow-on after FAM-08 closing audit.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001

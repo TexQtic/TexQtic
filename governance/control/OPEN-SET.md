@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-01 (FAM-07L13C-LEGAL-AUTHORITY-HUMAN-HOLD-TRACKER-SYNC-001 COMPLETE. L13A hold recorded (33fd8bf7). Hold state: HOLD_FOR_HUMAN_LEGAL_INPUTS. FAM-07 remains PARTIALLY_IMPLEMENTED. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
+**Last Updated:** 2026-07-01 (LAUNCH-READINESS-NONLEGAL-POINTER-SYNC-001 COMPLETE. FAM-08 selected as next nonlegal candidate (41f3336e). FAM-07 remains PARTIALLY_IMPLEMENTED. HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,17 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- LAUNCH-READINESS-NONLEGAL-POINTER-SYNC-001 COMPLETE (2026-07-01).
+  Nonlegal launch-readiness selection artifact LAUNCH-READINESS-NONLEGAL-NEXT-PACKET-SELECTION-001
+  completed at commit 41f3336e (final enum: LAUNCH_READINESS_NONLEGAL_NEXT_PACKET_SELECTED).
+  FAM-08-TENANT-CORE-WORKSPACE-OPENING-REPO-TRUTH-AUDIT-001 selected as next nonlegal
+  launch-readiness packet (P0 / LAUNCH_BLOCKER / NOT_ASSESSED / no legal dependency).
+  FAM-07 remains PARTIALLY_IMPLEMENTED. Hold state: HOLD_FOR_HUMAN_LEGAL_INPUTS (unchanged).
+  FAM-07L14 remains blocked. FAM-07 NOT VERIFIED_COMPLETE. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  HD-001 remains RUNTIME_CONFIRMED_CONFIGURED. FAM-08 opening audit may proceed after this sync.
+  No runtime mutation. No legal authority created.
+  Artifact: artifacts/launch-readiness/LAUNCH-READINESS-NONLEGAL-POINTER-SYNC-001.md.
 
 - FAM-07L13C-LEGAL-AUTHORITY-HUMAN-HOLD-TRACKER-SYNC-001 COMPLETE (2026-06-01).
   Governance tracker sync records the FAM-07 human-review hold state established by L13A
