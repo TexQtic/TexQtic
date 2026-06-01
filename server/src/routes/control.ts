@@ -33,6 +33,11 @@ import controlTtpRoutingStubRoutes from './control/ttp-routing-stubs.js';
 import controlTtpEnrollmentRoutes from './control/ttp-enrollments.js';
 import controlTtpScoreSnapshotRoutes from './control/ttp-score-snapshots.js';
 import { filterControlPlaneLaunchFacingTenantList } from '../config/controlPlaneTenantReadExclusions.js';
+import {
+  loadLegalPackageAuthority,
+  checkAuthorityEnvMatch,
+  buildAuthorityDiagnostic,
+} from '../lib/legalPackageAuthority.js';
 
 // ── Admin context helper (G-004) ──────────────────────────────────────────────
 // Canonical replacement for withDbContextLegacy({ isAdmin: true }).
@@ -533,6 +538,21 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       readOrganizationIdentities([tenantRecord.id]),
     ]);
 
+    // ── Authority-record diagnostic (FAM-07L5) ──────────────────────────────
+    // Loads the committed governance authority record and builds a safe
+    // diagnostic block for control-plane observability.
+    // Never reads DB; never exposes secrets or env values.
+    // Does NOT affect LEGAL_PENDING intake or has_legal_approved_record.
+    const authorityLoadResult = loadLegalPackageAuthority();
+    const authorityEnvMatch =
+      authorityLoadResult.ok
+        ? checkAuthorityEnvMatch(authorityLoadResult.record)
+        : undefined;
+    const authorityRecordDiagnostic = buildAuthorityDiagnostic(
+      authorityLoadResult,
+      authorityEnvMatch,
+    );
+
     const tenantWithOnboardingStatus = toPublicControlTenantReadModel({
       ...buildControlTenantInternalReadModel(
         tenantRecord,
@@ -545,6 +565,11 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         latest_snapshot: latestConsentSnapshot,
         recent_events: consentEvents,
       },
+      // authority_record is a sibling field (not nested inside consent_scaffold_observability)
+      // to preserve existing integration test assertions on consent_scaffold_observability.
+      // Future: move inside consent_scaffold_observability when
+      // control-onboarding-outcome.integration.test.ts is updated (FAM-07L6 pre-work).
+      authority_record: authorityRecordDiagnostic,
     });
 
     await writeAuditLog(prisma, createAdminAudit(adminId, 'control.tenants.read_one', 'tenant', { tenantId: id }));
