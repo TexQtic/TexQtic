@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-07-01 (LAUNCH-READINESS-NONLEGAL-POINTER-SYNC-001 COMPLETE. FAM-08 selected as next nonlegal candidate (41f3336e). FAM-07 remains PARTIALLY_IMPLEMENTED. HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
+**Last Updated:** 2026-08-01 (FAM-08G-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001 COMPLETE. FAM-08 CLOSE_READY_WITH_RESIDUALS. FAM-09 installed as next nonlegal candidate. FAM-07 remains PARTIALLY_IMPLEMENTED. HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,23 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- FAM-08G-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001 COMPLETE (2026-08-01).
+  FAM-08 evidence cycle closed via opening audit + runtime verification + FAM-08A through FAM-08G.
+  T-1 PROVEN_READY (0e7fd4ed, 69/69 pass); T-2 PROVEN_READY (FAM-08C1 87ca88d8, gate-d7 7/7 PASS);
+  T-3 SUBSTANTIALLY_IMPLEMENTED (FAM-08D2 98c8afe4, feature flag seeding DB-confirmed);
+  T-4 SUBSTANTIALLY_IMPLEMENTED (FAM-08E 5f31b35e, trg_sync_tenants_to_org trigger confirmed);
+  T-5 SUBSTANTIALLY_IMPLEMENTED / Case A PROVEN_READY (FAM-08F 1410564d, NC RFQ 43 DB-backed tests,
+  PRQ-23/24/25/29/43 proven); T-6 PROVEN_READY (runtime verification, 77/77 pass).
+  FAM-08 CLOSE_READY_WITH_RESIDUALS. Post-launch residuals: plan CHECK constraint,
+  /api/me normalization, admin settings write surface, CI hasDb coverage (all P2).
+  Decision-gated: QD-6 (supplier_quotes activation, Paresh decision pending),
+  FE-10 (rfq.award activation, Paresh decision pending).
+  FAM-09 installed as next nonlegal candidate. Requires Paresh authorization before opening.
+  FAM-07 hold preserved: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FAM-07L14 remains blocked.
+  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. governance/legal/fam-07/: ABSENT.
+  No source mutations. No legal authority created.
+  Artifact: artifacts/launch-readiness/FAM-08G-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001.md.
 
 - LAUNCH-READINESS-NONLEGAL-POINTER-SYNC-001 COMPLETE (2026-07-01).
   Nonlegal launch-readiness selection artifact LAUNCH-READINESS-NONLEGAL-NEXT-PACKET-SELECTION-001

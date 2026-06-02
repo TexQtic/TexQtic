@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-07-01 (LAUNCH-READINESS-NONLEGAL-POINTER-SYNC-001 COMPLETE. FAM-08 selected as next nonlegal candidate (41f3336e). FAM-07 remains PARTIALLY_IMPLEMENTED. HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-08-01 (FAM-08G-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001 COMPLETE. FAM-08 CLOSE_READY_WITH_RESIDUALS — T-1 PROVEN_READY, T-2 PROVEN_READY, T-3/T-4/T-5 SUBSTANTIALLY_IMPLEMENTED, T-6 PROVEN_READY. FAM-09 installed as next nonlegal candidate. FAM-07 remains PARTIALLY_IMPLEMENTED. HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,38 +15,44 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: LAUNCH-READINESS-NONLEGAL-POINTER-SYNC-001
+active_delivery_unit: FAM-08G-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001
 active_delivery_unit_status: VERIFIED_COMPLETE
 active_delivery_unit_note: >
-  Layer 0 governance pointer sync installs FAM-08-TENANT-CORE-WORKSPACE-OPENING-REPO-TRUTH-AUDIT-001
-  as the next nonlegal launch-readiness candidate. Selection authority:
-  LAUNCH-READINESS-NONLEGAL-NEXT-PACKET-SELECTION-001 (commit 41f3336e; final enum
-  LAUNCH_READINESS_NONLEGAL_NEXT_PACKET_SELECTED). FAM-08 selected: P0 / LAUNCH_BLOCKER /
-  NOT_ASSESSED / no legal dependency / read-only opening audit / cycle 7. FAM-07 hold
-  preserved: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. Authority file absent.
-  legal_approved_transition_allowed=false. FAM-07L14 blocked. No runtime mutation.
-  No legal authority created. No legal-final state advanced. FTR-LEGAL-003 remains
-  MVP_CRITICAL/OPEN. FAM-07 remains not VERIFIED_COMPLETE.
+  FAM-08 evidence cycle complete. T-1 PROVEN_READY (0e7fd4ed, 69/69 pass), T-2 PROVEN_READY
+  (FAM-08C1 87ca88d8, gate-d7 7/7 PASS; full remediation chain FAM-08A–FAM-08C1),
+  T-3 SUBSTANTIALLY_IMPLEMENTED (FAM-08D2 98c8afe4, feature flag seeding DB-confirmed),
+  T-4 SUBSTANTIALLY_IMPLEMENTED (FAM-08E 5f31b35e, trg_sync_tenants_to_org trigger confirmed),
+  T-5 SUBSTANTIALLY_IMPLEMENTED / Case A PROVEN_READY (FAM-08F 1410564d, NC RFQ 43 DB-backed
+  tests, PRQ-23/24/25/29/43 proven), T-6 PROVEN_READY (runtime verification, 77/77 pass).
+  FAM-08 CLOSE_READY_WITH_RESIDUALS. Post-launch residuals: plan CHECK constraint,
+  /api/me normalization, admin settings write surface, CI hasDb coverage.
+  Decision-gated: QD-6 (supplier_quotes), FE-10 (rfq.award).
+  FAM-09 installed as next nonlegal candidate. FAM-07 hold preserved:
+  HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  governance/legal/fam-07/: ABSENT. No source mutations.
+  legal_approved_transition_allowed=false. No legal authority created.
   HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.
-last_closed_unit: LAUNCH-READINESS-NONLEGAL-NEXT-PACKET-SELECTION-001
-last_closed_unit_status: VERIFIED_COMPLETE (2026-07-01)
+last_closed_unit: FAM-08G-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001
+last_closed_unit_status: VERIFIED_COMPLETE (2026-08-01)
 last_closed_unit_runtime_verdict: >
-  Nonlegal launch-readiness selection artifact created (41f3336e): 25-section read-only
-  repo audit selecting FAM-08-TENANT-CORE-WORKSPACE-OPENING-REPO-TRUTH-AUDIT-001 as
-  primary selection (P0 / LAUNCH_BLOCKER / NOT_ASSESSED / no legal dependency). Inspected
-  all 24 families, full FTR register, MVP checklist, pilot readiness, 15 public app states,
-  16 public components, public service layer. No source mutation. No legal authority created.
-  FAM-07 hold preserved. FTR-LEGAL-003 remains OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.
-  FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit_commits: "docs(launch): select next nonlegal readiness packet"
+  FAM-08 evidence sync complete. T-item matrix (6 items):
+  T-1 PROVEN_READY (runtime verification 0e7fd4ed, 69/69 pass),
+  T-2 PROVEN_READY (FAM-08C1 87ca88d8, gate-d7 7/7 PASS; full remediation chain FAM-08A–C1),
+  T-3 SUBSTANTIALLY_IMPLEMENTED (FAM-08D2 98c8afe4, NC flag provisioning DB-confirmed),
+  T-4 SUBSTANTIALLY_IMPLEMENTED (FAM-08E 5f31b35e, trg_sync_tenants_to_org trigger confirmed),
+  T-5 SUBSTANTIALLY_IMPLEMENTED / Case A PROVEN_READY (FAM-08F 1410564d, NC RFQ 43 DB-backed
+  tests, PRQ-23/24/25/29/43 proven), T-6 PROVEN_READY (runtime verification, 77/77 pass).
+  No source mutations. FAM-07 hold preserved. FTR-LEGAL-003 remains OPEN.
+  Artifact: artifacts/launch-readiness/FAM-08G-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001.md.
+last_closed_unit_commits: "docs(fam-08): sync launch readiness evidence"
 last_closed_unit_closure_basis: >
-  Read-only repo audit confirmed FAM-08 as P0/LAUNCH_BLOCKER/NOT_ASSESSED with no legal
-  dependency. Full candidate evaluation matrix (A through E) recorded. Artifact:
-  artifacts/launch-readiness/LAUNCH-READINESS-NONLEGAL-NEXT-PACKET-SELECTION-001.md.
-  No legal authority created. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
-  FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit_prior: FAM-07L13C-LEGAL-AUTHORITY-HUMAN-HOLD-TRACKER-SYNC-001
-last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-01)
+  Full FAM-08 evidence cycle (opening audit + runtime verification + FAM-08A through FAM-08G)
+  confirms all 6 T-items at SUBSTANTIALLY_IMPLEMENTED or PROVEN_READY. No launch blockers open
+  within FAM-08 scope. Residuals are post-launch P2/P3 or decision-gated.
+  FAM-08 CLOSE_READY_WITH_RESIDUALS. No legal authority created.
+  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. FAM-07 remains not VERIFIED_COMPLETE.
+last_closed_unit_prior: LAUNCH-READINESS-NONLEGAL-NEXT-PACKET-SELECTION-001
+last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-07-01)
 fam07_hold_preservation: >
   FAM-07 legal hold preserved through this pointer sync. L13A (33fd8bf7): hold recorded.
   L13C (ee6252d9): tracker sync complete. HOLD_FOR_HUMAN_LEGAL_INPUTS active.
@@ -55,18 +61,21 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FAM-08-TENANT-CORE-WORKSPACE-OPENING-REPO-TRUTH-AUDIT-001
-next_candidate_unit_status: READY_AFTER_POINTER_SYNC
-next_candidate_unit_date_installed: "2026-07-01"
+next_candidate_unit: FAM-09-SUPPLIER-PROFILE-CATALOG-OPENING-REPO-TRUTH-AUDIT-001
+next_candidate_unit_status: READY_AFTER_FAM08G
+next_candidate_unit_date_installed: "2026-08-01"
 next_candidate_unit_note: >
-  Read-only opening repo-truth audit for FAM-08 Tenant Core Workspace (P0 / LAUNCH_BLOCKER).
-  Scope: tenant workspace routing and session, org_id isolation (constitutional), feature
-  flag provisioning, subscription metadata, admin settings surface. Output: single governance
-  artifact mapping current state vs. MVP checklist §3 (T-1 to T-6). Proposed unit name:
-  FAM-08-TENANT-CORE-WORKSPACE-OPENING-REPO-TRUTH-AUDIT-001. This is a read-only audit;
-  it does NOT implement workspace changes, does NOT weaken org_id isolation, and does NOT
-  touch auth/session source code. FAM-07L14 remains blocked (HOLD_FOR_HUMAN_LEGAL_INPUTS).
-  FAM-09 is the recommended follow-on after FAM-08 closing audit.
+  Read-only opening repo-truth audit for FAM-09 Supplier Profile and Catalog
+  (P0 / LAUNCH_BLOCKER / NOT_ASSESSED / no legal dependency / cycle 8).
+  Scope: supplier profile completeness, catalog route coverage, org_id isolation in
+  catalog queries, supplier photo/media handling, search/filter surface,
+  PublicSupplierProfile.tsx real-data readiness. Output: governance artifact mapping
+  current state vs. MVP checklist for supplier profile and catalog.
+  NOTE: pre-existing unstaged M: components/Public/PublicSupplierProfile.tsx —
+  do NOT stage in any family cycle without explicit allowlist.
+  FAM-07L14 remains blocked (HOLD_FOR_HUMAN_LEGAL_INPUTS).
+  FAM-07 hold unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  Requires Paresh authorization before opening.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001
