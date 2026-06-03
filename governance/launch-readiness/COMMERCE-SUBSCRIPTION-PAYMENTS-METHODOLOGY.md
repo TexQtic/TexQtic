@@ -325,6 +325,60 @@ RAZORPAY-INVOICE-SAC-VERIFICATION-001 formally CLOSED. Zoho Books operational pa
 
 ---
 
+### 4.6 D7 Status — Razorpay KYC and Payment Account Readiness Closure (2026-06-03)
+
+**Unit:** FAM-13B-D7-RAZORPAY-KYC-AND-PAYMENT-ACCOUNT-READINESS-CLOSURE-001 — ✅ **COMPLETE**
+
+**Outcome:** D6 closure reconfirmed. PR-04 reviewed against the D3 checklist and recorded as
+`PENDING_PARESH_EVIDENCE` — not complete yet. Legal entity for payment-readiness tracking
+confirmed as **TexQtic Ventures Pvt Ltd**. D6 line `TexQtic Innovations Pvt Ltd` treated as an
+unverified typo carry-forward and not propagated as verified account truth.
+
+**Repo-truth findings:**
+- D6 remains closed: PR-03 COMPLETE; RAZORPAY-INVOICE-SAC-VERIFICATION-001 CLOSED; Zoho Books pathway locked.
+- D3 remains the authority for PR-04 completion evidence.
+- D-015 and D-020 confirm founder decisions only: Razorpay Subscriptions, test mode first,
+  STARTER first, KYC owner = TexQtic company entity.
+- No later governance artifact records Razorpay account creation, KYC submission/approval,
+  settlement bank setup, dashboard admin access, test-mode access, or live-mode status.
+
+**PR-04 assessment:**
+- Razorpay account created: PENDING
+- Correct legal entity name: CONFIRMED — TexQtic Ventures Pvt Ltd
+- Business type verified: PENDING
+- GSTIN linked/available: PENDING
+- KYC submitted: PENDING
+- KYC approved: PENDING
+- Settlement bank configured: PENDING
+- Test mode accessible: PENDING
+- Live mode status known: PENDING
+- Dashboard admin owner known: PENDING
+- API key handling guardrail: CONFIRMED_GUARDRAIL_ONLY — no keys in repo/reports
+- Webhook secret handling guardrail: CONFIRMED_GUARDRAIL_ONLY — no secrets in repo/reports
+- Product scope: CONFIRMED — SaaS subscriptions first; no marketplace split settlement at MVP
+
+**PR-04 decision:** `PENDING_PARESH_EVIDENCE`
+- D7 does not justify COMPLETE because mandatory off-platform readiness evidence is still absent.
+- D7 does not justify BLOCKED_LEGAL_ENTITY_MISMATCH because Paresh supplied a clear entity
+  correction and no competing verified authority proves another legal entity.
+
+**PR-05–PR-08 preserved:**
+- PR-05: NOT_STARTED
+- PR-06: NOT_STARTED
+- PR-07: NOT_STARTED
+- PR-08: PARTIALLY_COMPLETE
+
+**Implementation gate:** CLOSED — unchanged. PR-04 remains open; PR-05–PR-08 remain open/partial.
+No implementation authorization supplied.
+
+**No source, schema, migration, package, or environment changes** in D7.
+
+**Final enum:** `FAM_13B_D7_RAZORPAY_KYC_READINESS_RECORDED_PR_04_PENDING_PARESH_EVIDENCE`
+
+**Next recommended unit:** `FAM-13B-D7A — Razorpay KYC Evidence Completion`
+
+---
+
 ## 5. B2B Financial Boundary (CONFIRMED GUARDRAIL)
 
 ### 5.1 Confirmed Position
