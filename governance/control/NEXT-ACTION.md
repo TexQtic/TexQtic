@@ -40,7 +40,7 @@ last_closed_unit_runtime_verdict: >
   D-015 fully resolved. D-011/D-012 partially resolved for SaaS scope. D-019 resolved.
   D-020/D-021/D-022 registered. PR-01/PR-02 satisfied. PR-03 through PR-08 open.
   No source changes. Governance files only. Implementation gate still closed.
-last_closed_unit_commits: TBD — updated after seal commit
+last_closed_unit_commits: 9a7a1fbd (main commit) + c7dbf5d7 (seal)
 last_closed_unit_closure_basis: >
   FAM-13B-D1: complete decision reconciliation artifact + parking lot update + NEXT-ACTION sync.
   Final enum: FAM_13B_D1_PAYMENT_DECISION_RECONCILIATION_COMPLETE_PREREQS_OPEN.

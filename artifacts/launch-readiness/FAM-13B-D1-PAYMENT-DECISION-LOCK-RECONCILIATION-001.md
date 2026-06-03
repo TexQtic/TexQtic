@@ -138,7 +138,7 @@ The following units form the authoritative payment/subscription governance chain
 | FAM-11E: `FAM-11E-FAMILY-EVIDENCE-SYNC-AND-CLOSE-READINESS-001` | `3c9cf5aa` (sealed `3834980b`) | VERIFIED_COMPLETE (2026-06-03) | FAM-11 commercial tier-awareness CLOSE_READY. Display-only read; no self-serve billing. TenantPlan enum confirmed. |
 | FAM-13A: `FAM-13A-RAZORPAY-READINESS-DESIGN-DECISION-001` | `8946bda8` (sealed `b2b8ab39`) | VERIFIED_COMPLETE (2026-06-03) | Razorpay ABSENT from all source. §4.3 prerequisites status audited. D-011/D-012/D-015 still PARKED. |
 | FAM-13B: `FAM-13B-RAZORPAY-PAYMENT-ARCHITECTURE-DECISION-LOCK-001` | `ad1b5e2b` (sealed `a0e8eb3d`) | BLOCKED (2026-06-03) | All 17 required human decision inputs unresolved. D-PG-PRIORITY unnumbered. Parking lot numbering conflict D-016–D-018 documented. |
-| **FAM-13B-D1 (this unit)** | `9a7a1fbd` (seal TBD) | VERIFIED_COMPLETE (2026-06-03) | Reconcile supplied decisions. Register D-019–D-022. Update D-011/D-012/D-015 status. Confirm prereqs. |
+| **FAM-13B-D1 (this unit)** | `9a7a1fbd` (sealed `c7dbf5d7`) | VERIFIED_COMPLETE (2026-06-03) | Reconcile supplied decisions. Register D-019–D-022. Update D-011/D-012/D-015 status. Confirm prereqs. |
 
 ---
 
@@ -444,7 +444,7 @@ FAM_13B_D1_PAYMENT_DECISION_RECONCILIATION_COMPLETE_PREREQS_OPEN
 ## 13. Commit Hash
 
 **Artifact commit:** `9a7a1fbd`
-**Seal commit:** TBD — written after seal commit
+**Seal commit:** `c7dbf5d7`
 
 ---
 
