@@ -195,11 +195,24 @@ into any TexQtic surface:
 - D-012 is `PARTIALLY_RESOLVED` for SaaS scope: MoR and separation confirmed; marketplace deferred.
 - **§4.3 prerequisites PR-03 through PR-08 remain open. Implementation gate still CLOSED.**
 
-No implementation may begin until all prerequisites in §4.3 are satisfied and Paresh issues
-explicit implementation authorization via a dedicated design unit (FAM-13B-D2 or successor).
+**Updated 2026-06-03 (FAM-13B-D2):** CA SAC confirmation recorded.
+- PR-03 advances from `CONFLICTING_EVIDENCE` to `PARTIALLY_COMPLETE`.
+  CA confirms: SAC 998315 for SaaS/AI add-on, SAC 998599 for marketplace facilitation,
+  SAC 998311 for professional services. 18% GST rate. Exclusive display rule.
+  Marketplace payment collection formally deferred at MVP. ECO/TCS not activated at MVP.
+  **Remaining PR-03 open items:** Razorpay invoice SAC/GST field capability not yet verified
+  (see RAZORPAY-INVOICE-SAC-VERIFICATION-001 in FAM-13B-D2 artifact §8); invoice filing
+  cadence and state-based IGST/CGST+SGST split treatment not yet confirmed.
+- PR-08 records CA SAC progress (label unchanged: `PARTIALLY_COMPLETE`). Provisional prices
+  remain provisional; CA authorization for public price display not yet complete.
+- PR-04 through PR-07 remain NOT_STARTED.
+- **§4.3 prerequisites PR-03 through PR-08 still open. Implementation gate still CLOSED.**
 
-**Future unit:** `FAM-13B-D2-PAYMENT-PREREQUISITE-TRACKER-AND-DESIGN-001` (recommended next
-unit; not yet opened; awaiting Paresh direction).
+No implementation may begin until all prerequisites in §4.3 are satisfied and Paresh issues
+explicit implementation authorization via a dedicated design unit.
+
+**Next unit:** `FAM-13B-D3-PAYMENT-PREREQUISITE-TRACKER-AND-OPERATIONAL-READINESS-001`
+(recommended; not yet opened; awaiting Paresh direction after reviewing FAM-13B-D2).
 
 ---
 

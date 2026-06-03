@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-03 (FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001 COMPLETE. Founder payment decisions reconciled. D-019 RESOLVED. D-020 PARTIALLY_RESOLVED. D-021/D-022 registered as PARKED. D-015 FOUNDER_DECISION_RESOLVED. D-011/D-012 PARTIALLY_RESOLVED. PR-01/PR-02 satisfied for SaaS scope. PR-03 through PR-08 still open. Implementation NOT authorized. FAM-11 CLOSE_READY unchanged. FAM-07 HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-03 (FAM-13B-D2-CA-SAC-CONFIRMATION-ADDENDUM-001 COMPLETE. CA SAC codes confirmed: 998315 SaaS/AI, 998599 marketplace facilitation, 998311 professional services. Eliminated codes 998314/998319/998596. PR-03 advances to PARTIALLY_COMPLETE. PR-08 PARTIALLY_COMPLETE unchanged. PR-04–PR-07 NOT_STARTED. D-011 item 4 CA_CONFIRMED. D-012 item 4 CA_CONFIRMED_PARTIAL. Implementation NOT authorized. FAM-11 CLOSE_READY unchanged. FAM-07 HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,37 +15,42 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001
+active_delivery_unit: FAM-13B-D2-CA-SAC-CONFIRMATION-ADDENDUM-001
 active_delivery_unit_status: COMPLETE
 active_delivery_unit_note: >
-  FAM-13B-D1 Payment Decision Lock Reconciliation COMPLETE (2026-06-03).
-  Final enum: FAM_13B_D1_PAYMENT_DECISION_RECONCILIATION_COMPLETE_PREREQS_OPEN.
-  Founder payment decisions reconciled from supplied document.
-  D-015 FOUNDER_DECISION_RESOLVED (Razorpay Subscriptions, test mode, STARTER first, TexQtic KYC).
-  D-011 PARTIALLY_RESOLVED (5/7 items; feature entitlement scope + CA review still open).
-  D-012 PARTIALLY_RESOLVED SaaS scope (MoR + separation confirmed; marketplace deferred).
-  D-019 RESOLVED (SaaS subscription billing STARTER first; all other tracks deferred).
-  D-020 PARTIALLY_RESOLVED (product+mode+tier selected; activation flow design pending).
-  D-021 PARKED (refund/cancellation policy not supplied).
-  D-022 PARKED (upgrade invitation policy not supplied; non-payment downgrade confirmed).
-  PR-01/PR-02 satisfied for SaaS scope. PR-03 through PR-08 still open.
-  Parking lot numbering gap D-019–D-022 repaired (FAM-13B conflict resolved).
+  FAM-13B-D2 CA SAC Confirmation Addendum COMPLETE (2026-06-03).
+  Final enum: FAM_13B_D2_CA_SAC_CONFIRMATION_SYNC_COMPLETE_PREREQS_OPEN.
+  CA-confirmed SAC codes locked: 998315 (SaaS subscription + AI add-on), 998599 (B2B
+  marketplace facilitation fee), 998311 (enterprise professional services). 18% GST.
+  Eliminated codes: 998314, 998319, 998596 (replaced by 998315 and 998599 respectively).
+  CA follow-up answers recorded: MVP marketplace payment model (facilitation fee only,
+  no goods collection, not a payment aggregator); ECO/TCS not activated at MVP; recheck
+  required before any future marketplace payment collection track.
+  PR-03 advances from CONFLICTING_EVIDENCE to PARTIALLY_COMPLETE (SAC/GST confirmed;
+  Razorpay invoice SAC field verification and invoice cadence still pending).
+  PR-08 PARTIALLY_COMPLETE (unchanged label; CA SAC recorded).
+  PR-04 through PR-07 remain NOT_STARTED.
+  D-011 item 4: CA_CONFIRMED (SAC 998315, 18% GST, exclusive display).
+  D-012 item 4: CA_CONFIRMED_PARTIAL (SaaS SAC/GST confirmed; marketplace deferred; ECO/TCS
+  not activated at MVP; recheck required before any marketplace payment collection).
   No payment code, schema, migration, or env changes. Governance documentation only.
   FAM-07 hold preserved: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
   governance/legal/fam-07/: ABSENT. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
-last_closed_unit: FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001
+last_closed_unit: FAM-13B-D2-CA-SAC-CONFIRMATION-ADDENDUM-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-06-03)
 last_closed_unit_runtime_verdict: >
-  FAM-13B-D1 decision reconciliation complete (2026-06-03). Founder decisions captured.
-  D-015 fully resolved. D-011/D-012 partially resolved for SaaS scope. D-019 resolved.
-  D-020/D-021/D-022 registered. PR-01/PR-02 satisfied. PR-03 through PR-08 open.
-  No source changes. Governance files only. Implementation gate still closed.
-last_closed_unit_commits: 9a7a1fbd (main commit) + c7dbf5d7 (seal)
+  FAM-13B-D2 CA SAC confirmation complete (2026-06-03). CA SAC codes locked (998315/998599/998311).
+  Eliminated codes 998314/998319/998596 formally removed. CA marketplace payment deferral and
+  ECO/TCS analysis recorded. PR-03 advances to PARTIALLY_COMPLETE. PR-08 unchanged
+  (PARTIALLY_COMPLETE; CA SAC recorded). PR-04–PR-07 NOT_STARTED. No source changes.
+  Governance files only. Implementation gate still CLOSED.
+last_closed_unit_commits: TBD — backfill after commit
 last_closed_unit_closure_basis: >
-  FAM-13B-D1: complete decision reconciliation artifact + parking lot update + NEXT-ACTION sync.
-  Final enum: FAM_13B_D1_PAYMENT_DECISION_RECONCILIATION_COMPLETE_PREREQS_OPEN.
-last_closed_unit_prior2: FAM-13B-RAZORPAY-PAYMENT-ARCHITECTURE-DECISION-LOCK-001
-last_closed_unit_prior2_status: BLOCKED — SUPERSEDED_BY_FAM-13B-D1_DECISION_CAPTURE (2026-06-03)
+  FAM-13B-D2: CA SAC confirmation artifact + DECISION-PARKING-LOT update (D-011/D-012 item 4) +
+  NEXT-ACTION sync + COMMERCE-METHODOLOGY §4.4 + FUTURE-TODO-REGISTER history row.
+  Final enum: FAM_13B_D2_CA_SAC_CONFIRMATION_SYNC_COMPLETE_PREREQS_OPEN.
+last_closed_unit_prior2: FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001
+last_closed_unit_prior2_status: VERIFIED_COMPLETE (2026-06-03)
 last_closed_unit_prior: FAM-13A-RAZORPAY-READINESS-DESIGN-DECISION-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-03)
 fam07_hold_preservation: >
@@ -56,16 +61,17 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FAM-13B-D2-PAYMENT-PREREQUISITE-TRACKER-AND-DESIGN-001
+next_candidate_unit: FAM-13B-D3-PAYMENT-PREREQUISITE-TRACKER-AND-OPERATIONAL-READINESS-001
 next_candidate_unit_status: NOT_YET_OPENED — AWAITING_PARESH_DIRECTION
 next_candidate_unit_date_installed: "2026-06-03"
 next_candidate_unit_note: >
-  FAM-13B-D2 is the recommended next payment governance unit (2026-06-03).
-  Scope: track PR-03 through PR-08 to completion; design Razorpay Subscriptions
-  integration architecture (review only, not implementation); record CA advisory outcome;
+  FAM-13B-D3 is the recommended next payment governance unit (2026-06-03).
+  Scope: verify Razorpay invoice SAC/GST field capability (RAZORPAY-INVOICE-SAC-VERIFICATION-001);
+  define PR-04 KYC operational start authorization; define PR-05 refund/dispute policy;
+  define PR-06 PCI boundary design; define PR-07 payment event audit/log policy;
   clarify D-011 item 7 (feature entitlement scope per tier); define D-021 (refund policy);
-  clarify D-022 (FREE pilot upgrade invitation); authorize PR-04 KYC start.
-  Gate to open: Paresh explicitly directs FAM-13B-D2 after reviewing this unit.
+  clarify D-022 (FREE pilot upgrade invitation); assess prerequisites to full closure.
+  Gate to open: Paresh explicitly directs FAM-13B-D3 after reviewing FAM-13B-D2.
   Gate to authorize Razorpay implementation: all 8 §4.3 prerequisites satisfied AND
   Paresh issues explicit written implementation authorization.
   FAM-07L14 remains blocked (HOLD_FOR_HUMAN_LEGAL_INPUTS).
