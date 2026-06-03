@@ -44,7 +44,7 @@ last_closed_unit_runtime_verdict: >
   PR-04 through PR-07. RAZORPAY-INVOICE-SAC-VERIFICATION-001 structured plan provided.
   D-021 worksheet provided; status unchanged (PARKED). No source changes. No decisions
   advanced. Governance documentation only. Implementation gate still CLOSED.
-last_closed_unit_commits: *(TBD — backfill after main commit)*
+last_closed_unit_commits: cf189ad0 (main commit)
 last_closed_unit_closure_basis: >
   FAM-13B-D3: payment prerequisite tracker artifact + NEXT-ACTION sync +
   COMMERCE-METHODOLOGY §4.4 update + FUTURE-TODO-REGISTER history row.
