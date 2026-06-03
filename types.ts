@@ -56,6 +56,17 @@ export const normalizeCommercialPlan = (plan: string | null | undefined): Commer
   return 'FREE';
 };
 
+/**
+ * Returns the display-layer label for a commercial plan.
+ * 'FREE — Early Access' is a display-only label; the canonical internal plan value remains 'FREE'.
+ * Do NOT use this function for DB writes, API calls, or logic gates — use normalizeCommercialPlan there.
+ */
+export const getCommercialPlanDisplayLabel = (plan: string | null | undefined): string => {
+  const normalized = normalizeCommercialPlan(plan);
+  if (normalized === 'FREE') return 'FREE \u2014 Early Access';
+  return normalized;
+};
+
 export interface User {
   id: string;
   email: string;

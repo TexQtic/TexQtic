@@ -15,6 +15,7 @@ import { OnboardingFlow } from './components/Onboarding/OnboardingFlow';
 import { TeamManagement } from './components/Tenant/TeamManagement';
 import { InviteMemberForm } from './components/Tenant/InviteMemberForm';
 import { WhiteLabelSettings } from './components/Tenant/WhiteLabelSettings';
+import { PlanAndUsagePanel } from './components/Tenant/PlanAndUsagePanel';
 import { WLOrdersPanel } from './components/WhiteLabelAdmin/WLOrdersPanel';
 import { WLCollectionsPanel } from './components/WhiteLabelAdmin/WLCollectionsPanel';
 import { WLDomainsPanel } from './components/WhiteLabelAdmin/WLDomainsPanel';
@@ -5884,6 +5885,11 @@ const App: React.FC = () => {
               </div>
             </div>
           </section>
+          <PlanAndUsagePanel
+            plan={currentTenant.commercial_plan ?? currentTenant.plan}
+            aiBudget={currentTenant.aiBudget}
+            tenantName={currentTenant.name}
+          />
         </div>
       );
     }
