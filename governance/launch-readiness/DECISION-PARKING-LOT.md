@@ -214,7 +214,7 @@ Each entry has:
 | **Impact of delaying** | FAM-11 self-serve billing cannot be implemented. Pilot proceeds as FREE/operator-assigned. No commercial impact at pilot launch. |
 | **Who decides** | Paresh (pricing + product decision); counsel/CA for India SaaS GST treatment |
 | **Priority** | P2 |
-| **Status** | PARKED |
+| **Status** | PARTIALLY_RESOLVED — founder decisions supplied 2026-06-03 via FAM-13B-D1. Items resolved: (1) first paid tier = STARTER; (3) billing cycle = monthly + annual; (5) grace period = 3 days; (6) non-payment action = downgrade to FREE, preserve data. Item 2: provisional prices supplied (STARTER ₹2,499/mo, PROFESSIONAL ₹4,999/mo) — CA review pending. Item 4: GST display rule supplied (exclusive + 18% GST) — conflicting evidence on CA confirmation (PR-03 OPEN). Item 7: feature entitlement scope per tier NOT yet supplied — still PARKED. Full resolution requires: CA advisory complete (PR-03/PR-08) + feature entitlement scope defined. |
 | **PRIT cross-ref** | PRIT-028 (subscription tier entitlement); source unit: `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
 
 ---
@@ -230,7 +230,7 @@ Each entry has:
 | **Impact of delaying** | B2C checkout, D2C commerce, FAM-15 (invoices/settlement), and FAM-11 commercial billing are all blocked until this is resolved. |
 | **Who decides** | Paresh + counsel/CA (legal/accounting decision; significant financial and regulatory implications) |
 | **Priority** | P1 — hard gate before B2C/D2C checkout implementation |
-| **Status** | PARKED — NEEDS_PARESH_DECISION + NEEDS_COUNSEL_CA_REVIEW |
+| **Status** | PARTIALLY_RESOLVED (SaaS scope) — founder decisions supplied 2026-06-03 via FAM-13B-D1. SaaS items resolved: (1) MoR = TexQtic entity; (2) marketplace = DEFERRED, permanently separate track; (3) SaaS settlement = single-entity TexQtic collection; (5) SaaS vs marketplace separation = permanent. Item 4: India CA review of GST/TCS — CONFLICTING_EVIDENCE (PR-03 status open). D-012 for marketplace track remains fully PARKED and deferred. |
 | **PRIT cross-ref** | PRIT-029, PRIT-031; source unit: `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
 
 ---
@@ -278,7 +278,7 @@ Each entry has:
 | **Impact of delaying** | No payment gateway integration. B2C/D2C checkout and subscription billing cannot proceed to implementation. |
 | **Who decides** | Paresh + counsel/CA (legal/accounting/regulatory decision) |
 | **Priority** | P2 — DESIGN_GATED until D-012 resolves |
-| **Status** | PARKED — NEEDS_PARESH_DECISION + NEEDS_COUNSEL_CA_REVIEW |
+| **Status** | FOUNDER_DECISION_RESOLVED — COUNSEL_REVIEW_PENDING — all Paresh founder inputs supplied 2026-06-03 via FAM-13B-D1: (1) go = YES; (2) product = Razorpay Subscriptions; (3) mode = test mode first; (4) KYC owner = TexQtic company entity; (5) scope = SaaS subscriptions only, STARTER tier first. Legal counsel sign-off on Razorpay operating agreement and all §4.3 prerequisites remain open. D-015 trigger condition (Paresh authorization for specific use case) is SATISFIED. Implementation gate still closed: §4.3 prerequisites PR-03 through PR-08 remain open. |
 | **PRIT cross-ref** | PRIT-029; source unit: `TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001` |
 
 ---
@@ -328,6 +328,70 @@ Each entry has:
 | **Priority** | P1 |
 | **Status** | PARKED — awaiting FAM-06 opening audit completion |
 | **PRIT cross-ref** | PRIT-033; source unit: `TEXQTIC-SOFT-LAUNCH-NETWORK-BUILDING-STRATEGY-001` Decision C; `TEXQTIC-FIRST-FAMILY-CYCLE-SELECTION-001` |
+
+---
+
+### D-019: First Payment Use Case Priority
+
+| Field | Value |
+|---|---|
+| **Decision question** | Which payment use case should be implemented first? SaaS subscription billing, B2C checkout, D2C checkout, supplier split settlement, or TTP-gated payment? |
+| **Context** | FAM-13B identified D-PG-PRIORITY as an unnumbered required input. FAM-13A confirmed no payment integration exists. D-015 (Razorpay adoption) is now FOUNDER_DECISION_RESOLVED. First use case selection determines which design and implementation track to pursue next. |
+| **Why this was parked** | No priority input was supplied until FAM-13B-D1 (2026-06-03). |
+| **Trigger condition** | N/A — resolved by founder decision supply in FAM-13B-D1. |
+| **Impact of delaying** | N/A — resolved. |
+| **Who decided** | Paresh (via founder decision supply in `FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001`, 2026-06-03) |
+| **Priority** | P1 (for payment track sequencing) |
+| **Status** | RESOLVED_FOUNDER_DECISION — SaaS subscription billing for tenant plan upgrades, STARTER tier first. B2C checkout, D2C checkout, supplier split settlement, and TTP payment flows: all DEFERRED (permanently separate tracks). |
+| **Cross-reference** | FAM-13B-D1 artifact §5.4, D-015; source: `FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001` |
+
+---
+
+### D-020: Paid Subscription Activation Model
+
+| Field | Value |
+|---|---|
+| **Decision question** | What is the operational model for activating paid subscription tiers? Which Razorpay product, which mode, which tier first, and how does the in-product upgrade flow trigger subscription creation? |
+| **Context** | D-019 confirmed SaaS subscription billing as the first payment use case. D-015 confirmed Razorpay Subscriptions as the product. The activation model covers: which Razorpay product (Subscriptions vs Orders), test vs live mode for initial integration, STARTER tier rollout sequencing, in-app upgrade trigger design, and Razorpay plan ID mapping to TenantPlan enum. |
+| **Why not ready** | Founder product/mode decisions supplied 2026-06-03. Activation flow design (UI trigger, plan ID mapping) not yet designed. Requires FTU-COMM-002 design unit. |
+| **Trigger condition** | FTU-COMM-002 (RAZORPAY-PAYMENT-GATEWAY-DESIGN-001) design unit opened and all §4.3 prerequisites satisfied. |
+| **Impact of delaying** | No Razorpay Subscriptions integration can be implemented. Self-serve upgrade path blocked. |
+| **Who decides** | Paresh (product decisions supplied); design unit (technical activation flow design) |
+| **Priority** | P2 |
+| **Status** | PARTIALLY_RESOLVED — Razorpay Subscriptions product selected; test mode first; STARTER tier first; KYC owner: TexQtic company entity. Activation flow design (items 4–5: in-app upgrade trigger, plan ID mapping to TenantPlan enum) still OPEN — requires FTU-COMM-002 design unit. |
+| **Cross-reference** | D-019, D-015, FTU-COMM-002; source: `FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001` |
+
+---
+
+### D-021: SaaS Subscription Refund and Cancellation Policy
+
+| Field | Value |
+|---|---|
+| **Decision question** | What is the refund and cancellation policy for SaaS subscription billing? What happens when a customer requests a refund within a billing period? What is the cancellation notice period and what entitlements persist after cancellation? |
+| **Context** | Razorpay Subscriptions integration requires a defined refund and dispute policy before any live payment processing (§4.3 PR-05). No policy has been defined as of this unit. |
+| **Why not ready** | Not supplied in founder decision document. Requires Paresh decision and possibly counsel/CA review for India SaaS refund obligations. |
+| **Trigger condition** | Paresh defines refund and cancellation policy. Counsel/CA review if India-specific obligations apply. Required before live mode Razorpay integration. |
+| **Impact of delaying** | Live payment processing cannot begin. Test mode setup (no real payments) is unaffected. |
+| **Who decides** | Paresh; counsel/CA input recommended |
+| **Priority** | P2 (required before live mode; not blocking test mode) |
+| **Status** | PARKED — NOT_STARTED |
+| **Cross-reference** | §4.3 PR-05; source: `FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001` |
+
+---
+
+### D-022: FREE Pilot Tenant Conversion Policy
+
+| Field | Value |
+|---|---|
+| **Decision question** | When paid subscription tiers launch, how are existing FREE pilot tenants invited to convert to STARTER? What is the upgrade invitation mechanism, timeline, and any grandfather/grace arrangement for early pilot tenants? |
+| **Context** | Current pilot launches with FREE tier, operator-provisioned (D-017 CONFIRMED). When STARTER launches, existing FREE tenants will need a conversion path. Non-payment downgrade policy (STARTER → FREE on grace period expiry) is confirmed. But the reverse — how FREE pilot tenants are invited and encouraged to upgrade — is not defined. |
+| **Why not ready** | Upgrade invitation policy was not supplied in founder decision document (non-payment downgrade confirmed; upgrade invitation not addressed). |
+| **Trigger condition** | Before STARTER tier goes live. Before any in-product upgrade invitation flow is implemented. |
+| **Impact of delaying** | No upgrade invitation or conversion flow can be built. Pilot tenants remain on FREE indefinitely without a defined upgrade path. |
+| **Who decides** | Paresh |
+| **Priority** | P2 |
+| **Status** | PARKED — PARTIALLY_SUPPLIED. Non-payment action defined (downgrade to FREE, preserve data). Pilot tenant upgrade invitation policy not yet defined. |
+| **Cross-reference** | D-017 (FREE pilot provisioning), D-020 (activation model); source: `FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001` |
 
 ---
 
@@ -387,3 +451,4 @@ Each entry has:
 | 2026-07-22 | D-005 (SEO Domain Canonical Strategy) CLOSED: Option F marketing repo lock satisfies trigger condition; app.texqtic.com confirmed as canonical domain for all dynamic marketplace public pages; no redirect policy change needed; existing sitemap.xml, robots.txt, and canonical tag implementation confirmed correct by repo-truth inspection; strategy artifact created. HIST-D-004 added to Decided Items history. | `PUBLIC-SEO-DOMAIN-CANONICAL-STRATEGY-001` |
 | 2026-05-25 | Added D-026 (Reference Preview Buyer Bridge Activation — PARKED, TRIGGER_CONDITIONS_NOT_MET): static app-side reference previews and Marketing preview routing are production accepted through Unit 053 but remain preview-only; all four activation gates pending (real supplier/product data readiness, FTR-B2C-005 supplier-context notification, PRIT-034 legal/privacy/terms bundle, explicit Paresh approval). No buyer inquiry path is active; no commercial supply implied by current preview state. | `TLRH-DECISION-D026-BUYER-BRIDGE-SYNC-003A` |
 | 2026-05-25 | Added D-027 (Live CRM Provisioning Smoke Authorization — PARKED, APPROVAL_REQUIRED): CRM provisioning observability is production accepted through Unit 053 but does not authorize live CRM-system-triggered provisioning mutations; WEBHOOK-007 / PRIT-020 remain design-gated; no further live CRM provisioning smoke authorized without explicit Paresh written approval. | `TLRH-DECISION-D027-CRM-SMOKE-GATE-SYNC-003C` |
+| 2026-06-03 | Updated D-011 (PARTIALLY_RESOLVED: 5 of 7 items supplied by Paresh — first tier STARTER, billing cycle monthly+annual, grace period 3 days, non-payment downgrade to FREE; provisional prices ₹2,499/₹4,999; feature entitlement scope still open; CA review pending). Updated D-012 (PARTIALLY_RESOLVED SaaS scope: TexQtic MoR, permanent SaaS/marketplace separation, marketplace deferred; GST/TCS CA advisory conflicting). Updated D-015 (FOUNDER_DECISION_RESOLVED: Razorpay Subscriptions, test mode first, STARTER first, TexQtic KYC owner; counsel review + §4.3 prerequisites still open). Added D-019 (RESOLVED: SaaS subscription billing STARTER first; all other tracks deferred). Added D-020 (PARTIALLY_RESOLVED: product+mode+tier selected; activation flow design pending). Added D-021 (PARKED: refund/cancellation policy not yet supplied). Added D-022 (PARKED: upgrade invitation policy not supplied; non-payment downgrade confirmed). Parking lot numbering gap D-019–D-022 confirmed and assigned. | `FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001` |

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-03 (FAM-11E-FAMILY-EVIDENCE-SYNC-AND-CLOSE-READINESS-001 COMPLETE. FAM-11 CLOSE_READY — all commercial tier-awareness surfaces implemented and production-accepted. FAM-13A Razorpay readiness installed as next candidate. FAM-07 remains PARTIALLY_IMPLEMENTED. HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-03 (FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001 COMPLETE. Founder payment decisions reconciled. D-019 RESOLVED. D-020 PARTIALLY_RESOLVED. D-021/D-022 registered as PARKED. D-015 FOUNDER_DECISION_RESOLVED. D-011/D-012 PARTIALLY_RESOLVED. PR-01/PR-02 satisfied for SaaS scope. PR-03 through PR-08 still open. Implementation NOT authorized. FAM-11 CLOSE_READY unchanged. FAM-07 HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,35 +15,38 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-13B-RAZORPAY-PAYMENT-ARCHITECTURE-DECISION-LOCK-001
-active_delivery_unit_status: BLOCKED
+active_delivery_unit: FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001
+active_delivery_unit_status: COMPLETE
 active_delivery_unit_note: >
-  FAM-13B Razorpay payment architecture decision lock BLOCKED (2026-06-03).
-  Final enum: FAM_13B_PAYMENT_ARCHITECTURE_BLOCKED_MISSING_HUMAN_DECISIONS.
-  D-011 (subscription tier pricing), D-012 (merchant-of-record), D-015 (Razorpay adoption),
-  and D-PG-PRIORITY (first payment use case priority) — ALL unresolved. 17 explicit decision
-  inputs required from Paresh, CA/accountant, and legal counsel before FAM-13B can re-open.
-  No payment code, schema, migration, or env changes made. Documentation only.
+  FAM-13B-D1 Payment Decision Lock Reconciliation COMPLETE (2026-06-03).
+  Final enum: FAM_13B_D1_PAYMENT_DECISION_RECONCILIATION_COMPLETE_PREREQS_OPEN.
+  Founder payment decisions reconciled from supplied document.
+  D-015 FOUNDER_DECISION_RESOLVED (Razorpay Subscriptions, test mode, STARTER first, TexQtic KYC).
+  D-011 PARTIALLY_RESOLVED (5/7 items; feature entitlement scope + CA review still open).
+  D-012 PARTIALLY_RESOLVED SaaS scope (MoR + separation confirmed; marketplace deferred).
+  D-019 RESOLVED (SaaS subscription billing STARTER first; all other tracks deferred).
+  D-020 PARTIALLY_RESOLVED (product+mode+tier selected; activation flow design pending).
+  D-021 PARKED (refund/cancellation policy not supplied).
+  D-022 PARKED (upgrade invitation policy not supplied; non-payment downgrade confirmed).
+  PR-01/PR-02 satisfied for SaaS scope. PR-03 through PR-08 still open.
+  Parking lot numbering gap D-019–D-022 repaired (FAM-13B conflict resolved).
+  No payment code, schema, migration, or env changes. Governance documentation only.
   FAM-07 hold preserved: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
   governance/legal/fam-07/: ABSENT. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
-  D-016/D-017 parking lot numbering conflict identified from FAM-13A (those numbers occupied).
-  Parking lot repair required when Paresh supplies payment decision inputs.
-last_closed_unit: FAM-13A-RAZORPAY-READINESS-DESIGN-DECISION-001
+last_closed_unit: FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-06-03)
 last_closed_unit_runtime_verdict: >
-  FAM-13A Razorpay readiness design/decision complete (2026-06-03). Repo truth inspected.
-  Razorpay ABSENT from all source, packages, env, and config. No payment gateway exists.
-  Existing checkout endpoint is B2C order creation only (PAYMENT_PENDING state); no payment SDK.
-  Invoices model is B2B trade invoices, not subscription billing. TenantPlan enum intact.
-  Blockers: D-011, D-012, D-015 all PARKED. 7 §4.3 prerequisites unresolved.
-  governance/legal/fam-07/: ABSENT. FTR-LEGAL-003 MVP_CRITICAL/OPEN.
-last_closed_unit_commits: "docs(launch-readiness): record FAM-13A Razorpay readiness design"
+  FAM-13B-D1 decision reconciliation complete (2026-06-03). Founder decisions captured.
+  D-015 fully resolved. D-011/D-012 partially resolved for SaaS scope. D-019 resolved.
+  D-020/D-021/D-022 registered. PR-01/PR-02 satisfied. PR-03 through PR-08 open.
+  No source changes. Governance files only. Implementation gate still closed.
+last_closed_unit_commits: TBD — updated after seal commit
 last_closed_unit_closure_basis: >
-  FAM-13A: complete design/decision artifact. Repo truth confirmed. No source changes.
-  Final enum: FAM_13A_RAZORPAY_READINESS_DESIGN_COMPLETE (commit 8946bda8, sealed b2b8ab39).
-last_closed_unit_prior2: FAM-11E-FAMILY-EVIDENCE-SYNC-AND-CLOSE-READINESS-001
-last_closed_unit_prior2_status: VERIFIED_COMPLETE (2026-06-03)
-last_closed_unit_prior: FAM-09-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001
+  FAM-13B-D1: complete decision reconciliation artifact + parking lot update + NEXT-ACTION sync.
+  Final enum: FAM_13B_D1_PAYMENT_DECISION_RECONCILIATION_COMPLETE_PREREQS_OPEN.
+last_closed_unit_prior2: FAM-13B-RAZORPAY-PAYMENT-ARCHITECTURE-DECISION-LOCK-001
+last_closed_unit_prior2_status: BLOCKED — SUPERSEDED_BY_FAM-13B-D1_DECISION_CAPTURE (2026-06-03)
+last_closed_unit_prior: FAM-13A-RAZORPAY-READINESS-DESIGN-DECISION-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-03)
 fam07_hold_preservation: >
   FAM-07 legal hold preserved through this pointer sync. L13A (33fd8bf7): hold recorded.
@@ -53,19 +56,22 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FAM-13B-REOPEN-RAZORPAY-ARCHITECTURE-DECISION-LOCK-001
-next_candidate_unit_status: BLOCKED_WAITING_HUMAN_DECISIONS
+next_candidate_unit: FAM-13B-D2-PAYMENT-PREREQUISITE-TRACKER-AND-DESIGN-001
+next_candidate_unit_status: NOT_YET_OPENED — AWAITING_PARESH_DIRECTION
 next_candidate_unit_date_installed: "2026-06-03"
 next_candidate_unit_note: >
-  FAM-13B is BLOCKED (2026-06-03). Final enum: FAM_13B_PAYMENT_ARCHITECTURE_BLOCKED_MISSING_HUMAN_DECISIONS.
-  FAM-13B cannot re-open until Paresh supplies 17 explicit decision inputs across D-011,
-  D-012, D-015, and D-PG-PRIORITY (first payment use case priority).
-  Required human inputs: see FAM-13B artifact §5 for full list.
-  Non-payment tracks (FAM-13 NC award maker-checker pending G-022; soft-launch units) may proceed.
-  NOTE: pre-existing unstaged M: components/Public/PublicSupplierProfile.tsx —
-  do NOT stage in any family cycle without explicit allowlist.
+  FAM-13B-D2 is the recommended next payment governance unit (2026-06-03).
+  Scope: track PR-03 through PR-08 to completion; design Razorpay Subscriptions
+  integration architecture (review only, not implementation); record CA advisory outcome;
+  clarify D-011 item 7 (feature entitlement scope per tier); define D-021 (refund policy);
+  clarify D-022 (FREE pilot upgrade invitation); authorize PR-04 KYC start.
+  Gate to open: Paresh explicitly directs FAM-13B-D2 after reviewing this unit.
+  Gate to authorize Razorpay implementation: all 8 §4.3 prerequisites satisfied AND
+  Paresh issues explicit written implementation authorization.
   FAM-07L14 remains blocked (HOLD_FOR_HUMAN_LEGAL_INPUTS).
   FAM-07 hold unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  NOTE: pre-existing unstaged M: components/Public/PublicSupplierProfile.tsx —
+  do NOT stage in any family cycle without explicit allowlist.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001

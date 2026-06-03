@@ -146,6 +146,11 @@ As of this methodology document, there are no:
 - Checkout route or payment callback endpoint in any backend service
 - Invoice payment processing or settlement payout logic
 
+**Decision status update (2026-06-03 — FAM-13B-D1):** D-015 (Razorpay adoption) is now
+`FOUNDER_DECISION_RESOLVED`. Razorpay Subscriptions adopted for SaaS subscription billing.
+Test mode first. STARTER tier first. D-015 trigger condition is satisfied. However, §4.3
+prerequisites (PR-03 through PR-08) remain open. **Implementation is still NOT authorized.**
+
 ### 4.2 Candidate Use Cases (All DESIGN_GATED)
 
 Razorpay (or an equivalent payment gateway) is a candidate for the following future surfaces:
@@ -180,10 +185,21 @@ into any TexQtic surface:
 
 ### 4.4 Razorpay Decision Status
 
-Razorpay usage is parked in D-011 and D-012. No implementation may begin until all
-prerequisites in §4.3 are satisfied and Paresh issues explicit authorization.
+**Updated 2026-06-03 (FAM-13B-D1):** D-015 is now `FOUNDER_DECISION_RESOLVED`.
+- Paresh has confirmed: YES to Razorpay; Razorpay Subscriptions product; test mode first;
+  TexQtic company entity as KYC owner; SaaS subscription billing as first scope; STARTER first.
+- D-015 trigger condition (`Paresh authorizes gateway integration for a specific use case`)
+  is satisfied.
+- D-011 is `PARTIALLY_RESOLVED`: first tier, billing cycle, grace period, non-payment action
+  supplied; feature entitlement scope per tier and CA review still open.
+- D-012 is `PARTIALLY_RESOLVED` for SaaS scope: MoR and separation confirmed; marketplace deferred.
+- **§4.3 prerequisites PR-03 through PR-08 remain open. Implementation gate still CLOSED.**
 
-**Future unit:** RAZORPAY-PAYMENT-GATEWAY-DESIGN-001 (when triggered after D-011/D-012 resolve)
+No implementation may begin until all prerequisites in §4.3 are satisfied and Paresh issues
+explicit implementation authorization via a dedicated design unit (FAM-13B-D2 or successor).
+
+**Future unit:** `FAM-13B-D2-PAYMENT-PREREQUISITE-TRACKER-AND-DESIGN-001` (recommended next
+unit; not yet opened; awaiting Paresh direction).
 
 ---
 
