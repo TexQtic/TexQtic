@@ -233,6 +233,25 @@ plan complete.
 **Next unit:** `FAM-13B-D4 — Razorpay Invoice SAC Verification`
 (recommended; not yet opened; awaiting Paresh direction after reviewing FAM-13B-D3).
 
+**Updated 2026-06-03 (FAM-13B-D4):** Razorpay Invoice SAC Verification — **UNVERIFIED**.
+- All Razorpay external documentation inaccessible via automated fetch (15 URLs attempted;
+  all JavaScript-blocked, 404, or 504). Consistent with D3 finding.
+- No Paresh-supplied Dashboard, API sandbox, or support ticket evidence provided.
+- VQ-01 through VQ-07 formally UNVERIFIED.
+- Knowledge-based analysis lean: Razorpay subscription receipts are payment receipts only
+  and do NOT constitute GST Tax Invoices under CGST Act Section 31. SAC code propagation
+  LIKELY NOT SUPPORTED. CGST/SGST breakdown LIKELY NOT NATIVELY SUPPORTED.
+- D2 §8.1 initial assessment ("SAC/GST fields cannot be customized in all configurations")
+  not contradicted by available knowledge.
+- Fallback-B (accounting software) or Fallback-A (TexQtic invoice system) is the likely
+  required path. CA decision required before fallback selection is finalized.
+- RAZORPAY-INVOICE-SAC-VERIFICATION-001 OPEN. PR-03 PARTIALLY_COMPLETE (3 open items
+  unchanged). Implementation gate CLOSED. FAM-07 HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
+- Final enum: `FAM_13B_D4_RAZORPAY_INVOICE_SAC_VERIFICATION_COMPLETE_UNVERIFIED`
+
+**Next unit:** `FAM-13B-D5 — Razorpay Invoice Pathway Selection and CA Advisory`
+(recommended; not yet opened; awaiting Paresh direction after reviewing FAM-13B-D4).
+
 ---
 
 ## 5. B2B Financial Boundary (CONFIRMED GUARDRAIL)

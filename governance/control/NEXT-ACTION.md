@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-03 (FAM-13B-D3-PAYMENT-PREREQUISITE-TRACKER-AND-OPERATIONAL-READINESS-001 COMPLETE. Payment prerequisite tracker documented for all PR-01 through PR-08 gates. PR-01/PR-02 COMPLETE; PR-03/PR-08 PARTIALLY_COMPLETE; PR-04–PR-07 NOT_STARTED with checklists provided. RAZORPAY-INVOICE-SAC-VERIFICATION-001 structured verification plan (VQ-01–VQ-07) and 3 fallback options documented. D-021 worksheet provided; status PARKED. Implementation gate CLOSED. FAM-07 HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-03 (FAM-13B-D4-RAZORPAY-INVOICE-SAC-VERIFICATION-001 COMPLETE. Outcome: UNVERIFIED — all Razorpay docs JS-blocked; VQ-01–VQ-07 unverified. Knowledge-based lean: LIKELY NOT_SUPPORTED for native GST Tax Invoice compliance. Fallback-A/B required; CA decision pending. RAZORPAY-INVOICE-SAC-VERIFICATION-001 OPEN. PR-03 PARTIALLY_COMPLETE unchanged. Implementation gate CLOSED. FAM-07 HOLD unchanged.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,44 +15,43 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-13B-D3-PAYMENT-PREREQUISITE-TRACKER-AND-OPERATIONAL-READINESS-001
+active_delivery_unit: FAM-13B-D4-RAZORPAY-INVOICE-SAC-VERIFICATION-001
 active_delivery_unit_status: COMPLETE
 active_delivery_unit_note: >
-  FAM-13B-D3 Payment Prerequisite Tracker and Operational Readiness Plan COMPLETE
-  (2026-06-03). Final enum:
-  FAM_13B_D3_PAYMENT_PREREQUISITE_TRACKER_COMPLETE_IMPLEMENTATION_GATE_CLOSED.
-  PR-01/PR-02 COMPLETE. PR-03/PR-08 PARTIALLY_COMPLETE (no status change; completion
-  paths with open items defined). PR-04–PR-07 NOT_STARTED — completion checklists
-  and evidence requirements now documented: KYC checklist (PR-04), refund/cancellation
-  worksheet D-021 (PR-05), PCI boundary checklist (PR-06), payment event audit/log
-  policy checklist with proposed event names (PR-07).
-  RAZORPAY-INVOICE-SAC-VERIFICATION-001 risk OPEN — structured 7-question verification
-  plan (VQ-01 through VQ-07) and 3 fallback invoice options (Fallback-A/B/C) documented.
-  Razorpay external documentation not accessible via automated fetch; manual off-platform
-  verification required in FAM-13B-D4.
-  D-021 (refund/cancellation policy) PARKED — worksheet provided; no Paresh decision yet.
-  D-022 unchanged. No decisions advanced. No source, schema, or environment changes.
-  Governance and operational readiness documentation only.
-  FAM-07 hold preserved: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
+  FAM-13B-D4 Razorpay Invoice SAC Verification COMPLETE (2026-06-03). Final enum:
+  FAM_13B_D4_RAZORPAY_INVOICE_SAC_VERIFICATION_COMPLETE_UNVERIFIED.
+  Outcome: UNVERIFIED — all Razorpay external documentation inaccessible via automated
+  fetch (15 URLs attempted; all JavaScript-blocked, 404, or 504). No Paresh-supplied
+  Dashboard or support evidence provided. VQ-01 through VQ-07 formally UNVERIFIED.
+  Knowledge-based analysis strongly suggests Razorpay subscription receipts are payment
+  receipts only and do NOT constitute GST Tax Invoices under CGST Act Section 31.
+  SAC code (998315) propagation LIKELY NOT SUPPORTED. CGST/SGST breakdown LIKELY NOT
+  NATIVELY SUPPORTED. State-based IGST/CGST+SGST auto-detection LIKELY NOT SUPPORTED.
+  Fallback-B (accounting software) or Fallback-A (TexQtic invoice system) is the likely
+  required path; selection requires Paresh decision + CA confirmation.
+  RAZORPAY-INVOICE-SAC-VERIFICATION-001 OPEN. PR-03 PARTIALLY_COMPLETE (3 open items).
+  PR-04–PR-08 unchanged. No source, schema, or environment changes. Implementation gate
+  CLOSED. FAM-07 hold preserved: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
   governance/legal/fam-07/: ABSENT. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
-last_closed_unit: FAM-13B-D3-PAYMENT-PREREQUISITE-TRACKER-AND-OPERATIONAL-READINESS-001
+last_closed_unit: FAM-13B-D4-RAZORPAY-INVOICE-SAC-VERIFICATION-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-06-03)
 last_closed_unit_runtime_verdict: >
-  FAM-13B-D3 payment prerequisite tracker and operational readiness plan complete
-  (2026-06-03). Prerequisite gate table documented (PR-01/02 COMPLETE; PR-03/08
-  PARTIALLY_COMPLETE; PR-04–PR-07 NOT_STARTED). Completion checklists provided for
-  PR-04 through PR-07. RAZORPAY-INVOICE-SAC-VERIFICATION-001 structured plan provided.
-  D-021 worksheet provided; status unchanged (PARKED). No source changes. No decisions
-  advanced. Governance documentation only. Implementation gate still CLOSED.
-last_closed_unit_commits: cf189ad0 (main commit)
+  FAM-13B-D4 Razorpay Invoice SAC Verification complete (2026-06-03). Outcome: UNVERIFIED.
+  All Razorpay documentation inaccessible via automated fetch. VQ-01–VQ-07 unverified.
+  Knowledge-based analysis supports LIKELY NOT_SUPPORTED for native GST Tax Invoice
+  compliance. Fallback-A or Fallback-B required; selection pending Paresh + CA.
+  PR-03 unchanged (PARTIALLY_COMPLETE, 3 open items). No source changes.
+  Implementation gate CLOSED.
+last_closed_unit_commits: *(TBD — backfill after seal commit)*
 last_closed_unit_closure_basis: >
-  FAM-13B-D3: payment prerequisite tracker artifact + NEXT-ACTION sync +
-  COMMERCE-METHODOLOGY §4.4 update + FUTURE-TODO-REGISTER history row.
-  Final enum: FAM_13B_D3_PAYMENT_PREREQUISITE_TRACKER_COMPLETE_IMPLEMENTATION_GATE_CLOSED.
-last_closed_unit_prior2: FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001
-last_closed_unit_prior2_status: VERIFIED_COMPLETE (2026-06-03)
-last_closed_unit_prior: FAM-13B-D2-CA-SAC-CONFIRMATION-ADDENDUM-001
+  FAM-13B-D4: D4 artifact + NEXT-ACTION sync + COMMERCE-METHODOLOGY §4.4 update +
+  FUTURE-TODO-REGISTER §11 update. DECISION-PARKING-LOT not updated (no decisions
+  advance). LAUNCH-FAMILY-INDEX not updated (no family cycle change). Final enum:
+  FAM_13B_D4_RAZORPAY_INVOICE_SAC_VERIFICATION_COMPLETE_UNVERIFIED.
+last_closed_unit_prior: FAM-13B-D3-PAYMENT-PREREQUISITE-TRACKER-AND-OPERATIONAL-READINESS-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-03)
+last_closed_unit_prior2: FAM-13B-D2-CA-SAC-CONFIRMATION-ADDENDUM-001
+last_closed_unit_prior2_status: VERIFIED_COMPLETE (2026-06-03)
 fam07_hold_preservation: >
   FAM-07 legal hold preserved through this pointer sync. L13A (33fd8bf7): hold recorded.
   L13C (ee6252d9): tracker sync complete. HOLD_FOR_HUMAN_LEGAL_INPUTS active.
@@ -61,23 +60,24 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FAM-13B-D4-RAZORPAY-INVOICE-SAC-VERIFICATION-001
+next_candidate_unit: FAM-13B-D5-RAZORPAY-INVOICE-PATHWAY-SELECTION-AND-CA-ADVISORY-001
 next_candidate_unit_status: NOT_YET_OPENED — AWAITING_PARESH_DIRECTION
 next_candidate_unit_date_installed: "2026-06-03"
 next_candidate_unit_note: >
-  FAM-13B-D4 is the recommended next payment governance unit (2026-06-03).
-  Scope: execute RAZORPAY-INVOICE-SAC-VERIFICATION-001 structured verification plan
-  (VQ-01 through VQ-07 from FAM-13B-D3 §6); Paresh verifies Razorpay invoice SAC/GST
-  field capability off-platform via Razorpay Dashboard, API sandbox, and/or Razorpay
-  support channel; determine NATIVE_SUPPORT / PARTIAL_SUPPORT / NOT_SUPPORTED;
-  select invoice fallback option (Fallback-A/B/C) with CA confirmation; close
-  RAZORPAY-INVOICE-SAC-VERIFICATION-001 risk; advance PR-03 toward COMPLETE; authorize
-  PR-04 KYC operational start if entity details confirmed; optionally advance D-021 if
-  Paresh supplies refund/cancellation policy decisions.
-  Gate to open: Paresh explicitly directs FAM-13B-D4 after reviewing FAM-13B-D3.
-  Gate to authorize Razorpay implementation: all 8 §4.3 prerequisites satisfied AND
-  Paresh issues explicit written implementation authorization.
-  FAM-07L14 remains blocked (HOLD_FOR_HUMAN_LEGAL_INPUTS).
+  FAM-13B-D5 is the recommended next payment governance unit (2026-06-03).
+  Scope: (1) Paresh completes off-platform VQ-01–VQ-07 verification using D3 §6.2
+  checklist (Dashboard screenshots, API test evidence, or Razorpay support confirmation);
+  (2) Select invoice fallback option (Fallback-A/B/C) based on VQ findings; obtain CA
+  confirmation; close RAZORPAY-INVOICE-SAC-VERIFICATION-001; advance PR-03 toward COMPLETE;
+  (3) CA advisory on invoice timing (PR-03-B) and IGST/CGST+SGST state-based split (PR-03-C);
+  (4) Optionally authorize PR-04 KYC start if entity details confirmed; optionally advance
+  D-021 if Paresh supplies refund/cancellation policy decision.
+  Note: If Paresh accepts the knowledge-based lean (LIKELY NOT_SUPPORTED) without further
+  off-platform verification, FAM-13B-D5 may select Fallback-B directly and proceed with
+  CA advisory. This is a valid path.
+  Gate to open: Paresh explicitly directs FAM-13B-D5 after reviewing FAM-13B-D4.
+  Gate to authorize Razorpay implementation: all 8 §4.3 prerequisites satisfied AND Paresh
+  issues explicit written implementation authorization. FAM-07L14 remains blocked.
   FAM-07 hold unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
   NOTE: pre-existing unstaged M: components/Public/PublicSupplierProfile.tsx —
   do NOT stage in any family cycle without explicit allowlist.
