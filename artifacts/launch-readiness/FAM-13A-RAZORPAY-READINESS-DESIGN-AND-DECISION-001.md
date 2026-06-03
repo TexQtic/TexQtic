@@ -328,6 +328,6 @@ The following residuals are explicitly preserved from FAM-11 and are now the for
 
 ## 15. Commit Information
 
-- **Artifact commit:** *(to be filled after commit)*
+- **Artifact commit:** `8946bda8`
 - **HEAD at unit open:** `3834980b`
 - **Files committed:** `artifacts/launch-readiness/FAM-13A-RAZORPAY-READINESS-DESIGN-AND-DECISION-001.md`
