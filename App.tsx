@@ -99,6 +99,7 @@ import { PublicAggregatorPreview } from './components/Public/PublicAggregatorPre
 import { PublicIndustryClusterLanding } from './components/Public/PublicIndustryClusterLanding';
 import { PublicB2CCategoryPage } from './components/Public/PublicB2CCategoryPage';
 import { PublicInquiryPage } from './components/Public/PublicInquiryPage';
+import { PublicPricingPage } from './components/Public/PublicPricingPage';
 import {
   LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY,
   REFERENCE_PRODUCT_PREVIEW_LABEL,
@@ -1996,6 +1997,7 @@ type AppState =
   | 'PUBLIC_SUPPLIER_PROFILE'
   | 'PUBLIC_REFERRAL_LANDING'
   | 'PUBLIC_INQUIRY'
+  | 'PUBLIC_PRICING'
   | 'PUBLIC_NOT_FOUND'
   | 'AUTH'
   | 'FORGOT_PASSWORD'
@@ -2117,6 +2119,14 @@ const resolveInitialAppState = (): AppState => {
       globalThis.window.location.pathname === '/inquiry/'
     ) {
       return 'PUBLIC_INQUIRY';
+    }
+
+    // FAM-11D: Public pricing / plan comparison page — /pricing
+    if (
+      globalThis.window.location.pathname === '/pricing' ||
+      globalThis.window.location.pathname === '/pricing/'
+    ) {
+      return 'PUBLIC_PRICING';
     }
 
     const params = new URLSearchParams(globalThis.window.location.search);
@@ -3048,6 +3058,10 @@ const App: React.FC = () => {
       return 'Express Interest — TexQtic';
     }
 
+    if (appState === 'PUBLIC_PRICING') {
+      return 'Plans & Pricing — TexQtic';
+    }
+
     if (appState === 'AUTH') {
       return authRealm === 'CONTROL_PLANE' ? 'TexQtic Admin Sign In' : 'TexQtic Sign In';
     }
@@ -3479,6 +3493,29 @@ const App: React.FC = () => {
         twitterCard: 'summary',
         twitterTitle: inquiryTitle,
         twitterDescription: inquiryDescription,
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
+    // FAM-11D: /pricing — public plan comparison page
+    if (appState === 'PUBLIC_PRICING') {
+      const pricingTitle = 'Plans & Pricing — TexQtic';
+      const pricingDescription =
+        'Explore TexQtic commercial tiers. Start free during early access — STARTER, PROFESSIONAL, and ENTERPRISE tiers coming soon.';
+      applyPublicPageMeta({
+        title: pricingTitle,
+        description: pricingDescription,
+        canonical: `${origin}/pricing`,
+        robots: 'index, follow',
+        ogTitle: pricingTitle,
+        ogDescription: pricingDescription,
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/pricing`,
+        ogType: 'website',
+        twitterCard: 'summary',
+        twitterTitle: pricingTitle,
+        twitterDescription: pricingDescription,
         twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
       });
       return;
@@ -6822,6 +6859,7 @@ const App: React.FC = () => {
       onGoTrust: () => { globalThis.window?.history.replaceState(null, '', '/trust'); setAppState('PUBLIC_TRUST_LANDING'); },
       onGoAggregator: () => { globalThis.window?.history.replaceState(null, '', '/aggregator'); setAppState('PUBLIC_AGGREGATOR'); },
       onGoInquiry: () => { globalThis.window?.history.replaceState(null, '', '/inquiry'); setAppState('PUBLIC_INQUIRY'); },
+      onGoPricing: () => { globalThis.window?.history.replaceState(null, '', '/pricing'); setAppState('PUBLIC_PRICING'); },
       onSignIn: () => openSecondaryAuthenticatedEntry('TENANT'),
       onRequestAccess: openSupplierRequestAccess,
     };
@@ -7601,6 +7639,19 @@ const App: React.FC = () => {
             sourceSurface={publicInquirySourceSurfaceFromQuery || undefined}
             onBack={navigateToPublicB2BDiscovery}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+          />
+        );
+      // FAM-11D: Public pricing / plan comparison — /pricing
+      case 'PUBLIC_PRICING':
+        return (
+          <PublicPricingPage
+            nav={{ ...publicNavBase, activeSection: 'pricing' }}
+            onBack={() => {
+              globalThis.window?.history.replaceState(null, '', '/');
+              setAppState('PUBLIC_ENTRY');
+            }}
+            onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+            onRequestAccess={openSupplierRequestAccess}
           />
         );
       // REFERRAL-005: Public referral join landing — /join/:referral_code
