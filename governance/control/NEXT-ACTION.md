@@ -44,7 +44,7 @@ last_closed_unit_runtime_verdict: >
   ECO/TCS analysis recorded. PR-03 advances to PARTIALLY_COMPLETE. PR-08 unchanged
   (PARTIALLY_COMPLETE; CA SAC recorded). PR-04–PR-07 NOT_STARTED. No source changes.
   Governance files only. Implementation gate still CLOSED.
-last_closed_unit_commits: 2f342bb9 (main commit) + TBD (seal)
+last_closed_unit_commits: 2f342bb9 (main commit) + dd5b2da1 (seal)
 last_closed_unit_closure_basis: >
   FAM-13B-D2: CA SAC confirmation artifact + DECISION-PARKING-LOT update (D-011/D-012 item 4) +
   NEXT-ACTION sync + COMMERCE-METHODOLOGY §4.4 + FUTURE-TODO-REGISTER history row.

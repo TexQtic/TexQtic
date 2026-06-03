@@ -386,4 +386,4 @@ schema, migration, or environment changes. Governance documentation only.
 | FAM-13B-D1 seal | `c7dbf5d7` | Seal commit — commit hash backfilled |
 | FAM-13B-D1 hash propagation | `fe87916f` | Seal hash + NEXT-ACTION.md `last_closed_unit_commits` |
 | FAM-13B-D2 main | `2f342bb9` | This artifact + governance file updates |
-| FAM-13B-D2 seal | TBD — backfill after seal commit | Seal hash backfilled |
+| FAM-13B-D2 seal | `dd5b2da1` | Seal hash backfilled |
