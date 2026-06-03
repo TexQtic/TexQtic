@@ -42,7 +42,7 @@ last_closed_unit_runtime_verdict: >
   compliance. Fallback-A or Fallback-B required; selection pending Paresh + CA.
   PR-03 unchanged (PARTIALLY_COMPLETE, 3 open items). No source changes.
   Implementation gate CLOSED.
-last_closed_unit_commits: *(TBD — backfill after seal commit)*
+last_closed_unit_commits: `c40111cc` (main commit)
 last_closed_unit_closure_basis: >
   FAM-13B-D4: D4 artifact + NEXT-ACTION sync + COMMERCE-METHODOLOGY §4.4 update +
   FUTURE-TODO-REGISTER §11 update. DECISION-PARKING-LOT not updated (no decisions

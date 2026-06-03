@@ -642,5 +642,5 @@ Advisory.
 | FAM-13B-D2 hash propagation | `e0777e8d` | Seal hash + NEXT-ACTION.md |
 | FAM-13B-D3 main | `cf189ad0` | Payment prerequisite tracker artifact + governance files |
 | FAM-13B-D3 seal | `6c2a6414` | Seal commit — main hash backfilled in NEXT-ACTION.md |
-| FAM-13B-D4 main | *(TBD — backfill after commit)* | This artifact + governance file updates |
+| FAM-13B-D4 main | `c40111cc` | This artifact + governance file updates |
 | FAM-13B-D4 seal | *(TBD — backfill after seal commit)* | Seal hash backfilled |
