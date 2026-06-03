@@ -211,8 +211,27 @@ into any TexQtic surface:
 No implementation may begin until all prerequisites in §4.3 are satisfied and Paresh issues
 explicit implementation authorization via a dedicated design unit.
 
-**Next unit:** `FAM-13B-D3-PAYMENT-PREREQUISITE-TRACKER-AND-OPERATIONAL-READINESS-001`
-(recommended; not yet opened; awaiting Paresh direction after reviewing FAM-13B-D2).
+**Updated 2026-06-03 (FAM-13B-D3):** Payment prerequisite tracker and operational readiness
+plan complete.
+- PR-01 and PR-02 confirmed COMPLETE (no change).
+- PR-03 and PR-08 remain PARTIALLY_COMPLETE (no change from D2; completion paths defined).
+  PR-03 open items: Razorpay invoice SAC/GST field capability (VQ-01–VQ-07 in
+  RAZORPAY-INVOICE-SAC-VERIFICATION-001), invoice filing cadence (PR-03-B), state-based
+  IGST/CGST+SGST split (PR-03-C). PR-08 open items: CA authorization for public price
+  display (PR-08-A), annual price equivalents (PR-08-B).
+- PR-04 (KYC checklist provided), PR-05 (refund/cancellation worksheet D-021 provided),
+  PR-06 (PCI boundary checklist provided), PR-07 (payment event audit/log policy checklist
+  provided) — all NOT_STARTED; completion paths now documented.
+- RAZORPAY-INVOICE-SAC-VERIFICATION-001 risk remains OPEN with structured 7-question
+  verification plan (VQ-01 through VQ-07) and 3 fallback options (A/B/C) documented.
+  Razorpay external documentation not accessible via automated fetch — manual off-platform
+  verification required in FAM-13B-D4.
+- D-021 (refund/cancellation policy) PARKED — worksheet provided; no Paresh decision yet.
+- No implementation authorized. No source, schema, or environment changes.
+- **§4.3 prerequisites PR-03 through PR-08 still open. Implementation gate still CLOSED.**
+
+**Next unit:** `FAM-13B-D4 — Razorpay Invoice SAC Verification`
+(recommended; not yet opened; awaiting Paresh direction after reviewing FAM-13B-D3).
 
 ---
 
