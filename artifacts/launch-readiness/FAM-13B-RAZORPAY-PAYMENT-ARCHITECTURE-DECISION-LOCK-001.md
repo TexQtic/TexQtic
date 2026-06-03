@@ -336,6 +336,6 @@ FAM-11 remains display-only. **No payment implementation was introduced.**
 
 ## 15. Commit Information
 
-- **Artifact commit:** *(to be filled after commit)*
+- **Artifact commit:** `ad1b5e2b`
 - **HEAD at unit open:** `b2b8ab39`
-- **Files to be committed:** `artifacts/launch-readiness/FAM-13B-RAZORPAY-PAYMENT-ARCHITECTURE-DECISION-LOCK-001.md`, `governance/control/NEXT-ACTION.md`
+- **Files committed:** `artifacts/launch-readiness/FAM-13B-RAZORPAY-PAYMENT-ARCHITECTURE-DECISION-LOCK-001.md`, `governance/control/NEXT-ACTION.md`
