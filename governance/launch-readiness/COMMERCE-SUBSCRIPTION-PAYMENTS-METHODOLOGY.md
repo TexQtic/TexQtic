@@ -252,6 +252,77 @@ plan complete.
 **Next unit:** `FAM-13B-D5 — Razorpay Invoice Pathway Selection and CA Advisory`
 (recommended; not yet opened; awaiting Paresh direction after reviewing FAM-13B-D4).
 
+**Updated 2026-06-03 (FAM-13B-D5):** Razorpay Invoice Pathway Selection and CA Advisory — **PATHWAY_SELECTED**.
+- Knowledge-based lean from D4 accepted as operational basis (per NEXT-ACTION.md D5 candidate provision).
+- Fallback options evaluated: Fallback-A (TexQtic internal — HIGH COMPLEXITY), Fallback-B (Zoho Books — RECOMMENDED), Fallback-C (CA manual — NOT SCALABLE, bridge only).
+- **Selected pathway: Fallback-B (Zoho Books API integration).**
+- Zoho Books India GST invoice API confirmed via live research: `hsn_or_sac` field (SAC 998315), `gst_treatment`, `gst_no`, `place_of_supply`, CGST/SGST auto-split, Tax Invoice format — all requirements satisfied.
+- Zoho Books ↔ Razorpay native integration page HTTP 404 — API-direct integration required; standard pattern.
+- RAZORPAY-INVOICE-SAC-VERIFICATION-001 status: PATHWAY_SELECTED_PENDING_CA_CONFIRMATION. VQ-01–VQ-07 all resolved via Fallback-B; formal closure pending CA advisory (CA-Q1).
+- CA Advisory Briefing produced: 5 questions (CA-Q1: Zoho Books acceptability; CA-Q2: invoice timing PR-03-B; CA-Q3: state-based IGST/CGST+SGST split PR-03-C; CA-Q4: B2B vs B2C handling; CA-Q5: e-invoicing threshold).
+- PR-03 status: PATHWAY_SELECTED_PENDING_CA (PR-03-A pathway selected; PR-03-B and PR-03-C pending CA advisory).
+- PR-08 PARTIALLY_COMPLETE — unchanged. PR-04 through PR-07 NOT_STARTED — unchanged.
+- D-021 PARKED — unchanged.
+- FTU-COMM-001 status unchanged (PARKED POST_MVP). FTU-COMM-002 trigger unchanged (all §4.3 prerequisites required).
+- Implementation gate CLOSED — unchanged. No source, schema, or environment changes.
+- Final enum: `FAM_13B_D5_RAZORPAY_INVOICE_PATHWAY_SELECTION_COMPLETE_FALLBACK_B_SELECTED`
+
+**Next unit:** `FAM-13B-D6 — CA Advisory Close and PR-03 Completion`
+(recommended; not yet opened; awaiting Paresh CA advisory consultation after reviewing FAM-13B-D5 §8).
+
+### 4.5 D6 Status — CA Advisory Close and PR-03 Completion (2026-06-03)
+
+**Unit:** FAM-13B-D6-CA-ADVISORY-CLOSE-AND-PR-03-COMPLETION-001 — ✅ **COMPLETE**
+
+**Outcome:** CA Advisory Loop CLOSED. All five CA confirmations recorded and Paresh-approved.
+PR-03 (GST invoice compliance) advanced from PATHWAY_SELECTED_PENDING_CA → **COMPLETE**.
+RAZORPAY-INVOICE-SAC-VERIFICATION-001 formally CLOSED. Zoho Books operational pathway locked.
+
+**CA confirmations recorded:**
+- CA-Q1: Zoho Books India edition acceptable for GST Tax Invoices; compliant under CGST Act §31; acceptable for GSTR-1/GSTR-3B filing; B2B customers can claim ITC. ✅ CONFIRMED
+- CA-Q2: Same-day invoice generation after Razorpay payment confirmation correct and compliant; billing period must be included in invoice description. ✅ CONFIRMED
+- CA-Q3: TexQtic registered state = Gujarat (code 24); tax split = CGST 9% + SGST 9% same-state, IGST 18% inter-state; place_of_supply determined by GSTIN state (B2B) or billing address state (B2C). ✅ CONFIRMED
+- CA-Q4 (supplementary): Single Tax Invoice format acceptable for all subscriber types (B2B/B2C/unregistered/export); Zoho Books GST treatment mapping (business_gst / business_none / consumer / overseas) supports all types. ✅ CONFIRMED
+- CA-Q5 (supplementary): E-invoicing NOT required at launch if TexQtic below ₹5 crore threshold; Zoho Books configured e-invoicing-ready; IRN NOT activated without explicit CA confirmation + Paresh authorization. ✅ CONFIRMED
+
+**PR-03 completion:**
+- PR-03-A (invoice pathway selection): ✅ COMPLETE — Fallback-B / Zoho Books selected and CA-confirmed
+- PR-03-B (invoice timing cadence): ✅ COMPLETE — same-day generation after payment, CA-confirmed
+- PR-03-C (state-based CGST/SGST split): ✅ COMPLETE — Gujarat state, CGST/SGST 9%+9%, place_of_supply logic, CA-confirmed
+- **PR-03 overall:** ✅ **COMPLETE**
+
+**RAZORPAY-INVOICE-SAC-VERIFICATION-001 disposition:**
+- Previous status: PATHWAY_SELECTED_PENDING_CA_CONFIRMATION
+- D6 status: **✅ FORMALLY CLOSED**
+- Closure basis: Fallback-B (Zoho Books) selected and CA-confirmed acceptable; all VQ-01–VQ-07 resolved via Zoho Books capabilities; Razorpay receipts are payment receipts only (not Tax Invoices); Zoho Books is GST-compliant invoice authority
+
+**Zoho Books setup carry-forward documented:**
+- Organization state: Gujarat (code 24)
+- Supplier GSTIN: [internal, not exposed]
+- SAC code: 998315 (platform SaaS)
+- Invoice numbering: TEXQ/[FY]/[seq]
+- Place of Supply field: enabled
+- GST Liability/Output Tax accounts: configured for setup
+- Razorpay payment reference: custom field for reconciliation
+- E-invoicing: configured ready, not activated
+
+**PR-04–PR-08 status (unchanged by D6):**
+- PR-04 (Razorpay KYC): NOT_STARTED — awaiting Paresh completion (checklist in D3)
+- PR-05 (refund/cancellation policy): NOT_STARTED — awaiting Paresh decision (worksheet in D3)
+- PR-06 (PCI boundary): NOT_STARTED — awaiting Paresh review (checklist in D3)
+- PR-07 (payment event audit/log): NOT_STARTED — awaiting Paresh review (checklist in D3)
+- PR-08 (pricing/tier structure): PARTIALLY_COMPLETE — PR-08-A (CA auth for public prices); PR-08-B (annual equivalents)
+
+**Implementation gate:** CLOSED — unchanged. 3/8 prerequisites satisfied (PR-01, PR-02, PR-03). PR-04–PR-08 remain open/partial. Explicit Paresh written implementation authorization not yet issued. FTU-COMM-002 trigger: UNMET.
+
+**D6 governance changes:** D6 artifact created; NEXT-ACTION.md synced (active unit D6 COMPLETE, next candidate D7); COMMERCE-METHODOLOGY D6 status block added; FUTURE-TODO-REGISTER §11 D6 row added.
+
+**No source, schema, migration, or environment changes** in D6.
+
+**Final enum:** `FAM_13B_D6_CA_ADVISORY_CLOSED_PR_03_COMPLETE`
+
+**Next recommended unit:** `FAM-13B-D7 — Razorpay KYC and Payment Account Readiness Closure` (scope: record Razorpay KYC status from D3 checklist; confirm settlement, test/live readiness; advisory/governance only).
+
 ---
 
 ## 5. B2B Financial Boundary (CONFIRMED GUARDRAIL)
