@@ -15,37 +15,34 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-13A-RAZORPAY-READINESS-DESIGN-DECISION-001
-active_delivery_unit_status: VERIFIED_COMPLETE
+active_delivery_unit: FAM-13B-RAZORPAY-PAYMENT-ARCHITECTURE-DECISION-LOCK-001
+active_delivery_unit_status: BLOCKED
 active_delivery_unit_note: >
+  FAM-13B Razorpay payment architecture decision lock BLOCKED (2026-06-03).
+  Final enum: FAM_13B_PAYMENT_ARCHITECTURE_BLOCKED_MISSING_HUMAN_DECISIONS.
+  D-011 (subscription tier pricing), D-012 (merchant-of-record), D-015 (Razorpay adoption),
+  and D-PG-PRIORITY (first payment use case priority) — ALL unresolved. 17 explicit decision
+  inputs required from Paresh, CA/accountant, and legal counsel before FAM-13B can re-open.
+  No payment code, schema, migration, or env changes made. Documentation only.
+  FAM-07 hold preserved: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
+  governance/legal/fam-07/: ABSENT. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  D-016/D-017 parking lot numbering conflict identified from FAM-13A (those numbers occupied).
+  Parking lot repair required when Paresh supplies payment decision inputs.
+last_closed_unit: FAM-13A-RAZORPAY-READINESS-DESIGN-DECISION-001
+last_closed_unit_status: VERIFIED_COMPLETE (2026-06-03)
+last_closed_unit_runtime_verdict: >
   FAM-13A Razorpay readiness design/decision complete (2026-06-03). Repo truth inspected.
   Razorpay ABSENT from all source, packages, env, and config. No payment gateway exists.
   Existing checkout endpoint is B2C order creation only (PAYMENT_PENDING state); no payment SDK.
   Invoices model is B2B trade invoices, not subscription billing. TenantPlan enum intact.
-  Blockers documented: D-011 (subscription pricing), D-012 (merchant-of-record), D-015 (Razorpay
-  adoption) all PARKED. 7 §4.3 prerequisites all unresolved. New decisions D-016 through D-019
-  identified. Future unit sequence: FAM-13B (arch lock, DECISION_GATED) → FAM-13C → FAM-13D →
-  FAM-13E → FAM-13F. No source/package/env/schema/migration files changed. Documentation only.
-  FAM-07 hold preserved: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
-  governance/legal/fam-07/: ABSENT. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
-last_closed_unit: FAM-11E-FAMILY-EVIDENCE-SYNC-AND-CLOSE-READINESS-001
-last_closed_unit_status: VERIFIED_COMPLETE (2026-06-03)
-last_closed_unit_runtime_verdict: >
-  FAM-11 evidence sync complete. All commercial tier-awareness display surfaces confirmed in
-  production (Paresh verified 2026-06-03). /pricing CTA wiring correct: Get started free →
-  https://texqtic.com/request-access. Paid-tier CTAs → mailto:hello@texqtic.com.
-  Feature comparison accordions accepted. PlanAndUsagePanel confirmed in tenant workspace.
-  No source mutations. No schema modifications. FAM-07 hold preserved.
-  FTR-LEGAL-003 remains OPEN. Artifact: artifacts/launch-readiness/FAM-11E-FAMILY-EVIDENCE-SYNC-AND-CLOSE-READINESS-001.md.
-last_closed_unit_commits: "docs(launch-readiness): close FAM-11 evidence sync"
+  Blockers: D-011, D-012, D-015 all PARKED. 7 §4.3 prerequisites unresolved.
+  governance/legal/fam-07/: ABSENT. FTR-LEGAL-003 MVP_CRITICAL/OPEN.
+last_closed_unit_commits: "docs(launch-readiness): record FAM-13A Razorpay readiness design"
 last_closed_unit_closure_basis: >
-  FAM-11 full evidence cycle (FAM-11A scenario matrix + FAM-11B commercial framing +
-  FAM-11B2 decision lock + FAM-11C tier awareness implementation + FAM-11D public pricing +
-  FAM-11D CTA fix + feature comparison redesign + FAM-11E evidence sync) confirms
-  commercial tier-awareness display surfaces accepted in production.
-  FAM-11 CLOSE_READY. Display-only MVP posture intentional. No paid enforcement.
-  No legal authority created. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
-  FAM-07 remains not VERIFIED_COMPLETE.
+  FAM-13A: complete design/decision artifact. Repo truth confirmed. No source changes.
+  Final enum: FAM_13A_RAZORPAY_READINESS_DESIGN_COMPLETE (commit 8946bda8, sealed b2b8ab39).
+last_closed_unit_prior2: FAM-11E-FAMILY-EVIDENCE-SYNC-AND-CLOSE-READINESS-001
+last_closed_unit_prior2_status: VERIFIED_COMPLETE (2026-06-03)
 last_closed_unit_prior: FAM-09-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-03)
 fam07_hold_preservation: >
@@ -56,15 +53,15 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FAM-13B-RAZORPAY-ARCHITECTURE-DESIGN-LOCK-001
-next_candidate_unit_status: DECISION_GATED
+next_candidate_unit: FAM-13B-REOPEN-RAZORPAY-ARCHITECTURE-DECISION-LOCK-001
+next_candidate_unit_status: BLOCKED_WAITING_HUMAN_DECISIONS
 next_candidate_unit_date_installed: "2026-06-03"
 next_candidate_unit_note: >
-  FAM-11 is CLOSE_READY (2026-06-03). Next recommended candidate is FAM-13A Razorpay
-  readiness design/decision — minimum design/decision unit for Razorpay integration
-  readiness. Scope: design + decision only; no Razorpay/Stripe/payment implementation
-  authorized. Separate track from FAM-11 commercial tier-awareness scope.
-  FAM-13A requires explicit Paresh authorization before opening.
+  FAM-13B is BLOCKED (2026-06-03). Final enum: FAM_13B_PAYMENT_ARCHITECTURE_BLOCKED_MISSING_HUMAN_DECISIONS.
+  FAM-13B cannot re-open until Paresh supplies 17 explicit decision inputs across D-011,
+  D-012, D-015, and D-PG-PRIORITY (first payment use case priority).
+  Required human inputs: see FAM-13B artifact §5 for full list.
+  Non-payment tracks (FAM-13 NC award maker-checker pending G-022; soft-launch units) may proceed.
   NOTE: pre-existing unstaged M: components/Public/PublicSupplierProfile.tsx —
   do NOT stage in any family cycle without explicit allowlist.
   FAM-07L14 remains blocked (HOLD_FOR_HUMAN_LEGAL_INPUTS).
