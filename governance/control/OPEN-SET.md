@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-08-01 (FAM-08G-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001 COMPLETE. FAM-08 CLOSE_READY_WITH_RESIDUALS. FAM-09 installed as next nonlegal candidate. FAM-07 remains PARTIALLY_IMPLEMENTED. HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
+**Last Updated:** 2026-06-03 (FAM-09-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001 COMPLETE. FAM-09 CLOSE_READY_WITH_LAUNCH_TEST_RESIDUALS. FAM-11 installed as next nonlegal candidate. FAM-07 remains PARTIALLY_IMPLEMENTED. HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,23 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- FAM-09-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001 COMPLETE (2026-06-03).
+  FAM-09 evidence cycle closed via opening audit + runtime verification + onboarding evidence +
+  operator handoff + seed data requirements audit + launch-test supplier seed + TLRH sync.
+  Technical/runtime launch-readiness proven via launch-test supplier lt-b2b-001 (5/5 projection
+  gates PASS, GET /api/public/b2b/suppliers 200 OK total=1, GET /api/public/supplier/lt-b2b-001
+  200 OK, 61/61 unit tests PASS, seed script idempotent, commit dd503325).
+  FAM-09 CLOSE_READY_WITH_LAUNCH_TEST_RESIDUALS. Residuals: lt-b2b-001 is launch-test data only
+  (NOT a real supplier); real supplier onboarding / aggregator supplier data remains operational
+  pending; lt-b2b-001 cleanup/deactivation before public launch = Paresh decision;
+  shraddha-industries untouched and requires explicit Paresh approval for posture changes.
+  FAM-11 installed as next nonlegal candidate. Requires Paresh authorization before opening.
+  FAM-07 hold preserved: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FAM-07L14 remains blocked.
+  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. governance/legal/fam-07/: ABSENT.
+  No source mutations. No schema modifications. No legal authority created.
+  HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.
+  Artifact: artifacts/launch-readiness/FAM-09-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001.md.
 
 - FAM-08G-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001 COMPLETE (2026-08-01).
   FAM-08 evidence cycle closed via opening audit + runtime verification + FAM-08A through FAM-08G.

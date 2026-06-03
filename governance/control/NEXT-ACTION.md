@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-08-01 (FAM-08G-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001 COMPLETE. FAM-08 CLOSE_READY_WITH_RESIDUALS — T-1 PROVEN_READY, T-2 PROVEN_READY, T-3/T-4/T-5 SUBSTANTIALLY_IMPLEMENTED, T-6 PROVEN_READY. FAM-09 installed as next nonlegal candidate. FAM-07 remains PARTIALLY_IMPLEMENTED. HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-03 (FAM-09-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001 COMPLETE. FAM-09 CLOSE_READY_WITH_LAUNCH_TEST_RESIDUALS — technical/runtime path proven via lt-b2b-001; real supplier onboarding pending. FAM-10 already VERIFIED_COMPLETE. FAM-11 installed as next nonlegal candidate. FAM-07 remains PARTIALLY_IMPLEMENTED. HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,44 +15,44 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-08G-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001
+active_delivery_unit: FAM-09-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001
 active_delivery_unit_status: VERIFIED_COMPLETE
 active_delivery_unit_note: >
-  FAM-08 evidence cycle complete. T-1 PROVEN_READY (0e7fd4ed, 69/69 pass), T-2 PROVEN_READY
-  (FAM-08C1 87ca88d8, gate-d7 7/7 PASS; full remediation chain FAM-08A–FAM-08C1),
-  T-3 SUBSTANTIALLY_IMPLEMENTED (FAM-08D2 98c8afe4, feature flag seeding DB-confirmed),
-  T-4 SUBSTANTIALLY_IMPLEMENTED (FAM-08E 5f31b35e, trg_sync_tenants_to_org trigger confirmed),
-  T-5 SUBSTANTIALLY_IMPLEMENTED / Case A PROVEN_READY (FAM-08F 1410564d, NC RFQ 43 DB-backed
-  tests, PRQ-23/24/25/29/43 proven), T-6 PROVEN_READY (runtime verification, 77/77 pass).
-  FAM-08 CLOSE_READY_WITH_RESIDUALS. Post-launch residuals: plan CHECK constraint,
-  /api/me normalization, admin settings write surface, CI hasDb coverage.
-  Decision-gated: QD-6 (supplier_quotes), FE-10 (rfq.award).
-  FAM-09 installed as next nonlegal candidate. FAM-07 hold preserved:
+  FAM-09 evidence cycle complete. Public B2B supplier profile and catalog technical/runtime
+  path proven via launch-test supplier lt-b2b-001. All 5 projection gates PASS (Gate A:
+  PUBLICATION_ELIGIBLE, Gate B: B2B_PUBLIC, Gate C: B2B, Gate D: ACTIVE, Gate E:
+  is_qa_sentinel=false). GET /api/public/b2b/suppliers: 200 OK, total=1, lt-b2b-001 present.
+  GET /api/public/supplier/lt-b2b-001: 200 OK, public-safe profile confirmed. Offering preview:
+  3 launch-test catalog items. 61/61 targeted unit tests PASS. Seed script idempotent.
+  FAM-09 CLOSE_READY_WITH_LAUNCH_TEST_RESIDUALS. Residuals: lt-b2b-001 is launch-test data only
+  (NOT a real supplier); real supplier onboarding / aggregator supplier readiness remains
+  operational pending; lt-b2b-001 cleanup/deactivation before public launch = Paresh decision;
+  shraddha-industries untouched and requires explicit Paresh approval for posture changes.
+  FAM-11 installed as next nonlegal candidate. FAM-07 hold preserved:
   HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
-  governance/legal/fam-07/: ABSENT. No source mutations.
+  governance/legal/fam-07/: ABSENT. No source mutations. No schema modifications.
   legal_approved_transition_allowed=false. No legal authority created.
   HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.
-last_closed_unit: FAM-08G-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001
-last_closed_unit_status: VERIFIED_COMPLETE (2026-08-01)
+last_closed_unit: FAM-09-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001
+last_closed_unit_status: VERIFIED_COMPLETE (2026-06-03)
 last_closed_unit_runtime_verdict: >
-  FAM-08 evidence sync complete. T-item matrix (6 items):
-  T-1 PROVEN_READY (runtime verification 0e7fd4ed, 69/69 pass),
-  T-2 PROVEN_READY (FAM-08C1 87ca88d8, gate-d7 7/7 PASS; full remediation chain FAM-08A–C1),
-  T-3 SUBSTANTIALLY_IMPLEMENTED (FAM-08D2 98c8afe4, NC flag provisioning DB-confirmed),
-  T-4 SUBSTANTIALLY_IMPLEMENTED (FAM-08E 5f31b35e, trg_sync_tenants_to_org trigger confirmed),
-  T-5 SUBSTANTIALLY_IMPLEMENTED / Case A PROVEN_READY (FAM-08F 1410564d, NC RFQ 43 DB-backed
-  tests, PRQ-23/24/25/29/43 proven), T-6 PROVEN_READY (runtime verification, 77/77 pass).
+  FAM-09 evidence sync complete. Public B2B supplier profile and catalog runtime path proven via
+  launch-test supplier lt-b2b-001. All 5 projection gates PASS. GET /api/public/b2b/suppliers:
+  200 OK, total=1, lt-b2b-001 present. GET /api/public/supplier/lt-b2b-001: 200 OK.
+  Offering preview: 3 launch-test catalog items. 61/61 targeted unit tests PASS.
+  Seed script: server/scripts/seed-launch-test-b2b-supplier.ts (idempotent, dd503325).
   No source mutations. FAM-07 hold preserved. FTR-LEGAL-003 remains OPEN.
-  Artifact: artifacts/launch-readiness/FAM-08G-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001.md.
-last_closed_unit_commits: "docs(fam-08): sync launch readiness evidence"
+  Artifact: artifacts/launch-readiness/FAM-09-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001.md.
+last_closed_unit_commits: "docs(fam-09): sync supplier profile launch readiness evidence"
 last_closed_unit_closure_basis: >
-  Full FAM-08 evidence cycle (opening audit + runtime verification + FAM-08A through FAM-08G)
-  confirms all 6 T-items at SUBSTANTIALLY_IMPLEMENTED or PROVEN_READY. No launch blockers open
-  within FAM-08 scope. Residuals are post-launch P2/P3 or decision-gated.
-  FAM-08 CLOSE_READY_WITH_RESIDUALS. No legal authority created.
+  Full FAM-09 evidence cycle (opening audit + runtime verification + onboarding evidence +
+  operator handoff + seed data requirements audit + launch-test supplier seed + TLRH sync)
+  confirms technical/runtime launch-readiness via launch-test data. Real supplier onboarding
+  remains separate operational residual. lt-b2b-001 is launch-test data only.
+  FAM-09 CLOSE_READY_WITH_LAUNCH_TEST_RESIDUALS. No legal authority created.
   FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. FAM-07 remains not VERIFIED_COMPLETE.
-last_closed_unit_prior: LAUNCH-READINESS-NONLEGAL-NEXT-PACKET-SELECTION-001
-last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-07-01)
+last_closed_unit_prior: FAM-08G-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001
+last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-08-01)
 fam07_hold_preservation: >
   FAM-07 legal hold preserved through this pointer sync. L13A (33fd8bf7): hold recorded.
   L13C (ee6252d9): tracker sync complete. HOLD_FOR_HUMAN_LEGAL_INPUTS active.
@@ -61,21 +61,21 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FAM-09-SUPPLIER-PROFILE-CATALOG-OPENING-REPO-TRUTH-AUDIT-001
-next_candidate_unit_status: READY_AFTER_FAM08G
-next_candidate_unit_date_installed: "2026-08-01"
+next_candidate_unit: FAM-11-SUBSCRIPTION-COMMERCIAL-GATING-OPENING-REPO-TRUTH-AUDIT-001
+next_candidate_unit_status: READY_AFTER_FAM09_TLRH
+next_candidate_unit_date_installed: "2026-06-03"
 next_candidate_unit_note: >
-  Read-only opening repo-truth audit for FAM-09 Supplier Profile and Catalog
-  (P0 / LAUNCH_BLOCKER / NOT_ASSESSED / no legal dependency / cycle 8).
-  Scope: supplier profile completeness, catalog route coverage, org_id isolation in
-  catalog queries, supplier photo/media handling, search/filter surface,
-  PublicSupplierProfile.tsx real-data readiness. Output: governance artifact mapping
-  current state vs. MVP checklist for supplier profile and catalog.
+  FAM-10 (Platform Ops and Control Plane) is already VERIFIED_COMPLETE (2026-05-28).
+  Next actionable nonlegal candidate is FAM-11 Subscription and Commercial Gating
+  (P1_MVP_MUST_HAVE / NOT_ASSESSED / no legal dependency / cycle 10).
+  Scope: minimum commercial gating logic for pilot tenants; subscription enforcement;
+  plan-gated route surfaces; commercial gating unit tests.
+  FAM-11 is P1 priority — not a P0 LAUNCH_BLOCKER. Requires explicit Paresh authorization
+  before opening. Paresh may choose to sequence a different family or packet instead.
   NOTE: pre-existing unstaged M: components/Public/PublicSupplierProfile.tsx —
   do NOT stage in any family cycle without explicit allowlist.
   FAM-07L14 remains blocked (HOLD_FOR_HUMAN_LEGAL_INPUTS).
   FAM-07 hold unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
-  Requires Paresh authorization before opening.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001
