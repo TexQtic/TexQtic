@@ -15,21 +15,19 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-11E-FAMILY-EVIDENCE-SYNC-AND-CLOSE-READINESS-001
+active_delivery_unit: FAM-13A-RAZORPAY-READINESS-DESIGN-DECISION-001
 active_delivery_unit_status: VERIFIED_COMPLETE
 active_delivery_unit_note: >
-  FAM-11 evidence sync complete. All commercial tier-awareness surfaces implemented and
-  production-accepted (Paresh verified 2026-06-03). FREE plan display, tenant PlanAndUsagePanel,
-  public /pricing page, CTA wiring to request-access, feature comparison accordions all confirmed.
-  FAM-11D CTA fix: Get started free routes to https://texqtic.com/request-access (not login).
-  Feature comparison redesigned: category accordions, expand/collapse, mobile-safe.
-  hello@texqtic.com monitored; upgrade inquiries answered by Paresh.
-  FAM-11 CLOSE_READY. Residuals: paid enforcement future; FAM-13A Razorpay separate track;
-  TTP omitted (FTR-LEGAL-003 MVP_CRITICAL/OPEN); paid pricing amounts pending CA/legal decision.
-  No source mutations. No schema modifications. No backend changes.
+  FAM-13A Razorpay readiness design/decision complete (2026-06-03). Repo truth inspected.
+  Razorpay ABSENT from all source, packages, env, and config. No payment gateway exists.
+  Existing checkout endpoint is B2C order creation only (PAYMENT_PENDING state); no payment SDK.
+  Invoices model is B2B trade invoices, not subscription billing. TenantPlan enum intact.
+  Blockers documented: D-011 (subscription pricing), D-012 (merchant-of-record), D-015 (Razorpay
+  adoption) all PARKED. 7 §4.3 prerequisites all unresolved. New decisions D-016 through D-019
+  identified. Future unit sequence: FAM-13B (arch lock, DECISION_GATED) → FAM-13C → FAM-13D →
+  FAM-13E → FAM-13F. No source/package/env/schema/migration files changed. Documentation only.
   FAM-07 hold preserved: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
-  governance/legal/fam-07/: ABSENT. legal_approved_transition_allowed=false.
-  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.
+  governance/legal/fam-07/: ABSENT. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
 last_closed_unit: FAM-11E-FAMILY-EVIDENCE-SYNC-AND-CLOSE-READINESS-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-06-03)
 last_closed_unit_runtime_verdict: >
@@ -58,8 +56,8 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FAM-13A-RAZORPAY-READINESS-DESIGN-DECISION-001
-next_candidate_unit_status: READY_AFTER_FAM11E
+next_candidate_unit: FAM-13B-RAZORPAY-ARCHITECTURE-DESIGN-LOCK-001
+next_candidate_unit_status: DECISION_GATED
 next_candidate_unit_date_installed: "2026-06-03"
 next_candidate_unit_note: >
   FAM-11 is CLOSE_READY (2026-06-03). Next recommended candidate is FAM-13A Razorpay
