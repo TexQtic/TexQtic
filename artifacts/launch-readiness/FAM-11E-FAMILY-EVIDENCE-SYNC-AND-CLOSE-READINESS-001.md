@@ -197,6 +197,6 @@ Note: FAM-13A is a payment-readiness design/decision track entirely separate fro
 
 ## 12. Commit Information
 
-- **Artifact commit:** *(to be filled after commit)*
+- **Artifact commit:** `3c9cf5aa`
 - **HEAD before artifact commit:** `21d8eaa0`
 - **Files committed:** `artifacts/launch-readiness/FAM-11E-FAMILY-EVIDENCE-SYNC-AND-CLOSE-READINESS-001.md` + tracker sync (`governance/launch-readiness/LAUNCH-FAMILY-INDEX.md`, `governance/control/NEXT-ACTION.md`)
