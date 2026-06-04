@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTR-LEGAL-003A-SAAS-CHECKOUT-LEGAL-TERMS-AND-PAYMENT-GATE-REVIEW-001 COMPLETE. Decision: BLOCKED_PENDING_LEGAL_CONTENT. All 8 payment gate criteria unmet — no customer-facing legal content exists. Final enum: FTR_LEGAL_003A_BLOCKED_PENDING_LEGAL_CONTENT. Next unit: FTR-LEGAL-003B.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTR-LEGAL-003B-SAAS-PAYMENT-TERMS-CONTENT-DRAFT-AND-COUNSEL-PREP-001 COMPLETE. 6 draft legal documents produced + counsel-review packet. Founder decisions incorporated. 12 open questions flagged. Final enum: FTR_LEGAL_003B_DRAFT_PACK_READY_FOR_PARESH_REVIEW.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,42 +15,44 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FTR-LEGAL-003A-SAAS-CHECKOUT-LEGAL-TERMS-AND-PAYMENT-GATE-REVIEW-001
-active_delivery_unit_status: COMPLETE
+active_delivery_unit: FTR-LEGAL-003B-SAAS-PAYMENT-TERMS-CONTENT-DRAFT-AND-COUNSEL-PREP-001
+active_delivery_unit_status: COMPLETE_DRAFT_READY_FOR_PARESH_REVIEW
 active_delivery_unit_note: >
-  FTR-LEGAL-003A SaaS Checkout Legal Terms and Payment Gate Review COMPLETE (2026-06-04).
-  Decision: BLOCKED_PENDING_LEGAL_CONTENT. All 8 payment gate criteria assessed — 0 of 8 satisfied.
-  Cause: no customer-facing legal content exists anywhere (Terms of Service, Payment Terms,
-  Refund/Cancellation Policy, GST/Invoice Disclosure, Privacy Policy, Grievance/Contact Policy
-  all absent). Governance decisions exist (D8 refund policy, D-012 GST, D9 PCI, D10 audit)
-  but none published as customer-facing legal documents. Legal architecture (PRIT-034-001)
-  confirmed: canonical legal pages live on texqtic.com (separate marketing repo; not in this
-  checkout). FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains
-  MVP_CRITICAL/OPEN. No source, schema, package, env, or checkout changes.
-  Final enum: FTR_LEGAL_003A_BLOCKED_PENDING_LEGAL_CONTENT.
-  Next unit: FTR-LEGAL-003B-SAAS-PAYMENT-TERMS-CONTENT-DRAFT-AND-COUNSEL-PREP-001.
-last_closed_unit: FTR-LEGAL-003A-SAAS-CHECKOUT-LEGAL-TERMS-AND-PAYMENT-GATE-REVIEW-001
+  FTR-LEGAL-003B SaaS Payment Terms Content Draft and Counsel Prep COMPLETE (2026-06-04).
+  6 draft legal documents produced: Terms of Use, Subscription and Payment Terms,
+  Refund and Cancellation Policy, Privacy Policy, Grievance and Contact Policy,
+  GST and Invoice Disclosure. Parent counsel-review packet also produced.
+  All founder decisions incorporated: governing law India, Surat Gujarat jurisdiction,
+  grievance officer SIDDHI A PATEL, hello@texqtic.com, 7-10 business day refund processing,
+  annual plan no auto-refund except exceptions, auto-renewal notice in-app + email where feasible.
+  8 counsel-review categories flagged (CR-01 through CR-08).
+  12 open questions for Paresh review flagged (OQ-01 through OQ-12).
+  All artifacts in artifacts/launch-readiness/ (git-ignored). No source, schema, package,
+  env, or checkout changes. FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
+  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  Final enum: FTR_LEGAL_003B_DRAFT_PACK_READY_FOR_PARESH_REVIEW.
+  Next unit: FTR-LEGAL-003C (publication, separate texqtic.com marketing repo) —
+  blocked until Paresh review complete + counsel engagement decision (OQ-02) + CIN/entity details (OQ-03).
+last_closed_unit: FTR-LEGAL-003B-SAAS-PAYMENT-TERMS-CONTENT-DRAFT-AND-COUNSEL-PREP-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-06-04)
 last_closed_unit_runtime_verdict: >
-  FTR-LEGAL-003A SaaS Checkout Legal Terms and Payment Gate Review COMPLETE (2026-06-04).
-  Decision: BLOCKED_PENDING_LEGAL_CONTENT. Final enum: FTR_LEGAL_003A_BLOCKED_PENDING_LEGAL_CONTENT.
-last_closed_unit_commits: '"gov: record FTR-LEGAL-003 SaaS payment legal gaps" (3 tracker files)'
+  FTR-LEGAL-003B SaaS Payment Terms Content Draft and Counsel Prep COMPLETE (2026-06-04).
+  6 draft documents produced. Counsel-review packet produced. Founder decisions incorporated.
+  Final enum: FTR_LEGAL_003B_DRAFT_PACK_READY_FOR_PARESH_REVIEW.
+last_closed_unit_commits: '"legal: draft FTR-LEGAL-003B SaaS payment terms pack" (3 tracker files)'
 last_closed_unit_closure_basis: >
-  FTR-LEGAL-003A: repo-truth inspection at HEAD 6ac93794 confirmed all required legal
-  surfaces NOT_IMPLEMENTED. 8-criterion payment gate assessed: 0/8 satisfied.
-  Primary blocker: no customer-facing legal content exists (Terms, Privacy, Payment Terms,
-  Refund Policy, GST Disclosure, Grievance/Contact all absent). Governance decisions
-  D-021/PR-05 (refund), D-012/PR-03 (GST), D9/PR-06 (PCI), D10/PR-07 (audit) are
-  complete governance records but NOT published customer-facing legal documents.
-  PRIT-034-001 legal architecture confirmed: canonical legal pages on texqtic.com (separate
-  marketing repo not in this checkout). All 8 Razorpay prerequisites COMPLETE.
-  Implementation gate remains CLOSED — held by FTR-LEGAL-003 (legal content absent).
-  Artifact: artifacts/launch-readiness/FTR-LEGAL-003A-...md (git-ignored).
-  FAM-07 hold unchanged. FTR-LEGAL-003 unchanged.
-  Final enum: FTR_LEGAL_003A_BLOCKED_PENDING_LEGAL_CONTENT.
-last_closed_unit_prior: FTU-COMM-002C-PUBLIC-PRICING-CTA-INTENT-ALIGNMENT-001
+  FTR-LEGAL-003B: 6 draft legal documents produced from governance decisions:
+  Terms of Use, Subscription and Payment Terms, Refund and Cancellation Policy,
+  Privacy Policy, Grievance and Contact Policy, GST and Invoice Disclosure.
+  Parent counsel-review packet produced with 8 counsel-review categories (CR-01 through CR-08)
+  and 12 open questions (OQ-01 through OQ-12). Founder decisions incorporated.
+  All artifacts under artifacts/launch-readiness/ (git-ignored). No source/schema/package/env
+  changes. FAM-07 hold unchanged. FTR-LEGAL-003 MVP_CRITICAL/OPEN unchanged.
+  Implementation gate remains CLOSED — FTR-LEGAL-003 not yet closeable.
+  Final enum: FTR_LEGAL_003B_DRAFT_PACK_READY_FOR_PARESH_REVIEW.
+last_closed_unit_prior: FTR-LEGAL-003A-SAAS-CHECKOUT-LEGAL-TERMS-AND-PAYMENT-GATE-REVIEW-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-04)
-last_closed_unit_prior2: FAM-13B-D12A-PAYMENT-IMPLEMENTATION-AUTHORIZATION-DECISION-001
+last_closed_unit_prior2: FTU-COMM-002C-PUBLIC-PRICING-CTA-INTENT-ALIGNMENT-001
 last_closed_unit_prior2_status: VERIFIED_COMPLETE (2026-06-04)
 fam07_hold_preservation: >
   FAM-07 legal hold preserved through this pointer sync. L13A (33fd8bf7): hold recorded.
@@ -60,19 +62,20 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FTR-LEGAL-003B-SAAS-PAYMENT-TERMS-CONTENT-DRAFT-AND-COUNSEL-PREP-001
-next_candidate_unit_status: OPEN_FOR_AUTHORIZATION
+next_candidate_unit: FTR-LEGAL-003C-SAAS-LEGAL-PAGES-PUBLICATION-001
+next_candidate_unit_status: BLOCKED_PENDING_PARESH_REVIEW_OF_DRAFT_PACK
 next_candidate_unit_date_installed: "2026-06-04"
 next_candidate_unit_note: >
-  FTR-LEGAL-003B — SaaS Payment Terms Content Draft and Counsel Prep.
-  Scope: Draft customer-facing SaaS/payment-related legal documents (Terms of Use, Subscription
-  Terms, Payment Terms, Refund/Cancellation Policy, Privacy Policy, Grievance/Contact Policy).
-  Use governance decisions as input (D-021, D-012, D9, D10, refund policy table from D8).
-  Produce counsel-review packet for Paresh review + optional external counsel.
-  No source changes. No checkout. No Razorpay integration. No schema/package/env changes.
-  Gating condition: Paresh authorization to open FTR-LEGAL-003B.
-  After FTR-LEGAL-003B: texqtic.com publication unit (separate marketing repo).
-  After publication: FTR-LEGAL-003 re-examined for closure.
+  FTR-LEGAL-003C — SaaS Legal Pages Publication (separate texqtic.com marketing repo).
+  Scope: Publish 6 legal documents at texqtic.com/legal/... and wire app.texqtic.com legal links.
+  BLOCKED until ALL of the following are complete:
+  1. Paresh reviews all 6 draft documents (OQ-01 through OQ-12 resolved).
+  2. Counsel engagement decision confirmed in writing (OQ-02).
+  3. External counsel review complete (if not waived by Paresh in writing).
+  4. CIN and registered address supplied by Paresh (OQ-03).
+  5. Final document versions approved and effective dates assigned.
+  Gating condition: explicit Paresh written authorization after Steps 1-4 complete.
+  After FTR-LEGAL-003C: FTR-LEGAL-003 re-examined for closure.
   After FTR-LEGAL-003 closes: FTU-COMM-002D (Razorpay checkout) may open.
 prior_next_candidate_unit: FTU-COMM-002D-RAZORPAY-SUBSCRIPTIONS-INTEGRATION-DESIGN-001
 prior_next_candidate_unit_status: HOLD_FOR_FTR_LEGAL_003_RESOLUTION

@@ -977,6 +977,60 @@ no source changes; no checkout; governance and content preparation only)
 
 ---
 
+### §4.20 FTR-LEGAL-003B — SaaS Payment Terms Content Draft and Counsel Prep
+
+**Unit:** `FTR-LEGAL-003B-SAAS-PAYMENT-TERMS-CONTENT-DRAFT-AND-COUNSEL-PREP-001`
+**Status:** COMPLETE_DRAFT_READY_FOR_PARESH_REVIEW (2026-06-04)
+**Final enum:** `FTR_LEGAL_003B_DRAFT_PACK_READY_FOR_PARESH_REVIEW`
+
+**Summary:** 6 draft legal documents produced from governance decisions:
+- `DRAFT-TEXQTIC-TERMS-OF-USE-001.md`
+- `DRAFT-TEXQTIC-SUBSCRIPTION-AND-PAYMENT-TERMS-001.md`
+- `DRAFT-TEXQTIC-REFUND-AND-CANCELLATION-POLICY-001.md`
+- `DRAFT-TEXQTIC-PRIVACY-POLICY-001.md`
+- `DRAFT-TEXQTIC-GRIEVANCE-AND-CONTACT-POLICY-001.md`
+- `DRAFT-TEXQTIC-GST-AND-INVOICE-DISCLOSURE-001.md`
+
+Parent counsel-review packet produced:
+`FTR-LEGAL-003B-SAAS-PAYMENT-TERMS-CONTENT-DRAFT-AND-COUNSEL-PREP-001.md`
+
+**Founder decisions incorporated:**
+- Governing law: India
+- Jurisdiction: Surat, Gujarat courts / arbitration venue `[COUNSEL-REVIEW CR-02]`
+- Grievance officer: SIDDHI A PATEL `[COUNSEL-REVIEW CR-07]`
+- Contact email: hello@texqtic.com
+- Refund processing: 7–10 business days after approval
+- Annual plan: no automatic refund after activation, except listed exceptions
+- Auto-renewal notice: renewal date in-app where feasible; email reminder where feasible
+
+**Counsel-review categories flagged:** CR-01 (liability cap) through CR-08 (8 categories total)
+**Open questions:** OQ-01 through OQ-12 (12 questions for Paresh resolution)
+
+**Pricing reference (from §4.16 / FTU-COMM-002A):**
+- STARTER: ₹2,499/month + 18% GST; ₹23,990/year + 18% GST
+- PROFESSIONAL: ₹4,999/month + 18% GST; ₹47,990/year + 18% GST
+- ENTERPRISE: custom pricing
+
+**Payment / invoice architecture (from FAM-13B chain):**
+- Payment processor: Razorpay (PR-04 COMPLETE; website/app approved)
+- GST Tax Invoice authority: Zoho Books (SAC 998315, 18% GST exclusive)
+- PCI boundary: Razorpay Hosted Checkout only; no raw card data in TexQtic
+
+**All artifacts in `artifacts/launch-readiness/` (git-ignored).**
+
+**Key invariants:** FTR-LEGAL-003 MVP_CRITICAL/OPEN unchanged. FAM-07 hold
+HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. No source, schema, package, env, or checkout changes.
+No public legal pages implemented. All 6 documents are DRAFT status only — not binding.
+
+**Implementation gate (source code):** CLOSED — unchanged. Held by FTR-LEGAL-003.
+
+**Next unit:** `FTR-LEGAL-003C-SAAS-LEGAL-PAGES-PUBLICATION-001`
+(scope: publish legal pages at texqtic.com/legal/... in texqtic.com marketing repo; wire
+app.texqtic.com legal links — BLOCKED pending Paresh review + counsel decision (OQ-02) +
+CIN/entity details (OQ-03) + effective date assignment)
+
+---
+
 ## 5. B2B Financial Boundary (CONFIRMED GUARDRAIL)
 
 ### 5.1 Confirmed Position
