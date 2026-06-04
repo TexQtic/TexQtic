@@ -765,6 +765,53 @@ PR-08-B (annual price equivalents): addressed by explicit annual billing deferra
 
 ---
 
+### §4.15 D12A — Payment Implementation Authorization Decision (2026-06-04)
+
+| Item | Status |
+|---|---|
+| Unit | FAM-13B-D12A-PAYMENT-IMPLEMENTATION-AUTHORIZATION-DECISION-001 |
+| Date | 2026-06-04 |
+| D12 carry-forward | PR-08 = COMPLETE_WITH_PUBLIC_DISPLAY_APPROVED; public display UNBLOCKED; all 8 prerequisites COMPLETE; gate CLOSED pending Paresh explicit authorization |
+| Paresh authorization | **AUTHORIZED** — explicit authorization supplied and recorded |
+| Authorization wording | `Paresh authorizes opening FTU-COMM-002 for the first public-price-display Razorpay payment implementation design unit.` |
+| Annual billing | DEFERRED — no CA-approved annual price equivalents supplied |
+| D-011 item 7 | PARKED — feature entitlement scope per tier not yet defined |
+| Event taxonomy | Governance proposals only; no payment events registered; Team A sign-off required |
+| FAM-07 hold | HOLD_FOR_HUMAN_LEGAL_INPUTS — unchanged |
+| FTR-LEGAL-003 | MVP_CRITICAL/OPEN — unchanged |
+| Implementation gate | **OPEN** — Paresh authorization recorded; FTU-COMM-002A design unit authorized |
+| Selected next unit | `FTU-COMM-002A — Razorpay + Zoho Public-Display Pricing Repo-Truth Design and File-Surface Map` |
+| Final enum | `FAM_13B_D12A_FTU_COMM_002_OPENING_AUTHORIZED` |
+
+**All-prerequisites after D12A (unchanged from D12):**
+
+| PR | Status |
+|---|---|
+| PR-01 | ✅ COMPLETE |
+| PR-02 | ✅ COMPLETE |
+| PR-03 | ✅ COMPLETE |
+| PR-04 | ✅ COMPLETE |
+| PR-05 | ✅ COMPLETE |
+| PR-06 | ✅ COMPLETE |
+| PR-07 | ✅ COMPLETE |
+| PR-08 | ✅ **COMPLETE_WITH_PUBLIC_DISPLAY_APPROVED** |
+| **Total** | **8/8 prerequisites complete** |
+
+**Implementation gate after D12A:** **OPEN** — all 8 prerequisites satisfied; Paresh explicit authorization recorded; FTU-COMM-002A design unit may now be opened. Source implementation still requires separate authorization within or after FTU-COMM-002A.
+
+**Carry-forward:**
+- Annual billing launch requires CA-reviewed annual price equivalents + new governance unit
+- D-011 item 7 (feature entitlement scope per tier): still PARKED; required before FAM-11 self-serve billing implementation
+- `event-names.md`: unchanged; no payment events registered; Team A sign-off required before implementation
+- FAM-07 hold: unchanged (HOLD_FOR_HUMAN_LEGAL_INPUTS)
+- FTR-LEGAL-003: unchanged (MVP_CRITICAL/OPEN)
+- Production payment launch: blocked by FTR-LEGAL-003 (terms of service pending) even with D12A authorization
+
+**Next recommended unit:** `FTU-COMM-002A — Razorpay + Zoho Public-Display Pricing Repo-Truth Design and File-Surface Map`
+(scope: repo-truth inspection, file-surface mapping, implementation design, file allowlist production — no source code implementation unless separately authorized within that unit)
+
+---
+
 ## 5. B2B Financial Boundary (CONFIRMED GUARDRAIL)
 
 ### 5.1 Confirmed Position

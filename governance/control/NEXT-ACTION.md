@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FAM-13B-D12-PUBLIC-PRICE-DISPLAY-AND-PAYMENT-IMPLEMENTATION-READINESS-REVIEW-001 COMPLETE. New CA public price display authorization recorded: approved format = `Price + 18% GST`. PR-08 caveat updated: COMPLETE_WITH_PRIVATE_PRICING → COMPLETE_WITH_PUBLIC_DISPLAY_APPROVED. All 8 prerequisites (PR-01 through PR-08) now COMPLETE with public-display-approved caveat. Public price display UNBLOCKED for `Price + 18% GST` format. Annual billing remains DEFERRED. Implementation gate: GATE_CONDITION_MET but CLOSED — Paresh has not supplied explicit FTU-COMM-002 authorization in D12. Final enum: FAM_13B_D12_PUBLIC_PRICE_DISPLAY_APPROVED_READY_AWAITING_AUTHORIZATION. Recommended next unit: FAM-13B-D12A — Payment Implementation Authorization Decision.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FAM-13B-D12A-PAYMENT-IMPLEMENTATION-AUTHORIZATION-DECISION-001 COMPLETE. Paresh explicit authorization recorded: "Paresh authorizes opening FTU-COMM-002 for the first public-price-display Razorpay payment implementation design unit." Implementation gate: OPEN — FTU-COMM-002A design unit authorized. All 8 prerequisites (PR-01 through PR-08) COMPLETE (PR-08 with public-display-approved caveat). Public price display approved format = `Price + 18% GST`. Annual billing remains DEFERRED. D-011 item 7: PARKED. FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS — unchanged. FTR-LEGAL-003: MVP_CRITICAL/OPEN — unchanged. Final enum: FAM_13B_D12A_FTU_COMM_002_OPENING_AUTHORIZED. Next unit: FTU-COMM-002A — Razorpay + Zoho Public-Display Pricing Repo-Truth Design and File-Surface Map.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,51 +15,53 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-13B-D12-PUBLIC-PRICE-DISPLAY-AND-PAYMENT-IMPLEMENTATION-READINESS-REVIEW-001
+active_delivery_unit: FAM-13B-D12A-PAYMENT-IMPLEMENTATION-AUTHORIZATION-DECISION-001
 active_delivery_unit_status: COMPLETE
 active_delivery_unit_note: >
-  FAM-13B-D12 Public-Price-Display Correction and Payment Implementation Readiness Review COMPLETE
-  (2026-06-04). Final enum: FAM_13B_D12_PUBLIC_PRICE_DISPLAY_APPROVED_READY_AWAITING_AUTHORIZATION.
-  D11 carry-forward: PR-08 was COMPLETE_WITH_PRIVATE_PRICING; public display was BLOCKED.
-  D12 new CA approval: CA public price display APPROVED; format = `Price + 18% GST`.
-  PR-08 caveat updated: COMPLETE_WITH_PRIVATE_PRICING → COMPLETE_WITH_PUBLIC_DISPLAY_APPROVED.
-  GST treatment: exclusive; 18% shown separately; SAC 998315 (CA-confirmed, FAM-13B-D2).
-  Public price display now UNBLOCKED for `Price + 18% GST` format.
+  FAM-13B-D12A Payment Implementation Authorization Decision COMPLETE (2026-06-04).
+  Final enum: FAM_13B_D12A_FTU_COMM_002_OPENING_AUTHORIZED.
+  D12 carry-forward: PR-08 COMPLETE_WITH_PUBLIC_DISPLAY_APPROVED; public display UNBLOCKED for
+  `Price + 18% GST`; all 8 prerequisites (PR-01 through PR-08) COMPLETE.
+  D12A: Paresh explicit authorization recorded: "Paresh authorizes opening FTU-COMM-002 for
+  the first public-price-display Razorpay payment implementation design unit."
+  Implementation gate: OPEN — FTU-COMM-002A design unit authorized.
+  FTU-COMM-002A scope: repo-truth inspection + file-surface map + implementation design only;
+  no source code changes in FTU-COMM-002A unless separately authorized within that unit.
   Annual billing: DEFERRED — no CA-approved annual price equivalents supplied.
   D-011 item 7 (feature entitlement scope per tier): still PARKED.
   Event taxonomy: governance proposals only; no payment events registered; Team A sign-off required.
   FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS — unchanged.
   FTR-LEGAL-003: MVP_CRITICAL/OPEN — unchanged.
-  Implementation gate: GATE_CONDITION_MET but CLOSED — Paresh has not supplied explicit
-  FTU-COMM-002 authorization in this unit. Sole remaining item before opening FTU-COMM-002.
-  All 8 prerequisites (PR-01 through PR-08): COMPLETE (PR-08 with public-display-approved caveat).
-  Recommended next unit: FAM-13B-D12A — Payment Implementation Authorization Decision.
-  No source, schema, migration, package, or environment changes.
+  No source, schema, migration, package, or environment changes in D12A.
   Guardrails preserved: no API keys, key secrets, webhook secrets, bank details, PAN/Aadhaar,
   GSTIN, KYC documents, login credentials, or customer payment data recorded.
-last_closed_unit: FAM-13B-D12-PUBLIC-PRICE-DISPLAY-AND-PAYMENT-IMPLEMENTATION-READINESS-REVIEW-001
+last_closed_unit: FAM-13B-D12A-PAYMENT-IMPLEMENTATION-AUTHORIZATION-DECISION-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-06-04)
 last_closed_unit_runtime_verdict: >
-  FAM-13B-D12 Public-Price-Display Correction and Payment Implementation Readiness Review COMPLETE
-  (2026-06-04). New CA approval: public price display APPROVED; format = `Price + 18% GST`.
-  PR-08 caveat updated: COMPLETE_WITH_PRIVATE_PRICING → COMPLETE_WITH_PUBLIC_DISPLAY_APPROVED.
-  All 8 prerequisites (PR-01 through PR-08) COMPLETE. Gate condition met (8/8). Implementation
-  CLOSED — Paresh has not supplied explicit FTU-COMM-002 authorization in D12.
-  Final enum: FAM_13B_D12_PUBLIC_PRICE_DISPLAY_APPROVED_READY_AWAITING_AUTHORIZATION.
-last_closed_unit_commits: governance-only (D12 artifact + 4 tracker updates; no source commits)
+  FAM-13B-D12A Payment Implementation Authorization Decision COMPLETE (2026-06-04).
+  Paresh explicit authorization supplied: "Paresh authorizes opening FTU-COMM-002 for the
+  first public-price-display Razorpay payment implementation design unit."
+  All 8 prerequisites (PR-01 through PR-08) COMPLETE (PR-08 with public-display-approved caveat).
+  Implementation gate: OPEN — FTU-COMM-002A design unit authorized.
+  Annual billing: DEFERRED. D-011 item 7: PARKED. FAM-07 hold: unchanged. FTR-LEGAL-003: unchanged.
+  Final enum: FAM_13B_D12A_FTU_COMM_002_OPENING_AUTHORIZED.
+last_closed_unit_commits: governance-only (D12A artifact + 4 tracker updates; no source commits)
 last_closed_unit_closure_basis: >
-  FAM-13B-D12: D12 artifact created (git-ignored); NEXT-ACTION.md synced (active unit D12 COMPLETE,
-  last_closed_unit updated, next_candidate D12A confirmed); COMMERCE-METHODOLOGY §4.14 D12 status
-  block added; FUTURE-TODO-REGISTER D12 row prepended; DECISION-PARKING-LOT D-011 item 2 updated
-  from PRIVATE_PRICING_ONLY to PUBLIC_DISPLAY_APPROVED. D11 carry-forward: PR-08 was
-  COMPLETE_WITH_PRIVATE_PRICING; public display was BLOCKED. D12 new CA approval: public price
-  display APPROVED; format = `Price + 18% GST`; exclusive GST; 18% shown separately; SAC 998315.
-  PR-08 caveat updated: COMPLETE_WITH_PUBLIC_DISPLAY_APPROVED. Annual billing: DEFERRED
+  FAM-13B-D12A: D12A artifact created (git-ignored); NEXT-ACTION.md synced (active unit D12A
+  COMPLETE, last_closed_unit updated, next_candidate FTU-COMM-002A confirmed); COMMERCE-METHODOLOGY
+  §4.15 D12A status block added; FUTURE-TODO-REGISTER D12A row prepended; DECISION-PARKING-LOT
+  D-011 status updated (D12A authorization advance recorded; item 7 still PARKED).
+  D12 carry-forward: PR-08 COMPLETE_WITH_PUBLIC_DISPLAY_APPROVED; public display UNBLOCKED for
+  `Price + 18% GST`; all 8 prerequisites (PR-01–PR-08) COMPLETE; gate was CLOSED pending Paresh
+  explicit authorization. D12A: Paresh explicit authorization recorded: "Paresh authorizes opening
+  FTU-COMM-002 for the first public-price-display Razorpay payment implementation design unit."
+  Implementation gate OPEN for first design unit (FTU-COMM-002A) only. Annual billing: DEFERRED
   (no CA-approved annual equivalents supplied). D-011 item 7: still PARKED. Event taxonomy:
-  governance proposals only; no payment events registered. FAM-07 hold: unchanged. FTR-LEGAL-003:
-  MVP_CRITICAL/OPEN unchanged. Implementation gate CLOSED — Paresh has not supplied explicit
-  FTU-COMM-002 authorization. Sole remaining item before FTU-COMM-002 opens.
-  Final enum: FAM_13B_D12_PUBLIC_PRICE_DISPLAY_APPROVED_READY_AWAITING_AUTHORIZATION.
+  governance proposals only; no payment events registered. FAM-07 hold: unchanged.
+  FTR-LEGAL-003: MVP_CRITICAL/OPEN unchanged. No source, schema, package, or env changes.
+  Final enum: FAM_13B_D12A_FTU_COMM_002_OPENING_AUTHORIZED.
+last_closed_unit_prior: FAM-13B-D12-PUBLIC-PRICE-DISPLAY-AND-PAYMENT-IMPLEMENTATION-READINESS-REVIEW-001
+last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-04)
 last_closed_unit_prior: FAM-13B-D11-PRICING-TIER-STRUCTURE-FINALIZATION-PR-08-CLOSURE-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-04)
 last_closed_unit_prior: FAM-13B-D10-PAYMENT-EVENT-AUDIT-AND-LEDGER-LOGGING-PR-07-CLOSURE-001
@@ -74,21 +76,23 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FAM-13B-D12A-PAYMENT-IMPLEMENTATION-AUTHORIZATION-DECISION-001
+next_candidate_unit: FTU-COMM-002A-RAZORPAY-ZOHO-PUBLIC-DISPLAY-PRICING-REPO-TRUTH-DESIGN-001
 next_candidate_unit_status: NOT_YET_OPENED
 next_candidate_unit_date_installed: "2026-06-04"
 next_candidate_unit_note: >
-  FAM-13B-D12A is the recommended next payment governance unit (2026-06-04; confirmed after D12
-  closure). Scope: Paresh supplies explicit authorization or holds FTU-COMM-002 opening.
-  If authorized, select bounded first implementation design slice: FTU-COMM-002A —
-  Razorpay + Zoho Public-Display Pricing Repo-Truth Design and File-Surface Map.
-  Authorization wording Paresh must supply: "Paresh authorizes opening FTU-COMM-002 for the
-  first public-price-display Razorpay payment implementation design unit."
-  Governance / advisory / authorization decision only — no source, schema, migration, package,
-  environment, or payment implementation changes unless separately authorized by Paresh in D12A.
-  D12 COMPLETE: PR-08 COMPLETE_WITH_PUBLIC_DISPLAY_APPROVED; public display UNBLOCKED for
-  `Price + 18% GST`; all 8 prerequisites (PR-01–PR-08) COMPLETE; gate CLOSED pending explicit
-  Paresh authorization. FAM-07 hold unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
+  FTU-COMM-002A — Razorpay + Zoho Public-Display Pricing Repo-Truth Design and File-Surface Map
+  (2026-06-04; confirmed after FAM-13B-D12A closure; authorized by Paresh explicit authorization).
+  Scope: repo-truth inspection, file-surface mapping, implementation design, file allowlist
+  production — no source code implementation unless separately authorized within that unit.
+  D12A authorization basis: "Paresh authorizes opening FTU-COMM-002 for the first
+  public-price-display Razorpay payment implementation design unit."
+  Design-only unit: map frontend/backend/schema/service payment surfaces; confirm public display
+  format `Price + 18% GST`; confirm no annual billing in first slice; confirm STARTER-only scope;
+  confirm no marketplace/B2B/B2C/D2C/TTP payment scope; produce implementation design + allowlist.
+  FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS — unchanged.
+  FTR-LEGAL-003: MVP_CRITICAL/OPEN — unchanged.
+  All 8 prerequisites (PR-01–PR-08) COMPLETE. PR-08: COMPLETE_WITH_PUBLIC_DISPLAY_APPROVED.
+  Annual billing: DEFERRED. D-011 item 7: PARKED. Event taxonomy: governance proposals only.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001
