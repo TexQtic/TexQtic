@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTR-LEGAL-003B-SAAS-PAYMENT-TERMS-CONTENT-DRAFT-AND-COUNSEL-PREP-001 COMPLETE. 6 draft legal documents produced + counsel-review packet. Founder decisions incorporated. 12 open questions flagged. Final enum: FTR_LEGAL_003B_DRAFT_PACK_READY_FOR_PARESH_REVIEW.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (LAUNCH-FAMILY-SELECTOR-001 COMPLETE. Next non-legal-blocked family selected: FAM-11 — Subscription and Commercial Gating — Formal Family Closure. First unit: FAM-11F-SUBSCRIPTION-COMMERCIAL-GATING-TLRH-VERIFY-AND-FAMILY-CLOSE-001. Final enum: LAUNCH_FAMILY_SELECTOR_001_NEXT_NON_LEGAL_BLOCKED_FAMILY_SELECTED. Prior: FTR-LEGAL-003B COMPLETE_DRAFT_READY_FOR_PARESH_REVIEW.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,44 +15,41 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FTR-LEGAL-003B-SAAS-PAYMENT-TERMS-CONTENT-DRAFT-AND-COUNSEL-PREP-001
-active_delivery_unit_status: COMPLETE_DRAFT_READY_FOR_PARESH_REVIEW
+active_delivery_unit: LAUNCH-FAMILY-SELECTOR-001-NON-LEGAL-BLOCKED-LAUNCH-READINESS-FAMILY-SELECTION
+active_delivery_unit_status: COMPLETE
 active_delivery_unit_note: >
-  FTR-LEGAL-003B SaaS Payment Terms Content Draft and Counsel Prep COMPLETE (2026-06-04).
-  6 draft legal documents produced: Terms of Use, Subscription and Payment Terms,
-  Refund and Cancellation Policy, Privacy Policy, Grievance and Contact Policy,
-  GST and Invoice Disclosure. Parent counsel-review packet also produced.
-  All founder decisions incorporated: governing law India, Surat Gujarat jurisdiction,
-  grievance officer SIDDHI A PATEL, hello@texqtic.com, 7-10 business day refund processing,
-  annual plan no auto-refund except exceptions, auto-renewal notice in-app + email where feasible.
-  8 counsel-review categories flagged (CR-01 through CR-08).
-  12 open questions for Paresh review flagged (OQ-01 through OQ-12).
-  All artifacts in artifacts/launch-readiness/ (git-ignored). No source, schema, package,
-  env, or checkout changes. FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
-  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
-  Final enum: FTR_LEGAL_003B_DRAFT_PACK_READY_FOR_PARESH_REVIEW.
-  Next unit: FTR-LEGAL-003C (publication, separate texqtic.com marketing repo) —
-  blocked until Paresh review complete + counsel engagement decision (OQ-02) + CIN/entity details (OQ-03).
-last_closed_unit: FTR-LEGAL-003B-SAAS-PAYMENT-TERMS-CONTENT-DRAFT-AND-COUNSEL-PREP-001
+  LAUNCH-FAMILY-SELECTOR-001 COMPLETE (2026-06-04).
+  Next non-legal-blocked launch-readiness family selected: FAM-11 — Subscription and Commercial Gating.
+  Governance basis: FAM-11 CLOSE_READY per FAM-11E (2026-06-03); explicitly installed as next nonlegal
+  candidate in OPEN-SET.md per FAM-09-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001.
+  7 candidate families scored: all Razorpay/legal/FAM-07-adjacent candidates excluded.
+  FAM-11 selected: highest repo readiness (CLOSE_READY evidence complete); no legal/payment dependency;
+  LFI L0 gate = NO; P1_MVP_MUST_HAVE; display-only MVP posture verified in production by Paresh 2026-06-03.
+  First unit: FAM-11F-SUBSCRIPTION-COMMERCIAL-GATING-TLRH-VERIFY-AND-FAMILY-CLOSE-001
+  (verification + TLRH sync + formal closure; no source changes).
+  Selector artifact: artifacts/launch-readiness/LAUNCH-FAMILY-SELECTOR-001-NON-LEGAL-BLOCKED-LAUNCH-READINESS-FAMILY-SELECTION.md (git-ignored).
+  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. FAM-07 hold unchanged: HOLD_FOR_HUMAN_LEGAL_INPUTS.
+  Final enum: LAUNCH_FAMILY_SELECTOR_001_NEXT_NON_LEGAL_BLOCKED_FAMILY_SELECTED.
+  Prior unit: FTR-LEGAL-003B COMPLETE_DRAFT_READY_FOR_PARESH_REVIEW (2026-06-04).
+last_closed_unit: LAUNCH-FAMILY-SELECTOR-001-NON-LEGAL-BLOCKED-LAUNCH-READINESS-FAMILY-SELECTION
 last_closed_unit_status: VERIFIED_COMPLETE (2026-06-04)
 last_closed_unit_runtime_verdict: >
-  FTR-LEGAL-003B SaaS Payment Terms Content Draft and Counsel Prep COMPLETE (2026-06-04).
-  6 draft documents produced. Counsel-review packet produced. Founder decisions incorporated.
-  Final enum: FTR_LEGAL_003B_DRAFT_PACK_READY_FOR_PARESH_REVIEW.
-last_closed_unit_commits: '"legal: draft FTR-LEGAL-003B SaaS payment terms pack" (3 tracker files)'
+  LAUNCH-FAMILY-SELECTOR-001 COMPLETE (2026-06-04).
+  7 candidate families scored. FAM-11 selected as next non-legal-blocked family.
+  First unit: FAM-11F-SUBSCRIPTION-COMMERCIAL-GATING-TLRH-VERIFY-AND-FAMILY-CLOSE-001.
+  Final enum: LAUNCH_FAMILY_SELECTOR_001_NEXT_NON_LEGAL_BLOCKED_FAMILY_SELECTED.
+last_closed_unit_commits: '"gov: select next non-legal-blocked launch family" (3 tracker files)'
 last_closed_unit_closure_basis: >
-  FTR-LEGAL-003B: 6 draft legal documents produced from governance decisions:
-  Terms of Use, Subscription and Payment Terms, Refund and Cancellation Policy,
-  Privacy Policy, Grievance and Contact Policy, GST and Invoice Disclosure.
-  Parent counsel-review packet produced with 8 counsel-review categories (CR-01 through CR-08)
-  and 12 open questions (OQ-01 through OQ-12). Founder decisions incorporated.
-  All artifacts under artifacts/launch-readiness/ (git-ignored). No source/schema/package/env
-  changes. FAM-07 hold unchanged. FTR-LEGAL-003 MVP_CRITICAL/OPEN unchanged.
-  Implementation gate remains CLOSED — FTR-LEGAL-003 not yet closeable.
-  Final enum: FTR_LEGAL_003B_DRAFT_PACK_READY_FOR_PARESH_REVIEW.
-last_closed_unit_prior: FTR-LEGAL-003A-SAAS-CHECKOUT-LEGAL-TERMS-AND-PAYMENT-GATE-REVIEW-001
-last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-04)
-last_closed_unit_prior2: FTU-COMM-002C-PUBLIC-PRICING-CTA-INTENT-ALIGNMENT-001
+  LAUNCH-FAMILY-SELECTOR-001: 7 candidate families evaluated against legal/payment independence,
+  launch impact, repo readiness, risk, and sliceability. FAM-11 (Subscription and Commercial
+  Gating) selected as highest-repo-readiness, no legal/payment dependency, CLOSE_READY state,
+  explicitly installed as next nonlegal candidate in OPEN-SET.md.
+  Selector artifact: artifacts/launch-readiness/LAUNCH-FAMILY-SELECTOR-001-...(git-ignored).
+  FTR-LEGAL-003 MVP_CRITICAL/OPEN unchanged. FAM-07 HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
+  Final enum: LAUNCH_FAMILY_SELECTOR_001_NEXT_NON_LEGAL_BLOCKED_FAMILY_SELECTED.
+last_closed_unit_prior: FTR-LEGAL-003B-SAAS-PAYMENT-TERMS-CONTENT-DRAFT-AND-COUNSEL-PREP-001
+last_closed_unit_prior_status: COMPLETE_DRAFT_READY_FOR_PARESH_REVIEW (2026-06-04)
+last_closed_unit_prior2: FTR-LEGAL-003A-SAAS-CHECKOUT-LEGAL-TERMS-AND-PAYMENT-GATE-REVIEW-001
 last_closed_unit_prior2_status: VERIFIED_COMPLETE (2026-06-04)
 fam07_hold_preservation: >
   FAM-07 legal hold preserved through this pointer sync. L13A (33fd8bf7): hold recorded.
@@ -62,19 +59,28 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FTR-LEGAL-003C-SAAS-LEGAL-PAGES-PUBLICATION-001
-next_candidate_unit_status: BLOCKED_PENDING_PARESH_REVIEW_OF_DRAFT_PACK
+next_candidate_unit: FAM-11F-SUBSCRIPTION-COMMERCIAL-GATING-TLRH-VERIFY-AND-FAMILY-CLOSE-001
+next_candidate_unit_status: READY_TO_OPEN
 next_candidate_unit_date_installed: "2026-06-04"
 next_candidate_unit_note: >
+  FAM-11F — Subscription and Commercial Gating Formal Family Closure.
+  Scope: Inspect FAM-11 TLRH, verify /pricing production state, verify entitlementDisplay.ts
+  and PublicPricingPage.tsx display-only posture, confirm no Razorpay integration active,
+  produce closure evidence artifact, update TLRH to VERIFIED_COMPLETE, update LFI FAM-11 rows.
+  No source changes. No legal/payment dependency. No L0 gate.
+  Authorization basis: LAUNCH-FAMILY-SELECTOR-001 selection (2026-06-04).
+  Gating condition: none — FAM-11 is already CLOSE_READY per FAM-11E evidence sync (2026-06-03).
+  After FAM-11F closes: consider FTR-SL-001 (aggregator directory design, MVP_CRITICAL/P1) or
+  FTR-OPS-001 (Sentry error monitoring, MVP_CRITICAL/P1) as next nonlegal candidates.
+next_candidate_unit_legal_track_blocked: FTR-LEGAL-003C-SAAS-LEGAL-PAGES-PUBLICATION-001
+next_candidate_unit_legal_track_status: BLOCKED_PENDING_PARESH_REVIEW_OF_DRAFT_PACK
+next_candidate_unit_legal_track_note: >
   FTR-LEGAL-003C — SaaS Legal Pages Publication (separate texqtic.com marketing repo).
-  Scope: Publish 6 legal documents at texqtic.com/legal/... and wire app.texqtic.com legal links.
-  BLOCKED until ALL of the following are complete:
-  1. Paresh reviews all 6 draft documents (OQ-01 through OQ-12 resolved).
-  2. Counsel engagement decision confirmed in writing (OQ-02).
-  3. External counsel review complete (if not waived by Paresh in writing).
-  4. CIN and registered address supplied by Paresh (OQ-03).
-  5. Final document versions approved and effective dates assigned.
-  Gating condition: explicit Paresh written authorization after Steps 1-4 complete.
+  BLOCKED until: Paresh reviews 6 draft documents (OQ-01 through OQ-12 resolved);
+  counsel engagement decision confirmed in writing (OQ-02);
+  CIN and registered address supplied by Paresh (OQ-03);
+  final documents approved and effective dates assigned.
+  Gating condition: explicit Paresh written authorization after all review steps complete.
   After FTR-LEGAL-003C: FTR-LEGAL-003 re-examined for closure.
   After FTR-LEGAL-003 closes: FTU-COMM-002D (Razorpay checkout) may open.
 prior_next_candidate_unit: FTU-COMM-002D-RAZORPAY-SUBSCRIPTIONS-INTEGRATION-DESIGN-001

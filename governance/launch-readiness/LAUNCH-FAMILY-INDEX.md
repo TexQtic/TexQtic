@@ -4,7 +4,7 @@
 **Unit:** `TEXQTIC-LAUNCH-FAMILY-INDEX-001`
 **Status:** COMPLETE — navigation map only
 **Created:** 2026-05-19
-**Last Updated:** 2026-06-03 (FAM-11E-FAMILY-EVIDENCE-SYNC-AND-CLOSE-READINESS-001: FAM-11 CLOSE_READY. FAM-13A Razorpay readiness installed as next candidate.)
+**Last Updated:** 2026-06-04 (LAUNCH-FAMILY-SELECTOR-001: FAM-11 formally selected as next non-legal-blocked launch readiness candidate. FAM-11 status remains CLOSE_READY until FAM-11F formal closure. First unit: FAM-11F-SUBSCRIPTION-COMMERCIAL-GATING-TLRH-VERIFY-AND-FAMILY-CLOSE-001. Prior: FAM-11E-FAMILY-EVIDENCE-SYNC-AND-CLOSE-READINESS-001 2026-06-03: FAM-11 CLOSE_READY. FAM-13A Razorpay readiness installed as post-FAM-11 candidate.)
 **Owner:** Paresh Patel (TexQtic founder)
 **Design authority:** `TEXQTIC-LAUNCH-READINESS-TECHNICAL-AUDIT-STRATEGY-001`
 
