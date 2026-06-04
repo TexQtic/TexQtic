@@ -374,8 +374,8 @@ Each entry has:
 | **Impact of delaying** | Live payment processing cannot begin. Test mode setup (no real payments) is unaffected. |
 | **Who decides** | Paresh; counsel/CA input recommended |
 | **Priority** | P2 (required before live mode; not blocking test mode) |
-| **Status** | PARKED — NOT_STARTED |
-| **Cross-reference** | §4.3 PR-05; source: `FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001` |
+| **Status** | RESOLVED — FAM-13B-D8 (2026-06-04). Founder-approved refund and cancellation policy recorded. General: non-refundable once paid period begins (named exceptions: duplicate payment, accidental overcharge, technical billing error, failed activation, legally required). Cancellation at period end; no auto pro-rata refund. Annual plan: no refund at launch. Disputes: manual at launch; tenant access not auto-terminated. PR-05 = COMPLETE. |
+| **Cross-reference** | §4.3 PR-05; FAM-13B-D8-REFUND-CANCELLATION-POLICY-AND-PR-05-CLOSURE-001; source: `FAM-13B-D1-PAYMENT-DECISION-LOCK-RECONCILIATION-001` |
 
 ---
 

@@ -542,6 +542,50 @@ remaining evidence is sufficient; no implementation; open after Paresh receives 
 (scope: confirm PCI boundary via Razorpay Hosted Checkout; webhook signature verification; API key storage rule; SAQ classification; close PR-06; governance only; no implementation)
 Note: `FAM-13B-D7C` remains pending as adjacent unit awaiting Razorpay website/app review result.
 
+### 4.10 D7C Status — Razorpay Website/App Approval and Test-Mode Verification / PR-04 Closure (2026-06-04)
+
+**Unit:** FAM-13B-D7C-RAZORPAY-WEBSITE-APP-APPROVAL-AND-TEST-MODE-VERIFICATION-001 — ✅ **COMPLETE**
+
+**D7C outcome:** Razorpay website/app review APPROVED. Test mode accessible. Live mode available. Production/live API key generated and secret stored securely. **PR-04 = COMPLETE.** Webhook not yet created (endpoint not implemented; carry-forward).
+
+**Paresh-supplied evidence summary:**
+
+| Evidence Item | Status |
+|---|---|
+| Website/app review | APPROVED |
+| Approved URL | `https://app.texqtic.com` |
+| KYC | COMPLETED (D7B carry-forward) |
+| Test mode | ACCESSIBLE |
+| Live mode | AVAILABLE |
+| Test API keys (separate option) | NOT_APPLICABLE — dashboard shows only production key option (dashboard behavior; not a blocker) |
+| Production/live API key | GENERATED (value not recorded) |
+| Key secret | STORED_SECURELY (value not recorded) |
+| Webhook | NOT_CREATED — TexQtic endpoint not implemented yet; carry-forward |
+
+**PR-04 checklist result:** All 13 conditions satisfied. Website/app APPROVED resolves the primary D7B blocker. Test-key interpretation rule applied (no separate test key option = dashboard behavior; test mode confirmed accessible). Webhook interpretation rule applied (no endpoint = not a blocker; carry-forward to implementation unit).
+
+**D7C payment prerequisite status:**
+
+| Prerequisite | D8 Status | D7C Status | Change |
+|---|---|---|---|
+| PR-01 — Payment provider selection | COMPLETE | COMPLETE | = |
+| PR-02 — Subscription billing model | COMPLETE | COMPLETE | = |
+| PR-03 — CA advisory / Zoho Books lock | COMPLETE | COMPLETE | = |
+| PR-04 — Razorpay account readiness | KYC_COMPLETE_PENDING_WEBSITE_APP_REVIEW_AND_TEST_MODE_VERIFICATION | ✅ COMPLETE | ↑ closed |
+| PR-05 — Refund/cancellation policy | COMPLETE | COMPLETE | = |
+| PR-06 — PCI boundary checklist | NOT_STARTED | NOT_STARTED | = |
+| PR-07 — Payment event audit/log policy | NOT_STARTED | NOT_STARTED | = |
+| PR-08 — Pricing/tier structure | PARTIALLY_COMPLETE | PARTIALLY_COMPLETE | = |
+
+**Implementation gate: CLOSED** — unchanged in D7C. FTU-COMM-002 trigger: 5/8 prerequisites (PR-01, PR-02, PR-03, PR-04, PR-05). Gate opens at 8/8. PR-06/07 NOT_STARTED. PR-08 PARTIALLY_COMPLETE.
+
+**D7C governance changes:** D7C artifact created (git-ignored); NEXT-ACTION.md synced (active unit D7C COMPLETE, last_closed_unit updated, next candidate D9 confirmed); COMMERCE-METHODOLOGY §4.10 added; FUTURE-TODO-REGISTER D7C row appended; DECISION-PARKING-LOT D-021 updated from `PARKED — NOT_STARTED` to `RESOLVED` (carry-forward from D8, not in D8 allowlist). No source, schema, migration, package, or environment changes.
+
+**Final enum:** `FAM_13B_D7C_RAZORPAY_APPROVAL_TEST_MODE_VERIFIED_PR_04_COMPLETE`
+
+**Next recommended unit:** `FAM-13B-D9 — PCI Boundary and Hosted Payment Collection Policy / PR-06 Closure`
+(scope: confirm PCI boundary via Razorpay Hosted Checkout; webhook signature verification; API key and webhook secret storage rules; SAQ classification; close PR-06; governance only; no implementation)
+
 ---
 
 ## 5. B2B Financial Boundary (CONFIRMED GUARDRAIL)
