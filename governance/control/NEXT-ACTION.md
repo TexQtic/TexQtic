@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FAM-13B-D7B-RAZORPAY-KYC-COMPLETE-WEBSITE-APP-REVIEW-PENDING-001 COMPLETE. KYC confirmed COMPLETED — resolves D7A AMBIGUOUS status. Website/app review UNDER REVIEW: "Your Website/app is under review. Our team will get back to you shortly. Expect an update in 24-48 hours." Test mode PENDING. Live mode PENDING. PR-04 = KYC_COMPLETE_PENDING_WEBSITE_APP_REVIEW_AND_TEST_MODE_VERIFICATION. Implementation gate CLOSED. Recommended next unit: FAM-13B-D7C — Razorpay Website/App Review Approval and Test-Mode Verification.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FAM-13B-D8-REFUND-CANCELLATION-POLICY-AND-PR-05-CLOSURE-001 COMPLETE. Founder-approved refund and cancellation policy recorded. PR-05 = COMPLETE. D-021 = RESOLVED. Implementation gate CLOSED (4/8 prerequisites: PR-01/02/03/05). PR-04 unchanged: KYC_COMPLETE_PENDING_WEBSITE_APP_REVIEW_AND_TEST_MODE_VERIFICATION. D7C pending adjacently. Recommended next unit: FAM-13B-D9 — PCI Boundary and Hosted Payment Collection Policy / PR-06 Closure.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,49 +15,44 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-13B-D7B-RAZORPAY-KYC-COMPLETE-WEBSITE-APP-REVIEW-PENDING-001
+active_delivery_unit: FAM-13B-D8-REFUND-CANCELLATION-POLICY-AND-PR-05-CLOSURE-001
 active_delivery_unit_status: COMPLETE
 active_delivery_unit_note: >
-  FAM-13B-D7B Razorpay KYC Complete / Website-App Review Pending COMPLETE (2026-06-04).
-  Final enum: FAM_13B_D7B_KYC_COMPLETE_WEBSITE_APP_REVIEW_PENDING_PR_04_NOT_COMPLETE.
-  Paresh-supplied Razorpay update received and recorded in sanitized status-only form.
-  KYC status: CONFIRMED_COMPLETE — resolves D7A AMBIGUOUS status (major progress).
-  Website/app review: UNDER_REVIEW — Razorpay Dashboard message: "Your Website/app is under
-  review. Our team will get back to you shortly. Under review. Expect an update in 24-48 hours."
-  Review outcome unknown; test mode access pending review outcome.
-  Test mode: PENDING (awaiting website/app review approval).
-  Live mode: PENDING.
-  PR-04 status: KYC_COMPLETE_PENDING_WEBSITE_APP_REVIEW_AND_TEST_MODE_VERIFICATION.
-  Legal entity: CONFIRMED — TexQtic Ventures Pvt Ltd (carry-forward); no entity mismatch.
-  Settlement bank: CONFIRMED (carry-forward; no bank details recorded).
-  Dashboard admin: CONFIRMED (carry-forward).
-  PR-05 refund/cancellation: NOT_STARTED (unchanged). PR-06 PCI boundary: NOT_STARTED.
-  PR-07 payment audit/log policy: NOT_STARTED. PR-08 pricing/tier: PARTIALLY_COMPLETE.
-  Payment implementation gate remains CLOSED. FTU-COMM-002 trigger: 3/8 prerequisites.
+  FAM-13B-D8 Refund and Cancellation Policy / PR-05 Closure COMPLETE (2026-06-04).
+  Final enum: FAM_13B_D8_REFUND_CANCELLATION_POLICY_COMPLETE_PR_05_COMPLETE.
+  Founder-approved refund and cancellation policy recorded. D-021 status: RESOLVED.
+  Policy covers: general non-refundable SaaS subscription (R-1 with named exceptions:
+  duplicate payment, accidental overcharge, technical billing error, failed activation,
+  legally required); cancellation at period end with access to expiry (C-1); no annual
+  plan refund at launch (A-1); failed renewal 7-day grace carry-forward; downgrade/upgrade
+  rules carry-forward to implementation design; disputes/chargebacks handled manually at
+  launch; tenant access NOT auto-terminated on dispute alone; support: hello@texqtic.com;
+  free plan: no refund (no payment collected).
+  Zoho Books GST credit note: carry-forward to Zoho Books implementation design.
+  PR-05 status: COMPLETE. PR-04 status: KYC_COMPLETE_PENDING_WEBSITE_APP_REVIEW_AND_TEST_MODE_VERIFICATION (UNCHANGED).
+  PR-06 NOT_STARTED. PR-07 NOT_STARTED. PR-08 PARTIALLY_COMPLETE.
+  Implementation gate: CLOSED. FTU-COMM-002 trigger: 4/8 prerequisites (PR-01/02/03/05).
+  D7C pending separately (awaiting Razorpay website/app review result).
   Guardrails preserved: no API keys, key secrets, webhook secrets, bank details, GST
   documents, PAN/Aadhaar data, login credentials, or customer payment data recorded.
   No source, schema, package, environment, or migration changes.
-last_closed_unit: FAM-13B-D7B-RAZORPAY-KYC-COMPLETE-WEBSITE-APP-REVIEW-PENDING-001
+last_closed_unit: FAM-13B-D8-REFUND-CANCELLATION-POLICY-AND-PR-05-CLOSURE-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-06-04)
 last_closed_unit_runtime_verdict: >
-  FAM-13B-D7B Razorpay KYC Complete / Website-App Review Pending complete (2026-06-04).
-  Paresh-supplied update recorded: KYC CONFIRMED_COMPLETE (resolves D7A AMBIGUOUS); website/app
-  UNDER_REVIEW (message: expect update in 24-48h); test mode PENDING; live mode PENDING.
-  PR-04 status: KYC_COMPLETE_PENDING_WEBSITE_APP_REVIEW_AND_TEST_MODE_VERIFICATION.
-  Implementation gate CLOSED. No source changes. Final enum:
-  FAM_13B_D7B_KYC_COMPLETE_WEBSITE_APP_REVIEW_PENDING_PR_04_NOT_COMPLETE.
-last_closed_unit_commits: governance-only (D7B artifact + 3 tracker updates; no source commits)
+  FAM-13B-D8 Refund and Cancellation Policy / PR-05 Closure COMPLETE (2026-06-04).
+  Policy recorded. D-021 RESOLVED. PR-05 COMPLETE. Implementation gate CLOSED (4/8).
+  No source changes. Final enum: FAM_13B_D8_REFUND_CANCELLATION_POLICY_COMPLETE_PR_05_COMPLETE.
+last_closed_unit_commits: governance-only (D8 artifact + 3 tracker updates; no source commits)
 last_closed_unit_closure_basis: >
-  FAM-13B-D7B: D7B artifact + NEXT-ACTION sync + COMMERCE-METHODOLOGY §4.8 D7B status block
-  + FUTURE-TODO-REGISTER D7B row. PR-04 reassessed against D7B evidence: KYC COMPLETED
-  satisfies 13-item items 5 and 6 (KYC submitted/approved). Website/app UNDER_REVIEW prevents
-  closure; test mode PENDING; live mode PENDING. PR-04 not yet COMPLETE.
-  D7C recommended; not yet opened. Final enum:
-  FAM_13B_D7B_KYC_COMPLETE_WEBSITE_APP_REVIEW_PENDING_PR_04_NOT_COMPLETE.
-last_closed_unit_prior: FAM-13B-D7A-RAZORPAY-KYC-EVIDENCE-COMPLETION-001
+  FAM-13B-D8: D8 artifact + NEXT-ACTION sync + COMMERCE-METHODOLOGY §4.9 D8 status block
+  + FUTURE-TODO-REGISTER D8 row. PR-05 complete: all mandatory policy decisions recorded by
+  founder. CA review "if applicable" not required (India SaaS). Policy text and implementation
+  deferred to FTU-COMM-002 (not blocking governance closure). D-021 RESOLVED.
+  Final enum: FAM_13B_D8_REFUND_CANCELLATION_POLICY_COMPLETE_PR_05_COMPLETE.
+last_closed_unit_prior: FAM-13B-D7B-RAZORPAY-KYC-COMPLETE-WEBSITE-APP-REVIEW-PENDING-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-04)
-last_closed_unit_prior2: FAM-13B-D6-CA-ADVISORY-CLOSE-AND-PR-03-COMPLETION-001
-last_closed_unit_prior2_status: VERIFIED_COMPLETE (2026-06-03)
+last_closed_unit_prior2: FAM-13B-D7A-RAZORPAY-KYC-EVIDENCE-COMPLETION-001
+last_closed_unit_prior2_status: VERIFIED_COMPLETE (2026-06-04)
 fam07_hold_preservation: >
   FAM-07 legal hold preserved through this pointer sync. L13A (33fd8bf7): hold recorded.
   L13C (ee6252d9): tracker sync complete. HOLD_FOR_HUMAN_LEGAL_INPUTS active.
@@ -66,24 +61,21 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FAM-13B-D7C-RAZORPAY-WEBSITE-APP-REVIEW-APPROVAL-AND-TEST-MODE-VERIFICATION-001
-next_candidate_unit_status: NOT_YET_OPENED — AWAITING_RAZORPAY_WEBSITE_APP_REVIEW_RESULT
+next_candidate_unit: FAM-13B-D9-PCI-BOUNDARY-AND-HOSTED-PAYMENT-COLLECTION-POLICY-AND-PR-06-CLOSURE-001
+next_candidate_unit_status: NOT_YET_OPENED
 next_candidate_unit_date_installed: "2026-06-04"
 next_candidate_unit_note: >
-  FAM-13B-D7C is the recommended next payment governance unit (2026-06-04).
-  Scope: record Razorpay website/app review outcome (approved / rejected / remediation needed);
-  verify test-mode accessibility in the Razorpay Dashboard after review decision; record
-  live-mode status if known; close PR-04 if website/app review is approved and test mode is
-  confirmed accessible. If review is rejected or requires remediation: record feedback and
-  plan a remediation unit. Governance and advisory only — no source, schema, migration,
-  package, environment, or payment implementation changes.
-  D7C should not be opened until Paresh receives the Razorpay website/app review outcome
-  (expected within 24–48 hours per the Razorpay Dashboard message received in D7B).
-  If PR-04 closes in D7C, the next bounded unit after D7C should be FAM-13B-D8 —
-  Refund and Cancellation Policy Decision / PR-05 Closure.
-  Payment implementation remains unauthorized. PR-05–PR-08 remain open/partial. Explicit
-  Paresh implementation authorization still required. FAM-07 hold unchanged. FTR-LEGAL-003
-  remains MVP_CRITICAL/OPEN.
+  FAM-13B-D9 is the recommended next payment governance unit (2026-06-04).
+  Scope: confirm PCI boundary (Razorpay Hosted Checkout; no TexQtic-side card form; no card
+  data on TexQtic servers); define webhook signature verification protocol (HMAC-SHA256);
+  define Razorpay API key storage rule; confirm SAQ scope classification (SAQ A or SAQ A-EP);
+  close PR-06. Governance and advisory only — no source, schema, migration, package,
+  environment, or payment implementation changes.
+  Note: FAM-13B-D7C remains pending as adjacent parallel unit, independently awaiting
+  Razorpay website/app review result. D7C and D9 are independent; either may be opened first.
+  Payment implementation remains unauthorized. PR-06/07 NOT_STARTED. PR-08 PARTIALLY_COMPLETE.
+  Explicit Paresh implementation authorization still required. FAM-07 hold unchanged.
+  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001

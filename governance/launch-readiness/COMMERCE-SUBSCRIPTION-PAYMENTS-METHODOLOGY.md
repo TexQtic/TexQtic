@@ -496,6 +496,52 @@ D7B row appended. No source, schema, migration, package, or environment changes.
 (scope: record website/app review outcome; verify test-mode accessibility; close PR-04 if all
 remaining evidence is sufficient; no implementation; open after Paresh receives review result)
 
+### 4.9 D8 Status — Refund and Cancellation Policy / PR-05 Closure (2026-06-04)
+
+**Unit:** FAM-13B-D8-REFUND-CANCELLATION-POLICY-AND-PR-05-CLOSURE-001 — ✅ **COMPLETE**
+
+**D8 outcome:** Founder-approved refund and cancellation policy recorded. **PR-05 = COMPLETE.** D-021 = RESOLVED.
+
+**Approved policy summary:**
+
+| Policy Area | Decision |
+|---|---|
+| General refund | Non-refundable once paid period begins (with named exceptions) |
+| Refund exceptions | Duplicate payment; accidental overcharge; technical billing error; failed activation; legally required |
+| Cancellation | Cancel at period end; access to end of billing period; no auto pro-rata refund (C-1) |
+| Annual plan | No refund at initial launch (A-1) |
+| Failed renewal | 7-day grace period; downgrade/suspend logic deferred to implementation design unit |
+| Downgrade | Next billing cycle; no mid-cycle automatic credit unless approved |
+| Upgrade | Immediate on payment; prorating deferred to billing-rules design unit |
+| Disputes/chargebacks | Manual at launch; tenant access NOT auto-terminated on dispute alone |
+| Support channel | `hello@texqtic.com` |
+| Free plan | No refund applicable (no payment collected) |
+
+**Zoho Books / GST credit note:** Refunds reversing taxable value require a credit note in Zoho Books. No automation in D8 scope. Carry-forward to Zoho Books implementation design unit.
+
+**D8 payment prerequisite status:**
+
+| Prerequisite | D7B Status | D8 Status | Change |
+|---|---|---|---|
+| PR-01 — Payment provider selection | COMPLETE | COMPLETE | = |
+| PR-02 — Subscription billing model | COMPLETE | COMPLETE | = |
+| PR-03 — CA advisory / Zoho Books lock | COMPLETE | COMPLETE | = |
+| PR-04 — Razorpay account readiness | KYC_COMPLETE_PENDING_WEBSITE_APP_REVIEW_AND_TEST_MODE_VERIFICATION | KYC_COMPLETE_PENDING_WEBSITE_APP_REVIEW_AND_TEST_MODE_VERIFICATION | = |
+| PR-05 — Refund/cancellation policy | NOT_STARTED | ✅ COMPLETE | ↑ closed |
+| PR-06 — PCI boundary checklist | NOT_STARTED | NOT_STARTED | = |
+| PR-07 — Payment event audit/log policy | NOT_STARTED | NOT_STARTED | = |
+| PR-08 — Pricing/tier structure | PARTIALLY_COMPLETE | PARTIALLY_COMPLETE | = |
+
+**Implementation gate: CLOSED** — unchanged in D8. FTU-COMM-002 trigger: 4/8 prerequisites (PR-01, PR-02, PR-03, PR-05). Gate opens at 8/8. PR-04 not yet complete (D7C pending). PR-06/07 NOT_STARTED. PR-08 PARTIALLY_COMPLETE.
+
+**D8 governance changes:** D8 artifact created (git-ignored); NEXT-ACTION.md synced (active unit D8 COMPLETE, next candidate D9 installed); COMMERCE-METHODOLOGY §4.9 added; FUTURE-TODO-REGISTER D8 row appended. No source, schema, migration, package, or environment changes.
+
+**Final enum:** `FAM_13B_D8_REFUND_CANCELLATION_POLICY_COMPLETE_PR_05_COMPLETE`
+
+**Next recommended unit:** `FAM-13B-D9 — PCI Boundary and Hosted Payment Collection Policy / PR-06 Closure`
+(scope: confirm PCI boundary via Razorpay Hosted Checkout; webhook signature verification; API key storage rule; SAQ classification; close PR-06; governance only; no implementation)
+Note: `FAM-13B-D7C` remains pending as adjacent unit awaiting Razorpay website/app review result.
+
 ---
 
 ## 5. B2B Financial Boundary (CONFIRMED GUARDRAIL)
