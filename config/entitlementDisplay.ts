@@ -12,6 +12,9 @@
  *     Yearly: STARTER ₹23,990/year; PROFESSIONAL ₹47,990/year.
  *     ENTERPRISE remains custom/negotiated. FREE remains no payment.
  *     No checkout or payment collection authorized in this unit.
+ *   - DL-04 CTA alignment: AUTHORIZED — FTU-COMM-002C (2026-06-04).
+ *     Plan-specific CTA labels and billing-cycle-aware mailto hrefs added (TIER_CTA_LABELS, getTierCtaHref).
+ *     No checkout, no payment collection, no Razorpay/Zoho code.
  */
 
 export type AvailabilityLabel =
@@ -215,3 +218,43 @@ export const TIER_YEARLY_PRICE_COPY: Record<string, string> = {
   PROFESSIONAL: '₹47,990/year + 18% GST',
   ENTERPRISE: 'Contact sales',
 };
+
+/**
+ * Plan-specific CTA labels — display only. No checkout.
+ * Authorized per FTU-COMM-002C (2026-06-04).
+ */
+export const TIER_CTA_LABELS: Record<string, string> = {
+  FREE: 'Get started free',
+  STARTER: 'Request STARTER Access',
+  PROFESSIONAL: 'Request PROFESSIONAL Access',
+  ENTERPRISE: 'Contact Sales',
+};
+
+/**
+ * Returns a plan-specific, billing-cycle-aware mailto href for the given tier.
+ * No checkout or payment URL — display only. Authorized per FTU-COMM-002C (2026-06-04).
+ */
+export function getTierCtaHref(tier: string, cycle: 'monthly' | 'yearly'): string {
+  const email = 'hello@texqtic.com';
+
+  if (tier === 'STARTER' || tier === 'PROFESSIONAL') {
+    const cycleLabel = cycle === 'monthly' ? 'Monthly' : 'Yearly';
+    const price =
+      (cycle === 'monthly' ? TIER_UPGRADE_COPY[tier] : TIER_YEARLY_PRICE_COPY[tier]) ?? '';
+    const subject = encodeURIComponent(`TexQtic ${tier} ${cycleLabel} Plan Inquiry`);
+    const body = encodeURIComponent(
+      `Hello TexQtic team,\n\nI am interested in the ${tier} plan.\n\nBilling option: ${cycleLabel}\nDisplayed price: ${price}\n\nPlease share the next steps.`
+    );
+    return `mailto:${email}?subject=${subject}&body=${body}`;
+  }
+
+  if (tier === 'ENTERPRISE') {
+    const subject = encodeURIComponent('TexQtic ENTERPRISE Plan Inquiry');
+    const body = encodeURIComponent(
+      'Hello TexQtic team,\n\nI am interested in the ENTERPRISE plan.\n\nPlease contact me to discuss requirements and pricing.'
+    );
+    return `mailto:${email}?subject=${subject}&body=${body}`;
+  }
+
+  return UPGRADE_CTA_MAILTO;
+}

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTU-COMM-002B-PUBLIC-PRICING-DISPLAY-IMPLEMENTATION-001 COMPLETE. Monthly + yearly CA-approved pricing displayed on public pricing page. Billing cycle toggle added. TypeScript: PASS. No backend changes. Final enum: FTU_COMM_002B_PUBLIC_MONTHLY_YEARLY_PRICING_DISPLAY_COMPLETE.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTU-COMM-002C-PUBLIC-PRICING-CTA-INTENT-ALIGNMENT-001 COMPLETE. Plan-specific CTA labels (Request STARTER/PROFESSIONAL Access, Contact Sales) and billing-cycle-aware mailto hrefs added. TypeScript: PASS. No backend changes. Final enum: FTU_COMM_002C_PUBLIC_PRICING_CTA_INTENT_ALIGNMENT_COMPLETE.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,37 +15,39 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FTU-COMM-002B-PUBLIC-PRICING-DISPLAY-IMPLEMENTATION-001
+active_delivery_unit: FTU-COMM-002C-PUBLIC-PRICING-CTA-INTENT-ALIGNMENT-001
 active_delivery_unit_status: COMPLETE
 active_delivery_unit_note: >
-  FTU-COMM-002B Public Pricing Display Implementation COMPLETE (2026-06-04).
-  Final enum: FTU_COMM_002B_PUBLIC_MONTHLY_YEARLY_PRICING_DISPLAY_COMPLETE.
-  Changes: config/entitlementDisplay.ts — governance comment updated; TIER_UPGRADE_COPY updated
-  with CA-approved monthly prices (STARTER ₹2,499/month + 18% GST; PROFESSIONAL ₹4,999/month +
-  18% GST); TIER_YEARLY_PRICE_COPY added (STARTER ₹23,990/year + 18% GST; PROFESSIONAL
-  ₹47,990/year + 18% GST). components/Public/PublicPricingPage.tsx — TIER_YEARLY_PRICE_COPY
-  imported; getPriceLine helper added; billing cycle toggle (Monthly/Yearly) added; STARTER
-  tagline and ctaLabel updated; hero text updated; GST-exclusive note added; price line render
-  made dynamic. TypeScript typecheck: PASS. No backend, schema, package, env, or checkout changes.
-  CTA remains mailto. Annual billing: NOW_AUTHORIZED_DISPLAY. D-011 item 7: PARKED.
-  FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003: MVP_CRITICAL/OPEN unchanged.
-  Guardrails preserved: no API keys, key secrets, webhook secrets, bank details, or payment data.
-last_closed_unit: FTU-COMM-002B-PUBLIC-PRICING-DISPLAY-IMPLEMENTATION-001
+  FTU-COMM-002C Public Pricing CTA Intent Alignment COMPLETE (2026-06-04).
+  Final enum: FTU_COMM_002C_PUBLIC_PRICING_CTA_INTENT_ALIGNMENT_COMPLETE.
+  Changes: config/entitlementDisplay.ts — governance comment updated; TIER_CTA_LABELS added
+  (FREE: 'Get started free'; STARTER: 'Request STARTER Access'; PROFESSIONAL: 'Request
+  PROFESSIONAL Access'; ENTERPRISE: 'Contact Sales'); getTierCtaHref() function added (returns
+  plan-specific, billing-cycle-aware mailto href for STARTER/PROFESSIONAL; ENTERPRISE custom
+  inquiry; FREE fallback). components/Public/PublicPricingPage.tsx — TIER_CTA_LABELS and
+  getTierCtaHref imported; TIER_CARDS ctaLabel updated to use TIER_CTA_LABELS per tier; JSX
+  <a> href updated to use getTierCtaHref(card.tier, billingCycle) for billing-cycle-aware mailto.
+  TypeScript typecheck: PASS. No backend, schema, package, env, or checkout changes.
+  CTA remains mailto/contact. Billing cycle toggle preserved. Monthly/yearly prices preserved.
+  D-011 item 7: PARKED. FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
+  FTR-LEGAL-003: MVP_CRITICAL/OPEN unchanged.
+last_closed_unit: FTU-COMM-002C-PUBLIC-PRICING-CTA-INTENT-ALIGNMENT-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-06-04)
 last_closed_unit_runtime_verdict: >
-  FTU-COMM-002B Public Pricing Display Implementation COMPLETE (2026-06-04). Monthly + yearly
-  CA-approved pricing displayed. Billing cycle toggle added. TypeScript: PASS. No backend changes.
-  Final enum: FTU_COMM_002B_PUBLIC_MONTHLY_YEARLY_PRICING_DISPLAY_COMPLETE.
-last_closed_unit_commits: '"feat: display public monthly and yearly pricing" (2 source files + 3 tracker files)'
+  FTU-COMM-002C Public Pricing CTA Intent Alignment COMPLETE (2026-06-04).
+  Plan-specific CTA labels and billing-cycle-aware mailto hrefs added. TypeScript: PASS.
+  No backend changes. Final enum: FTU_COMM_002C_PUBLIC_PRICING_CTA_INTENT_ALIGNMENT_COMPLETE.
+last_closed_unit_commits: '"feat: align public pricing CTA intent" (2 source files + 3 tracker files)'
 last_closed_unit_closure_basis: >
-  FTU-COMM-002B: config/entitlementDisplay.ts updated (TIER_UPGRADE_COPY monthly prices,
-  TIER_YEARLY_PRICE_COPY added); components/Public/PublicPricingPage.tsx updated (billing toggle,
-  getPriceLine helper, STARTER tagline + CTA, hero text, GST note). NEXT-ACTION.md synced;
-  COMMERCE-METHODOLOGY §4.17 FTU-COMM-002B status block added; FUTURE-TODO-REGISTER
-  FTU-COMM-002B history row prepended + FTU-COMM-002 unit row updated.
-  Annual billing NOW_AUTHORIZED_DISPLAY. D-011 item 7 PARKED. FAM-07 hold unchanged.
-  FTR-LEGAL-003 unchanged. Final enum: FTU_COMM_002B_PUBLIC_MONTHLY_YEARLY_PRICING_DISPLAY_COMPLETE.
-last_closed_unit_prior: FTU-COMM-002A-RAZORPAY-ZOHO-PUBLIC-DISPLAY-PRICING-REPO-TRUTH-DESIGN-001
+  FTU-COMM-002C: config/entitlementDisplay.ts updated (TIER_CTA_LABELS, getTierCtaHref added);
+  components/Public/PublicPricingPage.tsx updated (TIER_CTA_LABELS + getTierCtaHref imported;
+  ctaLabel updated per tier; JSX <a> href uses getTierCtaHref(card.tier, billingCycle)).
+  NEXT-ACTION.md synced; COMMERCE-METHODOLOGY §4.18 FTU-COMM-002C status block added;
+  FUTURE-TODO-REGISTER FTU-COMM-002C history row appended + FTU-COMM-002 unit row updated.
+  Monthly/yearly prices preserved. GST-exclusive note preserved. CTA remains mailto.
+  D-011 item 7 PARKED. FAM-07 hold unchanged. FTR-LEGAL-003 unchanged.
+  Final enum: FTU_COMM_002C_PUBLIC_PRICING_CTA_INTENT_ALIGNMENT_COMPLETE.
+last_closed_unit_prior: FTU-COMM-002B-PUBLIC-PRICING-DISPLAY-IMPLEMENTATION-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-04)
 last_closed_unit_prior2: FAM-13B-D12A-PAYMENT-IMPLEMENTATION-AUTHORIZATION-DECISION-001
 last_closed_unit_prior2_status: VERIFIED_COMPLETE (2026-06-04)
@@ -57,11 +59,11 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FTU-COMM-002C-RAZORPAY-SUBSCRIPTIONS-INTEGRATION-DESIGN-001
+next_candidate_unit: FTU-COMM-002D-RAZORPAY-SUBSCRIPTIONS-INTEGRATION-DESIGN-001
 next_candidate_unit_status: HOLD_FOR_FTR_LEGAL_003_RESOLUTION
 next_candidate_unit_date_installed: "2026-06-04"
 next_candidate_unit_note: >
-  FTU-COMM-002C — Razorpay Subscriptions Integration Design (backend implementation unit).
+  FTU-COMM-002D — Razorpay Subscriptions Integration Design (backend implementation unit).
   Gating condition: FTR-LEGAL-003 must be resolved (MVP_CRITICAL/OPEN) before this unit opens.
   Scope (when unblocked): Razorpay Subscriptions Hosted Checkout backend, webhook HMAC-SHA256
   verification, Zoho Books GST Tax Invoice integration, subscription service routes, DB tables

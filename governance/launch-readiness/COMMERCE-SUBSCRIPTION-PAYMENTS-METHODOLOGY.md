@@ -886,7 +886,57 @@ PR-08-B (annual price equivalents): addressed by explicit annual billing deferra
 
 **Commit:** `feat: display public monthly and yearly pricing`
 
-**Next unit:** `FTU-COMM-002C — Razorpay Subscriptions Integration Design`
+**Next unit:** `FTU-COMM-002C — Public Pricing CTA Intent Alignment`
+(authorized as CTA alignment unit, no FTR-LEGAL-003 dependency)
+
+---
+
+### §4.18 FTU-COMM-002C — Public Pricing CTA Intent Alignment
+
+**Unit:** `FTU-COMM-002C-PUBLIC-PRICING-CTA-INTENT-ALIGNMENT-001`
+**Status:** VERIFIED_COMPLETE (2026-06-04)
+**Final enum:** `FTU_COMM_002C_PUBLIC_PRICING_CTA_INTENT_ALIGNMENT_COMPLETE`
+
+**Authorization basis:** FTU-COMM-002B design recommendation; §4.17 confirmed pricing display
+complete; CA-approved pricing preserved; CTA alignment is display-only with no payment or
+checkout changes.
+
+**Allowlist (modified):**
+- `config/entitlementDisplay.ts`
+- `components/Public/PublicPricingPage.tsx`
+
+**Changes made:**
+
+`config/entitlementDisplay.ts`:
+- Governance comment updated: DL-04 CTA alignment AUTHORIZED (FTU-COMM-002C).
+- `TIER_CTA_LABELS` added: FREE → 'Get started free'; STARTER → 'Request STARTER Access';
+  PROFESSIONAL → 'Request PROFESSIONAL Access'; ENTERPRISE → 'Contact Sales'.
+- `getTierCtaHref(tier, cycle)` function added: returns plan-specific, billing-cycle-aware
+  mailto href for STARTER/PROFESSIONAL (subject: "TexQtic {TIER} {Monthly|Yearly} Plan Inquiry";
+  body includes tier, billing option, displayed price); ENTERPRISE custom inquiry href;
+  FREE falls back to UPGRADE_CTA_MAILTO. No checkout URL, no Razorpay/Zoho URL.
+
+`components/Public/PublicPricingPage.tsx`:
+- `TIER_CTA_LABELS` and `getTierCtaHref` imported.
+- `TIER_CARDS` `ctaLabel` updated to use `TIER_CTA_LABELS[tier]` for STARTER, PROFESSIONAL,
+  ENTERPRISE.
+- JSX `<a>` CTA `href` updated to `getTierCtaHref(card.tier, billingCycle)` — billing-cycle-aware.
+
+**Carry-forward (unchanged — must not be cleared):**
+- Monthly/yearly pricing display: PRESERVED.
+- GST-exclusive note: PRESERVED.
+- D-011 item 7: PARKED unchanged.
+- FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
+- FTR-LEGAL-003: MVP_CRITICAL/OPEN unchanged.
+- No checkout, no payment collection, no backend/schema/migration/package/env changes.
+- CTA remains mailto/contact only.
+
+**Validation:** TypeScript typecheck PASS. `git diff --name-only` confirmed only 2 source files
++ 3 tracker files modified.
+
+**Commit:** `feat: align public pricing CTA intent`
+
+**Next unit:** `FTU-COMM-002D — Razorpay Subscriptions Integration Design`
 (gated: FTR-LEGAL-003 must resolve before opening)
 
 ---

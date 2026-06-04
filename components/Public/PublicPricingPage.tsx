@@ -5,6 +5,8 @@ import {
   UPGRADE_CTA_MAILTO,
   TIER_UPGRADE_COPY,
   TIER_YEARLY_PRICE_COPY,
+  TIER_CTA_LABELS,
+  getTierCtaHref,
   type AvailabilityLabel,
 } from '../../config/entitlementDisplay';
 
@@ -105,7 +107,7 @@ const TIER_CARDS: readonly TierCardConfig[] = [
     label: 'STARTER',
     tagline: 'Designed for growing teams. Transparent, simple pricing.',
     priceLine: TIER_UPGRADE_COPY['STARTER'],
-    ctaLabel: 'Contact us',
+    ctaLabel: TIER_CTA_LABELS['STARTER'],
     ctaHref: UPGRADE_CTA_MAILTO,
     featured: false,
     badgeClass: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -118,7 +120,7 @@ const TIER_CARDS: readonly TierCardConfig[] = [
     label: 'PROFESSIONAL',
     tagline: 'Advanced commerce features for professional B2B operations.',
     priceLine: TIER_UPGRADE_COPY['PROFESSIONAL'],
-    ctaLabel: 'Contact us',
+    ctaLabel: TIER_CTA_LABELS['PROFESSIONAL'],
     ctaHref: UPGRADE_CTA_MAILTO,
     featured: false,
     badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
@@ -131,7 +133,7 @@ const TIER_CARDS: readonly TierCardConfig[] = [
     label: 'ENTERPRISE',
     tagline: 'Custom scale, dedicated support, and full-platform capability.',
     priceLine: TIER_UPGRADE_COPY['ENTERPRISE'],
-    ctaLabel: 'Contact sales',
+    ctaLabel: TIER_CTA_LABELS['ENTERPRISE'],
     ctaHref: UPGRADE_CTA_MAILTO,
     featured: false,
     badgeClass: 'bg-violet-50 text-violet-700 border-violet-200',
@@ -389,7 +391,7 @@ export function PublicPricingPage({
                       </button>
                     ) : (
                       <a
-                        href={card.ctaHref}
+                        href={getTierCtaHref(card.tier, billingCycle)}
                         className={card.ctaClass}
                         rel="noopener noreferrer"
                       >
