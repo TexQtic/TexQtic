@@ -662,6 +662,63 @@ Payment event audit policy and ledger logging governance recorded. event-names.m
 
 ---
 
+### §4.13 D11 — Pricing / Tier Structure Finalization and PR-08 Closure (2026-06-04)
+
+**Status:** COMPLETE — `FAM-13B-D11-PRICING-TIER-STRUCTURE-FINALIZATION-PR-08-CLOSURE-001`
+**Final enum:** `FAM_13B_D11_PRIVATE_PRICING_READY_PR_08_COMPLETE_WITH_PUBLIC_DISPLAY_BLOCKED`
+
+**PR-08 advancement:**
+
+| PR | Status Before D11 | Status After D11 | Change |
+|---|---|---|---|
+| PR-08 | PARTIALLY_COMPLETE | **COMPLETE_WITH_PRIVATE_PRICING** | Closed in D11 |
+| All prerequisites | 7/8 | **8/8 COMPLETE** | Gate condition met |
+
+**Key decisions recorded in D11:**
+
+| Decision | Value |
+|---|---|
+| First paid plan | STARTER |
+| First billing cadence | Monthly only |
+| Annual billing | **DEFERRED** — explicit launch-deferral; no CA-approved annual equivalents in repo truth |
+| Public price display | **BLOCKED** — CA explicit authorization absent; founder elects private/manual controlled pricing |
+| Operative prices (private/operator use only) | STARTER ₹2,499/mo; PROFESSIONAL ₹4,999/mo |
+| GST treatment | Exclusive; SAC 998315; 18% GST; Zoho Books GST Tax Invoice authority |
+| PROFESSIONAL / ENTERPRISE at launch | Non-self-serve / manual inquiry |
+| Marketplace / B2C / D2C / TTP payments | Explicitly excluded from PR-08 scope |
+| D-011 status advance | PARTIALLY_RESOLVED → PARTIALLY_RESOLVED_WITH_PRIVATE_PRICING_DECISION |
+
+**PR-08 completion path:** `COMPLETE_WITH_PRIVATE_PRICING`
+PR-08-A (CA public display authorization): not confirmed in repo truth → founder explicitly elects private/manual pricing as sufficient for first payment-readiness closure.
+PR-08-B (annual price equivalents): addressed by explicit annual billing deferral.
+
+**All-prerequisites summary:**
+
+| PR | Status as of D11 |
+|---|---|
+| PR-01 | ✅ COMPLETE |
+| PR-02 | ✅ COMPLETE |
+| PR-03 | ✅ COMPLETE |
+| PR-04 | ✅ COMPLETE |
+| PR-05 | ✅ COMPLETE |
+| PR-06 | ✅ COMPLETE |
+| PR-07 | ✅ COMPLETE |
+| PR-08 | ✅ COMPLETE_WITH_PRIVATE_PRICING |
+| **Total** | **8/8 prerequisites complete** |
+
+**Implementation gate after D11:** GATE_CONDITION_MET (8/8 prerequisites satisfied) but **CLOSED** — Paresh must explicitly authorize implementation in FAM-13B-D12 before FTU-COMM-002 (RAZORPAY-PAYMENT-GATEWAY-DESIGN-001) opens.
+
+**Carry-forward:**
+- Public price display authorization requires future CA explicit off-platform advisory + new governance unit
+- Annual billing launch requires CA-reviewed annual price equivalents + new governance unit
+- D-011 item 7 (feature entitlement scope per tier): still PARKED; required before FAM-11 self-serve billing implementation
+- `event-names.md`: unchanged; no payment events registered; Team A sign-off required before implementation
+
+**Next recommended unit:** `FAM-13B-D12 — Private-Pricing Payment Implementation Readiness Review`
+(scope: confirm all 8 prerequisites COMPLETE; confirm private/manual pricing as authorized launch path; decide whether Paresh authorizes opening FTU-COMM-002; choose first implementation design slice; governance / advisory / authorization review only; no implementation unless Paresh explicitly authorizes in D12)
+
+---
+
 ## 5. B2B Financial Boundary (CONFIRMED GUARDRAIL)
 
 ### 5.1 Confirmed Position
