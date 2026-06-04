@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTR-OPS-001B COMPLETE. Privacy-safe Sentry error monitoring implemented for frontend (@sentry/react) and backend (@sentry/node). sendDefaultPii: false, tracesSampleRate: 0, beforeSend PII scrub, DSN-guard init, Sentry.captureException in both Fastify error handlers. No session replay, no performance tracing. FTR-OPS-001 IMPLEMENTATION_COMPLETE. Prior: FTR-SL-001A COMPLETE 2026-06-04.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTR-OPS-001C COMPLETE. Vercel deployment + Sentry project setup checkpoint recorded. Backend project corrected from wrong platform to Fastify/Node. SENTRY_DSN (backend) and VITE_SENTRY_DSN (frontend) confirmed in Vercel (values not printed). Production redeploy complete. FTR-OPS-001 remains OPEN: IMPLEMENTATION_COMPLETE / VERIFICATION_PENDING_FIRST_EVENT — no first event captured yet in texqtic-frontend or texqtic-backend. Prior: FTR-OPS-001B COMPLETE 2026-06-04.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,45 +15,45 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FTR-OPS-001B-SENTRY-ERROR-MONITORING-IMPLEMENTATION-001
+active_delivery_unit: FTR-OPS-001C-SENTRY-PRODUCTION-VERIFICATION-PENDING-EVIDENCE-SYNC-001
 active_delivery_unit_status: COMPLETE
 active_delivery_unit_note: >
-  FTR-OPS-001B COMPLETE (2026-06-04). Privacy-safe Sentry error monitoring implemented.
-  Frontend: @sentry/react, sentry.ts at root (DSN-guard, sendDefaultPii: false, tracesSampleRate: 0,
-  beforeSend PII scrub of user/auth headers/extra fields, no session replay, integrations empty).
-  Backend: @sentry/node, server/src/sentry.ts (same privacy posture), imported by both
-  api/index.ts (Vercel) and server/src/index.ts (local dev).
-  Sentry.captureException(error) added in setErrorHandler in both backend entrypoints.
-  API response behavior unchanged. .env.example + server/.env.example placeholders documented.
-  TypeScript: zero new errors (2 pre-existing noUnusedLocals in gate-d7 test confirmed unchanged).
-  Grep: no real DSN or auth token values in any committed file.
-  FTR-OPS-001 readiness: DESIGN_COMPLETE → IMPLEMENTATION_COMPLETE.
-  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. FAM-07 hold unchanged: HOLD_FOR_HUMAN_LEGAL_INPUTS.
-  FTR-LEGAL-003C remains BLOCKED_PENDING_PARESH_REVIEW_OF_ITERATED_DRAFT_PACK.
-  Artifact: artifacts/launch-readiness/FTR-OPS-001B-SENTRY-ERROR-MONITORING-IMPLEMENTATION-001.md (git-ignored).
-  Commit: "feat: add privacy-safe Sentry error monitoring" (all allowlisted files + trackers).
-  Final enum: FTR_OPS_001B_SENTRY_ERROR_MONITORING_IMPLEMENTED.
-last_closed_unit: FTR-OPS-001B-SENTRY-ERROR-MONITORING-IMPLEMENTATION-001
+  FTR-OPS-001C COMPLETE (2026-06-04). Governance sync only — no source changes.
+  Vercel production deployment completed after FTR-OPS-001B commit (354bbff4).
+  Backend Sentry project corrected from wrong platform to Fastify/Node.
+  SENTRY_DSN in Vercel confirmed from backend Fastify/Node project (value not printed).
+  VITE_SENTRY_DSN in Vercel confirmed from frontend React project (value not printed).
+  Production redeploy completed after DSN confirmation.
+  Sentry texqtic-backend dashboard: still awaiting first event.
+  Sentry texqtic-frontend dashboard: still awaiting first event.
+  FTR-OPS-001 remains OPEN: IMPLEMENTATION_COMPLETE / VERIFICATION_PENDING_FIRST_EVENT.
+  Repo privacy posture reconfirmed: sendDefaultPii=false, tracesSampleRate=0, no session replay,
+  no profiling, no setUser, beforeSend PII scrub present in both init files.
+  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. FAM-07 HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
+  FTR-LEGAL-003C BLOCKED_PENDING_PARESH_REVIEW_OF_ITERATED_DRAFT_PACK unchanged.
+  FTU-COMM-002D HOLD_FOR_FTR_LEGAL_003_RESOLUTION unchanged.
+  Artifact: artifacts/launch-readiness/FTR-OPS-001C-SENTRY-PRODUCTION-VERIFICATION-PENDING-EVIDENCE-SYNC-001.md (git-ignored).
+  Commit: "gov: record FTR-OPS-001 Sentry verification pending".
+  Final enum: FTR_OPS_001C_VERIFICATION_PENDING_FIRST_EVENT_RECORDED.
+last_closed_unit: FTR-OPS-001C-SENTRY-PRODUCTION-VERIFICATION-PENDING-EVIDENCE-SYNC-001
 last_closed_unit_status: COMPLETE (2026-06-04)
 last_closed_unit_runtime_verdict: >
-  FTR-OPS-001B COMPLETE (2026-06-04). @sentry/react + @sentry/node installed. sentry.ts (frontend)
-  and server/src/sentry.ts (backend) created with full privacy-safe posture.
-  index.tsx, api/index.ts, server/src/index.ts wired. .env.example files documented.
-  Zero new TypeScript errors. No real secrets committed. FTR-OPS-001 IMPLEMENTATION_COMPLETE.
-  Artifact git-ignored; commit: "feat: add privacy-safe Sentry error monitoring".
-  Final enum: FTR_OPS_001B_SENTRY_ERROR_MONITORING_IMPLEMENTED.
-last_closed_unit_commits: '"feat: add privacy-safe Sentry error monitoring"'
+  FTR-OPS-001C COMPLETE (2026-06-04). Vercel deployment + Sentry project setup checkpoint recorded.
+  Backend project corrected to Fastify/Node. SENTRY_DSN + VITE_SENTRY_DSN confirmed in Vercel.
+  Sentry dashboards still awaiting first event for both texqtic-frontend and texqtic-backend.
+  FTR-OPS-001 remains OPEN: IMPLEMENTATION_COMPLETE / VERIFICATION_PENDING_FIRST_EVENT.
+  Final enum: FTR_OPS_001C_VERIFICATION_PENDING_FIRST_EVENT_RECORDED.
+last_closed_unit_commits: '"gov: record FTR-OPS-001 Sentry verification pending"'
 last_closed_unit_closure_basis: >
-  FTR-OPS-001B: complete Sentry error monitoring implementation per FTR-OPS-001A design.
-  Privacy posture: sendDefaultPii=false, tracesSampleRate=0, no session replay, no profiling,
-  beforeSend PII scrub, DSN-guard (no-op if env var absent). API response shapes unchanged.
-  TypeScript clean (pre-existing errors not introduced). No secrets committed.
-last_closed_unit_prior: FTR-SL-001A-SOFT-LAUNCH-AGGREGATOR-DIRECTORY-REPO-TRUTH-DESIGN-AND-READINESS-PLAN-001
+  FTR-OPS-001C: governance sync only. Records Vercel deployment checkpoint, Sentry project
+  platform correction (wrong platform → Fastify/Node), and first-event verification pending status.
+  No source, package, env, schema, data, or legal changes made.
+  FTR-OPS-001 not closed — first-event evidence required before closure.
+last_closed_unit_prior: FTR-OPS-001B-SENTRY-ERROR-MONITORING-IMPLEMENTATION-001
 last_closed_unit_prior_status: COMPLETE (2026-06-04)
-  FTR-LEGAL-003 MVP_CRITICAL/OPEN unchanged. FAM-07 HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
-  FTR-LEGAL-003C BLOCKED_PENDING_PARESH_REVIEW_OF_ITERATED_DRAFT_PACK unchanged.
-  Final enum: FTR_SL_001A_AGGREGATOR_DIRECTORY_DESIGN_READY.
-last_closed_unit_prior2: FTR-OPS-001A-SENTRY-ERROR-MONITORING-REPO-TRUTH-DESIGN-AND-PRIVACY-IMPACT-INVENTORY-001
+  Final enum: FTR_OPS_001B_SENTRY_ERROR_MONITORING_IMPLEMENTED.
+  Commit: "feat: add privacy-safe Sentry error monitoring" (354bbff4).
+last_closed_unit_prior2: FTR-SL-001A-SOFT-LAUNCH-AGGREGATOR-DIRECTORY-REPO-TRUTH-DESIGN-AND-READINESS-PLAN-001
 last_closed_unit_prior2_status: COMPLETE (2026-06-04)
 last_closed_unit_prior3: LAUNCH-FAMILY-SELECTOR-001-NON-LEGAL-BLOCKED-LAUNCH-READINESS-FAMILY-SELECTION
 last_closed_unit_prior3_status: VERIFIED_COMPLETE (2026-06-04)
