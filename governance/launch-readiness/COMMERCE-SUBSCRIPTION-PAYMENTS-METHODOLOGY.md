@@ -812,6 +812,55 @@ PR-08-B (annual price equivalents): addressed by explicit annual billing deferra
 
 ---
 
+### §4.16 FTU-COMM-002A — Razorpay + Zoho Public-Display Pricing Repo-Truth Design and File-Surface Map (2026-06-04)
+
+| Field | Value |
+|---|---|
+| Unit | FTU-COMM-002A-RAZORPAY-ZOHO-PUBLIC-DISPLAY-PRICING-REPO-TRUTH-DESIGN-001 |
+| Type | Design / Repo-Truth Map (no source implementation) |
+| Status | **VERIFIED_COMPLETE** (2026-06-04) |
+| Authorization basis | FAM-13B-D12A Paresh explicit authorization; Implementation gate: OPEN |
+| Final enum | `FTU_COMM_002A_REPO_TRUTH_DESIGN_FILE_SURFACE_MAP_COMPLETE` |
+
+**Repo-truth finding (100% confirmed):**
+- Zero Razorpay/Zoho source across all surfaces (schema, services, routes, events, config, packages, env — clean slate confirmed)
+- TenantPlan enum (`FREE|STARTER|PROFESSIONAL|ENTERPRISE`) exists; `Tenant.plan` field exists; not connected to any payment activation path
+- `TenantConfig.billingStatus` type field exists but no billing engine populates it; ready for payment system
+- `POST /tenant/checkout` route = B2B catalog cart only (NOT subscription billing)
+- `config/entitlementDisplay.ts` STARTER = waitlist copy; no ₹ amounts; DL-04 governance rule active
+- `components/Public/PublicPricingPage.tsx` STARTER = waitlist; CTA = mailto; no ₹ amounts
+
+**Design produced:**
+- Razorpay Subscriptions Hosted Checkout architecture map
+- Zoho Books GST Tax Invoice integration design (SAC 998315; 18% GST exclusive)
+- Webhook HMAC-SHA256 verification design (PCI-05 compliant; `crypto.timingSafeEqual`)
+- Subscription activation sequence (10-step)
+- Monthly renewal + grace period + downgrade sequence
+- Proposed new env vars (7): `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REFRESH_TOKEN`, `ZOHO_ORGANIZATION_ID`
+- Proposed new service directories: `server/src/services/razorpay/`, `server/src/services/zoho/`, `server/src/services/subscription/`
+- Proposed new routes: `POST /api/tenant/subscription/checkout`, `POST /api/internal/razorpay/webhook`, `GET /api/tenant/subscription/status`, `POST /api/tenant/subscription/cancel`
+- Proposed new DB tables (future unit): `subscriptions`, `subscription_events`, `zoho_invoice_refs`
+- Payment event proposals (governance only; not registered; Team A sign-off required)
+
+**Carry-forward (unchanged from D12A):**
+- Annual billing: DEFERRED
+- D-011 item 7: PARKED
+- FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS
+- FTR-LEGAL-003: MVP_CRITICAL/OPEN (blocks production payment launch)
+- Event taxonomy: governance proposals only; Team A sign-off required before `event-names.md` registration
+- Production key: GENERATED + STORED_SECURELY (values not recorded)
+
+**Recommended first implementation slice:** Option A — public pricing display only
+- Allowlist: `config/entitlementDisplay.ts` + `components/Public/PublicPricingPage.tsx`
+- Change: `TIER_UPGRADE_COPY.STARTER` → `'₹2,499/month + 18% GST'`; STARTER priceLine updated
+- No backend, schema, package, env, or checkout changes in Option A
+- CTA remains mailto in Option A
+
+**Next recommended unit:** `FTU-COMM-002B — Public Pricing Display Implementation`
+(scope: Option A slice; 2-file allowlist; no payment collection; no checkout)
+
+---
+
 ## 5. B2B Financial Boundary (CONFIRMED GUARDRAIL)
 
 ### 5.1 Confirmed Position
