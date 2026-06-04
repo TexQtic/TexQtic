@@ -1,3 +1,6 @@
+// FTR-OPS-001B: Initialize Sentry error monitoring (no-ops if SENTRY_DSN absent)
+import './sentry.js';
+import * as Sentry from '@sentry/node';
 import Fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
 import fastifyHelmet from '@fastify/helmet';
@@ -168,6 +171,7 @@ await fastify.register(internalGovRoutes);
 // Error handler
 fastify.setErrorHandler((error, _request, reply) => {
   fastify.log.error(error);
+  Sentry.captureException(error);
 
   const err = toErrorLike(error);
   const statusCode =

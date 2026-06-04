@@ -34,6 +34,8 @@
     "@fastify/helmet": "^13.0.2",
     "@fastify/jwt": "^10.0.0",
     "@google/genai": "^1.4.0",
+    "@sentry/node": "^10.56.0",
+    "@sentry/react": "^10.56.0",
     "clsx": "^2.1.1",
     "fastify": "^5.7.4",
     "framer-motion": "^11.2.10",

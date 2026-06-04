@@ -12,6 +12,10 @@
 // applies the FastifyRequest/FastifyReply augmentations globally in this compilation.
 /// <reference path="../server/src/types/fastify.d.ts" />
 
+// FTR-OPS-001B: Initialize Sentry error monitoring (no-ops if SENTRY_DSN absent)
+import '../server/src/sentry.js';
+import * as Sentry from '@sentry/node';
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
@@ -166,6 +170,7 @@ await fastify.register(internalGovRoutes);
 // Error handler
 fastify.setErrorHandler((error, _request, reply) => {
   fastify.log.error(error);
+  Sentry.captureException(error);
 
   const err = toErrorLike(error);
   const statusCode =
