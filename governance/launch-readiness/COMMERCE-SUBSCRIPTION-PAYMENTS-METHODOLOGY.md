@@ -445,6 +445,59 @@ close PR-04 if remaining evidence is sufficient; no implementation)
 
 ---
 
+### 4.8 D7B Status — Razorpay KYC Completion and Website/App Review Pending (2026-06-04)
+
+**Unit:** FAM-13B-D7B-RAZORPAY-KYC-COMPLETE-WEBSITE-APP-REVIEW-PENDING-001 — ✅ **COMPLETE**
+
+**Major progress from D7A:** KYC is now **CONFIRMED_COMPLETE**. This resolves the AMBIGUOUS
+KYC status from D7A ("approved / submitted"). Razorpay KYC has been fully completed.
+
+**New blocker surfaced in D7B:** The Razorpay website/app review is **UNDER REVIEW**. The
+Razorpay Dashboard message supplied by Paresh:
+
+> *"Your Website/app is under review. Our team will get back to you shortly. Under review.
+> Expect an update in 24-48 hours."*
+
+This status means the review is active but not yet approved. Test mode and live mode cannot
+be confirmed until the review completes.
+
+**D7B payment prerequisite status:**
+
+| Prerequisite | D7A Status | D7B Status | Change |
+|---|---|---|---|
+| PR-01 — Payment provider selection | COMPLETE | COMPLETE | = |
+| PR-02 — Subscription billing model | COMPLETE | COMPLETE | = |
+| PR-03 — CA advisory / Zoho Books lock | COMPLETE | COMPLETE | = |
+| PR-04 — Razorpay account readiness | STILL_PENDING | KYC_COMPLETE_PENDING_WEBSITE_APP_REVIEW_AND_TEST_MODE_VERIFICATION | ↑ progressed |
+| PR-05 — Refund/cancellation policy | NOT_STARTED | NOT_STARTED | = |
+| PR-06 — PCI boundary checklist | NOT_STARTED | NOT_STARTED | = |
+| PR-07 — Payment event audit/log policy | NOT_STARTED | NOT_STARTED | = |
+| PR-08 — Pricing/tier structure | PARTIALLY_COMPLETE | PARTIALLY_COMPLETE | = |
+
+**PR-04 detail (D7B):**
+- KYC: CONFIRMED_COMPLETE ✅
+- Website/app review: UNDER_REVIEW ❌ (not approved; 24–48h expected update)
+- Test mode: PENDING ❌ (awaiting website/app review approval)
+- Live mode: PENDING ❌
+- Legal entity: CONFIRMED — TexQtic Ventures Pvt Ltd ✅
+- Settlement bank: CONFIRMED (carry-forward) ✅
+- Dashboard admin: CONFIRMED (carry-forward) ✅
+
+**Implementation gate: CLOSED** — unchanged. FTU-COMM-002 trigger: 3/8 prerequisites (PR-01,
+PR-02, PR-03). PR-04 advanced but not complete. PR-05–PR-08 unchanged.
+
+**D7B governance changes:** D7B artifact created; NEXT-ACTION.md synced (active unit D7B
+COMPLETE, next candidate D7C installed); COMMERCE-METHODOLOGY §4.8 added; FUTURE-TODO-REGISTER
+D7B row appended. No source, schema, migration, package, or environment changes.
+
+**Final enum:** `FAM_13B_D7B_KYC_COMPLETE_WEBSITE_APP_REVIEW_PENDING_PR_04_NOT_COMPLETE`
+
+**Next recommended unit:** `FAM-13B-D7C — Razorpay Website/App Review Approval and Test-Mode Verification`
+(scope: record website/app review outcome; verify test-mode accessibility; close PR-04 if all
+remaining evidence is sufficient; no implementation; open after Paresh receives review result)
+
+---
+
 ## 5. B2B Financial Boundary (CONFIRMED GUARDRAIL)
 
 ### 5.1 Confirmed Position
