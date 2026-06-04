@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTR-LEGAL-003B2 COMPLETE. Legal draft pack iterated and counsel questions hardened. Missing Subscription and Payment Terms document created. OQ-01–OQ-14 hardened. Founder/counsel approval matrices produced. Checkout-unlock gate checklist added. Draft pack status: ITERATED_COUNSEL_READY. FTR-LEGAL-003C remains BLOCKED_PENDING_PARESH_REVIEW. Prior: FAM-11F VERIFIED_COMPLETE 2026-06-04.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTR-OPS-001A COMPLETE. Sentry error monitoring repo-truth design and privacy impact inventory produced. Sentry confirmed absent from source; pino/console.error only; no ErrorBoundary. Full @sentry/react + @sentry/node architecture designed. Privacy/OQ-09 impact inventoried (no tracking cookies; session replay FORBIDDEN; perf tracing DEFERRED). FTR-OPS-001 readiness: NOT_ASSESSED → DESIGN_COMPLETE. FTR-OPS-001B pending Paresh authorization + DSN supply. Prior: FTR-LEGAL-003B2 COMPLETE 2026-06-04.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,41 +15,44 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FTR-LEGAL-003B2-LEGAL-DRAFT-PACK-ITERATION-AND-COUNSEL-QUESTION-HARDENING-001
+active_delivery_unit: FTR-OPS-001A-SENTRY-ERROR-MONITORING-REPO-TRUTH-DESIGN-AND-PRIVACY-IMPACT-INVENTORY-001
 active_delivery_unit_status: COMPLETE
 active_delivery_unit_note: >
-  FTR-LEGAL-003B2 COMPLETE (2026-06-04). Legal draft pack iterated from FTR-LEGAL-003B.
-  DRAFT-TEXQTIC-SUBSCRIPTION-AND-PAYMENT-TERMS-001.md created (was missing from FTR-LEGAL-003B pack).
-  All 6 draft documents reviewed; per-document gaps documented.
-  OQ-01 through OQ-12 hardened into structured decision matrices; OQ-13 and OQ-14 added.
-  Founder approval matrix (F-01 through F-14) produced.
-  Counsel approval matrix (C-01 through C-08) produced.
-  Checkout-unlock gate checklist (GATE-01 through GATE-12) added.
+  FTR-OPS-001A COMPLETE (2026-06-04). Repo-truth design and privacy impact inventory produced.
+  Sentry confirmed entirely absent from source: zero @sentry/* packages, zero Sentry.init() calls,
+  zero DSN env vars in either .env.example. Current error surfaces: fastify.log.error (pino, Vercel
+  logs only) and console.error in App.tsx/CartContext.tsx. No React ErrorBoundary in source.
+  No analytics SDKs (PostHog, GA, GTM, Hotjar, Mixpanel all absent). Cookie surface: session-only.
+  Architecture designed: @sentry/react (frontend) + @sentry/node (backend). Privacy/OQ-09 impact
+  inventoried: Sentry is error monitoring only; no tracking cookies; beforeSend PII scrub required;
+  session replay FORBIDDEN at launch; performance tracing DEFERRED. Env vars documented.
+  FTR-OPS-001 readiness: NOT_ASSESSED → DESIGN_COMPLETE.
   FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. FAM-07 hold unchanged: HOLD_FOR_HUMAN_LEGAL_INPUTS.
   FTR-LEGAL-003C remains BLOCKED_PENDING_PARESH_REVIEW_OF_ITERATED_DRAFT_PACK.
-  Artifacts: FTR-LEGAL-003B2 artifact + DRAFT-TEXQTIC-SUBSCRIPTION-AND-PAYMENT-TERMS-001.md (both git-ignored).
-  Commit: "gov: iterate FTR-LEGAL-003B counsel draft pack" (tracker files only; artifacts git-ignored).
-  Final enum: FTR_LEGAL_003B2_DRAFT_PACK_ITERATED_COUNSEL_READY.
-last_closed_unit: FTR-LEGAL-003B2-LEGAL-DRAFT-PACK-ITERATION-AND-COUNSEL-QUESTION-HARDENING-001
+  Artifact: artifacts/launch-readiness/FTR-OPS-001A-SENTRY-ERROR-MONITORING-REPO-TRUTH-DESIGN-AND-PRIVACY-IMPACT-INVENTORY-001.md (git-ignored).
+  Commit: "gov: design FTR-OPS-001 error monitoring setup" (NEXT-ACTION.md + FUTURE-TODO-REGISTER.md).
+  Final enum: FTR_OPS_001A_ERROR_MONITORING_DESIGN_READY.
+last_closed_unit: FTR-OPS-001A-SENTRY-ERROR-MONITORING-REPO-TRUTH-DESIGN-AND-PRIVACY-IMPACT-INVENTORY-001
 last_closed_unit_status: COMPLETE (2026-06-04)
 last_closed_unit_runtime_verdict: >
-  FTR-LEGAL-003B2 COMPLETE (2026-06-04). Legal draft pack iterated and hardened.
-  6 documents reviewed. DRAFT-TEXQTIC-SUBSCRIPTION-AND-PAYMENT-TERMS-001.md created (was missing).
-  OQ-01–OQ-14 hardened. Founder matrix F-01–F-14. Counsel matrix C-01–C-08.
-  Checkout-unlock gate GATE-01–GATE-12 documented.
-  Artifacts git-ignored; tracker files commit: "gov: iterate FTR-LEGAL-003B counsel draft pack".
-  Final enum: FTR_LEGAL_003B2_DRAFT_PACK_ITERATED_COUNSEL_READY.
-last_closed_unit_commits: '"gov: iterate FTR-LEGAL-003B counsel draft pack" (NEXT-ACTION.md + FUTURE-TODO-REGISTER.md)'
+  FTR-OPS-001A COMPLETE (2026-06-04). Sentry entirely absent from source confirmed.
+  Architecture: @sentry/react (frontend) + @sentry/node (backend). Privacy/OQ-09 inventoried.
+  No tracking cookies. Session replay FORBIDDEN. Perf tracing DEFERRED.
+  FTR-OPS-001 readiness: NOT_ASSESSED → DESIGN_COMPLETE.
+  Artifact git-ignored; tracker files commit: "gov: design FTR-OPS-001 error monitoring setup".
+  Final enum: FTR_OPS_001A_ERROR_MONITORING_DESIGN_READY.
+last_closed_unit_commits: '"gov: design FTR-OPS-001 error monitoring setup" (NEXT-ACTION.md + FUTURE-TODO-REGISTER.md)'
 last_closed_unit_closure_basis: >
-  FTR-LEGAL-003B2: all 6 draft legal documents reviewed; per-document gaps documented.
-  Missing Subscription and Payment Terms created. OQ-01–OQ-14 hardened into decision matrices.
-  Founder approval matrix (F-01–F-14) and counsel approval matrix (C-01–C-08) produced.
-  Checkout-unlock gate checklist (GATE-01–GATE-12) produced.
+  FTR-OPS-001A: complete repo-truth investigation — Sentry absent from all source, packages, config, env examples.
+  Current error surfaces mapped (pino backend, console.error frontend, no ErrorBoundary).
+  Architecture designed (@sentry/react + @sentry/node). Privacy/OQ-09 impact inventoried.
+  No tracking cookies; beforeSend PII scrub required; session replay FORBIDDEN; perf tracing DEFERRED.
+  Required env vars documented. Implementation unit FTR-OPS-001B defined (pending Paresh auth + DSN supply).
   FTR-LEGAL-003 MVP_CRITICAL/OPEN unchanged. FAM-07 HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
   FTR-LEGAL-003C BLOCKED_PENDING_PARESH_REVIEW_OF_ITERATED_DRAFT_PACK unchanged.
-  Final enum: FTR_LEGAL_003B2_DRAFT_PACK_ITERATED_COUNSEL_READY.
-last_closed_unit_prior: FAM-11F-SUBSCRIPTION-COMMERCIAL-GATING-TLRH-VERIFY-AND-FAMILY-CLOSE-001
-last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-04)
+  Final enum: FTR_OPS_001A_ERROR_MONITORING_DESIGN_READY.
+last_closed_unit_prior: FTR-LEGAL-003B2-LEGAL-DRAFT-PACK-ITERATION-AND-COUNSEL-QUESTION-HARDENING-001
+last_closed_unit_prior_status: COMPLETE (2026-06-04)
 last_closed_unit_prior2: LAUNCH-FAMILY-SELECTOR-001-NON-LEGAL-BLOCKED-LAUNCH-READINESS-FAMILY-SELECTION
 last_closed_unit_prior2_status: VERIFIED_COMPLETE (2026-06-04)
 fam07_hold_preservation: >
@@ -60,18 +63,19 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FTR-SL-001-OR-FTR-OPS-001-SELECTION-PENDING-PARESH-DECISION
-next_candidate_unit_status: READY_TO_EVALUATE
+next_candidate_unit: FTR-OPS-001B-SENTRY-ERROR-MONITORING-IMPLEMENTATION-001
+next_candidate_unit_status: READY_TO_EVALUATE_PENDING_PARESH_AUTHORIZATION_AND_DSN_SUPPLY
 next_candidate_unit_date_installed: "2026-06-04"
 next_candidate_unit_note: >
-  Post-FAM-11F, two MVP_CRITICAL/P1 nonlegal candidates are available for Paresh selection:
-  Option A — FTR-SL-001 (soft-launch aggregator directory readiness design, MVP_CRITICAL/P1,
-    pre-outreach gate for FAM-01; confirms directory surface completeness before first real
-    supplier profile promotion; no legal/payment dependency; no L0 gate).
-  Option B — FTR-OPS-001 (Sentry error monitoring setup, MVP_CRITICAL/P1; operational
-    observability for production; no legal/payment dependency; no L0 gate).
-  Both options are independently openable. Paresh selects one or designates a different candidate.
+  FTR-OPS-001A design complete. Next unit: FTR-OPS-001B (Sentry implementation).
+  Pre-implementation human step required: Paresh creates two Sentry projects (TexQtic Frontend, TexQtic Backend)
+  at sentry.io and supplies DSNs as Vercel env vars (VITE_SENTRY_DSN, SENTRY_DSN, SENTRY_AUTH_TOKEN).
+  No implementation may begin until DSNs are confirmed available.
+  Implementation file surface: 2 new files (src/sentry.ts, server/src/sentry.ts) +
+  3 modified source files (index.tsx, api/index.ts, server/src/index.ts) +
+  2 env.example updates. No schema changes, no DB changes, no migration required.
   Legal track candidate (when gate clears): FTR-LEGAL-003C (SaaS legal pages publication).
+  Alternative parallel candidate: FTR-SL-001 (soft-launch aggregator directory readiness design).
 next_candidate_unit_legal_track_blocked: FTR-LEGAL-003C-SAAS-LEGAL-PAGES-PUBLICATION-001
 next_candidate_unit_legal_track_status: BLOCKED_PENDING_PARESH_REVIEW_OF_ITERATED_DRAFT_PACK
 next_candidate_unit_legal_track_note: >
