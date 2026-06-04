@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTR-SL-001B COMPLETE. Shraddha Industries provisioning readiness investigated. Two platform API gaps confirmed: no posture-elevation endpoint, no re-invite endpoint. Path A (manual SQL, Paresh authorization required) and Path B (FTR-SL-001C implementation) documented. FTR-SL-001A "no source changes required" assumption qualified: holds for new suppliers via acquisitionProvisioning; does NOT hold for Shraddha's existing APPROVED_ONBOARDING org. Final enum: FTR_SL_001B_SHRADDHA_PROVISIONING_BLOCKED_MISSING_PLATFORM_APIS. Prior: FTR-B2C-005A COMPLETE 2026-06-04.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTR-SL-001C COMPLETE. POST /api/control/tenants/:id/publish and POST /api/control/tenants/:id/first-owner/reinvite implemented. 16/16 tests pass. Typecheck clean (pre-existing gate-d7 unused-var errors unrelated). Final enum: FTR_SL_001C_CONTROL_SUPPLIER_APIS_IMPLEMENTED. Prior: FTR-SL-001B COMPLETE 2026-06-04.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,46 +15,46 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FTR-SL-001B-SHRADDHA-INDUSTRIES-REAL-SUPPLIER-PROVISIONING-READINESS-AND-SMOKE-GATE-001
+active_delivery_unit: FTR-SL-001C-CONTROL-PLANE-SUPPLIER-PUBLISH-AND-REINVITE-API-001
 active_delivery_unit_status: COMPLETE
 active_delivery_unit_note: >
-  FTR-SL-001B COMPLETE (2026-06-04). Provisioning chain investigation for Shraddha Industries
-  (orgId: 0ae549d7-b17b-4277-b9f6-f3e8c3a57e09, slug: shraddha-industries, IN-GJ).
-  FINDING: APPROVED_ONBOARDING provisioning path does NOT set publication_posture or
-  publicEligibilityPosture — Gates A and B both FAIL → HTTP 404 on public directory.
-  FTR-SL-001A assumption ("no source code changes required") is CORRECT for new suppliers
-  provisioned via acquisitionProvisioning webhook, but INCORRECT for Shraddha's existing
-  APPROVED_ONBOARDING org which has no posture set.
-  TWO PLATFORM CAPABILITY GAPS CONFIRMED:
-  (1) No posture-elevation API: no POST /api/control/tenants/:id/publish endpoint exists.
-  (2) No re-invite API: no POST /api/control/tenants/:id/first-owner/reinvite endpoint exists.
-  Existing activate-approved endpoint transitions status only — does NOT touch publication_posture.
-  THREE PATHS ASSESSED: Path A (manual DB SQL, immediate, requires Paresh authorization);
-  Path B (FTR-SL-001C implementation, architecturally clean); Path C (acquisition webhook new slug, NOT recommended).
-  Inquiry notification (FTR-B2C-005B) also blocked: no OWNER membership → supplier email skipped
-  non-fatally in public.ts inquiry handler. Full Shraddha activation requires both posture elevation
-  AND invite re-issue → user activation → OWNER membership.
-  No source changes. No schema changes. No production data writes. No real emails.
-  Artifact: artifacts/launch-readiness/FTR-SL-001B-...-001.md (git-ignored).
-  Final enum: FTR_SL_001B_SHRADDHA_PROVISIONING_BLOCKED_MISSING_PLATFORM_APIS.
-last_closed_unit: FTR-SL-001B-SHRADDHA-INDUSTRIES-REAL-SUPPLIER-PROVISIONING-READINESS-AND-SMOKE-GATE-001
+  FTR-SL-001C COMPLETE (2026-06-04). Both missing control-plane APIs implemented.
+  (1) POST /api/control/tenants/:id/publish: elevates VERIFICATION_APPROVED or ACTIVE tenant
+      to B2B public directory presence atomically (publicEligibilityPosture='PUBLICATION_ELIGIBLE'
+      + publication_posture='B2B_PUBLIC'); SUPER_ADMIN only; QA-sentinel guard; idempotent;
+      writes audit log (control.tenants.publish.recorded / skipped_already_published).
+  (2) POST /api/control/tenants/:id/first-owner/reinvite: supersedes prior unaccepted
+      FIRST_OWNER_PREPARATION invites; creates fresh invite (7-day expiry, role=OWNER);
+      accepts optional body.email override (falls back to prior invite email; 422 if none);
+      fire-and-forget email dispatch; SUPER_ADMIN only; QA-sentinel guard;
+      writes audit log (control.tenants.first_owner_reinvite.recorded);
+      raw token NEVER returned in response or logged.
+  Tests: 16/16 pass. Typecheck: clean on new code (pre-existing gate-d7 TS6133 unrelated).
+  Allowlist: server/src/routes/control.ts + new test file.
+  No schema, package, env, or data changes.
+  Deployment: call (1) then (2) for shraddha-industries → GATE-SL-01 becomes MET;
+  Shraddha accepts invite → OWNER membership → FTR-B2C-005B becomes runnable.
+  Final enum: FTR_SL_001C_CONTROL_SUPPLIER_APIS_IMPLEMENTED.
+last_closed_unit: FTR-SL-001C-CONTROL-PLANE-SUPPLIER-PUBLISH-AND-REINVITE-API-001
 last_closed_unit_status: COMPLETE (2026-06-04)
 last_closed_unit_runtime_verdict: >
-  FTR-SL-001B COMPLETE (2026-06-04). Investigation only — no source changes.
-  Shraddha org state confirmed: 3/5 gates pass (C, D, E), 2/5 fail (A: NO_PUBLIC_PRESENCE, B: PRIVATE_OR_AUTH_ONLY).
-  Existing invite expired 2026-05-27; no user, no OWNER membership.
-  APPROVED_ONBOARDING provisioning cannot be retried (slug conflict) and does not set posture.
-  acquisitionProvisioning webhook cannot upgrade existing org posture (idempotent lookup only).
-  Two control-plane API gaps identified. Next runnable: FTR-SL-001C (code implementation).
-  Parallel alternative: Paresh-authorized manual DB SQL (Path A).
-  Final enum: FTR_SL_001B_SHRADDHA_PROVISIONING_BLOCKED_MISSING_PLATFORM_APIS.
-last_closed_unit_commits: '"gov: assess Shraddha supplier provisioning readiness"'
+  FTR-SL-001C COMPLETE (2026-06-04). Source changes only — no schema, package, env, or data changes.
+  POST /api/control/tenants/:id/publish and POST /api/control/tenants/:id/first-owner/reinvite
+  implemented in server/src/routes/control.ts. Integration test suite: 16/16 pass.
+  Typecheck: new code clean; 2 pre-existing TS6133 errors in gate-d7 test (unrelated, not in allowlist).
+  Commit: "feat: add supplier publish and reinvite control APIs".
+  Final enum: FTR_SL_001C_CONTROL_SUPPLIER_APIS_IMPLEMENTED.
+last_closed_unit_commits: '"feat: add supplier publish and reinvite control APIs"'
 last_closed_unit_closure_basis: >
-  FTR-SL-001B: investigation only. No source, package, env, schema, or data changes.
-  Two platform API capability gaps documented. Three provisioning paths assessed.
-  Next unit (FTR-SL-001C) scoped: implement posture-elevation + re-invite control-plane endpoints.
-last_closed_unit_prior: FTR-B2C-005A-SUPPLIER-INQUIRY-NOTIFICATION-REPO-TRUTH-VERIFY-AND-IMPLEMENTATION-PLAN-001
+  FTR-SL-001C: two Fastify route handlers added to control.ts. No schema, package, env, or data changes.
+  16 integration tests added and passing. Allowlist: control.ts + test file.
+  Next: FTR-B2C-005B runtime verification unblocked pending Paresh authorization to call the new APIs.
+last_closed_unit_prior: FTR-SL-001B-SHRADDHA-INDUSTRIES-REAL-SUPPLIER-PROVISIONING-READINESS-AND-SMOKE-GATE-001
 last_closed_unit_prior_status: COMPLETE (2026-06-04)
+  Final enum: FTR_SL_001B_SHRADDHA_PROVISIONING_BLOCKED_MISSING_PLATFORM_APIS.
+  Commit: "gov: assess Shraddha supplier provisioning readiness".
+last_closed_unit_prior2: FTR-B2C-005A-SUPPLIER-INQUIRY-NOTIFICATION-REPO-TRUTH-VERIFY-AND-IMPLEMENTATION-PLAN-001
+last_closed_unit_prior2_status: COMPLETE (2026-06-04)
   Final enum: FTR_B2C_005A_SUPPLIER_NOTIFICATION_DESIGN_READY.
   Commit: "gov: design FTR-B2C-005 supplier inquiry notification" (a6a389e0).
 last_closed_unit_prior2: FTR-OPS-001C-SENTRY-PRODUCTION-VERIFICATION-PENDING-EVIDENCE-SYNC-001
@@ -69,39 +69,23 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FTR-SL-001C-CONTROL-PLANE-SUPPLIER-PUBLISH-AND-REINVITE-API-001
-next_candidate_unit_status: OPEN
+next_candidate_unit: FTR-B2C-005B-SUPPLIER-INQUIRY-NOTIFICATION-PRODUCTION-RUNTIME-VERIFY-001
+next_candidate_unit_status: BLOCKED_PENDING_PARESH_AUTHORIZATION
 next_candidate_unit_date_installed: "2026-06-04"
 next_candidate_unit_note: >
-  FTR-SL-001B confirmed two missing control-plane API capabilities blocking Shraddha Industries
-  from appearing in the B2B public directory and from receiving inquiry email notifications.
-  FTR-SL-001C implements both:
-  (1) POST /api/control/tenants/:id/publish — atomically sets publication_posture='B2B_PUBLIC' AND
-      publicEligibilityPosture='PUBLICATION_ELIGIBLE' in a single Prisma transaction; SUPER_ADMIN only;
-      pre-condition: org status must be VERIFICATION_APPROVED or ACTIVE; idempotent; writes audit log.
-  (2) POST /api/control/tenants/:id/first-owner/reinvite — supersedes any existing
-      FIRST_OWNER_PREPARATION invite (marks acceptedAt=now()); creates fresh invite with 7-day expiry;
-      dispatches sendInviteMemberEmail (best-effort, non-blocking, matching existing provision pattern);
-      SUPER_ADMIN only.
-  No schema changes required — all Prisma model fields already exist.
-  No package changes required.
-  Allowlist: server/src/routes/control.ts (two new route handlers + audit log writes).
-  Once deployed: Paresh calls (1) then (2) for shraddha-industries → GATE-SL-01 becomes MET;
-  Shraddha accepts invite → OWNER membership → FTR-B2C-005B becomes runnable.
-  Parallel alternative: Paresh may choose Path A (manual DB SQL with explicit authorization)
-  to unblock GATE-SL-01 sooner — documented in FTR-SL-001B artifact.
-next_candidate_unit_blocked_dep: FTR-B2C-005B-SUPPLIER-INQUIRY-NOTIFICATION-PRODUCTION-RUNTIME-VERIFY-001
-next_candidate_unit_blocked_dep_status: BLOCKED_PENDING_SUPPLIER_OWNER_MEMBERSHIP
-next_candidate_unit_blocked_dep_note: >
-  FTR-B2C-005B is the production runtime verification run — no code changes required.
-  Blocked until ALL of the following are in place (Paresh authorization required):
-  (1) One approved supplier-context slug: supplier in prod DB with OWNER/ADMIN membership + confirmed email.
-      UPDATED: requires either FTR-SL-001C deployment (Path B) OR Paresh DB write authorization (Path A).
-  (2) One approved observability source: Postmark delivery log OR Paresh-controlled inbox at supplier email.
-  (3) Explicit Paresh written authorization to run a live test inquiry in production.
-  (4) Non-reclassification policy confirmed: test inquiry will not be actioned as a real lead.
-  FTR-SL-001B finding: shraddhaind@gmail.com has expired invite, no user, no OWNER membership.
-  Supplier notification is currently silently skipped (non-fatal, by design) for Shraddha's org.
+  FTR-SL-001C COMPLETE — the two platform API gaps are now resolved.
+  FTR-B2C-005B is the production runtime verification for supplier inquiry notification.
+  No code changes required for FTR-B2C-005B.
+  Unblocked after FTR-SL-001C deployment AND Paresh authorization for the following:
+  (1) Call POST /api/control/tenants/:id/publish for shraddha-industries.
+  (2) Call POST /api/control/tenants/:id/first-owner/reinvite for shraddha-industries.
+  (3) Shraddha accepts invite → user created → OWNER membership established.
+  (4) Paresh written authorization to run a live test inquiry in production.
+  (5) Observability source confirmed: Postmark delivery log or Paresh inbox at supplier email.
+  (6) Non-reclassification policy: test inquiry will not be actioned as a real lead.
+  GATE-SL-01 becomes MET after steps 1–3.
+prior_next_candidate_unit: FTR-SL-001C-CONTROL-PLANE-SUPPLIER-PUBLISH-AND-REINVITE-API-001
+prior_next_candidate_unit_status: COMPLETE (2026-06-04)
 prior_next_candidate_unit: FTR-B2C-005-SUPPLIER-INQUIRY-NOTIFICATION-PRODUCTION-VERIFICATION-001
 prior_next_candidate_unit_status: SUPERSEDED_BY_FTR_B2C_005A_AND_005B_SPLIT
 next_candidate_unit_legal_track_blocked: FTR-LEGAL-003C-SAAS-LEGAL-PAGES-PUBLICATION-001

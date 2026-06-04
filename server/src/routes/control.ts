@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { Prisma, type EventLog, type PrismaClient } from '@prisma/client';
 import { adminAuthMiddleware, requireAdminRole } from '../middleware/auth.js';
 import { sendSuccess, sendError, sendForbidden, sendNotFound, sendUnauthorized, sendValidationError } from '../utils/response.js';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash, randomBytes } from 'node:crypto';
+import { sendInviteMemberEmail } from '../services/email/email.service.js';
 import {
   buildOrganizationTaxonomyCarrier,
   canonicalizeTenantPlan,
@@ -2560,6 +2561,317 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   // GET    /api/control/ttp/score-snapshot/:snapshotId — get snapshot detail (SUPER_ADMIN)
   // NOTE: Tenant-facing score history NOT implemented — LEGAL_REVIEW_PENDING unresolved.
   await fastify.register(controlTtpScoreSnapshotRoutes, { prefix: '/ttp' });
+
+  /**
+   * POST /api/control/tenants/:id/publish
+   * Elevate a verified or active supplier tenant to B2B public directory presence.
+   *
+   * Slice boundary:
+   * - SUPER_ADMIN only
+   * - requires VERIFICATION_APPROVED or ACTIVE org status
+   * - blocks QA sentinel orgs
+   * - idempotent: re-publishing an already-published tenant returns alreadyPublished: true
+   * - updates tenants.publicEligibilityPosture and organizations.publication_posture together
+   */
+  fastify.post('/tenants/:id/publish', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
+    if (!request.adminId) {
+      return sendUnauthorized(reply, 'Admin authentication required');
+    }
+
+    const paramsSchema = z.object({
+      id: z.string().uuid('Invalid tenant id format'),
+    });
+
+    const paramsResult = paramsSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return sendValidationError(reply, paramsResult.error.errors);
+    }
+
+    const adminId = request.adminId;
+    const { id } = paramsResult.data;
+
+    try {
+      const result = await withOrgAdminWriteContext(id, adminId, async tx => {
+        const [currentTenant, currentOrg] = await Promise.all([
+          tx.tenant.findUnique({
+            where: { id },
+            select: {
+              id: true,
+              slug: true,
+              publicEligibilityPosture: true,
+            },
+          }),
+          tx.organizations.findUnique({
+            where: { id },
+            select: {
+              id: true,
+              legal_name: true,
+              status: true,
+              is_qa_sentinel: true,
+              publication_posture: true,
+            },
+          }),
+        ]);
+
+        if (!currentTenant || !currentOrg) {
+          return { kind: 'not_found' as const };
+        }
+
+        if (currentOrg.is_qa_sentinel) {
+          return { kind: 'qa_sentinel' as const, currentOrg, currentTenant };
+        }
+
+        if (!['VERIFICATION_APPROVED', 'ACTIVE'].includes(currentOrg.status)) {
+          return { kind: 'invalid_status' as const, currentOrg, currentTenant };
+        }
+
+        if (
+          currentTenant.publicEligibilityPosture === 'PUBLICATION_ELIGIBLE' &&
+          currentOrg.publication_posture === 'B2B_PUBLIC'
+        ) {
+          return { kind: 'already_published' as const, currentOrg, currentTenant };
+        }
+
+        await tx.tenant.update({
+          where: { id },
+          data: { publicEligibilityPosture: 'PUBLICATION_ELIGIBLE' },
+        });
+
+        const updatedOrg = await tx.organizations.update({
+          where: { id },
+          data: { publication_posture: 'B2B_PUBLIC', updated_at: new Date() },
+          select: {
+            id: true,
+            legal_name: true,
+            status: true,
+            publication_posture: true,
+          },
+        });
+
+        return { kind: 'published' as const, currentOrg, currentTenant, updatedOrg };
+      });
+
+      if (result.kind === 'not_found') {
+        return sendNotFound(reply, 'Tenant organization not found');
+      }
+
+      if (result.kind === 'qa_sentinel') {
+        return sendForbidden(
+          reply,
+          `Tenant ${result.currentTenant.slug} is a QA sentinel and cannot be published`
+        );
+      }
+
+      if (result.kind === 'invalid_status') {
+        return sendError(
+          reply,
+          'TENANT_PUBLISH_STATUS_CONFLICT',
+          `Tenant cannot be published from status ${result.currentOrg.status}`,
+          409
+        );
+      }
+
+      if (result.kind === 'already_published') {
+        await writeAuditLog(
+          prisma,
+          createAdminAudit(adminId, 'control.tenants.publish.skipped_already_published', 'tenant', {
+            tenantId: result.currentOrg.id,
+            slug: result.currentTenant.slug,
+          })
+        );
+        return sendSuccess(reply, {
+          tenantId: result.currentOrg.id,
+          slug: result.currentTenant.slug,
+          publicationPosture: result.currentOrg.publication_posture,
+          publicEligibilityPosture: result.currentTenant.publicEligibilityPosture,
+          alreadyPublished: true,
+        });
+      }
+
+      await writeAuditLog(
+        prisma,
+        createAdminAudit(adminId, 'control.tenants.publish.recorded', 'tenant', {
+          tenantId: result.updatedOrg.id,
+          slug: result.currentTenant.slug,
+          previousPosture: result.currentOrg.publication_posture,
+          nextPosture: result.updatedOrg.publication_posture,
+          previousEligibility: result.currentTenant.publicEligibilityPosture,
+          nextEligibility: 'PUBLICATION_ELIGIBLE',
+        })
+      );
+
+      return sendSuccess(reply, {
+        tenantId: result.updatedOrg.id,
+        slug: result.currentTenant.slug,
+        publicationPosture: result.updatedOrg.publication_posture,
+        publicEligibilityPosture: 'PUBLICATION_ELIGIBLE',
+        alreadyPublished: false,
+      });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error, tenantId: id, adminId }, '[Tenant Publish] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to publish tenant', 500);
+    }
+  });
+
+  /**
+   * POST /api/control/tenants/:id/first-owner/reinvite
+   * Issue a fresh FIRST_OWNER_PREPARATION invite for a supplier tenant,
+   * superseding any prior unaccepted invites of the same purpose.
+   *
+   * Slice boundary:
+   * - SUPER_ADMIN only
+   * - target email may be supplied in body; falls back to most recent prior invite email
+   * - prior FIRST_OWNER_PREPARATION invites with null acceptedAt are superseded
+   * - raw invite token is used only inside the email link; never returned or logged
+   * - email dispatch is best-effort, fire-and-forget
+   */
+  fastify.post('/tenants/:id/first-owner/reinvite', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
+    if (!request.adminId) {
+      return sendUnauthorized(reply, 'Admin authentication required');
+    }
+
+    const paramsSchema = z.object({
+      id: z.string().uuid('Invalid tenant id format'),
+    });
+
+    const paramsResult = paramsSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return sendValidationError(reply, paramsResult.error.errors);
+    }
+
+    const bodySchema = z.object({
+      email: z.string().email('Invalid email address').optional(),
+    });
+
+    const bodyResult = bodySchema.safeParse(request.body ?? {});
+    if (!bodyResult.success) {
+      return sendValidationError(reply, bodyResult.error.errors);
+    }
+
+    const adminId = request.adminId;
+    const { id } = paramsResult.data;
+    const overrideEmail = bodyResult.data.email;
+
+    try {
+      const result = await withOrgAdminWriteContext(id, adminId, async tx => {
+        const [currentTenant, currentOrg, priorInvite] = await Promise.all([
+          tx.tenant.findUnique({
+            where: { id },
+            select: { id: true, slug: true, name: true },
+          }),
+          tx.organizations.findUnique({
+            where: { id },
+            select: { id: true, legal_name: true, status: true, is_qa_sentinel: true },
+          }),
+          tx.invite.findFirst({
+            where: {
+              tenantId: id,
+              invitePurpose: 'FIRST_OWNER_PREPARATION',
+            },
+            orderBy: { createdAt: 'desc' },
+            select: { id: true, email: true },
+          }),
+        ]);
+
+        if (!currentTenant || !currentOrg) {
+          return { kind: 'not_found' as const };
+        }
+
+        if (currentOrg.is_qa_sentinel) {
+          return { kind: 'qa_sentinel' as const, currentOrg, currentTenant };
+        }
+
+        const targetEmail = overrideEmail ?? priorInvite?.email ?? null;
+        if (!targetEmail) {
+          return { kind: 'no_email' as const };
+        }
+
+        // Supersede all prior unaccepted FIRST_OWNER_PREPARATION invites
+        await tx.invite.updateMany({
+          where: {
+            tenantId: id,
+            invitePurpose: 'FIRST_OWNER_PREPARATION',
+            acceptedAt: null,
+          },
+          data: { acceptedAt: new Date() },
+        });
+
+        const rawToken = randomBytes(32).toString('hex');
+        const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+        const newInvite = await tx.invite.create({
+          data: {
+            tenantId: id,
+            email: targetEmail,
+            role: 'OWNER',
+            invitePurpose: 'FIRST_OWNER_PREPARATION',
+            tokenHash: createHash('sha256').update(rawToken).digest('hex'),
+            expiresAt: new Date(Date.now() + INVITE_EXPIRY_MS),
+          },
+          select: { id: true, expiresAt: true },
+        });
+
+        return {
+          kind: 'reinvited' as const,
+          currentOrg,
+          currentTenant,
+          newInviteId: newInvite.id,
+          expiresAt: newInvite.expiresAt,
+          targetEmail,
+          rawToken,
+        };
+      });
+
+      if (result.kind === 'not_found') {
+        return sendNotFound(reply, 'Tenant organization not found');
+      }
+
+      if (result.kind === 'qa_sentinel') {
+        return sendForbidden(
+          reply,
+          `Tenant ${result.currentTenant.slug} is a QA sentinel and cannot receive a reinvite`
+        );
+      }
+
+      if (result.kind === 'no_email') {
+        return sendError(
+          reply,
+          'REINVITE_NO_EMAIL',
+          'No email address found for this tenant. Provide an email in the request body.',
+          422
+        );
+      }
+
+      // Fire-and-forget email dispatch — non-blocking, errors logged
+      void sendInviteMemberEmail(
+        result.targetEmail,
+        result.rawToken,
+        result.currentOrg.legal_name,
+        { triggeredBy: 'admin', actorId: adminId }
+      ).catch(err => {
+        fastify.log.warn({ err }, '[Reinvite] First-owner reinvite email dispatch failed (non-blocking)');
+      });
+
+      await writeAuditLog(
+        prisma,
+        createAdminAudit(adminId, 'control.tenants.first_owner_reinvite.recorded', 'invite', {
+          tenantId: id,
+          slug: result.currentTenant.slug,
+          inviteId: result.newInviteId,
+          expiresAt: result.expiresAt.toISOString(),
+        })
+      );
+
+      return sendSuccess(reply, {
+        tenantId: id,
+        inviteId: result.newInviteId,
+        expiresAt: result.expiresAt,
+        emailDispatched: true,
+      });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error, tenantId: id, adminId }, '[First Owner Reinvite] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to create first-owner reinvite', 500);
+    }
+  });
 };
 
 export default controlRoutes;
