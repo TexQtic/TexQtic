@@ -714,8 +714,54 @@ PR-08-B (annual price equivalents): addressed by explicit annual billing deferra
 - D-011 item 7 (feature entitlement scope per tier): still PARKED; required before FAM-11 self-serve billing implementation
 - `event-names.md`: unchanged; no payment events registered; Team A sign-off required before implementation
 
-**Next recommended unit:** `FAM-13B-D12 — Private-Pricing Payment Implementation Readiness Review`
-(scope: confirm all 8 prerequisites COMPLETE; confirm private/manual pricing as authorized launch path; decide whether Paresh authorizes opening FTU-COMM-002; choose first implementation design slice; governance / advisory / authorization review only; no implementation unless Paresh explicitly authorizes in D12)
+**Next recommended unit:** `FAM-13B-D12A — Payment Implementation Authorization Decision`
+(scope: Paresh supplies explicit authorization or holds FTU-COMM-002 opening; governance / authorization decision only; no implementation unless Paresh explicitly authorizes)
+
+---
+
+### §4.14 D12 — Public-Price-Display Correction and Payment Implementation Readiness Review (2026-06-04)
+
+| Item | Status |
+|---|---|
+| Unit | FAM-13B-D12-PUBLIC-PRICE-DISPLAY-AND-PAYMENT-IMPLEMENTATION-READINESS-REVIEW-001 |
+| Date | 2026-06-04 |
+| D11 carry-forward | PR-08 = COMPLETE_WITH_PRIVATE_PRICING; public display BLOCKED; all 8 prerequisites COMPLETE |
+| New CA approval | Public price display: **APPROVED**; approved format: `Price + 18% GST` |
+| GST treatment | Exclusive GST; 18% shown separately; SAC 998315 (CA-confirmed, FAM-13B-D2) |
+| PR-08 caveat update | COMPLETE_WITH_PRIVATE_PRICING → **COMPLETE_WITH_PUBLIC_DISPLAY_APPROVED** |
+| Annual billing | DEFERRED — no CA-approved annual price equivalents supplied or confirmed |
+| D-011 item 7 | PARKED — feature entitlement scope per tier not yet defined |
+| Event taxonomy | Governance proposals only; no payment events registered; Team A sign-off required |
+| FAM-07 hold | HOLD_FOR_HUMAN_LEGAL_INPUTS — unchanged |
+| FTR-LEGAL-003 | MVP_CRITICAL/OPEN — unchanged |
+| Implementation gate | GATE_CONDITION_MET but **CLOSED** — Paresh has not supplied explicit FTU-COMM-002 authorization in D12 |
+| Final enum | `FAM_13B_D12_PUBLIC_PRICE_DISPLAY_APPROVED_READY_AWAITING_AUTHORIZATION` |
+
+**All-prerequisites after D12:**
+
+| PR | Status |
+|---|---|
+| PR-01 | ✅ COMPLETE |
+| PR-02 | ✅ COMPLETE |
+| PR-03 | ✅ COMPLETE |
+| PR-04 | ✅ COMPLETE |
+| PR-05 | ✅ COMPLETE |
+| PR-06 | ✅ COMPLETE |
+| PR-07 | ✅ COMPLETE |
+| PR-08 | ✅ **COMPLETE_WITH_PUBLIC_DISPLAY_APPROVED** |
+| **Total** | **8/8 prerequisites complete** |
+
+**Implementation gate after D12:** GATE_CONDITION_MET (8/8 prerequisites satisfied; CA public price display approved for `Price + 18% GST` format) but **CLOSED** — Paresh must explicitly authorize opening FTU-COMM-002 in FAM-13B-D12A before any payment code is written.
+
+**Carry-forward:**
+- Annual billing launch requires CA-reviewed annual price equivalents + new governance unit
+- D-011 item 7 (feature entitlement scope per tier): still PARKED; required before FAM-11 self-serve billing implementation
+- `event-names.md`: unchanged; no payment events registered; Team A sign-off required before implementation
+- FAM-07 hold: unchanged (HOLD_FOR_HUMAN_LEGAL_INPUTS)
+- FTR-LEGAL-003: unchanged (MVP_CRITICAL/OPEN)
+
+**Next recommended unit:** `FAM-13B-D12A — Payment Implementation Authorization Decision`
+(scope: Paresh supplies explicit authorization wording "Paresh authorizes opening FTU-COMM-002 for the first public-price-display Razorpay payment implementation design unit." or holds implementation; if authorized, select bounded first design unit: FTU-COMM-002A — Razorpay + Zoho Public-Display Pricing Repo-Truth Design and File-Surface Map)
 
 ---
 
