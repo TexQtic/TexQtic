@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTR-OPS-001C COMPLETE. Vercel deployment + Sentry project setup checkpoint recorded. Backend project corrected from wrong platform to Fastify/Node. SENTRY_DSN (backend) and VITE_SENTRY_DSN (frontend) confirmed in Vercel (values not printed). Production redeploy complete. FTR-OPS-001 remains OPEN: IMPLEMENTATION_COMPLETE / VERIFICATION_PENDING_FIRST_EVENT — no first event captured yet in texqtic-frontend or texqtic-backend. Prior: FTR-OPS-001B COMPLETE 2026-06-04.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTR-B2C-005A COMPLETE. Supplier inquiry notification repo-truth investigation complete. Code path confirmed structurally complete — no source changes required. Blocking dependency: operational (approved supplier slug + observability source + Paresh authorization). FTR-B2C-005 §15 status resolved: DESIGN_COMPLETE / VERIFICATION_BLOCKED_PENDING_APPROVED_SUPPLIER_SLUG. Prior: FTR-OPS-001C COMPLETE 2026-06-04.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,48 +15,47 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FTR-OPS-001C-SENTRY-PRODUCTION-VERIFICATION-PENDING-EVIDENCE-SYNC-001
+active_delivery_unit: FTR-B2C-005A-SUPPLIER-INQUIRY-NOTIFICATION-REPO-TRUTH-VERIFY-AND-IMPLEMENTATION-PLAN-001
 active_delivery_unit_status: COMPLETE
 active_delivery_unit_note: >
-  FTR-OPS-001C COMPLETE (2026-06-04). Governance sync only — no source changes.
-  Vercel production deployment completed after FTR-OPS-001B commit (354bbff4).
-  Backend Sentry project corrected from wrong platform to Fastify/Node.
-  SENTRY_DSN in Vercel confirmed from backend Fastify/Node project (value not printed).
-  VITE_SENTRY_DSN in Vercel confirmed from frontend React project (value not printed).
-  Production redeploy completed after DSN confirmation.
-  Sentry texqtic-backend dashboard: still awaiting first event.
-  Sentry texqtic-frontend dashboard: still awaiting first event.
-  FTR-OPS-001 remains OPEN: IMPLEMENTATION_COMPLETE / VERIFICATION_PENDING_FIRST_EVENT.
-  Repo privacy posture reconfirmed: sendDefaultPii=false, tracesSampleRate=0, no session replay,
-  no profiling, no setUser, beforeSend PII scrub present in both init files.
-  FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. FAM-07 HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
-  FTR-LEGAL-003C BLOCKED_PENDING_PARESH_REVIEW_OF_ITERATED_DRAFT_PACK unchanged.
-  FTU-COMM-002D HOLD_FOR_FTR_LEGAL_003_RESOLUTION unchanged.
-  Artifact: artifacts/launch-readiness/FTR-OPS-001C-SENTRY-PRODUCTION-VERIFICATION-PENDING-EVIDENCE-SYNC-001.md (git-ignored).
-  Commit: "gov: record FTR-OPS-001 Sentry verification pending".
-  Final enum: FTR_OPS_001C_VERIFICATION_PENDING_FIRST_EVENT_RECORDED.
-last_closed_unit: FTR-OPS-001C-SENTRY-PRODUCTION-VERIFICATION-PENDING-EVIDENCE-SYNC-001
+  FTR-B2C-005A COMPLETE (2026-06-04). Repo-truth investigation: no source code changes.
+  Supplier-context notification path STRUCTURALLY COMPLETE. No code changes required for FTR-B2C-005B.
+  sendSupplierInquiryNotificationEmail: implemented in email.service.ts, imported and called in
+  supplier-context branch of public.ts, branded template applied (F1-P6A). Buyer ack email:
+  intentionally NOT called (pre-auth inquiry, buyer provides no email — by design, confirmed by
+  unit tests INQ-028/029/032/034 asserting not.toHaveBeenCalled()). Admin notification:
+  production-verified (2026-05-22), unchanged. Operational blocking dependency for FTR-B2C-005B:
+  ≥1 real supplier tenant in prod DB with OWNER/ADMIN membership + confirmed email + Paresh-approved
+  slug + observability source. FTR-B2C-005 status conflict resolved: main row IMPLEMENTATION_READY/OPEN
+  is authoritative; §15 pending units row updated to DESIGN_COMPLETE/VERIFICATION_BLOCKED.
+  Governance invariants preserved: FTR-LEGAL-003 OPEN, FAM-07 HOLD_FOR_HUMAN_LEGAL_INPUTS,
+  FTR-OPS-001 VERIFICATION_PENDING_FIRST_EVENT — all unchanged.
+  Artifact: artifacts/launch-readiness/FTR-B2C-005A-...-001.md (git-ignored).
+  Commit: "gov: design FTR-B2C-005 supplier inquiry notification".
+  Final enum: FTR_B2C_005A_SUPPLIER_NOTIFICATION_DESIGN_READY.
+last_closed_unit: FTR-B2C-005A-SUPPLIER-INQUIRY-NOTIFICATION-REPO-TRUTH-VERIFY-AND-IMPLEMENTATION-PLAN-001
 last_closed_unit_status: COMPLETE (2026-06-04)
 last_closed_unit_runtime_verdict: >
-  FTR-OPS-001C COMPLETE (2026-06-04). Vercel deployment + Sentry project setup checkpoint recorded.
-  Backend project corrected to Fastify/Node. SENTRY_DSN + VITE_SENTRY_DSN confirmed in Vercel.
-  Sentry dashboards still awaiting first event for both texqtic-frontend and texqtic-backend.
-  FTR-OPS-001 remains OPEN: IMPLEMENTATION_COMPLETE / VERIFICATION_PENDING_FIRST_EVENT.
-  Final enum: FTR_OPS_001C_VERIFICATION_PENDING_FIRST_EVENT_RECORDED.
-last_closed_unit_commits: '"gov: record FTR-OPS-001 Sentry verification pending"'
+  FTR-B2C-005A COMPLETE (2026-06-04). Repo-truth investigation only — no source changes.
+  Supplier-context notification path confirmed structurally complete.
+  Buyer ack suppression confirmed intentional design (pre-auth, no buyer email collected).
+  Admin notification confirmed production-verified (unchanged since 2026-05-22).
+  Blocking dependency: operational — approved supplier slug + observability source + Paresh authorization.
+  FTR-B2C-005 §15 status updated: DESIGN_COMPLETE / VERIFICATION_BLOCKED_PENDING_APPROVED_SUPPLIER_SLUG.
+  Final enum: FTR_B2C_005A_SUPPLIER_NOTIFICATION_DESIGN_READY.
+last_closed_unit_commits: '"gov: design FTR-B2C-005 supplier inquiry notification"'
 last_closed_unit_closure_basis: >
-  FTR-OPS-001C: governance sync only. Records Vercel deployment checkpoint, Sentry project
-  platform correction (wrong platform → Fastify/Node), and first-event verification pending status.
-  No source, package, env, schema, data, or legal changes made.
-  FTR-OPS-001 not closed — first-event evidence required before closure.
-last_closed_unit_prior: FTR-OPS-001B-SENTRY-ERROR-MONITORING-IMPLEMENTATION-001
+  FTR-B2C-005A: repo-truth investigation only. No source, package, env, schema, data, or legal changes.
+  Supplier notification code confirmed complete. FTR-B2C-005B design plan produced.
+  Operational prerequisites for FTR-B2C-005B documented (supplier slug, observability, Paresh auth).
+last_closed_unit_prior: FTR-OPS-001C-SENTRY-PRODUCTION-VERIFICATION-PENDING-EVIDENCE-SYNC-001
 last_closed_unit_prior_status: COMPLETE (2026-06-04)
-  Final enum: FTR_OPS_001B_SENTRY_ERROR_MONITORING_IMPLEMENTED.
-  Commit: "feat: add privacy-safe Sentry error monitoring" (354bbff4).
-last_closed_unit_prior2: FTR-SL-001A-SOFT-LAUNCH-AGGREGATOR-DIRECTORY-REPO-TRUTH-DESIGN-AND-READINESS-PLAN-001
+  Final enum: FTR_OPS_001C_VERIFICATION_PENDING_FIRST_EVENT_RECORDED.
+  Commit: "gov: record FTR-OPS-001 Sentry verification pending" (1b74ea6f).
+last_closed_unit_prior2: FTR-OPS-001B-SENTRY-ERROR-MONITORING-IMPLEMENTATION-001
 last_closed_unit_prior2_status: COMPLETE (2026-06-04)
-last_closed_unit_prior3: LAUNCH-FAMILY-SELECTOR-001-NON-LEGAL-BLOCKED-LAUNCH-READINESS-FAMILY-SELECTION
-last_closed_unit_prior3_status: VERIFIED_COMPLETE (2026-06-04)
+last_closed_unit_prior3: FTR-SL-001A-SOFT-LAUNCH-AGGREGATOR-DIRECTORY-REPO-TRUTH-DESIGN-AND-READINESS-PLAN-001
+last_closed_unit_prior3_status: COMPLETE (2026-06-04)
 fam07_hold_preservation: >
   FAM-07 legal hold preserved through this pointer sync. L13A (33fd8bf7): hold recorded.
   L13C (ee6252d9): tracker sync complete. HOLD_FOR_HUMAN_LEGAL_INPUTS active.
@@ -65,20 +64,22 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FTR-B2C-005-SUPPLIER-INQUIRY-NOTIFICATION-PRODUCTION-VERIFICATION-001
-next_candidate_unit_status: READY_TO_EVALUATE (FTR-B2C-005 IMPLEMENTATION_READY)
+next_candidate_unit: FTR-B2C-005B-SUPPLIER-INQUIRY-NOTIFICATION-PRODUCTION-RUNTIME-VERIFY-001
+next_candidate_unit_status: BLOCKED_PENDING_PARESH_OPERATIONAL_AUTHORIZATION
 next_candidate_unit_date_installed: "2026-06-04"
 next_candidate_unit_note: >
-  FTR-SL-001A gate checklist identified FTR-B2C-005 as P1 pre-outreach blocker.
-  Supplier-context notification path structurally implemented but NOT production runtime verified.
-  Unit: verify sendSupplierInquiryNotificationEmail delivers branded email to supplier email address
-  end-to-end in production. No code changes likely required — verification + evidence only.
-  Parallel operational candidate: provision ≥1 real Surat B2B supplier (Paresh-led operational step;
-  no code changes required) then run BS-001 real-data smoke test on B2B directory.
+  FTR-B2C-005A confirmed: supplier notification code is structurally complete.
+  FTR-B2C-005B is the production runtime verification run — no code changes required.
+  Blocked until ALL of the following are in place (Paresh authorization required):
+  (1) One approved supplier-context slug: supplier in prod DB with OWNER/ADMIN membership + confirmed email.
+  (2) One approved observability source: Postmark delivery log OR Paresh-controlled inbox at supplier email.
+  (3) Explicit Paresh written authorization to run a live test inquiry in production.
+  (4) Non-reclassification policy confirmed: test inquiry will not be actioned as a real lead.
+  Parallel operational track: provision ≥1 real Surat B2B supplier (Paresh-led step);
+  once provisioned with OWNER role + confirmed email, that supplier can serve as the FTR-B2C-005B target.
   Legal track candidate (when gate clears): FTR-LEGAL-003C (SaaS legal pages publication).
-prior_next_candidate_unit: FTR-OPS-001B-SENTRY-ERROR-MONITORING-IMPLEMENTATION-001
-prior_next_candidate_unit_status: READY_TO_EVALUATE_PENDING_PARESH_AUTHORIZATION_AND_DSN_SUPPLY
-prior_next_candidate_unit_date_installed: "2026-06-04"
+prior_next_candidate_unit: FTR-B2C-005-SUPPLIER-INQUIRY-NOTIFICATION-PRODUCTION-VERIFICATION-001
+prior_next_candidate_unit_status: SUPERSEDED_BY_FTR_B2C_005A_AND_005B_SPLIT
 next_candidate_unit_legal_track_blocked: FTR-LEGAL-003C-SAAS-LEGAL-PAGES-PUBLICATION-001
 next_candidate_unit_legal_track_status: BLOCKED_PENDING_PARESH_REVIEW_OF_ITERATED_DRAFT_PACK
 next_candidate_unit_legal_track_note: >
