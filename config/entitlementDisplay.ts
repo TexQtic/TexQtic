@@ -6,8 +6,12 @@
  *   - TTP (Trade Transaction Platform) is explicitly ABSENT from this matrix.
  *     Reason: HOLD_FOR_COUNSEL_FEEDBACK — FTR-LEGAL-003 is open MVP_CRITICAL.
  *   - NC Pool / RFQ rows are included: operational in NC Phase 1.
- *   - No exact pricing amounts (₹ or otherwise). See DL-04 in FAM-11B2.
- *   - Paid-tier copy must use only the locked labels below: 'Coming soon' / 'Contact us' / tier availability.
+ *   - DL-04 (FAM-11B2) public pricing display: AUTHORIZED — FTU-COMM-002B (2026-06-04).
+ *     CA-approved format: `Price + 18% GST` (exclusive GST; SAC 998315; 18%).
+ *     Monthly: STARTER ₹2,499/month; PROFESSIONAL ₹4,999/month.
+ *     Yearly: STARTER ₹23,990/year; PROFESSIONAL ₹47,990/year.
+ *     ENTERPRISE remains custom/negotiated. FREE remains no payment.
+ *     No checkout or payment collection authorized in this unit.
  */
 
 export type AvailabilityLabel =
@@ -189,12 +193,25 @@ export const UPGRADE_CTA_MAILTO =
   'mailto:hello@texqtic.com?subject=TexQtic%20upgrade%20interest&body=Company%2FOrg%20name%3A%20%0ACurrent%20plan%3A%20FREE%20%E2%80%94%20Early%20Access%0AInterested%20tier%3A%20%0AUse%20case%3A%20%0AContact%20person%3A%20%0A';
 
 /**
- * Locked upgrade copy labels per tier — DL-04 in FAM-11B2.
- * No ₹ amounts, no commitments, no checkout.
+ * CA-approved public monthly pricing — `Price + 18% GST` format (exclusive GST; SAC 998315; 18%).
+ * Authorized public display per FTU-COMM-002B (2026-06-04). No checkout in this unit.
+ * ENTERPRISE: custom/negotiated. FREE: no payment.
  */
 export const TIER_UPGRADE_COPY: Record<string, string> = {
   FREE: 'Free during early access',
-  STARTER: 'Early adopter pricing opening soon \u2014 join the waitlist',
-  PROFESSIONAL: 'Contact us for pricing',
+  STARTER: '₹2,499/month + 18% GST',
+  PROFESSIONAL: '₹4,999/month + 18% GST',
+  ENTERPRISE: 'Contact sales',
+};
+
+/**
+ * CA-approved public yearly pricing — `Price + 18% GST` format (exclusive GST; SAC 998315; 18%).
+ * Authorized public display per FTU-COMM-002B (2026-06-04). No checkout in this unit.
+ * ENTERPRISE: custom/negotiated. FREE: no payment.
+ */
+export const TIER_YEARLY_PRICE_COPY: Record<string, string> = {
+  FREE: 'Free during early access',
+  STARTER: '₹23,990/year + 18% GST',
+  PROFESSIONAL: '₹47,990/year + 18% GST',
   ENTERPRISE: 'Contact sales',
 };

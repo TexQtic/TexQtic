@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTU-COMM-002A-RAZORPAY-ZOHO-PUBLIC-DISPLAY-PRICING-REPO-TRUTH-DESIGN-001 COMPLETE. Repo-truth inspection + implementation design + file-surface map complete. Zero Razorpay/Zoho source confirmed; clean-slate design produced. Recommended first slice: Option A (public pricing display). Next unit: FTU-COMM-002B — Public Pricing Display Implementation. Final enum: FTU_COMM_002A_REPO_TRUTH_DESIGN_FILE_SURFACE_MAP_COMPLETE.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTU-COMM-002B-PUBLIC-PRICING-DISPLAY-IMPLEMENTATION-001 COMPLETE. Monthly + yearly CA-approved pricing displayed on public pricing page. Billing cycle toggle added. TypeScript: PASS. No backend changes. Final enum: FTU_COMM_002B_PUBLIC_MONTHLY_YEARLY_PRICING_DISPLAY_COMPLETE.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,44 +15,39 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FTU-COMM-002A-RAZORPAY-ZOHO-PUBLIC-DISPLAY-PRICING-REPO-TRUTH-DESIGN-001
+active_delivery_unit: FTU-COMM-002B-PUBLIC-PRICING-DISPLAY-IMPLEMENTATION-001
 active_delivery_unit_status: COMPLETE
 active_delivery_unit_note: >
-  FTU-COMM-002A Razorpay + Zoho Public-Display Pricing Repo-Truth Design and File-Surface Map
-  COMPLETE (2026-06-04). Final enum: FTU_COMM_002A_REPO_TRUTH_DESIGN_FILE_SURFACE_MAP_COMPLETE.
-  Repo-truth: zero Razorpay/Zoho source confirmed across all surfaces (schema, services, routes,
-  events, config, packages, env). Plan identity surfaces (TenantPlan enum, Tenant.plan,
-  CommercialPlan type, TenantConfig) fully documented. Implementation design produced:
-  Razorpay Subscriptions Hosted Checkout + Zoho Books GST Tax Invoice.
-  Recommended first slice: Option A — public pricing display (2-file allowlist;
-  config/entitlementDisplay.ts + components/Public/PublicPricingPage.tsx).
-  Annual billing: DEFERRED. D-011 item 7: PARKED. FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS.
-  FTR-LEGAL-003: MVP_CRITICAL/OPEN (blocks production payment launch; test-mode may proceed).
-  Event taxonomy: governance proposals only; Team A sign-off required before registration.
-  No source, schema, migration, package, or environment changes in FTU-COMM-002A.
-  Guardrails preserved: no API keys, key secrets, webhook secrets, bank details, or payment data
-  recorded in any file.
-last_closed_unit: FTU-COMM-002A-RAZORPAY-ZOHO-PUBLIC-DISPLAY-PRICING-REPO-TRUTH-DESIGN-001
+  FTU-COMM-002B Public Pricing Display Implementation COMPLETE (2026-06-04).
+  Final enum: FTU_COMM_002B_PUBLIC_MONTHLY_YEARLY_PRICING_DISPLAY_COMPLETE.
+  Changes: config/entitlementDisplay.ts — governance comment updated; TIER_UPGRADE_COPY updated
+  with CA-approved monthly prices (STARTER ₹2,499/month + 18% GST; PROFESSIONAL ₹4,999/month +
+  18% GST); TIER_YEARLY_PRICE_COPY added (STARTER ₹23,990/year + 18% GST; PROFESSIONAL
+  ₹47,990/year + 18% GST). components/Public/PublicPricingPage.tsx — TIER_YEARLY_PRICE_COPY
+  imported; getPriceLine helper added; billing cycle toggle (Monthly/Yearly) added; STARTER
+  tagline and ctaLabel updated; hero text updated; GST-exclusive note added; price line render
+  made dynamic. TypeScript typecheck: PASS. No backend, schema, package, env, or checkout changes.
+  CTA remains mailto. Annual billing: NOW_AUTHORIZED_DISPLAY. D-011 item 7: PARKED.
+  FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003: MVP_CRITICAL/OPEN unchanged.
+  Guardrails preserved: no API keys, key secrets, webhook secrets, bank details, or payment data.
+last_closed_unit: FTU-COMM-002B-PUBLIC-PRICING-DISPLAY-IMPLEMENTATION-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-06-04)
 last_closed_unit_runtime_verdict: >
-  FTU-COMM-002A Razorpay + Zoho Public-Display Pricing Repo-Truth Design and File-Surface Map
-  COMPLETE (2026-06-04). Zero Razorpay/Zoho source confirmed across all surfaces. Design produced.
-  Recommended first slice: Option A. Final enum: FTU_COMM_002A_REPO_TRUTH_DESIGN_FILE_SURFACE_MAP_COMPLETE.
-last_closed_unit_commits: governance-only (FTU-COMM-002A artifact + 4 tracker updates; no source commits)
+  FTU-COMM-002B Public Pricing Display Implementation COMPLETE (2026-06-04). Monthly + yearly
+  CA-approved pricing displayed. Billing cycle toggle added. TypeScript: PASS. No backend changes.
+  Final enum: FTU_COMM_002B_PUBLIC_MONTHLY_YEARLY_PRICING_DISPLAY_COMPLETE.
+last_closed_unit_commits: '"feat: display public monthly and yearly pricing" (2 source files + 3 tracker files)'
 last_closed_unit_closure_basis: >
-  FTU-COMM-002A: artifact created (git-ignored); NEXT-ACTION.md synced; COMMERCE-METHODOLOGY
-  §4.16 FTU-COMM-002A status block added; FUTURE-TODO-REGISTER FTU-COMM-002A history row
-  prepended; DECISION-PARKING-LOT D-011 status updated with FTU-COMM-002A advance note.
-  Repo-truth: all payment/plan/config/event/schema/service/route surfaces confirmed clean-slate.
-  Annual billing DEFERRED. D-011 item 7 PARKED. FAM-07 hold unchanged. FTR-LEGAL-003 unchanged.
-  Final enum: FTU_COMM_002A_REPO_TRUTH_DESIGN_FILE_SURFACE_MAP_COMPLETE.
-last_closed_unit_prior: FAM-13B-D12A-PAYMENT-IMPLEMENTATION-AUTHORIZATION-DECISION-001
+  FTU-COMM-002B: config/entitlementDisplay.ts updated (TIER_UPGRADE_COPY monthly prices,
+  TIER_YEARLY_PRICE_COPY added); components/Public/PublicPricingPage.tsx updated (billing toggle,
+  getPriceLine helper, STARTER tagline + CTA, hero text, GST note). NEXT-ACTION.md synced;
+  COMMERCE-METHODOLOGY §4.17 FTU-COMM-002B status block added; FUTURE-TODO-REGISTER
+  FTU-COMM-002B history row prepended + FTU-COMM-002 unit row updated.
+  Annual billing NOW_AUTHORIZED_DISPLAY. D-011 item 7 PARKED. FAM-07 hold unchanged.
+  FTR-LEGAL-003 unchanged. Final enum: FTU_COMM_002B_PUBLIC_MONTHLY_YEARLY_PRICING_DISPLAY_COMPLETE.
+last_closed_unit_prior: FTU-COMM-002A-RAZORPAY-ZOHO-PUBLIC-DISPLAY-PRICING-REPO-TRUTH-DESIGN-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-04)
-last_closed_unit_prior: FAM-13B-D12-PUBLIC-PRICE-DISPLAY-AND-PAYMENT-IMPLEMENTATION-READINESS-REVIEW-001
-last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-04)
-last_closed_unit_prior: FAM-13B-D10-PAYMENT-EVENT-AUDIT-AND-LEDGER-LOGGING-PR-07-CLOSURE-001
-last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-04)
-last_closed_unit_prior2: FAM-13B-D9-PCI-BOUNDARY-AND-HOSTED-PAYMENT-COLLECTION-PR-06-CLOSURE-001
+last_closed_unit_prior2: FAM-13B-D12A-PAYMENT-IMPLEMENTATION-AUTHORIZATION-DECISION-001
 last_closed_unit_prior2_status: VERIFIED_COMPLETE (2026-06-04)
 fam07_hold_preservation: >
   FAM-07 legal hold preserved through this pointer sync. L13A (33fd8bf7): hold recorded.
@@ -62,17 +57,16 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FTU-COMM-002B-PUBLIC-PRICING-DISPLAY-IMPLEMENTATION-001
-next_candidate_unit_status: NOT_YET_OPENED
+next_candidate_unit: FTU-COMM-002C-RAZORPAY-SUBSCRIPTIONS-INTEGRATION-DESIGN-001
+next_candidate_unit_status: HOLD_FOR_FTR_LEGAL_003_RESOLUTION
 next_candidate_unit_date_installed: "2026-06-04"
 next_candidate_unit_note: >
-  FTU-COMM-002B — Public Pricing Display Implementation (Option A slice from FTU-COMM-002A design).
-  Allowlist: config/entitlementDisplay.ts + components/Public/PublicPricingPage.tsx only.
-  Change: TIER_UPGRADE_COPY.STARTER → '₹2,499/month + 18% GST'; STARTER priceLine display updated.
-  No backend, schema, package, env, or checkout changes. CTA remains mailto in Option A.
-  Authorized by D12 CA public-display authorization + FTU-COMM-002A design recommendation.
-  Annual billing: DEFERRED. D-011 item 7: PARKED. FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS.
-  FTR-LEGAL-003: MVP_CRITICAL/OPEN.
+  FTU-COMM-002C — Razorpay Subscriptions Integration Design (backend implementation unit).
+  Gating condition: FTR-LEGAL-003 must be resolved (MVP_CRITICAL/OPEN) before this unit opens.
+  Scope (when unblocked): Razorpay Subscriptions Hosted Checkout backend, webhook HMAC-SHA256
+  verification, Zoho Books GST Tax Invoice integration, subscription service routes, DB tables
+  (subscriptions, subscription_events, zoho_invoice_refs). See FTU-COMM-002A design artifact.
+  FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. D-011 item 7: PARKED.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001

@@ -861,6 +861,36 @@ PR-08-B (annual price equivalents): addressed by explicit annual billing deferra
 
 ---
 
+## 4.17 FTU-COMM-002B — Public Pricing Display Implementation (COMPLETE 2026-06-04)
+
+**Unit:** `FTU-COMM-002B-PUBLIC-PRICING-DISPLAY-IMPLEMENTATION-001`
+**Status:** VERIFIED_COMPLETE (2026-06-04)
+**Final enum:** `FTU_COMM_002B_PUBLIC_MONTHLY_YEARLY_PRICING_DISPLAY_COMPLETE`
+
+**Authorization basis:** FTU-COMM-002A design recommendation (Option A); FAM-13B-D12A Paresh explicit authorization; CA-approved `Price + 18% GST` format; CA approval covers both monthly and yearly display (Paresh correction recorded in session).
+
+**Allowlist (source):** `config/entitlementDisplay.ts`, `components/Public/PublicPricingPage.tsx`
+
+**Changes made:**
+- `config/entitlementDisplay.ts` — governance comment updated (DL-04 now AUTHORIZED); `TIER_UPGRADE_COPY` updated with CA-approved monthly prices (STARTER `₹2,499/month + 18% GST`; PROFESSIONAL `₹4,999/month + 18% GST`); `TIER_YEARLY_PRICE_COPY` added (STARTER `₹23,990/year + 18% GST`; PROFESSIONAL `₹47,990/year + 18% GST`)
+- `components/Public/PublicPricingPage.tsx` — `TIER_YEARLY_PRICE_COPY` imported; `getPriceLine(tier, cycle)` helper added (module-level); billing cycle toggle (Monthly / Yearly segmented control) added; STARTER tagline updated to `'Designed for growing teams. Transparent, simple pricing.'`; STARTER `ctaLabel` updated to `'Contact us'`; hero text updated (no more "Paid tiers open later" waitlist language); GST-exclusive note added below toggle; price line render updated to use `getPriceLine(card.tier, billingCycle)` dynamically
+
+**Carry-forward (unchanged):**
+- D-011 item 7: PARKED
+- FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS
+- FTR-LEGAL-003: MVP_CRITICAL/OPEN (blocks production payment launch)
+- Event taxonomy: governance proposals only; Team A sign-off required before `event-names.md` registration
+- No checkout or payment collection in this unit
+
+**Validation:** TypeScript typecheck PASS. `git diff --name-only` confirmed only 2 source files + 3 tracker files modified.
+
+**Commit:** `feat: display public monthly and yearly pricing`
+
+**Next unit:** `FTU-COMM-002C — Razorpay Subscriptions Integration Design`
+(gated: FTR-LEGAL-003 must resolve before opening)
+
+---
+
 ## 5. B2B Financial Boundary (CONFIRMED GUARDRAIL)
 
 ### 5.1 Confirmed Position

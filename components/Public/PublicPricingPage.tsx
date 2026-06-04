@@ -4,6 +4,7 @@ import {
   ENTITLEMENT_DISPLAY_ROWS,
   UPGRADE_CTA_MAILTO,
   TIER_UPGRADE_COPY,
+  TIER_YEARLY_PRICE_COPY,
   type AvailabilityLabel,
 } from '../../config/entitlementDisplay';
 
@@ -59,6 +60,14 @@ function getCategories(): string[] {
 
 const CATEGORIES = getCategories();
 
+// Returns the display price line for a tier given the current billing cycle.
+function getPriceLine(tier: Tier, cycle: 'monthly' | 'yearly'): string {
+  if (tier === 'STARTER' || tier === 'PROFESSIONAL') {
+    return cycle === 'monthly' ? TIER_UPGRADE_COPY[tier] : TIER_YEARLY_PRICE_COPY[tier];
+  }
+  return TIER_UPGRADE_COPY[tier];
+}
+
 // ── Tier card config ───────────────────────────────────────────────────────────
 
 interface TierCardConfig {
@@ -94,9 +103,9 @@ const TIER_CARDS: readonly TierCardConfig[] = [
   {
     tier: 'STARTER',
     label: 'STARTER',
-    tagline: 'Designed for growing teams. Early adopter pricing opening soon.',
+    tagline: 'Designed for growing teams. Transparent, simple pricing.',
     priceLine: TIER_UPGRADE_COPY['STARTER'],
-    ctaLabel: 'Join waitlist',
+    ctaLabel: 'Contact us',
     ctaHref: UPGRADE_CTA_MAILTO,
     featured: false,
     badgeClass: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -255,6 +264,7 @@ export function PublicPricingPage({
   nav,
   onRequestAccess,
 }: PublicPricingPageProps) {
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
 
   const allOpen = openCategories.size === CATEGORIES.length;
@@ -296,12 +306,12 @@ export function PublicPricingPage({
               Start free. Scale when ready.
             </h1>
             <p className="mt-4 text-base text-slate-600">
-              TexQtic is free during early access. Paid tiers open later &mdash; reach out to
-              be among the first to access STARTER or PROFESSIONAL.
+              TexQtic is free during early access. STARTER and PROFESSIONAL plans are available
+              on a contact basis &mdash; reach out to enquire.
             </p>
             <p className="mt-2 text-xs text-slate-400">
               No checkout. No payment information required. Feature availability is indicative
-              and subject to change.
+              and subject to change. Prices are shown exclusive of GST.
             </p>
           </div>
         </section>
@@ -311,6 +321,37 @@ export function PublicPricingPage({
           className="px-6 py-12 lg:px-10"
           aria-label="Plan tiers"
         >
+          {/* Billing cycle toggle */}
+          <div className="mx-auto mb-2 flex max-w-xs items-center justify-center rounded-full border border-[#d6e4e8] bg-white p-1 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setBillingCycle('monthly')}
+              aria-pressed={billingCycle === 'monthly'}
+              className={`flex-1 rounded-full px-5 py-2 text-[11px] font-bold uppercase tracking-[0.16em] transition ${
+                billingCycle === 'monthly'
+                  ? 'bg-[#071a2f] text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingCycle('yearly')}
+              aria-pressed={billingCycle === 'yearly'}
+              className={`flex-1 rounded-full px-5 py-2 text-[11px] font-bold uppercase tracking-[0.16em] transition ${
+                billingCycle === 'yearly'
+                  ? 'bg-[#071a2f] text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Yearly
+            </button>
+          </div>
+          {/* GST note */}
+          <p className="mb-8 text-center text-[11px] text-slate-400">
+            Prices are shown exclusive of GST. 18% GST applies separately.
+          </p>
           <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
             {TIER_CARDS.map((card) => (
               <div key={card.tier} className={card.cardClass}>
@@ -334,7 +375,7 @@ export function PublicPricingPage({
                   <p className="mt-3 text-sm text-slate-600">{card.tagline}</p>
 
                   {/* Price line */}
-                  <p className="mt-3 text-xs font-semibold text-slate-700">{card.priceLine}</p>
+                  <p className="mt-3 text-xs font-semibold text-slate-700">{getPriceLine(card.tier, billingCycle)}</p>
 
                   {/* CTA */}
                   <div className="mt-5">
