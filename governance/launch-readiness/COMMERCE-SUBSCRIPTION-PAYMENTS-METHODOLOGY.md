@@ -941,6 +941,42 @@ checkout changes.
 
 ---
 
+### §4.19 FTR-LEGAL-003A — SaaS Checkout Legal Terms and Payment Gate Review
+
+**Unit:** `FTR-LEGAL-003A-SAAS-CHECKOUT-LEGAL-TERMS-AND-PAYMENT-GATE-REVIEW-001`
+**Status:** VERIFIED_COMPLETE (2026-06-04)
+**Decision:** `BLOCKED_PENDING_LEGAL_CONTENT`
+**Final enum:** `FTR_LEGAL_003A_BLOCKED_PENDING_LEGAL_CONTENT`
+
+**Gate assessment:** All 8 FTR-LEGAL-003 closure criteria assessed at HEAD `6ac93794`.
+**Result: 0 of 8 satisfied.**
+
+**Root cause:** No customer-facing legal content exists anywhere (Terms of Service,
+Subscription/Payment Terms, Refund/Cancellation Policy, GST/Invoice Disclosure, Privacy Policy,
+Grievance/Contact Policy — all absent from both app.texqtic.com and confirmed texqtic.com).
+
+**What exists (governance-only — NOT customer-facing):**
+- D8 founder-approved refund/cancellation policy (COMMERCE-METHODOLOGY §4.9)
+- D-012/PR-03 GST confirmation (SAC 998315, 18% exclusive)
+- D9/PR-06 PCI boundary (SAQ A)
+- D10/PR-07 payment event audit/log policy
+- PRIT-034-001 legal architecture design (canonical route: texqtic.com/legal/)
+
+**Architecture confirmation:** Per PRIT-034-001, legal pages are canonical on the texqtic.com
+marketing site (separate repo; not in this checkout). app.texqtic.com links out via absolute URLs.
+Payment/GST group routes are in the GATED group pending TTP counsel feedback.
+
+**Implementation gate (source code):** CLOSED — unchanged. Held by FTR-LEGAL-003.
+
+**Key invariants:** FTR-LEGAL-003 MVP_CRITICAL/OPEN unchanged. FAM-07 hold
+HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. No source, schema, package, env, or checkout changes.
+
+**Next unit:** `FTR-LEGAL-003B-SAAS-PAYMENT-TERMS-CONTENT-DRAFT-AND-COUNSEL-PREP-001`
+(scope: draft 6 customer-facing legal documents; produce counsel-review packet; Paresh review;
+no source changes; no checkout; governance and content preparation only)
+
+---
+
 ## 5. B2B Financial Boundary (CONFIRMED GUARDRAIL)
 
 ### 5.1 Confirmed Position

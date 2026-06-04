@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTU-COMM-002C-PUBLIC-PRICING-CTA-INTENT-ALIGNMENT-001 COMPLETE. Plan-specific CTA labels (Request STARTER/PROFESSIONAL Access, Contact Sales) and billing-cycle-aware mailto hrefs added. TypeScript: PASS. No backend changes. Final enum: FTU_COMM_002C_PUBLIC_PRICING_CTA_INTENT_ALIGNMENT_COMPLETE.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTR-LEGAL-003A-SAAS-CHECKOUT-LEGAL-TERMS-AND-PAYMENT-GATE-REVIEW-001 COMPLETE. Decision: BLOCKED_PENDING_LEGAL_CONTENT. All 8 payment gate criteria unmet — no customer-facing legal content exists. Final enum: FTR_LEGAL_003A_BLOCKED_PENDING_LEGAL_CONTENT. Next unit: FTR-LEGAL-003B.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,39 +15,40 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FTU-COMM-002C-PUBLIC-PRICING-CTA-INTENT-ALIGNMENT-001
+active_delivery_unit: FTR-LEGAL-003A-SAAS-CHECKOUT-LEGAL-TERMS-AND-PAYMENT-GATE-REVIEW-001
 active_delivery_unit_status: COMPLETE
 active_delivery_unit_note: >
-  FTU-COMM-002C Public Pricing CTA Intent Alignment COMPLETE (2026-06-04).
-  Final enum: FTU_COMM_002C_PUBLIC_PRICING_CTA_INTENT_ALIGNMENT_COMPLETE.
-  Changes: config/entitlementDisplay.ts — governance comment updated; TIER_CTA_LABELS added
-  (FREE: 'Get started free'; STARTER: 'Request STARTER Access'; PROFESSIONAL: 'Request
-  PROFESSIONAL Access'; ENTERPRISE: 'Contact Sales'); getTierCtaHref() function added (returns
-  plan-specific, billing-cycle-aware mailto href for STARTER/PROFESSIONAL; ENTERPRISE custom
-  inquiry; FREE fallback). components/Public/PublicPricingPage.tsx — TIER_CTA_LABELS and
-  getTierCtaHref imported; TIER_CARDS ctaLabel updated to use TIER_CTA_LABELS per tier; JSX
-  <a> href updated to use getTierCtaHref(card.tier, billingCycle) for billing-cycle-aware mailto.
-  TypeScript typecheck: PASS. No backend, schema, package, env, or checkout changes.
-  CTA remains mailto/contact. Billing cycle toggle preserved. Monthly/yearly prices preserved.
-  D-011 item 7: PARKED. FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged.
-  FTR-LEGAL-003: MVP_CRITICAL/OPEN unchanged.
-last_closed_unit: FTU-COMM-002C-PUBLIC-PRICING-CTA-INTENT-ALIGNMENT-001
+  FTR-LEGAL-003A SaaS Checkout Legal Terms and Payment Gate Review COMPLETE (2026-06-04).
+  Decision: BLOCKED_PENDING_LEGAL_CONTENT. All 8 payment gate criteria assessed — 0 of 8 satisfied.
+  Cause: no customer-facing legal content exists anywhere (Terms of Service, Payment Terms,
+  Refund/Cancellation Policy, GST/Invoice Disclosure, Privacy Policy, Grievance/Contact Policy
+  all absent). Governance decisions exist (D8 refund policy, D-012 GST, D9 PCI, D10 audit)
+  but none published as customer-facing legal documents. Legal architecture (PRIT-034-001)
+  confirmed: canonical legal pages live on texqtic.com (separate marketing repo; not in this
+  checkout). FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains
+  MVP_CRITICAL/OPEN. No source, schema, package, env, or checkout changes.
+  Final enum: FTR_LEGAL_003A_BLOCKED_PENDING_LEGAL_CONTENT.
+  Next unit: FTR-LEGAL-003B-SAAS-PAYMENT-TERMS-CONTENT-DRAFT-AND-COUNSEL-PREP-001.
+last_closed_unit: FTR-LEGAL-003A-SAAS-CHECKOUT-LEGAL-TERMS-AND-PAYMENT-GATE-REVIEW-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-06-04)
 last_closed_unit_runtime_verdict: >
-  FTU-COMM-002C Public Pricing CTA Intent Alignment COMPLETE (2026-06-04).
-  Plan-specific CTA labels and billing-cycle-aware mailto hrefs added. TypeScript: PASS.
-  No backend changes. Final enum: FTU_COMM_002C_PUBLIC_PRICING_CTA_INTENT_ALIGNMENT_COMPLETE.
-last_closed_unit_commits: '"feat: align public pricing CTA intent" (2 source files + 3 tracker files)'
+  FTR-LEGAL-003A SaaS Checkout Legal Terms and Payment Gate Review COMPLETE (2026-06-04).
+  Decision: BLOCKED_PENDING_LEGAL_CONTENT. Final enum: FTR_LEGAL_003A_BLOCKED_PENDING_LEGAL_CONTENT.
+last_closed_unit_commits: '"gov: record FTR-LEGAL-003 SaaS payment legal gaps" (3 tracker files)'
 last_closed_unit_closure_basis: >
-  FTU-COMM-002C: config/entitlementDisplay.ts updated (TIER_CTA_LABELS, getTierCtaHref added);
-  components/Public/PublicPricingPage.tsx updated (TIER_CTA_LABELS + getTierCtaHref imported;
-  ctaLabel updated per tier; JSX <a> href uses getTierCtaHref(card.tier, billingCycle)).
-  NEXT-ACTION.md synced; COMMERCE-METHODOLOGY §4.18 FTU-COMM-002C status block added;
-  FUTURE-TODO-REGISTER FTU-COMM-002C history row appended + FTU-COMM-002 unit row updated.
-  Monthly/yearly prices preserved. GST-exclusive note preserved. CTA remains mailto.
-  D-011 item 7 PARKED. FAM-07 hold unchanged. FTR-LEGAL-003 unchanged.
-  Final enum: FTU_COMM_002C_PUBLIC_PRICING_CTA_INTENT_ALIGNMENT_COMPLETE.
-last_closed_unit_prior: FTU-COMM-002B-PUBLIC-PRICING-DISPLAY-IMPLEMENTATION-001
+  FTR-LEGAL-003A: repo-truth inspection at HEAD 6ac93794 confirmed all required legal
+  surfaces NOT_IMPLEMENTED. 8-criterion payment gate assessed: 0/8 satisfied.
+  Primary blocker: no customer-facing legal content exists (Terms, Privacy, Payment Terms,
+  Refund Policy, GST Disclosure, Grievance/Contact all absent). Governance decisions
+  D-021/PR-05 (refund), D-012/PR-03 (GST), D9/PR-06 (PCI), D10/PR-07 (audit) are
+  complete governance records but NOT published customer-facing legal documents.
+  PRIT-034-001 legal architecture confirmed: canonical legal pages on texqtic.com (separate
+  marketing repo not in this checkout). All 8 Razorpay prerequisites COMPLETE.
+  Implementation gate remains CLOSED — held by FTR-LEGAL-003 (legal content absent).
+  Artifact: artifacts/launch-readiness/FTR-LEGAL-003A-...md (git-ignored).
+  FAM-07 hold unchanged. FTR-LEGAL-003 unchanged.
+  Final enum: FTR_LEGAL_003A_BLOCKED_PENDING_LEGAL_CONTENT.
+last_closed_unit_prior: FTU-COMM-002C-PUBLIC-PRICING-CTA-INTENT-ALIGNMENT-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-04)
 last_closed_unit_prior2: FAM-13B-D12A-PAYMENT-IMPLEMENTATION-AUTHORIZATION-DECISION-001
 last_closed_unit_prior2_status: VERIFIED_COMPLETE (2026-06-04)
@@ -59,16 +60,23 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FTU-COMM-002D-RAZORPAY-SUBSCRIPTIONS-INTEGRATION-DESIGN-001
-next_candidate_unit_status: HOLD_FOR_FTR_LEGAL_003_RESOLUTION
+next_candidate_unit: FTR-LEGAL-003B-SAAS-PAYMENT-TERMS-CONTENT-DRAFT-AND-COUNSEL-PREP-001
+next_candidate_unit_status: OPEN_FOR_AUTHORIZATION
 next_candidate_unit_date_installed: "2026-06-04"
 next_candidate_unit_note: >
-  FTU-COMM-002D — Razorpay Subscriptions Integration Design (backend implementation unit).
-  Gating condition: FTR-LEGAL-003 must be resolved (MVP_CRITICAL/OPEN) before this unit opens.
-  Scope (when unblocked): Razorpay Subscriptions Hosted Checkout backend, webhook HMAC-SHA256
-  verification, Zoho Books GST Tax Invoice integration, subscription service routes, DB tables
-  (subscriptions, subscription_events, zoho_invoice_refs). See FTU-COMM-002A design artifact.
-  FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. D-011 item 7: PARKED.
+  FTR-LEGAL-003B — SaaS Payment Terms Content Draft and Counsel Prep.
+  Scope: Draft customer-facing SaaS/payment-related legal documents (Terms of Use, Subscription
+  Terms, Payment Terms, Refund/Cancellation Policy, Privacy Policy, Grievance/Contact Policy).
+  Use governance decisions as input (D-021, D-012, D9, D10, refund policy table from D8).
+  Produce counsel-review packet for Paresh review + optional external counsel.
+  No source changes. No checkout. No Razorpay integration. No schema/package/env changes.
+  Gating condition: Paresh authorization to open FTR-LEGAL-003B.
+  After FTR-LEGAL-003B: texqtic.com publication unit (separate marketing repo).
+  After publication: FTR-LEGAL-003 re-examined for closure.
+  After FTR-LEGAL-003 closes: FTU-COMM-002D (Razorpay checkout) may open.
+prior_next_candidate_unit: FTU-COMM-002D-RAZORPAY-SUBSCRIPTIONS-INTEGRATION-DESIGN-001
+prior_next_candidate_unit_status: HOLD_FOR_FTR_LEGAL_003_RESOLUTION
+prior_next_candidate_unit_date_installed: "2026-06-04"
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001
 archived_candidate_fam07d3_status: CLOSED (2026-05-28)
 archived_candidate_fam07d2: FAM-07D2-TENANT-ONBOARDING-EXISTING-USER-FRONTEND-SIGNIN-REDIRECT-001
