@@ -377,6 +377,72 @@ No implementation authorization supplied.
 
 **Next recommended unit:** `FAM-13B-D7A — Razorpay KYC Evidence Completion`
 
+### 4.7 D7A Status — Razorpay KYC Evidence Completion (2026-06-04)
+
+**Unit:** FAM-13B-D7A-RAZORPAY-KYC-EVIDENCE-COMPLETION-001 — ✅ **COMPLETE**
+
+**Outcome:** Paresh-supplied Razorpay account/KYC readiness evidence received and recorded in
+sanitized status-only form. Three new items confirmed. KYC status remains AMBIGUOUS and PR-04
+cannot close in D7A.
+
+**Paresh-supplied evidence recorded:**
+
+| Evidence Item | Paresh-Supplied Status | D7A Recorded Status |
+|---|---|---|
+| Razorpay account exists | YES | CONFIRMED |
+| Legal entity shown in Razorpay | TexQtic Ventures Pvt Ltd | CONFIRMED — matches D7 tracking entity |
+| KYC status | "approved / submitted" | AMBIGUOUS — not normalized to approved; see note |
+| Settlement bank configured | YES | CONFIRMED (no bank details recorded) |
+| Test mode accessible | PENDING VERIFICATION after KYC accepted | PENDING |
+| Live mode status | PENDING | PENDING |
+| Dashboard admin access | YES | CONFIRMED |
+| Active payment/profile link | `razorpay.me/@texqtic` active | SUPPORTING_EVIDENCE_ONLY — account/profile existence; not proof of KYC approval or subscription-payment readiness |
+
+**KYC status note:** `"approved / submitted"` is AMBIGUOUS. Cannot be normalized to approved
+without explicit clarification. Both KYC submitted and KYC approved are required for PR-04
+COMPLETE. The `razorpay.me/@texqtic` link corroborates account/profile existence only.
+
+**Not supplied in D7A evidence:**
+- Business type (not confirmed)
+- GSTIN linked/available status (not confirmed)
+
+**PR-04 assessment (D7A):**
+- Razorpay account created: CONFIRMED ✅
+- Correct legal entity name: CONFIRMED — TexQtic Ventures Pvt Ltd ✅
+- Business type verified: NOT_SUPPLIED ❌
+- GSTIN linked/available: NOT_SUPPLIED ❌
+- KYC submitted: AMBIGUOUS ❌
+- KYC approved: AMBIGUOUS ❌
+- Settlement bank configured: CONFIRMED ✅
+- Test mode accessible: PENDING ❌
+- Live mode status known: PENDING ❌
+- Dashboard admin access: CONFIRMED ✅
+- API key handling guardrail: CONFIRMED_GUARDRAIL_ONLY ⚠️
+- Webhook secret handling guardrail: CONFIRMED_GUARDRAIL_ONLY ⚠️
+- Product scope: CONFIRMED — SaaS subscriptions first ✅
+
+**PR-04 decision:** `STILL_PENDING`
+- Items 3, 4, 5, 6, 8, 9 of the 13-item completion checklist are not satisfied.
+- No entity mismatch (`BLOCKED_LEGAL_ENTITY_MISMATCH` NOT triggered).
+- No repo-truth or tracker conflict (`FAM_13B_D7A_BLOCKED_REPO_TRUTH_OR_TRACKER_CONFLICT` NOT triggered).
+
+**PR-05–PR-08 preserved (unchanged from D7):**
+- PR-05: NOT_STARTED
+- PR-06: NOT_STARTED
+- PR-07: NOT_STARTED
+- PR-08: PARTIALLY_COMPLETE
+
+**Implementation gate:** CLOSED — unchanged. PR-04 STILL_PENDING; PR-05–PR-08 open/partial.
+No implementation authorization. FTU-COMM-002 trigger: 3/8 prerequisites (PR-01/02/03 COMPLETE).
+
+**No source, schema, migration, package, or environment changes** in D7A.
+
+**Final enum:** `FAM_13B_D7A_RAZORPAY_KYC_EVIDENCE_RECORDED_PR_04_STILL_PENDING`
+
+**Next recommended unit:** `FAM-13B-D7B — Razorpay KYC Approval and Test-Mode Verification Follow-Up`
+(scope: clarify KYC approval vs. submitted; confirm business type and GSTIN; verify test mode;
+close PR-04 if remaining evidence is sufficient; no implementation)
+
 ---
 
 ## 5. B2B Financial Boundary (CONFIRMED GUARDRAIL)

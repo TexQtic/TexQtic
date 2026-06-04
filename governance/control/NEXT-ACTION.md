@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-03 (FAM-13B-D7-RAZORPAY-KYC-AND-PAYMENT-ACCOUNT-READINESS-CLOSURE-001 COMPLETE. D6 confirmed closed. PR-04 reviewed and recorded as PENDING_PARESH_EVIDENCE. Legal entity for payment readiness confirmed as TexQtic Ventures Pvt Ltd; D6 `TexQtic Innovations Pvt Ltd` line treated as unverified typo carry-forward. Implementation gate CLOSED. PR-05–PR-08 remain open/partial. Recommended next unit: FAM-13B-D7A — Razorpay KYC Evidence Completion.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FAM-13B-D7A-RAZORPAY-KYC-EVIDENCE-COMPLETION-001 COMPLETE. Paresh-supplied Razorpay evidence recorded: account exists, legal entity confirmed TexQtic Ventures Pvt Ltd, settlement bank configured, dashboard admin access confirmed. KYC status AMBIGUOUS (approved/submitted — not normalized to approved). Business type and GSTIN not supplied. Test mode PENDING. PR-04 = STILL_PENDING. Implementation gate CLOSED. Recommended next unit: FAM-13B-D7B — Razorpay KYC Approval and Test-Mode Verification Follow-Up.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,46 +15,46 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-13B-D7-RAZORPAY-KYC-AND-PAYMENT-ACCOUNT-READINESS-CLOSURE-001
+active_delivery_unit: FAM-13B-D7A-RAZORPAY-KYC-EVIDENCE-COMPLETION-001
 active_delivery_unit_status: COMPLETE
 active_delivery_unit_note: >
-  FAM-13B-D7 Razorpay KYC and Payment Account Readiness Closure COMPLETE (2026-06-03).
-  Final enum: FAM_13B_D7_RAZORPAY_KYC_READINESS_RECORDED_PR_04_PENDING_PARESH_EVIDENCE.
-  D6 closure confirmed in repo truth: PR-03 remains COMPLETE; RAZORPAY-INVOICE-SAC-
-  VERIFICATION-001 remains CLOSED; Zoho Books invoice pathway remains locked.
-  PR-04 assessed against D3 checklist and D-015/D-020 founder decision truth.
-  Result: PR-04 does NOT advance to COMPLETE. No repo-truth or Paresh-supplied status-only
-  evidence yet confirms Razorpay account creation, KYC submission/approval, settlement bank,
-  dashboard admin access, test-mode availability, or live-mode status.
-  PR-04 status: PENDING_PARESH_EVIDENCE.
-  Legal entity for payment readiness confirmed by Paresh note: TexQtic Ventures Pvt Ltd.
-  D6 Zoho setup line `TexQtic Innovations Pvt Ltd` treated as unverified typo carry-forward;
-  not propagated as verified payment truth.
+  FAM-13B-D7A Razorpay KYC Evidence Completion COMPLETE (2026-06-04).
+  Final enum: FAM_13B_D7A_RAZORPAY_KYC_EVIDENCE_RECORDED_PR_04_STILL_PENDING.
+  Paresh-supplied Razorpay evidence received and recorded in sanitized status-only form.
+  Newly confirmed: account exists for TexQtic Ventures Pvt Ltd; settlement bank configured
+  (no bank details recorded); dashboard admin access available; active payment/profile page
+  razorpay.me/@texqtic (supporting evidence of account existence only).
+  KYC status: AMBIGUOUS ("approved / submitted" — cannot be normalized to approved without
+  clarification; both submitted and approved are required for PR-04 COMPLETE).
+  Not supplied: business type, GSTIN linked/available status.
+  Test mode: PENDING VERIFICATION after KYC acceptance per Paresh evidence.
+  Live mode: PENDING.
+  PR-04 status: STILL_PENDING (items 3/4/5/6/8/9 of 13-item checklist not satisfied).
+  Legal entity: CONFIRMED — TexQtic Ventures Pvt Ltd; no entity mismatch.
+  PR-05 refund/cancellation: NOT_STARTED (unchanged). PR-06 PCI boundary: NOT_STARTED.
+  PR-07 payment audit/log policy: NOT_STARTED. PR-08 pricing/tier: PARTIALLY_COMPLETE.
+  Payment implementation gate remains CLOSED. FTU-COMM-002 trigger: 3/8 prerequisites.
   Guardrails preserved: no API keys, key secrets, webhook secrets, bank details, GST
-  documents, PAN/Aadhaar data, or payment customer data recorded. No source, schema,
-  package, environment, or migration changes.
-  PR-05 refund/cancellation: NOT_STARTED. PR-06 PCI boundary: NOT_STARTED. PR-07 payment
-  audit/log policy: NOT_STARTED. PR-08 pricing/tier structure: PARTIALLY_COMPLETE.
-  Payment implementation gate remains CLOSED. FTU-COMM-002 trigger remains unmet.
-  Preflight at D7 open: clean worktree; HEAD 8d1973ac; D6 commit in lineage; no unrelated
-  tracked file modifications present.
-last_closed_unit: FAM-13B-D7-RAZORPAY-KYC-AND-PAYMENT-ACCOUNT-READINESS-CLOSURE-001
-last_closed_unit_status: VERIFIED_COMPLETE (2026-06-03)
+  documents, PAN/Aadhaar data, login credentials, or customer payment data recorded.
+  No source, schema, package, environment, or migration changes.
+last_closed_unit: FAM-13B-D7A-RAZORPAY-KYC-EVIDENCE-COMPLETION-001
+last_closed_unit_status: VERIFIED_COMPLETE (2026-06-04)
 last_closed_unit_runtime_verdict: >
-  FAM-13B-D7 payment-account readiness review complete (2026-06-03). PR-04 assessed and
-  recorded as PENDING_PARESH_EVIDENCE; legal entity corrected to TexQtic Ventures Pvt Ltd;
-  D6 typo flagged; implementation gate remains CLOSED; no source changes. Final enum:
-  FAM_13B_D7_RAZORPAY_KYC_READINESS_RECORDED_PR_04_PENDING_PARESH_EVIDENCE.
-last_closed_unit_commits: governance-only (D7 artifact + 3 tracker updates; no source commits)
+  FAM-13B-D7A Razorpay KYC Evidence Completion complete (2026-06-04). Paresh-supplied
+  evidence recorded: account exists, entity confirmed, settlement bank configured, dashboard
+  admin confirmed. KYC AMBIGUOUS; business type/GSTIN not supplied; test mode PENDING.
+  PR-04 status: STILL_PENDING. Implementation gate CLOSED. No source changes. Final enum:
+  FAM_13B_D7A_RAZORPAY_KYC_EVIDENCE_RECORDED_PR_04_STILL_PENDING.
+last_closed_unit_commits: governance-only (D7A artifact + 3 tracker updates; no source commits)
 last_closed_unit_closure_basis: >
-  FAM-13B-D7: D7 artifact + NEXT-ACTION sync + COMMERCE-METHODOLOGY D7 status block +
-  FUTURE-TODO-REGISTER §11 D7 row. PR-04 assessed against D3 checklist and kept pending
-  due to missing Paresh evidence. Legal entity verified as TexQtic Ventures Pvt Ltd.
-  D7A recommended; not yet opened. Final enum:
-  FAM_13B_D7_RAZORPAY_KYC_READINESS_RECORDED_PR_04_PENDING_PARESH_EVIDENCE.
-last_closed_unit_prior: FAM-13B-D6-CA-ADVISORY-CLOSE-AND-PR-03-COMPLETION-001
+  FAM-13B-D7A: D7A artifact + NEXT-ACTION sync + COMMERCE-METHODOLOGY §4.7 D7A status block
+  + FUTURE-TODO-REGISTER §11 D7A row. PR-04 reassessed against D7A evidence; kept STILL_PENDING
+  due to ambiguous KYC, missing business type/GSTIN, and unconfirmed test mode.
+  D7B recommended; not yet opened. Final enum:
+  FAM_13B_D7A_RAZORPAY_KYC_EVIDENCE_RECORDED_PR_04_STILL_PENDING.
+last_closed_unit_prior: FAM-13B-D7-RAZORPAY-KYC-AND-PAYMENT-ACCOUNT-READINESS-CLOSURE-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-03)
-last_closed_unit_prior2: FAM-13B-D5-RAZORPAY-INVOICE-PATHWAY-SELECTION-AND-CA-ADVISORY-001
+last_closed_unit_prior2: FAM-13B-D6-CA-ADVISORY-CLOSE-AND-PR-03-COMPLETION-001
 last_closed_unit_prior2_status: VERIFIED_COMPLETE (2026-06-03)
 fam07_hold_preservation: >
   FAM-07 legal hold preserved through this pointer sync. L13A (33fd8bf7): hold recorded.
@@ -64,21 +64,20 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FAM-13B-D7A-RAZORPAY-KYC-EVIDENCE-COMPLETION-001
-next_candidate_unit_status: NOT_YET_OPENED — AWAITING_PARESH_KYC_EVIDENCE
-next_candidate_unit_date_installed: "2026-06-03"
+next_candidate_unit: FAM-13B-D7B-RAZORPAY-KYC-APPROVAL-AND-TEST-MODE-VERIFICATION-001
+next_candidate_unit_status: NOT_YET_OPENED — AWAITING_PARESH_KYC_APPROVAL_CLARIFICATION
+next_candidate_unit_date_installed: "2026-06-04"
 next_candidate_unit_note: >
-  FAM-13B-D7A is the recommended next payment governance unit (2026-06-03).
-  Scope: collect the missing status-only evidence required to close PR-04 without exposing
-  secrets or private KYC material. Required confirmations: Razorpay account exists for
-  TexQtic Ventures Pvt Ltd; business type selected; GSTIN available/linked where applicable;
-  KYC submitted; KYC approved or dashboard-ready for intended use; settlement bank added;
-  test mode available; live mode status known; dashboard admin access available; API key and
-  webhook secret handling policies understood with no secrets stored in repo/reports.
-  If Paresh supplies all evidence and no contradiction emerges, PR-04 may then advance to
-  COMPLETE. If evidence instead shows the account is already complete and PR-04 closes,
-  the next bounded unit after D7A should be FAM-13B-D8 — Refund and Cancellation Policy
-  Decision / PR-05 Closure.
+  FAM-13B-D7B is the recommended next payment governance unit (2026-06-04).
+  Scope: record exact Razorpay KYC approval status (clarify "approved / submitted" ambiguity);
+  confirm business type selected; confirm GSTIN linked/available status; verify test-mode
+  accessibility; record live-mode status. Close PR-04 if remaining evidence is sufficient.
+  Governance and advisory only — no source, schema, migration, package, environment, or
+  payment implementation changes.
+  D7B should not be opened until Paresh confirms the exact KYC approval status and verifies
+  test-mode accessibility in the Razorpay Dashboard.
+  If PR-04 closes in D7B, the next bounded unit after D7B should be FAM-13B-D8 —
+  Refund and Cancellation Policy Decision / PR-05 Closure.
   Payment implementation remains unauthorized. PR-05–PR-08 remain open/partial. Explicit
   Paresh implementation authorization still required. FAM-07 hold unchanged. FTR-LEGAL-003
   remains MVP_CRITICAL/OPEN.
