@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FAM-13B-D9-PCI-BOUNDARY-AND-HOSTED-PAYMENT-COLLECTION-PR-06-CLOSURE-001 COMPLETE. PCI boundary confirmed: Razorpay Hosted Checkout; no TexQtic-side card form; no raw card data in TexQtic systems. All 6 D3 §9.3 evidence items satisfied. All 13 D9 completion conditions satisfied. PR-06 = COMPLETE. Implementation gate CLOSED (6/8 prerequisites: PR-01/02/03/04/05/06). PR-07 NOT_STARTED; PR-08 PARTIALLY_COMPLETE. Recommended next unit: FAM-13B-D10 — Payment Event Audit and Ledger Logging Policy / PR-07 Closure.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FAM-13B-D10-PAYMENT-EVENT-AUDIT-AND-LEDGER-LOGGING-PR-07-CLOSURE-001 COMPLETE. Payment event audit and ledger logging policy documented. All 3 event taxonomy namespaces recorded (payment.razorpay.*, billing.zoho.*, subscription.*). All 15 PR-07 completion conditions satisfied. PR-07 = COMPLETE. Implementation gate CLOSED (7/8 prerequisites: PR-01/02/03/04/05/06/07). PR-08 PARTIALLY_COMPLETE. Recommended next unit: FAM-13B-D11 — Pricing / Tier Structure Finalization and PR-08 Closure.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -15,49 +15,56 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: FAM-13B-D9-PCI-BOUNDARY-AND-HOSTED-PAYMENT-COLLECTION-PR-06-CLOSURE-001
+active_delivery_unit: FAM-13B-D10-PAYMENT-EVENT-AUDIT-AND-LEDGER-LOGGING-PR-07-CLOSURE-001
 active_delivery_unit_status: COMPLETE
 active_delivery_unit_note: >
-  FAM-13B-D9 PCI Boundary and Hosted Payment Collection Policy COMPLETE (2026-06-04).
-  Final enum: FAM_13B_D9_PCI_BOUNDARY_COMPLETE_PR_06_COMPLETE.
-  PCI boundary confirmed: Razorpay Hosted Checkout exclusively; no TexQtic-side card form;
-  no raw card data in TexQtic frontend, backend, logs, DB, or events.
-  All 6 D3 §9.3 evidence items satisfied. All 13 D9 completion conditions satisfied.
-  Allowed payment references documented: Razorpay customer ID, subscription ID, payment ID,
-  order/invoice/reference ID, plan ID; Zoho Books invoice ID/invoice number; internal
-  tenant/subscription status; billing period dates; amount (INR paise); payment timestamp.
-  API key and webhook secret: env/secret-manager only; never in source, git, or logs.
-  Webhook HMAC-SHA256 signature verification: mandatory protocol documented.
-  Server-side payment verification before subscription activation: mandatory policy documented.
-  Logging/redaction guardrails: card data and secrets never logged; webhook payloads sanitized.
-  PCI scope classification: SAQ A expected (hosted checkout only); SAQ A-EP possible (if
-  Standard Checkout JS modal embedded on TexQtic page); SAQ D explicitly excluded.
-  PR-06 status: COMPLETE. PR-07 NOT_STARTED. PR-08 PARTIALLY_COMPLETE.
-  Implementation gate: CLOSED. FTU-COMM-002 trigger: 6/8 prerequisites (PR-01/02/03/04/05/06).
-  Webhook carry-forward (D7C): webhook creation deferred; TexQtic endpoint not implemented.
+  FAM-13B-D10 Payment Event Audit and Ledger Logging Policy COMPLETE (2026-06-04).
+  Final enum: FAM_13B_D10_PAYMENT_EVENT_AUDIT_POLICY_COMPLETE_PR_07_COMPLETE.
+  D9 carry-forward: PR-06 COMPLETE; PCI boundary locked; Razorpay Hosted Checkout; no card form;
+  no raw card data in TexQtic systems; SAQ A expected; webhook HMAC-SHA256 mandatory; server-side
+  activation verification mandatory.
+  Event-name authority inspection: shared/contracts/event-names.md read-only; NO payment events
+  currently registered; naming convention: domain-prefixed snake_case versioned .v1; Team A owns
+  event naming; proposed payment event names are governance proposals pending Team A sign-off and
+  event-names.md registration before implementation.
+  Event taxonomy recorded (3 namespaces): payment.razorpay.* (16 events); billing.zoho.* (7 events);
+  subscription.* activation/state-machine events (14 events). Also D3 §10.1 proposals preserved.
+  Safe payload fields documented: org_id, event_type/source/status, Razorpay reference IDs,
+  Zoho reference IDs, subscription/plan code, amount_paise, billing_period, timestamp, actor_type,
+  sanitized failure_reason. Forbidden payload fields: raw card data, CVV, UPI PIN, bank credentials,
+  API keys, webhook secrets, full raw webhook payloads, PII, KYC documents.
+  Retention policy: 8 financial years (founder-approved; exceeds India GST 7-year minimum).
+  Webhook payload: extract key fields only after HMAC-SHA256 verification; NOT stored raw.
+  Audit access: operator/Paresh control plane only at MVP.
+  Manual review queue: operator-only; safe fields only; no silent paid-state changes permitted.
+  All 6 D3 §10.3 evidence requirements satisfied. All 15 D10 completion conditions satisfied.
+  PR-07 status: COMPLETE. PR-08 PARTIALLY_COMPLETE (unchanged).
+  Implementation gate: CLOSED. FTU-COMM-002 trigger: 7/8 prerequisites (PR-01/02/03/04/05/06/07).
   No source, schema, migration, package, or environment changes.
   Guardrails preserved: no API keys, key secrets, webhook secrets, bank details, PAN/Aadhaar,
   GSTIN, KYC documents, login credentials, or customer payment data recorded.
-last_closed_unit: FAM-13B-D9-PCI-BOUNDARY-AND-HOSTED-PAYMENT-COLLECTION-PR-06-CLOSURE-001
+last_closed_unit: FAM-13B-D10-PAYMENT-EVENT-AUDIT-AND-LEDGER-LOGGING-PR-07-CLOSURE-001
 last_closed_unit_status: VERIFIED_COMPLETE (2026-06-04)
 last_closed_unit_runtime_verdict: >
-  FAM-13B-D9 PCI Boundary COMPLETE (2026-06-04).
-  PR-06 COMPLETE. Gate CLOSED (6/8). No source changes.
-  Final enum: FAM_13B_D9_PCI_BOUNDARY_COMPLETE_PR_06_COMPLETE.
-last_closed_unit_commits: governance-only (D9 artifact + 3 tracker updates; no source commits)
+  FAM-13B-D10 Payment Event Audit and Ledger Logging Policy COMPLETE (2026-06-04).
+  PR-07 COMPLETE. Gate CLOSED (7/8). No source changes.
+  Final enum: FAM_13B_D10_PAYMENT_EVENT_AUDIT_POLICY_COMPLETE_PR_07_COMPLETE.
+last_closed_unit_commits: governance-only (D10 artifact + 3 tracker updates; no source commits)
 last_closed_unit_closure_basis: >
-  FAM-13B-D9: D9 artifact created (git-ignored); NEXT-ACTION.md synced (active unit D9 COMPLETE,
-  last_closed_unit updated, next_candidate D10 confirmed); COMMERCE-METHODOLOGY §4.11 D9 status
-  block added; FUTURE-TODO-REGISTER D9 row appended. DECISION-PARKING-LOT not modified
-  (no PR-06-specific parked decisions exist). PR-06 COMPLETE: all 6 D3 §9.3 evidence
-  requirements satisfied; all 13 D9 completion conditions satisfied. PCI boundary documented:
-  Razorpay Hosted Checkout; no card form; no card data in TexQtic systems; safe payment
-  references allowed; API key + webhook secret env-only policy; HMAC-SHA256 webhook verification;
-  server-side activation verification; logging redaction guardrails; SAQ A expected.
-  Final enum: FAM_13B_D9_PCI_BOUNDARY_COMPLETE_PR_06_COMPLETE.
-last_closed_unit_prior: FAM-13B-D7C-RAZORPAY-WEBSITE-APP-APPROVAL-AND-TEST-MODE-VERIFICATION-001
+  FAM-13B-D10: D10 artifact created (git-ignored); NEXT-ACTION.md synced (active unit D10 COMPLETE,
+  last_closed_unit updated, next_candidate D11 confirmed); COMMERCE-METHODOLOGY §4.12 D10 status
+  block added; FUTURE-TODO-REGISTER D10 row appended. DECISION-PARKING-LOT not modified
+  (no PR-07-specific parked decisions found). PR-07 COMPLETE: all 6 D3 §10.3 evidence
+  requirements satisfied; all 15 D10 completion conditions satisfied. Payment event audit policy
+  documented: 3 namespaces (payment.razorpay.*, billing.zoho.*, subscription.*); safe payload
+  fields; forbidden fields; redaction policy; 8-financial-year retention (founder-approved);
+  webhook payload NOT stored raw; operator-only audit access; no silent paid-state changes.
+  event-names.md inspected read-only: no payment events registered; proposals require Team A
+  sign-off before implementation.
+  Final enum: FAM_13B_D10_PAYMENT_EVENT_AUDIT_POLICY_COMPLETE_PR_07_COMPLETE.
+last_closed_unit_prior: FAM-13B-D9-PCI-BOUNDARY-AND-HOSTED-PAYMENT-COLLECTION-PR-06-CLOSURE-001
 last_closed_unit_prior_status: VERIFIED_COMPLETE (2026-06-04)
-last_closed_unit_prior2: FAM-13B-D8-REFUND-CANCELLATION-POLICY-AND-PR-05-CLOSURE-001
+last_closed_unit_prior2: FAM-13B-D7C-RAZORPAY-WEBSITE-APP-APPROVAL-AND-TEST-MODE-VERIFICATION-001
 last_closed_unit_prior2_status: VERIFIED_COMPLETE (2026-06-04)
 fam07_hold_preservation: >
   FAM-07 legal hold preserved through this pointer sync. L13A (33fd8bf7): hold recorded.
@@ -67,20 +74,19 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FAM-13B-D10-PAYMENT-EVENT-AUDIT-AND-LEDGER-LOGGING-POLICY-AND-PR-07-CLOSURE-001
+next_candidate_unit: FAM-13B-D11-PRICING-TIER-STRUCTURE-FINALIZATION-AND-PR-08-CLOSURE-001
 next_candidate_unit_status: NOT_YET_OPENED
 next_candidate_unit_date_installed: "2026-06-04"
 next_candidate_unit_note: >
-  FAM-13B-D10 is the recommended next payment governance unit (2026-06-04; confirmed after D9 closure).
-  Scope: extract PR-07 evidence requirements from D3 §10; record proposed payment event names
-  (D3 §10.1) and review against shared/contracts/event-names.md; record payment event retention
-  policy decisions (D3 §10.2); define subscription state change logging policy; define invoice
-  creation/failure/retry event logging policy; define manual-review queue events; close PR-07
-  if all evidence requirements are satisfied.
-  Governance and advisory only — no source, schema, migration, package, environment, or
-  payment implementation changes.
-  D9 COMPLETE: PR-06 closed. D7C COMPLETE: PR-04 closed. D8 COMPLETE: PR-05 closed.
-  6/8 prerequisites complete (PR-01/02/03/04/05/06). PR-07 NOT_STARTED. PR-08 PARTIALLY_COMPLETE.
+  FAM-13B-D11 is the recommended next payment governance unit (2026-06-04; confirmed after D10 closure).
+  Scope: resolve remaining PR-08 items; confirm CA authorization for public price display;
+  confirm annual price equivalents or explicitly defer annual plan launch; confirm first paid plan
+  launch configuration; review D-011 (Subscription Tier Pricing) against CA-authorized pricing;
+  close PR-08 if all evidence requirements satisfied. Governance and advisory only — no source,
+  schema, migration, package, environment, or payment implementation changes.
+  D10 COMPLETE: PR-07 closed. D9 COMPLETE: PR-06 closed. D7C COMPLETE: PR-04 closed.
+  D8 COMPLETE: PR-05 closed. 7/8 prerequisites complete (PR-01/02/03/04/05/06/07).
+  PR-08 PARTIALLY_COMPLETE. Implementation gate: CLOSED.
   Payment implementation remains unauthorized. Explicit Paresh implementation authorization
   still required. FAM-07 hold unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN.
 archived_candidate_fam07d3: FAM-07D3-TENANT-ONBOARDING-AUTHENTICATED-INVITE-ACCEPTANCE-001

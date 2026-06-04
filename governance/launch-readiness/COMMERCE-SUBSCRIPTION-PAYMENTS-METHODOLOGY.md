@@ -623,6 +623,45 @@ Note: `FAM-13B-D7C` remains pending as adjacent unit awaiting Razorpay website/a
 
 ---
 
+### 4.12 FAM-13B-D10 — Payment Event Audit and Ledger Logging Policy / PR-07 Closure
+
+**Unit:** `FAM-13B-D10-PAYMENT-EVENT-AUDIT-AND-LEDGER-LOGGING-PR-07-CLOSURE-001`
+**Date:** 2026-06-04
+**PR-07 advance:** NOT_STARTED → **COMPLETE**
+**Final enum:** `FAM_13B_D10_PAYMENT_EVENT_AUDIT_POLICY_COMPLETE_PR_07_COMPLETE`
+
+#### D10 Summary
+
+Payment event audit policy and ledger logging governance recorded. event-names.md inspected read-only: no payment events currently registered; proposed names are governance proposals pending Team A sign-off and event-names.md registration before implementation. All 6 D3 §10.3 evidence requirements satisfied. All 15 D10 completion conditions satisfied. No source, schema, migration, package, environment, or payment implementation changes. Governance only.
+
+#### Event Taxonomy (Proposed — Pending Team A Registration in `shared/contracts/event-names.md`)
+
+| Namespace | Count | Coverage |
+|---|---|---|
+| `payment.razorpay.*` | 16 events | Webhook receipt/verification/rejection; payment captured/failed; subscription activated/charged/cancelled/halted/completed; refund initiated/processed/failed; dispute opened; chargeback lost/won |
+| `billing.zoho.*` | 7 events | Invoice create.requested/created/failed/email.sent; credit_note required/created/failed |
+| `subscription.*` | 14 events | payment.verification.requested/succeeded/failed; activation.requested/succeeded/failed; renewal.succeeded/failed; grace_period.started/ended; downgrade.scheduled; cancel_at_period_end.requested/confirmed; manual_review.required |
+
+#### Key Policy Decisions
+
+| Decision | Policy |
+|---|---|
+| Retention period | **8 financial years** (founder-approved; exceeds India GST 7-year minimum; subject to CA/legal confirmation) |
+| Webhook payload storage | NOT stored raw; extract safe fields only after HMAC-SHA256 verification |
+| Safe payload fields | `org_id`, event_type/source/status, Razorpay reference IDs, Zoho reference IDs, subscription/plan code, `amount_paise`, billing_period, timestamp, `actor_type`, sanitized failure_reason |
+| Forbidden payload fields | Raw card data, CVV, UPI PIN, bank credentials, API keys, webhook secrets, full raw webhook payloads, PII, KYC documents |
+| Silent paid-state changes | PROHIBITED — every payment-affecting state change must emit an audit event |
+| Audit log access | Operator / Paresh (control plane) only at MVP; tenant self-access not authorized at MVP |
+| Manual review queue | Operator-only; safe fields only; operator must log resolution |
+| `event-names.md` | NO payment events currently registered; all proposed names require Team A sign-off before implementation |
+
+**Implementation gate after D10:** CLOSED — 7/8 prerequisites (PR-01/02/03/04/05/06/07). Gate opens at 8/8. PR-08 PARTIALLY_COMPLETE.
+
+**Next recommended unit:** `FAM-13B-D11 — Pricing / Tier Structure Finalization and PR-08 Closure`
+(scope: resolve PR-08 remaining items; CA authorization for public price display; D-011 Subscription Tier Pricing confirmation; close PR-08; governance only; no implementation)
+
+---
+
 ## 5. B2B Financial Boundary (CONFIRMED GUARDRAIL)
 
 ### 5.1 Confirmed Position
