@@ -586,6 +586,41 @@ Note: `FAM-13B-D7C` remains pending as adjacent unit awaiting Razorpay website/a
 **Next recommended unit:** `FAM-13B-D9 — PCI Boundary and Hosted Payment Collection Policy / PR-06 Closure`
 (scope: confirm PCI boundary via Razorpay Hosted Checkout; webhook signature verification; API key and webhook secret storage rules; SAQ classification; close PR-06; governance only; no implementation)
 
+### 4.11 D9 Status — PCI Boundary and Hosted Payment Collection Policy / PR-06 Closure (2026-06-04)
+
+**Unit:** FAM-13B-D9-PCI-BOUNDARY-AND-HOSTED-PAYMENT-COLLECTION-PR-06-CLOSURE-001
+**Date:** 2026-06-04
+**Opened after:** FAM-13B-D7C COMPLETE (PR-04); FAM-13B-D8 COMPLETE (PR-05)
+**Final enum:** `FAM_13B_D9_PCI_BOUNDARY_COMPLETE_PR_06_COMPLETE`
+
+**PR-06 advance:** NOT_STARTED → **COMPLETE** (all 6 D3 §9.3 evidence requirements + all 13 D9 completion conditions satisfied)
+
+**PCI boundary confirmed (founder-approved decisions recorded):**
+
+| Decision | Policy |
+|---|---|
+| Payment collection method | Razorpay Hosted Checkout / Subscription Checkout ONLY |
+| TexQtic-side card form | PROHIBITED — no card number, CVV, expiry input in TexQtic UI (PCI-01) |
+| Raw card data in TexQtic systems | PROHIBITED — frontend, backend, logs, DB, events (PCI-02/03) |
+| CVV / UPI PIN / bank credentials | PROHIBITED — never handled by TexQtic systems |
+| Checkout/payment authentication | Razorpay-controlled; TexQtic does NOT intercept 3DS, OTP, or payment auth UX |
+| Allowed safe references TexQtic may store | Razorpay customer ID, subscription ID, payment ID, order/invoice/reference ID, plan ID; Zoho Books invoice ID/number; internal tenant/subscription status; billing period dates; amount (INR paise); payment timestamp |
+| Razorpay API key (key_id + key_secret) storage | Environment variable / secure secret manager ONLY — never in source, git, logs, artifacts |
+| Razorpay webhook secret storage | Environment variable / secure secret manager ONLY — never in source, git, logs |
+| Webhook signature verification | MANDATORY — HMAC-SHA256 (`X-Razorpay-Signature` header); constant-time comparison; unverified payloads rejected with HTTP 400 |
+| Server-side payment verification | MANDATORY before subscription activation or renewal; frontend success callback alone is NEVER sufficient |
+| Logging / redaction | Card data and secrets NEVER logged; webhook payloads sanitized (extract safe fields only) before logging |
+| PCI SAQ classification | SAQ A expected (hosted checkout redirect/iframe only); SAQ A-EP possible (if Standard Checkout JS modal on TexQtic page); SAQ D explicitly excluded |
+
+**Implementation gate:** CLOSED — 6/8 prerequisites (PR-01/02/03/04/05/06). PR-07 NOT_STARTED; PR-08 PARTIALLY_COMPLETE.
+
+**D9 governance changes:** D9 artifact created (git-ignored); NEXT-ACTION.md synced (active unit D9 COMPLETE, last_closed_unit updated, next_candidate D10 confirmed); COMMERCE-METHODOLOGY §4.11 added; FUTURE-TODO-REGISTER D9 row appended. DECISION-PARKING-LOT not modified (no PR-06-specific parked decisions). No source, schema, migration, package, or environment changes.
+
+**Final enum:** `FAM_13B_D9_PCI_BOUNDARY_COMPLETE_PR_06_COMPLETE`
+
+**Next recommended unit:** `FAM-13B-D10 — Payment Event Audit and Ledger Logging Policy / PR-07 Closure`
+(scope: payment event names from D3 §10.1; retention policy from D3 §10.2; review against event-names.md; close PR-07; governance only; no implementation)
+
 ---
 
 ## 5. B2B Financial Boundary (CONFIRMED GUARDRAIL)
