@@ -6950,7 +6950,16 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       let activationUser: { id: string; email: string };
 
       if (existingAccount) {
-        const isValidPassword = await bcrypt.compare(userData.password, existingAccount.passwordHash);
+        // Guard against legacy/malformed stored hashes so this path returns
+        // AUTH_INVALID instead of bubbling a generic 500.
+        let isValidPassword = false;
+        try {
+          if (typeof existingAccount.passwordHash === 'string' && existingAccount.passwordHash.length > 0) {
+            isValidPassword = await bcrypt.compare(userData.password, existingAccount.passwordHash);
+          }
+        } catch (compareError) {
+          fastify.log.warn({ err: compareError }, '[Tenant Activation] Existing-account password verification failed');
+        }
         if (!isValidPassword) {
           return sendError(reply, 'AUTH_INVALID', 'Invalid credentials', 401);
         }

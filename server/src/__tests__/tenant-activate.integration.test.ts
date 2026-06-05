@@ -415,6 +415,26 @@ describe('B-01 — existing account invite activation path', () => {
     expect(txMock.invite.update).not.toHaveBeenCalled();
     expect(writeAuditLogMock).not.toHaveBeenCalled();
   });
+
+  it('returns 401 AUTH_INVALID when existing account password hash is malformed', async () => {
+    prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      id: TEST_USER_ID,
+      email: 'owner@example.test',
+      passwordHash: 'legacy-non-bcrypt-hash',
+    });
+
+    const response = await app.inject({ method: 'POST', url: '/api/tenant/activate', payload: BASE_ACTIVATE_PAYLOAD });
+
+    expect(response.statusCode).toBe(401);
+    const body = response.json();
+    expect(body.error).toMatchObject({ code: 'AUTH_INVALID' });
+    expect(withDbContextMock).not.toHaveBeenCalled();
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
+    expect(txMock.membership.create).not.toHaveBeenCalled();
+    expect(txMock.invite.update).not.toHaveBeenCalled();
+    expect(writeAuditLogMock).not.toHaveBeenCalled();
+  });
 });
 
 // ---------------------------------------------------------------------------
