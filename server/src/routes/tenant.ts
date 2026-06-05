@@ -6866,6 +6866,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * Allows a user with an invite to activate their pre-provisioned tenant
    */
   fastify.post('/tenant/activate', async (request, reply) => {
+    let newlyCreatedUserId: string | null = null;
     try {
       const bodySchema = z.object({
         inviteToken: z.string().min(1, 'Invite token is required'),
@@ -6933,39 +6934,56 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'EMAIL_MISMATCH', 'Email does not match invite', 403);
       }
 
-      // B-01: Detect existing TexQtic account — sign-in-first flow.
-      // An existing user must sign in and accept the invite via the authenticated path.
-      // We MUST NOT issue a JWT or create a membership without credential validation.
-      const existingAccount = await prisma.user.findUnique({ where: { email: normalizedUserEmail } });
-      if (existingAccount) {
-        return sendError(
-          reply,
-          'EXISTING_USER_MUST_SIGN_IN',
-          'Existing TexQtic account found. Please sign in to accept this invite.',
-          409,
-        );
-      }
-
-      // Hash password
-      const passwordHash = await bcrypt.hash(userData.password, 10);
-
-      // G-RLS-USER-CREATE: Create user BEFORE entering withDbContext.
-      // withDbContext calls `SET LOCAL ROLE texqtic_app` (NOBYPASSRLS) at the start of
-      // every transaction. The `users` table has no INSERT policy for texqtic_app,
-      // so any tx.user.create inside withDbContext fails with Postgres 42501
-      // (new row violates row-level security policy for table "users").
-      // Creating the user here — using the native prisma client connection
-      // (postgres role, BYPASSRLS=true) — avoids this restriction.
-      // Pattern mirrors tenantProvision.service.ts Phase 1:
-      //   "texqtic_app cannot INSERT into users (no applicable INSERT policy)"
-      const newUser = await prisma.user.create({
-        data: {
-          email: normalizedUserEmail,
-          passwordHash,
-          emailVerified: true,
-          emailVerifiedAt: new Date(),
+      // Existing-account invite acceptance path:
+      // if the account exists, verify credentials and continue activation in this flow.
+      // This prevents the contradiction where invite acceptance says account exists
+      // but tenant login says no account found due to missing membership.
+      const existingAccount = await prisma.user.findUnique({
+        where: { email: normalizedUserEmail },
+        select: {
+          id: true,
+          email: true,
+          passwordHash: true,
         },
       });
+
+      let activationUser: { id: string; email: string };
+
+      if (existingAccount) {
+        const isValidPassword = await bcrypt.compare(userData.password, existingAccount.passwordHash);
+        if (!isValidPassword) {
+          return sendError(reply, 'AUTH_INVALID', 'Invalid credentials', 401);
+        }
+
+        activationUser = {
+          id: existingAccount.id,
+          email: existingAccount.email,
+        };
+      } else {
+        // Hash password
+        const passwordHash = await bcrypt.hash(userData.password, 10);
+
+        // G-RLS-USER-CREATE: Create user BEFORE entering withDbContext.
+        // withDbContext calls `SET LOCAL ROLE texqtic_app` (NOBYPASSRLS) at the start of
+        // every transaction. The `users` table has no INSERT policy for texqtic_app,
+        // so any tx.user.create inside withDbContext fails with Postgres 42501
+        // (new row violates row-level security policy for table "users").
+        // Creating the user here — using the native prisma client connection
+        // (postgres role, BYPASSRLS=true) — avoids this restriction.
+        // Pattern mirrors tenantProvision.service.ts Phase 1:
+        //   "texqtic_app cannot INSERT into users (no applicable INSERT policy)"
+        const newUser = await prisma.user.create({
+          data: {
+            email: normalizedUserEmail,
+            passwordHash,
+            emailVerified: true,
+            emailVerifiedAt: new Date(),
+          },
+        });
+
+        newlyCreatedUserId = newUser.id;
+        activationUser = newUser;
+      }
 
       // Gate D.1: Build db context for invite tenant
       const dbContext: DatabaseContext = {
@@ -6992,9 +7010,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
         await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
 
-        // User was created outside this transaction (native postgres connection = BYPASSRLS).
-        // texqtic_app (used by withDbContext) has no INSERT policy on the users table.
-        const user = newUser;
+        // User is either a verified existing account or created outside this transaction
+        // (native postgres connection = BYPASSRLS).
+        const user = activationUser;
 
         const updatedOrg = await tx.organizations.update({
           where: { id: invite.tenantId },
@@ -7119,6 +7137,23 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         },
       });
     } catch (error: unknown) {
+      if (newlyCreatedUserId) {
+        try {
+          const hasAnyMembership = await prisma.membership.findFirst({
+            where: { userId: newlyCreatedUserId },
+            select: { id: true },
+          });
+
+          // Roll back orphaned invite-created user rows when activation fails before
+          // membership creation, so retries do not hit account-exists/login-mismatch loops.
+          if (!hasAnyMembership) {
+            await prisma.user.delete({ where: { id: newlyCreatedUserId } });
+          }
+        } catch (cleanupError) {
+          fastify.log.warn({ err: cleanupError }, '[Tenant Activation] Orphan user cleanup failed');
+        }
+      }
+
       // B-02: Map controlled duplicate-membership sentinel to 409
       if (error instanceof Error && (error as Error & { _activationCode?: string })._activationCode === 'ALREADY_MEMBER') {
         return sendError(reply, 'ALREADY_MEMBER', 'This user is already a member of this tenant.', 409);

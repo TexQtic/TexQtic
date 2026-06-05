@@ -2,7 +2,7 @@
  * FAM-07D1 — Tenant Activation Security Containment Tests
  *
  * Covers:
- *   T-GAP-02: B-01 — Existing TexQtic account blocked before any activation write
+ *   T-GAP-02: B-01 — Existing TexQtic account continues activation with credential verification
  *   T-GAP-03: B-02 — Duplicate membership returns 409 not 500
  *   T-GAP-06: Regression — new-user happy path still succeeds after B-01 guard
  *   T-GAP-07: Regression — invalid invite still returns 404 (B-01 guard does not interfere)
@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Fastify, { type FastifyInstance } from 'fastify';
 import fastifyJwt from '@fastify/jwt';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
 const {
   tenantAuthMiddlewareMock,
@@ -62,6 +63,7 @@ const {
     user: {
       findUnique: vi.fn(),
       create: vi.fn(), // user.create moved outside withDbContext — needs its own spy on prismaMock
+      delete: vi.fn(),
     },
     membership: {
       findFirst: vi.fn(),
@@ -325,25 +327,52 @@ async function buildServer(): Promise<FastifyInstance> {
 }
 
 // ---------------------------------------------------------------------------
-// T-GAP-02 — B-01: Existing TexQtic account must sign in
+// T-GAP-02 — B-01: Existing TexQtic account can continue activation with valid credentials
 // ---------------------------------------------------------------------------
-describe('B-01 — existing user must sign in to accept invite', () => {
+describe('B-01 — existing account invite activation path', () => {
   let app: FastifyInstance;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     withDbContextMock.mockImplementation(async (_client: unknown, _ctx: unknown, cb: (tx: unknown) => Promise<unknown>) => cb(txMock));
+    txMock.membership.findFirst.mockReset();
+    txMock.membership.create.mockReset();
     app = await buildServer();
   });
 
   afterEach(async () => { await app.close(); });
 
-  it('returns 409 EXISTING_USER_MUST_SIGN_IN when email already has a TexQtic account', async () => {
+  it('accepts existing account credentials and completes activation without creating a new user row', async () => {
+    const passwordHash = await bcrypt.hash('ValidPass99', 10);
+
     prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
     prismaMock.user.findUnique.mockResolvedValueOnce({
       id:    TEST_USER_ID,
       email: 'owner@example.test',
+      passwordHash,
     });
+    txMock.$queryRaw.mockResolvedValue([{ org_id: TEST_TENANT_ID }]);
+    txMock.$executeRawUnsafe.mockResolvedValue(undefined);
+    txMock.organizations.update.mockResolvedValue({
+      legal_name: 'Test Org', status: 'PENDING_VERIFICATION', org_type: 'B2B', is_white_label: false, plan: 'FREE',
+    });
+    txMock.organizations.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      slug: 'test-org',
+      legal_name: 'Test Org',
+      status: 'PENDING_VERIFICATION',
+      org_type: 'B2B',
+      primary_segment_key: 'Yarn',
+      is_white_label: false,
+      jurisdiction: 'IN-MH',
+      registration_no: 'REG-001',
+      plan: 'FREE',
+      secondary_segments: [],
+      role_positions: [],
+    });
+    txMock.membership.findFirst.mockResolvedValueOnce(null);
+    txMock.membership.create.mockResolvedValue({ role: 'OWNER' });
+    txMock.invite.update.mockResolvedValue({ acceptedAt: new Date() });
 
     const response = await app.inject({
       method:  'POST',
@@ -351,40 +380,40 @@ describe('B-01 — existing user must sign in to accept invite', () => {
       payload: BASE_ACTIVATE_PAYLOAD,
     });
 
-    expect(response.statusCode).toBe(409);
+    expect(response.statusCode).toBe(200);
     const body = response.json();
-    expect(body.success).toBe(false);
-    expect(body.error).toMatchObject({
-      code:    'EXISTING_USER_MUST_SIGN_IN',
-      message: expect.stringContaining('sign in'),
-    });
+    expect(body.success).toBe(true);
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
+    expect(txMock.membership.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: TEST_USER_ID,
+          tenantId: TEST_TENANT_ID,
+        }),
+      }),
+    );
   });
 
-  it('does not call withDbContext, create user, create membership, update invite, or write audit log', async () => {
+  it('returns 401 AUTH_INVALID when existing account password does not match', async () => {
+    const passwordHash = await bcrypt.hash('different-password', 10);
+
     prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
     prismaMock.user.findUnique.mockResolvedValueOnce({
       id:    TEST_USER_ID,
       email: 'owner@example.test',
+      passwordHash,
     });
-
-    await app.inject({ method: 'POST', url: '/api/tenant/activate', payload: BASE_ACTIVATE_PAYLOAD });
-
-    expect(withDbContextMock).not.toHaveBeenCalled();
-    expect(prismaMock.user.create).not.toHaveBeenCalled(); // user.create moved outside withDbContext; must also not be called when B-01 fires
-    expect(txMock.membership.create).not.toHaveBeenCalled();
-    expect(txMock.invite.update).not.toHaveBeenCalled();
-    expect(writeAuditLogMock).not.toHaveBeenCalled();
-  });
-
-  it('does not issue a JWT when an existing account is detected', async () => {
-    prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
-    prismaMock.user.findUnique.mockResolvedValueOnce({ id: TEST_USER_ID, email: 'owner@example.test' });
 
     const response = await app.inject({ method: 'POST', url: '/api/tenant/activate', payload: BASE_ACTIVATE_PAYLOAD });
 
+    expect(response.statusCode).toBe(401);
     const body = response.json();
-    expect(body).not.toHaveProperty('data');
-    expect(response.statusCode).toBe(409);
+    expect(body.error).toMatchObject({ code: 'AUTH_INVALID' });
+    expect(withDbContextMock).not.toHaveBeenCalled();
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
+    expect(txMock.membership.create).not.toHaveBeenCalled();
+    expect(txMock.invite.update).not.toHaveBeenCalled();
+    expect(writeAuditLogMock).not.toHaveBeenCalled();
   });
 });
 
@@ -397,6 +426,8 @@ describe('B-02 — duplicate membership returns 409 ALREADY_MEMBER', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     withDbContextMock.mockImplementation(async (_client: unknown, _ctx: unknown, cb: (tx: unknown) => Promise<unknown>) => cb(txMock));
+    txMock.membership.findFirst.mockReset();
+    txMock.membership.create.mockReset();
     txMock.$queryRaw.mockResolvedValue([{ org_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' }]);
     txMock.$executeRawUnsafe.mockResolvedValue(undefined);
     app = await buildServer();
@@ -415,7 +446,7 @@ describe('B-02 — duplicate membership returns 409 ALREADY_MEMBER', () => {
     });
 
     // B-02 pre-check: membership already exists
-    txMock.membership.findFirst.mockResolvedValueOnce({ id: 'membership-id-existing', role: 'OWNER' });
+    txMock.membership.findFirst.mockResolvedValue({ id: 'membership-id-existing', role: 'OWNER' });
 
     const response = await app.inject({
       method:  'POST',
@@ -437,7 +468,7 @@ describe('B-02 — duplicate membership returns 409 ALREADY_MEMBER', () => {
     txMock.organizations.update.mockResolvedValueOnce({
       legal_name: 'Test Org', status: 'PENDING_VERIFICATION', org_type: 'B2B', is_white_label: false, plan: 'FREE',
     });
-    txMock.membership.findFirst.mockResolvedValueOnce({ id: 'membership-id-existing', role: 'OWNER' });
+    txMock.membership.findFirst.mockResolvedValue({ id: 'membership-id-existing', role: 'OWNER' });
 
     await app.inject({ method: 'POST', url: '/api/tenant/activate', payload: BASE_ACTIVATE_PAYLOAD });
 
@@ -479,6 +510,7 @@ describe('B-01 regression — new user activation proceeds when no existing acco
       secondary_segments: [],
       role_positions: [],
     });
+    txMock.membership.findFirst.mockReset();
     txMock.membership.findFirst.mockResolvedValue(null);
     txMock.membership.create.mockResolvedValue({ role: 'OWNER' });
     txMock.invite.update.mockResolvedValue({ acceptedAt: new Date() });
