@@ -61,6 +61,7 @@ const {
     },
     user: {
       findUnique: vi.fn(),
+      create: vi.fn(), // user.create moved outside withDbContext — needs its own spy on prismaMock
     },
     membership: {
       findFirst: vi.fn(),
@@ -369,7 +370,7 @@ describe('B-01 — existing user must sign in to accept invite', () => {
     await app.inject({ method: 'POST', url: '/api/tenant/activate', payload: BASE_ACTIVATE_PAYLOAD });
 
     expect(withDbContextMock).not.toHaveBeenCalled();
-    expect(txMock.user.create).not.toHaveBeenCalled();
+    expect(prismaMock.user.create).not.toHaveBeenCalled(); // user.create moved outside withDbContext; must also not be called when B-01 fires
     expect(txMock.membership.create).not.toHaveBeenCalled();
     expect(txMock.invite.update).not.toHaveBeenCalled();
     expect(writeAuditLogMock).not.toHaveBeenCalled();
@@ -407,10 +408,8 @@ describe('B-02 — duplicate membership returns 409 ALREADY_MEMBER', () => {
     prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
     // B-01 passes: no existing user account
     prismaMock.user.findUnique.mockResolvedValueOnce(null);
-
-    // Inside transaction: user doesn't exist → creates new
-    txMock.user.findUnique.mockResolvedValueOnce(null);
-    txMock.user.create.mockResolvedValueOnce({ id: TEST_USER_ID, email: 'owner@example.test' });
+    // User is created outside withDbContext (native postgres connection = BYPASSRLS)
+    prismaMock.user.create.mockResolvedValueOnce({ id: TEST_USER_ID, email: 'owner@example.test' });
     txMock.organizations.update.mockResolvedValueOnce({
       legal_name: 'Test Org', status: 'PENDING_VERIFICATION', org_type: 'B2B', is_white_label: false, plan: 'FREE',
     });
@@ -433,8 +432,8 @@ describe('B-02 — duplicate membership returns 409 ALREADY_MEMBER', () => {
   it('does not call membership.create when membership pre-check detects duplicate', async () => {
     prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
     prismaMock.user.findUnique.mockResolvedValueOnce(null);
-    txMock.user.findUnique.mockResolvedValueOnce(null);
-    txMock.user.create.mockResolvedValueOnce({ id: TEST_USER_ID, email: 'owner@example.test' });
+    // User is created outside withDbContext (native postgres connection = BYPASSRLS)
+    prismaMock.user.create.mockResolvedValueOnce({ id: TEST_USER_ID, email: 'owner@example.test' });
     txMock.organizations.update.mockResolvedValueOnce({
       legal_name: 'Test Org', status: 'PENDING_VERIFICATION', org_type: 'B2B', is_white_label: false, plan: 'FREE',
     });
@@ -461,6 +460,8 @@ describe('B-01 regression — new user activation proceeds when no existing acco
     txMock.$executeRawUnsafe.mockResolvedValue(undefined);
     txMock.user.findUnique.mockResolvedValue(null);
     txMock.user.create.mockResolvedValue({ id: TEST_USER_ID, email: 'owner@example.test' });
+    // user.create moved outside withDbContext — must be mocked on prismaMock
+    prismaMock.user.create.mockResolvedValue({ id: TEST_USER_ID, email: 'owner@example.test' });
     txMock.organizations.update.mockResolvedValue({
       legal_name: 'Test Org', status: 'PENDING_VERIFICATION', org_type: 'B2B', is_white_label: false, plan: 'FREE',
     });
@@ -862,6 +863,8 @@ describe('FAM-07E2 — activation consent scaffold (LEGAL_PENDING only)', () => 
     txMock.$executeRawUnsafe.mockResolvedValue(undefined);
     txMock.user.findUnique.mockResolvedValue(null);
     txMock.user.create.mockResolvedValue({ id: TEST_USER_ID, email: 'owner@example.test' });
+    // user.create moved outside withDbContext — must be mocked on prismaMock
+    prismaMock.user.create.mockResolvedValue({ id: TEST_USER_ID, email: 'owner@example.test' });
     txMock.organizations.update.mockResolvedValue({
       legal_name: 'Test Org', status: 'PENDING_VERIFICATION', org_type: 'B2B', is_white_label: false, plan: 'FREE',
     });
@@ -1080,6 +1083,8 @@ describe('FAM-07G — POST /api/tenant/activate: response shape and write verifi
     txMock.$executeRawUnsafe.mockResolvedValue(undefined);
     txMock.user.findUnique.mockResolvedValue(null);
     txMock.user.create.mockResolvedValue({ id: TEST_USER_ID, email: 'owner@example.test' });
+    // user.create moved outside withDbContext — must be mocked on prismaMock
+    prismaMock.user.create.mockResolvedValue({ id: TEST_USER_ID, email: 'owner@example.test' });
     txMock.organizations.update.mockResolvedValue({
       legal_name: 'Test Org', status: 'PENDING_VERIFICATION', org_type: 'B2B', is_white_label: false, plan: 'FREE',
     });
@@ -1142,7 +1147,10 @@ describe('FAM-07G — POST /api/tenant/activate: response shape and write verifi
       payload: BASE_ACTIVATE_PAYLOAD,
     });
 
-    expect(txMock.user.create).toHaveBeenCalled();
+    // user.create is now called on prismaMock (outside withDbContext, native postgres role)
+    // NOT on txMock (inside withDbContext, texqtic_app role has no INSERT policy on users table)
+    expect(prismaMock.user.create).toHaveBeenCalled();
+    expect(txMock.user.create).not.toHaveBeenCalled();
     expect(txMock.membership.create).toHaveBeenCalled();
     expect(txMock.invite.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -1211,5 +1219,29 @@ describe('FAM-07G — POST /api/tenant/activate: response shape and write verifi
         }),
       }),
     );
+  });
+
+  it('T-MISS-07: user.create runs outside withDbContext (native postgres, not texqtic_app) to bypass users-table RLS restriction', async () => {
+    prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate',
+      payload: BASE_ACTIVATE_PAYLOAD,
+    });
+
+    // user.create MUST be called on prismaMock (native connection, BYPASSRLS=true)
+    expect(prismaMock.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          email: 'owner@example.test',
+          emailVerified: true,
+        }),
+      }),
+    );
+    // user.create MUST NOT be called inside the withDbContext transaction (texqtic_app role
+    // has no INSERT policy on the users table — would fail with Postgres 42501 in production)
+    expect(txMock.user.create).not.toHaveBeenCalled();
   });
 });

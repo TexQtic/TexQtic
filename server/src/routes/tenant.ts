@@ -6949,6 +6949,24 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       // Hash password
       const passwordHash = await bcrypt.hash(userData.password, 10);
 
+      // G-RLS-USER-CREATE: Create user BEFORE entering withDbContext.
+      // withDbContext calls `SET LOCAL ROLE texqtic_app` (NOBYPASSRLS) at the start of
+      // every transaction. The `users` table has no INSERT policy for texqtic_app,
+      // so any tx.user.create inside withDbContext fails with Postgres 42501
+      // (new row violates row-level security policy for table "users").
+      // Creating the user here — using the native prisma client connection
+      // (postgres role, BYPASSRLS=true) — avoids this restriction.
+      // Pattern mirrors tenantProvision.service.ts Phase 1:
+      //   "texqtic_app cannot INSERT into users (no applicable INSERT policy)"
+      const newUser = await prisma.user.create({
+        data: {
+          email: normalizedUserEmail,
+          passwordHash,
+          emailVerified: true,
+          emailVerifiedAt: new Date(),
+        },
+      });
+
       // Gate D.1: Build db context for invite tenant
       const dbContext: DatabaseContext = {
         orgId: invite.tenantId,
@@ -6974,19 +6992,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
         await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
 
-        // Create or find user
-        let user = await tx.user.findUnique({
-          where: { email: normalizedUserEmail },
-        });
-
-        user ??= await tx.user.create({
-          data: {
-            email: normalizedUserEmail,
-            passwordHash,
-            emailVerified: true,
-            emailVerifiedAt: new Date(),
-          },
-        });
+        // User was created outside this transaction (native postgres connection = BYPASSRLS).
+        // texqtic_app (used by withDbContext) has no INSERT policy on the users table.
+        const user = newUser;
 
         const updatedOrg = await tx.organizations.update({
           where: { id: invite.tenantId },
