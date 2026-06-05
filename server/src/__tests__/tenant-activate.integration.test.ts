@@ -303,6 +303,13 @@ const BASE_ACTIVATE_PAYLOAD = {
   },
 };
 
+const BASE_ACTIVATE_PAYLOAD_NO_REGISTRATION = {
+  ...BASE_ACTIVATE_PAYLOAD,
+  verificationData: {
+    jurisdiction: 'IN-MH',
+  },
+};
+
 async function buildServer(): Promise<FastifyInstance> {
   const app = Fastify({ logger: false });
   await app.register(fastifyJwt, {
@@ -1162,6 +1169,46 @@ describe('FAM-07G — POST /api/tenant/activate: response shape and write verifi
     expect(txMock.organizations.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ status: 'PENDING_VERIFICATION' }),
+      }),
+    );
+  });
+
+  it('T-MISS-05: accepts blank registration number and stores null when omitted by business type', async () => {
+    prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate',
+      payload: BASE_ACTIVATE_PAYLOAD_NO_REGISTRATION,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(txMock.organizations.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          registration_no: null,
+          jurisdiction: 'IN-MH',
+        }),
+      }),
+    );
+  });
+
+  it('T-MISS-06: preserves supplied registration number when present', async () => {
+    prismaMock.invite.findFirst.mockResolvedValueOnce(BASE_INVITE);
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate',
+      payload: BASE_ACTIVATE_PAYLOAD,
+    });
+
+    expect(txMock.organizations.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          registration_no: 'REG-001',
+        }),
       }),
     );
   });

@@ -31,7 +31,7 @@ export interface ScaffoldConsentPayload {
 const CONSENT_SCAFFOLD_PLACEHOLDER_VERSION = 'PENDING_FINAL_LEGAL_PACKAGE';
 const CONSENT_SCAFFOLD_PLACEHOLDER_HASH = 'PENDING_FINAL_LEGAL_PACKAGE';
 const CONSENT_SCAFFOLD_PLACEHOLDER_SOURCE =
-  '/legal/pending-final-legal-package';
+  'https://app.texqtic.com/legal/pending-final-legal-package';
 
 export function buildLegalPendingScaffoldConsent(
   sourceFlow: ScaffoldConsentSourceFlow,

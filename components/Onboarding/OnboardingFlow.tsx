@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TenantType } from '../../types';
-import { ACTIVATION_ERROR_CODES } from '../../services/tenantService';
+import { ACTIVATION_ERROR_CODES, buildLegalPendingScaffoldConsent } from '../../services/tenantService';
 
 const CONSENT_SCAFFOLD_ENABLED = import.meta.env.VITE_FAM07_CONSENT_SCAFFOLD_ENABLED !== 'false';
 
@@ -41,8 +41,8 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
   const next = () => setStep(s => s + 1);
 
   const handleComplete = async () => {
-    if (!formData.registrationNumber.trim() || !formData.jurisdiction.trim()) {
-      setSubmitError('Registration number and jurisdiction are required to submit verification.');
+    if (!formData.jurisdiction.trim()) {
+      setSubmitError('Jurisdiction is required to submit verification.');
       return;
     }
 
@@ -59,21 +59,7 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
       const submissionPayload = {
         ...formData,
         consent: CONSENT_SCAFFOLD_ENABLED
-          ? {
-              agreementType: 'PLATFORM_TERMS',
-              agreementVersion: 'PENDING_FINAL_LEGAL_PACKAGE',
-              agreementHash: 'PENDING_FINAL_LEGAL_PACKAGE',
-              agreementSourceUrl: '/legal/pending-final-legal-package',
-              legalStatus: 'LEGAL_PENDING',
-              sourceFlow: 'ACTIVATE_NEW_USER',
-              accepted: true,
-              acceptedAt: new Date().toISOString(),
-              metadataJson: {
-                scaffoldMode: true,
-                legalCheckpointState: 'LEGAL_PENDING',
-                legalApprovalState: 'NOT_LEGAL_APPROVED',
-              },
-            }
+          ? buildLegalPendingScaffoldConsent('ACTIVATE_NEW_USER')
           : undefined,
       };
 
@@ -279,7 +265,7 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
                   htmlFor="registrationNumber"
                   className="text-[10px] font-bold uppercase text-slate-400 tracking-widest"
                 >
-                  Registration Number
+                  Registration Number (optional)
                 </label>
                 <input
                   id="registrationNumber"
@@ -289,6 +275,9 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="Company registration or incorporation number"
                 />
+                <p className="text-[11px] text-slate-500">
+                  Leave this blank if your business type does not use a registration number.
+                </p>
               </div>
               <div className="space-y-1">
                 <label

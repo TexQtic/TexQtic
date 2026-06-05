@@ -352,7 +352,7 @@ function validateConsentScaffoldPayload(input: {
     return {
       ok: false,
       code: 'CONSENT_METADATA_MISSING',
-      message: 'Consent payload is missing required scaffold metadata.',
+      message: 'Consent payload is missing required scaffold metadata. Include agreementType, agreementVersion, agreementHash, agreementSourceUrl, legalStatus, sourceFlow, accepted, acceptedAt, and scaffold metadataJson.',
       statusCode: 400,
     };
   }
@@ -6880,7 +6880,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           })
           .optional(),
         verificationData: z.object({
-          registrationNumber: z.string().trim().min(1, 'Registration number is required'),
+          registrationNumber: z.string().trim().max(200).optional(),
           jurisdiction: z.string().trim().min(1, 'Jurisdiction is required'),
         }),
         consent: z.unknown().optional(),
@@ -6992,7 +6992,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           where: { id: invite.tenantId },
           data: {
             ...(tenantData?.name?.trim() ? { legal_name: tenantData.name.trim() } : {}),
-            registration_no: verificationData.registrationNumber.trim(),
+            registration_no: verificationData.registrationNumber?.trim() || null,
             jurisdiction: verificationData.jurisdiction.trim(),
             status: 'PENDING_VERIFICATION',
           },

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-04 (FTR-SL-001D COMPLETE. Shraddha Industries publish+reinvite activated in production. POST /publish → 200 B2B_PUBLIC; POST /reinvite → 200 emailDispatched:true; GET /api/public/supplier/shraddha-industries → 200; directory total:2. Final enum: FTR_SL_001D_SHRADDHA_PUBLISH_REINVITE_ACTIVATED. Prior: FTR-SL-001C COMPLETE 2026-06-04.)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-05 (FTR-SL-001D COMPLETE. Shraddha Industries publish+reinvite activated in production. POST /publish → 200 B2B_PUBLIC; POST /reinvite → 200 emailDispatched:true; GET /api/public/supplier/shraddha-industries → 200; directory total:2. FTR-SL-001E invite-acceptance consent scaffold blocker fixed in code/tests: absolute LEGAL_PENDING source URL + optional registration number in activation flow. Live Shraddha acceptance still pending. Final enum: FTR_SL_001D_SHRADDHA_PUBLISH_REINVITE_ACTIVATED. Prior: FTR-SL-001C COMPLETE 2026-06-04.)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a

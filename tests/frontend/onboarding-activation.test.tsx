@@ -72,13 +72,13 @@ function renderAtStep4(props: {
   return container;
 }
 
-/** Fill step-4 required fields and click Submit */
-async function fillAndSubmit() {
+/** Fill step-4 fields and click Submit */
+async function fillAndSubmit(options: { registrationNumber?: string; jurisdiction?: string } = {}) {
   fireEvent.change(screen.getByLabelText(/registration number/i), {
-    target: { value: 'REG-001' },
+    target: { value: options.registrationNumber ?? 'REG-001' },
   });
   fireEvent.change(screen.getByLabelText(/jurisdiction/i), {
-    target: { value: 'India' },
+    target: { value: options.jurisdiction ?? 'India' },
   });
   const consentCheckbox = screen.queryByRole('checkbox');
   if (consentCheckbox && !(consentCheckbox as HTMLInputElement).checked) {
@@ -255,8 +255,22 @@ describe('Validation gate (step 4 required fields)', () => {
 
     // Validation error shown
     expect(
-      screen.getByText(/registration number and jurisdiction are required/i)
+      screen.getByText(/jurisdiction is required/i)
     ).toBeInTheDocument();
+  });
+
+  it('ACT-010B: blank registration number is accepted when jurisdiction is present', async () => {
+    const onComplete = vi.fn().mockResolvedValue(undefined);
+
+    renderAtStep4({ onComplete });
+    await fillAndSubmit({ registrationNumber: '', jurisdiction: 'India' });
+
+    await waitFor(() => {
+      expect(onComplete).toHaveBeenCalledTimes(1);
+    });
+
+    const payload = onComplete.mock.calls[0][0];
+    expect(payload.registrationNumber).toBe('');
   });
 });
 
@@ -310,8 +324,13 @@ describe('FAM-07E3 frontend consent checkpoint scaffold', () => {
       sourceFlow: 'ACTIVATE_NEW_USER',
       agreementVersion: 'PENDING_FINAL_LEGAL_PACKAGE',
       agreementHash: 'PENDING_FINAL_LEGAL_PACKAGE',
-      agreementSourceUrl: '/legal/pending-final-legal-package',
+      agreementSourceUrl: 'https://app.texqtic.com/legal/pending-final-legal-package',
       accepted: true,
+    });
+    expect(payload.consent.metadataJson).toMatchObject({
+      scaffoldMode: true,
+      legalCheckpointState: 'LEGAL_PENDING',
+      legalApprovalState: 'NOT_LEGAL_APPROVED',
     });
     expect(payload.consent.legalStatus).not.toBe('LEGAL_APPROVED');
   });
