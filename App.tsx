@@ -100,6 +100,7 @@ import { PublicIndustryClusterLanding } from './components/Public/PublicIndustry
 import { PublicB2CCategoryPage } from './components/Public/PublicB2CCategoryPage';
 import { PublicInquiryPage } from './components/Public/PublicInquiryPage';
 import { PublicPricingPage } from './components/Public/PublicPricingPage';
+import { PublicRequestAccess } from './components/Public/PublicRequestAccess';
 import {
   LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY,
   REFERENCE_PRODUCT_PREVIEW_LABEL,
@@ -1998,6 +1999,7 @@ type AppState =
   | 'PUBLIC_REFERRAL_LANDING'
   | 'PUBLIC_INQUIRY'
   | 'PUBLIC_PRICING'
+  | 'PUBLIC_REQUEST_ACCESS'
   | 'PUBLIC_NOT_FOUND'
   | 'AUTH'
   | 'FORGOT_PASSWORD'
@@ -2119,6 +2121,14 @@ const resolveInitialAppState = (): AppState => {
       globalThis.window.location.pathname === '/inquiry/'
     ) {
       return 'PUBLIC_INQUIRY';
+    }
+
+    // IMPLEMENT-MAINAPP-TIER0-REQUEST-ACCESS-UI-01: Tier 0 request-access route
+    if (
+      globalThis.window.location.pathname === '/request-access' ||
+      globalThis.window.location.pathname === '/request-access/'
+    ) {
+      return 'PUBLIC_REQUEST_ACCESS';
     }
 
     // FAM-11D: Public pricing / plan comparison page — /pricing
@@ -2289,6 +2299,18 @@ const App: React.FC = () => {
       return (
         new URLSearchParams(globalThis.window.location.search).get('sourceSurface') ?? ''
       );
+    }
+    return '';
+  });
+  // IMPLEMENT-MAINAPP-TIER0-REQUEST-ACCESS-UI-01: referral code for /request-access
+  // Captured from ?ref= or ?referralCode= query param. Validated to safe alphanum pattern.
+  const [publicRequestAccessReferralCodeFromQuery] = useState<string>(() => {
+    if (globalThis.window !== undefined) {
+      const raw =
+        new URLSearchParams(globalThis.window.location.search).get('ref')
+        ?? new URLSearchParams(globalThis.window.location.search).get('referralCode')
+        ?? '';
+      return /^[a-zA-Z0-9_-]{1,80}$/.test(raw) ? raw : '';
     }
     return '';
   });
@@ -3058,6 +3080,10 @@ const App: React.FC = () => {
       return 'Express Interest — TexQtic';
     }
 
+    if (appState === 'PUBLIC_REQUEST_ACCESS') {
+      return 'Request Access — TexQtic';
+    }
+
     if (appState === 'PUBLIC_PRICING') {
       return 'Plans & Pricing — TexQtic';
     }
@@ -3493,6 +3519,29 @@ const App: React.FC = () => {
         twitterCard: 'summary',
         twitterTitle: inquiryTitle,
         twitterDescription: inquiryDescription,
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
+    // IMPLEMENT-MAINAPP-TIER0-REQUEST-ACCESS-UI-01: /request-access SEO
+    if (appState === 'PUBLIC_REQUEST_ACCESS') {
+      const raTitle = 'Request Access — TexQtic';
+      const raDescription =
+        'Apply for early access to TexQtic — the B2B textile commerce platform for suppliers, buyers, and service providers.';
+      applyPublicPageMeta({
+        title: raTitle,
+        description: raDescription,
+        canonical: `${origin}/request-access`,
+        robots: 'index, follow',
+        ogTitle: raTitle,
+        ogDescription: raDescription,
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/request-access`,
+        ogType: 'website',
+        twitterCard: 'summary',
+        twitterTitle: raTitle,
+        twitterDescription: raDescription,
         twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
       });
       return;
@@ -7652,6 +7701,19 @@ const App: React.FC = () => {
             }}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
             onRequestAccess={openSupplierRequestAccess}
+          />
+        );
+      // IMPLEMENT-MAINAPP-TIER0-REQUEST-ACCESS-UI-01: Tier 0 request-access page
+      case 'PUBLIC_REQUEST_ACCESS':
+        return (
+          <PublicRequestAccess
+            nav={{ ...publicNavBase, activeSection: 'home' }}
+            onBack={() => {
+              globalThis.window?.history.replaceState(null, '', '/');
+              setAppState('PUBLIC_ENTRY');
+            }}
+            onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+            referralCode={publicRequestAccessReferralCodeFromQuery || undefined}
           />
         );
       // REFERRAL-005: Public referral join landing — /join/:referral_code
