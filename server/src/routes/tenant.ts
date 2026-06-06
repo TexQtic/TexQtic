@@ -7103,7 +7103,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         });
 
         return { user, membership, updatedOrg };
-      });
+      // FTR-SL-001S: Explicit timeout — Prisma default 5s exceeded by cold-start DB latency (~8–17s observed in production).
+      }, { timeoutMs: 30000, maxWaitMs: 30000 });
 
       const tenant = await resolveTenantSessionIdentity({
         tenantId: invite.tenantId,
