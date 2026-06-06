@@ -7040,13 +7040,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           },
         });
 
-        const updatedTenant = tenantData?.name?.trim()
-          ? await tx.tenant.update({
-              where: { id: invite.tenantId },
-              data: { name: tenantData.name.trim() },
-              select: { name: true },
-            })
-          : null;
+        // Tenant table updates are intentionally not performed inside activation because
+        // `tenants` is RLS update-denied for `texqtic_app` (tenants_deny_all qual=false blocks
+        // all UPDATE ops). Owner profile / name edits must happen through a separate safe route.
 
         await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'tenant', true)`);
         await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'false', true)`);
@@ -7106,7 +7102,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           },
         });
 
-        return { user, membership, updatedOrg, updatedTenant };
+        return { user, membership, updatedOrg };
       });
 
       const tenant = await resolveTenantSessionIdentity({
