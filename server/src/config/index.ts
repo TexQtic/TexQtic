@@ -46,6 +46,12 @@ const envSchema = z.object({
   // Optional for API bootstrap; required only by acquisition provisioning webhook handler.
   ACQUISITION_PROVISIONING_WEBHOOK_SECRET: z.string().min(32).optional(),
 
+  // TIER0-001 — CRM Tier 0 notify client.
+  // Optional for API bootstrap; required at runtime by POST /api/public/tier0/request-access.
+  // Both vars must be set together in all environments where Tier 0 intake is active.
+  CRM_MAINAPP_TIER0_BASE_URL: z.string().url().optional(),
+  CRM_MAINAPP_TIER0_INGESTION_SECRET: z.string().min(32).optional(),
+
   // Feature Flags
   KILL_SWITCH_ALL: z
     .string()

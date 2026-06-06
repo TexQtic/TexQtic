@@ -43,6 +43,7 @@ import {
   type InquiryNotificationContext,
 } from '../services/email/email.service.js';
 import { config } from '../config/index.js';
+import { notifyCrmTier0Capture } from '../services/crmTier0NotifyClient.js';
 
 type PublicEntryKind = 'PLATFORM' | 'TENANT_SUBDOMAIN' | 'TENANT_CUSTOM_DOMAIN';
 type ResolutionSourceType =
@@ -1532,6 +1533,272 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
         message: 'Your inquiry has been received.',
       },
     });
+  });
+
+  // ─── TIER0-001: Tier 0 Request Access — public pre-auth capture ─────────────
+  // POST /api/public/tier0/request-access
+  //
+  // Accepts a Tier 0 request-access form submission from the /request-access UI.
+  //
+  // This endpoint:
+  //   • Validates the payload (Zod), strips PII from notes, normalizes sourceChannel.
+  //   • Generates mainAppTier0RequestId server-side (never accepted from client).
+  //   • Checks honeypot field (h_trap) — silently drops bot submissions.
+  //   • Rejects forbidden cross-system token fields before calling CRM.
+  //   • Calls CRM: POST /api/webhooks/mainapp-tier0-captures (8s timeout).
+  //   • Returns safe ack { requestId, crmReceiptId, status, message } to browser.
+  //
+  // Security:
+  //   • CRM secret (CRM_MAINAPP_TIER0_INGESTION_SECRET) NEVER logged or returned.
+  //   • Email/phone NEVER logged — only mainAppTier0RequestId logged.
+  //   • No account, invite, tenant, membership, or provisioning created here.
+  //   • GSTIN/Udyam NOT collected.
+  //   • Rate limit: max 5 per IP / 15 minutes.
+  //   • Payload size limit: 8 KB.
+  //
+  // Design authority: DESIGN-MAINAPP-TIER0-REQUEST-ACCESS-AND-CRM-NOTIFY-01 (commit a1b6ab34)
+  // CRM receiver: IMPLEMENT-CRM-MAINAPP-TIER0-NOTIFICATION-RECEIVER-01 (CRM commit 64ba995)
+  // Source contract: GOV-CROSSAPP-ACQUISITION-SOURCE-TAGGING-CONTRACT-01 (commit 42f0248c)
+  // ────────────────────────────────────────────────────────────────────────────
+
+  // Canonical source channel values (GOV-CROSSAPP §4.1).
+  const TIER0_CANONICAL_SOURCE_CHANNELS = new Set<string>([
+    'WEB', 'CRM_CAMPAIGN', 'DIRECT_INVITE', 'REFERRAL',
+    'WHATSAPP', 'SOCIAL', 'ASSOCIATION', 'OFFLINE_EVENT',
+    'PARTNER', 'MANUAL', 'CAE_FIELD_AGENT', 'UNKNOWN',
+  ]);
+
+  // Source channel alias map for URL param normalization (DESIGN §12.4).
+  const TIER0_SOURCE_ALIAS_MAP: Record<string, string> = {
+    web: 'WEB',
+    organic: 'WEB',
+    direct: 'DIRECT_INVITE',
+    invite: 'DIRECT_INVITE',
+    referral: 'REFERRAL',
+    qr: 'REFERRAL',
+    qr_card: 'REFERRAL',
+    campaign: 'CRM_CAMPAIGN',
+    inbound: 'CRM_CAMPAIGN',
+    camp: 'CRM_CAMPAIGN',
+    unknown: 'UNKNOWN',
+  };
+
+  // Forbidden cross-system fields — rejected before any processing or CRM call.
+  // Mirrors CRM receiver FORBIDDEN_TOP_LEVEL_FIELDS.
+  const TIER0_FORBIDDEN_FIELDS = new Set<string>([
+    'inviteToken', 'mainAppSessionToken', 'sessionToken',
+    'authToken', 'accessToken', 'refreshToken', 'idToken',
+    'privateInviteUrl', 'inviteUrl', 'token', 'tokenHash',
+    'mainAppTier0RequestId', // server-generated; client must not inject
+  ]);
+
+  // PII sanitization patterns for notes field (matches inquiry endpoint pattern).
+  const TIER0_HTML_TAG_PATTERN = /<[^>]*>/g;
+  const TIER0_EMAIL_PATTERN = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/;
+  const TIER0_PHONE_PATTERN = /(?:\+?\d{1,3}[.\-]?)?\(?\d{3}\)?[.\-]\d{3}[.\-]\d{4}|\b\d{10,11}\b/;
+  const TIER0_URL_PATTERN = /https?:\/\/[^\s]+/g;
+
+  // Zod body schema. mainAppTier0RequestId excluded — server-generated only.
+  // h_trap included so Zod strips rather than trips on it; honeypot check is manual.
+  const tier0RequestBodySchema = z.object({
+    roleIntent: z.enum(['supplier', 'buyer', 'service_provider', 'unknown']),
+    name: z.string().min(1).max(200),
+    email: z.string().email().optional(),
+    phone: z.string().min(7).max(20).optional(),
+    firstTouchTimestamp: z.string().datetime(),
+    sourceChannel: z.string().max(100).optional(),
+    companyName: z.string().min(1).max(200).optional(),
+    city: z.string().min(1).max(100).optional(),
+    state: z.string().min(1).max(100).optional(),
+    campaignId: z.string().max(200).optional(),
+    acquisitionContext: z.string().max(200).optional(),
+    referrerUrl: z.string().max(500).optional(),
+    utmSource: z.string().max(200).optional(),
+    utmMedium: z.string().max(200).optional(),
+    utmCampaign: z.string().max(200).optional(),
+    landingPage: z.string().max(500).optional(),
+    consentToContact: z.boolean().optional(),
+    referralCode: z.string().max(80).optional(),
+    productCategoryInterest: z.string().max(100).optional(),
+    notes: z.string().max(200).optional(),
+    h_trap: z.string().optional(), // honeypot — not forwarded to CRM
+  }).refine(
+    data => data.email !== undefined || data.phone !== undefined,
+    { message: 'At least one of email or phone must be provided', path: ['email'] },
+  );
+
+  function normalizeTier0SourceChannel(raw: string | undefined): string {
+    if (!raw) return 'WEB';
+    const upper = raw.toUpperCase();
+    if (TIER0_CANONICAL_SOURCE_CHANNELS.has(upper)) return upper;
+    const alias = TIER0_SOURCE_ALIAS_MAP[raw.toLowerCase()];
+    if (alias) return alias;
+    return 'UNKNOWN';
+  }
+
+  fastify.post('/tier0/request-access', {
+    config: {
+      rateLimit: { max: 5, timeWindow: '15 minutes' },
+    },
+    bodyLimit: 8 * 1024, // 8 KB
+  }, async (request, reply) => {
+    // ── 1. Env config guard ──────────────────────────────────────────────────
+    const crmBaseUrl = config.CRM_MAINAPP_TIER0_BASE_URL;
+    const crmSecret = config.CRM_MAINAPP_TIER0_INGESTION_SECRET;
+    if (!crmBaseUrl || !crmSecret) {
+      fastify.log.error('[tier0] CRM env not configured (CRM_MAINAPP_TIER0_BASE_URL or CRM_MAINAPP_TIER0_INGESTION_SECRET missing)');
+      return sendError(reply, 'SERVICE_UNAVAILABLE', 'Service temporarily unavailable.', 503);
+    }
+
+    // ── 2. Forbidden field check (raw body, before Zod) ──────────────────────
+    const rawBody = request.body as Record<string, unknown>;
+    for (const forbiddenField of TIER0_FORBIDDEN_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(rawBody, forbiddenField)) {
+        fastify.log.warn({ field: forbiddenField }, '[tier0] Forbidden field detected in payload');
+        return sendError(reply, 'INVALID_PAYLOAD', 'Invalid submission.', 400);
+      }
+    }
+
+    // ── 3. Honeypot check (bot trap) ─────────────────────────────────────────
+    // If h_trap is present and non-empty, silently return fake success without calling CRM.
+    if (rawBody.h_trap !== undefined && rawBody.h_trap !== '') {
+      fastify.log.warn('[tier0] Honeypot triggered — submission silently discarded');
+      return reply.code(200).send({
+        success: true,
+        data: {
+          requestId: randomUUID(),
+          crmReceiptId: null,
+          status: 'RECEIVED',
+          message: "You're on the list. Our team will be in touch.",
+        },
+      });
+    }
+
+    // ── 4. Zod validation ────────────────────────────────────────────────────
+    const parseResult = tier0RequestBodySchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      return sendValidationError(reply, parseResult.error.errors);
+    }
+
+    const {
+      roleIntent, name, email, phone, firstTouchTimestamp,
+      sourceChannel: rawSourceChannel, companyName, city, state,
+      campaignId, acquisitionContext, referrerUrl, utmSource, utmMedium, utmCampaign,
+      landingPage, consentToContact, referralCode, productCategoryInterest, notes: rawNotes,
+    } = parseResult.data;
+
+    // ── 5. Normalize text fields ─────────────────────────────────────────────
+    const normalizedName = name.trim();
+    const normalizedEmail = email !== undefined ? email.toLowerCase().trim() : undefined;
+    const normalizedCompanyName = companyName !== undefined ? companyName.trim() : undefined;
+
+    // ── 6. Notes sanitization — PII check + HTML strip (matches inquiry pattern) ──
+    let tier0Notes: string | undefined;
+    if (rawNotes !== undefined) {
+      if (TIER0_EMAIL_PATTERN.test(rawNotes) || TIER0_PHONE_PATTERN.test(rawNotes)) {
+        return sendValidationError(reply, [{ message: 'Invalid message content' }]);
+      }
+      const sanitized = rawNotes
+        .replace(TIER0_HTML_TAG_PATTERN, '')
+        .replace(TIER0_URL_PATTERN, '')
+        .trim();
+      tier0Notes = sanitized.length > 0 ? sanitized : undefined;
+    }
+
+    // ── 7. sourceChannel normalization ───────────────────────────────────────
+    const normalizedSourceChannel = normalizeTier0SourceChannel(rawSourceChannel);
+
+    // ── 8. Generate server-side mainAppTier0RequestId ───────────────────────
+    // Client must never inject this value — rejected above via forbidden fields.
+    const mainAppTier0RequestId = randomUUID();
+
+    // ── 9. Build CRM payload ─────────────────────────────────────────────────
+    // Only safe Tier 0 fields forwarded. Forbidden fields must not appear here.
+    const crmPayload: Record<string, unknown> = {
+      mainAppTier0RequestId,
+      roleIntent,
+      name: normalizedName,
+      sourceChannel: normalizedSourceChannel,
+      firstTouchTimestamp,
+      ...(normalizedEmail !== undefined ? { email: normalizedEmail } : {}),
+      ...(phone !== undefined ? { phone } : {}),
+      ...(normalizedCompanyName !== undefined ? { companyName: normalizedCompanyName } : {}),
+      ...(city !== undefined ? { city } : {}),
+      ...(state !== undefined ? { state } : {}),
+      ...(campaignId !== undefined ? { campaignId } : {}),
+      ...(acquisitionContext !== undefined ? { acquisitionContext } : {}),
+      ...(referrerUrl !== undefined ? { referrerUrl } : {}),
+      ...(utmSource !== undefined ? { utmSource } : {}),
+      ...(utmMedium !== undefined ? { utmMedium } : {}),
+      ...(utmCampaign !== undefined ? { utmCampaign } : {}),
+      ...(landingPage !== undefined ? { landingPage } : {}),
+      ...(consentToContact !== undefined ? { consentToContact } : {}),
+      ...(referralCode !== undefined ? { referralCode } : {}),
+      ...(productCategoryInterest !== undefined ? { productCategoryInterest } : {}),
+      ...(tier0Notes !== undefined ? { notes: tier0Notes } : {}),
+    };
+
+    // ── 10. CRM notify ───────────────────────────────────────────────────────
+    // Log only mainAppTier0RequestId and roleIntent — never email/phone/secret.
+    fastify.log.info(
+      { mainAppTier0RequestId, roleIntent, sourceChannel: normalizedSourceChannel },
+      '[tier0] Calling CRM notify',
+    );
+
+    let crmResult: { status: number; ack: Record<string, unknown> | null };
+    try {
+      crmResult = await notifyCrmTier0Capture(crmBaseUrl, crmSecret, crmPayload);
+    } catch (err: unknown) {
+      fastify.log.warn(
+        { err: err instanceof Error ? err.message : String(err), mainAppTier0RequestId },
+        '[tier0] CRM notify call failed (network/timeout)',
+      );
+      return sendError(reply, 'SERVICE_UNAVAILABLE', "We're having trouble. Please try again in a moment.", 503);
+    }
+
+    // ── 11. CRM response handling ────────────────────────────────────────────
+    const { status: crmStatus, ack } = crmResult;
+
+    if (crmStatus === 201 || crmStatus === 200) {
+      // 201 RECEIVED or 200 DUPLICATE — both treated as success.
+      const intakeStatus = (ack?.intakeStatus as string | undefined) ?? (crmStatus === 200 ? 'DUPLICATE' : 'RECEIVED');
+      const crmReceiptId = (ack?.crmReceiptId as string | undefined) ?? null;
+      fastify.log.info(
+        { mainAppTier0RequestId, intakeStatus },
+        '[tier0] CRM intake success',
+      );
+      return reply.code(201).send({
+        success: true,
+        data: {
+          requestId: mainAppTier0RequestId,
+          crmReceiptId,
+          status: intakeStatus,
+          message: "You're on the list. Our team will be in touch.",
+        },
+      });
+    }
+
+    if (crmStatus === 409) {
+      // DUPLICATE_CONFLICT — non-retryable; no access granted.
+      fastify.log.warn({ mainAppTier0RequestId }, '[tier0] CRM duplicate conflict');
+      return sendError(reply, 'DUPLICATE_CONFLICT', 'A conflict was encountered. Please try again.', 409);
+    }
+
+    if (crmStatus === 400) {
+      // INVALID_PAYLOAD — indicates a code/config bug in Main App (sent bad payload).
+      fastify.log.error({ mainAppTier0RequestId, crmStatus }, '[tier0] CRM rejected payload (INVALID_PAYLOAD) — code or config bug');
+      return sendError(reply, 'INTERNAL_ERROR', 'Something went wrong. Please contact support.', 500);
+    }
+
+    if (crmStatus === 401) {
+      // UNAUTHORIZED — secret mismatch, critical config error. Never expose secret.
+      fastify.log.error({ mainAppTier0RequestId }, '[tier0] CRM auth rejected — critical config error (secret mismatch)');
+      return sendError(reply, 'SERVICE_UNAVAILABLE', 'Service temporarily unavailable.', 503);
+    }
+
+    // Unexpected or 5xx status from CRM.
+    fastify.log.warn({ mainAppTier0RequestId, crmStatus }, '[tier0] CRM returned unexpected/error status');
+    return sendError(reply, 'SERVICE_UNAVAILABLE', "We're having trouble. Please try again in a moment.", 503);
   });
 
 };
