@@ -73,7 +73,7 @@ fam07_hold_preservation: >
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
 next_candidate_unit: FTR-B2C-005B-SUPPLIER-INQUIRY-NOTIFICATION-PRODUCTION-RUNTIME-VERIFY-001
-next_candidate_unit_status: BLOCKED_PENDING_PARESH_AUTHORIZATION
+next_candidate_unit_status: ELIGIBLE_TO_OPEN_PENDING_PARESH_AUTHORIZATION
 next_candidate_unit_date_installed: "2026-06-04"
 next_candidate_unit_note: >
   FTR-SL-001D COMPLETE — publish+reinvite activated for shraddha-industries.
@@ -82,12 +82,13 @@ next_candidate_unit_note: >
   Gate progress:
   (1) POST /publish called — shraddha-industries now B2B_PUBLIC (2026-06-04). DONE.
   (2) POST /reinvite called — fresh invite dispatched to shraddhaind@gmail.com (expires 2026-06-11). DONE.
-  (3) Shraddha accepts invite → user created → OWNER membership → GATE-SL-01 fully MET. PENDING.
+  (3) Shraddha accepts invite → OWNER membership created. DONE (2026-06-06 05:31:09Z). Membership id=9307c62c-9425-48c9-a9f5-eac1735779b5, role=OWNER, email=shraddhaind@gmail.com. ✅
+  NOTE: Activation set org.status=PENDING_VERIFICATION (expected). FTR-SL-001U applied control-plane approval → VERIFICATION_APPROVED. Public profile 200 restored (2026-06-06).
   Remaining for FTR-B2C-005B (requires Paresh authorization):
   (4) Paresh written authorization to run a live test inquiry in production.
   (5) Observability source confirmed: Postmark delivery log or Paresh inbox at supplier email.
   (6) Non-reclassification policy: test inquiry will not be actioned as a real lead.
-  Status: BLOCKED_PENDING_SHRADDHA_INVITE_ACCEPTANCE (+ PARESH_AUTHORIZATION for steps 4-6).
+  Status: ELIGIBLE_TO_OPEN_PENDING_PARESH_AUTHORIZATION (steps 4-6 only remain; all technical gates MET).
 prior_next_candidate_unit: FTR-SL-001C-CONTROL-PLANE-SUPPLIER-PUBLISH-AND-REINVITE-API-001
 prior_next_candidate_unit_status: COMPLETE (2026-06-04)
 prior_next_candidate_unit: FTR-B2C-005-SUPPLIER-INQUIRY-NOTIFICATION-PRODUCTION-VERIFICATION-001
