@@ -433,6 +433,61 @@ Main App requirements for onboarding are now documented with sufficient clarity 
 
 ---
 
+## 28. Truth Sync Note — Tier 0 Request Access Cutover (2026-06-06)
+
+**TRUTH SYNC NOTE** — added post-implementation by unit `VERIFY-TLRH-TIER0-REQUEST-ACCESS-CYCLE-CLOSE-01`.
+
+The findings recorded in §11, §12, §13, §20, and §26 were correct at the time this document was authored. The following implementation chain has since been completed and production-verified. This section records the truth sync only — no decisions in this document are revoked or superseded.
+
+### What Changed (post-authoring)
+
+| Finding (as written) | Truth at Cycle Close (2026-06-06) |
+|---|---|
+| §11: `Request-access (Main App tier 0 surface) \| App.tsx \| MISSING from Main App — currently on https://texqtic.com/request-access` | **IMPLEMENTED**: `components/Public/PublicRequestAccess.tsx` implements `/request-access` on `app.texqtic.com`. `SUPPLIER_REQUEST_ACCESS_URL = '/request-access'` in `App.tsx` (was `'https://texqtic.com/request-access'`). 18 downstream usages confirmed routing to internal SPA path. |
+| §11 Friction Point 1: "A web-origin visitor who clicks Request Access is redirected to `https://texqtic.com/request-access`" | **RESOLVED**: Visitor is now directed to `https://app.texqtic.com/request-access` (internal SPA). No external marketing site redirect. |
+| §12: `Web-Direct Gap — There is NO app.texqtic.com route for Tier 0 lite access creation` | **RESOLVED**: `https://app.texqtic.com/request-access` returns HTTP 200. Form collects name, email, phone, company, city, state, message, and role intent. |
+| §12: `SUPPLIER_REQUEST_ACCESS_URL = 'https://texqtic.com/request-access'` | **UPDATED**: `SUPPLIER_REQUEST_ACCESS_URL = '/request-access'` (commit `901749a8`). |
+| §13: `Tier 0 — Claimed Identity / Lite Access \| MISSING — no lite-access surface; PUBLIC_ENTRY redirects to marketing` | **PARTIALLY IMPLEMENTED**: Capture-only surface live. No local account/tenant created. Lead relayed to CRM `marketing.lead_submissions`. `form_name='Main App Tier 0'`, `source_channel='Website Form'`. Full Tier 0 model (local storage, CRM automation, account conversion) still deferred — see §16 FTR-ACQ register. |
+| §20: `Supplier from website \| Soft-Launch Status: PARTIAL — invite path works; Tier 0 MISSING` | **UPDATED**: Soft-Launch Status → `PARTIAL_ADVANCING` — invite path works (unchanged); Tier 0 capture surface IMPLEMENTED (commit `2f1bfd21` + `901749a8`). CRM-to-Main-App automated provisioning still MISSING (FTR-ACQ-005). |
+| §22 Recommendation 1: `Main App captures Tier 0 — MISSING` | **IMPLEMENTED** (capture-only): `POST /api/public/tier0/request-access` relays to CRM immediately on form submission. CRM qualification and provisioning chain unchanged. |
+| §26 Rationale §1: `Main App has no Tier 0 surface` | **RESOLVED**: `https://app.texqtic.com/request-access` is live. |
+
+### Verified Final User Path (PRODUCTION_VERIFIED)
+
+```
+Marketing Website CTA or direct /request-access visit
+→ https://app.texqtic.com/request-access (HTTP 200, no auth required)
+→ form submit → POST /api/public/tier0/request-access
+→ HTTP 201 { success: true, data: { requestId, crmReceiptId, status, message } }
+→ CRM marketing.lead_submissions (DB row confirmed: requestId=8201d90b, crmReceiptId=8f3b18d7)
+→ CRM qualification / follow-up (unchanged — operator responsibility)
+→ CRM provisioning → invite → activation (unchanged — invite path still required)
+```
+
+### Implementation Chain (Main App repo)
+
+| Commit | Description |
+|---|---|
+| `a060febb` | feat: Tier 0 Request Access API (`server/src/routes/public.ts`) |
+| `2f1bfd21` | feat: Tier 0 Request Access UI (`components/Public/PublicRequestAccess.tsx`, `services/tier0Service.ts`, App.tsx state machine) — 20/20 tests PASS |
+| `901749a8` | fix: route public request access CTAs to app page (4 CTA locations updated; 8/8 source-level CTA tests PASS) |
+
+### Architecture Decision Locked
+
+- `texqtic.com` = marketing / credibility / SEO / conversion website
+- `app.texqtic.com` = application AND public-safe platform surface (including public request-access intake)
+- Marketing Website explains and routes; Main App owns the canonical request-access surface
+- CRM remains the persistent Tier 0 receiver (`marketing.lead_submissions`, `form_name='Main App Tier 0'`)
+- Tier 0 is ungated: no GSTIN, no Udyam, no payment, no legal gate at capture point
+- GSTIN transactional gate (FD-TEXQTIC-ONBOARDING-AUTH-001.md) applies before any transactional access — UNCHANGED
+
+### Open Backlog Items
+
+See `governance/launch-readiness/FUTURE-TODO-REGISTER.md` §16 (FTR-ACQ-001 through FTR-ACQ-007) for the full open backlog from the cutover cycle.
+
+**Closure enum:** `VERIFY_TLRH_TIER0_REQUEST_ACCESS_CYCLE_CLOSE_COMPLETE`
+
+
 ## 28. Recommended Next Prompt/Unit
 
 **Draft next:**
