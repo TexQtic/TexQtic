@@ -58,9 +58,10 @@ export interface Tier0RequestResponse {
 export async function submitTier0RequestAccess(
   params: Tier0RequestPayload,
 ): Promise<Tier0RequestResponse> {
-  const result = await post<{ success: boolean; data: Tier0RequestResponse }>(
+  // apiClient.apiRequest already unwraps the { success: true, data: {...} } envelope,
+  // returning data.data directly. Type as Tier0RequestResponse to avoid a double-unwrap.
+  return post<Tier0RequestResponse>(
     '/api/public/tier0/request-access',
     params,
   );
-  return result.data;
 }

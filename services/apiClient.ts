@@ -305,6 +305,11 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
   // redirect loop. Skip Authorization + skip the redirect 401 handler for these routes.
   const isAuthRoute = endpoint.includes('/api/auth/');
 
+  // Public endpoints are intentionally unauthenticated. Attaching an admin or tenant
+  // JWT from an existing browser session can trigger the realm/auth guard on a public
+  // route and cause 401/403 failures for authenticated testers and admin users.
+  const isPublicRoute = endpoint.includes('/api/public/');
+
   const requestHasBody = options.body !== undefined;
 
   // Build headers
@@ -325,8 +330,8 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     headers['Content-Type'] = 'application/json';
   }
 
-  // Attach JWT only for non-auth routes
-  if (token && !isAuthRoute) {
+  // Attach JWT only for protected (non-auth, non-public) routes
+  if (token && !isAuthRoute && !isPublicRoute) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
@@ -335,8 +340,9 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
       url,
       method: options.method || 'GET',
       isAuthRoute,
+      isPublicRoute,
       hasStoredToken: !!token,
-      attachedAuth: !!token && !isAuthRoute,
+      attachedAuth: !!token && !isAuthRoute && !isPublicRoute,
       storedRealm: localStorage.getItem('texqtic_auth_realm'),
     });
   }
