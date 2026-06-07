@@ -62,12 +62,27 @@ describe('D17-S — Static: rate-limit registration + route config', () => {
     expect(src).toMatch(/timeWindow\s*:\s*['"]15 minutes['"]/);
   });
 
-  it("D17-S05 — errorResponseBuilder returns { error: 'rate_limited' }", () => {
-    expect(src).toMatch(/error\s*:\s*['"]rate_limited['"]/);
+  it('D17-S05 — DPP errorResponseBuilder uses Object.assign to return an Error (not a plain object)', () => {
+    // FIX-MAINAPP-DPP-RATELIMIT-STATUS-CODE-01: @fastify/rate-limit v10 throws the
+    // errorResponseBuilder result. A plain object has no statusCode, causing the global
+    // error handler to default to HTTP 500. The builder must return an Error with statusCode.
+    const dppRateLimitBlock = src.slice(
+      src.indexOf('// GET /api/public/dpp/:publicPassportId — rate-limited'),
+      src.indexOf("fastify.get('/dpp/:publicPassportId'"),
+    );
+    expect(dppRateLimitBlock).toMatch(/Object\.assign\s*\(\s*new Error/);
+    expect(dppRateLimitBlock).toMatch(/context\.statusCode/);
+    expect(dppRateLimitBlock).toMatch(/RATE_LIMITED/);
   });
 
-  it('D17-S06 — errorResponseBuilder returns retryAfter derived from context.ttl', () => {
-    expect(src).toMatch(/retryAfter\s*:\s*Math\.ceil\s*\(\s*context\.ttl\s*\/\s*1000\s*\)/);
+  it('D17-S06 — DPP errorResponseBuilder does NOT return a plain retryAfter object (old 500-causing pattern removed)', () => {
+    const dppRateLimitBlock = src.slice(
+      src.indexOf('// GET /api/public/dpp/:publicPassportId — rate-limited'),
+      src.indexOf("fastify.get('/dpp/:publicPassportId'"),
+    );
+    // The old pattern { error: 'rate_limited', retryAfter: ... } must be gone
+    expect(dppRateLimitBlock).not.toMatch(/error\s*:\s*['"]rate_limited['"]/);
+    expect(dppRateLimitBlock).not.toMatch(/retryAfter\s*:\s*Math\.ceil/);
   });
 });
 

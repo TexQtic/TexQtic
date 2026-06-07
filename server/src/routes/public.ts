@@ -1128,12 +1128,15 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
   }
 
   // GET /api/public/dpp/:publicPassportId — rate-limited (max 100 req/15 min per IP)
+  // Return a proper Error so the global setErrorHandler forwards statusCode 429.
+  // @fastify/rate-limit v10 throws the errorResponseBuilder result; a plain object
+  // has no statusCode, which causes the error handler to default to 500.
   await fastify.register(fastifyRateLimit, {
     global: false,
-    errorResponseBuilder: (_req, context) => ({
-      error: 'rate_limited',
-      retryAfter: Math.ceil(context.ttl / 1000),
-    }),
+    errorResponseBuilder: (_req, context) => Object.assign(
+      new Error('Too many requests. Please wait and try again.'),
+      { statusCode: context.statusCode, code: 'RATE_LIMITED' },
+    ),
   });
 
   fastify.get('/dpp/:publicPassportId', {
