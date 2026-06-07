@@ -1638,7 +1638,17 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
 
   fastify.post('/tier0/request-access', {
     config: {
-      rateLimit: { max: 5, timeWindow: '15 minutes' },
+      rateLimit: {
+        max: 5,
+        timeWindow: '15 minutes',
+        // Return a proper Error so the global setErrorHandler forwards statusCode 429.
+        // @fastify/rate-limit v10 throws the errorResponseBuilder result; a plain object
+        // has no statusCode, which causes the error handler to default to 500.
+        errorResponseBuilder: (_req, context) => Object.assign(
+          new Error('Too many requests. Please wait and try again.'),
+          { statusCode: context.statusCode, code: 'RATE_LIMITED' },
+        ),
+      },
     },
     bodyLimit: 8 * 1024, // 8 KB
   }, async (request, reply) => {

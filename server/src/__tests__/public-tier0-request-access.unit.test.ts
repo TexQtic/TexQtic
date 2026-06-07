@@ -26,6 +26,15 @@
  *   TIR-018: buyer roleIntent accepted at Tier 0
  *   TIR-019: missing roleIntent → 400 validation error
  *   TIR-020: notes PII (email pattern) rejected → 400 validation error
+ *
+ * Rate-limit tests (FIX-MAINAPP-TIER0-RATELIMIT-STATUS-CODE-01):
+ *   TIR-021 (static): config.rateLimit has errorResponseBuilder on tier0 route
+ *   TIR-022 (static): errorResponseBuilder uses context.statusCode (returns 429-bearing Error)
+ *   TIR-023: 6th identical request in same window → HTTP 429
+ *   TIR-024: rate-limited response body has success: false
+ *   TIR-025: rate-limited response body has code: RATE_LIMITED
+ *   TIR-026: CRM not called for rate-limited request
+ *   TIR-027: retry-after header present on rate-limited response
  */
 
 // ─── Module mocks (hoisted by Vitest) ────────────────────────────────────────
@@ -81,7 +90,9 @@ vi.mock('./internal/resolveDomain.js', () => ({
 // ─── Imports ─────────────────────────────────────────────────────────────────
 
 import Fastify, { type FastifyInstance } from 'fastify';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import publicRoutes from '../routes/public.js';
 import { config } from '../config/index.js';
@@ -123,6 +134,20 @@ const CRM_200_DUPLICATE_RESPONSE = {
 
 async function buildApp(): Promise<FastifyInstance> {
   const fastify = Fastify({ logger: false });
+  // Mirror the production setErrorHandler from api/index.ts so that thrown errors
+  // (e.g. from @fastify/rate-limit) produce the same { success, error } shape.
+  fastify.setErrorHandler((error, _request, reply) => {
+    const e = error as { statusCode?: number; code?: string; message?: string };
+    const statusCode =
+      typeof e.statusCode === 'number' && isFinite(e.statusCode) ? e.statusCode : 500;
+    reply.code(statusCode).send({
+      success: false,
+      error: {
+        code: e.code || 'INTERNAL_ERROR',
+        message: e.message || 'An unexpected error occurred',
+      },
+    });
+  });
   await fastify.register(publicRoutes, { prefix: PREFIX });
   await fastify.ready();
   return fastify;
@@ -472,6 +497,97 @@ describe('POST /api/public/tier0/request-access', () => {
 
     expect(response.statusCode).toBe(400);
     expect(vi.mocked(notifyCrmTier0Capture)).not.toHaveBeenCalled();
+  });
+
+  // ─── Rate-limit configuration — static source checks ──────────────────────
+  describe('Rate-limit configuration (static)', () => {
+    let src: string;
+
+    beforeAll(() => {
+      src = readFileSync(resolve(process.cwd(), 'src/routes/public.ts'), 'utf-8');
+    });
+
+    it('TIR-021: tier0 route config.rateLimit has errorResponseBuilder', () => {
+      // Anchor on the route declaration (unique in this file) rather than the comment block
+      const routeDecl = src.indexOf("fastify.post('/tier0/request-access'");
+      expect(routeDecl).toBeGreaterThan(-1);
+      const routeConfig = src.slice(routeDecl, routeDecl + 600);
+      expect(routeConfig).toMatch(/errorResponseBuilder/);
+    });
+
+    it('TIR-022: tier0 errorResponseBuilder includes context.statusCode (propagates 429)', () => {
+      const routeDecl = src.indexOf("fastify.post('/tier0/request-access'");
+      const routeConfig = src.slice(routeDecl, routeDecl + 600);
+      expect(routeConfig).toMatch(/context\.statusCode/);
+      expect(routeConfig).toMatch(/RATE_LIMITED/);
+    });
+  });
+
+  // ─── Rate-limit enforcement — live HTTP tests ──────────────────────────────
+  describe('Rate-limit enforcement', () => {
+    let rateLimitApp: FastifyInstance;
+
+    beforeAll(async () => {
+      rateLimitApp = await buildApp();
+      vi.mocked(notifyCrmTier0Capture).mockResolvedValue(CRM_201_RESPONSE);
+      // Exhaust the allowed 5 requests
+      for (let i = 0; i < 5; i++) {
+        await rateLimitApp.inject({
+          method: 'POST',
+          url: ENDPOINT,
+          payload: VALID_MINIMAL_PAYLOAD,
+        });
+      }
+    });
+
+    it('TIR-023: 6th request in same window → HTTP 429', async () => {
+      const res = await rateLimitApp.inject({
+        method: 'POST',
+        url: ENDPOINT,
+        payload: VALID_MINIMAL_PAYLOAD,
+      });
+      expect(res.statusCode).toBe(429);
+    });
+
+    it('TIR-024: rate-limited response body has success: false', async () => {
+      const res = await rateLimitApp.inject({
+        method: 'POST',
+        url: ENDPOINT,
+        payload: VALID_MINIMAL_PAYLOAD,
+      });
+      const body = JSON.parse(res.body) as Record<string, unknown>;
+      expect(body.success).toBe(false);
+    });
+
+    it('TIR-025: rate-limited response body has code RATE_LIMITED', async () => {
+      const res = await rateLimitApp.inject({
+        method: 'POST',
+        url: ENDPOINT,
+        payload: VALID_MINIMAL_PAYLOAD,
+      });
+      const body = JSON.parse(res.body) as { error?: { code?: string } };
+      expect(body.error?.code).toBe('RATE_LIMITED');
+    });
+
+    it('TIR-026: CRM not called for rate-limited request', async () => {
+      vi.clearAllMocks();
+      const res = await rateLimitApp.inject({
+        method: 'POST',
+        url: ENDPOINT,
+        payload: VALID_MINIMAL_PAYLOAD,
+      });
+      expect(res.statusCode).toBe(429);
+      expect(vi.mocked(notifyCrmTier0Capture)).not.toHaveBeenCalled();
+    });
+
+    it('TIR-027: retry-after header present on rate-limited response', async () => {
+      const res = await rateLimitApp.inject({
+        method: 'POST',
+        url: ENDPOINT,
+        payload: VALID_MINIMAL_PAYLOAD,
+      });
+      expect(res.headers['retry-after']).toBeDefined();
+    });
   });
 
 });
