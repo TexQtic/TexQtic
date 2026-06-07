@@ -2017,7 +2017,7 @@ type AppState =
 
 type NeutralEntryPathSelection = 'B2B' | 'B2C' | 'SUPPLIER' | null;
 
-const SUPPLIER_REQUEST_ACCESS_URL = 'https://texqtic.com/request-access';
+const SUPPLIER_REQUEST_ACCESS_URL = '/request-access';
 
 const hasStoredAuthenticatedSession = () => {
   if (globalThis.window === undefined) {
