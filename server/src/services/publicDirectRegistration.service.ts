@@ -43,6 +43,34 @@ export interface DirectRegistrationResult {
   nextStep: 'SIGN_IN_TO_CONTINUE_ONBOARDING';
 }
 
+export interface PersistedDirectRegistrationRoleIntent {
+  roleIntent: DirectRegistrationRoleIntent;
+  source: 'audit_log.public.direct_registration.created';
+}
+
+const DIRECT_ROLE_INTENTS: ReadonlySet<DirectRegistrationRoleIntent> = new Set([
+  'supplier',
+  'buyer',
+  'service_provider',
+]);
+
+function parsePersistedRoleIntent(metadataJson: Prisma.JsonValue | null): DirectRegistrationRoleIntent | null {
+  if (!metadataJson || typeof metadataJson !== 'object' || Array.isArray(metadataJson)) {
+    return null;
+  }
+
+  const roleIntent = (metadataJson as Record<string, unknown>).roleIntent;
+  if (typeof roleIntent !== 'string') {
+    return null;
+  }
+
+  if (!DIRECT_ROLE_INTENTS.has(roleIntent as DirectRegistrationRoleIntent)) {
+    return null;
+  }
+
+  return roleIntent as DirectRegistrationRoleIntent;
+}
+
 function slugify(value: string): string {
   const slug = value
     .toLowerCase()
@@ -203,4 +231,32 @@ export async function registerDirectProvisionalAccount(
   }
 
   throw new Error('Unable to create account');
+}
+
+export async function getPersistedDirectRegistrationRoleIntentByTenantId(
+  tenantId: string,
+): Promise<PersistedDirectRegistrationRoleIntent | null> {
+  const registrationAudit = await prisma.auditLog.findFirst({
+    where: {
+      realm: 'TENANT',
+      tenantId,
+      action: 'public.direct_registration.created',
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+    select: {
+      metadataJson: true,
+    },
+  });
+
+  const roleIntent = parsePersistedRoleIntent(registrationAudit?.metadataJson ?? null);
+  if (!roleIntent) {
+    return null;
+  }
+
+  return {
+    roleIntent,
+    source: 'audit_log.public.direct_registration.created',
+  };
 }

@@ -4,6 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('../db/prisma.js', () => ({
   prisma: {
     $transaction: vi.fn(),
+    auditLog: {
+      findFirst: vi.fn(),
+    },
   },
 }));
 
@@ -46,6 +49,7 @@ vi.mock('./internal/resolveDomain.js', () => ({
 
 import publicRoutes from '../routes/public.js';
 import { prisma } from '../db/prisma.js';
+import { getPersistedDirectRegistrationRoleIntentByTenantId } from '../services/publicDirectRegistration.service.js';
 
 type MockTx = {
   user: {
@@ -168,6 +172,14 @@ describe('POST /api/public/register', () => {
       expect.objectContaining({ data: expect.objectContaining({ status: 'PENDING_VERIFICATION' }) }),
     );
     expect(tx.invite.create).not.toHaveBeenCalled();
+    expect(tx.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: 'public.direct_registration.created',
+          metadataJson: expect.objectContaining({ roleIntent: 'supplier' }),
+        }),
+      }),
+    );
 
     await app.close();
   });
@@ -192,7 +204,14 @@ describe('POST /api/public/register', () => {
     expect(response.statusCode).toBe(201);
     const body = JSON.parse(response.body);
     expect(body.data.roleIntent).toBe('buyer');
-    expect(tx.auditLog.create).toHaveBeenCalled();
+    expect(tx.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: 'public.direct_registration.created',
+          metadataJson: expect.objectContaining({ roleIntent: 'buyer' }),
+        }),
+      }),
+    );
 
     await app.close();
   });
@@ -217,6 +236,14 @@ describe('POST /api/public/register', () => {
     expect(response.statusCode).toBe(201);
     const body = JSON.parse(response.body);
     expect(body.data.roleIntent).toBe('service_provider');
+    expect(tx.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: 'public.direct_registration.created',
+          metadataJson: expect.objectContaining({ roleIntent: 'service_provider' }),
+        }),
+      }),
+    );
 
     await app.close();
   });
@@ -269,5 +296,76 @@ describe('POST /api/public/register', () => {
     expect(body.error.code).toBe('VALIDATION_ERROR');
 
     await app.close();
+  });
+});
+
+describe('getPersistedDirectRegistrationRoleIntentByTenantId', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns persisted supplier role intent from registration audit metadata', async () => {
+    vi.mocked(prisma.auditLog.findFirst).mockResolvedValue({
+      metadataJson: {
+        roleIntent: 'supplier',
+      },
+    } as never);
+
+    const persisted = await getPersistedDirectRegistrationRoleIntentByTenantId('tenant-1');
+
+    expect(prisma.auditLog.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          tenantId: 'tenant-1',
+          action: 'public.direct_registration.created',
+        }),
+      }),
+    );
+    expect(persisted).toEqual({
+      roleIntent: 'supplier',
+      source: 'audit_log.public.direct_registration.created',
+    });
+  });
+
+  it('returns persisted buyer role intent from registration audit metadata', async () => {
+    vi.mocked(prisma.auditLog.findFirst).mockResolvedValue({
+      metadataJson: {
+        roleIntent: 'buyer',
+      },
+    } as never);
+
+    const persisted = await getPersistedDirectRegistrationRoleIntentByTenantId('tenant-2');
+
+    expect(persisted).toEqual({
+      roleIntent: 'buyer',
+      source: 'audit_log.public.direct_registration.created',
+    });
+  });
+
+  it('returns persisted service_provider role intent from registration audit metadata', async () => {
+    vi.mocked(prisma.auditLog.findFirst).mockResolvedValue({
+      metadataJson: {
+        roleIntent: 'service_provider',
+      },
+    } as never);
+
+    const persisted = await getPersistedDirectRegistrationRoleIntentByTenantId('tenant-3');
+
+    expect(persisted).toEqual({
+      roleIntent: 'service_provider',
+      source: 'audit_log.public.direct_registration.created',
+    });
+  });
+
+  it('returns null when registration audit metadata has invalid role intent', async () => {
+    vi.mocked(prisma.auditLog.findFirst).mockResolvedValue({
+      metadataJson: {
+        roleIntent: 'unknown',
+      },
+    } as never);
+
+    const persisted = await getPersistedDirectRegistrationRoleIntentByTenantId('tenant-4');
+
+    expect(persisted).toBeNull();
   });
 });
