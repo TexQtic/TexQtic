@@ -22,6 +22,10 @@ vi.mock('../services/crmTier0NotifyClient.js', () => ({
   notifyCrmTier0Capture: vi.fn(),
 }));
 
+vi.mock('../services/crmLifecycleNotifyClient.js', () => ({
+  notifyRegistrationSubmitted: vi.fn().mockResolvedValue({ dispatch_status: 'NOOP_SKIPPED' }),
+}));
+
 vi.mock('../services/email/email.service.js', () => ({
   sendBuyerInquiryAcknowledgementEmail: vi.fn(),
   sendSupplierInquiryNotificationEmail: vi.fn(),
@@ -50,6 +54,7 @@ vi.mock('./internal/resolveDomain.js', () => ({
 import publicRoutes from '../routes/public.js';
 import { prisma } from '../db/prisma.js';
 import { getPersistedDirectRegistrationRoleIntentByTenantId } from '../services/publicDirectRegistration.service.js';
+import { notifyRegistrationSubmitted } from '../services/crmLifecycleNotifyClient.js';
 
 type MockTx = {
   $executeRawUnsafe: ReturnType<typeof vi.fn>;
@@ -296,6 +301,111 @@ describe('POST /api/public/register', () => {
     const body = JSON.parse(response.body);
     expect(body.success).toBe(false);
     expect(body.error.code).toBe('VALIDATION_ERROR');
+
+    await app.close();
+  });
+
+  it('emits CRM registration lifecycle event after successful registration', async () => {
+    const tx = buildTransactionMock({ tenantSlug: 'crm-test-co' });
+    vi.mocked(prisma.$transaction).mockImplementation(async callback => callback(tx as never));
+
+    const app = await buildApp();
+    const response = await app.inject({
+      method: 'POST',
+      url: ENDPOINT,
+      payload: {
+        roleIntent: 'supplier',
+        name: 'CRM Test User',
+        email: 'crm-test@example.com',
+        password: 'Password123!',
+        companyName: 'CRM Test Co',
+      },
+    });
+
+    expect(response.statusCode).toBe(201);
+    // Allow event loop to drain so fire-and-forget executes
+    await new Promise(resolve => globalThis.setTimeout(resolve, 0));
+    expect(vi.mocked(notifyRegistrationSubmitted)).toHaveBeenCalledOnce();
+
+    await app.close();
+  });
+
+  it('CRM lifecycle event call includes email and role intent, excludes passwordHash', async () => {
+    const tx = buildTransactionMock({ tenantSlug: 'crm-payload-co' });
+    vi.mocked(prisma.$transaction).mockImplementation(async callback => callback(tx as never));
+
+    const app = await buildApp();
+    await app.inject({
+      method: 'POST',
+      url: ENDPOINT,
+      payload: {
+        roleIntent: 'buyer',
+        name: 'Payload User',
+        email: 'PAYLOAD@EXAMPLE.COM',
+        password: 'Password123!',
+        companyName: 'Payload Co',
+      },
+    });
+
+    await new Promise(resolve => globalThis.setTimeout(resolve, 0));
+    expect(vi.mocked(notifyRegistrationSubmitted)).toHaveBeenCalledOnce();
+    const callArg = vi.mocked(notifyRegistrationSubmitted).mock.calls[0][0];
+
+    // Email must be lowercase-normalized
+    expect(callArg.email).toBe('payload@example.com');
+    expect(callArg.roleIntent).toBe('buyer');
+    expect(callArg.orgStatus).toBe('PENDING_VERIFICATION');
+    expect(callArg.externalOrchestrationRef).toBeNull();
+    // passwordHash must never appear
+    expect(callArg).not.toHaveProperty('passwordHash');
+
+    await app.close();
+  });
+
+  it('CRM lifecycle event failure does not fail registration', async () => {
+    const tx = buildTransactionMock({ tenantSlug: 'crm-fail-co' });
+    vi.mocked(prisma.$transaction).mockImplementation(async callback => callback(tx as never));
+    vi.mocked(notifyRegistrationSubmitted).mockRejectedValueOnce(new Error('CRM down'));
+
+    const app = await buildApp();
+    const response = await app.inject({
+      method: 'POST',
+      url: ENDPOINT,
+      payload: {
+        roleIntent: 'supplier',
+        name: 'CRM Fail User',
+        email: 'crmfail@example.com',
+        password: 'Password123!',
+        companyName: 'CRM Fail Co',
+      },
+    });
+
+    // Registration must succeed even when CRM notify throws
+    expect(response.statusCode).toBe(201);
+
+    await app.close();
+  });
+
+  it('CRM lifecycle event is NOT called for duplicate email (registration fails)', async () => {
+    const tx = buildTransactionMock({ existingUserId: 'user-existing', tenantSlug: 'dup-co' });
+    vi.mocked(prisma.$transaction).mockImplementation(async callback => callback(tx as never));
+
+    const app = await buildApp();
+    const response = await app.inject({
+      method: 'POST',
+      url: ENDPOINT,
+      payload: {
+        roleIntent: 'supplier',
+        name: 'Duplicate User',
+        email: 'duplicate@example.com',
+        password: 'Password123!',
+        companyName: 'Duplicate Co',
+      },
+    });
+
+    expect(response.statusCode).toBe(409);
+    await new Promise(resolve => globalThis.setTimeout(resolve, 0));
+    expect(vi.mocked(notifyRegistrationSubmitted)).not.toHaveBeenCalled();
 
     await app.close();
   });

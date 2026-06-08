@@ -8,7 +8,7 @@
  *       (from server/ directory)
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   GstVerificationService,
   GstAlreadyApprovedError,
@@ -18,6 +18,25 @@ import {
   type GstProviderAdapter,
   NoopGstProviderAdapter,
 } from '../services/gstProvider.service.js';
+
+// Mock CRM lifecycle client — noop for all tests unless explicitly configured.
+vi.mock('../services/crmLifecycleNotifyClient.js', () => ({
+  notifyGstSubmitted: vi.fn().mockResolvedValue({ dispatch_status: 'NOOP_SKIPPED' }),
+  notifyGstResubmitted: vi.fn().mockResolvedValue({ dispatch_status: 'NOOP_SKIPPED' }),
+  notifyProviderCheckCompleted: vi.fn().mockResolvedValue({ dispatch_status: 'NOOP_SKIPPED' }),
+  notifyAdminReviewedApproved: vi.fn().mockResolvedValue({ dispatch_status: 'NOOP_SKIPPED' }),
+  notifyAdminReviewedRejected: vi.fn().mockResolvedValue({ dispatch_status: 'NOOP_SKIPPED' }),
+  notifyAdminReviewedNeedsMoreInfo: vi.fn().mockResolvedValue({ dispatch_status: 'NOOP_SKIPPED' }),
+}));
+
+import {
+  notifyGstSubmitted,
+  notifyGstResubmitted,
+  notifyProviderCheckCompleted,
+  notifyAdminReviewedApproved,
+  notifyAdminReviewedRejected,
+  notifyAdminReviewedNeedsMoreInfo,
+} from '../services/crmLifecycleNotifyClient.js';
 
 // ─── Prisma mock ──────────────────────────────────────────────────────────────
 
@@ -875,3 +894,271 @@ describe('GstVerificationService.getVerificationByOrgIdAdmin — provider eviden
   });
 });
 
+// ─── CRM lifecycle events ─────────────────────────────────────────────────────
+
+describe('GstVerificationService — CRM lifecycle events', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // Drain a microtask tick so void fire-and-forget promises resolve before assertions.
+  async function drainTick() {
+    await new Promise(resolve => globalThis.setTimeout(resolve, 0));
+  }
+
+  describe('submitVerification — emits gst.submitted on first submit', () => {
+    it('emits notifyGstSubmitted when no prior record exists', async () => {
+      vi.mocked(notifyGstSubmitted).mockClear();
+      const db = makeDb();
+      const svc = new GstVerificationService(db);
+      db.gst_verifications.findUnique.mockResolvedValueOnce(null); // no prior record
+      db.gst_verifications.upsert.mockResolvedValueOnce(makeTenantDbRecord());
+
+      await svc.submitVerification(ORG_ID, {
+        gstin: VALID_GSTIN,
+        legal_name_on_gst: 'Test Company Pvt Ltd',
+        state_code: '29',
+        registration_type: 'Regular',
+      });
+
+      await drainTick();
+      expect(vi.mocked(notifyGstSubmitted)).toHaveBeenCalledOnce();
+      expect(vi.mocked(notifyGstResubmitted)).not.toHaveBeenCalled();
+    });
+
+    it('GST submit CRM params include org_id, registration_type, state_code, PENDING_VERIFICATION status', async () => {
+      vi.mocked(notifyGstSubmitted).mockClear();
+      const db = makeDb();
+      const svc = new GstVerificationService(db);
+      db.gst_verifications.findUnique.mockResolvedValueOnce(null);
+      db.gst_verifications.upsert.mockResolvedValueOnce(makeTenantDbRecord());
+
+      await svc.submitVerification(ORG_ID, {
+        gstin: VALID_GSTIN,
+        legal_name_on_gst: 'Test Company Pvt Ltd',
+        state_code: '29',
+        registration_type: 'Composition',
+      });
+
+      await drainTick();
+      const callArg = vi.mocked(notifyGstSubmitted).mock.calls[0][0];
+      expect(callArg.orgId).toBe(ORG_ID);
+      expect(callArg.tenantId).toBe(ORG_ID);
+      expect(callArg.registrationType).toBe('Composition');
+      expect(callArg.stateCode).toBe('29');
+      expect(callArg.orgStatus).toBe('PENDING_VERIFICATION');
+    });
+  });
+
+  describe('submitVerification — emits gst.resubmitted after REJECTED or NEEDS_MORE_INFO', () => {
+    it('emits notifyGstResubmitted when prior record is REJECTED', async () => {
+      vi.mocked(notifyGstResubmitted).mockClear();
+      vi.mocked(notifyGstSubmitted).mockClear();
+      const db = makeDb();
+      const svc = new GstVerificationService(db);
+      db.gst_verifications.findUnique.mockResolvedValueOnce(
+        makeTenantDbRecord({ review_outcome: 'REJECTED' }),
+      );
+      db.gst_verifications.upsert.mockResolvedValueOnce(makeTenantDbRecord());
+      db.organizations.updateMany.mockResolvedValueOnce({ count: 1 });
+
+      await svc.submitVerification(ORG_ID, {
+        gstin: VALID_GSTIN,
+        legal_name_on_gst: 'Test Company Pvt Ltd',
+        state_code: '29',
+        registration_type: 'Regular',
+      });
+
+      await drainTick();
+      expect(vi.mocked(notifyGstResubmitted)).toHaveBeenCalledOnce();
+      expect(vi.mocked(notifyGstSubmitted)).not.toHaveBeenCalled();
+    });
+
+    it('emits notifyGstResubmitted when prior record is NEEDS_MORE_INFO', async () => {
+      vi.mocked(notifyGstResubmitted).mockClear();
+      const db = makeDb();
+      const svc = new GstVerificationService(db);
+      db.gst_verifications.findUnique.mockResolvedValueOnce(
+        makeTenantDbRecord({ review_outcome: 'NEEDS_MORE_INFO' }),
+      );
+      db.gst_verifications.upsert.mockResolvedValueOnce(makeTenantDbRecord());
+      db.organizations.updateMany.mockResolvedValueOnce({ count: 1 });
+
+      await svc.submitVerification(ORG_ID, {
+        gstin: VALID_GSTIN,
+        legal_name_on_gst: 'Test Company Pvt Ltd',
+        state_code: '29',
+        registration_type: 'Regular',
+      });
+
+      await drainTick();
+      expect(vi.mocked(notifyGstResubmitted)).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('provider check — emits provider_check.completed event', () => {
+    it('emits notifyProviderCheckCompleted after provider runs', async () => {
+      vi.mocked(notifyProviderCheckCompleted).mockClear();
+
+      const mockAdapter: GstProviderAdapter = {
+        name: 'deepvue',
+        verifyGstin: vi.fn().mockResolvedValue({
+          ok: false,
+          reason: 'PROVIDER_ERROR',
+        }),
+      };
+
+      const db = makeDb();
+      const svc = new GstVerificationService(db, mockAdapter);
+      db.gst_verifications.findUnique
+        .mockResolvedValueOnce(null) // existing check
+        .mockResolvedValueOnce(makeTenantDbRecord({ provider_result: 'PROVIDER_ERROR' })); // after update
+      db.gst_verifications.upsert.mockResolvedValueOnce(makeTenantDbRecord());
+      db.gst_verifications.updateMany.mockResolvedValueOnce({ count: 1 });
+
+      await svc.submitVerification(ORG_ID, {
+        gstin: VALID_GSTIN,
+        legal_name_on_gst: 'Test Company Pvt Ltd',
+        state_code: '29',
+        registration_type: 'Regular',
+      });
+
+      await drainTick();
+      expect(vi.mocked(notifyProviderCheckCompleted)).toHaveBeenCalledOnce();
+      const callArg = vi.mocked(notifyProviderCheckCompleted).mock.calls[0][0];
+      expect(callArg.providerResult).toBe('PROVIDER_ERROR');
+      expect(callArg.providerName).toBe('deepvue');
+      expect(callArg.autoApproved).toBe(false);
+    });
+
+    it('provider check payload does NOT contain provider_request_id', async () => {
+      vi.mocked(notifyProviderCheckCompleted).mockClear();
+      const mockAdapter: GstProviderAdapter = {
+        name: 'noop',
+        verifyGstin: vi.fn().mockResolvedValue({ ok: false, reason: 'TIMEOUT' }),
+      };
+
+      const db = makeDb();
+      const svc = new GstVerificationService(db, mockAdapter);
+      db.gst_verifications.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(makeTenantDbRecord());
+      db.gst_verifications.upsert.mockResolvedValueOnce(makeTenantDbRecord());
+      db.gst_verifications.updateMany.mockResolvedValueOnce({ count: 1 });
+
+      await svc.submitVerification(ORG_ID, {
+        gstin: VALID_GSTIN,
+        legal_name_on_gst: 'Test Company Pvt Ltd',
+        state_code: '29',
+        registration_type: 'Regular',
+      });
+
+      await drainTick();
+      const callArg = vi.mocked(notifyProviderCheckCompleted).mock.calls[0][0];
+      expect(callArg).not.toHaveProperty('provider_request_id');
+      expect(callArg).not.toHaveProperty('provider_verified_at');
+      expect(callArg).not.toHaveProperty('raw_verification_json');
+    });
+
+    it('does NOT emit provider_check event when no provider is configured', async () => {
+      vi.mocked(notifyProviderCheckCompleted).mockClear();
+      const db = makeDb();
+      const svc = new GstVerificationService(db); // no provider
+      db.gst_verifications.findUnique.mockResolvedValueOnce(null);
+      db.gst_verifications.upsert.mockResolvedValueOnce(makeTenantDbRecord());
+
+      await svc.submitVerification(ORG_ID, {
+        gstin: VALID_GSTIN,
+        legal_name_on_gst: 'Test Company',
+        state_code: '29',
+        registration_type: 'Regular',
+      });
+
+      await drainTick();
+      expect(vi.mocked(notifyProviderCheckCompleted)).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('adminReviewVerification — emits correct admin review event', () => {
+    it('emits notifyAdminReviewedApproved on APPROVED outcome', async () => {
+      vi.mocked(notifyAdminReviewedApproved).mockClear();
+      const db = makeDb();
+      const svc = new GstVerificationService(db);
+      db.gst_verifications.findUnique.mockResolvedValueOnce(makeTenantDbRecord({ id: 'rec-1' }));
+      db.gst_verifications.update.mockResolvedValueOnce(
+        makeTenantDbRecord({ review_outcome: 'APPROVED', reviewed_by_admin_id: ADMIN_ID }),
+      );
+      db.organizations.updateMany.mockResolvedValueOnce({ count: 1 });
+
+      await svc.adminReviewVerification(ORG_ID, ADMIN_ID, { review_outcome: 'APPROVED' });
+
+      await drainTick();
+      expect(vi.mocked(notifyAdminReviewedApproved)).toHaveBeenCalledOnce();
+      expect(vi.mocked(notifyAdminReviewedRejected)).not.toHaveBeenCalled();
+      expect(vi.mocked(notifyAdminReviewedNeedsMoreInfo)).not.toHaveBeenCalled();
+    });
+
+    it('emits notifyAdminReviewedRejected on REJECTED outcome', async () => {
+      vi.mocked(notifyAdminReviewedRejected).mockClear();
+      const db = makeDb();
+      const svc = new GstVerificationService(db);
+      db.gst_verifications.findUnique.mockResolvedValueOnce(makeTenantDbRecord({ id: 'rec-2' }));
+      db.gst_verifications.update.mockResolvedValueOnce(
+        makeTenantDbRecord({ review_outcome: 'REJECTED', reviewed_by_admin_id: ADMIN_ID }),
+      );
+      db.organizations.updateMany.mockResolvedValueOnce({ count: 1 });
+
+      await svc.adminReviewVerification(ORG_ID, ADMIN_ID, {
+        review_outcome: 'REJECTED',
+        review_notes: 'Invalid docs',
+      });
+
+      await drainTick();
+      expect(vi.mocked(notifyAdminReviewedRejected)).toHaveBeenCalledOnce();
+      // Raw review_notes must NOT appear in the CRM call args
+      const callArg = vi.mocked(notifyAdminReviewedRejected).mock.calls[0][0];
+      expect(callArg).not.toHaveProperty('review_notes');
+      expect(callArg).not.toHaveProperty('reviewed_by_admin_id');
+    });
+
+    it('emits notifyAdminReviewedNeedsMoreInfo on NEEDS_MORE_INFO outcome', async () => {
+      vi.mocked(notifyAdminReviewedNeedsMoreInfo).mockClear();
+      const db = makeDb();
+      const svc = new GstVerificationService(db);
+      db.gst_verifications.findUnique.mockResolvedValueOnce(makeTenantDbRecord({ id: 'rec-3' }));
+      db.gst_verifications.update.mockResolvedValueOnce(
+        makeTenantDbRecord({ review_outcome: 'NEEDS_MORE_INFO', reviewed_by_admin_id: ADMIN_ID }),
+      );
+      db.organizations.updateMany.mockResolvedValueOnce({ count: 1 });
+
+      await svc.adminReviewVerification(ORG_ID, ADMIN_ID, {
+        review_outcome: 'NEEDS_MORE_INFO',
+        review_notes: 'Please provide GST certificate',
+      });
+
+      await drainTick();
+      expect(vi.mocked(notifyAdminReviewedNeedsMoreInfo)).toHaveBeenCalledOnce();
+      // Raw review_notes must NOT appear in the CRM call args
+      const callArg = vi.mocked(notifyAdminReviewedNeedsMoreInfo).mock.calls[0][0];
+      expect(callArg).not.toHaveProperty('review_notes');
+    });
+
+    it('admin approved CRM call passes org_id and tenant_id', async () => {
+      vi.mocked(notifyAdminReviewedApproved).mockClear();
+      const db = makeDb();
+      const svc = new GstVerificationService(db);
+      db.gst_verifications.findUnique.mockResolvedValueOnce(makeTenantDbRecord({ id: 'rec-4' }));
+      db.gst_verifications.update.mockResolvedValueOnce(
+        makeTenantDbRecord({ review_outcome: 'APPROVED' }),
+      );
+      db.organizations.updateMany.mockResolvedValueOnce({ count: 1 });
+
+      await svc.adminReviewVerification(ORG_ID, ADMIN_ID, { review_outcome: 'APPROVED' });
+
+      await drainTick();
+      const callArg = vi.mocked(notifyAdminReviewedApproved).mock.calls[0][0];
+      expect(callArg.orgId).toBe(ORG_ID);
+      expect(callArg.tenantId).toBe(ORG_ID);
+    });
+  });
+});

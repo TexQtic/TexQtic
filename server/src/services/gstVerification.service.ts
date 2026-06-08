@@ -19,6 +19,14 @@ import {
   nameMatches,
   createGstProvider,
 } from './gstProvider.service.js';
+import {
+  notifyGstSubmitted,
+  notifyGstResubmitted,
+  notifyProviderCheckCompleted,
+  notifyAdminReviewedApproved,
+  notifyAdminReviewedRejected,
+  notifyAdminReviewedNeedsMoreInfo,
+} from './crmLifecycleNotifyClient.js';
 
 // GSTIN pattern: 2-digit state code + 5 uppercase letters + 4 digits +
 //                1 uppercase letter + 1 [1-9A-Z] + literal Z + 1 [0-9A-Z]
@@ -196,10 +204,11 @@ export class GstVerificationService {
 
     // Reset org.status to PENDING_VERIFICATION on resubmission after REJECTED or NEEDS_MORE_INFO.
     // Defence-in-depth: guard is on { in: [...] } so only those exact statuses are touched.
-    if (
+    const isResubmit =
       existing?.review_outcome === TTP_GST_REVIEW_OUTCOME.REJECTED ||
-      existing?.review_outcome === TTP_GST_REVIEW_OUTCOME.NEEDS_MORE_INFO
-    ) {
+      existing?.review_outcome === TTP_GST_REVIEW_OUTCOME.NEEDS_MORE_INFO;
+
+    if (isResubmit) {
       await (this.db as any).organizations.updateMany({
         where: {
           id: orgId,
@@ -209,15 +218,42 @@ export class GstVerificationService {
       });
     }
 
+    // Emit GST submit / resubmit lifecycle event (fire-and-forget).
+    const gstCrmParams = {
+      orgId,
+      tenantId: orgId, // org_id === tenant_id in current schema
+      registrationType: data.registration_type,
+      stateCode: data.state_code,
+      orgStatus: 'PENDING_VERIFICATION',
+    };
+    if (isResubmit) {
+      void notifyGstResubmitted(gstCrmParams).catch(() => undefined);
+    } else {
+      void notifyGstSubmitted(gstCrmParams).catch(() => undefined);
+    }
+
     // Provider check — if configured, runs inline and updates record with evidence.
     // Provider failures do NOT throw; they leave the record in the admin fallback queue.
     if (this.gstProvider) {
-      await this.runProviderCheck(
+      const providerCheckResult = await this.runProviderCheck(
         orgId,
         normalizedGstin,
         data.legal_name_on_gst,
         data.state_code,
       );
+
+      // Emit provider check event if provider ran (fire-and-forget).
+      if (providerCheckResult) {
+        void notifyProviderCheckCompleted({
+          orgId,
+          tenantId: orgId,
+          providerResult: providerCheckResult.provider_result,
+          providerName: providerCheckResult.provider_name,
+          autoApproved: providerCheckResult.auto_approved,
+          orgStatus: providerCheckResult.org_status,
+        }).catch(() => undefined);
+      }
+
       // Return the definitively updated record
       const updatedRecord = await (this.db as any).gst_verifications.findUnique({
         where: { org_id: orgId },
@@ -301,16 +337,34 @@ export class GstVerificationService {
         where: { id: orgId, status: 'PENDING_VERIFICATION' },
         data: { status: 'VERIFICATION_APPROVED' },
       });
+      // Emit admin-approved lifecycle event (fire-and-forget).
+      void notifyAdminReviewedApproved({
+        orgId,
+        tenantId: orgId,
+        reviewNotesCategory: null, // safe default; admin category UI is a future unit
+      }).catch(() => undefined);
     } else if (data.review_outcome === TTP_GST_REVIEW_OUTCOME.REJECTED) {
       await (this.db as any).organizations.updateMany({
         where: { id: orgId, status: 'PENDING_VERIFICATION' },
         data: { status: 'VERIFICATION_REJECTED' },
       });
+      // Emit admin-rejected lifecycle event (fire-and-forget).
+      void notifyAdminReviewedRejected({
+        orgId,
+        tenantId: orgId,
+        rejectionReasonCategory: null, // safe default; admin category UI is a future unit
+      }).catch(() => undefined);
     } else if (data.review_outcome === TTP_GST_REVIEW_OUTCOME.NEEDS_MORE_INFO) {
       await (this.db as any).organizations.updateMany({
         where: { id: orgId, status: 'PENDING_VERIFICATION' },
         data: { status: 'VERIFICATION_NEEDS_MORE_INFO' },
       });
+      // Emit admin-needs-more-info lifecycle event (fire-and-forget).
+      void notifyAdminReviewedNeedsMoreInfo({
+        orgId,
+        tenantId: orgId,
+        reviewNotesCategory: null, // safe default; admin category UI is a future unit
+      }).catch(() => undefined);
     }
 
     return this.toAdminRecord(updated);
@@ -320,6 +374,9 @@ export class GstVerificationService {
 
   /**
    * Run the GST provider verification and write evidence columns.
+   *
+   * Returns provider check result info for the CRM notify caller,
+   * or null if no provider is configured.
    *
    * Auto-approval criteria (all must pass):
    *   C3 — provider reports gstin_status 'Active'
@@ -335,8 +392,13 @@ export class GstVerificationService {
     gstin: string,
     legalNameOnGst: string,
     stateCode: string,
-  ): Promise<void> {
-    if (!this.gstProvider) return;
+  ): Promise<{
+    provider_result: string;
+    provider_name: string;
+    auto_approved: boolean;
+    org_status: string;
+  } | null> {
+    if (!this.gstProvider) return null;
 
     const providerResult = await this.gstProvider.verifyGstin({
       gstin,
@@ -357,7 +419,12 @@ export class GstVerificationService {
           updated_at: now,
         },
       });
-      return;
+      return {
+        provider_result: providerResult.reason,
+        provider_name: this.gstProvider.name,
+        auto_approved: false,
+        org_status: 'PENDING_VERIFICATION',
+      };
     }
 
     const { data } = providerResult;
@@ -429,7 +496,21 @@ export class GstVerificationService {
           data: { status: 'VERIFICATION_APPROVED' },
         });
       }
+
+      return {
+        provider_result: autoProviderResult,
+        provider_name: this.gstProvider.name,
+        auto_approved: true,
+        org_status: approveResult.count > 0 ? 'VERIFICATION_APPROVED' : 'PENDING_VERIFICATION',
+      };
     }
+
+    return {
+      provider_result: autoProviderResult,
+      provider_name: this.gstProvider.name,
+      auto_approved: false,
+      org_status: 'PENDING_VERIFICATION',
+    };
   }
 
   // ─── Private projectors ───────────────────────────────────────────────────

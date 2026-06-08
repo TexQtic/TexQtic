@@ -3,6 +3,10 @@ import { randomUUID } from 'node:crypto';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog } from '../lib/auditLog.js';
+import {
+  notifyRegistrationSubmitted,
+  type CrmAttributionPayload,
+} from './crmLifecycleNotifyClient.js';
 
 export type DirectRegistrationRoleIntent = 'supplier' | 'buyer' | 'service_provider';
 
@@ -128,7 +132,7 @@ export async function registerDirectProvisionalAccount(
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      return await prisma.$transaction(async tx => {
+      const result: DirectRegistrationResult = await prisma.$transaction(async tx => {
         const existingUser = await tx.user.findUnique({
           where: { email: normalizedEmail },
           select: { id: true },
@@ -228,7 +232,32 @@ export async function registerDirectProvisionalAccount(
           nextStep: 'SIGN_IN_TO_CONTINUE_ONBOARDING',
         };
       });
-    } catch (error: unknown) {
+      // Fire-and-forget CRM lifecycle event — must not block or throw into registration.
+      // Email is included only in this event (EMAIL_INCLUDED_IN_V1).
+      // externalOrchestrationRef is always null for direct-registration orgs.
+      const crmAttribution: CrmAttributionPayload | null = payload.attribution
+        ? {
+            source_channel: payload.attribution.sourceChannel ?? null,
+            utm_source: payload.attribution.utmSource ?? null,
+            utm_medium: payload.attribution.utmMedium ?? null,
+            utm_campaign: payload.attribution.utmCampaign ?? null,
+          }
+        : null;
+
+      void notifyRegistrationSubmitted({
+        orgId: result.tenantId,
+        tenantId: result.tenantId,
+        email: normalizedEmail,
+        legalName: normalizedCompanyName,
+        roleIntent: payload.roleIntent,
+        jurisdiction: payload.country?.trim() || 'UNKNOWN',
+        plan: 'FREE',
+        orgStatus: 'PENDING_VERIFICATION',
+        externalOrchestrationRef: null,
+        attribution: crmAttribution,
+      }).catch(() => undefined);
+
+      return result;    } catch (error: unknown) {
       const code = (error as { code?: string }).code;
 
       if (code === 'DUPLICATE_EMAIL') {

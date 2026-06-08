@@ -52,6 +52,13 @@ const envSchema = z.object({
   CRM_MAINAPP_TIER0_BASE_URL: z.string().url().optional(),
   CRM_MAINAPP_TIER0_INGESTION_SECRET: z.string().min(32).optional(),
 
+  // CRM-LIFECYCLE-001 — CRM lifecycle event sync client.
+  // Optional in all environments; when absent, all lifecycle notify calls are noop-skipped.
+  // When CRM_LIFECYCLE_BASE_URL is set, CRM_LIFECYCLE_INGESTION_SECRET must also be set
+  // or dispatch will be skipped with a safe console.warn.
+  CRM_LIFECYCLE_BASE_URL: z.string().url().optional(),
+  CRM_LIFECYCLE_INGESTION_SECRET: z.string().min(32).optional(),
+
   // Feature Flags
   KILL_SWITCH_ALL: z
     .string()
