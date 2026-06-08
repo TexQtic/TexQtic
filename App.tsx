@@ -110,7 +110,7 @@ import {
 } from './components/Public/ReferencePreviewNotice';
 import { getCategoryPageBySlug as getB2CCategoryPageBySlug } from './config/publicB2CCategoryPages';
 import { getPlatformInsights } from './services/aiService';
-import { getGstVerification } from './services/gstVerificationService';
+import { getGstVerification, type GstVerificationRecord } from './services/gstVerificationService';
 import {
   getAggregatorDiscoveryEntries,
   type AggregatorDiscoveryEntry,
@@ -1984,6 +1984,23 @@ export const __B2B_BUYER_CATALOG_PDP_TESTING__ = {
   resolveBuyerCatalogPhase,
 };
 
+// Pure resolver: maps a GstVerificationRecord (or null) to the provisional shell status.
+// Extracted for test coverage — this is the exact same logic as the useEffect setProvisionalGstStatus calls.
+export function resolveProvisionalGstStatus(
+  record: GstVerificationRecord | null,
+): 'not_submitted' | 'pending' | 'rejected' | 'needs_more_info' | 'approved' {
+  if (!record) return 'not_submitted';
+  if (record.review_outcome === 'REJECTED') return 'rejected';
+  if (record.review_outcome === 'NEEDS_MORE_INFO') return 'needs_more_info';
+  if (record.review_outcome === 'APPROVED') return 'approved';
+  return 'pending';
+}
+
+export const __PROVISIONAL_GST_SHELL_TESTING__ = {
+  resolveProvisionalGstStatus,
+  getOnboardingStatusContinuity,
+};
+
 type AppState =
   | 'PUBLIC_ENTRY'
   | 'PUBLIC_B2B_DISCOVERY'
@@ -2459,7 +2476,7 @@ const App: React.FC = () => {
   const [adminView, setAdminView] = useState<AdminView>('TENANTS');
   const [disputeEscalationBridge, setDisputeEscalationBridge] = useState<DisputeEscalationBridgeTarget | null>(null);
   const [financeEscrowBridge, setFinanceEscrowBridge] = useState<FinanceEscrowBridgeTarget | null>(null);
-  const [invoiceApprovalTradeId, setInvoiceApprovalTradeId] = useState<string | null>(null);
+  const [invoiceApprovalTradeId, _setInvoiceApprovalTradeId] = useState<string | null>(null);
   const [ttpEligibilityBridgeOrgId, setTtpEligibilityBridgeOrgId] = useState<string | null>(null);
   const controlPlaneActorLabel = useMemo(() => {
     return formatControlPlaneActorLabel(controlPlaneIdentity);
@@ -2841,18 +2858,7 @@ const App: React.FC = () => {
     setProvisionalGstStatus('loading');
     void getGstVerification()
       .then(res => {
-        const rec = res.gst_verification;
-        if (!rec) {
-          setProvisionalGstStatus('not_submitted');
-        } else if (rec.review_outcome === 'REJECTED') {
-          setProvisionalGstStatus('rejected');
-        } else if (rec.review_outcome === 'NEEDS_MORE_INFO') {
-          setProvisionalGstStatus('needs_more_info');
-        } else if (rec.review_outcome === 'APPROVED') {
-          setProvisionalGstStatus('approved');
-        } else {
-          setProvisionalGstStatus('pending');
-        }
+        setProvisionalGstStatus(resolveProvisionalGstStatus(res.gst_verification));
       })
       .catch(() => {
         setProvisionalGstStatus('not_submitted');
