@@ -187,6 +187,52 @@ describe('GstVerificationService.submitVerification', () => {
     ).resolves.not.toThrow();
   });
 
+  it('resets org.status to PENDING_VERIFICATION on resubmission after REJECTED', async () => {
+    const db = makeDb();
+    const svc = new GstVerificationService(db);
+
+    db.gst_verifications.findUnique.mockResolvedValueOnce({ review_outcome: 'REJECTED' });
+    db.gst_verifications.upsert.mockResolvedValueOnce(makeTenantDbRecord({ review_outcome: null }));
+
+    await svc.submitVerification(ORG_ID, {
+      gstin: VALID_GSTIN,
+      legal_name_on_gst: 'Test Company Pvt Ltd',
+      state_code: '29',
+      registration_type: 'Regular',
+    });
+
+    expect(db.organizations.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: ORG_ID,
+        status: { in: ['VERIFICATION_REJECTED', 'VERIFICATION_NEEDS_MORE_INFO'] },
+      },
+      data: { status: 'PENDING_VERIFICATION' },
+    });
+  });
+
+  it('resets org.status to PENDING_VERIFICATION on resubmission after NEEDS_MORE_INFO', async () => {
+    const db = makeDb();
+    const svc = new GstVerificationService(db);
+
+    db.gst_verifications.findUnique.mockResolvedValueOnce({ review_outcome: 'NEEDS_MORE_INFO' });
+    db.gst_verifications.upsert.mockResolvedValueOnce(makeTenantDbRecord({ review_outcome: null }));
+
+    await svc.submitVerification(ORG_ID, {
+      gstin: VALID_GSTIN,
+      legal_name_on_gst: 'Test Company Pvt Ltd',
+      state_code: '29',
+      registration_type: 'Regular',
+    });
+
+    expect(db.organizations.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: ORG_ID,
+        status: { in: ['VERIFICATION_REJECTED', 'VERIFICATION_NEEDS_MORE_INFO'] },
+      },
+      data: { status: 'PENDING_VERIFICATION' },
+    });
+  });
+
   it('throws GstAlreadyApprovedError when existing record is APPROVED', async () => {
     const db = makeDb();
     const svc = new GstVerificationService(db);
@@ -337,8 +383,10 @@ describe('GstVerificationService.adminReviewVerification', () => {
     expect(result.review_outcome).toBe('REJECTED');
     expect(result.reviewed_by_admin_id).toBe(ADMIN_ID);
     expect(db.gst_verifications.update).toHaveBeenCalledOnce();
-    // organizations.updateMany must NOT be called on REJECTED
-    expect(db.organizations.updateMany).not.toHaveBeenCalled();
+    expect(db.organizations.updateMany).toHaveBeenCalledWith({
+      where: { id: ORG_ID, status: 'PENDING_VERIFICATION' },
+      data: { status: 'VERIFICATION_REJECTED' },
+    });
   });
 
   it('calls organizations.updateMany when outcome is APPROVED', async () => {
@@ -364,7 +412,7 @@ describe('GstVerificationService.adminReviewVerification', () => {
     });
   });
 
-  it('does NOT call organizations.updateMany when outcome is NEEDS_MORE_INFO', async () => {
+  it('calls organizations.updateMany when outcome is NEEDS_MORE_INFO', async () => {
     const db = makeDb();
     const svc = new GstVerificationService(db);
 
@@ -380,7 +428,10 @@ describe('GstVerificationService.adminReviewVerification', () => {
       review_outcome: 'NEEDS_MORE_INFO',
     });
 
-    expect(db.organizations.updateMany).not.toHaveBeenCalled();
+    expect(db.organizations.updateMany).toHaveBeenCalledWith({
+      where: { id: ORG_ID, status: 'PENDING_VERIFICATION' },
+      data: { status: 'VERIFICATION_NEEDS_MORE_INFO' },
+    });
   });
 
   it('throws GstNotFoundError when no record exists', async () => {

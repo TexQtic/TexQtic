@@ -110,6 +110,7 @@ import {
 } from './components/Public/ReferencePreviewNotice';
 import { getCategoryPageBySlug as getB2CCategoryPageBySlug } from './config/publicB2CCategoryPages';
 import { getPlatformInsights } from './services/aiService';
+import { getGstVerification } from './services/gstVerificationService';
 import {
   getAggregatorDiscoveryEntries,
   type AggregatorDiscoveryEntry,
@@ -1231,7 +1232,7 @@ const ONBOARDING_STATUS_CONTINUITY = {
     panelClassName: 'bg-white border border-amber-200',
     badgeClassName: 'text-amber-800 bg-amber-50 border border-amber-200',
     bannerText:
-      'Business verification has been submitted and is pending review. Trade and fund operations remain disabled until approval is recorded.',
+      'Complete business verification to unlock trade and fund operations.',
   },
   VERIFICATION_REJECTED: {
     title: 'Business Verification Not Approved',
@@ -2394,6 +2395,9 @@ const App: React.FC = () => {
   }>({ open: false, tenant: null, reason: '', loading: false, error: null });
 
   const [rfqDialog, setRfqDialog] = useState<BuyerRfqDialogState>(createInitialBuyerRfqDialogState);
+  const [provisionalGstStatus, setProvisionalGstStatus] = useState<
+    'loading' | 'not_submitted' | 'pending' | 'rejected' | 'needs_more_info' | 'approved' | null
+  >(null);
 
   const enterWlAdmin = (view: WLAdminView = 'BRANDING') => {
     const nextSelection = resolveRuntimeLocalRouteSelection(tenantWlAdminRuntimeHandoff?.manifestEntry ?? null, {
@@ -2828,6 +2832,33 @@ const App: React.FC = () => {
   }, [currentTenant?.status]);
   const isVerificationBlockedTenantWorkspace = tenantContentFamily === 'b2b_workspace'
     && currentOnboardingStatusContinuity !== null;
+
+  useEffect(() => {
+    if (!isVerificationBlockedTenantWorkspace || !currentTenantId) {
+      setProvisionalGstStatus(null);
+      return;
+    }
+    setProvisionalGstStatus('loading');
+    void getGstVerification()
+      .then(res => {
+        const rec = res.gst_verification;
+        if (!rec) {
+          setProvisionalGstStatus('not_submitted');
+        } else if (rec.review_outcome === 'REJECTED') {
+          setProvisionalGstStatus('rejected');
+        } else if (rec.review_outcome === 'NEEDS_MORE_INFO') {
+          setProvisionalGstStatus('needs_more_info');
+        } else if (rec.review_outcome === 'APPROVED') {
+          setProvisionalGstStatus('approved');
+        } else {
+          setProvisionalGstStatus('pending');
+        }
+      })
+      .catch(() => {
+        setProvisionalGstStatus('not_submitted');
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVerificationBlockedTenantWorkspace, currentTenantId]);
   const verificationBlockedActionMessage = currentOnboardingStatusContinuity?.detail
     ?? 'Business verification approval is required before this action is available.';
   const tenantDefaultLocalRouteKey = tenantWorkspaceRuntimeHandoff?.defaultLocalRouteKey ?? null;
@@ -5917,10 +5948,74 @@ const App: React.FC = () => {
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                 <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Next step</div>
-                <div className="mt-2 text-lg font-semibold text-slate-900">Wait for TexQtic review</div>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Once verification is approved, the full B2B workspace and activation-dependent routes can open normally.
-                </p>
+                {(provisionalGstStatus === null || provisionalGstStatus === 'loading') && (
+                  <>
+                    <div className="mt-2 text-lg font-semibold text-slate-900">Wait for TexQtic review</div>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      Once verification is approved, the full B2B workspace and activation-dependent routes can open normally.
+                    </p>
+                  </>
+                )}
+                {provisionalGstStatus === 'not_submitted' && (
+                  <>
+                    <div className="mt-2 text-lg font-semibold text-slate-900">Submit business verification</div>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      Submit your GST details to begin business verification and unlock trade operations.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigateTenantManifestRoute('gst_verification')}
+                      className="mt-3 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition"
+                    >
+                      Submit GST Verification
+                    </button>
+                  </>
+                )}
+                {provisionalGstStatus === 'pending' && (
+                  <>
+                    <div className="mt-2 text-lg font-semibold text-slate-900">Verification under review</div>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      GST verification submitted — awaiting TexQtic review.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigateTenantManifestRoute('gst_verification')}
+                      className="mt-3 text-xs font-semibold text-indigo-600 hover:underline"
+                    >
+                      View GST Submission →
+                    </button>
+                  </>
+                )}
+                {provisionalGstStatus === 'rejected' && (
+                  <>
+                    <div className="mt-2 text-lg font-semibold text-slate-900">Resubmit verification</div>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      Your GST submission was not approved. Review the notes and resubmit.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigateTenantManifestRoute('gst_verification')}
+                      className="mt-3 rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-700 transition"
+                    >
+                      Resubmit GST Verification
+                    </button>
+                  </>
+                )}
+                {provisionalGstStatus === 'needs_more_info' && (
+                  <>
+                    <div className="mt-2 text-lg font-semibold text-slate-900">Update your submission</div>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      Additional information is required for your GST submission.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigateTenantManifestRoute('gst_verification')}
+                      className="mt-3 rounded-lg bg-amber-600 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-700 transition"
+                    >
+                      Update GST Submission
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </section>

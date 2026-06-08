@@ -170,6 +170,21 @@ export class GstVerificationService {
       },
     });
 
+    // Reset org.status to PENDING_VERIFICATION on resubmission after REJECTED or NEEDS_MORE_INFO.
+    // Defence-in-depth: guard is on { in: [...] } so only those exact statuses are touched.
+    if (
+      existing?.review_outcome === TTP_GST_REVIEW_OUTCOME.REJECTED ||
+      existing?.review_outcome === TTP_GST_REVIEW_OUTCOME.NEEDS_MORE_INFO
+    ) {
+      await (this.db as any).organizations.updateMany({
+        where: {
+          id: orgId,
+          status: { in: ['VERIFICATION_REJECTED', 'VERIFICATION_NEEDS_MORE_INFO'] },
+        },
+        data: { status: 'PENDING_VERIFICATION' },
+      });
+    }
+
     return this.toTenantRecord(record);
   }
 
@@ -239,15 +254,22 @@ export class GstVerificationService {
       },
     });
 
-    // On APPROVED: conditionally advance org onboarding status.
-    // Only transitions from PENDING_VERIFICATION — no other state is touched.
+    // Conditionally advance org.status based on review outcome.
+    // Each branch only transitions from PENDING_VERIFICATION — no other org.status is touched.
     if (data.review_outcome === TTP_GST_REVIEW_OUTCOME.APPROVED) {
       await (this.db as any).organizations.updateMany({
-        where: {
-          id: orgId,
-          status: 'PENDING_VERIFICATION',
-        },
+        where: { id: orgId, status: 'PENDING_VERIFICATION' },
         data: { status: 'VERIFICATION_APPROVED' },
+      });
+    } else if (data.review_outcome === TTP_GST_REVIEW_OUTCOME.REJECTED) {
+      await (this.db as any).organizations.updateMany({
+        where: { id: orgId, status: 'PENDING_VERIFICATION' },
+        data: { status: 'VERIFICATION_REJECTED' },
+      });
+    } else if (data.review_outcome === TTP_GST_REVIEW_OUTCOME.NEEDS_MORE_INFO) {
+      await (this.db as any).organizations.updateMany({
+        where: { id: orgId, status: 'PENDING_VERIFICATION' },
+        data: { status: 'VERIFICATION_NEEDS_MORE_INFO' },
       });
     }
 
