@@ -542,3 +542,70 @@ DECIDE-CRM-ACQUISITION-QUALIFICATION-AND-MAINAPP-FLOW-01
 *Unit: DECIDE-MAINAPP-SUPPLIER-BUYER-ONBOARDING-REQUIREMENTS-01*
 *Date: 2026-06-06 | Branch: main | Starting HEAD: 8ddbe36e*
 *Mode: TECS Safe Decision / Docs-only / No runtime implementation*
+
+---
+
+## 30. Truth Sync Note — Hybrid Onboarding Direct Registration Launch Readiness (2026-06-08)
+
+**TRUTH SYNC NOTE** — added post-implementation by unit `GOV-SYNC-MAINAPP-HYBRID-ONBOARDING-DIRECT-REGISTRATION-TRUTH-01`.
+
+The findings recorded in §11, §12, §13, §20, and §26 were correct at the time this document was authored. The Tier 0 truth sync in §28 updated the request-access surface. The following additional implementation chain has since been completed and production-verified (2026-06-08). This section records the truth sync only — no decisions in this document are revoked or superseded.
+
+### What Changed (post §28 sync, i.e. since 2026-06-06)
+
+| Finding (as written) | Truth at Direct Registration Launch (2026-06-08) |
+|---|---|
+| §11: `Self-service direct registration (no invite) \| App.tsx, all routes \| MISSING — no self-registration surface` | **IMPLEMENTED**: `/register` route added. `POST /api/public/register` creates `PENDING_VERIFICATION` org + `OWNER` membership without invite. `public.direct_registration.created` audit event with `roleIntent` captured. 500 blocker resolved (commit `da9cbece`). |
+| §12: `There is NO app.texqtic.com route for... Direct self-registration` | **RESOLVED**: `https://app.texqtic.com/register` is live. Direct registration without invite is now the primary online acquisition entry point. |
+| §13: `Tier 0 — Claimed Identity / Lite Access \| MISSING — no lite-access surface` | **SUPERSEDED** by direct registration lane: online users now land directly at `/register` (Tier 1 entry with provisional PENDING_VERIFICATION account). Tier 0 `/request-access` is retained as legacy/high-touch fallback only. |
+| §20: `Supplier from website \| Direct Registration Allowed? \| NOT YET (requires Tier 0 implementation)` | **UPDATED**: Direct registration is now ALLOWED via `/register`. `PENDING_VERIFICATION` org created on submit. Transactional access gated by backend verification guard until GST/KYC approved. |
+| §20: `Supplier from website \| Invite Required? \| YES (current) or NO (future Tier 0)` | **UPDATED**: Invite NOT required. Direct registration creates org + OWNER membership without invite. |
+| §20: `Supplier from website \| Soft-Launch Status \| PARTIAL_ADVANCING` | **UPDATED**: `DIRECT_REGISTRATION_LIVE` — `/register` live, PENDING_VERIFICATION account created, transactional gate enforced backend-side. CRM-to-Main-App automated provisioning seam unchanged (offline/assisted fallback). |
+| §21 Friction Path 3: `Website → Main App full registration → CRM verifies later \| VIABLE` | **CONFIRMED IMPLEMENTED**: This path is now live. Account created immediately, transactional gated backend-side (403 `ORG_VERIFICATION_REQUIRED` on 34 endpoints). |
+| §22: `What is currently MISSING to enable this: Tier 0 surface on app.texqtic.com (no self-service capture form exists)` | **RESOLVED (revised model)**: `/register` is the canonical self-service entry — not `/request-access`. Decision locked in `DECIDE-ONLINE-DIRECT-REGISTRATION-HYBRID-ONBOARDING-MODEL-01.md`. |
+
+### Additional Implementation (post-§28)
+
+| What Implemented | Commit | Description |
+|---|---|---|
+| Direct registration API (`POST /api/public/register`) | `da9cbece` | Creates `PENDING_VERIFICATION` org + `OWNER` membership; `public.direct_registration.created` event; 500 blocker fixed |
+| Public CTA hierarchy — `Join TexQtic → /register` primary | `1ced08c6` | Request Access removed from primary public navbar; Join TexQtic CTA points to `/register` |
+| Request Access public-nav deprecation | `0c44d426` | `/request-access` retained as legacy/high-touch fallback only |
+| Provisional success posture | `254aef60` | SUCCESS stage shows pending-verification messaging + locked-transactions notice; no debug fields |
+| Backend transactional verification gate — main routes | `b30987f9` | `isOrgVerificationBlocked` guard on catalog, cart, checkout, RFQ, trades, escrow, settlement (26 endpoints, 5 files) |
+| Backend transactional verification gate — NC Pool routes | `15548d9a` | Guard extended to pools, poolRfq, poolDemandLines, poolRfqSupplierInvites, poolRfqSupplierQuotes (19 endpoints, 5 files) |
+
+### Backend Verification Guard Summary
+
+- Utility: `server/src/utils/orgVerificationGuard.ts` — `isOrgVerificationBlocked(orgId, reply)`
+- Blocked statuses: `PENDING_VERIFICATION`, `VERIFICATION_REJECTED`, `VERIFICATION_NEEDS_MORE_INFO`
+- Response: HTTP 403, `ORG_VERIFICATION_REQUIRED`
+- Fail-closed: returns `true` (blocks) if org not found or DB error
+- Total endpoints guarded: 34 across 10 route files
+- Unit test coverage: 18/18 tests pass
+
+### Architecture Decision Locked
+
+- Online default = Main App direct registration lane (`/register`)
+- CRM-approved provisioning seam = offline/assisted fallback (unchanged, parked)
+- `VERIFICATION_BLOCKED_VIEWS` + `isVerificationBlockedTenantWorkspace` in App.tsx = frontend gate (unchanged)
+- `isOrgVerificationBlocked` in server routes = backend gate (added 2026-06-08)
+- GSTIN transactional gate (FD-TEXQTIC-ONBOARDING-AUTH-001.md) remains the policy authority — UNCHANGED
+- Decision authority: `DECIDE-ONLINE-DIRECT-REGISTRATION-HYBRID-ONBOARDING-MODEL-01.md`
+
+### Still Open (Not Completed by This Chain)
+
+| Item | Status |
+|---|---|
+| GST/KYC automation with admin fallback (`DESIGN-MAINAPP-GST-KYC-AUTOMATION-HYBRID-WITH-ADMIN-FALLBACK-01`) | OPEN — design unit, not started |
+| CRM lifecycle sync event map from direct registration | OPEN — design unit, not started |
+| Zoho post-activation contact sync design | OPEN — design unit, not started |
+| Marketing Website CTA migration to `/register` | OPEN — Marketing Website repo |
+| Role-aware registration entry intent (Supplier / Buyer / Service Provider) | OPEN — design unit, not started |
+| E2E online direct registration verification (end-to-end path) | OPEN — pending GST/KYC automation |
+| Source channel tagging at account/tenant level | OPEN — no org-level field added |
+| B2C audit | OPEN |
+
+### Closure Enum
+
+`VERIFY_MAINAPP_PENDING_VERIFICATION_BACKEND_STATUS_GATE_PRODUCTION_COMPLETE`

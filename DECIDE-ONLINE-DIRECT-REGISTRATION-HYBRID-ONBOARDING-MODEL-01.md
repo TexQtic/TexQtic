@@ -309,3 +309,78 @@ DECISION_ONLINE_DIRECT_REGISTRATION_HYBRID_MODEL_LOCKED
 
 ## 20. Final Enum
 DECIDE_ONLINE_DIRECT_REGISTRATION_HYBRID_ONBOARDING_MODEL_COMPLETE
+
+---
+
+## 21. Production Verification Record (2026-06-08)
+
+**PRODUCTION VERIFICATION RECORD** — added post-implementation by unit `GOV-SYNC-MAINAPP-HYBRID-ONBOARDING-DIRECT-REGISTRATION-TRUTH-01`.
+
+This section records the production verification truth for the implementation units that executed the §15 implementation sequence. No decisions in this document are revoked or superseded.
+
+### Implementation Sequence Progress (§15)
+
+| Step | Unit | Status | Commit |
+|---|---|---|---|
+| 1 | `DESIGN-MAINAPP-DIRECT-REGISTRATION-ENTRY-AND-ROLE-SELECTION-01` | COMPLETE (design locked in this decision doc) | `32580088` |
+| 2 | `IMPL-MAINAPP-DIRECT-REGISTRATION-PROVISIONAL-ACCOUNT-01` | PRODUCTION_VERIFIED — `POST /api/public/register` live; `da9cbece` | `da9cbece` |
+| — | Public CTA hierarchy — `Join TexQtic → /register` as primary | PRODUCTION_VERIFIED | `1ced08c6` |
+| — | Request Access public-nav deprecation (legacy fallback only) | PRODUCTION_VERIFIED | `0c44d426` |
+| — | Provisional success posture — SUCCESS stage messaging | PRODUCTION_VERIFIED | `254aef60` |
+| — | Backend transactional verification gate — main route files | PRODUCTION_VERIFIED | `b30987f9` |
+| — | Backend transactional verification gate — NC Pool route files | PRODUCTION_VERIFIED | `15548d9a` |
+| 3 | `DESIGN-MAINAPP-GST-KYC-AUTOMATION-HYBRID-WITH-ADMIN-FALLBACK-01` | NOT_STARTED | — |
+| 4 | `IMPL-MAINAPP-GST-KYC-PROVIDER-INTEGRATION-AND-EVIDENCE-CAPTURE-01` | NOT_STARTED | — |
+| 5 | `DESIGN-CRM-LIFECYCLE-SYNC-EVENT-MAP-FROM-MAINAPP-01` | NOT_STARTED | — |
+| 6 | `IMPL-CRM-LIFECYCLE-SYNC-INGESTION-AND-STATUS-MAP-01` | NOT_STARTED | — |
+| 7 | `DESIGN-ZOHO-POST-ACTIVATION-CONTACT-SYNC-CONTRACT-01` | NOT_STARTED | — |
+| 8 | `IMPL-ZOHO-POST-ACTIVATION-SYNC-01` | NOT_STARTED | — |
+| 9 | `IMPL-MARKETING-CTA-MIGRATION-TO-DIRECT-REGISTRATION-01` | NOT_STARTED | — |
+| 10 | `VERIFY-END-TO-END-ONLINE-DIRECT-REGISTRATION-HYBRID-01` | NOT_STARTED (depends on steps 3–9) | — |
+| 11 | `FIX-CRM-MAINAPP-APPROVED-ONBOARDING-PROVISIONING-404-01` | OPEN / PARKED (offline-assisted fallback lane) | — |
+
+### Production Deployment Evidence
+
+| Item | Value |
+|---|---|
+| Production deployment ID | `4973455418` |
+| Deployed SHA | `15548d9a451d74806dbd4269dc38daa780da3654` |
+| Deployment state | `success` |
+| Environment | Production (`app.texqtic.com`) |
+| Completed | `2026-06-08T10:29:07` |
+
+### Backend Verification Gate Summary
+
+| Item | Value |
+|---|---|
+| Guard utility | `server/src/utils/orgVerificationGuard.ts` |
+| Guard function | `isOrgVerificationBlocked(orgId, reply)` |
+| Blocked statuses | `PENDING_VERIFICATION`, `VERIFICATION_REJECTED`, `VERIFICATION_NEEDS_MORE_INFO` |
+| HTTP response | 403, `ORG_VERIFICATION_REQUIRED` |
+| Fail-closed | YES — blocks on missing org or DB error |
+| Total endpoints guarded | 34 across 10 route files |
+| Unit tests | 18/18 PASS (`org-verification-guard.unit.test.ts` + `nc-pool-verification-gate.unit.test.ts`) |
+| Implementation commits | `b30987f9` (main routes) + `15548d9a` (NC Pool routes) |
+
+### §14 Provisional Access Rules — Production Status
+
+| Rule | Status |
+|---|---|
+| `profile completion` — allowed before verification | ALLOWED (no backend gate on profile routes) |
+| `document upload` — allowed before verification | ALLOWED (no backend gate on upload routes) |
+| `RFQ execution and quote action` — blocked | BLOCKED — backend gate on `POST /rfqs`, `POST /rfqs/drafts/*`, `POST /:poolId/rfq/*` |
+| `trade creation/execution` — blocked | BLOCKED — backend gate on `POST /` (trades), `POST /from-rfq` |
+| `escrow and settlement operations` — blocked | BLOCKED — backend gate on escrow and settlement endpoints |
+| `invoice approval/payment-readiness actions` — blocked | BLOCKED — backend gate on catalog, checkout endpoints |
+| `any NC Pool transactional operation` — blocked | BLOCKED — backend gate on pools, pool demand lines, pool RFQ, supplier invites/quotes |
+
+### Hybrid Model Lock Confirmed
+
+- Online default = Main App direct registration lane (`/register`)
+- Provisional org status on registration = `PENDING_VERIFICATION`
+- Frontend gate = `VERIFICATION_BLOCKED_VIEWS` + `isVerificationBlockedTenantWorkspace` in App.tsx (pre-existing, unchanged)
+- Backend gate = `isOrgVerificationBlocked` in server route files (added 2026-06-08)
+- CRM-approved provisioning seam = offline/assisted fallback lane (parked, unchanged)
+- Decision verdict remains: `DECISION_ONLINE_DIRECT_REGISTRATION_HYBRID_MODEL_LOCKED`
+
+**Production Verification Enum:** `VERIFY_MAINAPP_PENDING_VERIFICATION_BACKEND_STATUS_GATE_PRODUCTION_COMPLETE`
