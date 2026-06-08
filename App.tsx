@@ -101,6 +101,7 @@ import { PublicB2CCategoryPage } from './components/Public/PublicB2CCategoryPage
 import { PublicInquiryPage } from './components/Public/PublicInquiryPage';
 import { PublicPricingPage } from './components/Public/PublicPricingPage';
 import { PublicRequestAccess } from './components/Public/PublicRequestAccess';
+import { PublicRegister, type PublicRegisterRoleIntent } from './components/Public/PublicRegister';
 import {
   LIVE_PROFILES_AND_PRODUCTS_REPLACE_COPY,
   REFERENCE_PRODUCT_PREVIEW_LABEL,
@@ -2000,6 +2001,7 @@ type AppState =
   | 'PUBLIC_INQUIRY'
   | 'PUBLIC_PRICING'
   | 'PUBLIC_REQUEST_ACCESS'
+  | 'PUBLIC_REGISTER'
   | 'PUBLIC_NOT_FOUND'
   | 'AUTH'
   | 'FORGOT_PASSWORD'
@@ -2113,6 +2115,15 @@ const resolveInitialAppState = (): AppState => {
     );
     if (referralPathMatch) {
       return 'PUBLIC_REFERRAL_LANDING';
+    }
+
+    // IMPL-MAINAPP-DIRECT-REGISTRATION-ENTRY-ROUTES-AND-ROLE-CHOOSER-01
+    // Direct registration entry: /register plus optional role alias preselectors.
+    const registerPathMatch = /^\/register(?:\/(supplier|buyer|service-provider))?\/?$/.exec(
+      globalThis.window.location.pathname,
+    );
+    if (registerPathMatch) {
+      return 'PUBLIC_REGISTER';
     }
 
     // PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-IMPLEMENTATION-001: /inquiry route
@@ -2313,6 +2324,21 @@ const App: React.FC = () => {
       return /^[a-zA-Z0-9_-]{1,80}$/.test(raw) ? raw : '';
     }
     return '';
+  });
+  // IMPL-MAINAPP-DIRECT-REGISTRATION-ENTRY-ROUTES-AND-ROLE-CHOOSER-01:
+  // Role preselector captured from /register/:role alias path.
+  const [publicRegisterRoleFromPath] = useState<PublicRegisterRoleIntent | null>(() => {
+    if (globalThis.window !== undefined) {
+      const m = /^\/register(?:\/(supplier|buyer|service-provider))?\/?$/.exec(
+        globalThis.window.location.pathname,
+      );
+      const alias = m?.[1];
+      if (alias === 'supplier') return 'supplier';
+      if (alias === 'buyer') return 'buyer';
+      if (alias === 'service-provider') return 'service_provider';
+    }
+
+    return null;
   });
   // B2C-PUBLIC-CATEGORY-STORY-PAGES-IMPLEMENTATION-001:
   // category slug captured from /products/category/:slug pathname on load
@@ -3084,6 +3110,10 @@ const App: React.FC = () => {
       return 'Request Access — TexQtic';
     }
 
+    if (appState === 'PUBLIC_REGISTER') {
+      return 'Join TexQtic — Direct Registration';
+    }
+
     if (appState === 'PUBLIC_PRICING') {
       return 'Plans & Pricing — TexQtic';
     }
@@ -3542,6 +3572,29 @@ const App: React.FC = () => {
         twitterCard: 'summary',
         twitterTitle: raTitle,
         twitterDescription: raDescription,
+        twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+      });
+      return;
+    }
+
+    // IMPL-MAINAPP-DIRECT-REGISTRATION-ENTRY-ROUTES-AND-ROLE-CHOOSER-01: /register SEO
+    if (appState === 'PUBLIC_REGISTER') {
+      const registerTitle = 'Join TexQtic — Direct Registration';
+      const registerDescription =
+        'Start direct registration on TexQtic. Choose your role as Supplier, Buyer, or Service Provider and continue to the next onboarding step.';
+      applyPublicPageMeta({
+        title: registerTitle,
+        description: registerDescription,
+        canonical: `${origin}/register`,
+        robots: 'index, follow',
+        ogTitle: registerTitle,
+        ogDescription: registerDescription,
+        ogImage: PUBLIC_META_OG_FALLBACK_IMAGE,
+        ogUrl: `${origin}/register`,
+        ogType: 'website',
+        twitterCard: 'summary',
+        twitterTitle: registerTitle,
+        twitterDescription: registerDescription,
         twitterImage: PUBLIC_META_OG_FALLBACK_IMAGE,
       });
       return;
@@ -7714,6 +7767,19 @@ const App: React.FC = () => {
             }}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
             referralCode={publicRequestAccessReferralCodeFromQuery || undefined}
+          />
+        );
+      case 'PUBLIC_REGISTER':
+        return (
+          <PublicRegister
+            nav={{ ...publicNavBase, activeSection: 'home' }}
+            onBack={() => {
+              globalThis.window?.history.replaceState(null, '', '/');
+              setAppState('PUBLIC_ENTRY');
+            }}
+            onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+            onRequestAccess={openSupplierRequestAccess}
+            initialRoleIntent={publicRegisterRoleFromPath}
           />
         );
       // REFERRAL-005: Public referral join landing — /join/:referral_code
