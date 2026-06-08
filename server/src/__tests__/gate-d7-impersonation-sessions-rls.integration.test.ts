@@ -53,22 +53,6 @@ const contextAdminA: DatabaseContext = {
   requestId: 'test-req-admin-a',
 };
 
-// Admin B context (control-plane)
-const contextAdminB: DatabaseContext = {
-  orgId: ADMIN_B_ID,
-  actorId: ADMIN_B_ID,
-  realm: 'admin',
-  requestId: 'test-req-admin-b',
-};
-
-// Admin A context (alternate request)
-const contextAdminA2: DatabaseContext = {
-  orgId: ADMIN_A_ID,
-  actorId: ADMIN_A_ID,
-  realm: 'admin',
-  requestId: 'test-req-admin-a2',
-};
-
 // Tenant context (should NOT see impersonation sessions)
 const contextTenant: DatabaseContext = {
   orgId: TENANT_X_ID,
