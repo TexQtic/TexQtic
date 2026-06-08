@@ -5,6 +5,7 @@ import { databaseContextMiddleware } from '../../middleware/database-context.mid
 import { ncPoolSupplierQuoteFeatureGateMiddleware } from '../../middleware/ncPoolSupplierQuoteFeatureGate.middleware.js';
 import { prisma } from '../../db/prisma.js';
 import { sendError, sendSuccess, sendValidationError } from '../../utils/response.js';
+import { isOrgVerificationBlocked } from '../../utils/orgVerificationGuard.js';
 import { StateMachineService } from '../../services/stateMachine.service.js';
 import {
   NetworkPoolRfqService,
@@ -140,6 +141,8 @@ const poolRfqSupplierQuotesRoutes: FastifyPluginAsync = async fastify => {
       if (!orgId) {
         return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
       }
+
+      if (await isOrgVerificationBlocked(orgId, reply)) return reply;
 
       const parsedParams = inviteIdParamSchema.safeParse(request.params);
       if (!parsedParams.success) {

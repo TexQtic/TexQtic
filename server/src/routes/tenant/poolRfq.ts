@@ -23,6 +23,7 @@ import { ncPoolSupplierInviteFeatureGateMiddleware } from '../../middleware/ncPo
 import { ncPoolRfqAwardFeatureGateMiddleware } from '../../middleware/ncPoolRfqAwardFeatureGate.middleware.js';
 import { prisma } from '../../db/prisma.js';
 import { sendError, sendSuccess, sendValidationError } from '../../utils/response.js';
+import { isOrgVerificationBlocked } from '../../utils/orgVerificationGuard.js';
 import { StateMachineService } from '../../services/stateMachine.service.js';
 import {
   NetworkPoolRfqService,
@@ -412,6 +413,8 @@ const poolRfqRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may issue an RFQ', 403);
       }
 
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
       const paramResult = poolParamSchema.safeParse(request.params);
       if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
 
@@ -569,6 +572,8 @@ const poolRfqRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may send supplier invites', 403);
       }
 
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
       const paramResult = rfqParamSchema.safeParse(request.params);
       if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
 
@@ -697,6 +702,8 @@ const poolRfqRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may cancel supplier invites', 403);
       }
 
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
       const paramResult = inviteParamSchema.safeParse(request.params);
       if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
 
@@ -804,6 +811,8 @@ const poolRfqRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may accept quotes', 403);
       }
 
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
       const paramResult = rfqQuoteParamSchema.safeParse(request.params);
       if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
 
@@ -847,6 +856,8 @@ const poolRfqRoutes: FastifyPluginAsync = async fastify => {
       if (!userRole.includes('ADMIN') && userRole !== 'OWNER') {
         return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may reject quotes', 403);
       }
+
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
 
       const paramResult = rfqQuoteParamSchema.safeParse(request.params);
       if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
@@ -904,6 +915,8 @@ const poolRfqRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may request an award', 403);
       }
 
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
       const paramResult = rfqQuoteParamSchema.safeParse(request.params);
       if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
 
@@ -949,6 +962,8 @@ const poolRfqRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may approve an award', 403);
       }
 
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
       const paramResult = approvalParamSchema.safeParse(request.params);
       if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
 
@@ -993,6 +1008,8 @@ const poolRfqRoutes: FastifyPluginAsync = async fastify => {
       if (!userRole.includes('ADMIN') && userRole !== 'OWNER') {
         return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may reject an award', 403);
       }
+
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
 
       const paramResult = approvalParamSchema.safeParse(request.params);
       if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);

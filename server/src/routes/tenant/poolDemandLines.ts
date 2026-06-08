@@ -25,6 +25,7 @@ import { ncPoolFeatureGateMiddleware } from '../../middleware/ncPoolFeatureGate.
 import { ncPoolRfqFeatureGateMiddleware } from '../../middleware/ncPoolRfqFeatureGate.middleware.js';
 import { prisma } from '../../db/prisma.js';
 import { sendError, sendSuccess, sendValidationError } from '../../utils/response.js';
+import { isOrgVerificationBlocked } from '../../utils/orgVerificationGuard.js';
 import {
   NetworkPoolDemandLineService,
   DemandLineNotFoundError,
@@ -270,6 +271,8 @@ const poolDemandLineRoutes: FastifyPluginAsync = async fastify => {
       const dbContext = request.dbContext;
       if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
 
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
       const paramResult = poolParamSchema.safeParse(request.params);
       if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
 
@@ -317,6 +320,8 @@ const poolDemandLineRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'FORBIDDEN', 'Only pool owners and admins may lock demand lines for RFQ', 403);
       }
 
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
       const paramResult = poolParamSchema.safeParse(request.params);
       if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
 
@@ -354,6 +359,8 @@ const poolDemandLineRoutes: FastifyPluginAsync = async fastify => {
       const dbContext = request.dbContext;
       if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
 
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
       const paramResult = poolAndLineParamSchema.safeParse(request.params);
       if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
 
@@ -385,6 +392,8 @@ const poolDemandLineRoutes: FastifyPluginAsync = async fastify => {
     async (request, reply) => {
       const dbContext = request.dbContext;
       if (!dbContext) return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
 
       const paramResult = poolAndLineParamSchema.safeParse(request.params);
       if (!paramResult.success) return sendValidationError(reply, paramResult.error.errors);
