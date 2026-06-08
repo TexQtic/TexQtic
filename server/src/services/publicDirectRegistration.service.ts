@@ -163,10 +163,12 @@ export async function registerDirectProvisionalAccount(
           },
         });
 
-        await tx.organizations.create({
+        // Trigger trg_sync_tenants_to_org (G-015) fires AFTER INSERT on tenants
+        // and pre-creates the organizations row with status='ACTIVE'. Update only
+        // the fields that differ from the trigger defaults for provisional registration.
+        await tx.organizations.update({
+          where: { id: tenant.id },
           data: {
-            id: tenant.id,
-            slug: tenant.slug,
             legal_name: normalizedCompanyName,
             jurisdiction: payload.country?.trim() || 'UNKNOWN',
             org_type: 'B2B',

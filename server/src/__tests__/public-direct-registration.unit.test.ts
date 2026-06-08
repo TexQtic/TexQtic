@@ -63,7 +63,7 @@ type MockTx = {
   };
   organizations: {
     findMany: ReturnType<typeof vi.fn>;
-    create: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
   };
   membership: {
     create: ReturnType<typeof vi.fn>;
@@ -97,7 +97,7 @@ function buildTransactionMock(overrides?: {
     },
     organizations: {
       findMany: vi.fn(async () => [{ slug: tenantSlug }]),
-      create: vi.fn(async () => ({ id: 'tenant-1' })),
+      update: vi.fn(async () => ({ id: 'tenant-1' })),
     },
     membership: {
       create: vi.fn(async () => ({ id: 'membership-1', role: 'OWNER' })),
@@ -170,7 +170,7 @@ describe('POST /api/public/register', () => {
     expect(tx.membership.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ role: 'OWNER' }) }),
     );
-    expect(tx.organizations.create).toHaveBeenCalledWith(
+    expect(tx.organizations.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: 'PENDING_VERIFICATION' }) }),
     );
     expect(tx.invite.create).not.toHaveBeenCalled();
