@@ -27,6 +27,7 @@ import type { PrismaClient, Prisma } from '@prisma/client';
 import { tenantAuthMiddleware } from '../../middleware/auth.js';
 import { databaseContextMiddleware } from '../../middleware/database-context.middleware.js';
 import { sendSuccess, sendError, sendValidationError } from '../../utils/response.js';
+import { isOrgVerificationBlocked } from '../../utils/orgVerificationGuard.js';
 import { withDbContext } from '../../lib/database-context.js';
 import { prisma } from '../../db/prisma.js';
 import { writeAuditLog } from '../../lib/auditLog.js';
@@ -231,6 +232,8 @@ const tenantTradesRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
       }
 
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
       const { userId } = request;
       if (!userId) {
         return sendError(reply, 'UNAUTHORIZED', 'User ID missing', 401);
@@ -307,6 +310,8 @@ const tenantTradesRoutes: FastifyPluginAsync = async fastify => {
       if (!dbContext) {
         return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
       }
+
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
 
       const { userId } = request;
       if (!userId) {
@@ -402,6 +407,8 @@ const tenantTradesRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
       }
 
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
       const { userId } = request;
       if (!userId) {
         return sendError(reply, 'UNAUTHORIZED', 'User ID missing', 401);
@@ -486,6 +493,8 @@ const tenantTradesRoutes: FastifyPluginAsync = async fastify => {
       if (!dbContext) {
         return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
       }
+
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
 
       const { userId } = request;
       if (!userId) {

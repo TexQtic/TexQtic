@@ -68,6 +68,7 @@ import {
   sendNotFound,
   sendUnauthorized,
 } from '../utils/response.js';
+import { isOrgVerificationBlocked } from '../utils/orgVerificationGuard.js';
 import {
   consentAcceptanceSchema,
   type ConsentAcceptance,
@@ -2715,6 +2716,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
       }
 
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
       // Role guard: only OWNER or ADMIN may create catalog items
       if (!['OWNER', 'ADMIN'].includes(userRole ?? '')) {
         return sendError(reply, 'FORBIDDEN', 'Only OWNER or ADMIN can create catalog items', 403);
@@ -2869,6 +2872,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       if (!dbContext) {
         return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
       }
+
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
 
       // Role guard: only OWNER or ADMIN may update catalog items
       if (!['OWNER', 'ADMIN'].includes(userRole ?? '')) {
@@ -3039,6 +3044,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       if (!dbContext) {
         return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
       }
+
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
 
       // Role guard: only OWNER or ADMIN may delete catalog items
       if (!['OWNER', 'ADMIN'].includes(userRole ?? '')) {
@@ -4269,6 +4276,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
     }
 
+    if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
     const result = await withDbContext(prisma, dbContext, async tx => {
       // Find existing active cart (RLS enforces tenant boundary)
       let cart = await tx.cart.findFirst({
@@ -4413,6 +4422,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       if (!dbContext) {
         return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
       }
+
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
 
       const cartOwnerUserId = dbContext.actorId;
 
@@ -5659,6 +5670,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
     }
 
+    if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
     const bodySchema = z.object({
       draftIds: z.array(z.string().uuid()).min(1).max(50),
       idempotencyKey: z.string().trim().min(1).max(120).optional(),
@@ -5934,6 +5947,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
     }
 
+    if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
     const paramsSchema = z.object({ id: z.string().uuid() });
     const paramsResult = paramsSchema.safeParse(request.params);
     if (!paramsResult.success) {
@@ -6182,6 +6197,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
     }
 
+    if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
     const result = await withDbContext(prisma, dbContext, async tx => {
       const rfq = await tx.rfq.create({
         data: {
@@ -6321,6 +6338,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
       }
 
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
       const result = await withDbContext(prisma, dbContext, async tx => {
         // Find cart item (RLS enforces tenant boundary via cart FK)
         const cartItem = await tx.cartItem.findUnique({
@@ -6446,6 +6465,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     if (!dbContext) {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
     }
+
+    if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
 
     const checkoutUserId = dbContext.actorId;
     const t0 = Date.now();
