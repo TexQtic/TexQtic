@@ -25,7 +25,8 @@ export interface PublicNavbarProps {
   readonly onGoInquiry: () => void;
   readonly onGoPricing: () => void;
   readonly onSignIn: () => void;
-  readonly onRequestAccess: () => void;
+  // Legacy/high-touch fallback only — Request Access is no longer a primary public nav CTA.
+  // Primary online acquisition is Join TexQtic -> /register.
   readonly onJoinTexQtic: () => void;
 }
 
@@ -101,7 +102,6 @@ export function PublicNavbar({
   onGoInquiry,
   onGoPricing,
   onSignIn,
-  onRequestAccess,
   onJoinTexQtic,
 }: PublicNavbarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -245,7 +245,7 @@ export function PublicNavbar({
           ))}
         </nav>
 
-        {/* Right cluster: Join TexQtic (lg+) + Sign in + Request Access (xl+) + hamburger (< lg) */}
+        {/* Right cluster: Join TexQtic (lg+) + Sign in + hamburger (< lg) */}
         <div className="flex flex-shrink-0 items-center gap-2">
           <button
             type="button"
@@ -260,13 +260,6 @@ export function PublicNavbar({
             className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
           >
             Sign in
-          </button>
-          <button
-            type="button"
-            onClick={onRequestAccess}
-            className="hidden items-center justify-center rounded-full border border-[#d1dee3] px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036] xl:inline-flex"
-          >
-            Request Access
           </button>
           {/* Hamburger toggle — hidden at lg+ */}
           <button
@@ -365,16 +358,6 @@ export function PublicNavbar({
                 className="inline-flex w-full items-center justify-center rounded-full bg-[#071a2f] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
               >
                 Sign in
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onRequestAccess();
-                  setDrawerOpen(false);
-                }}
-                className="inline-flex w-full items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#2f8094] transition hover:bg-[#eff6f8]"
-              >
-                Request Access
               </button>
             </div>
           </div>

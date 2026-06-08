@@ -6963,7 +6963,8 @@ const App: React.FC = () => {
       onGoInquiry: () => { globalThis.window?.history.replaceState(null, '', '/inquiry'); setAppState('PUBLIC_INQUIRY'); },
       onGoPricing: () => { globalThis.window?.history.replaceState(null, '', '/pricing'); setAppState('PUBLIC_PRICING'); },
       onSignIn: () => openSecondaryAuthenticatedEntry('TENANT'),
-      onRequestAccess: openSupplierRequestAccess,
+      // Legacy/high-touch fallback only — Request Access is no longer a primary public nav CTA.
+      // Primary online acquisition is Join TexQtic -> /register.
       onJoinTexQtic: () => {
         globalThis.window?.history.pushState(null, '', '/register');
         setAppState('PUBLIC_REGISTER');
@@ -7028,13 +7029,6 @@ const App: React.FC = () => {
                         className="inline-flex items-center justify-center rounded-full bg-[#2f8094] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#206b7a]"
                       >
                         Join TexQtic
-                      </button>
-                      <button
-                        type="button"
-                        onClick={openSupplierRequestAccess}
-                        className="inline-flex items-center justify-center rounded-full border border-[#d1dee3] px-4 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-700 transition hover:border-[#2f8094] hover:text-[#0b2238]"
-                      >
-                        Request Access
                       </button>
                     </div>
                   </div>

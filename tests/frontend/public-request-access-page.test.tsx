@@ -59,7 +59,6 @@ const NAV_STUB = {
   onGoInquiry: () => {},
   onGoPricing: () => {},
   onSignIn: () => {},
-  onRequestAccess: () => {},
   onJoinTexQtic: () => {},
 };
 
@@ -81,7 +80,7 @@ function getForm() {
   return screen.getByRole('form', { name: /Request access form/i });
 }
 
-/** Returns the form's submit button (scoped to form to avoid navbar 'Request Access' button). */
+/** Returns the form's submit button (scoped to the form element). */
 function getSubmitBtn(namePattern: RegExp = /Request Access/i) {
   return within(getForm()).getByRole('button', { name: namePattern });
 }

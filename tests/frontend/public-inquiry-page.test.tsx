@@ -55,7 +55,6 @@ const NAV_STUB = {
   onGoAggregator: () => {},
   onGoInquiry: () => {},
   onSignIn: () => {},
-  onRequestAccess: () => {},
   onJoinTexQtic: () => {},
 };
 

@@ -23,7 +23,7 @@ const NAV_STUB = {
   onGoInquiry: () => {},
   onGoPricing: () => {},
   onSignIn: () => {},
-  onRequestAccess: () => {},
+  onJoinTexQtic: () => {},
 };
 
 afterEach(() => {
