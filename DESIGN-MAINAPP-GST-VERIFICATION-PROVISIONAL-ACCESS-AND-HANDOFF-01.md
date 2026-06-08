@@ -60,11 +60,11 @@
 
 | File | Count | Coverage |
 |---|---|---|
-| `server/src/__tests__/gst-verification.service.unit.test.ts` | **25** | validateGstin (10 cases), submitVerification (4 cases), adminReviewVerification (5 cases), getVerification (2 cases), listPending (2 cases), error paths (2 cases) |
+| `server/src/__tests__/gst-verification.service.unit.test.ts` | **27** | validateGstin (10 cases), submitVerification (6 cases), adminReviewVerification (7 cases), getVerification (2 cases), listPending (2 cases) — expanded in commit `56d916f9` |
+| `tests/frontend/provisional-gst-shell.test.ts` | **10** | `resolveProvisionalGstStatus` (5 states), `getOnboardingStatusContinuity` bannerText (3 statuses), null returns (2 cases) — added in commit `0dd94bf1` |
 
-No route-level integration tests for the tenant/control GST endpoints (noted as gap).
-No frontend component tests for `GstVerificationCard`.
-No test for provisional workspace shell GST surfacing.
+No route-level integration tests for the tenant/control GST endpoints (noted as gap — deferred).
+No frontend component tests for `GstVerificationCard` (noted as gap — deferred).
 
 ---
 
@@ -88,11 +88,16 @@ No test for provisional workspace shell GST surfacing.
    └─ getOnboardingStatusContinuity → PENDING_VERIFICATION entry
 
 4. Provisional workspace loads
-   └─ Top banner: "Business Verification In Review"
+   └─ Top banner: "Complete business verification to unlock trade and fund operations." (BANNER-TEXT-01 RESOLVED in 56d916f9)
    └─ Blocked shell (SETTINGS view): shows 3 tiles:
       · "Workspace posture: Read-only review state"
       · "What remains paused: Catalog, RFQ, and trade actions"
-      · "Next step: Wait for TexQtic review"    ← DESIGN GAP: should say "Submit GST verification"
+      · "Next step" card — GST-state-aware CTA (SHELL-CTA-01 RESOLVED in 56d916f9):
+        - not_submitted → "Submit GST Verification" button
+        - pending        → "View GST Submission" link
+        - rejected       → "Resubmit GST Verification" button
+        - needs_more_info → "Update GST Submission" button
+   └─ Shell lazily loads GET /api/tenant/gst-verification to resolve CTA state
    └─ Sidebar nav IS visible (B2BShell renders with B2B_SHELL_ROUTE_KEYS)
    └─ Sidebar includes: 🔐 GST Verification link
 
@@ -117,16 +122,17 @@ No test for provisional workspace shell GST surfacing.
 
 7b. Admin rejects (PATCH /api/control/gst-verification/:orgId with REJECTED)
    └─ gst.review_outcome → REJECTED
-   └─ org.status stays PENDING_VERIFICATION (NOT changed by GST route)
-   └─ Admin must separately call POST /api/control/tenants/:id/onboarding/outcome
-      to advance org.status to VERIFICATION_REJECTED if desired
+   └─ org.status → VERIFICATION_REJECTED (ORG-STATUS-SYNC-01 RESOLVED in 56d916f9)
    └─ GstVerificationCard shows 'rejected' state + resubmit form + review_notes
 
 7c. Admin requests more info (NEEDS_MORE_INFO)
-   └─ Same as 7b but 'needs_more_info' state
+   └─ gst.review_outcome → NEEDS_MORE_INFO
+   └─ org.status → VERIFICATION_NEEDS_MORE_INFO (ORG-STATUS-SYNC-01 RESOLVED in 56d916f9)
+   └─ GstVerificationCard shows 'needs_more_info' state + review_notes + update form
 
 8. After resubmission
    └─ gst.review_outcome reset to null, review fields cleared
+   └─ org.status reset to PENDING_VERIFICATION (RESUBMIT-ORG-RESET-01 RESOLVED in 56d916f9)
    └─ GstVerificationCard → 'pending' state again
    └─ Cycle repeats from step 6
 ```
@@ -135,9 +141,9 @@ No test for provisional workspace shell GST surfacing.
 
 | Gap | Description | Severity |
 |---|---|---|
-| **SHELL-CTA-01** | Blocked shell "Next step" card says "Wait for TexQtic review" — no CTA to GST submission, no awareness of whether GST has been submitted | HIGH |
-| **BANNER-TEXT-01** | PENDING_VERIFICATION bannerText assumes verification "has been submitted" when user may not have submitted yet | MEDIUM |
-| **ORG-STATUS-SYNC-01** | REJECTED/NEEDS_MORE_INFO gst.review_outcome does NOT automatically advance org.status — admin needs two separate actions | MEDIUM |
+| **SHELL-CTA-01** | ~~Blocked shell "Next step" card says "Wait for TexQtic review" — no CTA to GST submission~~ | ~~HIGH~~ **RESOLVED** — commit `56d916f9` |
+| **BANNER-TEXT-01** | ~~PENDING_VERIFICATION bannerText assumes verification "has been submitted" when user may not have submitted yet~~ | ~~MEDIUM~~ **RESOLVED** — commit `56d916f9` |
+| **ORG-STATUS-SYNC-01** | ~~REJECTED/NEEDS_MORE_INFO gst.review_outcome does NOT automatically advance org.status — admin needs two separate actions~~ | ~~MEDIUM~~ **RESOLVED** — commit `56d916f9` |
 | **NO-NOTIFICATION-01** | No automated notification to tenant user when admin approves, rejects, or requests more info | LOW (deferred) |
 | **NO-REFRESH-01** | Workspace does not auto-refresh when org.status changes from PENDING_VERIFICATION → VERIFICATION_APPROVED | LOW (deferred) |
 | **NO-DOCS-01** | No document upload surface (PAN, COI, address proof) — tenant can only submit structured fields | LOW (deferred) |
@@ -205,13 +211,13 @@ POST /api/control/tenants/:id/onboarding/outcome  [separate canonical org status
 
 | ID | Type | Description | Severity |
 |---|---|---|---|
-| SHELL-CTA-01 | UX design gap | Blocked provisional shell "Next step" does not surface GST submission | HIGH |
-| BANNER-TEXT-01 | UX design gap | bannerText for PENDING_VERIFICATION assumes GST has been submitted | MEDIUM |
-| ORG-STATUS-SYNC-01 | Backend design gap | GST REJECTED/NEEDS_MORE_INFO does not atomically advance org.status — two admin actions required | MEDIUM |
-| RESUBMIT-ORG-RESET-01 | Backend design gap | When tenant resubmits GST, org.status is NOT reset (remains VERIFICATION_REJECTED/NEEDS_MORE_INFO) — gst.review_outcome resets but org.status may drift out of sync | MEDIUM |
-| NO-ROUTE-TESTS-01 | Test gap | No route-level integration tests for POST/GET /api/tenant/gst-verification | LOW |
-| NO-FRONTEND-TESTS-01 | Test gap | No component tests for GstVerificationCard | LOW |
-| NO-SHELL-TESTS-01 | Test gap | No tests for provisional workspace shell GST surfacing behavior | LOW |
+| SHELL-CTA-01 | UX design gap | ~~Blocked provisional shell "Next step" does not surface GST submission~~ | ~~HIGH~~ **RESOLVED** — commit `56d916f9` |
+| BANNER-TEXT-01 | UX design gap | ~~bannerText for PENDING_VERIFICATION assumes GST has been submitted~~ | ~~MEDIUM~~ **RESOLVED** — commit `56d916f9` |
+| ORG-STATUS-SYNC-01 | Backend design gap | ~~GST REJECTED/NEEDS_MORE_INFO does not atomically advance org.status — two admin actions required~~ | ~~MEDIUM~~ **RESOLVED** — commit `56d916f9` |
+| RESUBMIT-ORG-RESET-01 | Backend design gap | ~~When tenant resubmits GST, org.status is NOT reset~~ | ~~MEDIUM~~ **RESOLVED** — commit `56d916f9` |
+| NO-ROUTE-TESTS-01 | Test gap | No route-level integration tests for POST/GET /api/tenant/gst-verification | LOW — DEFERRED |
+| NO-FRONTEND-TESTS-01 | Test gap | No component tests for GstVerificationCard | LOW — DEFERRED |
+| NO-SHELL-TESTS-01 | Test gap | ~~No tests for provisional workspace shell GST surfacing behavior~~ | ~~LOW~~ **RESOLVED** — commit `0dd94bf1` |
 | NO-NOTIFICATION-01 | Feature gap (deferred) | No tenant notification on admin review outcome | DEFERRED |
 | NO-REFRESH-01 | Feature gap (deferred) | No auto-refresh when org.status changes post-approval | DEFERRED |
 | NO-DOCS-01 | Feature gap (deferred) | No document upload (PAN, COI) | DEFERRED |
@@ -538,6 +544,76 @@ runtime/sessionRuntimeDescriptor.ts             (no change required)
 
 ### Recommended implementation unit
 
-`IMPL-MAINAPP-GST-VERIFICATION-PROVISIONAL-SHELL-SURFACING-01`
+`IMPL-MAINAPP-GST-VERIFICATION-PROVISIONAL-SHELL-SURFACING-01` — **PRODUCTION VERIFIED** (see §15 below).
 
-**Awaiting Paresh authorization.**
+---
+
+## 15. Implementation and Verification Closure Record (2026-06-08)
+
+### Design gaps resolved
+
+| Gap | Resolution | Commit |
+|---|---|---|
+| SHELL-CTA-01 | Provisional shell next-step card is now GST-state-aware with CTA per status | `56d916f9` |
+| BANNER-TEXT-01 | `PENDING_VERIFICATION.bannerText` updated to neutral: "Complete business verification to unlock trade and fund operations." | `56d916f9` |
+| ORG-STATUS-SYNC-01 | `adminReviewVerification(REJECTED)` → `VERIFICATION_REJECTED`; `adminReviewVerification(NEEDS_MORE_INFO)` → `VERIFICATION_NEEDS_MORE_INFO` | `56d916f9` |
+| RESUBMIT-ORG-RESET-01 | `submitVerification` resubmission after REJECTED/NEEDS_MORE_INFO resets org.status to `PENDING_VERIFICATION` | `56d916f9` |
+| NO-SHELL-TESTS-01 | `tests/frontend/provisional-gst-shell.test.ts` — 10 tests covering all GST state resolver paths and bannerText | `0dd94bf1` |
+
+### Implementation commit
+
+| Item | Value |
+|---|---|
+| Commit SHA | `56d916f9b748c4b32e6999980dbcebb3527ed552` |
+| Commit message | `feat(onboarding): surface GST verification in provisional workspace` |
+| Files changed | `App.tsx`, `server/src/services/gstVerification.service.ts`, `server/src/__tests__/gst-verification.service.unit.test.ts` |
+
+### Test-hardening commit
+
+| Item | Value |
+|---|---|
+| Commit SHA | `0dd94bf1305f5b150a80db5bf324670bb41359b2` |
+| Commit message | `test(onboarding): cover provisional GST shell states` |
+| Files changed | `App.tsx` (resolveProvisionalGstStatus export), `tests/frontend/provisional-gst-shell.test.ts` (new — 10 tests) |
+
+### Production deployment
+
+| Item | Value |
+|---|---|
+| Deployment ID | `4974188160` |
+| Deployed SHA | `56d916f9b748c4b32e6999980dbcebb3527ed552` |
+| State | `success` |
+| Environment | Production (`app.texqtic.com`) |
+| Completed | `2026-06-08T11:37:04Z` |
+| Verifier | `vercel[bot]` |
+
+### Verification evidence
+
+- Backend GST service tests: 27/27 PASS
+- Frontend provisional shell tests: 10/10 PASS
+- Frontend typecheck: PASS
+- Backend typecheck: PASS
+- Production `/api/health`: HTTP 200
+- Source/bundle confirmed: new copy/CTA strings present; old static "Wait for TexQtic review" removed from active provisional next-step tile
+- No production GST submission or admin review performed
+- No production org.status changed
+- No production transactional mutation attempted
+- GST endpoints remain accessible to pending orgs (no `orgVerificationGuard` on GST routes — unchanged)
+- Transactional gates unchanged
+- Public nav/register/request-access not regressed
+- Secrets not exposed
+
+### Still deferred
+
+| Item | Status |
+|---|---|
+| GSTN provider automation (`raw_verification_json` population) | DEFERRED — design unit `DESIGN-MAINAPP-GST-KYC-AUTOMATION-HYBRID-WITH-ADMIN-FALLBACK-01` |
+| Document upload (PAN, COI) | DEFERRED |
+| Automated tenant notification on admin review | DEFERRED |
+| Auto-refresh when org.status changes | DEFERRED |
+| Route-level integration tests for GST endpoints | DEFERRED |
+| GstVerificationCard component tests | DEFERRED |
+
+### Final enum
+
+`VERIFY_MAINAPP_GST_VERIFICATION_PROVISIONAL_SHELL_SURFACING_PRODUCTION_COMPLETE`

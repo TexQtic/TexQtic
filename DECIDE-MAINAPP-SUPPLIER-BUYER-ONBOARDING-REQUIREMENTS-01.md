@@ -609,3 +609,56 @@ The findings recorded in §11, §12, §13, §20, and §26 were correct at the ti
 ### Closure Enum
 
 `VERIFY_MAINAPP_PENDING_VERIFICATION_BACKEND_STATUS_GATE_PRODUCTION_COMPLETE`
+
+---
+
+## §31 — Truth Sync: Provisional GST Verification Handoff (2026-06-08)
+
+**Added by:** `GOV-SYNC-MAINAPP-GST-HANDOFF-AND-SHELL-TEST-CLOSURE-01`
+**HEAD at sync:** `0dd94bf1305f5b150a80db5bf324670bb41359b2` (branch `main`, CLEAN)
+
+### Design gaps from §30 "Still Open" — status at §31
+
+| Gap (from §30 Still Open) | Status at §31 |
+|---|---|
+| GST/KYC automation with admin fallback (`DESIGN-MAINAPP-GST-KYC-AUTOMATION-HYBRID-WITH-ADMIN-FALLBACK-01`) | OPEN — design unit, not started |
+| CRM lifecycle sync event map from direct registration | OPEN — design unit, not started |
+| Zoho post-activation contact sync design | OPEN — design unit, not started |
+| Marketing Website CTA migration to `/register` | OPEN — Marketing Website repo |
+| Role-aware registration entry intent (Supplier / Buyer / Service Provider) | OPEN — design unit, not started |
+| E2E online direct registration verification (end-to-end path) | OPEN — pending GST/KYC automation |
+| Source channel tagging at account/tenant level | OPEN — no org-level field added |
+| B2C audit | OPEN |
+
+### Provisional GST handoff — what is now complete
+
+| What Implemented | Commit | Description |
+|---|---|---|
+| Provisional workspace shell GST-state-aware CTA (SHELL-CTA-01) | `56d916f9` | Shell loads GET /api/tenant/gst-verification lazily; renders state-aware next-step tile: not_submitted → Submit, pending → View, rejected → Resubmit, needs_more_info → Update |
+| PENDING_VERIFICATION bannerText correction (BANNER-TEXT-01) | `56d916f9` | Updated to neutral: \"Complete business verification to unlock trade and fund operations.\" |
+| GST REJECTED outcome syncs org.status (ORG-STATUS-SYNC-01, REJECTED branch) | `56d916f9` | `adminReviewVerification(REJECTED)` → `organizations.updateMany` where `status = PENDING_VERIFICATION` → `VERIFICATION_REJECTED` |
+| GST NEEDS_MORE_INFO outcome syncs org.status (ORG-STATUS-SYNC-01, NEEDS_MORE_INFO branch) | `56d916f9` | `adminReviewVerification(NEEDS_MORE_INFO)` → `organizations.updateMany` where `status = PENDING_VERIFICATION` → `VERIFICATION_NEEDS_MORE_INFO` |
+| Resubmission resets org.status to PENDING_VERIFICATION (RESUBMIT-ORG-RESET-01) | `56d916f9` | `submitVerification` resubmission after REJECTED/NEEDS_MORE_INFO calls `updateMany` where `status IN (VERIFICATION_REJECTED, VERIFICATION_NEEDS_MORE_INFO)` → `PENDING_VERIFICATION` |
+| Backend GST service unit tests expanded | `56d916f9` | 27/27 pass (was 25) |
+| Frontend provisional GST shell state tests (NO-SHELL-TESTS-01) | `0dd94bf1` | `resolveProvisionalGstStatus` extracted and exported; `tests/frontend/provisional-gst-shell.test.ts` — 10/10 pass |
+
+### Production deployment
+
+| Item | Value |
+|---|---|
+| Deployment ID | `4974188160` |
+| SHA | `56d916f9b748c4b32e6999980dbcebb3527ed552` |
+| State | `success` |
+| Environment | Production (`app.texqtic.com`) |
+| Completed | `2026-06-08T11:37:04Z` |
+
+### Architecture invariants unchanged
+
+- `org_id` tenancy boundary: unchanged
+- Transactional verification gate: unchanged (34 endpoints, same guard)
+- GST endpoints remain accessible to `PENDING_VERIFICATION` orgs: confirmed (no `orgVerificationGuard` on GST routes)
+- Decision authority: `DECIDE-ONLINE-DIRECT-REGISTRATION-HYBRID-ONBOARDING-MODEL-01.md` — unchanged
+
+### Closure Enum
+
+`VERIFY_MAINAPP_GST_VERIFICATION_PROVISIONAL_SHELL_SURFACING_PRODUCTION_COMPLETE`

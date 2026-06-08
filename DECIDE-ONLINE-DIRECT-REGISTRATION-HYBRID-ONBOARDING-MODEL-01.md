@@ -384,3 +384,42 @@ This section records the production verification truth for the implementation un
 - Decision verdict remains: `DECISION_ONLINE_DIRECT_REGISTRATION_HYBRID_MODEL_LOCKED`
 
 **Production Verification Enum:** `VERIFY_MAINAPP_PENDING_VERIFICATION_BACKEND_STATUS_GATE_PRODUCTION_COMPLETE`
+
+---
+
+## 22. GST Provisional Handoff Addendum (2026-06-08)
+
+**Added by:** `GOV-SYNC-MAINAPP-GST-HANDOFF-AND-SHELL-TEST-CLOSURE-01`
+**HEAD at sync:** `0dd94bf1305f5b150a80db5bf324670bb41359b2` (branch `main`, CLEAN)
+
+This section records progress on the §15 implementation sequence beyond the §21 scope (which ended at step 2, backend transactional verification gate).
+
+### §15 Implementation Sequence — updated progress
+
+| Step | Unit | Status | Commit |
+|---|---|---|---|
+| 1 | `DESIGN-MAINAPP-DIRECT-REGISTRATION-ENTRY-AND-ROLE-SELECTION-01` | COMPLETE | `32580088` |
+| 2 | `IMPL-MAINAPP-DIRECT-REGISTRATION-PROVISIONAL-ACCOUNT-01` + gate extensions | PRODUCTION_VERIFIED | See §21 |
+| 2a | `DESIGN-MAINAPP-GST-VERIFICATION-PROVISIONAL-ACCESS-AND-HANDOFF-01` (design) | COMPLETE | `f18b7ea0` |
+| 2b | `IMPL-MAINAPP-GST-VERIFICATION-PROVISIONAL-SHELL-SURFACING-01` (implementation) | PRODUCTION_VERIFIED — provisional shell GST CTA, org.status sync, bannerText fix | `56d916f9` |
+| 2c | `TEST-MAINAPP-GST-VERIFICATION-PROVISIONAL-SHELL-STATE-SWITCHING-01` (test hardening) | COMPLETE — 10/10 frontend shell tests pass | `0dd94bf1` |
+| 3 | `DESIGN-MAINAPP-GST-KYC-AUTOMATION-HYBRID-WITH-ADMIN-FALLBACK-01` | NOT_STARTED | — |
+| 4 | `IMPL-MAINAPP-GST-KYC-PROVIDER-INTEGRATION-AND-EVIDENCE-CAPTURE-01` | NOT_STARTED | — |
+| 5 | `DESIGN-CRM-LIFECYCLE-SYNC-EVENT-MAP-FROM-MAINAPP-01` | NOT_STARTED | — |
+| 6 | `IMPL-CRM-LIFECYCLE-SYNC-INGESTION-AND-STATUS-MAP-01` | NOT_STARTED | — |
+| 7 | `DESIGN-ZOHO-POST-ACTIVATION-CONTACT-SYNC-CONTRACT-01` | NOT_STARTED | — |
+| 8 | `IMPL-ZOHO-POST-ACTIVATION-SYNC-01` | NOT_STARTED | — |
+| 9 | `IMPL-MARKETING-CTA-MIGRATION-TO-DIRECT-REGISTRATION-01` | NOT_STARTED | — |
+| 10 | `VERIFY-END-TO-END-ONLINE-DIRECT-REGISTRATION-HYBRID-01` | NOT_STARTED (depends on steps 3–9) | — |
+| 11 | `FIX-CRM-MAINAPP-APPROVED-ONBOARDING-PROVISIONING-404-01` | OPEN / PARKED (offline-assisted fallback lane) | — |
+
+### Decisions confirmed unchanged
+
+- Hybrid model lock: `DECISION_ONLINE_DIRECT_REGISTRATION_HYBRID_MODEL_LOCKED` — unchanged.
+- org.status blocked statuses: `PENDING_VERIFICATION`, `VERIFICATION_REJECTED`, `VERIFICATION_NEEDS_MORE_INFO` — unchanged.
+- GST endpoints bypass `isOrgVerificationBlocked` — confirmed by implementation review (no guard on GST routes).
+- Manual admin-review workflow for GST: remains in place until step 3–4 (GSTN provider integration) executes.
+
+### Addendum Enum
+
+`VERIFY_MAINAPP_GST_VERIFICATION_PROVISIONAL_SHELL_SURFACING_PRODUCTION_COMPLETE`
