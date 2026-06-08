@@ -1516,10 +1516,15 @@ model gst_verifications {
   raw_verification_json Json          @default("{}")
   created_at            DateTime      @default(now()) @db.Timestamptz(6)
   updated_at            DateTime      @default(now()) @db.Timestamptz(6)
+  provider_name         String?       @db.VarChar(100)
+  provider_request_id   String?       @db.VarChar(200)
+  provider_verified_at  DateTime?     @db.Timestamptz(6)
+  provider_result       String?       @db.VarChar(30)
   organizations         organizations @relation(fields: [org_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "gst_verifications_org_id_fk")
 
   @@index([gstin], map: "idx_gst_verifications_gstin")
   @@index([org_id], map: "idx_gst_verifications_org_id")
+  @@index([provider_result], map: "idx_gst_verifications_provider_result")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

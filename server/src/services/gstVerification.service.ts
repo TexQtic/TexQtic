@@ -14,6 +14,11 @@
 
 import type { PrismaClient } from '@prisma/client';
 import { TTP_GST_FILING_STATUS, TTP_GST_REVIEW_OUTCOME } from '../ttp/ttp.constants.js';
+import {
+  type GstProviderAdapter,
+  nameMatches,
+  createGstProvider,
+} from './gstProvider.service.js';
 
 // GSTIN pattern: 2-digit state code + 5 uppercase letters + 4 digits +
 //                1 uppercase letter + 1 [1-9A-Z] + literal Z + 1 [0-9A-Z]
@@ -75,17 +80,36 @@ export interface GstVerificationTenantRecord {
   updated_at: Date;
 }
 
-/** Admin full record — includes all fields */
+/** Admin full record — includes all fields including provider evidence */
 export interface GstVerificationAdminRecord extends GstVerificationTenantRecord {
   reviewed_at: Date | null;
   reviewed_by_admin_id: string | null;
   raw_verification_json: unknown;
+  provider_name: string | null;
+  provider_request_id: string | null;
+  provider_verified_at: Date | null;
+  provider_result: string | null;
 }
 
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export class GstVerificationService {
-  constructor(private readonly db: PrismaClient) {}
+  private readonly gstProvider: GstProviderAdapter | undefined;
+
+  constructor(
+    private readonly db: PrismaClient,
+    /** Inject a provider for testing; if omitted, resolved from GST_PROVIDER env var. */
+    gstProviderOverride?: GstProviderAdapter,
+  ) {
+    if (gstProviderOverride !== undefined) {
+      this.gstProvider = gstProviderOverride;
+    } else {
+      const providerName = process.env.GST_PROVIDER;
+      // Only create a provider when GST_PROVIDER is explicitly set.
+      // Default (undefined) = no provider = admin fallback queue (backwards-compatible).
+      this.gstProvider = providerName ? createGstProvider(providerName) : undefined;
+    }
+  }
 
   /**
    * Validate GSTIN format (pure, no DB access).
@@ -185,6 +209,22 @@ export class GstVerificationService {
       });
     }
 
+    // Provider check — if configured, runs inline and updates record with evidence.
+    // Provider failures do NOT throw; they leave the record in the admin fallback queue.
+    if (this.gstProvider) {
+      await this.runProviderCheck(
+        orgId,
+        normalizedGstin,
+        data.legal_name_on_gst,
+        data.state_code,
+      );
+      // Return the definitively updated record
+      const updatedRecord = await (this.db as any).gst_verifications.findUnique({
+        where: { org_id: orgId },
+      });
+      return this.toTenantRecord(updatedRecord ?? record);
+    }
+
     return this.toTenantRecord(record);
   }
 
@@ -276,6 +316,122 @@ export class GstVerificationService {
     return this.toAdminRecord(updated);
   }
 
+  // ─── Provider check ───────────────────────────────────────────────────────
+
+  /**
+   * Run the GST provider verification and write evidence columns.
+   *
+   * Auto-approval criteria (all must pass):
+   *   C3 — provider reports gstin_status 'Active'
+   *   C4 — GSTIN prefix (state code) matches submitted state_code
+   *   C5 — legalName or businessName fuzzy-matches submitted legal_name_on_gst (≥80%)
+   *   C6 — No other org already has the same GSTIN with review_outcome = APPROVED
+   *
+   * Race guard: auto-approval updateMany uses WHERE review_outcome IS NULL
+   * so an admin review that already occurred between the upsert and here is preserved.
+   */
+  private async runProviderCheck(
+    orgId: string,
+    gstin: string,
+    legalNameOnGst: string,
+    stateCode: string,
+  ): Promise<void> {
+    if (!this.gstProvider) return;
+
+    const providerResult = await this.gstProvider.verifyGstin({
+      gstin,
+      legalNameOnGst,
+      stateCode,
+      orgId,
+    });
+
+    const now = new Date();
+
+    if (!providerResult.ok) {
+      // Provider failed — record result, leave record in admin fallback queue
+      await (this.db as any).gst_verifications.updateMany({
+        where: { org_id: orgId },
+        data: {
+          provider_name: this.gstProvider.name,
+          provider_result: providerResult.reason,
+          updated_at: now,
+        },
+      });
+      return;
+    }
+
+    const { data } = providerResult;
+
+    // Determine provider_result based on auto-approval criteria
+    let autoProviderResult: string;
+
+    // C3: GSTIN status must be Active
+    if (data.normalizedFilingStatus !== TTP_GST_FILING_STATUS.ACTIVE) {
+      autoProviderResult = 'INACTIVE_GSTIN';
+    }
+    // C4: State code from GSTIN prefix must match submitted state_code
+    else if (gstin.substring(0, 2) !== stateCode) {
+      autoProviderResult = 'MISMATCH';
+    }
+    // C5: Legal or business name must fuzzy-match (≥80%)
+    else if (
+      !nameMatches(legalNameOnGst, data.legalName) &&
+      !nameMatches(legalNameOnGst, data.businessName)
+    ) {
+      autoProviderResult = 'MISMATCH';
+    } else {
+      // C6: Duplicate GSTIN check — another org already approved with same GSTIN
+      const duplicate = await (this.db as any).gst_verifications.findFirst({
+        where: {
+          gstin,
+          review_outcome: TTP_GST_REVIEW_OUTCOME.APPROVED,
+          org_id: { not: orgId },
+        },
+        select: { org_id: true },
+      });
+      autoProviderResult = duplicate ? 'DUPLICATE_GSTIN' : 'AUTO_APPROVED';
+    }
+
+    // Write evidence columns + provider_result + filing_status
+    await (this.db as any).gst_verifications.updateMany({
+      where: { org_id: orgId },
+      data: {
+        provider_name: this.gstProvider.name,
+        provider_request_id: data.transactionId || null,
+        provider_verified_at: new Date(data.providerTimestamp),
+        filing_status: data.normalizedFilingStatus,
+        provider_result: autoProviderResult,
+        raw_verification_json: {
+          provider: this.gstProvider.name,
+          transaction_id: data.transactionId,
+          timestamp: data.providerTimestamp,
+          ...data.sanitizedPayload,
+        },
+        updated_at: now,
+      },
+    });
+
+    // Auto-approve — race guard: only write if review_outcome is still null
+    if (autoProviderResult === 'AUTO_APPROVED') {
+      const approveResult = await (this.db as any).gst_verifications.updateMany({
+        where: { org_id: orgId, review_outcome: null },
+        data: {
+          review_outcome: TTP_GST_REVIEW_OUTCOME.APPROVED,
+          reviewed_at: now,
+          updated_at: now,
+        },
+      });
+
+      // Only advance org.status if the race guard succeeded (count > 0)
+      if (approveResult.count > 0) {
+        await (this.db as any).organizations.updateMany({
+          where: { id: orgId, status: 'PENDING_VERIFICATION' },
+          data: { status: 'VERIFICATION_APPROVED' },
+        });
+      }
+    }
+  }
+
   // ─── Private projectors ───────────────────────────────────────────────────
 
   private toTenantRecord(record: any): GstVerificationTenantRecord {
@@ -301,6 +457,10 @@ export class GstVerificationService {
       reviewed_at: record.reviewed_at,
       reviewed_by_admin_id: record.reviewed_by_admin_id,
       raw_verification_json: record.raw_verification_json,
+      provider_name: record.provider_name ?? null,
+      provider_request_id: record.provider_request_id ?? null,
+      provider_verified_at: record.provider_verified_at ?? null,
+      provider_result: record.provider_result ?? null,
     };
   }
 }

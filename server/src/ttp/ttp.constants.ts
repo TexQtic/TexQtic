@@ -215,6 +215,7 @@ export type TtpTransmissionStatus =
 
 export const TTP_GST_FILING_STATUS = {
   ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
   CANCELLED: 'CANCELLED',
   SUSPENDED: 'SUSPENDED',
   UNKNOWN: 'UNKNOWN',
