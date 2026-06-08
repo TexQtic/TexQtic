@@ -1,7 +1,7 @@
 # DECIDE-MAINAPP-GST-KYC-PROVIDER-SELECTION-01
 
 **Unit:** `DECIDE-MAINAPP-GST-KYC-PROVIDER-SELECTION-01`
-**Status:** DECIDE COMPLETE — Outcome B (Shortlist + recommended primary)
+**Status:** DECIDE COMPLETE — ADDENDUM APPLIED — Outcome A (Provider Selected: Deepvue primary) — see §ADDENDUM below
 **Branch:** `main` · HEAD `3919a1d6`
 **Date:** 2026-06-08
 **Author:** Copilot (research/decision)
@@ -37,7 +37,7 @@
 | **HyperVerge** | KYC/KYB, global | ⚠️ Partial | KYB marketing page accessible; developer API docs not publicly readable; KYB is secondary product |
 | **Surepass** | KYB aggregator, India | ❌ Offline | surepass.io returns 404; docs.surepass.app redirects to app.surepass.app which also returns 404 — appears defunct |
 | **Masters India (GSP)** | GSTN GSP + compliance | ⚠️ Partial | Website accessible; API docs not public; GSP certification adds onboarding overhead |
-| **Deepvue** | KYB aggregator, India | ❌ Redirected | deepvue.tech redirects to deepvue.ai — no accessible API docs found |
+| **Deepvue** | KYB aggregator, India | ✅ Fully public | deepvue.ai — self-signup dashboard; publicly accessible docs at docs.deepvue.ai; Postman collection; ISO 27001:2022 confirmed. ⚠️ Phase 1 probe targeted deepvue.tech (redirect) instead of deepvue.ai — see §ADDENDUM |
 | **GSTN Public Portal (direct)** | Government API | ✅ Public | Open search endpoint; rate-limited; no SLA; not production-suitable |
 | **Cleartax / Clear** | Tax platform / GSP | ⚠️ Partial | Verification-specific API page returns 404; product offering unclear for standalone GSTIN verification |
 
@@ -332,7 +332,7 @@ The provider-neutral `GstProviderAdapter` interface defined in the design doc al
 | Surepass | Appears defunct (domain 404) |
 | Masters India (GSP) | GSP onboarding overhead disproportionate for current volume; consider at scale |
 | GSTN Public Portal | Not suitable for production; no SLA, rate-limited, no official API contract |
-| Deepvue | Domain inaccessible; unknown status |
+| ~~Deepvue~~ | ~~Domain inaccessible~~ — **CORRECTED IN ADDENDUM** — Deepvue elevated to PRIMARY. See §ADDENDUM |
 
 ---
 
@@ -518,9 +518,9 @@ However, the implementation must:
 
 ## 13. Final Enum
 
-**`DECIDE_MAINAPP_GST_KYC_PROVIDER_SELECTION_COMPLETE_SHORTLIST_ONLY`**
+**`DECIDE_MAINAPP_GST_KYC_PROVIDER_SELECTION_COMPLETE_PROVIDER_SELECTED`** *(revised in ADDENDUM — Deepvue selected as primary)*
 
-**Rationale:** Decentro is identified and recommended as primary. IDfy is the confirmed backup. Final commercial lock-in is deferred to Paresh's review of Decentro DPA and pricing after sandbox testing. The implementation unit is now unblocked and can begin in parallel with commercial engagement.
+**Rationale (revised):** Deepvue is selected as primary (92/100 HIGH confidence). Deepvue's free-trial self-signup eliminates the commercial barrier that justified Shortlist-only in Phase 1. Implementation can begin against the Deepvue sandbox immediately. Decentro is the backup (83/100). IDfy is the enterprise fallback. See §ADDENDUM for full rationale.
 
 ---
 
@@ -557,4 +557,397 @@ git commit -m "docs(onboarding): decide GST KYC provider selection"
 
 ---
 
-*TexQtic Governance — DECIDE-MAINAPP-GST-KYC-PROVIDER-SELECTION-01 — closed 2026-06-08*
+*TexQtic Governance — DECIDE-MAINAPP-GST-KYC-PROVIDER-SELECTION-01 — Phase 1 closed 2026-06-08 — Addendum applied 2026-06-09*
+
+---
+
+## ADDENDUM — Deepvue Corrected Evaluation & Provider Re-selection
+
+**Addendum date:** 2026-06-09
+**Trigger:** Phase 1 research probe error (see §A.0). Paresh confirmed Deepvue as preferred provider.
+**Outcome change:** Phase 1 Outcome B (Shortlist, Decentro primary) → **Outcome A: Provider Selected — Deepvue primary**
+
+---
+
+### A.0 Why This Addendum Exists
+
+Phase 1 research incorrectly classified Deepvue as `❌ Redirected — no accessible API docs found`. The research probe targeted `deepvue.tech`, which redirects, instead of `deepvue.ai`, the live product domain. This was a probe-path error, not a product availability issue.
+
+Paresh confirmed that Deepvue is a known, accessible provider and stated a preference for Deepvue as primary. This addendum corrects the Phase 1 classification, provides full Deepvue research findings from a successful Phase 2 probe of `deepvue.ai` and `docs.deepvue.ai`, and revises the provider selection from "Decentro primary" to "Deepvue primary, Decentro backup, IDfy enterprise fallback."
+
+**Corrected accessibility verdict: ✅ Fully public**
+
+| Resource | URL |
+|---|---|
+| Product | `deepvue.ai` |
+| API docs | `docs.deepvue.ai` (no login required) |
+| Dashboard / self-signup | `dashboard.deepvue.ai/sign-up` |
+| Postman collection | `hi.deepvue.tech/postman` |
+| Security Trust Vault | `security.deepvue.ai` |
+| Status | `status.deepvue.ai` |
+| Support | `support@deepvue.ai` |
+
+---
+
+### A.1 Deepvue Research Findings
+
+**Company:** Deepvue Technologies Pvt. Ltd. Developer-first KYB/KYC verification platform. Active since ~2021. Serves Times Internet, iMocha, Waaree, Vardhman and other B2B customers.
+
+#### Security / Compliance
+
+| Item | Status |
+|---|---|
+| ISO 27001:2022 | **CONFIRMED** — certificate document on `security.deepvue.ai` Trust Vault |
+| DPDP 2023 (India) | Compliant (stated on product pages) |
+| Infrastructure | AWS-hosted, WAF, VPC |
+| Data protection | Encryption-in-transit + encryption-at-rest |
+| Resilience | BC/DR plan documented on Trust Vault |
+| Security testing | Pentest report + Vulnerability Assessment Report available (gated) |
+| Access control | MFA enforced; audit logging enabled |
+| Uptime SLA | 99.99% stated |
+| SOC2 | Not explicitly confirmed — request during commercial onboarding |
+
+#### GST Basic Endpoint
+
+**`GET /v1/verification/gstinlite?gstin_number={GSTIN}`**
+Base URL: `https://production.deepvue.tech`
+
+Response envelope: `{ code, timestamp, transaction_id, data }`
+
+| Field | TexQtic Relevance |
+|---|---|
+| `sts` | Filing/registration status (Active / Inactive) — `filing_status` normalization source for Basic |
+| `lgnm` | Legal name — C5 fuzzy match input |
+| `tradeNam` | Trade name — C5 alternate |
+| `dty` | Taxpayer type |
+| `ctb` | Constitution of business |
+| `rgdt` | Registration date |
+| `lstupdt` | Last update date |
+| `pradr` | Principal address |
+| `adadr` | Additional addresses |
+| `stj` / `stjCd` | State / centre jurisdiction |
+| `einvoiceStatus` | E-invoice enabled flag |
+| `transaction_id` | → `provider_request_id` |
+
+#### GST Advanced Endpoint
+
+**`GET /v1/verification/gstin-advanced?gstin_number={GSTIN}`**
+
+All Basic fields, plus:
+
+| Field | TexQtic Relevance |
+|---|---|
+| `gstin_status` | **Filing/registration status for Advanced** — primary source (Active / Inactive / Cancelled / Suspended) |
+| `legal_name` | Legal name — C5 fuzzy match primary |
+| `business_name` | Business/trade name — C5 fuzzy match fallback |
+| `pan_number` | PAN — **exclude from `raw_verification_json`** (RISK-04) |
+| `taxpayer_type` | Taxpayer type |
+| `constitution_of_business` | Org type |
+| `date_of_registration` | Registration date |
+| `state_jurisdiction` | Full text with state/division/range — C4 state match |
+| `center_jurisdiction` | Centre jurisdiction |
+| `annual_turnover` / `annual_turnover_fy` | Turnover slab |
+| `percentage_in_cash` / `percentage_in_cash_fy` | Cash transaction % |
+| `aadhaar_validation` / `aadhaar_validation_date` | **Exclude from storage** (biometric data — DPDP) |
+| `promoters[]` | Name strings — retain for KYB context |
+| `contact_details.principal` / `contact_details.additional[]` | Addresses, email, mobile — **exclude mobile/email** (privacy) |
+| `nature_bus_activities[]` | Business activity types |
+| `nature_of_core_business_activity_code` / `_description` | Core activity |
+| `filing_status[][]` | Filing records: GSTR1, GSTR3B, GSTR9, GSTR9C — (return_type, financial_year, tax_period, date_of_filing, status, mode_of_filing) |
+| `date_of_cancellation` | Cancellation date (if applicable) |
+| `field_visit_conducted` | Physical inspection flag |
+| `hsn_info` | HSN codes |
+| `filing_frequency[]` | Filing frequency |
+| `transaction_id` | → `provider_request_id` |
+| `timestamp` | Unix ms → `provider_verified_at` |
+
+**⚠️ Field name inconsistency between endpoints:** Basic uses `sts` for status; Advanced uses `gstin_status`. Adapter must handle both: `response.data.gstin_status ?? response.data.sts`.
+
+#### GST Return Status Endpoint
+
+**`GET /v1/verification/gstin/track-gstr?gstin_number={GSTIN}&financial_year={YYYY-YYYY}`**
+
+Returns per-return-type filing status for the specified financial year. Separate from Advanced; useful for real-time compliance tracking in future releases.
+
+#### Authentication — 2-Step Flow
+
+1. `POST /v1/authorize` with form body `client_id=...&client_secret=...` → returns `{ access_token, token_type: "bearer", expiry: "ISO8601" }` (JWT valid 24h)
+2. Every API call: `Authorization: Bearer {access_token}` header + `x-api-key: {client_secret}` header
+
+**⚠️ Token management required in adapter:** Module-scoped in-memory cache with expiry tracking. Refresh when `Date.now() > expiry_ms - REFRESH_BUFFER_MS` (recommended buffer: 5 minutes).
+
+#### KYB Expansion (in-platform)
+
+PAN-to-GST, CIN/MCA, DIN (PAN↔DIN), MSME/Udyam Aadhaar, TAN, TDS 206, FSSAI, Shop Establishment Certificate.
+
+#### Rate Limits by Plan
+
+| Plan | RPS | RPM | RPD |
+|---|---|---|---|
+| Starter | 1 | 30 | 1,000 |
+| Business | 2 | 100 | 10,000 |
+| Growth | 5 | 500 | 20,000 |
+| Enterprise | 17 | 1,000 | 50,000 |
+
+Starter (1 RPS / 30 RPM) is sufficient for TexQtic's onboarding throughput. Growth tier for future batch paths.
+
+#### Pricing
+
+Prepaid wallet. From ₹2/check. Free trial with real data, no credit card required. No minimum commitment for self-serve plans. Volume/enterprise pricing negotiable.
+
+#### Error Response Format
+
+- HTTP-level errors: `{ "detail": "..." }` (e.g. `"Inactive client_id"`, `"Source Unavailable"`)
+- Business-level errors: `{ code, transaction_id, data: { error_code, message } }` (e.g. "No Records Found", "Invalid GSTIN")
+- Key codes: 400 (bad input), 401 (auth failure), 403 (token expired → refresh), 422 (validation), 429 (rate limit → exponential backoff), 500 (server error → retry), 503 (upstream GSTN unavailable → TexQtic `PROVIDER_ERROR`)
+
+#### Name Matching Gap
+
+Deepvue has **no native phonetic name matching API** (unlike Decentro). C5 (legal name fuzzy match ≥80%) must be implemented via a lightweight npm library in the adapter: `fast-levenshtein` or `fuse.js`. Both are well-maintained, lightweight, no native bindings. **Must be in impl unit explicit allowlist.**
+
+---
+
+### A.2 Revised Scoring Matrix
+
+Deepvue added; Decentro and IDfy scores unchanged from Phase 1.
+
+| Provider | C1/20 | C2/15 | C3/15 | C4/15 | C5/10 | C6/10 | C7/10 | C8/5 | **Total** | Confidence |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **Deepvue** | 19 | 15 | 15 | 14 | 9 | 9 | 7 | 4 | **92** | HIGH (docs fully confirmed) |
+| **Decentro** | 17 | 13 | 14 | 10 | 8 | 9 | 9 | 3 | **83** | HIGH (docs confirmed) |
+| **IDfy (Hyperion)** | 17 | 14 | 7 | 13 | 4 | 9 | 7 | 5 | **76** | LOW (docs gated) |
+| Others | (unchanged from §4) | | | | | | | | | |
+
+**Deepvue score rationale:**
+
+| Criterion | Score | Rationale |
+|---|---|---|
+| C1/20 = 19 | GST Advanced covers all 6 auto-approve criteria. `gstin_status: "Active/Inactive"`, `legal_name`/`business_name` (C5 fuzzy match), `state_jurisdiction` (C4 state match), `filing_status[][]` (C3 active filing check). −1 for `sts` vs `gstin_status` field name inconsistency across endpoints. |
+| C2/15 = 15 | Full — filing history (GSTR1/3B/9/9C), promoters, turnover, addresses, constitution, cancellation date all confirmed. |
+| C3/15 = 15 | Publicly accessible docs (no login); self-signup sandbox with real-data free trial; Postman collection; curl/Python/JS/Go/Ruby examples; status page; complete error/rate-limit docs. |
+| C4/15 = 14 | ISO 27001:2022 confirmed. DPDP 2023 compliant. AWS WAF/VPC, encryption, BC/DR, pentest, 99.99% SLA. −1 for SOC2 not confirmed in Trust Vault. |
+| C5/10 = 9 | ₹2+/check prepaid, free trial, no minimum, self-serve. −1 for production pricing tier requires commercial confirmation. |
+| C6/10 = 9 | Full KYB in-platform (CIN/MCA, DIN, Udyam/MSME, TAN, TDS, FSSAI). −1 for no native name matching API (requires npm lib). |
+| C7/10 = 7 | REST + standard JSON, good docs. −3 for 2-step auth complexity: adapter must implement token caching + refresh-before-expiry logic (not present in Decentro path). |
+| C8/5 = 4 | Founded ~2021, growing B2B base, ISO cert, active status page and docs (updated days ago). Newer than IDfy/Decentro but solid. |
+
+---
+
+### A.3 Revised Recommendation — Outcome A: Provider Selected
+
+**Paresh's preference for Deepvue: ACCEPTED. Research confirms Deepvue is the best-fit provider.**
+
+| Role | Provider | Score |
+|---|---|---|
+| **Primary (SELECTED)** | **Deepvue** | **92/100 HIGH** |
+| Backup | Decentro | 83/100 HIGH |
+| Enterprise fallback | IDfy | 76/100 LOW |
+
+**Why Outcome A (Provider Selected) vs Phase 1 Outcome B (Shortlist):**
+
+Free-trial self-signup eliminates the commercial barrier that justified deferring to Shortlist-only. All technical criteria are met. Implementation against Deepvue's sandbox can begin immediately. DPA review is a standard pre-production step, not an implementation blocker. The provider-neutral `GstProviderAdapter` interface means commercial swap remains an env var + adapter class change if required — lock-in risk is low.
+
+**Why Deepvue #1 (not Decentro as in Phase 1):**
+- Highest confirmed score (92/100)
+- ISO 27001:2022 confirmed (Decentro's cert status unconfirmed in public docs)
+- 99.99% uptime SLA stated (Decentro's unconfirmed)
+- All 6 auto-approve criteria covered in GST Advanced
+- `gstin_status: "Active/Inactive"` directly resolves ADJ-05 (`TTP_GST_FILING_STATUS` INACTIVE constant)
+- Full KYB expansion in-platform
+- Self-signup sandbox with real data, no sales call required
+- DPDP 2023 compliant
+- Prepaid from ₹2/check — no commitment risk
+
+**Why Decentro remains #2 (not ruled out):**
+Decentro retains 83/100 and its one differentiating advantage — native phonetic name matching API (C5) — avoids the npm library dependency. This is a real but minor implementation concern. If Deepvue's DPA terms or production pricing create a blocker, Decentro is a fully qualified backup with confirmed docs and self-signup sandbox.
+
+---
+
+### A.4 Revised Provider Fields Mapping — Deepvue
+
+**`DeepvueGstAdapter` → `gst_verifications` columns + `raw_verification_json`:**
+
+```typescript
+// Normalization performed inside DeepvueGstAdapter
+
+provider_name: "deepvue"
+provider_request_id: response.transaction_id          // UUID string — present on all responses
+provider_verified_at: new Date(response.timestamp)    // Unix ms → TIMESTAMPTZ
+provider_result: <derived from orchestration outcome> // AUTO_APPROVED | TIMEOUT | MISMATCH | etc.
+
+filing_status: normalizeDeepvueStatus(
+  response.data.gstin_status ?? response.data.sts     // Advanced: gstin_status; Basic: sts
+)
+// "Active"    → "ACTIVE"
+// "Inactive"  → "INACTIVE"   ← requires ADJ-05 constant addition (same as Decentro)
+// "Cancelled" → "CANCELLED"
+// "Suspended" → "SUSPENDED"
+// <any other> → "UNKNOWN"
+
+// Auto-approve criteria:
+C3: (response.data.gstin_status ?? response.data.sts) === "Active"
+C4: extractStateFromJurisdiction(response.data.state_jurisdiction) === stored_state_code
+    // state_jurisdiction format: "State - Karnataka,Division - DGSTO Dharwad,..."
+    // extract the state name and map to state code
+C5: fuzzyMatch(response.data.legal_name, legalNameOnGst) >= 0.80
+    //   OR fuzzyMatch(response.data.business_name, legalNameOnGst) >= 0.80
+    // Implementation: fast-levenshtein (npm) — must be in impl unit allowlist
+
+// raw_verification_json (JSONB — sanitized, no PII):
+{
+  provider: "deepvue",
+  transaction_id: "...",             // for audit/support
+  timestamp: ...,                    // Unix ms
+  gstin: "...",
+  legal_name: "...",                 // from Advanced — C5 match source
+  business_name: "...",              // from Advanced — C5 alternate
+  gstin_status: "...",               // filing_status normalization source
+  taxpayer_type: "...",
+  constitution_of_business: "...",
+  date_of_registration: "...",
+  state_jurisdiction: "...",         // full text — C4 match source
+  annual_turnover: "...",
+  annual_turnover_fy: "...",
+  promoters: [...],                  // name strings only
+  filing_summary: [...],             // last 6 months of GSTR1 + GSTR3B entries
+  nature_bus_activities: [...],
+  field_visit_conducted: "...",
+  // EXCLUDED from storage:
+  // - pan_number           (PAN — RISK-04 mask/exclude)
+  // - contact_details.mobile + contact_details.email  (privacy — DPDP)
+  // - aadhaar_validation, aadhaar_validation_date     (biometric — exclude)
+}
+```
+
+**Token management implementation note:**
+
+```typescript
+// Module-scoped token cache (inside DeepvueGstAdapter)
+let cachedToken: { accessToken: string; expiryMs: number } | null = null;
+const REFRESH_BUFFER_MS = 5 * 60 * 1000; // 5 minutes before expiry
+
+async function getAccessToken(): Promise<string> {
+  if (cachedToken && Date.now() < cachedToken.expiryMs - REFRESH_BUFFER_MS) {
+    return cachedToken.accessToken;
+  }
+  const resp = await fetch('https://production.deepvue.tech/v1/authorize', {
+    method: 'POST',
+    body: new URLSearchParams({
+      client_id: process.env.GST_PROVIDER_CLIENT_ID!,
+      client_secret: process.env.GST_PROVIDER_CLIENT_SECRET!,
+    }),
+  });
+  const { access_token, expiry } = await resp.json();
+  cachedToken = { accessToken: access_token, expiryMs: new Date(expiry).getTime() };
+  return access_token;
+}
+// Credentials MUST NOT be logged (RISK-04). AbortController pattern from crmTier0NotifyClient applies.
+```
+
+---
+
+### A.5 Revised Commercial Checklist
+
+**Deepvue (PRIMARY — action first):**
+
+- [ ] Sign up at `dashboard.deepvue.ai/sign-up` (free trial, immediate sandbox access, no credit card)
+- [ ] Test `GET /v1/verification/gstin-advanced` with a known active GSTIN — confirm `gstin_status`, `legal_name`, `state_jurisdiction`, `transaction_id` present
+- [ ] Test with a known Inactive/Cancelled GSTIN — confirm `gstin_status: "Inactive"` / `"Cancelled"` returned
+- [ ] Confirm `transaction_id` is a stable UUID-format string in all responses
+- [ ] Request: Data Processing Agreement (DPA) — required before storing GSTN response data in Supabase
+- [ ] Request: SOC2 report or equivalent (ISO 27001:2022 confirmed; SOC2 not visible in Trust Vault)
+- [ ] Confirm: Data residency — GSTN data processed/stored in India
+- [ ] Confirm: Credential rotation policy (sandbox and production credential separation)
+- [ ] Confirm: Rate limits for selected plan (Starter sufficient for onboarding throughput)
+- [ ] Request: Production pricing for GST Advanced (target: ≤₹5/call at early volume)
+
+**Decentro (BACKUP — contact only if Deepvue DPA/pricing unsuitable):**
+
+- [ ] Contact via `decentro.tech/signup` if Deepvue creates a commercial blocker
+- [ ] Request DPA, ISO27001/SOC2 cert, per-call pricing for GSTIN_DETAILED
+- [ ] Confirm phonetic name matching API pricing (may be separate SKU)
+
+**IDfy (ENTERPRISE FALLBACK — contact only if both Deepvue and Decentro fail):**
+
+- [ ] Contact via `hyperion.idfy.com` only if both primary and backup fail commercial diligence
+
+---
+
+### A.6 Revised Implementation Recommendation
+
+**First concrete adapter:** `DeepvueGstAdapter`
+**Backup adapter (future):** `DecentroGstAdapter`
+**CI/test:** `GST_PROVIDER=noop`
+
+| Item | Phase 1 (Decentro) | Addendum Revised (Deepvue) |
+|---|---|---|
+| Concrete adapter | `DecentroGstAdapter` | **`DeepvueGstAdapter`** |
+| Auth model | Single-step: headers only | **2-step:** `POST /v1/authorize` → Bearer JWT (24h) + `x-api-key` on every request |
+| Token management | Not needed | **Required:** module-scoped cache + refresh-before-expiry |
+| Name matching (C5) | Native Decentro API | **`fast-levenshtein` npm library** (must be in impl allowlist) |
+| Base URL | `https://in.decentro.tech` | **`https://production.deepvue.tech`** |
+| Primary endpoint | `POST /v2/kyc/identities/business-verification/validate` | **`GET /v1/verification/gstin-advanced`** |
+| Token endpoint | N/A | **`POST /v1/authorize`** |
+| `filing_status` source | `response.kycResult.currentStatusOfRegistration` | **`response.data.gstin_status ?? response.data.sts`** |
+| `provider_request_id` | `response.decentroTxnId` | **`response.transaction_id`** |
+| `provider_verified_at` | `response.responseTimestamp` (ISO string) | **`new Date(response.timestamp)`** (Unix ms) |
+
+**Env vars for impl unit:**
+
+```
+GST_PROVIDER=deepvue
+GST_PROVIDER_CLIENT_ID=<production deepvue client_id>
+GST_PROVIDER_CLIENT_SECRET=<production deepvue client_secret>
+GST_PROVIDER_SANDBOX_CLIENT_ID=<sandbox deepvue client_id>
+GST_PROVIDER_SANDBOX_CLIENT_SECRET=<sandbox deepvue client_secret>
+```
+
+**New npm dependency (must be in impl unit explicit allowlist):**
+- `fast-levenshtein` — pure-JS edit distance, no native bindings, for C5 name fuzzy match
+- Alternative: `fuse.js` (token-based, better for multi-word names — slightly heavier)
+
+---
+
+### A.7 Revised Final Enum
+
+**`DECIDE_MAINAPP_GST_KYC_PROVIDER_SELECTION_COMPLETE_PROVIDER_SELECTED`**
+
+*(Phase 1 was `SHORTLIST_ONLY`. Revised to `PROVIDER_SELECTED` because Deepvue's free-trial self-signup eliminates the commercial barrier. Implementation can begin against sandbox immediately. DPA/production pricing confirmation happens before go-live, not before implementation.)*
+
+---
+
+### A.8 Revised Risk Register
+
+| ID | Risk | Severity | Owner | Mitigation |
+|---|---|---|---|---|
+| R-01 | Deepvue DPA may require stripping PAN/contact data from stored JSONB | MEDIUM | Paresh (legal) | Exclude `pan_number`, `contact_details.mobile/email`, `aadhaar_*` from day one (already in field mapping above) |
+| R-02 | Deepvue SOC2 not confirmed in Trust Vault | LOW-MEDIUM | Paresh (vendor) | Request during commercial onboarding; ISO 27001:2022 is confirmed baseline |
+| R-03 | 2-step auth token management adds adapter complexity | LOW | Impl unit | Module-scoped in-memory token cache with 5-min refresh buffer — standard pattern, no external dependency |
+| R-04 | `TTP_GST_FILING_STATUS` INACTIVE constant not yet added | LOW | Impl unit | One-line constant addition — must be in Slice A allowlist |
+| R-05 | `fast-levenshtein` npm package not yet approved | LOW | Impl unit | Must be in impl unit explicit allowlist; lightweight, audited, widely used |
+| R-06 | Credentials must never appear in logs (RISK-04) | HIGH | Impl unit | `DeepvueGstAdapter` follows `crmTier0NotifyClient` pattern; credentials only in headers; AbortController 8s timeout; no request body logging |
+| R-07 | `sts` vs `gstin_status` field name inconsistency | LOW | Impl unit | Adapter handles both: `response.data.gstin_status ?? response.data.sts` with shared normalization function |
+| R-08 | Deepvue sandbox GSTINs may not cover Inactive/Cancelled edge cases | MEDIUM | Impl unit | Request test GSTINs from Deepvue support; use mock adapter for edge-case unit tests in CI |
+| R-09 | Decentro's native name matching advantage lost | LOW | Arch note | `fast-levenshtein` achieves equivalent accuracy for business name matching at negligible cost |
+
+---
+
+### A.9 What Changed — Summary
+
+| Section | Phase 1 Value | Addendum Value |
+|---|---|---|
+| Status | Outcome B: Shortlist, Decentro primary | **Outcome A: Provider Selected, Deepvue primary** |
+| §2.1 Deepvue row | ❌ Redirected | ✅ Fully public (deepvue.ai) |
+| §3 Provider details | No §3.9 | **§A.1 Deepvue findings** |
+| §4 Scoring matrix | Deepvue not scored | **Deepvue 92/100 HIGH — #1** |
+| §5.1 Primary | Decentro (83/100) | **Deepvue (92/100)** |
+| §5.2 Backup | IDfy | **Decentro** |
+| §5.3 Ruled out | Deepvue listed as ruled out | **Deepvue removed from ruled-out** |
+| §7 Field mapping | Decentro mapping | **Deepvue mapping** (§A.4) |
+| §10 Commercial | Decentro first | **Deepvue first** |
+| §12 Impl | `DecentroGstAdapter` | **`DeepvueGstAdapter`** |
+| §13 Final enum | `SHORTLIST_ONLY` | **`PROVIDER_SELECTED`** |
+
+---
+
+*Addendum — DECIDE-MAINAPP-GST-KYC-PROVIDER-SELECTION-01 — 2026-06-09*
