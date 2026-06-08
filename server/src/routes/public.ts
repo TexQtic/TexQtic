@@ -44,6 +44,10 @@ import {
 } from '../services/email/email.service.js';
 import { config } from '../config/index.js';
 import { notifyCrmTier0Capture } from '../services/crmTier0NotifyClient.js';
+import {
+  registerDirectProvisionalAccount,
+  type DirectRegistrationPayload,
+} from '../services/publicDirectRegistration.service.js';
 
 type PublicEntryKind = 'PLATFORM' | 'TENANT_SUBDOMAIN' | 'TENANT_CUSTOM_DOMAIN';
 type ResolutionSourceType =
@@ -1536,6 +1540,70 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
         message: 'Your inquiry has been received.',
       },
     });
+  });
+
+  // ─── Direct Registration (Self-Serve Provisional Account) ───────────────
+  // POST /api/public/register
+  //
+  // Creates a direct self-serve provisional workspace without invite issuance.
+  // This endpoint is intentionally narrow:
+  //   • creates user identity
+  //   • creates tenant + organizations shell
+  //   • creates first OWNER membership
+  //   • sets organizations.status = PENDING_VERIFICATION
+  //   • persists role intent in audit metadata
+  //
+  // Out of scope:
+  //   • invite token generation
+  //   • CRM / Zoho sync
+  //   • GST provider automation
+  //   • payment or billing objects
+  const directRegistrationBodySchema = z.object({
+    roleIntent: z.enum(['supplier', 'buyer', 'service_provider']),
+    name: z.string().min(1).max(200),
+    email: z.string().email().max(255),
+    password: z.string().min(8).max(128),
+    companyName: z.string().min(2).max(200),
+    phone: z.string().min(7).max(20).optional(),
+    city: z.string().min(1).max(100).optional(),
+    state: z.string().min(1).max(100).optional(),
+    country: z.string().min(2).max(100).optional(),
+    attribution: z
+      .object({
+        sourceChannel: z.string().max(30).optional(),
+        utmSource: z.string().max(200).optional(),
+        utmMedium: z.string().max(200).optional(),
+        utmCampaign: z.string().max(200).optional(),
+        campaignId: z.string().max(200).optional(),
+        referralCode: z.string().max(80).optional(),
+        acquisitionContext: z.string().max(200).optional(),
+        landingPage: z.string().max(500).optional(),
+        referrerUrl: z.string().max(500).optional(),
+        firstTouchTimestamp: z.string().datetime().optional(),
+      })
+      .optional(),
+  });
+
+  fastify.post('/register', async (request, reply) => {
+    const parseResult = directRegistrationBodySchema.safeParse(request.body);
+    if (!parseResult.success) {
+      return sendValidationError(reply, parseResult.error.errors);
+    }
+
+    const payload = parseResult.data as DirectRegistrationPayload;
+
+    try {
+      const result = await registerDirectProvisionalAccount(payload);
+      return sendSuccess(reply, result, 201);
+    } catch (error: unknown) {
+      const code = (error as { code?: string }).code;
+      if (code === 'DUPLICATE_EMAIL') {
+        return sendError(reply, 'DUPLICATE_EMAIL', 'An account already exists for this email.', 409);
+      }
+
+      fastify.log.error({ err: error }, '[public-register] Failed to create provisional account');
+      return sendError(reply, 'INTERNAL_ERROR', 'Unable to create account right now.', 500);
+    }
   });
 
   // ─── TIER0-001: Tier 0 Request Access — public pre-auth capture ─────────────
