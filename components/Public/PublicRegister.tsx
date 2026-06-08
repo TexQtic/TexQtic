@@ -9,6 +9,8 @@ import {
   type PublicRegisterRoleIntent,
 } from '../../services/publicRegisterService';
 
+export type { PublicRegisterRoleIntent };
+
 interface PublicRegisterProps {
   readonly nav: PublicNavbarProps;
   readonly onSignIn: () => void;
