@@ -52,6 +52,7 @@ import { prisma } from '../db/prisma.js';
 import { getPersistedDirectRegistrationRoleIntentByTenantId } from '../services/publicDirectRegistration.service.js';
 
 type MockTx = {
+  $executeRawUnsafe: ReturnType<typeof vi.fn>;
   user: {
     findUnique: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
@@ -85,6 +86,7 @@ function buildTransactionMock(overrides?: {
   const tenantSlug = overrides?.tenantSlug ?? 'acme-textiles';
 
   return {
+    $executeRawUnsafe: vi.fn(async () => []),
     user: {
       findUnique: vi.fn(async () => (existingUserId ? { id: existingUserId } : null)),
       create: vi.fn(async () => ({ id: 'user-1' })),

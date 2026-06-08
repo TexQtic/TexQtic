@@ -121,6 +121,11 @@ export async function registerDirectProvisionalAccount(
   const normalizedName = payload.name.trim();
   const normalizedCompanyName = payload.companyName.trim();
 
+  // Hash password before the transaction to avoid holding a DB connection during
+  // CPU-intensive work. bcrypt with 12 rounds takes ~300ms and must not run inside
+  // a Prisma interactive transaction.
+  const passwordHash = await bcrypt.hash(payload.password, 12);
+
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
       return await prisma.$transaction(async tx => {
@@ -134,7 +139,6 @@ export async function registerDirectProvisionalAccount(
         }
 
         const slug = await generateUniqueSlug(tx, normalizedCompanyName);
-        const passwordHash = await bcrypt.hash(payload.password, 12);
 
         const user = await tx.user.create({
           data: {
@@ -170,6 +174,14 @@ export async function registerDirectProvisionalAccount(
             plan: 'FREE',
           },
         });
+
+        // Set admin RLS context before inserting membership and audit log.
+        // memberships has an RLS policy (memberships_tenant_access FOR ALL) that
+        // requires either app.org_id = tenant_id OR app.is_admin = 'true'.
+        // This is a system-level provisioning operation; no tenant session exists
+        // yet for this brand-new org, so admin context is the correct choice.
+        await tx.$executeRawUnsafe(`SELECT set_config('app.org_id', '', true)`);
+        await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
 
         await tx.membership.create({
           data: {
