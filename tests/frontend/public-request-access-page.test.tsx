@@ -60,6 +60,7 @@ const NAV_STUB = {
   onGoPricing: () => {},
   onSignIn: () => {},
   onRequestAccess: () => {},
+  onJoinTexQtic: () => {},
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

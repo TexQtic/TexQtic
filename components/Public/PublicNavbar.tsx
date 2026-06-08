@@ -26,6 +26,7 @@ export interface PublicNavbarProps {
   readonly onGoPricing: () => void;
   readonly onSignIn: () => void;
   readonly onRequestAccess: () => void;
+  readonly onJoinTexQtic: () => void;
 }
 
 // ── Nav link config ────────────────────────────────────────────────────────────
@@ -101,6 +102,7 @@ export function PublicNavbar({
   onGoPricing,
   onSignIn,
   onRequestAccess,
+  onJoinTexQtic,
 }: PublicNavbarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   // eslint-disable-next-line no-undef
@@ -243,8 +245,15 @@ export function PublicNavbar({
           ))}
         </nav>
 
-        {/* Right cluster: Sign in + Request Access (xl+) + hamburger (< lg) */}
+        {/* Right cluster: Join TexQtic (lg+) + Sign in + Request Access (xl+) + hamburger (< lg) */}
         <div className="flex flex-shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={onJoinTexQtic}
+            className="hidden lg:inline-flex items-center justify-center rounded-full bg-[#2f8094] px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#206b7a]"
+          >
+            Join TexQtic
+          </button>
           <button
             type="button"
             onClick={onSignIn}
@@ -337,6 +346,16 @@ export function PublicNavbar({
 
             {/* CTA cluster at drawer bottom */}
             <div className="flex flex-col gap-3 border-t border-[#d6e4e8] px-4 py-5">
+              <button
+                type="button"
+                onClick={() => {
+                  onJoinTexQtic();
+                  setDrawerOpen(false);
+                }}
+                className="inline-flex w-full items-center justify-center rounded-full bg-[#2f8094] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#206b7a]"
+              >
+                Join TexQtic
+              </button>
               <button
                 type="button"
                 onClick={() => {

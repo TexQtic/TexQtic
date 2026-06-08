@@ -56,6 +56,7 @@ const NAV_STUB = {
   onGoInquiry: () => {},
   onSignIn: () => {},
   onRequestAccess: () => {},
+  onJoinTexQtic: () => {},
 };
 
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
