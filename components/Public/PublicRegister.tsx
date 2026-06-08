@@ -463,11 +463,12 @@ export function PublicRegister({
                 </p>
               </header>
 
-              <div className="rounded-2xl border border-[#d9e5ea] bg-[#f8fcfd] p-5 text-sm text-slate-700">
-                <div>roleIntent: {result.roleIntent}</div>
-                <div>tenantSlug: {result.tenantSlug}</div>
-                <div>organizationStatus: {result.organizationStatus}</div>
-                <div>membershipRole: {result.membershipRole}</div>
+              <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5 space-y-3">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700">Provisional workspace posture</div>
+                <div className="space-y-2 text-sm leading-6 text-slate-700">
+                  <p>Business verification has been submitted and is pending review. Trade and fund operations remain disabled until approval is recorded.</p>
+                  <p>Sign in to access your provisional workspace. Catalog management, RFQ, escrow, and settlement capabilities stay locked until verification is approved.</p>
+                </div>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

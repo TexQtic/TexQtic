@@ -211,7 +211,7 @@ describe('PublicRegister', () => {
     fireEvent.click(screen.getByRole('button', { name: /Create Provisional Account/i }));
 
     expect(await screen.findByRole('heading', { name: /Registration Submitted/i })).toBeInTheDocument();
-    expect(screen.getByText(/organizationStatus: PENDING_VERIFICATION/i)).toBeInTheDocument();
+    expect(screen.getByText(/Business verification has been submitted/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Continue to Sign In/i })).toBeInTheDocument();
   });
 
