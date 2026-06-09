@@ -361,6 +361,29 @@ describe('GstVerificationService.getVerificationByOrgId', () => {
     expect((result as any).reviewed_at).toBeUndefined();
   });
 
+  it('tenant projection excludes provider evidence fields', async () => {
+    const db = makeDb();
+    const svc = new GstVerificationService(db);
+    db.gst_verifications.findUnique.mockResolvedValueOnce(
+      makeTenantDbRecord({
+        provider_name: 'deepvue',
+        provider_request_id: 'tx-sandbox-001',
+        provider_verified_at: NOW,
+        provider_result: 'AUTO_APPROVED',
+      }),
+    );
+
+    const result = await svc.getVerificationByOrgId(ORG_ID);
+
+    expect(result).not.toBeNull();
+    // Provider evidence must not bleed into tenant projection
+    expect((result as any).provider_name).toBeUndefined();
+    expect((result as any).provider_result).toBeUndefined();
+    expect((result as any).provider_verified_at).toBeUndefined();
+    expect((result as any).provider_request_id).toBeUndefined();
+    expect((result as any).raw_verification_json).toBeUndefined();
+  });
+
   it('returns null when no record exists', async () => {
     const db = makeDb();
     const svc = new GstVerificationService(db);
@@ -387,6 +410,64 @@ describe('GstVerificationService.getVerificationByOrgIdAdmin', () => {
     expect((result as any).raw_verification_json).toEqual({ gstin_status: 'ACTIVE' });
     expect(result!.reviewed_by_admin_id).toBeNull();
     expect(result!.reviewed_at).toBeNull();
+  });
+
+  it('includes safe provider evidence fields in admin record', async () => {
+    const db = makeDb();
+    const svc = new GstVerificationService(db);
+    db.gst_verifications.findUnique.mockResolvedValueOnce(
+      makeTenantDbRecord({
+        provider_name: 'deepvue',
+        provider_request_id: 'tx-sandbox-001',
+        provider_verified_at: NOW,
+        provider_result: 'AUTO_APPROVED',
+        raw_verification_json: { gstin: '29ABCDE1234F1Z5', legal_name: 'Test Co', gstin_status: 'Active' },
+      }),
+    );
+
+    const result = await svc.getVerificationByOrgIdAdmin(ORG_ID);
+
+    expect(result).not.toBeNull();
+    expect(result!.provider_name).toBe('deepvue');
+    expect(result!.provider_result).toBe('AUTO_APPROVED');
+    expect(result!.provider_verified_at).toEqual(NOW);
+    expect(result!.provider_request_id).toBe('tx-sandbox-001');
+  });
+
+  it('admin raw_verification_json does not contain pan_number or aadhaar_validation (sanitizer enforced)', async () => {
+    // Confirms sanitizer strips PAN/Aadhaar before storage; admin record stores sanitized payload only.
+    const sanitizedPayload = {
+      gstin: '29ABCDE1234F1Z5',
+      legal_name: 'Test Co',
+      gstin_status: 'Active',
+      // pan_number and aadhaar_validation intentionally absent (already stripped by sanitizeDeepvuePayload)
+    };
+    const db = makeDb();
+    const svc = new GstVerificationService(db);
+    db.gst_verifications.findUnique.mockResolvedValueOnce(
+      makeTenantDbRecord({ raw_verification_json: sanitizedPayload }),
+    );
+
+    const result = await svc.getVerificationByOrgIdAdmin(ORG_ID);
+
+    expect(result).not.toBeNull();
+    const stored = result!.raw_verification_json as Record<string, unknown>;
+    expect('pan_number' in stored).toBe(false);
+    expect('aadhaar_validation' in stored).toBe(false);
+    expect('aadhaar_validation_date' in stored).toBe(false);
+  });
+
+  it('provider_name and provider_result are null when no provider ran', async () => {
+    const db = makeDb();
+    const svc = new GstVerificationService(db);
+    db.gst_verifications.findUnique.mockResolvedValueOnce(makeTenantDbRecord());
+
+    const result = await svc.getVerificationByOrgIdAdmin(ORG_ID);
+
+    expect(result).not.toBeNull();
+    expect(result!.provider_name).toBeNull();
+    expect(result!.provider_result).toBeNull();
+    expect(result!.provider_verified_at).toBeNull();
   });
 
   it('returns null when no record exists', async () => {

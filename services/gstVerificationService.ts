@@ -38,6 +38,10 @@ export interface GstVerificationAdminRecord extends GstVerificationRecord {
   reviewed_at: string | null;
   reviewed_by_admin_id: string | null;
   raw_verification_json: unknown;
+  /** Safe provider evidence fields (admin-only display context) */
+  provider_name: string | null;
+  provider_result: string | null;
+  provider_verified_at: string | null;
 }
 
 // ─── Tenant endpoints ─────────────────────────────────────────────────────────

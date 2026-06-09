@@ -29,6 +29,51 @@ const OUTCOME_OPTIONS: { value: ReviewOutcome; label: string; cls: string }[] = 
   { value: 'NEEDS_MORE_INFO', label: 'Needs More Info', cls: 'bg-sky-600 hover:bg-sky-700 text-white' },
 ];
 
+// ─── Provider evidence helpers ────────────────────────────────────────────────
+
+const PROVIDER_RESULT_LABELS: Record<string, string> = {
+  AUTO_APPROVED:  'Auto approved',
+  TIMEOUT:        'Provider timeout',
+  MISMATCH:       'Name / state mismatch',
+  INACTIVE_GSTIN: 'Inactive GSTIN',
+  INVALID_GSTIN:  'Invalid GSTIN',
+  PROVIDER_ERROR: 'Provider error',
+  DUPLICATE_GSTIN:'Duplicate GSTIN',
+};
+
+const PROVIDER_RESULT_BADGE_CLS: Record<string, string> = {
+  AUTO_APPROVED:  'bg-emerald-100 text-emerald-700',
+  TIMEOUT:        'bg-amber-100 text-amber-700',
+  MISMATCH:       'bg-orange-100 text-orange-700',
+  INACTIVE_GSTIN: 'bg-slate-100 text-slate-600',
+  INVALID_GSTIN:  'bg-rose-100 text-rose-700',
+  PROVIDER_ERROR: 'bg-rose-100 text-rose-700',
+  DUPLICATE_GSTIN:'bg-violet-100 text-violet-700',
+};
+
+function formatProviderResult(result: string | null | undefined): string {
+  if (!result) return 'Not checked — manual review';
+  return PROVIDER_RESULT_LABELS[result] ?? result;
+}
+
+function providerResultBadgeCls(result: string | null | undefined): string {
+  if (!result) return 'bg-slate-100 text-slate-500';
+  return PROVIDER_RESULT_BADGE_CLS[result] ?? 'bg-slate-100 text-slate-600';
+}
+
+function formatProviderName(name: string | null | undefined): string {
+  if (!name) return 'Not configured';
+  if (name === 'deepvue') return 'Deepvue';
+  if (name === 'noop') return 'Noop (sandbox)';
+  return name;
+}
+
+function formatReviewRoute(result: string | null | undefined): string {
+  if (result === 'AUTO_APPROVED') return 'Auto-approved';
+  if (!result) return 'Manual review required';
+  return 'Admin fallback required';
+}
+
 interface ReviewDialogProps {
   record: GstVerificationAdminRecord;
   onComplete: () => void;
@@ -116,6 +161,44 @@ function ReviewDialog({ record, onComplete, onCancel }: ReviewDialogProps) {
               </dd>
             </div>
           </dl>
+        </div>
+
+        {/* Provider evidence */}
+        <div className="px-5 py-4 bg-indigo-50 border-b border-slate-100">
+          <h4 className="text-xs font-semibold text-indigo-700 uppercase tracking-wide mb-3">
+            Provider Evidence (advisory context)
+          </h4>
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            <div>
+              <dt className="text-slate-500 font-medium">Provider</dt>
+              <dd className="text-slate-800 mt-0.5">{formatProviderName(record.provider_name)}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500 font-medium">Review route</dt>
+              <dd className="text-slate-800 mt-0.5">{formatReviewRoute(record.provider_result)}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500 font-medium">Provider result</dt>
+              <dd className="mt-0.5">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${providerResultBadgeCls(record.provider_result)}`}>
+                  {formatProviderResult(record.provider_result)}
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-slate-500 font-medium">Verified at</dt>
+              <dd className="text-slate-800 mt-0.5 text-xs">
+                {record.provider_verified_at
+                  ? new Date(record.provider_verified_at).toLocaleString()
+                  : 'Not verified'}
+              </dd>
+            </div>
+          </dl>
+          <div className="mt-3 rounded bg-white border border-indigo-100 p-2.5 text-xs text-indigo-600 space-y-1">
+            <p>Provider result is advisory evidence only. Non-approved provider outcomes require manual admin review.</p>
+            <p>Do not reject automatically based only on provider result.</p>
+            <p>Raw provider response and sensitive identity fields are hidden for privacy and security.</p>
+          </div>
         </div>
 
         {/* Review form */}
@@ -257,6 +340,7 @@ export const GstVerificationQueue: React.FC = () => {
                   <th className="pb-2 pr-4 font-medium text-slate-600">Legal Name</th>
                   <th className="pb-2 pr-4 font-medium text-slate-600">State</th>
                   <th className="pb-2 pr-4 font-medium text-slate-600">Submitted</th>
+                  <th className="pb-2 pr-4 font-medium text-slate-600">Provider</th>
                   <th className="pb-2 font-medium text-slate-600">Action</th>
                 </tr>
               </thead>
@@ -273,6 +357,11 @@ export const GstVerificationQueue: React.FC = () => {
                     <td className="py-3 pr-4 text-slate-600">{rec.state_code}</td>
                     <td className="py-3 pr-4 text-slate-500 whitespace-nowrap text-xs">
                       {new Date(rec.submitted_at).toLocaleString()}
+                    </td>
+                    <td className="py-3 pr-4">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${providerResultBadgeCls(rec.provider_result)}`}>
+                        {formatProviderResult(rec.provider_result)}
+                      </span>
                     </td>
                     <td className="py-3">
                       <button
