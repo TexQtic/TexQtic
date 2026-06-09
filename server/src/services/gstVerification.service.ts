@@ -6,7 +6,8 @@
  * Constraints:
  *  - org_id is unique in gst_verifications (one record per org)
  *  - APPROVED records cannot be re-submitted by tenant
- *  - raw_verification_json is never returned to tenants
+ *  - raw_verification_json and provider_request_id are stored for server-side audit/write-path
+ *    purposes; they are excluded from all normal admin and tenant API response contracts
  *  - GSTIN validation: exactly 15 chars, uppercase, India state code 01–38
  *
  * Governance: TTP Slice 2, D-017-A org isolation
