@@ -2037,7 +2037,7 @@ type AppState =
 
 type NeutralEntryPathSelection = 'B2B' | 'B2C' | 'SUPPLIER' | null;
 
-const SUPPLIER_REQUEST_ACCESS_URL = '/request-access';
+const SUPPLIER_REQUEST_ACCESS_URL = '/register';
 
 const hasStoredAuthenticatedSession = () => {
   if (globalThis.window === undefined) {
@@ -3008,7 +3008,8 @@ const App: React.FC = () => {
     setAppState('AUTH');
   };
   const openSupplierRequestAccess = () => {
-    globalThis.window?.location.assign(SUPPLIER_REQUEST_ACCESS_URL);
+    globalThis.window?.history.pushState(null, '', SUPPLIER_REQUEST_ACCESS_URL);
+    setAppState('PUBLIC_REGISTER');
   };
   const openIssuedAccessContinuation = () => {
     setAppState('ONBOARDING_CONTINUATION');
@@ -7897,7 +7898,7 @@ const App: React.FC = () => {
               setAppState('PUBLIC_ENTRY');
             }}
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
-            onRequestAccess={openSupplierRequestAccess}
+            onRequestAccess={() => { globalThis.window?.location.assign('/request-access'); }}
             initialRoleIntent={publicRegisterRoleFromPath}
           />
         );

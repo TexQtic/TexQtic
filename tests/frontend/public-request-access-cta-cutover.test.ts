@@ -1,18 +1,22 @@
 /**
- * Public Request Access CTA cutover — source-level checks
+ * Public CTA migration — source-level checks
  *
- * Unit:    UPDATE-MAINAPP-PUBLIC-CTA-REQUEST-ACCESS-CUTOVER-01
- * Date:    2026-06-07
+ * Unit:    IMPL-MAINAPP-MARKETING-CTA-MIGRATION-REQUEST-ACCESS-TO-REGISTER-01
+ * Date:    2026-06-09
+ *
+ * Previous unit (UPDATE-MAINAPP-PUBLIC-CTA-REQUEST-ACCESS-CUTOVER-01) verified
+ * the first cutover: texqtic.com/request-access → /request-access.
+ * This unit verifies the second cutover: /request-access → /register (or /register/supplier).
  *
  * Covers:
  *   CTA-001 — B2CBrowse does not contain stale texqtic.com/request-access href
  *   CTA-002 — PublicB2CCategoryPage does not contain stale texqtic.com/request-access href
  *   CTA-003 — PublicProductDetail does not contain stale texqtic.com/request-access href
- *   CTA-004 — App.tsx SUPPLIER_REQUEST_ACCESS_URL targets /request-access
- *   CTA-005 — B2CBrowse List Your Products CTA targets /request-access
- *   CTA-006 — PublicB2CCategoryPage List Your Products CTA targets /request-access
- *   CTA-007 — PublicProductDetail List Your Products CTA targets /request-access
- *   CTA-008 — No changed CTA uses target="_blank" for the request-access route
+ *   CTA-004 — App.tsx SUPPLIER_REQUEST_ACCESS_URL targets /register
+ *   CTA-005 — B2CBrowse List Your Products CTA targets /register/supplier
+ *   CTA-006 — PublicB2CCategoryPage List Your Products CTA targets /register/supplier
+ *   CTA-007 — PublicProductDetail List Your Products CTA targets /register/supplier
+ *   CTA-008 — No changed CTA uses target="_blank" for the register/supplier route
  *
  * Harness: vitest (Node.js, no DOM needed — source-level file checks only)
  */
@@ -65,46 +69,45 @@ describe('public request access CTA cutover — source checks', () => {
   });
 
   /**
-   * CTA-004 — App.tsx SUPPLIER_REQUEST_ACCESS_URL must target the app-local route.
+   * CTA-004 — App.tsx SUPPLIER_REQUEST_ACCESS_URL must target the direct registration route.
    */
-  it('CTA-004 — App.tsx SUPPLIER_REQUEST_ACCESS_URL targets /request-access', () => {
+  it('CTA-004 — App.tsx SUPPLIER_REQUEST_ACCESS_URL targets /register', () => {
     const src = read(APP_SRC);
-    expect(src).toContain("SUPPLIER_REQUEST_ACCESS_URL = '/request-access'");
+    expect(src).toContain("SUPPLIER_REQUEST_ACCESS_URL = '/register'");
+    expect(src).not.toContain("SUPPLIER_REQUEST_ACCESS_URL = '/request-access'");
     expect(src).not.toContain("SUPPLIER_REQUEST_ACCESS_URL = 'https://texqtic.com/request-access'");
   });
 
   /**
-   * CTA-005 — B2CBrowse List Your Products CTA targets /request-access.
+   * CTA-005 — B2CBrowse List Your Products CTA targets /register/supplier.
    */
-  it('CTA-005 — B2CBrowse List Your Products CTA targets /request-access', () => {
+  it('CTA-005 — B2CBrowse List Your Products CTA targets /register/supplier', () => {
     const src = read(B2C_BROWSE_SRC);
-    expect(src).toMatch(/href="\/request-access"[\s\S]{0,300}List Your Products/);
+    expect(src).toMatch(/href="\/register\/supplier"[\s\S]{0,300}List Your Products/);
   });
 
   /**
-   * CTA-006 — PublicB2CCategoryPage List Your Products CTA targets /request-access.
+   * CTA-006 — PublicB2CCategoryPage List Your Products CTA targets /register/supplier.
    */
-  it('CTA-006 — PublicB2CCategoryPage List Your Products CTA targets /request-access', () => {
+  it('CTA-006 — PublicB2CCategoryPage List Your Products CTA targets /register/supplier', () => {
     const src = read(CATEGORY_PAGE_SRC);
-    expect(src).toMatch(/href="\/request-access"[\s\S]{0,300}List Your Products/);
+    expect(src).toMatch(/href="\/register\/supplier"[\s\S]{0,300}List Your Products/);
   });
 
   /**
-   * CTA-007 — PublicProductDetail List Your Products CTA targets /request-access.
+   * CTA-007 — PublicProductDetail List Your Products CTA targets /register/supplier.
    */
-  it('CTA-007 — PublicProductDetail List Your Products CTA targets /request-access', () => {
+  it('CTA-007 — PublicProductDetail List Your Products CTA targets /register/supplier', () => {
     const src = read(PRODUCT_DETAIL_SRC);
-    expect(src).toMatch(/href="\/request-access"[\s\S]{0,300}List Your Products/);
+    expect(src).toMatch(/href="\/register\/supplier"[\s\S]{0,300}List Your Products/);
   });
 
   /**
-   * CTA-008 — No request-access anchor uses target="_blank" (internal route; same-tab navigation).
-   * Checks that the /request-access href is not immediately followed by target="_blank".
+   * CTA-008 — No /register/supplier anchor uses target="_blank" (internal route; same-tab navigation).
    */
-  it('CTA-008 — request-access anchors do not use target="_blank"', () => {
+  it('CTA-008 — register/supplier anchors do not use target="_blank"', () => {
     for (const src of [read(B2C_BROWSE_SRC), read(CATEGORY_PAGE_SRC), read(PRODUCT_DETAIL_SRC)]) {
-      // Find occurrences of /request-access href and check the surrounding 100 chars for target="_blank"
-      const matches = [...src.matchAll(/href="\/request-access"([\s\S]{0,100})/g)];
+      const matches = [...src.matchAll(/href="\/register\/supplier"([\s\S]{0,100})/g)];
       for (const m of matches) {
         expect(m[1]).not.toContain('target="_blank"');
       }

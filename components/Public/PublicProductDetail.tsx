@@ -133,7 +133,7 @@ function AuthenticatedContinuationPanel({
           </a>
         )}
         <a
-          href="/request-access"
+          href="/register/supplier"
           className="inline-flex items-center justify-center rounded-full border border-[#d6e4e8] bg-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8094] transition hover:bg-[#eff6f8]"
         >
           List Your Products
