@@ -92,6 +92,9 @@ const tenantGstVerificationRoutes: FastifyPluginAsync = async fastify => {
       }
 
       try {
+        // timeoutMs: 30000 — the Deepvue HTTP call inside runProviderCheck takes ~5s;
+        // the default 5000ms interactive transaction timeout causes the entire upsert to
+        // roll back before the provider write-back can complete.
         const result = await withDbContext(prisma, dbContext, async tx => {
           const svc = new GstVerificationService(makeTxBoundPrisma(tx));
           const record = await svc.submitVerification(orgId, {
@@ -117,7 +120,7 @@ const tenantGstVerificationRoutes: FastifyPluginAsync = async fastify => {
           });
 
           return record;
-        });
+        }, { timeoutMs: 30000 });
 
         return sendSuccess(reply, { gst_verification: result }, 201);
       } catch (error: unknown) {
