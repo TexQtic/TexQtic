@@ -397,7 +397,7 @@ describe('GstVerificationService.getVerificationByOrgId', () => {
 // ─── getVerificationByOrgIdAdmin ─────────────────────────────────────────────
 
 describe('GstVerificationService.getVerificationByOrgIdAdmin', () => {
-  it('returns full admin record including raw_verification_json', async () => {
+  it('admin record does not include raw_verification_json or provider_request_id', async () => {
     const db = makeDb();
     const svc = new GstVerificationService(db);
     db.gst_verifications.findUnique.mockResolvedValueOnce(
@@ -407,7 +407,10 @@ describe('GstVerificationService.getVerificationByOrgIdAdmin', () => {
     const result = await svc.getVerificationByOrgIdAdmin(ORG_ID);
 
     expect(result).not.toBeNull();
-    expect((result as any).raw_verification_json).toEqual({ gstin_status: 'ACTIVE' });
+    // raw_verification_json excluded from normal admin contract (audit-only)
+    expect((result as any).raw_verification_json).toBeUndefined();
+    // provider_request_id excluded from normal admin contract (audit-only)
+    expect((result as any).provider_request_id).toBeUndefined();
     expect(result!.reviewed_by_admin_id).toBeNull();
     expect(result!.reviewed_at).toBeNull();
   });
@@ -431,16 +434,21 @@ describe('GstVerificationService.getVerificationByOrgIdAdmin', () => {
     expect(result!.provider_name).toBe('deepvue');
     expect(result!.provider_result).toBe('AUTO_APPROVED');
     expect(result!.provider_verified_at).toEqual(NOW);
-    expect(result!.provider_request_id).toBe('tx-sandbox-001');
+    // provider_request_id excluded from normal admin contract (audit-only field)
+    expect((result as any).provider_request_id).toBeUndefined();
+    // raw_verification_json excluded from normal admin contract (audit-only field)
+    expect((result as any).raw_verification_json).toBeUndefined();
   });
 
-  it('admin raw_verification_json does not contain pan_number or aadhaar_validation (sanitizer enforced)', async () => {
-    // Confirms sanitizer strips PAN/Aadhaar before storage; admin record stores sanitized payload only.
+  it('admin record does not expose raw_verification_json regardless of stored content (sanitizer enforced at write)', async () => {
+    // raw_verification_json is excluded from the normal admin projection.
+    // Sanitizer (sanitizeDeepvuePayload) strips PAN/Aadhaar/contact before storage;
+    // the admin projection additionally excludes the field entirely from the response contract.
     const sanitizedPayload = {
       gstin: '29ABCDE1234F1Z5',
       legal_name: 'Test Co',
       gstin_status: 'Active',
-      // pan_number and aadhaar_validation intentionally absent (already stripped by sanitizeDeepvuePayload)
+      // pan_number and aadhaar_validation absent (stripped by sanitizeDeepvuePayload at write)
     };
     const db = makeDb();
     const svc = new GstVerificationService(db);
@@ -451,10 +459,8 @@ describe('GstVerificationService.getVerificationByOrgIdAdmin', () => {
     const result = await svc.getVerificationByOrgIdAdmin(ORG_ID);
 
     expect(result).not.toBeNull();
-    const stored = result!.raw_verification_json as Record<string, unknown>;
-    expect('pan_number' in stored).toBe(false);
-    expect('aadhaar_validation' in stored).toBe(false);
-    expect('aadhaar_validation_date' in stored).toBe(false);
+    // raw_verification_json not included in normal admin record
+    expect((result as any).raw_verification_json).toBeUndefined();
   });
 
   it('provider_name and provider_result are null when no provider ran', async () => {
@@ -918,7 +924,7 @@ describe('GstVerificationService.submitVerification — no provider configured',
 // ─── toAdminRecord — provider evidence fields ─────────────────────────────────
 
 describe('GstVerificationService.getVerificationByOrgIdAdmin — provider evidence fields', () => {
-  it('includes provider evidence fields in admin record', async () => {
+  it('includes safe provider evidence fields in admin record', async () => {
     const db = makeDb();
     const svc = new GstVerificationService(db);
     db.gst_verifications.findUnique.mockResolvedValueOnce(
@@ -936,9 +942,12 @@ describe('GstVerificationService.getVerificationByOrgIdAdmin — provider eviden
 
     expect(result).not.toBeNull();
     expect(result!.provider_name).toBe('deepvue');
-    expect(result!.provider_request_id).toBe('tx-abc');
+    // provider_request_id excluded from normal admin contract (audit-only)
+    expect((result as any).provider_request_id).toBeUndefined();
     expect(result!.provider_verified_at).toEqual(NOW);
     expect(result!.provider_result).toBe('AUTO_APPROVED');
+    // raw_verification_json excluded from normal admin contract (audit-only)
+    expect((result as any).raw_verification_json).toBeUndefined();
   });
 
   it('returns null for provider evidence fields on old records without them', async () => {
@@ -970,7 +979,8 @@ describe('GstVerificationService.getVerificationByOrgIdAdmin — provider eviden
 
     expect(result).not.toBeNull();
     expect(result!.provider_name).toBeNull();
-    expect(result!.provider_request_id).toBeNull();
+    // provider_request_id not in normal admin contract
+    expect((result as any).provider_request_id).toBeUndefined();
     expect(result!.provider_result).toBeNull();
   });
 });

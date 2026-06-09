@@ -37,8 +37,9 @@ export interface GstVerificationRecord {
 export interface GstVerificationAdminRecord extends GstVerificationRecord {
   reviewed_at: string | null;
   reviewed_by_admin_id: string | null;
-  raw_verification_json: unknown;
-  /** Safe provider evidence fields (admin-only display context) */
+  /** Safe provider evidence fields (admin-only display context).
+   *  raw_verification_json and provider_request_id are excluded from the normal
+   *  admin queue contract (audit-only; served by a separate endpoint if needed). */
   provider_name: string | null;
   provider_result: string | null;
   provider_verified_at: string | null;

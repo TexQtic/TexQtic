@@ -88,13 +88,13 @@ export interface GstVerificationTenantRecord {
   updated_at: Date;
 }
 
-/** Admin full record — includes all fields including provider evidence */
+/** Admin review record — includes reviewed_by_admin_id, reviewed_at, and safe provider evidence.
+ *  raw_verification_json and provider_request_id are stored in DB but excluded from normal
+ *  admin queue responses (audit-only fields; served by a separate endpoint if needed). */
 export interface GstVerificationAdminRecord extends GstVerificationTenantRecord {
   reviewed_at: Date | null;
   reviewed_by_admin_id: string | null;
-  raw_verification_json: unknown;
   provider_name: string | null;
-  provider_request_id: string | null;
   provider_verified_at: Date | null;
   provider_result: string | null;
 }
@@ -276,7 +276,9 @@ export class GstVerificationService {
   }
 
   /**
-   * Get full GST verification record for admin view (all fields including raw_verification_json).
+   * Get full GST verification record for admin view.
+   * Returns safe admin projection — raw_verification_json and provider_request_id
+   * are stored in DB but excluded from the normal admin queue response.
    */
   async getVerificationByOrgIdAdmin(orgId: string): Promise<GstVerificationAdminRecord | null> {
     const record = await (this.db as any).gst_verifications.findUnique({
@@ -537,9 +539,7 @@ export class GstVerificationService {
       ...this.toTenantRecord(record),
       reviewed_at: record.reviewed_at,
       reviewed_by_admin_id: record.reviewed_by_admin_id,
-      raw_verification_json: record.raw_verification_json,
       provider_name: record.provider_name ?? null,
-      provider_request_id: record.provider_request_id ?? null,
       provider_verified_at: record.provider_verified_at ?? null,
       provider_result: record.provider_result ?? null,
     };
