@@ -43,8 +43,8 @@ Inspected at HEAD `5625b57c` (current HEAD at time of design work). All findings
 |---|---|---|
 | Tenant submit route | `server/src/routes/tenant/gst-verification.ts` | `POST /api/tenant/gst-verification`. No `orgVerificationGuard` — PENDING_VERIFICATION orgs CAN submit. Validates GSTIN format before DB. Upserts on org_id. Fires audit log. No provider call. |
 | Tenant read route | `server/src/routes/tenant/gst-verification.ts` | `GET /api/tenant/gst-verification`. No `orgVerificationGuard`. Returns tenant-safe projection (excludes `raw_verification_json`, `reviewed_at`, `reviewed_by_admin_id`). |
-| Control list route | `server/src/routes/control/gst-verification.ts` | `GET /api/control/gst-verification`. Lists all `review_outcome IS NULL` records. Returns full admin record including `raw_verification_json`. |
-| Control detail route | `server/src/routes/control/gst-verification.ts` | `GET /api/control/gst-verification/:orgId`. Admin full record for one org. |
+| Control list route | `server/src/routes/control/gst-verification.ts` | `GET /api/control/gst-verification`. Lists all `review_outcome IS NULL` records. Returns safe admin projection: GST registration fields + safe provider evidence (`provider_name`, `provider_result`, `provider_verified_at`) + `reviewed_at`/`reviewed_by_admin_id`. `raw_verification_json` and `provider_request_id` are **excluded from the normal response** (stored server-side for audit only; accessible via a separate future audit endpoint if needed). |
+| Control detail route | `server/src/routes/control/gst-verification.ts` | `GET /api/control/gst-verification/:orgId`. Safe admin projection for one org (same field boundary as list route — excludes `raw_verification_json` and `provider_request_id`). |
 | Control review route | `server/src/routes/control/gst-verification.ts` | `PATCH /api/control/gst-verification/:orgId`. `requireAdminRole('SUPER_ADMIN')`. Records APPROVED/REJECTED/NEEDS_MORE_INFO. Side effect: advances org.status for all three outcomes. |
 | GstVerificationService | `server/src/services/gstVerification.service.ts` | `validateGstin`, `submitVerification`, `getVerificationByOrgId`, `getVerificationByOrgIdAdmin`, `listPendingVerifications`, `adminReviewVerification`. All org.status side effects implemented. No provider call. |
 | orgVerificationGuard | `server/src/utils/orgVerificationGuard.ts` | Blocks PENDING_VERIFICATION, VERIFICATION_REJECTED, VERIFICATION_NEEDS_MORE_INFO from transactional mutations. Does NOT block GST endpoints. |
@@ -160,7 +160,7 @@ Fields available to admin at review time:
 ## 4. Current Admin Review Model
 
 - Queue: `GET /api/control/gst-verification` — lists all `review_outcome IS NULL` records, oldest-first
-- Detail: `GET /api/control/gst-verification/:orgId` — full record including `raw_verification_json`
+- Detail: `GET /api/control/gst-verification/:orgId` — safe admin projection (excludes `raw_verification_json` and `provider_request_id`; those fields remain stored in DB for server-side audit only)
 - Review: `PATCH /api/control/gst-verification/:orgId` — SUPER_ADMIN only, records outcome
 - UI: `GstVerificationQueue.tsx` — table of pending records, review dialog
 
