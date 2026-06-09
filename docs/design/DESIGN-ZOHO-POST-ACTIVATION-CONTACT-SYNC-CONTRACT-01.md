@@ -236,7 +236,7 @@ This is the **primary idempotency mechanism**. It requires the `cf_texqtic_org_i
 
 **Retry safety:** All operations are safe to re-run. The upsert pattern is inherently idempotent.
 
-**Prerequisite:** The `cf_texqtic_org_id` custom field must be provisioned in Zoho Books with **unique constraint enabled** before `IMPL-ZOHO-POST-ACTIVATION-SYNC-01` begins. This is a manual Zoho Books admin setup step or can be automated via `POST /settings/customfields` (requires `ZohoBooks.settings.CREATE` scope).
+**Prerequisite:** The `cf_texqtic_org_id` custom field must be provisioned in Zoho Books with **unique constraint enabled** before `IMPL-ZOHO-POST-ACTIVATION-SYNC-01` begins. This is a manual Zoho Books admin setup step or can be automated via `POST /settings/fields` (requires `ZohoBooks.settings.CREATE` scope).
 
 **Deduplication surface:** `cf_texqtic_org_id` custom field (Zoho side, unique) + `organization_integrations.external_id` stored locally in TexQtic (see §9).
 
@@ -627,7 +627,12 @@ The following findings were observed during repo-truth inspection. They are reco
 | `ZohoBooks.settings.READ` | Get organization ID | **YES** (at setup) |
 | `ZohoBooks.settings.CREATE` | Provision custom fields programmatically | Optional (see §19.8) |
 
-**Minimum scope string for runtime token:** `ZohoBooks.contacts.CREATE,ZohoBooks.contacts.UPDATE,ZohoBooks.contacts.READ`
+**Minimum scope string for runtime token (no startup custom-field validation):** `ZohoBooks.contacts.CREATE,ZohoBooks.contacts.UPDATE,ZohoBooks.contacts.READ`
+
+**If the service validates custom field availability at startup:** also include `ZohoBooks.settings.READ`:
+`ZohoBooks.contacts.CREATE,ZohoBooks.contacts.UPDATE,ZohoBooks.contacts.READ,ZohoBooks.settings.READ`
+
+> Note: `ZohoBooks.settings.READ` is required for `GET /settings/fields?entity=contact` (custom field listing/validation). If ops manually validates custom fields before deployment, this scope may be omitted from the runtime token. If startup validation is automated, it must be included.
 
 ### 19.6 Contacts API Endpoints
 
@@ -695,6 +700,10 @@ Content-Type: application/json
 ```
 
 **`custom_fields` sub-object:**
+
+> ⚠️ **Staging-validation required — payload shape not yet confirmed.** The Zoho Books Custom Fields API returns `api_name` (e.g., `cf_texqtic_org_id`) in field definitions, but the official Contacts API documents `custom_fields` sub-attributes as `index`, `value`, and `label` — **not** `api_name`. Whether `api_name` is accepted in the contact payload must be validated against a live staging/sandbox Zoho Books org **before** coding this array. Use the `label`-based alternative (Option B) if `api_name` is rejected.
+
+**Option A — `api_name`-based (confirm via staging/sandbox validation before coding):**
 ```json
 [
   { "api_name": "cf_texqtic_org_id",      "value": "<orgId UUID>" },
@@ -705,13 +714,24 @@ Content-Type: application/json
 ]
 ```
 
-> Note: Custom fields may also be referenced by `index` (numeric position) or `label`, but `api_name` (the `cf_*` prefixed name) is the canonical and stable reference. The upsert headers use the API name.
+**Option B — `label`-based (safe fallback if `api_name` is rejected by Contacts API):**
+```json
+[
+  { "label": "TexQtic Org ID",       "value": "<orgId UUID>" },
+  { "label": "TexQtic Tenant ID",    "value": "<tenantId UUID>" },
+  { "label": "TexQtic Plan Tier",    "value": "<plan>" },
+  { "label": "TexQtic Activated At", "value": "<ISO timestamp>" },
+  { "label": "TexQtic Source",       "value": "TexQtic Main App" }
+]
+```
+
+> Note: The `X-Unique-Identifier-Key: cf_texqtic_org_id` upsert header uses the field's `api_name` from the Custom Fields settings API — this is confirmed. The `custom_fields` array payload shape inside the contact body (whether `api_name` or `label` is the correct key) requires staging/sandbox validation before implementation.
 
 ### 19.8 Custom Field Strategy
 
 **Official finding:** Zoho Books supports custom fields on Contacts. They can be:
 - Provisioned manually via Zoho Books admin UI (Settings → Custom Fields → Contacts)
-- Provisioned programmatically via `POST /settings/customfields` (requires `ZohoBooks.settings.CREATE` scope)
+- Provisioned programmatically via `POST /settings/fields` (requires `ZohoBooks.settings.CREATE` scope)
 
 **For `cf_texqtic_org_id` specifically:**
 - Must be configured with **"Do not allow duplicate values"** (unique constraint) enabled
@@ -773,14 +793,21 @@ Content-Type: application/json
 
 ### 19.11 Sandbox and Testing Strategy
 
-**Official Zoho Books docs do not document a dedicated sandbox environment.** (No sandbox URL was found in the official docs reviewed.)
+**Official Zoho Books API docs include a Sandbox feature, but it is marked as early access** — availability and behavior vary by account and edition. TexQtic must verify whether Zoho Books sandbox is available and enabled for its plan/org before relying on it.
 
-**TexQtic testing approach (non-sandbox):**
-1. Use a **separate Zoho Books organization** (e.g., `TexQtic Dev/Staging`) for integration testing — this is the standard Zoho practice.
-2. Configure `ZOHO_BOOKS_ORGANIZATION_ID` to point to the staging Books org in non-production environments.
-3. Test tenants should use a separate Zoho Books org ID; never use production org ID in tests.
-4. Use a test GSTIN (Zoho accepts any 15-char string in test orgs — verify behavior at implementation time).
-5. Custom fields (`cf_texqtic_*`) must be provisioned in the staging org separately from production.
+**Zoho Books sandbox — official API findings:**
+- Documented at `GET/POST /sandboxes` (scope: `ZohoBooks.settings.*`); admin-only; early-access.
+- Purpose: copy of the production Books org for testing **configuration changes** (custom fields, templates, extensions) — NOT a general transactional data test environment.
+- Treat as "may not be available"; build automations must handle "not enabled / not available" responses gracefully.
+- Endpoints: `POST /sandboxes` (create), `GET /sandboxes` (list), `GET /sandboxes/{id}` (detail), plus push/validate/rebuild operations.
+
+**TexQtic testing approach (verify sandbox availability first):**
+1. **Preferred:** Check whether Zoho Books sandbox is available for TexQtic's plan/org (`GET /sandboxes`). If available and enabled, use the official sandbox as the primary isolated test environment.
+2. **Fallback:** Use a **separate Zoho Books organization** (e.g., `TexQtic Dev/Staging`) for integration testing — this is the standard Zoho practice when sandbox is not available.
+3. Configure `ZOHO_BOOKS_ORGANIZATION_ID` to point to the sandbox or staging Books org in non-production environments.
+4. Test tenants should use a separate Zoho Books org ID; never use production org ID in tests.
+5. Use a test GSTIN (Zoho accepts any 15-char string in test orgs — verify behavior at implementation time).
+6. Custom fields (`cf_texqtic_*`) must be provisioned in the sandbox/staging org separately from production.
 
 ### 19.12 Changes to Previous Design Assumptions
 
@@ -796,7 +823,7 @@ Content-Type: application/json
 | OAuth env var | `ZOHO_BOOKS_BASE_URL` | Should be driven by `api_domain` from token | Replace with `ZOHO_BOOKS_API_DOMAIN` (runtime-set from token response) |
 | Access token expiry | Not specified | 1 hour exactly (`expires_in: 3600`) | Cache token; refresh 60s before expiry |
 | Refresh token expiry | "Long-lived" | Does not expire (until revoked); max 20 per user | No rotation needed unless user revokes; monitor for revocation |
-| Sandbox | No info | Not officially documented; use separate staging org | Staging Zoho Books org for all non-production tests |
+| Sandbox | No info | IS documented (early-access); availability varies by plan/edition; treat as "may not be available" | Check `GET /sandboxes` for availability; use official sandbox if available and enabled, else use separate staging org |
 
 ### 19.13 OD-01 Final Recommendation
 
@@ -877,6 +904,7 @@ COMMENT ON COLUMN organization_integrations.external_id IS
   ]
 }
 ```
+> ⚠️ **`custom_fields` payload shape — staging-validation required.** The form above uses `api_name` keys (Option A from §19.7). Confirm whether Zoho Books Contacts API accepts `api_name` in this array; if not, switch to `label`-based Option B. See §19.7 for both options.
 
 **API call pattern (upsert):**
 ```
@@ -894,14 +922,33 @@ Content-Type: application/json
 
 > **Before writing any runtime code for `IMPL-ZOHO-POST-ACTIVATION-SYNC-01`:**
 >
-> 1. Provision all 5 custom fields in the **staging/test Zoho Books organization** first.
-> 2. Call `GET https://www.zohoapis.in/books/v3/settings/customfields?module=contacts&organization_id=<staging_org_id>` to retrieve the actual generated API names.
+> 1. Provision all 5 custom fields in the **staging/sandbox Zoho Books organization** first.
+> 2. Call `GET {api_domain}/books/v3/settings/fields?organization_id=<staging_org_id>&entity=contact` (scope: `ZohoBooks.settings.READ`) to retrieve the actual generated API names. Simple variant: `GET {api_domain}/books/v3/customfields?organization_id=<staging_org_id>&entity=contact`.
 > 3. Confirm `cf_texqtic_org_id` exists, has `unique: true` configured, and the `api_name` matches what will be used in `X-Unique-Identifier-Key`.
 > 4. Zoho generates API names from configured field labels (e.g., label "TexQtic Org ID" → `cf_texqtic_org_id`). If the label differs, the generated API name will differ — validate before coding.
-> 5. Never use a hardcoded base URL such as `https://www.zohoapis.in/books/v3` — always use `api_domain + "/books/v3"` from the OAuth token response.
-> 6. Never create contacts in a production Zoho Books organization during development or QA. Always use the dedicated staging/test org.
+> 5. **Confirm the `custom_fields` payload array shape** accepted by `PUT /contacts`: attempt a test upsert with `api_name`-keyed entries (Option A); if rejected, switch to `label`-keyed entries (Option B). Record the confirmed shape before coding the payload builder.
+> 6. Never use a hardcoded base URL such as `https://www.zohoapis.in/books/v3` — always use `api_domain + "/books/v3"` from the OAuth token response.
+> 7. Never create contacts in a production Zoho Books organization during development or QA. Always use the dedicated staging/sandbox org.
+
+### 19.16 Pre-Implementation Live Validation Checklist
+
+The following items must be verified against a live staging/sandbox Zoho Books org before `IMPL-ZOHO-POST-ACTIVATION-SYNC-01` begins:
+
+| # | Validation item | How to verify |
+|---|---|---|
+| 1 | Confirm Zoho Books org data center and `api_domain` | Run OAuth token refresh; confirm `api_domain` returns `https://www.zohoapis.in` (India DC) |
+| 2 | Confirm `organization_id` for staging org | `GET {api_domain}/books/v3/organizations` (scope: `ZohoBooks.settings.READ`) |
+| 3 | Confirm whether official Zoho Books sandbox is available for TexQtic's plan | `GET {api_domain}/books/v3/sandboxes`; if 200 with data → available; if error/empty → use separate staging org |
+| 4 | Confirm custom field entity key | `GET /settings/fields?entity=contact&organization_id=<id>` returns contact fields (not `entity=contacts`) |
+| 5 | Confirm generated `cf_*` API names in staging/sandbox org | Inspect `api_name` values in the List custom fields response |
+| 6 | Confirm `cf_texqtic_org_id` is configured as unique | `is_unique: true` in the field definition response |
+| 7 | Confirm accepted `custom_fields` payload shape | Perform a test `PUT /contacts` upsert; verify whether `api_name` (Option A) or `label` (Option B) is accepted |
+| 8 | Confirm `gst_no`, `gst_treatment`, `place_of_contact` behavior | Create/upsert a staging contact with dummy GSTIN; verify accepted without errors |
+| 9 | Confirm upsert returns `contact.contact_id` | Inspect the response from the test upsert; confirm numeric `contact_id` present |
+| 10 | Confirm no production contact created during validation | All test calls use staging/sandbox `organization_id`; verify staging org in Zoho UI |
 
 ---
 
 *Hardening section added: 2026-06-09*  
-*Internal consistency patch applied: 2026-06-09*
+*Internal consistency patch applied: 2026-06-09*  
+*Official docs crosscheck corrections applied: 2026-06-09*
