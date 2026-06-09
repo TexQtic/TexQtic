@@ -64,7 +64,7 @@
 
 **CRM event**: `public.direct_registration.created` — fire-and-forget event emitted at registration time. This is NOT a Zoho sync event; it is a separate CRM registration event.
 
-**External reference field pattern**: `Tenant.externalOrchestrationRef` exists and is unique. A parallel field (`organizations.zoho_contact_id` or similar) will be needed on `organizations` for storing the Zoho contact/customer ID post-sync. No such field exists today. This requires a future schema migration.
+**External reference field pattern**: `Tenant.externalOrchestrationRef` exists and is unique. It must **NOT** be repurposed for Zoho integration. A new `organization_integrations` table (OD-01: **resolved — Option B**) will store the Zoho contact ID (`external_id`), sync status, and error details per integration type. No such table exists today. This requires a future schema migration.
 
 ### 2.3 No Existing Design Docs for Zoho Sync
 
@@ -238,7 +238,7 @@ This is the **primary idempotency mechanism**. It requires the `cf_texqtic_org_i
 
 **Prerequisite:** The `cf_texqtic_org_id` custom field must be provisioned in Zoho Books with **unique constraint enabled** before `IMPL-ZOHO-POST-ACTIVATION-SYNC-01` begins. This is a manual Zoho Books admin setup step or can be automated via `POST /settings/customfields` (requires `ZohoBooks.settings.CREATE` scope).
 
-**Deduplication surface:** `cf_texqtic_org_id` custom field (Zoho side) + `zoho_contact_id` stored locally in TexQtic (see §9).
+**Deduplication surface:** `cf_texqtic_org_id` custom field (Zoho side, unique) + `organization_integrations.external_id` stored locally in TexQtic (see §9).
 
 ---
 
@@ -291,34 +291,28 @@ Zoho sync failure **MUST NOT**:
 - No integration mapping table exists.
 - `Tenant.externalOrchestrationRef` exists but serves a different purpose (general orchestration); must not be repurposed for Zoho.
 
-### 9.2 Recommended Storage Approach (for future implementation unit)
+### 9.2 Storage Approach — OD-01 Resolved
 
-**Option A (Recommended — Simple):** Add `zoho_contact_id` column to `organizations` table.
+**~~Option A~~ (REJECTED):** Adding a `zoho_contact_id` column to `organizations` was the simple-path option but is not the chosen approach. It cannot store sync status, retry counters, error details, or future integration types without polluting the core org model. Option A is rejected.
 
-```sql
-ALTER TABLE organizations
-  ADD COLUMN zoho_contact_id VARCHAR(255) NULL;
+**Option B (RESOLVED — chosen approach):** Create a new `organization_integrations` table. See §19.13 for the full SQL definition.
 
-COMMENT ON COLUMN organizations.zoho_contact_id IS
-  'Zoho Books Contact ID assigned after post-activation sync. NULL until sync succeeds. Set by TexQtic integration layer; never used for activation decisioning.';
-```
+**Why Option A was rejected:**
+- A single `zoho_contact_id` column on `organizations` cannot store `sync_status`, `last_synced_at`, `error_code`, `error_details`, or `attempt_count`.
+- Adding those as additional columns on `organizations` pollutes the core org model with integration-specific concerns.
+- Future integrations (Zoho CRM, payment providers, tax filing) would require repeated single-purpose columns.
+- `Tenant.externalOrchestrationRef` must NOT be repurposed for Zoho (different purpose; different domain).
 
-Schema annotation:
-```prisma
-zohoContactId  String? @map("zoho_contact_id") @db.VarChar(255)
-```
+### 9.3 OD-01 RESOLVED — Option B
 
-**Option B (Flexible — Multi-integration future):** Create a new `organization_integrations` table with columns: `id`, `org_id`, `integration_type` (e.g., `ZOHO_BOOKS`), `external_id`, `sync_status`, `last_synced_at`, `error_details`, `created_at`.
+**OD-01 is resolved: Option B — `organization_integrations` table.**
+This decision was finalized in the API hardening pass (§19.13). No further decision is needed.
 
-This option is better if multiple future integrations (Zoho CRM, Stripe, etc.) are anticipated.
-
-### 9.3 Decision Required Before Implementation
-
-**Open Decision OD-01:** Option A (direct column) vs Option B (integration table).
-
-**Recommendation:** Option B (integration table) is the preferred long-term approach given TexQtic's B2B trajectory and likely future integrations (Zoho CRM, payment providers). Option A is acceptable if only Zoho Books sync is planned for the foreseeable future.
-
-**This decision must be made explicit before IMPL-ZOHO-POST-ACTIVATION-SYNC-01 begins.**
+**Prerequisites before `IMPL-ZOHO-POST-ACTIVATION-SYNC-01` can begin (in order):**
+1. Provision Zoho Books custom fields (`cf_texqtic_org_id` as unique + 4 companions) in **both** staging/test and production Zoho Books organizations.
+2. Validate generated Zoho API names against the actual staging/test Zoho Books org (Zoho auto-generates `cf_*` names from field labels; confirm before coding).
+3. Create `organization_integrations` migration via approved DB governance: psql + `prisma db pull` + `prisma generate`.
+4. Configure Zoho OAuth2 secrets (OPS-ZOHO-PRODUCTION-SECRET-CONFIG-01).
 
 ### 9.4 Sync Status Tracking
 
@@ -453,7 +447,10 @@ Zoho sync never executes inside the approval transaction.
 Recommended implementation sequence when approved:
 
 1. **OPS-ZOHO-PRODUCTION-SECRET-CONFIG-01** — Configure Zoho OAuth2 credentials in secrets store.
-2. **Migration** — Add `zoho_contact_id` (Option A) or `organization_integrations` table (Option B) via psql + prisma db pull + prisma generate.
+2. **Prerequisites** — In this order:
+   a. Provision Zoho Books custom fields (`cf_texqtic_org_id` unique + 4 companions) in both staging/test and production Zoho Books organizations.
+   b. Validate generated `cf_*` API names against the actual staging/test Zoho Books org before writing any sync code.
+   c. Create `organization_integrations` table migration (OD-01: Option B — resolved) via approved DB governance: psql + `prisma db pull` + `prisma generate`.
 3. **ZohoBooks client** — Implement `ZohoBooksClient` (OAuth2 token management, Create Contact, Update Contact, Get Contact by ID/email).
 4. **ZohoSyncService** — Implement `ZohoSyncService.syncContact(orgId)` with idempotency, retry, and failure isolation logic.
 5. **Activation hook** — After `VERIFICATION_APPROVED` transaction commits, enqueue Zoho sync via event/job system.
@@ -468,12 +465,12 @@ Recommended implementation sequence when approved:
 
 | Test ID | Description | Target |
 |---|---|---|
-| UNIT-01 | `ZohoSyncService.syncContact()` - happy path (new org, no prior sync) | Creates contact, stores zoho_contact_id |
-| UNIT-02 | `ZohoSyncService.syncContact()` - idempotent (org already has zoho_contact_id) | Updates contact, does not create duplicate |
+| UNIT-01 | `ZohoSyncService.syncContact()` - happy path (new org, no prior sync) | Creates contact via upsert; stores `organization_integrations.external_id`; `sync_status = SYNC_SUCCESS` |
+| UNIT-02 | `ZohoSyncService.syncContact()` - idempotent (org has existing `organization_integrations` row) | Upserts via `cf_texqtic_org_id`; no duplicate contact created; `external_id` confirmed |
 | UNIT-03 | `ZohoSyncService.syncContact()` - Zoho API timeout | Does not throw; schedules retry; activation unaffected |
 | UNIT-04 | `ZohoSyncService.syncContact()` - Zoho 401 unauthorized | Marks credential error; does not retry auto; alerts ops |
 | UNIT-05 | Payload builder — excluded fields not present | No password, no provider payloads, no tokens in payload |
-| UNIT-06 | Payload builder — required fields present after activation | legalName, email, orgId, gstin all present |
+| UNIT-06 | Payload builder — required fields present after activation | `contact_name`, `contact_persons[0].email`, `gst_no` present; `cf_texqtic_org_id` in `custom_fields` |
 | UNIT-07 | Sync not triggered for PENDING_VERIFICATION org | No Zoho call made before activation |
 | UNIT-08 | Retry exhaustion → SYNC_FAILED state | Correct state transition, audit event emitted |
 
@@ -490,14 +487,24 @@ Recommended implementation sequence when approved:
 
 ## 15. Production Verification Plan (For Future Implementation Unit)
 
-1. Verify all `ZOHO_BOOKS_*` env vars are set in production secrets store.
-2. Activate a test tenant (non-production org) → confirm Zoho contact created in Books sandbox.
-3. Verify `zoho_contact_id` stored on `organizations` record.
-4. Verify `org.zoho_sync.success` event in `event_logs`.
-5. Re-run activation sync for same org → confirm no duplicate contact in Zoho.
-6. Take Zoho API offline (or use invalid credentials) → confirm activation still succeeds.
-7. Confirm `org.zoho_sync.exhausted` event and admin-visible error after retry exhaustion.
-8. Restore Zoho credentials → confirm manual retry succeeds.
+> ⚠️ **No real customer contact must be created in any Zoho Books organization during QA unless explicitly approved by Platform Engineering. Always use the dedicated staging/test Zoho Books organization for all non-production verification.**
+
+**Staging/test verification (must succeed before production):**
+1. Verify all `ZOHO_BOOKS_*` env vars set in **staging** secrets store; confirm `ZOHO_BOOKS_API_DOMAIN` returns the `.in` domain from the OAuth token response (no hardcoded base URL).
+2. Verify Zoho Books custom fields (`cf_texqtic_org_id` as unique + 4 companions) provisioned in the **staging/test Zoho Books organization**; validate API names match the values expected in code.
+3. Activate a test tenant (non-production org) → confirm Zoho contact created in the **staging/test Zoho Books organization** (Zoho Books has no official dedicated sandbox — use a separate staging org).
+4. Verify `organization_integrations.external_id` (Zoho `contact_id`) populated and `sync_status = SYNC_SUCCESS`.
+5. Verify `org.zoho_sync.success` event in `event_logs`.
+6. Re-run activation sync for same org → confirm no duplicate contact created (upsert idempotency via `cf_texqtic_org_id`).
+7. Take Zoho API offline (or use invalid credentials) → confirm activation still succeeds; sync marks `SYNC_FAILED` after retries exhausted.
+8. Confirm `org.zoho_sync.exhausted` event and admin-visible error after retry exhaustion.
+9. Restore Zoho credentials → confirm manual retry succeeds and `sync_status` transitions to `SYNC_SUCCESS`.
+
+**Production verification (only after staging/test verification passes in full):**
+10. Verify all `ZOHO_BOOKS_*` env vars set in **production** secrets store.
+11. Verify custom fields provisioned in the **production Zoho Books organization**.
+12. Activate a real-but-internal test org in production (explicitly approved, explicitly tracked) → confirm contact created in production Zoho Books org.
+13. Confirm `organization_integrations` row populated correctly.
 
 ---
 
@@ -505,7 +512,7 @@ Recommended implementation sequence when approved:
 
 | ID | Decision | Options | Recommended | Owner |
 |---|---|---|---|---|
-| OD-01 | External Zoho reference storage model | Option A: `organizations.zoho_contact_id` column; Option B: `organization_integrations` table | **Option B RECOMMENDED** — but given the upsert-via-custom-field pattern (§7), Option A is now a valid simpler choice if Zoho Books is the only near-term integration. See §13 final recommendation. | Platform Engineering — **updated after API hardening** |
+| OD-01 | External Zoho reference storage model | ~~Option A: `organizations.zoho_contact_id`~~ (rejected — cannot store sync metadata); Option B: `organization_integrations` table | **RESOLVED: Option B** — `organization_integrations` table. Option A rejected. See §9.2, §9.3, §13, §19.13. | Platform Engineering — **resolved in API hardening pass** |
 | OD-02 | Phone number sync consent scope | Review existing ToS to determine if business phone may be shared with Zoho Books | Omit phone until confirmed | Legal/Product |
 | OD-03 | Test/internal tenant exclusion logic | Flag on `Tenant` model (e.g., `is_test`); or slug-pattern exclusion | Recommend `is_test` flag if not already present | Platform Engineering |
 | OD-04 | Job queue / outbox implementation | Use existing event_logs as outbox + poller; or introduce a dedicated job queue | Use existing event_logs pattern first; evaluate dedicated queue at scale | Platform Engineering |
@@ -519,7 +526,7 @@ The following findings were observed during repo-truth inspection. They are reco
 
 | Candidate ID | Finding | Severity | Suggested Future Unit | Likely File Surface | Readiness |
 |---|---|---|---|---|---|
-| AF-01 | `Tenant.externalOrchestrationRef` is a general-purpose field on tenants; a cleaner integration reference pattern (per-integration, per-org) does not exist. Future integrations will need a proper integration mapping table. | Medium | IMPL-ZOHO-POST-ACTIVATION-SYNC-01 (Option B schema) | `server/prisma/schema.prisma`, new migration | Blocked on OD-01 decision |
+| AF-01 | `Tenant.externalOrchestrationRef` is a general-purpose field on tenants and must NOT be repurposed for Zoho. The `organization_integrations` table (OD-01: Option B, resolved) provides the correct per-integration, per-org reference pattern. | Medium | IMPL-ZOHO-POST-ACTIVATION-SYNC-01 | `server/prisma/schema.prisma`, new `organization_integrations` migration | Ready — OD-01 resolved; prerequisite for IMPL unit |
 | AF-02 | No admin UI currently surfaces integration sync status (SYNC_FAILED, SYNC_SUCCESS) for post-activation integrations. | Medium | ADMIN-ZOHO-SYNC-STATUS-VISIBILITY-01 | `server/src/routes/admin/`, frontend admin panel | After IMPL-ZOHO-POST-ACTIVATION-SYNC-01 |
 | AF-03 | Zoho OAuth2 credential rotation lifecycle (refresh token expiry) has no ops alerting path defined. | Medium | OPS-ZOHO-PRODUCTION-SECRET-CONFIG-01 | Ops/infra runbook | Before production activation |
 | AF-04 | Indian DPDPA compliance review for sharing business contact data with Zoho has not been formally documented. | High | Legal review item | docs/legal/ or formal DPA | Before production activation |
@@ -537,10 +544,10 @@ The following findings were observed during repo-truth inspection. They are reco
 | GST authority | Deepvue + TexQtic admin review |
 | Activation state authority | TexQtic Main App database |
 | Zoho role | Downstream accounting/contact sync only |
-| Idempotency key | `orgId` — lookup existing zoho_contact_id before create/update |
+| Idempotency key | Primary: Zoho upsert via unique `cf_texqtic_org_id` (`PUT /contacts` + `X-Unique-Identifier-Key` + `X-Upsert: true`). Local: `organization_integrations` stores `external_id`/contact_id and sync status. |
 | Failure behavior | Activation unaffected; retry with backoff; SYNC_FAILED after exhaustion |
-| Secret model | Zoho credentials in env vars only; never logged or persisted |
-| Schema change needed | YES — future migration required (see §9.2) |
+| Secret model | Zoho credentials in env vars only; never logged or persisted. No `ZOHO_BOOKS_BASE_URL` — base URL derived from `api_domain` in OAuth token response. Required vars: `ZOHO_BOOKS_CLIENT_ID`, `ZOHO_BOOKS_CLIENT_SECRET`, `ZOHO_BOOKS_REFRESH_TOKEN`, `ZOHO_BOOKS_ORGANIZATION_ID`, `ZOHO_BOOKS_API_DOMAIN`. |
+| Schema change needed | YES — `organization_integrations` migration required (OD-01: Option B, resolved; see §9.2, §9.3, and §19.13). |
 | Runtime code changed | NO (this unit is design-only) |
 
 ---
@@ -801,7 +808,7 @@ Content-Type: application/json
 1. The `organization_integrations` table naturally accommodates the sync status tracking (`NOT_SYNCED`, `SYNC_PENDING`, `SYNC_SUCCESS`, `SYNC_FAILED`, `SYNC_SKIPPED`), `last_synced_at`, `error_details`, and `attempt_count` — none of which fit on a simple column.
 2. Zoho Books returns a numeric `contact_id` — storing it alongside sync metadata is cleaner in a table than adding multiple columns to `organizations`.
 3. Future integrations (Zoho CRM, payment gateways, etc.) will follow the same pattern; a table amortizes the migration cost.
-4. The upsert-via-custom-field pattern reduces (but does not eliminate) the need to locally store `zoho_contact_id` — but it is still needed for the `GET /contacts/{contact_id}` fast-path and for admin sync-status display.
+4. The upsert-via-custom-field pattern reduces (but does not eliminate) the need to locally cache the Zoho `contact_id` — it is still needed for the `GET /contacts/{contact_id}` fast-path and for admin sync-status display. This value is stored in `organization_integrations.external_id`.
 
 **Minimum table definition (for Option B):**
 ```sql
@@ -883,6 +890,18 @@ Content-Type: application/json
 
 **After successful response:** Store `contact.contact_id` in `organization_integrations.external_id`; set `sync_status = SYNC_SUCCESS`.
 
+### 19.15 Implementation Guardrail
+
+> **Before writing any runtime code for `IMPL-ZOHO-POST-ACTIVATION-SYNC-01`:**
+>
+> 1. Provision all 5 custom fields in the **staging/test Zoho Books organization** first.
+> 2. Call `GET https://www.zohoapis.in/books/v3/settings/customfields?module=contacts&organization_id=<staging_org_id>` to retrieve the actual generated API names.
+> 3. Confirm `cf_texqtic_org_id` exists, has `unique: true` configured, and the `api_name` matches what will be used in `X-Unique-Identifier-Key`.
+> 4. Zoho generates API names from configured field labels (e.g., label "TexQtic Org ID" → `cf_texqtic_org_id`). If the label differs, the generated API name will differ — validate before coding.
+> 5. Never use a hardcoded base URL such as `https://www.zohoapis.in/books/v3` — always use `api_domain + "/books/v3"` from the OAuth token response.
+> 6. Never create contacts in a production Zoho Books organization during development or QA. Always use the dedicated staging/test org.
+
 ---
 
-*Hardening section added: 2026-06-09*
+*Hardening section added: 2026-06-09*  
+*Internal consistency patch applied: 2026-06-09*
