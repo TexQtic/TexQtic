@@ -29,7 +29,7 @@ Design the CRM lifecycle sync event map from the Main App's onboarding, GST/KYC,
 | `GOV-CROSSAPP-ACQUISITION-SOURCE-TAGGING-CONTRACT-01.md` | Source taxonomy and first-touch field contract |
 | `DECIDE-ONLINE-DIRECT-REGISTRATION-HYBRID-ONBOARDING-MODEL-01.md` | Direct registration as primary online acquisition lane |
 | `DESIGN-MAINAPP-GST-KYC-AUTOMATION-HYBRID-WITH-ADMIN-FALLBACK-01.md` | GST/KYC automation with admin fallback design |
-| `DECIDE-MAINAPP-GST-KYC-PROVIDER-SELECTION-01.md` (addendum `82058b94`) | Deepvue as primary provider; activation pending |
+| `DECIDE-MAINAPP-GST-KYC-PROVIDER-SELECTION-01.md` (addendum `82058b94`) | Deepvue as primary provider; production activation complete 2026-06-09 |
 
 ---
 

@@ -597,7 +597,7 @@ The findings recorded in §11, §12, §13, §20, and §26 were correct at the ti
 
 | Item | Status |
 |---|---|
-| GST/KYC automation with admin fallback (`DESIGN-MAINAPP-GST-KYC-AUTOMATION-HYBRID-WITH-ADMIN-FALLBACK-01`) | OPEN — design unit, not started |
+| GST/KYC automation with admin fallback (`DESIGN-MAINAPP-GST-KYC-AUTOMATION-HYBRID-WITH-ADMIN-FALLBACK-01`) | COMPLETE — design and implementation done; Deepvue production activation verified 2026-06-09 (commits `d45272cd`, `4adc8500`) |
 | CRM lifecycle sync event map from direct registration | OPEN — design unit, not started |
 | Zoho post-activation contact sync design | OPEN — design unit, not started |
 | Marketing Website CTA migration to `/register` | OPEN — Marketing Website repo |
@@ -621,7 +621,7 @@ The findings recorded in §11, §12, §13, §20, and §26 were correct at the ti
 
 | Gap (from §30 Still Open) | Status at §31 |
 |---|---|
-| GST/KYC automation with admin fallback (`DESIGN-MAINAPP-GST-KYC-AUTOMATION-HYBRID-WITH-ADMIN-FALLBACK-01`) | OPEN — design unit, not started |
+| GST/KYC automation with admin fallback (`DESIGN-MAINAPP-GST-KYC-AUTOMATION-HYBRID-WITH-ADMIN-FALLBACK-01`) | COMPLETE — design and implementation done; Deepvue production activation verified 2026-06-09 (commits `d45272cd`, `4adc8500`) |
 | CRM lifecycle sync event map from direct registration | OPEN — design unit, not started |
 | Zoho post-activation contact sync design | OPEN — design unit, not started |
 | Marketing Website CTA migration to `/register` | OPEN — Marketing Website repo |

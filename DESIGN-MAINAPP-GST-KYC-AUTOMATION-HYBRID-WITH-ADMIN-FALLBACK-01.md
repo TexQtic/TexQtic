@@ -1,7 +1,7 @@
 # DESIGN-MAINAPP-GST-KYC-AUTOMATION-HYBRID-WITH-ADMIN-FALLBACK-01
 
 **Unit:** `DESIGN-MAINAPP-GST-KYC-AUTOMATION-HYBRID-WITH-ADMIN-FALLBACK-01`
-**Status:** DESIGN COMPLETE — awaiting Paresh authorization for implementation unit
+**Status:** IMPLEMENTATION COMPLETE — Deepvue production activation verified 2026-06-09. See §PRODUCTION ACTIVATION RECORD below.
 **Branch:** `main` · HEAD `5625b57c`
 **Date:** 2026-06-08
 **Author:** Copilot (design/repo-truth audit)
@@ -29,7 +29,7 @@ Inspected at HEAD `5625b57c` (current HEAD at time of design work). All findings
 | Symbol | File | Finding |
 |---|---|---|
 | `GstVerificationCard` | `components/Tenant/GstVerificationCard.tsx` | Five view states: `not_submitted`, `pending`, `approved`, `rejected`, `needs_more_info`. Submission form. Re-submission form for rejected/needs_more_info. Status badge. Review notes displayed in rejected and needs_more_info states. |
-| `GstVerificationQueue` | `components/ControlPlane/GstVerificationQueue.tsx` | Admin control-plane component. Lists pending (review_outcome IS NULL) verifications. Review dialog: APPROVED / REJECTED / NEEDS_MORE_INFO buttons + notes field. Displays: org_id, gstin, legal_name_on_gst, state_code, registration_type, filing_status, submitted_at. **No provider evidence fields displayed.** |
+| `GstVerificationQueue` | `components/ControlPlane/GstVerificationQueue.tsx` | Admin control-plane component. Lists pending (review_outcome IS NULL) verifications. Review dialog: APPROVED / REJECTED / NEEDS_MORE_INFO buttons + notes field. Displays: org_id, gstin, legal_name_on_gst, state_code, registration_type, filing_status, submitted_at. **Provider evidence fields displayed: provider_name, provider_result, provider_verified_at** (commits `b329e568` / `53b04edd`). Privacy note rendered. `raw_verification_json` and `provider_request_id` excluded from response. |
 | `provisionalGstStatus` | `App.tsx:2415` | State variable: `'loading' \| 'not_submitted' \| 'pending' \| 'approved' \| 'rejected' \| 'needs_more_info' \| null`. Shell resolves this from GET /api/tenant/gst-verification. |
 | `resolveProvisionalGstStatus` | `App.tsx:1989` | Exported pure function — maps `GstVerificationRecord` to provisional status. Covered by frontend tests. |
 | Shell blocked-state CTAs | `App.tsx:5957–6010` | State-aware "Next step" card in provisional workspace: not_submitted → "Submit GST Verification"; pending → "View Submission"; rejected → "Resubmit"; needs_more_info → "Update Submission". Implemented in commit `56d916f9`. |
@@ -814,3 +814,51 @@ The following actions are explicitly forbidden in `IMPL-MAINAPP-GST-KYC-PROVIDER
   - `git status --short --untracked-files=all` (after): one new design doc only
 - [x] Hub impact assessment: `NO_HUB_UPDATE_REQUIRED` (§18)
 - [x] Final enum: `DESIGN_MAINAPP_GST_KYC_AUTOMATION_HYBRID_WITH_ADMIN_FALLBACK_COMPLETE`
+
+---
+
+## §PRODUCTION ACTIVATION RECORD
+
+**Added by:** `GOV-SYNC-DEEPVUE-GST-PRODUCTION-ACTIVATION-CLOSE-01`
+**HEAD at sync:** `4adc8500559c84547366046af27a3918523795cd` (branch `main`, CLEAN)
+**Date:** 2026-06-09
+
+### Implementation Chain
+
+| Commit | Description |
+|---|---|
+| `b329e568` | feat: provider evidence fields in GstVerificationQueue admin UI |
+| `53b04edd` | fix: tighten admin record contract (exclude raw_verification_json, provider_request_id) |
+| `3919a1d6` | feat: GST provider adapter interface + DeepvueGstAdapter + orchestration service |
+| `d45272cd` | fix(db): allow tenant GST verification writes under RLS (GRANT UPDATE + UPDATE policy for texqtic_app on gst_verifications) |
+| `4adc8500` | fix(gst): increase withDbContext timeout for provider HTTP call (30 000 ms) |
+
+### Pre-Production Blockers Resolved
+
+| Blocker | Fix |
+|---|---|
+| `42501 permission denied for table gst_verifications` on Prisma upsert | Migration `20260609000000_gst_verifications_update_grant_and_policy` — GRANT UPDATE + PERMISSIVE UPDATE policy for `texqtic_app` |
+| `P2028 Transaction already closed: timeout 5000ms` during Deepvue HTTP call | `{ timeoutMs: 30000 }` added as 4th arg to `withDbContext` in submit route |
+
+### Production Smoke Evidence (2026-06-09)
+
+| Item | Result |
+|---|---|
+| `POST /api/tenant/gst-verification` | 201 in 8.1 s |
+| GSTIN tested | 29\*\*\*ZS (TATA MOTORS LIMITED, state 29, Regular) |
+| `provider_result` | `MISMATCH` (expected — C5 fuzzy name check; not a provider failure) |
+| `provider_verified_at` | 2026-06-09 4:38:22 PM |
+| Admin queue loaded | ✅ — smoke record visible |
+| Admin Review dialog | ✅ — provider_name, provider_result, provider_verified_at rendered; no raw_verification_json |
+| 120 unit tests | PASS |
+| typecheck (server + frontend) | CLEAN |
+
+### Provider
+
+- **Primary:** Deepvue (`production.deepvue.tech`) — ISO 27001:2022
+- **Env vars present in production:** `GST_PROVIDER` ✅, `GST_PROVIDER_CLIENT_ID` ✅, `GST_PROVIDER_CLIENT_SECRET` ✅
+- **Name matching:** `fast-levenshtein` npm library (C5 fuzzy match ≥ 80%)
+
+### Final Enum
+
+`GOV_SYNC_DEEPVUE_GST_PRODUCTION_ACTIVATION_CLOSE_COMPLETE_PUSHED`
