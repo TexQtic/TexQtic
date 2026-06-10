@@ -28,6 +28,7 @@ import {
   notifyAdminReviewedRejected,
   notifyAdminReviewedNeedsMoreInfo,
 } from './crmLifecycleNotifyClient.js';
+import { maybeSyncZohoBooksContactAfterActivation } from './zoho/zohoBooks.lifecycle.js';
 
 // GSTIN pattern: 2-digit state code + 5 uppercase letters + 4 digits +
 //                1 uppercase letter + 1 [1-9A-Z] + literal Z + 1 [0-9A-Z]
@@ -346,6 +347,10 @@ export class GstVerificationService {
         tenantId: orgId,
         reviewNotesCategory: null, // safe default; admin category UI is a future unit
       }).catch(() => undefined);
+      // Feature-flagged Zoho Books contact sync — disabled by default.
+      // Flag: ZOHO_POST_ACTIVATION_CONTACT_SYNC_ENABLED=true to enable.
+      // Never throws; failure does not affect lifecycle transition.
+      await maybeSyncZohoBooksContactAfterActivation(orgId).catch(() => undefined);
     } else if (data.review_outcome === TTP_GST_REVIEW_OUTCOME.REJECTED) {
       await (this.db as any).organizations.updateMany({
         where: { id: orgId, status: 'PENDING_VERIFICATION' },
@@ -498,6 +503,10 @@ export class GstVerificationService {
           where: { id: orgId, status: 'PENDING_VERIFICATION' },
           data: { status: 'VERIFICATION_APPROVED' },
         });
+        // Feature-flagged Zoho Books contact sync — disabled by default.
+        // Flag: ZOHO_POST_ACTIVATION_CONTACT_SYNC_ENABLED=true to enable.
+        // Never throws; failure does not affect lifecycle transition.
+        await maybeSyncZohoBooksContactAfterActivation(orgId).catch(() => undefined);
       }
 
       return {

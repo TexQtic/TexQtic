@@ -29,6 +29,12 @@ vi.mock('../services/crmLifecycleNotifyClient.js', () => ({
   notifyAdminReviewedNeedsMoreInfo: vi.fn().mockResolvedValue({ dispatch_status: 'NOOP_SKIPPED' }),
 }));
 
+// Mock Zoho lifecycle sync — disabled by default (matches real flag-off behavior).
+// Prevents any DB or network access in GST service unit tests.
+vi.mock('../services/zoho/zohoBooks.lifecycle.js', () => ({
+  maybeSyncZohoBooksContactAfterActivation: vi.fn().mockResolvedValue({ status: 'SKIPPED_DISABLED' }),
+}));
+
 import {
   notifyGstSubmitted,
   notifyGstResubmitted,
