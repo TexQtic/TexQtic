@@ -219,7 +219,7 @@ export class GstVerificationService {
       });
     }
 
-    // Emit GST submit / resubmit lifecycle event (fire-and-forget).
+    // Emit GST submit / resubmit lifecycle event — awaited-safe, timeout-bounded.
     const gstCrmParams = {
       orgId,
       tenantId: orgId, // org_id === tenant_id in current schema
@@ -228,9 +228,9 @@ export class GstVerificationService {
       orgStatus: 'PENDING_VERIFICATION',
     };
     if (isResubmit) {
-      void notifyGstResubmitted(gstCrmParams).catch(() => undefined);
+      await notifyGstResubmitted(gstCrmParams).catch(() => undefined);
     } else {
-      void notifyGstSubmitted(gstCrmParams).catch(() => undefined);
+      await notifyGstSubmitted(gstCrmParams).catch(() => undefined);
     }
 
     // Provider check — if configured, runs inline and updates record with evidence.
@@ -243,9 +243,9 @@ export class GstVerificationService {
         data.state_code,
       );
 
-      // Emit provider check event if provider ran (fire-and-forget).
+      // Emit provider check event if provider ran — awaited-safe, timeout-bounded.
       if (providerCheckResult) {
-        void notifyProviderCheckCompleted({
+        await notifyProviderCheckCompleted({
           orgId,
           tenantId: orgId,
           providerResult: providerCheckResult.provider_result,
@@ -340,8 +340,8 @@ export class GstVerificationService {
         where: { id: orgId, status: 'PENDING_VERIFICATION' },
         data: { status: 'VERIFICATION_APPROVED' },
       });
-      // Emit admin-approved lifecycle event (fire-and-forget).
-      void notifyAdminReviewedApproved({
+      // Emit admin-approved lifecycle event — awaited-safe, timeout-bounded.
+      await notifyAdminReviewedApproved({
         orgId,
         tenantId: orgId,
         reviewNotesCategory: null, // safe default; admin category UI is a future unit
@@ -351,8 +351,8 @@ export class GstVerificationService {
         where: { id: orgId, status: 'PENDING_VERIFICATION' },
         data: { status: 'VERIFICATION_REJECTED' },
       });
-      // Emit admin-rejected lifecycle event (fire-and-forget).
-      void notifyAdminReviewedRejected({
+      // Emit admin-rejected lifecycle event — awaited-safe, timeout-bounded.
+      await notifyAdminReviewedRejected({
         orgId,
         tenantId: orgId,
         rejectionReasonCategory: null, // safe default; admin category UI is a future unit
@@ -362,8 +362,8 @@ export class GstVerificationService {
         where: { id: orgId, status: 'PENDING_VERIFICATION' },
         data: { status: 'VERIFICATION_NEEDS_MORE_INFO' },
       });
-      // Emit admin-needs-more-info lifecycle event (fire-and-forget).
-      void notifyAdminReviewedNeedsMoreInfo({
+      // Emit admin-needs-more-info lifecycle event — awaited-safe, timeout-bounded.
+      await notifyAdminReviewedNeedsMoreInfo({
         orgId,
         tenantId: orgId,
         reviewNotesCategory: null, // safe default; admin category UI is a future unit

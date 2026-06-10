@@ -992,7 +992,7 @@ describe('GstVerificationService — CRM lifecycle events', () => {
     vi.clearAllMocks();
   });
 
-  // Drain a microtask tick so void fire-and-forget promises resolve before assertions.
+  // Sender is now awaited — drainTick() is a no-op guard kept for safety.
   async function drainTick() {
     await new Promise(resolve => globalThis.setTimeout(resolve, 0));
   }

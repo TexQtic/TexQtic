@@ -232,7 +232,7 @@ export async function registerDirectProvisionalAccount(
           nextStep: 'SIGN_IN_TO_CONTINUE_ONBOARDING',
         };
       });
-      // Fire-and-forget CRM lifecycle event — must not block or throw into registration.
+      // Await CRM lifecycle event — timeout-bounded (8s AbortController), never throws into registration.
       // Email is included only in this event (EMAIL_INCLUDED_IN_V1).
       // externalOrchestrationRef is always null for direct-registration orgs.
       const crmAttribution: CrmAttributionPayload | null = payload.attribution
@@ -244,7 +244,7 @@ export async function registerDirectProvisionalAccount(
           }
         : null;
 
-      void notifyRegistrationSubmitted({
+      await notifyRegistrationSubmitted({
         orgId: result.tenantId,
         tenantId: result.tenantId,
         email: normalizedEmail,

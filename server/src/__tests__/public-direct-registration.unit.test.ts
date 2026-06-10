@@ -323,8 +323,7 @@ describe('POST /api/public/register', () => {
     });
 
     expect(response.statusCode).toBe(201);
-    // Allow event loop to drain so fire-and-forget executes
-    await new Promise(resolve => globalThis.setTimeout(resolve, 0));
+    // Sender is now awaited — no drainTick needed; mock must be called by the time inject() resolves.
     expect(vi.mocked(notifyRegistrationSubmitted)).toHaveBeenCalledOnce();
 
     await app.close();
@@ -347,7 +346,7 @@ describe('POST /api/public/register', () => {
       },
     });
 
-    await new Promise(resolve => globalThis.setTimeout(resolve, 0));
+    // Sender is awaited — mock is called before inject() resolves; no drainTick needed.
     expect(vi.mocked(notifyRegistrationSubmitted)).toHaveBeenCalledOnce();
     const callArg = vi.mocked(notifyRegistrationSubmitted).mock.calls[0][0];
 
@@ -404,7 +403,7 @@ describe('POST /api/public/register', () => {
     });
 
     expect(response.statusCode).toBe(409);
-    await new Promise(resolve => globalThis.setTimeout(resolve, 0));
+    // Sender is not reached when registration fails; no drainTick needed.
     expect(vi.mocked(notifyRegistrationSubmitted)).not.toHaveBeenCalled();
 
     await app.close();
