@@ -1087,6 +1087,7 @@ model organizations {
   dppEvidenceClaims                                                                                  DppEvidenceClaim[]
   legalConsentSnapshots                                                                              LegalConsentSnapshot[]
   legalConsentEvents                                                                                 LegalConsentEvent[]
+  organizationIntegrations                                                                           OrganizationIntegration[]
   dpp_evidence_items                                                                                 dpp_evidence_items[]
   dpp_passport_states                                                                                dpp_passport_states[]
   dpp_product_details                                                                                dpp_product_details[]
@@ -1156,6 +1157,29 @@ model OrganizationRolePosition {
 
   @@id([org_id, role_position_key])
   @@map("organization_role_positions")
+}
+
+model OrganizationIntegration {
+  id                 String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId     String        @map("organization_id") @db.Uuid
+  providerKey        String        @map("provider_key") @db.VarChar(50)
+  externalObjectType String        @map("external_object_type") @db.VarChar(50)
+  externalId         String?       @map("external_id") @db.VarChar(255)
+  syncStatus         String        @default("NOT_SYNCED") @map("sync_status") @db.VarChar(50)
+  lastAttemptedAt    DateTime?     @map("last_attempted_at") @db.Timestamptz(6)
+  lastDryRunAt       DateTime?     @map("last_dry_run_at") @db.Timestamptz(6)
+  lastErrorSummary   String?       @map("last_error_summary") @db.VarChar(500)
+  attemptCount       Int           @default(0) @map("attempt_count") @db.SmallInt
+  metadataJson       Json?         @map("metadata_json")
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organization       organizations @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([organizationId, providerKey, externalObjectType], map: "organization_integrations_org_provider_object_key")
+  @@index([organizationId], map: "idx_organization_integrations_organization_id")
+  @@index([providerKey], map: "idx_organization_integrations_provider_key")
+  @@index([syncStatus], map: "idx_organization_integrations_sync_status")
+  @@map("organization_integrations")
 }
 
 /// G-024: Sanctions domain.
