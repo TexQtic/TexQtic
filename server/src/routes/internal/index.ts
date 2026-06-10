@@ -32,7 +32,6 @@ import { tenantApprovalRoutes, adminApprovalRoutes } from './makerChecker.js';
 import resolveDomainRoutes from './resolveDomain.js';
 import cacheInvalidateRoutes from './cacheInvalidate.js';
 import acquisitionProvisioningRoutes from './acquisitionProvisioning.js';
-import zohoReadonlyDiagnosticRoutes from './zohoReadonlyDiagnostic.js';
 
 /**
  * Combined internal governance routes plugin.
@@ -66,7 +65,6 @@ const internalGovRoutes: FastifyPluginAsync = async fastify => {
   // POST /api/internal/acquisition/provision-supplier
   // Called by CRM after acquisition-sourced supplier approval/activation.
   await fastify.register(acquisitionProvisioningRoutes, { prefix: '/api/internal' });
-  await fastify.register(zohoReadonlyDiagnosticRoutes, { prefix: '/api/internal' });
 };
 
 export default internalGovRoutes;
