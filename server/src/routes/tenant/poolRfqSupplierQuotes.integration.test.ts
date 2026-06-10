@@ -971,13 +971,14 @@ describe.skipIf(!hasDb)(
 
     it('SQ-39 owner invite route still works (regression: ORI route unaffected)', async () => {
       // Verify owner RFQ route still accessible (Packet 13 must not break ORI).
+      // Role must be OWNER: GET /:poolId/rfq has a role gate (OWNER|ADMIN only → 403 for MEMBER).
       const res = await app.inject({
         method: 'GET',
         url: `/api/tenant/network-commerce/pools/${randomUUID()}/rfq`,
-        headers: authHeaders(ownerOrgId, ownerUserId),
+        headers: authHeaders(ownerOrgId, ownerUserId, 'OWNER'),
       });
       // 503 = pool gate triggered (expected if pool flag is down); 404 = handler reached.
-      // Either way, route is registered and accessible.
+      // Either way, route is registered and accessible to an OWNER.
       expect([200, 404, 422, 503]).toContain(res.statusCode);
     });
 
