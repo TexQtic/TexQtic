@@ -1258,4 +1258,144 @@ describe('GstVerificationService — CRM lifecycle events', () => {
       expect(callArg.tenantId).toBe(ORG_ID);
     });
   });
+
+  // ─── CRM auto-approval parity tests ──────────────────────────────────────────
+  // FIX-MAINAPP-CRM-LIFECYCLE-AUTO-APPROVAL-NOTIFY-PARITY-01
+  // Contract authority: DESIGN-CRM-LIFECYCLE-SYNC-EVENT-MAP-FROM-MAINAPP-01 §9 (line 393):
+  //   AUTO_APPROVED → org.gst.provider_check.auto_approved.v1 + org.gst.admin_reviewed.approved.v1
+  // review_notes_category 'AUTO_APPROVED' is from taxonomy §8.1 of
+  //   DECIDE-CRM-LIFECYCLE-SYNC-PAYLOAD-PRIVACY-AND-FIELD-CONTRACT-01.
+
+  describe('provider auto-approval — emits notifyAdminReviewedApproved on successful transition', () => {
+    function makeAutoApprovalDb() {
+      const db = makeDb();
+      db.gst_verifications.findUnique
+        .mockResolvedValueOnce(null)                       // APPROVED guard
+        .mockResolvedValueOnce(makeAutoApprovedDbRecord()); // final record
+      db.gst_verifications.upsert.mockResolvedValueOnce(makeTenantDbRecord());
+      db.gst_verifications.findFirst.mockResolvedValueOnce(null); // no duplicate GSTIN
+      db.gst_verifications.updateMany
+        .mockResolvedValueOnce({ count: 1 })  // evidence update
+        .mockResolvedValueOnce({ count: 1 }); // race-guard approve update
+      db.organizations.updateMany.mockResolvedValue({ count: 1 });
+      return db;
+    }
+
+    function makeAutoApprovalProvider(): GstProviderAdapter {
+      return {
+        name: 'deepvue',
+        verifyGstin: vi.fn().mockResolvedValue({ ok: true, data: makeSuccessProviderData() }),
+      };
+    }
+
+    it('emits notifyAdminReviewedApproved when provider auto-approval race guard succeeds', async () => {
+      vi.mocked(notifyAdminReviewedApproved).mockClear();
+      const db = makeAutoApprovalDb();
+      const svc = new GstVerificationService(db, makeAutoApprovalProvider());
+
+      await svc.submitVerification(ORG_ID, BASE_SUBMIT_INPUT);
+
+      await drainTick();
+      expect(vi.mocked(notifyAdminReviewedApproved)).toHaveBeenCalledOnce();
+    });
+
+    it('provider auto-approval CRM payload uses reviewNotesCategory AUTO_APPROVED (controlled taxonomy §8.1)', async () => {
+      vi.mocked(notifyAdminReviewedApproved).mockClear();
+      const db = makeAutoApprovalDb();
+      const svc = new GstVerificationService(db, makeAutoApprovalProvider());
+
+      await svc.submitVerification(ORG_ID, BASE_SUBMIT_INPUT);
+
+      await drainTick();
+      const callArg = vi.mocked(notifyAdminReviewedApproved).mock.calls[0][0];
+      expect(callArg.reviewNotesCategory).toBe('AUTO_APPROVED');
+    });
+
+    it('provider auto-approval CRM call passes correct orgId and tenantId', async () => {
+      vi.mocked(notifyAdminReviewedApproved).mockClear();
+      const db = makeAutoApprovalDb();
+      const svc = new GstVerificationService(db, makeAutoApprovalProvider());
+
+      await svc.submitVerification(ORG_ID, BASE_SUBMIT_INPUT);
+
+      await drainTick();
+      const callArg = vi.mocked(notifyAdminReviewedApproved).mock.calls[0][0];
+      expect(callArg.orgId).toBe(ORG_ID);
+      expect(callArg.tenantId).toBe(ORG_ID);
+    });
+
+    it('provider auto-approval CRM payload does NOT contain forbidden fields', async () => {
+      vi.mocked(notifyAdminReviewedApproved).mockClear();
+      const db = makeAutoApprovalDb();
+      const svc = new GstVerificationService(db, makeAutoApprovalProvider());
+
+      await svc.submitVerification(ORG_ID, BASE_SUBMIT_INPUT);
+
+      await drainTick();
+      const callArg = vi.mocked(notifyAdminReviewedApproved).mock.calls[0][0];
+      // Forbidden: raw provider data, GSTIN, PAN, Aadhaar, provider_request_id, timestamps
+      expect(callArg).not.toHaveProperty('gstin');
+      expect(callArg).not.toHaveProperty('pan');
+      expect(callArg).not.toHaveProperty('aadhaar');
+      expect(callArg).not.toHaveProperty('aadhar');
+      expect(callArg).not.toHaveProperty('provider_request_id');
+      expect(callArg).not.toHaveProperty('provider_verified_at');
+      expect(callArg).not.toHaveProperty('raw_verification_json');
+      expect(callArg).not.toHaveProperty('review_notes');
+      expect(callArg).not.toHaveProperty('reviewed_by_admin_id');
+    });
+
+    it('does NOT emit notifyAdminReviewedApproved when race guard fails (approveResult.count = 0)', async () => {
+      vi.mocked(notifyAdminReviewedApproved).mockClear();
+      const db = makeDb();
+      const provider = makeAutoApprovalProvider();
+      const svc = new GstVerificationService(db, provider);
+
+      db.gst_verifications.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(makeTenantDbRecord({ provider_result: 'AUTO_APPROVED' }));
+      db.gst_verifications.upsert.mockResolvedValueOnce(makeTenantDbRecord());
+      db.gst_verifications.findFirst.mockResolvedValueOnce(null);
+      db.gst_verifications.updateMany
+        .mockResolvedValueOnce({ count: 1 })  // evidence update
+        .mockResolvedValueOnce({ count: 0 }); // race guard fails — another admin already reviewed
+      db.organizations.updateMany.mockResolvedValue({ count: 0 });
+
+      await svc.submitVerification(ORG_ID, BASE_SUBMIT_INPUT);
+
+      await drainTick();
+      // Race guard lost: org was already reviewed by admin — must not double-fire
+      expect(vi.mocked(notifyAdminReviewedApproved)).not.toHaveBeenCalled();
+    });
+
+    it('CRM sender failure does not fail provider auto-approval path', async () => {
+      vi.mocked(notifyAdminReviewedApproved).mockRejectedValueOnce(new Error('CRM network failure'));
+      const db = makeAutoApprovalDb();
+      const svc = new GstVerificationService(db, makeAutoApprovalProvider());
+
+      // Must resolve without throwing even if CRM sender throws
+      await expect(svc.submitVerification(ORG_ID, BASE_SUBMIT_INPUT)).resolves.toBeDefined();
+    });
+
+    it('manual admin approval CRM behavior is unchanged after auto-approval fix', async () => {
+      vi.mocked(notifyAdminReviewedApproved).mockClear();
+      const db = makeDb();
+      const svc = new GstVerificationService(db); // no provider — pure admin path
+      db.gst_verifications.findUnique.mockResolvedValueOnce(makeTenantDbRecord({ id: 'manual-1' }));
+      db.gst_verifications.update.mockResolvedValueOnce(
+        makeTenantDbRecord({ review_outcome: 'APPROVED', reviewed_by_admin_id: ADMIN_ID }),
+      );
+      db.organizations.updateMany.mockResolvedValueOnce({ count: 1 });
+
+      await svc.adminReviewVerification(ORG_ID, ADMIN_ID, { review_outcome: 'APPROVED' });
+
+      await drainTick();
+      expect(vi.mocked(notifyAdminReviewedApproved)).toHaveBeenCalledOnce();
+      const callArg = vi.mocked(notifyAdminReviewedApproved).mock.calls[0][0];
+      expect(callArg.orgId).toBe(ORG_ID);
+      // Manual admin path passes null (not AUTO_APPROVED) for reviewNotesCategory
+      expect(callArg.reviewNotesCategory).toBeNull();
+    });
+  });
 });
+

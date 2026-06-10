@@ -503,6 +503,15 @@ export class GstVerificationService {
           where: { id: orgId, status: 'PENDING_VERIFICATION' },
           data: { status: 'VERIFICATION_APPROVED' },
         });
+        // Emit provider auto-approved lifecycle event — awaited-safe, timeout-bounded.
+        // review_notes_category 'AUTO_APPROVED' is from controlled taxonomy §8.1 of
+        // DECIDE-CRM-LIFECYCLE-SYNC-PAYLOAD-PRIVACY-AND-FIELD-CONTRACT-01.
+        // Aligns with org.gst.admin_reviewed.approved.v1 parity contract (design doc line 393).
+        await notifyAdminReviewedApproved({
+          orgId,
+          tenantId: orgId,
+          reviewNotesCategory: 'AUTO_APPROVED',
+        }).catch(() => undefined);
         // Feature-flagged Zoho Books contact sync — disabled by default.
         // Flag: ZOHO_POST_ACTIVATION_CONTACT_SYNC_ENABLED=true to enable.
         // Never throws; failure does not affect lifecycle transition.
