@@ -26,7 +26,14 @@
  *   REMOVE this script after storage proof is captured and committed.
  */
 
-import 'dotenv/config';
+// Load server/.env first (standard for all server scripts), then load root
+// .env.local without override so it adds any keys absent from server/.env.
+// Root .env.local is gitignored and carries Zoho credentials for local runs.
+import { config as dotenvConfig } from 'dotenv';
+import { resolve } from 'node:path';
+dotenvConfig(); // loads server/.env (CWD = server/)
+dotenvConfig({ path: resolve(process.cwd(), '../.env.local'), override: false });
+
 import { PrismaClient, Prisma } from '@prisma/client';
 import { runZohoBooksPostActivationDryRun } from '../src/services/zoho/zohoBooks.dryRun.js';
 
@@ -108,6 +115,13 @@ async function main(): Promise<void> {
     console.log(`[step-2] snapshot.activatedAt=${snapshot.activatedAt}`);
 
     // ── Step 3: Execute runZohoBooksPostActivationDryRun ─────────────────────
+    // AUTHORIZED OVERRIDE: For this controlled dry-run, set the enable flag
+    // in-process so the function checks credential availability.
+    // This is NOT a .env file edit — it is a one-off process.env override
+    // for this Paresh-authorized controlled execution only.
+    // The flag is NOT committed to any env file.
+    process.env['ZOHO_POST_ACTIVATION_SYNC_DRY_RUN_ENABLED'] = 'true';
+    console.log(`[step-3] ZOHO_POST_ACTIVATION_SYNC_DRY_RUN_ENABLED overridden to 'true' (in-process, authorized)`);
     console.log('\n[step-3] Executing runZohoBooksPostActivationDryRun...');
 
     const result = await runZohoBooksPostActivationDryRun(snapshot);
