@@ -130,6 +130,7 @@ All items are drawn from existing governance sources. No new classification is i
 | PRIT-035 | Product analytics and funnel tracking infrastructure | MAIN | FAM-10 / FAM-01 / FAM-02 | PILOT_REQUIRED | PARESH_CONFIRMED | NOT_ASSESSED | PARESH_CONFIRMED (2026-07-14) | P2 |
 | PRIT-036 | SMTP provider selection and Vercel production environment configuration (CU-02) | MAIN | FAM-10 / standalone ops unit | PRODUCTION_VERIFIED | `SOFT-LAUNCH-F1-P1A-SMTP-POSTMARK-OPS-RUNTIME-VERIFY` | RESOLVED | RESOLVED | P0 (RESOLVED) |
 | PRIT-037 | Buyer bridge from reference preview: activation gate | MAIN | FAM-03 / standalone unit | GOVERNANCE_CLAIM_ONLY | PARKED | OPEN | P1 provisional | P1 |
+| PRIT-038 | ONDC / GeM Commerce Rail — Pillar 7 | MAIN | FAM-25 (new; Paresh to decide) / FAM-12 / FAM-15 extension | USER_PLANNED_ONLY | USER_PLANNED_ONLY | PARESH_CONFIRMED_AS_PLANNED | POST_MVP | P3 |
 
 ---
 
@@ -174,6 +175,7 @@ All items are drawn from existing governance sources. No new classification is i
 | PRIT-035 | MISSING-FAMILY-AND-FEATURE-SCAN.md (§6) — no analytics service in repo; buyer_inquiry.created.v1 event defined but not emitted; no funnel tracking exists | Paresh must choose tooling; PRIT-034 (cookie consent stance) must be decided first if analytics captures PII | NO | YES — Paresh to decide tooling (GA4 / Mixpanel / Segment / PostHog / other) | MISSING-FAMILY-AND-FEATURE-SCAN.md | Confirm tooling with Paresh; infrastructure in FAM-10; event instrumentation in FAM-01/FAM-02/FAM-03 cycles |
 | PRIT-036 | `BLIND-SPOT-DEPENDENCY-RISK-REGISTER.md` (HD-001-SMTP) + `SOFT-LAUNCH-RT4-D-FINAL-IMPLEMENTATION-PRIORITY-SYNTHESIS.md` (CU-02, T0-2, P0). email.service.ts code complete (G-012, nodemailer SMTP, generic — not Postmark-specific). All 4 SMTP env vars absent from Vercel production (confirmed 2026-05-20, HD-001-SMTP-INFRA-GAP-001). April 17, 2026 writeback stated Postmark was configured + SENT verified — STALE; discrepancy confirmed. Postmark external-recipient delivery was BLOCKED (provider review) as of Apr 17; current status unknown. | FTR-B2C-004 (PRIT-033) depends on SMTP being operational first. No code changes needed to unblock registered-user flows — ops-only action. | YES — email.service.ts, config/index.ts already inspected in SOFT-LAUNCH-F1-P1-SMTP-POSTMARK-REPO-TRUTH-DESIGN-PLAN; no further source inspection needed | YES — Paresh must: (1) check Postmark account review status, (2) select provider (Postmark / Resend / SendGrid / SES), (3) set 4 Vercel production env vars | `SOFT-LAUNCH-F1-P1-SMTP-POSTMARK-REPO-TRUTH-DESIGN-PLAN.md` | **RESOLVED (2026-05-22)** — Postmark selected as SMTP provider. SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_PORT set in Vercel production. DKIM and return-path verified. Production email delivery confirmed (general inquiry buyer ack + admin alert runtime-delivered) via `SOFT-LAUNCH-F1-P1B-RV-ADMIN-EMAIL-ENV-VERIFY`. Minimum inquiry notification loop partially implemented (FTR-B2C-004 PARTIAL). HD-001-SMTP CLOSED. No further ops action required. |
 | PRIT-037 | DECISION-PARKING-LOT D-026 (PARKED — TRIGGER_CONDITIONS_NOT_MET) | All four D-026 trigger gates pending: (1) real supplier/product data readiness; (2) FTR-B2C-005 supplier-context inquiry notification readiness; (3) PRIT-034 legal/privacy/terms bundle deployed or accepted for launch scope; (4) explicit Paresh approval. | NO — governance gate only | YES — D-026; Paresh decision required | DECISION-PARKING-LOT.md (D-026) | No implementation until all four D-026 trigger conditions clear and Paresh explicitly approves buyer bridge activation. Reference previews remain preview-only. |
+| PRIT-038 | Paresh session direction: ONDC/GeM as Pillar 7 of 7 (was absent from prior 7-Pillars document provided for PRIT-022–027 intake). ONDC/GeM Commerce Rail. | ONDC/GeM integration design required (API spec, regulatory compliance, onboarding protocol, product catalog mapping to ONDC taxonomy); real pilot transaction data required; FAM-12 E2E RFQ (G-022 decision) is a prerequisite for ONDC-adjacent commerce flows. | YES — family opening audit required | YES — Paresh to decide: ONDC vs GeM priority; integration model; seller onboarding path; new FAM-25 or extension under FAM-12/FAM-15 | PLANNED-REQUIREMENTS-INTAKE.md | No implementation until post-MVP design gate opens and Paresh authorizes. Register acknowledged. |
 
 ---
 
@@ -234,7 +236,7 @@ See §14 for the full decision table. Summary:
 | PRIT-018 | Confirmed POST_MVP; pilot can launch free/manual; commercial packaging not required for MVP | POST_MVP_CONFIRMED |
 | PRIT-019 | Confirmed opt-in only during pilot; no default indexing of supplier profiles; policy direction partial | PARESH_CONFIRMED |
 
-**No UNCONFIRMED items remain in PRIT-011–019.** Next available PRIT ID: PRIT-038 (PRIT-037 added by TLRH-PRIT037-BUYER-BRIDGE-REQ-SYNC-003D, 2026-05-25).
+**No UNCONFIRMED items remain in PRIT-011–019.** Next available PRIT ID: PRIT-039 (PRIT-038 added by MAJOR-AUDIT-JULY-LAUNCH-READINESS-PLAN-HOLD-CLEARANCE-AND-FAMILY-REGISTRY-01, 2026-06-11).
 
 > **✅ PRIT-032 THROUGH PRIT-035 ADDED VIA TEXQTIC-LAUNCH-READINESS-MISSING-FAMILY-AND-FEATURE-SCAN-001 (2026-07-14)**
 >
@@ -279,6 +281,16 @@ See §14 for the full decision table. Summary:
 > for launch scope; (4) explicit Paresh written approval. No implementation authorized.
 > Reference previews remain preview-only. No commercial supply implied.
 > Next available PRIT ID: PRIT-038.
+>
+> **✅ PRIT-038 ADDED VIA MAJOR-AUDIT-JULY-LAUNCH-READINESS-PLAN-HOLD-CLEARANCE-AND-FAMILY-REGISTRY-01 (2026-06-11)**
+>
+> PRIT-038 registers ONDC / GeM Commerce Rail as Pillar 7 of the TexQtic 7 Pillars strategic
+> roadmap. Pillar 7 was absent from the prior Paresh-provided 7-Pillars document that produced
+> PRIT-024 through PRIT-027. Paresh confirmed ONDC/GeM as Pillar 7 in the July launch-readiness
+> audit session. Classification: POST_MVP / P3 / PARESH_CONFIRMED_AS_PLANNED / USER_PLANNED_ONLY.
+> No family cycle opened. Proposed family: new FAM-25 or extension under FAM-12/FAM-15; Paresh
+> to decide at PRIT-038 family opening audit. No implementation until post-MVP design gate opens
+> and Paresh authorizes. Next available PRIT ID: PRIT-039.
 >
 > **✅ PRIT-028 THROUGH PRIT-031 ADDED VIA TEXQTIC-COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY-DESIGN-001 (2026-05-19)**
 >
@@ -393,7 +405,7 @@ classification before the relevant family cycle opens.
 | 11 | Document registered in README.md hub read order | ✅ README.md updated in unit |
 | 12 | PRIT-022–027 added from Paresh-provided planned-feature documents | ✅ §13 added via TEXQTIC-PLANNED-FEATURES-DOCUMENT-INTAKE-001 |
 | 13 | DPP (Pillar 1) and TexCredit (Pillar 2) cross-referenced to existing governance | ✅ §13.4 — no duplicate rows |
-| 14 | Seventh Pillar absence noted; no row created | ✅ §13.6 |
+| 14 | Seventh Pillar absence noted; PRIT-038 now registered via July audit | ✅ §13.6 (absence noted) + PRIT-038 registered 2026-06-11 via MAJOR-AUDIT-JULY-LAUNCH-READINESS-PLAN-HOLD-CLEARANCE-AND-FAMILY-REGISTRY-01 |
 | 15 | PRIT-011–019 Paresh decisions recorded in §14 | ✅ COMPLETE — TEXQTIC-PLANNED-REQUIREMENTS-INTAKE-REVIEW-001 |
 | 16 | PRIT-022–027 reviewed; accepted as planned features; DESIGN_GATED retained | ✅ COMPLETE — §14.3 |
 | 17 | No family cycle opened by this review unit | ✅ CONFIRMED — §14.5 |
@@ -405,6 +417,7 @@ classification before the relevant family cycle opens.
 | 23 | Commerce methodology document created: COMMERCE-SUBSCRIPTION-PAYMENTS-METHODOLOGY.md | ✅ CONFIRMED — see TLRH |
 | 24 | No implementation authorized by §15 or methodology document | ✅ CONFIRMED — planning only |
 | 25 | PRIT-037 added: buyer bridge from reference preview activation gate (OPEN, P1 provisional); linked to D-026 (PARKED — TRIGGER_CONDITIONS_NOT_MET); no implementation authorized | ✅ COMPLETE — TLRH-PRIT037-BUYER-BRIDGE-REQ-SYNC-003D |
+| 26 | PRIT-038 added: ONDC/GeM Commerce Rail (Pillar 7); POST_MVP/P3; PARESH_CONFIRMED_AS_PLANNED; no family cycle opened | ✅ COMPLETE — MAJOR-AUDIT-JULY-LAUNCH-READINESS-PLAN-HOLD-CLEARANCE-AND-FAMILY-REGISTRY-01 (2026-06-11) |
 
 ---
 
