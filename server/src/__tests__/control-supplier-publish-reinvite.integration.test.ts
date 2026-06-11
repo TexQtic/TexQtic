@@ -27,6 +27,14 @@ const {
       updateMany: vi.fn(),
       create: vi.fn(),
     },
+    organizationSecondarySegment: {
+      deleteMany: vi.fn(),
+      createMany: vi.fn(),
+    },
+    organizationRolePosition: {
+      deleteMany: vi.fn(),
+      createMany: vi.fn(),
+    },
     legalConsentSnapshot: {
       findMany: vi.fn(),
     },
@@ -363,6 +371,291 @@ describe('POST /api/control/tenants/:id/publish', () => {
     expect(response.json().error).toEqual(
       expect.objectContaining({ code: 'FORBIDDEN' }),
     );
+    expect(FAKE_TX.tenant.findUnique).not.toHaveBeenCalled();
+  });
+});
+
+// ─── /profile-completeness ───────────────────────────────────────────────────
+
+describe('POST /api/control/tenants/:id/profile-completeness', () => {
+  let server: FastifyInstance;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    setAdminRole('SUPER_ADMIN');
+    prismaHolder.$transaction.mockImplementation(async (callback: (tx: typeof FAKE_TX) => Promise<unknown>) => callback(FAKE_TX));
+    FAKE_TX.$executeRawUnsafe.mockResolvedValue(undefined);
+    FAKE_TX.organizations.findUnique.mockReset();
+    FAKE_TX.organizations.update.mockReset();
+    FAKE_TX.tenant.findUnique.mockReset();
+    FAKE_TX.invite.findMany.mockResolvedValue([]);
+    FAKE_TX.organizationSecondarySegment.deleteMany.mockReset();
+    FAKE_TX.organizationSecondarySegment.createMany.mockReset();
+    FAKE_TX.organizationRolePosition.deleteMany.mockReset();
+    FAKE_TX.organizationRolePosition.createMany.mockReset();
+    server = await buildServer();
+  });
+
+  afterEach(async () => {
+    await server.close();
+  });
+
+  function mockB2BTenant(): void {
+    FAKE_TX.tenant.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      slug: 'shraddha-industries',
+      name: 'SHRADDHA INDUSTRIES',
+    });
+    FAKE_TX.organizations.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      legal_name: 'SHRADDHA INDUSTRIES',
+      org_type: 'B2B',
+      status: 'VERIFICATION_APPROVED',
+      is_qa_sentinel: false,
+      primary_segment_key: 'legacy-primary',
+      secondary_segments: [{ segment_key: 'legacy-secondary' }],
+      role_positions: [{ role_position_key: 'trader' }],
+    });
+    FAKE_TX.organizations.update.mockResolvedValue({});
+    FAKE_TX.organizationSecondarySegment.deleteMany.mockResolvedValue({ count: 1 });
+    FAKE_TX.organizationSecondarySegment.createMany.mockResolvedValue({ count: 2 });
+    FAKE_TX.organizationRolePosition.deleteMany.mockResolvedValue({ count: 1 });
+    FAKE_TX.organizationRolePosition.createMany.mockResolvedValue({ count: 1 });
+  }
+
+  it('updates only governed taxonomy fields for a B2B supplier and writes an audit entry', async () => {
+    mockB2BTenant();
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/profile-completeness`,
+      payload: {
+        primary_segment_key: 'synthetic_fabrics',
+        secondary_segment_keys: ['textile_processing', 'surat_supply'],
+        role_position_keys: ['manufacturer'],
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    expect(FAKE_TX.organizations.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: TEST_TENANT_ID },
+        data: expect.objectContaining({
+          primary_segment_key: 'synthetic_fabrics',
+          updated_at: expect.any(Date),
+        }),
+      }),
+    );
+    expect(FAKE_TX.organizationSecondarySegment.deleteMany).toHaveBeenCalledWith({ where: { org_id: TEST_TENANT_ID } });
+    expect(FAKE_TX.organizationSecondarySegment.createMany).toHaveBeenCalledWith({
+      data: [
+        { org_id: TEST_TENANT_ID, segment_key: 'textile_processing' },
+        { org_id: TEST_TENANT_ID, segment_key: 'surat_supply' },
+      ],
+    });
+    expect(FAKE_TX.organizationRolePosition.deleteMany).toHaveBeenCalledWith({ where: { org_id: TEST_TENANT_ID } });
+    expect(FAKE_TX.organizationRolePosition.createMany).toHaveBeenCalledWith({
+      data: [{ org_id: TEST_TENANT_ID, role_position_key: 'manufacturer' }],
+    });
+
+    expect(FAKE_TX.tenant.update).not.toHaveBeenCalled();
+    expect(FAKE_TX.invite.create).not.toHaveBeenCalled();
+    expect(writeAuditLog).toHaveBeenCalledWith(
+      prismaHolder,
+      expect.objectContaining({
+        action: 'control.tenants.profile_completeness.taxonomy_updated',
+        entity: 'tenant',
+        actorId: TEST_ADMIN_ID,
+        metadataJson: expect.objectContaining({
+          tenantId: TEST_TENANT_ID,
+          slug: 'shraddha-industries',
+          previousTaxonomy: {
+            primary_segment_key: 'legacy-primary',
+            secondary_segment_keys: ['legacy-secondary'],
+            role_position_keys: ['trader'],
+          },
+          nextTaxonomy: {
+            primary_segment_key: 'synthetic_fabrics',
+            secondary_segment_keys: ['textile_processing', 'surat_supply'],
+            role_position_keys: ['manufacturer'],
+          },
+        }),
+      }),
+    );
+
+    expect(response.json().data).toEqual({
+      tenantId: TEST_TENANT_ID,
+      slug: 'shraddha-industries',
+      name: 'SHRADDHA INDUSTRIES',
+      orgType: 'B2B',
+      taxonomy: {
+        primary_segment_key: 'synthetic_fabrics',
+        secondary_segment_keys: ['textile_processing', 'surat_supply'],
+        role_position_keys: ['manufacturer'],
+      },
+    });
+  });
+
+  it('allows replacing taxonomy with no secondary segments while retaining a required role position', async () => {
+    mockB2BTenant();
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/profile-completeness`,
+      payload: {
+        primary_segment_key: 'home_textiles',
+        secondary_segment_keys: [],
+        role_position_keys: ['service_provider'],
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(FAKE_TX.organizationSecondarySegment.deleteMany).toHaveBeenCalledWith({ where: { org_id: TEST_TENANT_ID } });
+    expect(FAKE_TX.organizationSecondarySegment.createMany).not.toHaveBeenCalled();
+    expect(FAKE_TX.organizationRolePosition.createMany).toHaveBeenCalledWith({
+      data: [{ org_id: TEST_TENANT_ID, role_position_key: 'service_provider' }],
+    });
+  });
+
+  it('returns 404 when the tenant organization does not exist', async () => {
+    FAKE_TX.tenant.findUnique.mockResolvedValue(null);
+    FAKE_TX.organizations.findUnique.mockResolvedValue(null);
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/profile-completeness`,
+      payload: {
+        primary_segment_key: 'synthetic_fabrics',
+        role_position_keys: ['manufacturer'],
+      },
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(FAKE_TX.organizations.update).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when tenant is a QA sentinel', async () => {
+    mockB2BTenant();
+    FAKE_TX.organizations.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      legal_name: 'QA Sentinel',
+      org_type: 'B2B',
+      status: 'ACTIVE',
+      is_qa_sentinel: true,
+      primary_segment_key: null,
+      secondary_segments: [],
+      role_positions: [],
+    });
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/profile-completeness`,
+      payload: {
+        primary_segment_key: 'synthetic_fabrics',
+        role_position_keys: ['manufacturer'],
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(FAKE_TX.organizations.update).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 when tenant organization is not B2B', async () => {
+    mockB2BTenant();
+    FAKE_TX.organizations.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      legal_name: 'B2C Tenant',
+      org_type: 'B2C',
+      status: 'ACTIVE',
+      is_qa_sentinel: false,
+      primary_segment_key: null,
+      secondary_segments: [],
+      role_positions: [],
+    });
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/profile-completeness`,
+      payload: {
+        primary_segment_key: 'synthetic_fabrics',
+        role_position_keys: ['manufacturer'],
+      },
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json().error).toEqual(expect.objectContaining({ code: 'PROFILE_COMPLETENESS_NOT_B2B' }));
+    expect(FAKE_TX.organizations.update).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when primary segment is repeated in secondary segments', async () => {
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/profile-completeness`,
+      payload: {
+        primary_segment_key: 'synthetic_fabrics',
+        secondary_segment_keys: ['synthetic_fabrics'],
+        role_position_keys: ['manufacturer'],
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(FAKE_TX.tenant.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when role positions are duplicated or invalid', async () => {
+    const duplicateResponse = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/profile-completeness`,
+      payload: {
+        primary_segment_key: 'synthetic_fabrics',
+        role_position_keys: ['manufacturer', 'manufacturer'],
+      },
+    });
+
+    expect(duplicateResponse.statusCode).toBe(400);
+
+    const invalidResponse = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/profile-completeness`,
+      payload: {
+        primary_segment_key: 'synthetic_fabrics',
+        role_position_keys: ['broker'],
+      },
+    });
+
+    expect(invalidResponse.statusCode).toBe(400);
+    expect(FAKE_TX.tenant.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for invalid UUID tenant id', async () => {
+    const response = await server.inject({
+      method: 'POST',
+      url: '/api/control/tenants/not-a-uuid/profile-completeness',
+      payload: {
+        primary_segment_key: 'synthetic_fabrics',
+        role_position_keys: ['manufacturer'],
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(FAKE_TX.tenant.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 for non-SUPER_ADMIN role', async () => {
+    setAdminRole('SUPPORT');
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/profile-completeness`,
+      payload: {
+        primary_segment_key: 'synthetic_fabrics',
+        role_position_keys: ['manufacturer'],
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error).toEqual(expect.objectContaining({ code: 'FORBIDDEN' }));
     expect(FAKE_TX.tenant.findUnique).not.toHaveBeenCalled();
   });
 });

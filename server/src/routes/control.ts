@@ -40,6 +40,7 @@ import {
   checkAuthorityEnvMatch,
   buildAuthorityDiagnostic,
 } from '../lib/legalPackageAuthority.js';
+import { ORGANIZATION_ROLE_POSITION_KEYS } from '../types/tenantProvision.types.js';
 
 // ── Admin context helper (G-004) ──────────────────────────────────────────────
 // Canonical replacement for withDbContextLegacy({ isAdmin: true }).
@@ -47,6 +48,48 @@ import {
 // then sets app.is_admin = 'true' so _admin_all RLS policies grant
 // cross-tenant access on tables that enforce RLS (e.g. audit_logs).
 const ADMIN_SENTINEL_ID = '00000000-0000-0000-0000-000000000001';
+
+const profileCompletenessSegmentKeySchema = z
+  .string()
+  .trim()
+  .min(1, 'Segment key is required')
+  .max(100, 'Segment key must be 100 characters or less')
+  .regex(/^[a-z0-9][a-z0-9_-]*$/, 'Segment key must be lowercase alphanumeric with optional hyphen or underscore separators');
+
+const profileCompletenessRolePositionSchema = z.enum(ORGANIZATION_ROLE_POSITION_KEYS);
+
+const profileCompletenessTaxonomyBodySchema = z
+  .object({
+    primary_segment_key: profileCompletenessSegmentKeySchema,
+    secondary_segment_keys: z.array(profileCompletenessSegmentKeySchema).default([]),
+    role_position_keys: z.array(profileCompletenessRolePositionSchema).min(1, 'At least one role position is required'),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (new Set(value.secondary_segment_keys).size !== value.secondary_segment_keys.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['secondary_segment_keys'],
+        message: 'secondary_segment_keys must be unique',
+      });
+    }
+
+    if (new Set(value.role_position_keys).size !== value.role_position_keys.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['role_position_keys'],
+        message: 'role_position_keys must be unique',
+      });
+    }
+
+    if (value.secondary_segment_keys.includes(value.primary_segment_key)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['secondary_segment_keys'],
+        message: 'primary_segment_key must not also appear in secondary_segment_keys',
+      });
+    }
+  });
 
 async function withAdminContext<T>(callback: (tx: any) => Promise<T>): Promise<T> {
   const ctx: DatabaseContext = {
@@ -2718,6 +2761,153 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     } catch (error: unknown) {
       fastify.log.error({ err: error, tenantId: id, adminId }, '[Tenant Publish] Error');
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to publish tenant', 500);
+    }
+  });
+
+  /**
+   * POST /api/control/tenants/:id/profile-completeness
+   * Complete public-safe supplier taxonomy fields for an already-provisioned B2B tenant.
+   *
+   * Slice boundary:
+   * - SUPER_ADMIN only
+   * - B2B organizations only
+   * - blocks QA sentinel orgs
+   * - updates only primary_segment_key, secondary segment rows, and role position rows
+   * - does not alter publication, eligibility, legal identity, membership, plan, payment, or contact data
+   */
+  fastify.post('/tenants/:id/profile-completeness', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
+    if (!request.adminId) {
+      return sendUnauthorized(reply, 'Admin authentication required');
+    }
+
+    const paramsSchema = z.object({
+      id: z.string().uuid('Invalid tenant id format'),
+    });
+
+    const paramsResult = paramsSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return sendValidationError(reply, paramsResult.error.errors);
+    }
+
+    const bodyResult = profileCompletenessTaxonomyBodySchema.safeParse(request.body ?? {});
+    if (!bodyResult.success) {
+      return sendValidationError(reply, bodyResult.error.errors);
+    }
+
+    const adminId = request.adminId;
+    const { id } = paramsResult.data;
+    const taxonomy = bodyResult.data;
+
+    try {
+      const result = await withOrgAdminWriteContext(id, adminId, async tx => {
+        const [currentTenant, currentOrg] = await Promise.all([
+          tx.tenant.findUnique({
+            where: { id },
+            select: { id: true, slug: true, name: true },
+          }),
+          tx.organizations.findUnique({
+            where: { id },
+            select: {
+              id: true,
+              legal_name: true,
+              org_type: true,
+              status: true,
+              is_qa_sentinel: true,
+              primary_segment_key: true,
+              secondary_segments: { select: { segment_key: true } },
+              role_positions: { select: { role_position_key: true } },
+            },
+          }),
+        ]);
+
+        if (!currentTenant || !currentOrg) {
+          return { kind: 'not_found' as const };
+        }
+
+        if (currentOrg.is_qa_sentinel) {
+          return { kind: 'qa_sentinel' as const, currentOrg, currentTenant };
+        }
+
+        if (currentOrg.org_type !== 'B2B') {
+          return { kind: 'not_b2b' as const, currentOrg, currentTenant };
+        }
+
+        await tx.organizations.update({
+          where: { id },
+          data: {
+            primary_segment_key: taxonomy.primary_segment_key,
+            updated_at: new Date(),
+          },
+        });
+
+        await tx.organizationSecondarySegment.deleteMany({ where: { org_id: id } });
+        if (taxonomy.secondary_segment_keys.length > 0) {
+          await tx.organizationSecondarySegment.createMany({
+            data: taxonomy.secondary_segment_keys.map(segment_key => ({ org_id: id, segment_key })),
+          });
+        }
+
+        await tx.organizationRolePosition.deleteMany({ where: { org_id: id } });
+        await tx.organizationRolePosition.createMany({
+          data: taxonomy.role_position_keys.map(role_position_key => ({ org_id: id, role_position_key })),
+        });
+
+        return {
+          kind: 'updated' as const,
+          currentOrg,
+          currentTenant,
+          taxonomy: {
+            primary_segment_key: taxonomy.primary_segment_key,
+            secondary_segment_keys: taxonomy.secondary_segment_keys,
+            role_position_keys: taxonomy.role_position_keys,
+          },
+        };
+      });
+
+      if (result.kind === 'not_found') {
+        return sendNotFound(reply, 'Tenant organization not found');
+      }
+
+      if (result.kind === 'qa_sentinel') {
+        return sendForbidden(
+          reply,
+          `Tenant ${result.currentTenant.slug} is a QA sentinel and cannot receive profile completeness updates`
+        );
+      }
+
+      if (result.kind === 'not_b2b') {
+        return sendError(
+          reply,
+          'PROFILE_COMPLETENESS_NOT_B2B',
+          'Profile completeness taxonomy can only be assigned to B2B supplier organizations',
+          409
+        );
+      }
+
+      await writeAuditLog(
+        prisma,
+        createAdminAudit(adminId, 'control.tenants.profile_completeness.taxonomy_updated', 'tenant', {
+          tenantId: id,
+          slug: result.currentTenant.slug,
+          previousTaxonomy: {
+            primary_segment_key: result.currentOrg.primary_segment_key,
+            secondary_segment_keys: result.currentOrg.secondary_segments.map(entry => entry.segment_key),
+            role_position_keys: result.currentOrg.role_positions.map(entry => entry.role_position_key),
+          },
+          nextTaxonomy: result.taxonomy,
+        })
+      );
+
+      return sendSuccess(reply, {
+        tenantId: id,
+        slug: result.currentTenant.slug,
+        name: result.currentTenant.name,
+        orgType: result.currentOrg.org_type,
+        taxonomy: result.taxonomy,
+      });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error, tenantId: id, adminId }, '[Profile Completeness] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to update supplier profile completeness', 500);
     }
   });
 
