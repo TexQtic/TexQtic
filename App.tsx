@@ -34,7 +34,7 @@ import { CertificationsAdmin } from './components/ControlPlane/CertificationsAdm
 // TECS-FBW-015: G-016 traceability CRUD panel (tenant) + admin read-only view (control-plane)
 import { TraceabilityPanel } from './components/Tenant/TraceabilityPanel';
 // TECS-FBW-016: tenant audit log read-only panel (EXPERIENCE-only surface)
-import { TenantAuditLogs } from './components/Tenant/TenantAuditLogs';
+import { SupplierInquiryInbox, TenantAuditLogs } from './components/Tenant/TenantAuditLogs';
 // TECS-FBW-002-B: G-017 tenant trade read-only panel
 import { TradesPanel } from './components/Tenant/TradesPanel';
 import { TraceabilityAdmin } from './components/ControlPlane/TraceabilityAdmin';
@@ -1081,6 +1081,7 @@ const VERIFICATION_BLOCKED_VIEWS = new Set([
   'TRADES',
   'RFQS',
   'SUPPLIER_RFQ_INBOX',
+  'SUPPLIER_INQUIRY_INBOX',
   'ESCROW',
   'SETTLEMENT',
   'INVOICES',
@@ -1197,6 +1198,7 @@ const EXPERIENCE_VIEWS = [
   'TRADES',
   'RFQS',
   'SUPPLIER_RFQ_INBOX',
+  'SUPPLIER_INQUIRY_INBOX',
   'GST_VERIFICATION',
   'INVOICES',
   'INVOICE_APPROVAL',
@@ -5479,6 +5481,15 @@ const App: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
+                    navigateTenantManifestRoute('supplier_inquiry_inbox');
+                  }}
+                  className="bg-white text-slate-700 px-4 py-2 rounded-lg font-medium border border-slate-200 shadow-sm hover:bg-slate-50 transition text-sm"
+                >
+                  Supplier Inquiry Inbox
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
                     void handleOpenBuyerRfqs();
                   }}
                   className="bg-white text-slate-700 px-4 py-2 rounded-lg font-medium border border-slate-200 shadow-sm hover:bg-slate-50 transition text-sm"
@@ -6197,6 +6208,8 @@ const App: React.FC = () => {
             onBack={handleCloseSupplierRfqInbox}
           />
         );
+      case 'supplier_inquiry_inbox':
+        return <SupplierInquiryInbox onBack={() => navigateTenantDefaultManifestRoute()} />;
       case 'dpp':
         return (
           <DPPPassport

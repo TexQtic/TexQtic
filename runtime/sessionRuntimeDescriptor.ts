@@ -117,6 +117,7 @@ export type RuntimeLocalRouteKey =
   | 'orders'
   | 'buyer_rfqs'
   | 'supplier_rfq_inbox'
+  | 'supplier_inquiry_inbox'
   | 'dpp'
   | 'escrow'
   | 'escalations'
@@ -366,6 +367,7 @@ const WORKSPACE_ORDERS_ROUTE_GROUP = defineRuntimeRouteGroup('orders_operations'
 const RFQ_ROUTE_GROUP = defineRuntimeRouteGroup('rfq_sourcing', [
   defineRuntimeRoute('buyer_rfqs', 'Buyer RFQs', 'RFQS', { expView: 'RFQS' }, { defaultForGroup: true }),
   defineRuntimeRoute('supplier_rfq_inbox', 'Supplier RFQ Inbox', 'SUPPLIER_RFQ_INBOX', { expView: 'SUPPLIER_RFQ_INBOX' }),
+  defineRuntimeRoute('supplier_inquiry_inbox', 'Supplier Inquiry Inbox', 'SUPPLIER_INQUIRY_INBOX', { expView: 'SUPPLIER_INQUIRY_INBOX' }),
 ]);
 
 const OPERATIONAL_WORKSPACE_ROUTE_GROUP = defineRuntimeRouteGroup('operational_workspace', [

@@ -1053,6 +1053,129 @@ type SupplierRfqResponseRow = {
   createdByUserId: string;
 };
 
+type SupplierInquiryClassification =
+  | 'QA_RUNTIME_VERIFICATION'
+  | 'DEMO_PILOT'
+  | 'REAL_BUYER_INTEREST'
+  | 'SPAM_INVALID';
+
+type SupplierInquiryAfterJson = {
+  supplier_slug?: string;
+  inquiry_category?: string;
+  source_surface?: string;
+  product_slug?: string;
+  category_slug?: string;
+  collection_slug?: string;
+  geo_band?: string;
+  volume_band?: string;
+  inquiry_message?: string;
+  timestamp?: string;
+};
+
+type SupplierInquiryAuditRow = {
+  id: string;
+  action: string;
+  createdAt: Date;
+  afterJson: Prisma.JsonValue | null;
+};
+
+const SUPPLIER_INQUIRY_AUDIT_ACTION = 'public.buyer.inquiry.created';
+const QA_RUNTIME_VERIFICATION_SUPPLIER_SLUG = 'shraddha-industries';
+const QA_RUNTIME_VERIFICATION_REFERENCE_ISO = '2026-06-11T05:31:37.111Z';
+const QA_RUNTIME_VERIFICATION_WINDOW_MS = 10 * 60 * 1000;
+
+function readStringFieldFromJsonObject(
+  jsonObject: Record<string, unknown>,
+  field: keyof SupplierInquiryAfterJson,
+): string | undefined {
+  const value = jsonObject[field];
+  return typeof value === 'string' ? value : undefined;
+}
+
+function parseSupplierInquiryAfterJson(afterJson: Prisma.JsonValue | null): SupplierInquiryAfterJson | null {
+  if (!afterJson || typeof afterJson !== 'object' || Array.isArray(afterJson)) {
+    return null;
+  }
+
+  const jsonObject = afterJson as Record<string, unknown>;
+  return {
+    supplier_slug: readStringFieldFromJsonObject(jsonObject, 'supplier_slug'),
+    inquiry_category: readStringFieldFromJsonObject(jsonObject, 'inquiry_category'),
+    source_surface: readStringFieldFromJsonObject(jsonObject, 'source_surface'),
+    product_slug: readStringFieldFromJsonObject(jsonObject, 'product_slug'),
+    category_slug: readStringFieldFromJsonObject(jsonObject, 'category_slug'),
+    collection_slug: readStringFieldFromJsonObject(jsonObject, 'collection_slug'),
+    geo_band: readStringFieldFromJsonObject(jsonObject, 'geo_band'),
+    volume_band: readStringFieldFromJsonObject(jsonObject, 'volume_band'),
+    inquiry_message: readStringFieldFromJsonObject(jsonObject, 'inquiry_message'),
+    timestamp: readStringFieldFromJsonObject(jsonObject, 'timestamp'),
+  };
+}
+
+function resolveSupplierInquirySubmittedAt(afterJson: SupplierInquiryAfterJson | null, createdAt: Date): Date {
+  if (!afterJson?.timestamp) {
+    return createdAt;
+  }
+
+  const parsedDate = new Date(afterJson.timestamp);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return createdAt;
+  }
+
+  return parsedDate;
+}
+
+function classifySupplierInquiry(
+  afterJson: SupplierInquiryAfterJson | null,
+  submittedAt: Date,
+): SupplierInquiryClassification {
+  if (!afterJson?.supplier_slug || !afterJson.inquiry_category || !afterJson.source_surface) {
+    return 'SPAM_INVALID';
+  }
+
+  if (afterJson.supplier_slug === 'lt-b2b-001') {
+    return 'DEMO_PILOT';
+  }
+
+  const qaReferenceTimeMs = new Date(QA_RUNTIME_VERIFICATION_REFERENCE_ISO).getTime();
+  const submissionTimeMs = submittedAt.getTime();
+  const isWithinQaWindow = Math.abs(submissionTimeMs - qaReferenceTimeMs) <= QA_RUNTIME_VERIFICATION_WINDOW_MS;
+
+  if (
+    afterJson.supplier_slug === QA_RUNTIME_VERIFICATION_SUPPLIER_SLUG
+    && afterJson.inquiry_category === 'SOURCING_INTENT'
+    && afterJson.geo_band === 'India'
+    && afterJson.volume_band === 'pilot'
+    && isWithinQaWindow
+  ) {
+    return 'QA_RUNTIME_VERIFICATION';
+  }
+
+  return 'REAL_BUYER_INTEREST';
+}
+
+function mapSupplierInquiryInboxItem(log: SupplierInquiryAuditRow) {
+  const afterJson = parseSupplierInquiryAfterJson(log.afterJson);
+  const submittedAt = resolveSupplierInquirySubmittedAt(afterJson, log.createdAt);
+  const classification = classifySupplierInquiry(afterJson, submittedAt);
+
+  return {
+    id: log.id,
+    inquiry_category: afterJson?.inquiry_category ?? null,
+    source_surface: afterJson?.source_surface ?? null,
+    supplier_slug: afterJson?.supplier_slug ?? null,
+    product_slug: afterJson?.product_slug ?? null,
+    category_slug: afterJson?.category_slug ?? null,
+    collection_slug: afterJson?.collection_slug ?? null,
+    geo_band: afterJson?.geo_band ?? null,
+    volume_band: afterJson?.volume_band ?? null,
+    inquiry_message: afterJson?.inquiry_message ?? null,
+    submitted_at: submittedAt,
+    created_at: log.createdAt,
+    classification,
+  };
+}
+
 function normalizeCatalogItemPrice<T extends { catalogItem: { price: unknown } }>(item: T) {
   return {
     ...item,
@@ -2009,6 +2132,49 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
     return sendSuccess(reply, { logs, count: logs.length });
   });
+
+  /**
+   * GET /api/tenant/inquiries/supplier-inbox
+   * Read-only supplier inquiry inbox from audit logs (launch-safe, no mutation).
+   * Authorization: OWNER, ADMIN, MEMBER only. VIEWER is explicitly denied.
+   */
+  fastify.get(
+    '/tenant/inquiries/supplier-inbox',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const { userRole } = request;
+
+      if (userRole !== 'OWNER' && userRole !== 'ADMIN' && userRole !== 'MEMBER') {
+        return sendError(reply, 'FORBIDDEN', 'Insufficient permissions', 403);
+      }
+
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      const logs = await withDbContext(prisma, dbContext, async tx => {
+        return tx.auditLog.findMany({
+          where: {
+            action: SUPPLIER_INQUIRY_AUDIT_ACTION,
+            realm: 'TENANT',
+            tenantId: dbContext.orgId,
+          },
+          select: {
+            id: true,
+            action: true,
+            createdAt: true,
+            afterJson: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 50,
+        });
+      });
+
+      const inquiries = logs.map(mapSupplierInquiryInboxItem);
+      return sendSuccess(reply, { inquiries, count: inquiries.length });
+    },
+  );
 
   /**
    * GET /api/tenant/memberships
