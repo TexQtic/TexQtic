@@ -440,3 +440,47 @@ describe('maybeSyncZohoBooksContactAfterActivation — payload contract', () => 
     expect(snapshot.source).toBe('TexQtic Main App');
   });
 });
+
+describe('maybeSyncZohoBooksContactAfterActivation — flag model: ZOHO_BOOKS_INTEGRATION_ENABLED', () => {
+  it('returns SKIPPED_CONFIG_NOT_READY when contact sync flag is set but integration config is DISABLED', async () => {
+    process.env['ZOHO_POST_ACTIVATION_CONTACT_SYNC_ENABLED'] = 'true';
+    vi.mocked(readZohoBooksRuntimeConfig).mockReturnValue({ status: 'DISABLED', dryRunEnabled: false });
+    const db = makeMockDb();
+
+    const result = await maybeSyncZohoBooksContactAfterActivation(ORG_ID, db as any);
+
+    expect(result.status).toBe('SKIPPED_CONFIG_NOT_READY');
+    if (result.status === 'SKIPPED_CONFIG_NOT_READY') {
+      expect(result.reason).toBe('DISABLED');
+    }
+    expect(vi.mocked(createZohoBooksContact)).not.toHaveBeenCalled();
+  });
+
+  it('returns SKIPPED_DISABLED when ZOHO_POST_ACTIVATION_CONTACT_SYNC_ENABLED is not set, even if integration config would be READY', async () => {
+    delete process.env['ZOHO_POST_ACTIVATION_CONTACT_SYNC_ENABLED'];
+    vi.mocked(readZohoBooksRuntimeConfig).mockReturnValue(MOCK_CONFIG);
+    const db = makeMockDb();
+
+    const result = await maybeSyncZohoBooksContactAfterActivation(ORG_ID, db as any);
+
+    expect(result.status).toBe('SKIPPED_DISABLED');
+    expect(vi.mocked(createZohoBooksContact)).not.toHaveBeenCalled();
+  });
+
+  it('proceeds to SYNC_SUCCESS when both ZOHO_BOOKS_INTEGRATION_ENABLED and ZOHO_POST_ACTIVATION_CONTACT_SYNC_ENABLED are active', async () => {
+    process.env['ZOHO_POST_ACTIVATION_CONTACT_SYNC_ENABLED'] = 'true';
+    vi.mocked(readZohoBooksRuntimeConfig).mockReturnValue(MOCK_CONFIG);
+    vi.mocked(createZohoBooksContact).mockResolvedValueOnce({
+      status: 'CONTACT_CREATED',
+      contactId: 'zoho-flag-model-001',
+      liveMutationAttempted: true,
+      shapeFallbackUsed: false,
+    });
+    const db = makeMockDb();
+
+    const result = await maybeSyncZohoBooksContactAfterActivation(ORG_ID, db as any);
+
+    expect(result.status).toBe('SYNC_SUCCESS');
+    expect(vi.mocked(createZohoBooksContact)).toHaveBeenCalledOnce();
+  });
+});

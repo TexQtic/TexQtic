@@ -12,7 +12,7 @@ const ORIGINAL_ENV = { ...process.env };
 
 function setDryRunEnv(enabled = true): void {
   process.env = { ...ORIGINAL_ENV };
-  process.env.ZOHO_POST_ACTIVATION_SYNC_DRY_RUN_ENABLED = enabled ? 'true' : 'false';
+  process.env.ZOHO_BOOKS_INTEGRATION_ENABLED = enabled ? 'true' : 'false';
   process.env.ZOHO_BOOKS_CLIENT_ID = 'client-id';
   process.env.ZOHO_BOOKS_CLIENT_SECRET = 'client-secret';
   process.env.ZOHO_BOOKS_REFRESH_TOKEN = 'refresh-token';
@@ -51,7 +51,7 @@ afterEach(() => {
 
 describe('Zoho Books dry-run foundation', () => {
   it('reads env safely and reports missing keys without leaking values', () => {
-    process.env = { ...ORIGINAL_ENV, ZOHO_POST_ACTIVATION_SYNC_DRY_RUN_ENABLED: 'true' };
+    process.env = { ...ORIGINAL_ENV, ZOHO_BOOKS_INTEGRATION_ENABLED: 'true' };
     delete process.env.ZOHO_BOOKS_CLIENT_SECRET;
 
     const result = readZohoBooksRuntimeConfig();
@@ -198,5 +198,49 @@ describe('Zoho Books dry-run foundation', () => {
     expect(result.integrationDraft?.externalObjectType).toBe('contact');
     expect(result.integrationDraft?.externalId).toBeNull();
     expect(result.integrationDraft?.syncStatus).toBe('DRY_RUN_READY');
+  });
+});
+
+describe('readZohoBooksRuntimeConfig — flag model: ZOHO_BOOKS_INTEGRATION_ENABLED', () => {
+  it('returns DISABLED when neither ZOHO_BOOKS_INTEGRATION_ENABLED nor deprecated flag is set', () => {
+    process.env = { ...ORIGINAL_ENV };
+    delete process.env.ZOHO_BOOKS_INTEGRATION_ENABLED;
+    delete process.env.ZOHO_POST_ACTIVATION_SYNC_DRY_RUN_ENABLED;
+
+    const result = readZohoBooksRuntimeConfig();
+
+    expect(result.status).toBe('DISABLED');
+    expect(result.dryRunEnabled).toBe(false);
+  });
+
+  it('returns READY when ZOHO_BOOKS_INTEGRATION_ENABLED=true with no deprecatedFlagUsed', () => {
+    setDryRunEnv(true); // sets ZOHO_BOOKS_INTEGRATION_ENABLED=true
+
+    const result = readZohoBooksRuntimeConfig();
+
+    expect(result.status).toBe('READY');
+    expect(result.dryRunEnabled).toBe(true);
+    if (result.status === 'READY') {
+      expect(result.deprecatedFlagUsed).toBeUndefined();
+    }
+  });
+
+  it('returns READY with deprecatedFlagUsed=true when only deprecated flag is set', () => {
+    process.env = { ...ORIGINAL_ENV };
+    process.env.ZOHO_POST_ACTIVATION_SYNC_DRY_RUN_ENABLED = 'true';
+    process.env.ZOHO_BOOKS_CLIENT_ID = 'client-id';
+    process.env.ZOHO_BOOKS_CLIENT_SECRET = 'client-secret';
+    process.env.ZOHO_BOOKS_REFRESH_TOKEN = 'refresh-token';
+    process.env.ZOHO_BOOKS_ORGANIZATION_ID = '60073287085';
+    process.env.ZOHO_BOOKS_API_DOMAIN = 'https://www.zohoapis.in';
+    delete process.env.ZOHO_BOOKS_INTEGRATION_ENABLED;
+
+    const result = readZohoBooksRuntimeConfig();
+
+    expect(result.status).toBe('READY');
+    expect(result.dryRunEnabled).toBe(true);
+    if (result.status === 'READY') {
+      expect(result.deprecatedFlagUsed).toBe(true);
+    }
   });
 });
