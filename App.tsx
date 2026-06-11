@@ -54,6 +54,7 @@ import { CartSummariesPanel } from './components/ControlPlane/CartSummariesPanel
 import { EscrowAdminPanel } from './components/ControlPlane/EscrowAdminPanel';
 // PW5-W3-FE: Settlement admin read panel (backend route: 14aea49)
 import { SettlementAdminPanel } from './components/ControlPlane/SettlementAdminPanel';
+import { ZohoBooksOps } from './components/ControlPlane/ZohoBooksOps';
 // PW5-W4: G-021 maker-checker approval queue console (read-only)
 import { MakerCheckerConsole } from './components/ControlPlane/MakerCheckerConsole';
 // PW5-WL1-WIRE: white-label storefront product grid
@@ -6964,6 +6965,9 @@ const App: React.FC = () => {
             onBack={() => navigateTenantDefaultManifestRoute()}
           />
         );
+      // IMPL-SUPERADMIN-ZOHO-BOOKS-CONTACT-SYNC-MONITORING-READONLY-01: Phase 1 read-only
+      case 'zoho_books_ops':
+        return <ZohoBooksOps />;
       default:
         return null;
     }

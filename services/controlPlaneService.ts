@@ -1429,3 +1429,112 @@ export async function requestControlPlaneAiInsights(
 ): Promise<ControlPlaneAiInsightsResponse> {
   return adminPost<ControlPlaneAiInsightsResponse>('/api/control/ai/insights', request);
 }
+
+// ==================== ZOHO BOOKS MONITORING (Phase 1: Read-Only) ====================
+//
+// Routes: GET /api/control/zoho-books/status
+//         GET /api/control/zoho-books/contacts
+//         GET /api/control/zoho-books/backfill-candidates
+//
+// Constitutional:
+//   SUPER_ADMIN only — enforced server-side.
+//   No raw externalId, metadataJson, GSTIN, PAN, secrets, or env values.
+//   externalId surfaced as PRESENT | MISSING only.
+//   No mutation endpoints in Phase 1.
+//
+// Design: DESIGN-SUPERADMIN-ZOHO-BOOKS-OPERATIONS-SURFACE-01 (3b588e88)
+// Impl:   IMPL-SUPERADMIN-ZOHO-BOOKS-CONTACT-SYNC-MONITORING-READONLY-01
+
+export interface ZohoBooksStatusResponse {
+  integrationEnabled: 'ENABLED' | 'DISABLED';
+  contactSyncEnabled: 'ENABLED' | 'DISABLED';
+  deprecatedFlagPresent: boolean;
+  configReadiness: 'READY' | 'MISSING_REQUIRED_ENV' | 'DISABLED';
+  missingKeys: string[];
+  contactSyncPosture: 'LIVE' | 'OFF' | 'DEGRADED';
+  deprecatedFlagWarning: boolean;
+}
+
+export interface ZohoBooksContactRow {
+  id: string;
+  organizationId: string;
+  organizationSlug: string;
+  organizationStatus: string;
+  organizationPlan: string | null;
+  organizationDisplayName: string | null;
+  providerKey: string;
+  externalObjectType: string;
+  /** PRESENT | MISSING — raw externalId is never returned */
+  externalIdStatus: 'PRESENT' | 'MISSING';
+  syncStatus: string;
+  attemptCount: number;
+  lastAttemptedAt: string | null;
+  lastDryRunAt: string | null;
+  lastErrorSummary: string | null;
+  createdAt: string;
+  updatedAt: string;
+  orgType: 'SYNTHETIC' | 'REAL';
+}
+
+export interface ZohoBooksContactsParams {
+  syncStatus?: 'SYNC_SUCCESS' | 'SYNC_FAILED' | 'NOT_SYNCED';
+  orgType?: 'synthetic' | 'real';
+  cursor?: string;
+  limit?: number;
+}
+
+export interface ZohoBooksContactsResponse {
+  rows: ZohoBooksContactRow[];
+  pagination: {
+    hasMore: boolean;
+    nextCursor: string | null;
+    limit: number;
+  };
+  summary: {
+    total: number;
+    synced: number;
+    failed: number;
+    pending: number;
+    synthetic: number;
+    real: number;
+  };
+}
+
+export interface ZohoBooksBackfillCandidateRow {
+  organizationId: string;
+  organizationSlug: string;
+  organizationStatus: string;
+  organizationPlan: string | null;
+  organizationDisplayName: string | null;
+  orgType: 'SYNTHETIC' | 'REAL';
+}
+
+export interface ZohoBooksBackfillCandidatesResponse {
+  rows: ZohoBooksBackfillCandidateRow[];
+  count: number;
+  realCount: number;
+  syntheticCount: number;
+  /** Always present: real org backfill requires explicit Paresh Patel authorization */
+  warning: string;
+}
+
+export async function getZohoBooksStatus(): Promise<ZohoBooksStatusResponse> {
+  return adminGet<ZohoBooksStatusResponse>('/api/control/zoho-books/status');
+}
+
+export async function listZohoBooksContacts(
+  params?: ZohoBooksContactsParams,
+): Promise<ZohoBooksContactsResponse> {
+  const q = new URLSearchParams();
+  if (params?.syncStatus) q.set('syncStatus', params.syncStatus);
+  if (params?.orgType)    q.set('orgType',    params.orgType);
+  if (params?.cursor)     q.set('cursor',     params.cursor);
+  if (params?.limit !== undefined) q.set('limit', String(params.limit));
+  const qs = q.toString();
+  const url = qs ? `/api/control/zoho-books/contacts?${qs}` : '/api/control/zoho-books/contacts';
+  return adminGet<ZohoBooksContactsResponse>(url);
+}
+
+export async function getZohoBooksBackfillCandidates(): Promise<ZohoBooksBackfillCandidatesResponse> {
+  return adminGet<ZohoBooksBackfillCandidatesResponse>('/api/control/zoho-books/backfill-candidates');
+}

@@ -165,7 +165,8 @@ export type RuntimeLocalRouteKey =
   | 'nc_pool_demand_lines'
   | 'nc_pool_rfq'
   | 'nc_pool_invite_inbox'
-  | 'nc_pool_oversight';
+  | 'nc_pool_oversight'
+  | 'zoho_books_ops';
 
 export interface RuntimeLocalRouteStateBinding {
   expView?: string;
@@ -355,6 +356,7 @@ const CONTROL_PLANE_ROUTE_GROUP = defineRuntimeRouteGroup('control_plane_operati
   defineRuntimeRoute('rbac', 'Access Control', 'RBAC', { adminView: 'RBAC' }),
   defineRuntimeRoute('health', 'Health Status', 'HEALTH', { adminView: 'HEALTH' }),
   defineRuntimeRoute('nc_pool_oversight', 'NC Pool Oversight', 'NC_POOL_OVERSIGHT', { adminView: 'NC_POOL_OVERSIGHT' }),
+  defineRuntimeRoute('zoho_books_ops', 'Zoho Books Ops', 'ZOHO_BOOKS_OPS', { adminView: 'ZOHO_BOOKS_OPS' }),
 ]);
 
 const WORKSPACE_ORDERS_ROUTE_GROUP = defineRuntimeRouteGroup('orders_operations', [
@@ -517,6 +519,7 @@ const CONTROL_PLANE_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
   'vpc_console',
   'ttp_enrollment_admin',
   'nc_pool_oversight',
+  'zoho_books_ops',
   'logs',
   'rbac',
   'health',

@@ -33,6 +33,7 @@ import controlVpcRoutes from './control/vpc.js';
 import controlTtpRoutingStubRoutes from './control/ttp-routing-stubs.js';
 import controlTtpEnrollmentRoutes from './control/ttp-enrollments.js';
 import controlTtpScoreSnapshotRoutes from './control/ttp-score-snapshots.js';
+import controlZohoBooksRoutes from './control/zoho-books.js';
 import { filterControlPlaneLaunchFacingTenantList } from '../config/controlPlaneTenantReadExclusions.js';
 import {
   loadLegalPackageAuthority,
@@ -2561,6 +2562,13 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   // GET    /api/control/ttp/score-snapshot/:snapshotId — get snapshot detail (SUPER_ADMIN)
   // NOTE: Tenant-facing score history NOT implemented — LEGAL_REVIEW_PENDING unresolved.
   await fastify.register(controlTtpScoreSnapshotRoutes, { prefix: '/ttp' });
+
+  // ─── Zoho Books Monitoring (Phase 1: Read-Only) ───────────────────────────────
+  // GET /api/control/zoho-books/status              — integration config status tokens (SUPER_ADMIN)
+  // GET /api/control/zoho-books/contacts            — contact sync monitor (SUPER_ADMIN)
+  // GET /api/control/zoho-books/backfill-candidates — approved orgs with no contact row (SUPER_ADMIN)
+  // Design: DESIGN-SUPERADMIN-ZOHO-BOOKS-OPERATIONS-SURFACE-01 (3b588e88)
+  await fastify.register(controlZohoBooksRoutes, { prefix: '/zoho-books' });
 
   /**
    * POST /api/control/tenants/:id/publish

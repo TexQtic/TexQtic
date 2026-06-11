@@ -57,7 +57,9 @@ export type AdminView =
   | 'HEALTH'
   | 'RBAC'
   | 'EVENTS'
-  | 'NC_POOL_OVERSIGHT';
+  | 'NC_POOL_OVERSIGHT'
+  /** IMPL-SUPERADMIN-ZOHO-BOOKS-CONTACT-SYNC-MONITORING-READONLY-01: Phase 1 read-only monitoring */
+  | 'ZOHO_BOOKS_OPS';
 
 interface SuperAdminShellProps {
   children: React.ReactNode;
@@ -102,6 +104,7 @@ const CONTROL_PLANE_NAV = [
   { routeKey: 'rbac', icon: '⚙️', label: 'Access Control' },
   { routeKey: 'health', icon: '❤️', label: 'Health Status' },
   { routeKey: 'nc_pool_oversight', icon: '💼', label: 'NC Pool Oversight' },
+  { routeKey: 'zoho_books_ops', icon: '🔗', label: 'Zoho Books Ops' },
 ] as const;
 
 export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
