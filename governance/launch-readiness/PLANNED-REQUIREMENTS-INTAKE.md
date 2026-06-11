@@ -280,7 +280,7 @@ See §14 for the full decision table. Summary:
 > inquiry notification readiness; (3) PRIT-034 legal/privacy/terms bundle deployed or accepted
 > for launch scope; (4) explicit Paresh written approval. No implementation authorized.
 > Reference previews remain preview-only. No commercial supply implied.
-> Next available PRIT ID: PRIT-038.
+> Next available PRIT ID: PRIT-039. (PRIT-038 registered 2026-06-11 via MAJOR-AUDIT-JULY-LAUNCH-READINESS-PLAN-HOLD-CLEARANCE-AND-FAMILY-REGISTRY-01; corrected 2026-06-11 by GOV-ADJACENT-FINDINGS-RULE-AND-WAVE1D-POINTER-SYNC-01.)
 >
 > **✅ PRIT-038 ADDED VIA MAJOR-AUDIT-JULY-LAUNCH-READINESS-PLAN-HOLD-CLEARANCE-AND-FAMILY-REGISTRY-01 (2026-06-11)**
 >

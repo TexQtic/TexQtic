@@ -15,16 +15,22 @@ product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).
   DPP Passport Network is technically PRODUCTION_READY based on PROD-AUDIT-002.
   Launch authorization: HOLD_FOR_PARESH_DECISION. v3 design: OPTIONAL_POLISH.
-active_delivery_unit: GOV-LAYER0-JULY-LAUNCH-READINESS-POINTER-SYNC-01
+active_delivery_unit: GOV-ADJACENT-FINDINGS-RULE-AND-WAVE1D-POINTER-SYNC-01
 active_delivery_unit_status: COMPLETE
 active_delivery_unit_sync_note: >
-  GOV-LAYER0-JULY-LAUNCH-READINESS-POINTER-SYNC-01 COMPLETE (2026-06-11). Layer 0 pointer sync.
-  Prior active unit FTR-SL-001D COMPLETE (2026-06-04). FTR-B2C-005B RUNTIME_VERIFIED (2026-06-11).
-  July launch window July 20–30 active. P0 gates now drive queue.
+  GOV-ADJACENT-FINDINGS-RULE-AND-WAVE1D-POINTER-SYNC-01 COMPLETE (2026-06-11). Wave 1D close sync.
+  Wave 1 sequence fully executed: FTR-OPS-003 COMPLETE (d2ab1caa, rollback runbook);
+  FTR-OPS-001D IMPL_COMPLETE (adb55ab1); FTR-ACQ-001 IMPL_COMPLETE (adb55ab1);
+  FAM-08 VERIFIED_COMPLETE_WITH_RESIDUALS (6c3e8174); FAM-09 VERIFIED_COMPLETE_WITH_LAUNCH_RESIDUALS (3996e571).
+  Adjacent findings rule registered: all adjacent findings must be explicitly evaluated and tracked
+  (fixed immediately if in-scope, or registered as separate follow-up units).
+  FTR-SL-005 registered (lt-b2b-001 demo labeling, P1, pre-promotion).
+  FTR-SL-006 registered (aggregator directory readiness audit, P1).
+  PRIT-039 footer corrected in PLANNED-REQUIREMENTS-INTAKE.md.
   FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS (unchanged). FAM-07L14 remains blocked.
   FTR-LEGAL-003: DRAFT_CONTENT_READY_BLOCKED_PENDING_PUBLICATION (OQ-02/OQ-03 pending).
   Zoho: parked. TTP/FAM-16: HOLD_FOR_COUNSEL_FEEDBACK (POST_MVP per July plan).
-  FAM-08: CLOSE_READY_WITH_RESIDUALS. FAM-09: CLOSE_READY_WITH_LAUNCH_TEST_RESIDUALS. FAM-11: VERIFIED_COMPLETE.
+  FAM-08: VERIFIED_COMPLETE_WITH_RESIDUALS. FAM-09: VERIFIED_COMPLETE_WITH_LAUNCH_RESIDUALS. FAM-11: VERIFIED_COMPLETE.
 active_delivery_unit_note: >
   FTR-SL-001D COMPLETE (2026-06-04). Shraddha Industries publish+reinvite activated in production.
   Deploy verified: commit 5c78be70 live at app.texqtic.com (probe returns 400 FST_ERR_CTP_EMPTY_JSON_BODY = route found, not 404).
@@ -80,15 +86,17 @@ fam07_hold_preservation: >
   L13 §10 (source/version/hash) complete; L13 §11 (re-consent policy) complete;
   L13 §12 (runtime/env alignment) complete; no stale tracker contradiction.
   No legal authority creation authorized. No L14 opening authorized.
-next_candidate_unit: FTR-OPS-003-ROLLBACK-RUNBOOK-DOCS-01
-next_candidate_unit_status: ELIGIBLE_TO_OPEN
+next_candidate_unit: FTR-SL-004-SUPPLIER-INQUIRY-INBOX-DESIGN-01
+next_candidate_unit_status: ELIGIBLE_PENDING_PARESH_AUTHORIZATION
 next_candidate_unit_date_installed: "2026-06-11"
 next_candidate_unit_note: >
-  FTR-B2C-005B RUNTIME_VERIFIED (2026-06-11) — supplier inquiry notification production verified.
-  July launch P0 gate queue drives sequencing. Next unit: FTR-OPS-003 rollback runbook
-  (docs-only, P1/MVP_CRITICAL, no legal/payment dependency, completable in one session).
-  Wave 1 sequence: FTR-OPS-003 → FTR-OPS-001D (Sentry first-event) → FTR-ACQ-001 (429 fix)
-  → legal-dependent gates when counsel/Paresh inputs arrive.
+  Wave 1D complete. Legal track (FTR-LEGAL-003C) remains blocked on OQ-02 (counsel) + OQ-03 (CIN).
+  Next non-legal-blocked P1 design unit: FTR-SL-004 supplier inquiry inbox
+  (design-first; Paresh authorization required before opening).
+  Parallel operational track: GATE-SL-01 (Shraddha invite acceptance + real supplier data).
+  FTR-OPS-001 close: Paresh to confirm Sentry first-event from dashboard (G-JULY-04).
+  FTR-ACQ-001 429 runtime verification: safe to run anytime (no code changes needed).
+  After legal inputs arrive: FTR-LEGAL-003C-LEGAL-PAGES-PUBLICATION-01 is P0 critical path.
 archived_next_candidate_unit_prior: FTR-B2C-005B-SUPPLIER-INQUIRY-NOTIFICATION-PRODUCTION-RUNTIME-VERIFY-001
 archived_next_candidate_unit_prior_status: RUNTIME_VERIFIED (2026-06-11)
   No code changes required for FTR-B2C-005B.

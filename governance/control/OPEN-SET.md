@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-11 (GOV-LAYER0-JULY-LAUNCH-READINESS-POINTER-SYNC-01 COMPLETE. FTR-B2C-005B RUNTIME_VERIFIED. FAM-11 VERIFIED_COMPLETE. FAM-08 CLOSE_READY_WITH_RESIDUALS. FAM-09 CLOSE_READY_WITH_LAUNCH_TEST_RESIDUALS. July launch window July 20–30. P0 gate queue active. FAM-07 PARTIALLY_IMPLEMENTED. HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 DRAFT_CONTENT_READY_BLOCKED_PENDING_PUBLICATION. Zoho parked. Prior: 2026-06-03 FAM-09 cycle closed.)
+**Last Updated:** 2026-06-11 (GOV-ADJACENT-FINDINGS-RULE-AND-WAVE1D-POINTER-SYNC-01 COMPLETE. Wave 1D fully closed: FAM-08 VERIFIED_COMPLETE_WITH_RESIDUALS. FAM-09 VERIFIED_COMPLETE_WITH_LAUNCH_RESIDUALS. Adjacent findings rule registered. FTR-SL-005/006 registered. PRIT-039 footer fixed. Prior: GOV-LAYER0-JULY-LAUNCH-READINESS-POINTER-SYNC-01 COMPLETE. FTR-B2C-005B RUNTIME_VERIFIED. FAM-11 VERIFIED_COMPLETE. FAM-08 VERIFIED_COMPLETE_WITH_RESIDUALS. FAM-09 VERIFIED_COMPLETE_WITH_LAUNCH_RESIDUALS. July launch window July 20–30. P0 gate queue active. FAM-07 PARTIALLY_IMPLEMENTED. HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 DRAFT_CONTENT_READY_BLOCKED_PENDING_PUBLICATION. Zoho parked. Prior: 2026-06-03 FAM-09 cycle closed.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,15 +53,27 @@
 
 ## Operating Notes
 
+- GOV-ADJACENT-FINDINGS-RULE-AND-WAVE1D-POINTER-SYNC-01 COMPLETE (2026-06-11).
+  Wave 1D fully closed. FAM-08 VERIFIED_COMPLETE_WITH_RESIDUALS (commit 6c3e8174).
+  FAM-09 VERIFIED_COMPLETE_WITH_LAUNCH_RESIDUALS (commit 3996e571).
+  Adjacent findings governance rule registered (FUTURE-TODO-REGISTER.md): all adjacent findings
+  must be explicitly evaluated and tracked in every future TECS unit.
+  FTR-SL-005 registered (lt-b2b-001 demo labeling, P1, pre-promotion required).
+  FTR-SL-006 registered (aggregator directory readiness audit, P1).
+  PRIT-039 footer corrected in PLANNED-REQUIREMENTS-INTAKE.md.
+  next_candidate_unit updated: FTR-SL-004-SUPPLIER-INQUIRY-INBOX-DESIGN-01 (ELIGIBLE_PENDING_PARESH_AUTHORIZATION).
+  Legal track (FTR-LEGAL-003C) still blocked on OQ-02/OQ-03. All other holds unchanged.
+  No source mutations. No schema changes. No legal authority created.
+
 - GOV-LAYER0-JULY-LAUNCH-READINESS-POINTER-SYNC-01 COMPLETE (2026-06-11).
   July launch baseline locked. FTR-B2C-005B RUNTIME_VERIFIED (2026-06-11): supplier inquiry
   notification production-verified (one QA inquiry, HTTP 202, audit log confirmed, email dispatched).
   FAM-11 VERIFIED_COMPLETE (FAM-11F, 2026-06-04): subscription display-only cycle complete.
-  FAM-08 CLOSE_READY_WITH_RESIDUALS (post-launch residuals: plan CHECK constraint, /api/me normalization,
+  FAM-08 VERIFIED_COMPLETE_WITH_RESIDUALS (post-launch residuals: plan CHECK constraint, /api/me normalization,
   admin settings write surface, CI hasDb; QD-6 and FE-10 decision-gated).
-  FAM-09 CLOSE_READY_WITH_LAUNCH_TEST_RESIDUALS (lt-b2b-001 fate = Paresh decision).
+  FAM-09 VERIFIED_COMPLETE_WITH_LAUNCH_RESIDUALS (lt-b2b-001 = CARRY_FORWARD_AS_LABELLED_DEMO_PILOT_SUPPLIER).
   July launch window: July 20–30. P0 gate queue now drives all sequencing.
-  NEXT-ACTION.md updated: active_delivery_unit → this sync; next_candidate_unit → FTR-OPS-003.
+  NEXT-ACTION.md updated: active_delivery_unit → GOV-ADJACENT-FINDINGS-RULE-AND-WAVE1D-POINTER-SYNC-01; next_candidate_unit → FTR-SL-004.
   FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FAM-07L14 remains blocked.
   FTR-LEGAL-003: DRAFT_CONTENT_READY_BLOCKED_PENDING_PUBLICATION (6 docs ready; OQ-02 counsel
   engagement pending; OQ-03 CIN/entity details pending). FTR-LEGAL-003C is critical path for July.
