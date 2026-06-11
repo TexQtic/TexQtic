@@ -99,7 +99,22 @@ describe('B2BDiscoveryPage public directory regression guard', () => {
     vi.useRealTimers();
   });
 
-  it('renders public supplier cards when a delayed successful response arrives after the timeout fallback', async () => {
+  it('keeps a slow pending request in a neutral loading state at the timeout threshold', async () => {
+    vi.mocked(getPublicB2BSuppliers).mockReturnValue(new Promise(() => {}));
+
+    renderDirectory();
+
+    await act(async () => {
+      vi.advanceTimersByTime(15000);
+    });
+
+    expect(screen.queryByText(/We could not load public profiles right now/i)).toBeNull();
+    expect(screen.getByText(/Still loading public textile profiles/i)).toBeInTheDocument();
+    expect(screen.queryByText('Shraddha Industries')).toBeNull();
+    expect(screen.queryByText('Launch Test Supplier B2B 001')).toBeNull();
+  });
+
+  it('renders public supplier cards when a delayed successful response arrives after the timeout threshold', async () => {
     let resolveSuppliers: (value: PublicB2BSuppliersResponse) => void = () => {};
     vi.mocked(getPublicB2BSuppliers).mockReturnValue(
       new Promise((resolve) => {
@@ -113,7 +128,8 @@ describe('B2BDiscoveryPage public directory regression guard', () => {
       vi.advanceTimersByTime(15000);
     });
 
-    expect(screen.getByText(/We could not load public profiles right now/i)).toBeInTheDocument();
+    expect(screen.queryByText(/We could not load public profiles right now/i)).toBeNull();
+    expect(screen.getByText(/Still loading public textile profiles/i)).toBeInTheDocument();
 
     await act(async () => {
       resolveSuppliers(DIRECTORY_RESPONSE);
@@ -124,5 +140,20 @@ describe('B2BDiscoveryPage public directory regression guard', () => {
     expect(screen.getByText('Shraddha Industries')).toBeInTheDocument();
     expect(screen.getByText('Launch Test Supplier B2B 001')).toBeInTheDocument();
     expect(screen.getByText('Demo / pilot supplier')).toBeInTheDocument();
+  });
+
+  it('renders the public error panel only after a genuine failed request', async () => {
+    vi.mocked(getPublicB2BSuppliers).mockRejectedValue(new Error('directory unavailable'));
+
+    renderDirectory();
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText(/We could not load public profiles right now/i)).toBeInTheDocument();
+    expect(screen.queryByText('Shraddha Industries')).toBeNull();
+    expect(screen.queryByText('Launch Test Supplier B2B 001')).toBeNull();
+    expect(screen.queryByText('Demo / pilot supplier')).toBeNull();
   });
 });

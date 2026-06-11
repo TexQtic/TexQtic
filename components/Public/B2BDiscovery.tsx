@@ -103,6 +103,7 @@ const DISCOVERY_CATEGORIES: DiscoveryCategory[] = [
 export function B2BDiscoveryPage({ onBack: _onBack, onSignIn, onListBusiness, onViewProfile, nav }: B2BDiscoveryPageProps) {
   const [items, setItems] = useState<PublicB2BSupplierEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [slowLoading, setSlowLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -117,12 +118,11 @@ export function B2BDiscoveryPage({ onBack: _onBack, onSignIn, onListBusiness, on
     let cancelled = false;
     let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
 
-    // Timeout safety: prevent indefinite loading if fetch hangs (15s max)
+    // Timeout safety: switch to neutral slow-loading copy while the request is still pending.
     const startTimeout = () => {
       timeoutHandle = setTimeout(() => {
         if (!cancelled) {
-          setError('Unable to load supplier listings. Please try again.');
-          setLoading(false);
+          setSlowLoading(true);
         }
       }, 15000);
     };
@@ -141,6 +141,7 @@ export function B2BDiscoveryPage({ onBack: _onBack, onSignIn, onListBusiness, on
         clearTimeout_();
         if (!cancelled) {
           setError(null);
+          setSlowLoading(false);
           setItems(data.items);
           setLoading(false);
         }
@@ -148,6 +149,7 @@ export function B2BDiscoveryPage({ onBack: _onBack, onSignIn, onListBusiness, on
       .catch(() => {
         clearTimeout_();
         if (!cancelled) {
+          setSlowLoading(false);
           setError('Unable to load supplier listings. Please try again.');
           setLoading(false);
         }
@@ -502,7 +504,9 @@ export function B2BDiscoveryPage({ onBack: _onBack, onSignIn, onListBusiness, on
             <div className="flex items-center justify-center py-24">
               <div className="flex flex-col items-center gap-4">
                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#d6e4e8] border-t-[#7fd5de]" />
-                <p className="text-sm text-slate-500">Loading public textile profiles…</p>
+                <p className="text-sm text-slate-500">
+                  {slowLoading ? 'Still loading public textile profiles…' : 'Loading public textile profiles…'}
+                </p>
               </div>
             </div>
           )}
