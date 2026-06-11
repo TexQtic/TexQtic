@@ -140,6 +140,7 @@ export function B2BDiscoveryPage({ onBack: _onBack, onSignIn, onListBusiness, on
       .then((data) => {
         clearTimeout_();
         if (!cancelled) {
+          setError(null);
           setItems(data.items);
           setLoading(false);
         }
@@ -506,7 +507,7 @@ export function B2BDiscoveryPage({ onBack: _onBack, onSignIn, onListBusiness, on
             </div>
           )}
 
-          {!loading && error && (
+          {!loading && error && items.length === 0 && (
             <div className="mt-6 rounded-[28px] border border-red-200 bg-red-50 px-6 py-8 text-center">
               <p className="text-sm font-medium text-red-700">
                 We could not load public profiles right now. You can still sign in or request access to continue.
