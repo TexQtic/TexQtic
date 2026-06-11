@@ -2,8 +2,8 @@
 
 **Unit:** `HOTFIX-FTR-SL-009-B2B-DISCOVERY-ERROR-FLASH-CLEANUP-01`
 **Date:** 2026-06-11
-**Status:** FIXED_PENDING_DEPLOY_VERIFICATION
-**Final enum:** `HOTFIX_FTR_SL_009_B2B_DISCOVERY_ERROR_FLASH_CLEANUP_FIXED_PENDING_DEPLOY_VERIFICATION`
+**Status:** FIXED_VERIFIED
+**Final enum:** `HOTFIX_FTR_SL_009_B2B_DISCOVERY_ERROR_FLASH_CLEANUP_FIXED_VERIFIED`
 
 ---
 
@@ -61,6 +61,8 @@ Focused frontend regression coverage now includes:
 
 Previous hotfix `HOTFIX-FTR-SL-009-PUBLIC-B2B-DIRECTORY-REGRESSION-01` was upgraded in `FUTURE-TODO-REGISTER.md` from pending deploy verification to verified, based on post-push production API and visual `/b2b` verification after commit `61ee2c5a`.
 
+This cleanup hotfix is also verified. Production verification after commit `3b77fbee` confirmed neutral initial loading, no final error flash, and both public supplier cards plus the demo/pilot label on `/b2b`.
+
 FTR-SL-009 remains:
 
 ```text
@@ -96,10 +98,10 @@ Test Files  1 passed (1)
 Tests  3 passed (3)
 ```
 
-Additional validation and production verification are recorded in the final hotfix report.
+Production verification did not call supplier profile GET, browser `/supplier/:slug`, inquiry, email, supplier data entry, SQL, Prisma migration/seed, schema/RLS/env/package, legal/payment/Zoho/CRM/CAE/TTP/D2C action.
 
 ---
 
 ## 8. Final Classification
 
-`HOTFIX_FTR_SL_009_B2B_DISCOVERY_ERROR_FLASH_CLEANUP_FIXED_PENDING_DEPLOY_VERIFICATION`
+`HOTFIX_FTR_SL_009_B2B_DISCOVERY_ERROR_FLASH_CLEANUP_FIXED_VERIFIED`

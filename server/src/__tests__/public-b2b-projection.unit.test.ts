@@ -299,6 +299,26 @@ describe('listPublicB2BSuppliers', () => {
       }),
     );
   });
+
+  it('queries offering preview items only when active and B2B-public safe without selecting price', async () => {
+    const orgRow = makeEligibleOrgRow();
+    const tenantRow = makeEligibleTenantRow();
+    const prisma = makeMockPrisma({ orgs: [orgRow], tenants: [tenantRow] });
+
+    await listPublicB2BSuppliers({}, prisma);
+
+    const mockTx = (prisma as unknown as { _mockTx: { catalogItem: { findMany: ReturnType<typeof vi.fn> } } })._mockTx;
+    expect(mockTx.catalogItem.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          tenantId: { in: ['org-uuid-001'] },
+          active: true,
+          publicationPosture: { in: ['B2B_PUBLIC', 'BOTH'] },
+        }),
+        select: expect.not.objectContaining({ price: true }),
+      }),
+    );
+  });
 });
 
 describe('getPublicB2BSupplierBySlug', () => {

@@ -2,8 +2,8 @@
 
 **Unit:** `HOTFIX-FTR-SL-009-PUBLIC-B2B-DIRECTORY-REGRESSION-01`
 **Date:** 2026-06-11
-**Status:** FIXED_PENDING_DEPLOY_VERIFICATION
-**Final enum:** `HOTFIX_FTR_SL_009_PUBLIC_B2B_DIRECTORY_REGRESSION_FIXED_PENDING_DEPLOY_VERIFICATION`
+**Status:** FIXED_VERIFIED
+**Final enum:** `HOTFIX_FTR_SL_009_PUBLIC_B2B_DIRECTORY_REGRESSION_FIXED_VERIFIED`
 
 ---
 
@@ -117,6 +117,12 @@ openapi.control-plane.json parse: OK
 
 ---
 
-## 6. Final Classification
+## 6. Production Verification Sync
 
-`HOTFIX_FTR_SL_009_PUBLIC_B2B_DIRECTORY_REGRESSION_FIXED_PENDING_DEPLOY_VERIFICATION`
+Safe production API and browser verification after commit `61ee2c5a` confirmed `GET /api/public/b2b/suppliers` returned HTTP 200 with `total=2` and slugs `shraddha-industries,lt-b2b-001`; the shared browser `/b2b` grid showed both `Shraddha Industries` and `Launch Test Supplier B2B 001`, including the `Demo / pilot supplier` label.
+
+No production supplier profile GET, browser `/supplier/:slug`, inquiry, email, supplier data entry, SQL, Prisma migration/seed, schema/RLS/env/package, legal/payment/Zoho/CRM/CAE/TTP/D2C action was performed for this verification.
+
+## 7. Final Classification
+
+`HOTFIX_FTR_SL_009_PUBLIC_B2B_DIRECTORY_REGRESSION_FIXED_VERIFIED`

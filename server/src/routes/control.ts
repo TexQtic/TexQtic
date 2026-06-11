@@ -58,6 +58,18 @@ const profileCompletenessSegmentKeySchema = z
 
 const profileCompletenessRolePositionSchema = z.enum(ORGANIZATION_ROLE_POSITION_KEYS);
 
+const catalogOfferingPreviewPublicationPostures = [
+  'PRIVATE_OR_AUTH_ONLY',
+  'B2B_PUBLIC',
+  'BOTH',
+] as const;
+
+const catalogOfferingPreviewPublicationPostureBodySchema = z
+  .object({
+    publicationPosture: z.enum(catalogOfferingPreviewPublicationPostures),
+  })
+  .strict();
+
 const profileCompletenessTaxonomyBodySchema = z
   .object({
     primary_segment_key: profileCompletenessSegmentKeySchema,
@@ -2908,6 +2920,175 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     } catch (error: unknown) {
       fastify.log.error({ err: error, tenantId: id, adminId }, '[Profile Completeness] Error');
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to update supplier profile completeness', 500);
+    }
+  });
+
+  /**
+   * POST /api/control/tenants/:id/catalog-items/:itemId/publication-posture
+   * Set public-safe offering-preview posture for an existing supplier-owned catalog item.
+   *
+   * Slice boundary:
+   * - SUPER_ADMIN only
+   * - B2B organizations only
+   * - blocks QA sentinel orgs
+   * - updates only CatalogItem.publicationPosture
+   * - does not alter item content, active state, pricing, MOQ, image, inventory, order, or contact data
+   */
+  fastify.post('/tenants/:id/catalog-items/:itemId/publication-posture', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
+    if (!request.adminId) {
+      return sendUnauthorized(reply, 'Admin authentication required');
+    }
+
+    const paramsSchema = z.object({
+      id: z.string().uuid('Invalid tenant id format'),
+      itemId: z.string().uuid('Invalid catalog item id format'),
+    });
+
+    const paramsResult = paramsSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return sendValidationError(reply, paramsResult.error.errors);
+    }
+
+    const bodyResult = catalogOfferingPreviewPublicationPostureBodySchema.safeParse(request.body ?? {});
+    if (!bodyResult.success) {
+      return sendValidationError(reply, bodyResult.error.errors);
+    }
+
+    const adminId = request.adminId;
+    const { id, itemId } = paramsResult.data;
+    const { publicationPosture } = bodyResult.data;
+
+    try {
+      const result = await withOrgAdminWriteContext(id, adminId, async tx => {
+        const [currentTenant, currentOrg, currentItem] = await Promise.all([
+          tx.tenant.findUnique({
+            where: { id },
+            select: { id: true, slug: true, name: true },
+          }),
+          tx.organizations.findUnique({
+            where: { id },
+            select: {
+              id: true,
+              legal_name: true,
+              org_type: true,
+              status: true,
+              is_qa_sentinel: true,
+            },
+          }),
+          tx.catalogItem.findFirst({
+            where: { id: itemId, tenantId: id },
+            select: {
+              id: true,
+              tenantId: true,
+              active: true,
+              publicationPosture: true,
+              catalogVisibilityPolicyMode: true,
+            },
+          }),
+        ]);
+
+        if (!currentTenant || !currentOrg) {
+          return { kind: 'not_found' as const };
+        }
+
+        if (currentOrg.is_qa_sentinel) {
+          return { kind: 'qa_sentinel' as const, currentOrg, currentTenant };
+        }
+
+        if (currentOrg.org_type !== 'B2B') {
+          return { kind: 'not_b2b' as const, currentOrg, currentTenant };
+        }
+
+        if (!currentItem) {
+          return { kind: 'item_not_found' as const, currentOrg, currentTenant };
+        }
+
+        if (
+          currentItem.catalogVisibilityPolicyMode === 'HIDDEN'
+          && (publicationPosture === 'B2B_PUBLIC' || publicationPosture === 'BOTH')
+        ) {
+          return { kind: 'hidden_policy_conflict' as const, currentOrg, currentTenant, currentItem };
+        }
+
+        const updatedItem = await tx.catalogItem.update({
+          where: { id: itemId },
+          data: { publicationPosture },
+          select: {
+            id: true,
+            tenantId: true,
+            active: true,
+            publicationPosture: true,
+            catalogVisibilityPolicyMode: true,
+          },
+        });
+
+        return {
+          kind: 'updated' as const,
+          currentOrg,
+          currentTenant,
+          currentItem,
+          updatedItem,
+        };
+      });
+
+      if (result.kind === 'not_found') {
+        return sendNotFound(reply, 'Tenant organization not found');
+      }
+
+      if (result.kind === 'qa_sentinel') {
+        return sendForbidden(
+          reply,
+          `Tenant ${result.currentTenant.slug} is a QA sentinel and cannot receive catalog offering-preview posture updates`
+        );
+      }
+
+      if (result.kind === 'not_b2b') {
+        return sendError(
+          reply,
+          'CATALOG_OFFERING_PREVIEW_NOT_B2B',
+          'Catalog offering-preview posture can only be assigned to B2B supplier organizations',
+          409
+        );
+      }
+
+      if (result.kind === 'item_not_found') {
+        return sendNotFound(reply, 'Catalog item not found');
+      }
+
+      if (result.kind === 'hidden_policy_conflict') {
+        return sendError(
+          reply,
+          'CATALOG_OFFERING_PREVIEW_HIDDEN_POLICY_CONFLICT',
+          'HIDDEN catalog visibility policy cannot be combined with B2B_PUBLIC or BOTH publication posture',
+          422
+        );
+      }
+
+      await writeAuditLog(
+        prisma,
+        createAdminAudit(adminId, 'control.tenants.catalog_item.publication_posture_updated', 'catalog_item', {
+          tenantId: id,
+          slug: result.currentTenant.slug,
+          itemId: result.updatedItem.id,
+          active: result.updatedItem.active,
+          catalogVisibilityPolicyMode: result.updatedItem.catalogVisibilityPolicyMode,
+          previousPublicationPosture: result.currentItem.publicationPosture,
+          nextPublicationPosture: result.updatedItem.publicationPosture,
+        })
+      );
+
+      return sendSuccess(reply, {
+        tenantId: id,
+        slug: result.currentTenant.slug,
+        item: {
+          id: result.updatedItem.id,
+          active: result.updatedItem.active,
+          publicationPosture: result.updatedItem.publicationPosture,
+        },
+      });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error, tenantId: id, itemId, adminId }, '[Catalog Offering Preview Posture] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to update catalog offering-preview posture', 500);
     }
   });
 

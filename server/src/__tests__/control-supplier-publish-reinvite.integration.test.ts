@@ -35,6 +35,10 @@ const {
       deleteMany: vi.fn(),
       createMany: vi.fn(),
     },
+    catalogItem: {
+      findFirst: vi.fn(),
+      update: vi.fn(),
+    },
     legalConsentSnapshot: {
       findMany: vi.fn(),
     },
@@ -657,6 +661,249 @@ describe('POST /api/control/tenants/:id/profile-completeness', () => {
     expect(response.statusCode).toBe(403);
     expect(response.json().error).toEqual(expect.objectContaining({ code: 'FORBIDDEN' }));
     expect(FAKE_TX.tenant.findUnique).not.toHaveBeenCalled();
+  });
+});
+
+// ─── /catalog-items/:itemId/publication-posture ──────────────────────────────
+
+describe('POST /api/control/tenants/:id/catalog-items/:itemId/publication-posture', () => {
+  let server: FastifyInstance;
+
+  const TEST_CATALOG_ITEM_ID = '33333333-3333-3333-3333-333333333333';
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    setAdminRole('SUPER_ADMIN');
+    prismaHolder.$transaction.mockImplementation(async (callback: (tx: typeof FAKE_TX) => Promise<unknown>) => callback(FAKE_TX));
+    FAKE_TX.$executeRawUnsafe.mockResolvedValue(undefined);
+    FAKE_TX.organizations.findUnique.mockReset();
+    FAKE_TX.organizations.update.mockReset();
+    FAKE_TX.tenant.findUnique.mockReset();
+    FAKE_TX.tenant.update.mockReset();
+    FAKE_TX.catalogItem.findFirst.mockReset();
+    FAKE_TX.catalogItem.update.mockReset();
+    FAKE_TX.invite.findMany.mockResolvedValue([]);
+    server = await buildServer();
+  });
+
+  afterEach(async () => {
+    await server.close();
+  });
+
+  function mockB2BTenantWithCatalogItem(overrides: {
+    org?: Record<string, unknown>;
+    item?: Record<string, unknown> | null;
+    updatedItem?: Record<string, unknown>;
+  } = {}): void {
+    FAKE_TX.tenant.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      slug: 'shraddha-industries',
+      name: 'SHRADDHA INDUSTRIES',
+    });
+    FAKE_TX.organizations.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      legal_name: 'SHRADDHA INDUSTRIES',
+      org_type: 'B2B',
+      status: 'VERIFICATION_APPROVED',
+      is_qa_sentinel: false,
+      ...overrides.org,
+    });
+    FAKE_TX.catalogItem.findFirst.mockResolvedValue(
+      overrides.item === null
+        ? null
+        : {
+            id: TEST_CATALOG_ITEM_ID,
+            tenantId: TEST_TENANT_ID,
+            active: true,
+            publicationPosture: 'PRIVATE_OR_AUTH_ONLY',
+            catalogVisibilityPolicyMode: null,
+            ...overrides.item,
+          },
+    );
+    FAKE_TX.catalogItem.update.mockResolvedValue({
+      id: TEST_CATALOG_ITEM_ID,
+      tenantId: TEST_TENANT_ID,
+      active: true,
+      publicationPosture: 'B2B_PUBLIC',
+      catalogVisibilityPolicyMode: null,
+      ...overrides.updatedItem,
+    });
+  }
+
+  it('updates only catalog item publication posture for a B2B supplier and writes an audit entry', async () => {
+    mockB2BTenantWithCatalogItem();
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/catalog-items/${TEST_CATALOG_ITEM_ID}/publication-posture`,
+      payload: { publicationPosture: 'B2B_PUBLIC' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(FAKE_TX.catalogItem.findFirst).toHaveBeenCalledWith({
+      where: { id: TEST_CATALOG_ITEM_ID, tenantId: TEST_TENANT_ID },
+      select: {
+        id: true,
+        tenantId: true,
+        active: true,
+        publicationPosture: true,
+        catalogVisibilityPolicyMode: true,
+      },
+    });
+    expect(FAKE_TX.catalogItem.update).toHaveBeenCalledWith({
+      where: { id: TEST_CATALOG_ITEM_ID },
+      data: { publicationPosture: 'B2B_PUBLIC' },
+      select: {
+        id: true,
+        tenantId: true,
+        active: true,
+        publicationPosture: true,
+        catalogVisibilityPolicyMode: true,
+      },
+    });
+    expect(FAKE_TX.organizations.update).not.toHaveBeenCalled();
+    expect(FAKE_TX.tenant.update).not.toHaveBeenCalled();
+    expect(FAKE_TX.invite.create).not.toHaveBeenCalled();
+    expect(writeAuditLog).toHaveBeenCalledWith(
+      prismaHolder,
+      expect.objectContaining({
+        action: 'control.tenants.catalog_item.publication_posture_updated',
+        entity: 'catalog_item',
+        actorId: TEST_ADMIN_ID,
+        metadataJson: expect.objectContaining({
+          tenantId: TEST_TENANT_ID,
+          slug: 'shraddha-industries',
+          itemId: TEST_CATALOG_ITEM_ID,
+          active: true,
+          previousPublicationPosture: 'PRIVATE_OR_AUTH_ONLY',
+          nextPublicationPosture: 'B2B_PUBLIC',
+        }),
+      }),
+    );
+    expect(response.json().data).toEqual({
+      tenantId: TEST_TENANT_ID,
+      slug: 'shraddha-industries',
+      item: {
+        id: TEST_CATALOG_ITEM_ID,
+        active: true,
+        publicationPosture: 'B2B_PUBLIC',
+      },
+    });
+  });
+
+  it('returns 403 for non-SUPER_ADMIN role', async () => {
+    setAdminRole('SUPPORT');
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/catalog-items/${TEST_CATALOG_ITEM_ID}/publication-posture`,
+      payload: { publicationPosture: 'B2B_PUBLIC' },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error).toEqual(expect.objectContaining({ code: 'FORBIDDEN' }));
+    expect(FAKE_TX.catalogItem.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 when the catalog item is missing or not owned by the target tenant', async () => {
+    mockB2BTenantWithCatalogItem({ item: null });
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/catalog-items/${TEST_CATALOG_ITEM_ID}/publication-posture`,
+      payload: { publicationPosture: 'B2B_PUBLIC' },
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(FAKE_TX.catalogItem.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: TEST_CATALOG_ITEM_ID, tenantId: TEST_TENANT_ID } }),
+    );
+    expect(FAKE_TX.catalogItem.update).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for invalid item id or invalid publication posture', async () => {
+    const invalidItemResponse = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/catalog-items/not-a-uuid/publication-posture`,
+      payload: { publicationPosture: 'B2B_PUBLIC' },
+    });
+
+    expect(invalidItemResponse.statusCode).toBe(400);
+
+    const invalidPostureResponse = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/catalog-items/${TEST_CATALOG_ITEM_ID}/publication-posture`,
+      payload: { publicationPosture: 'B2C_PUBLIC' },
+    });
+
+    expect(invalidPostureResponse.statusCode).toBe(400);
+    expect(FAKE_TX.catalogItem.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('does not activate inactive catalog items while setting public posture', async () => {
+    mockB2BTenantWithCatalogItem({
+      item: { active: false },
+      updatedItem: { active: false, publicationPosture: 'B2B_PUBLIC' },
+    });
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/catalog-items/${TEST_CATALOG_ITEM_ID}/publication-posture`,
+      payload: { publicationPosture: 'B2B_PUBLIC' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(FAKE_TX.catalogItem.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { publicationPosture: 'B2B_PUBLIC' },
+      }),
+    );
+    expect(response.json().data.item).toEqual({
+      id: TEST_CATALOG_ITEM_ID,
+      active: false,
+      publicationPosture: 'B2B_PUBLIC',
+    });
+  });
+
+  it('rejects public posture when the catalog visibility policy is HIDDEN', async () => {
+    mockB2BTenantWithCatalogItem({ item: { catalogVisibilityPolicyMode: 'HIDDEN' } });
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/catalog-items/${TEST_CATALOG_ITEM_ID}/publication-posture`,
+      payload: { publicationPosture: 'BOTH' },
+    });
+
+    expect(response.statusCode).toBe(422);
+    expect(response.json().error).toEqual(expect.objectContaining({ code: 'CATALOG_OFFERING_PREVIEW_HIDDEN_POLICY_CONFLICT' }));
+    expect(FAKE_TX.catalogItem.update).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 when tenant organization is not B2B and does not update item posture', async () => {
+    mockB2BTenantWithCatalogItem({ org: { org_type: 'B2C' } });
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/catalog-items/${TEST_CATALOG_ITEM_ID}/publication-posture`,
+      payload: { publicationPosture: 'B2B_PUBLIC' },
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json().error).toEqual(expect.objectContaining({ code: 'CATALOG_OFFERING_PREVIEW_NOT_B2B' }));
+    expect(FAKE_TX.catalogItem.update).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when tenant is a QA sentinel and does not update item posture', async () => {
+    mockB2BTenantWithCatalogItem({ org: { is_qa_sentinel: true } });
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/catalog-items/${TEST_CATALOG_ITEM_ID}/publication-posture`,
+      payload: { publicationPosture: 'B2B_PUBLIC' },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(FAKE_TX.catalogItem.update).not.toHaveBeenCalled();
   });
 });
 

@@ -620,6 +620,134 @@
         }
       }
     },
+    "/api/control/tenants/{id}/catalog-items/{itemId}/publication-posture": {
+      "post": {
+        "summary": "Update supplier catalog offering-preview publication posture",
+        "description": "SUPER_ADMIN-only bounded action for already-provisioned B2B suppliers. Updates only CatalogItem.publicationPosture for an existing tenant-owned catalog item. Does not alter item content, active state, pricing, MOQ, image, inventory, order, publication eligibility, membership, plan, payment, contact data, or organization publication posture.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Tenant / organization ID"
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Catalog item ID owned by the tenant"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["publicationPosture"],
+                "additionalProperties": false,
+                "properties": {
+                  "publicationPosture": {
+                    "type": "string",
+                    "enum": ["PRIVATE_OR_AUTH_ONLY", "B2B_PUBLIC", "BOTH"],
+                    "description": "Bounded B2B offering-preview posture. B2C_PUBLIC is intentionally excluded from this B2B supplier tooling surface. Active B2B_PUBLIC and BOTH items are eligible for public B2B offering preview projection; inactive items remain excluded."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Catalog item offering-preview publication posture updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "required": ["tenantId", "slug", "item"],
+                      "properties": {
+                        "tenantId": { "type": "string", "format": "uuid" },
+                        "slug": { "type": "string" },
+                        "item": {
+                          "type": "object",
+                          "required": ["id", "active", "publicationPosture"],
+                          "properties": {
+                            "id": { "type": "string", "format": "uuid" },
+                            "active": { "type": "boolean" },
+                            "publicationPosture": {
+                              "type": "string",
+                              "enum": [
+                                "PRIVATE_OR_AUTH_ONLY",
+                                "B2B_PUBLIC",
+                                "BOTH"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or QA sentinel tenant",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Tenant organization or tenant-owned catalog item not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "409": {
+            "description": "Target organization is not a B2B supplier organization",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Requested posture conflicts with HIDDEN catalog visibility policy",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/control/tenants/{id}/archive": {
       "post": {
         "summary": "Archive a tenant",
