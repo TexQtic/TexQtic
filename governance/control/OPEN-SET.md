@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-06-03 (FAM-09-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001 COMPLETE. FAM-09 CLOSE_READY_WITH_LAUNCH_TEST_RESIDUALS. FAM-11 installed as next nonlegal candidate. FAM-07 remains PARTIALLY_IMPLEMENTED. HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 remains MVP_CRITICAL/OPEN. HD-001 remains RUNTIME_CONFIRMED_CONFIGURED.)
+**Last Updated:** 2026-06-11 (GOV-LAYER0-JULY-LAUNCH-READINESS-POINTER-SYNC-01 COMPLETE. FTR-B2C-005B RUNTIME_VERIFIED. FAM-11 VERIFIED_COMPLETE. FAM-08 CLOSE_READY_WITH_RESIDUALS. FAM-09 CLOSE_READY_WITH_LAUNCH_TEST_RESIDUALS. July launch window July 20–30. P0 gate queue active. FAM-07 PARTIALLY_IMPLEMENTED. HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FTR-LEGAL-003 DRAFT_CONTENT_READY_BLOCKED_PENDING_PUBLICATION. Zoho parked. Prior: 2026-06-03 FAM-09 cycle closed.)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -52,6 +52,26 @@
 | Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
+
+- GOV-LAYER0-JULY-LAUNCH-READINESS-POINTER-SYNC-01 COMPLETE (2026-06-11).
+  July launch baseline locked. FTR-B2C-005B RUNTIME_VERIFIED (2026-06-11): supplier inquiry
+  notification production-verified (one QA inquiry, HTTP 202, audit log confirmed, email dispatched).
+  FAM-11 VERIFIED_COMPLETE (FAM-11F, 2026-06-04): subscription display-only cycle complete.
+  FAM-08 CLOSE_READY_WITH_RESIDUALS (post-launch residuals: plan CHECK constraint, /api/me normalization,
+  admin settings write surface, CI hasDb; QD-6 and FE-10 decision-gated).
+  FAM-09 CLOSE_READY_WITH_LAUNCH_TEST_RESIDUALS (lt-b2b-001 fate = Paresh decision).
+  July launch window: July 20–30. P0 gate queue now drives all sequencing.
+  NEXT-ACTION.md updated: active_delivery_unit → this sync; next_candidate_unit → FTR-OPS-003.
+  FAM-07 hold: HOLD_FOR_HUMAN_LEGAL_INPUTS unchanged. FAM-07L14 remains blocked.
+  FTR-LEGAL-003: DRAFT_CONTENT_READY_BLOCKED_PENDING_PUBLICATION (6 docs ready; OQ-02 counsel
+  engagement pending; OQ-03 CIN/entity details pending). FTR-LEGAL-003C is critical path for July.
+  Zoho: parked (GOV_ZOHO_BOOKS_SYNC_SAFETY_DEFERRAL confirmed; flag=off; no reopen until launch gate).
+  TTP/FAM-16: HOLD_FOR_COUNSEL_FEEDBACK (POST_MVP per July plan; TexQticScore SUPER_ADMIN-only).
+  P0 gates: G-JULY-01 legal pages live, G-JULY-02 Shraddha acceptance, G-JULY-03 FAM-07 L13A
+  legal inputs, G-JULY-04 Sentry first-event, G-JULY-05 rollback runbook, G-JULY-06 real supplier data.
+  PRIT-038 registered (ONDC/GeM Pillar 7, POST_MVP/P3). Next PRIT ID: PRIT-039.
+  No source mutations. No schema changes. No legal authority created. No Zoho/payment changes.
+  Artifact: governance/launch-readiness/MAJOR-AUDIT-JULY-LAUNCH-READINESS-PLAN-HOLD-CLEARANCE-AND-FAMILY-REGISTRY-01.md.
 
 - FAM-09-TLRH-EVIDENCE-SYNC-AND-CLOSE-READINESS-001 COMPLETE (2026-06-03).
   FAM-09 evidence cycle closed via opening audit + runtime verification + onboarding evidence +
