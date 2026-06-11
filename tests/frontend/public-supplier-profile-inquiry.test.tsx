@@ -14,6 +14,7 @@
  *   PSI-006 — no payment/order/RFQ language in inquiry section
  *   PSI-007 — submitPublicInquiry called with correct payload (no PII)
  *   PSI-008 — success state replaces form (no double-submit path)
+ *   PSI-009 — demo/pilot supplier profile is clearly labeled
  *
  * Harness: vitest + @testing-library/react + jsdom
  */
@@ -27,7 +28,10 @@ import * as publicB2BService from '../../services/publicB2BService';
 // ─── Module mock ──────────────────────────────────────────────────────────────
 
 vi.mock('../../services/publicB2BService', () => ({
+  DEMO_PILOT_SUPPLIER_HELPER_TEXT: 'Reference profile for launch testing; not a verified commercial supplier.',
+  DEMO_PILOT_SUPPLIER_LABEL: 'Demo / pilot supplier',
   getPublicSupplierBySlug: vi.fn(),
+  isDemoPilotSupplierSlug: (slug: string) => slug.trim().toLowerCase() === 'lt-b2b-001',
   submitPublicInquiry: vi.fn(),
 }));
 
@@ -49,6 +53,12 @@ const MOCK_PROFILE: publicB2BService.PublicB2BSupplierProfile = {
   offeringPreview: [],
   publicationPosture: 'B2B_PUBLIC',
   eligibilityPosture: 'PUBLICATION_ELIGIBLE',
+};
+
+const MOCK_DEMO_PILOT_PROFILE: publicB2BService.PublicB2BSupplierProfile = {
+  ...MOCK_PROFILE,
+  slug: 'lt-b2b-001',
+  legalName: 'Launch Test B2B Supplier',
 };
 
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
@@ -256,5 +266,30 @@ describe('PublicSupplierProfile — inquiry form (INQUIRY-004)', () => {
 
     // The submit button must no longer be visible
     expect(screen.queryByRole('button', { name: /Send inquiry/i })).toBeNull();
+  });
+
+  /**
+   * PSI-009 — demo/pilot supplier profile is clearly labeled.
+   *
+   * The launch-test supplier slug must never read like a genuine verified
+   * commercial supplier when the public profile route renders it.
+   */
+  it('PSI-009 — demo/pilot supplier profile is clearly labeled', async () => {
+    vi.mocked(publicB2BService.getPublicSupplierBySlug).mockResolvedValueOnce(MOCK_DEMO_PILOT_PROFILE);
+
+    await act(async () => {
+      render(
+        <PublicSupplierProfile
+          slug="lt-b2b-001"
+          onBack={() => {}}
+          onSignIn={() => {}}
+        />,
+      );
+    });
+
+    await screen.findByText('Launch Test B2B Supplier');
+
+    expect(screen.getAllByText(publicB2BService.DEMO_PILOT_SUPPLIER_LABEL).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(publicB2BService.DEMO_PILOT_SUPPLIER_HELPER_TEXT).length).toBeGreaterThan(0);
   });
 });

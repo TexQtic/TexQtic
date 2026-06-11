@@ -1,5 +1,14 @@
 import { get, post } from './apiClient';
 
+export const DEMO_PILOT_SUPPLIER_LABEL = 'Demo / pilot supplier';
+export const DEMO_PILOT_SUPPLIER_HELPER_TEXT = 'Reference profile for launch testing; not a verified commercial supplier.';
+
+const DEMO_PILOT_SUPPLIER_SLUGS = new Set(['lt-b2b-001']);
+
+export function isDemoPilotSupplierSlug(slug: string): boolean {
+  return DEMO_PILOT_SUPPLIER_SLUGS.has(slug.trim().toLowerCase());
+}
+
 export interface PublicB2BSupplierTaxonomy {
   primarySegment: string;
   secondarySegments: string[];

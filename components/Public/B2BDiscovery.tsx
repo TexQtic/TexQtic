@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  DEMO_PILOT_SUPPLIER_HELPER_TEXT,
+  DEMO_PILOT_SUPPLIER_LABEL,
   getPublicB2BSuppliers,
+  isDemoPilotSupplierSlug,
   type PublicB2BSupplierEntry,
 } from '../../services/publicB2BService';
 import { PublicNavbar, type PublicNavbarProps } from './PublicNavbar';
@@ -691,9 +694,12 @@ function SupplierCard({ supplier, onViewProfile, onSignIn }: SupplierCardProps) 
   const taxonomy = supplier.taxonomy;
   const previewItems = supplier.offeringPreview.slice(0, 3);
   const isReferencePreview = 'isReferencePreview' in supplier && supplier.isReferencePreview;
+  const isDemoPilotSupplier = !isReferencePreview && isDemoPilotSupplierSlug(supplier.slug);
   let trustBadge = 'Public-safe profile';
   if (isReferencePreview) {
     trustBadge = REFERENCE_SUPPLIER_PROFILE_LABEL;
+  } else if (isDemoPilotSupplier) {
+    trustBadge = DEMO_PILOT_SUPPLIER_LABEL;
   } else if (
     supplier.eligibilityPosture === 'PUBLICATION_ELIGIBLE'
     && (supplier.publicationPosture === 'B2B_PUBLIC' || supplier.publicationPosture === 'BOTH')
@@ -704,6 +710,8 @@ function SupplierCard({ supplier, onViewProfile, onSignIn }: SupplierCardProps) 
   let summary = `A public-safe ${supplier.orgType.toLowerCase()} participant available for discovery.`;
   if (isReferencePreview) {
     summary = 'Reference preview of how a supplier profile can show category fit, capability context, and public-safe storytelling before a business publishes live discovery data.';
+  } else if (isDemoPilotSupplier) {
+    summary = DEMO_PILOT_SUPPLIER_HELPER_TEXT;
   } else if (taxonomy?.primarySegment) {
     summary = `A ${supplier.orgType.toLowerCase()} participant with ${taxonomy.primarySegment.toLowerCase()} capability available for discovery.`;
   }
@@ -716,6 +724,11 @@ function SupplierCard({ supplier, onViewProfile, onSignIn }: SupplierCardProps) 
             <ReferencePreviewBadge label={REFERENCE_SUPPLIER_PROFILE_LABEL} />
           ) : (
             <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-[#2f8094]">{supplier.orgType}</p>
+          )}
+          {isDemoPilotSupplier && (
+            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#9a5a00]">
+              {DEMO_PILOT_SUPPLIER_HELPER_TEXT}
+            </p>
           )}
           <h3 className="mt-1 text-lg font-semibold leading-tight text-[#0a2036]">{supplier.legalName}</h3>
         </div>

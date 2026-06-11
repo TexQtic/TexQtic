@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
+  DEMO_PILOT_SUPPLIER_HELPER_TEXT,
+  DEMO_PILOT_SUPPLIER_LABEL,
   getPublicSupplierBySlug,
+  isDemoPilotSupplierSlug,
   submitPublicInquiry,
   type PublicB2BSupplierProfile as SupplierProfile,
   type PublicInquiryCategory,
@@ -103,14 +106,44 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
 
   const isReferencePreview =
     typeof profile === 'object' && profile !== null && 'isReferencePreview' in profile && profile.isReferencePreview === true;
+  const isDemoPilotSupplier = Boolean(profile && !isReferencePreview && isDemoPilotSupplierSlug(profile.slug));
 
-  const trustNotice = isReferencePreview
-    ? 'This reference supplier profile illustrates how TexQtic can present public-safe business context before your business goes live. It is not a live commercial offer and it does not represent a genuine onboarded supplier.'
-    : 'This public profile shows only information approved for public discovery. Connection, negotiation, pricing, documents, orders, and deeper business intelligence are available only through authenticated TexQtic workflows.';
+  const trustNotice = (() => {
+    if (isReferencePreview) {
+      return 'This reference supplier profile illustrates how TexQtic can present public-safe business context before your business goes live. It is not a live commercial offer and it does not represent a genuine onboarded supplier.';
+    }
+    if (isDemoPilotSupplier) {
+      return DEMO_PILOT_SUPPLIER_HELPER_TEXT;
+    }
+    return 'This public profile shows only information approved for public discovery. Connection, negotiation, pricing, documents, orders, and deeper business intelligence are available only through authenticated TexQtic workflows.';
+  })();
+
+  const heroProfileLabel = (() => {
+    if (isReferencePreview) {
+      return REFERENCE_SUPPLIER_PROFILE_LABEL;
+    }
+    if (isDemoPilotSupplier) {
+      return DEMO_PILOT_SUPPLIER_LABEL;
+    }
+    return 'Public Textile Profile';
+  })();
+
+  const heroProfileDescription = (() => {
+    if (isReferencePreview) {
+      return 'Explore a clearly labeled reference supplier example that shows how public-safe business information and capability context can appear before genuine businesses onboard.';
+    }
+    if (isDemoPilotSupplier) {
+      return DEMO_PILOT_SUPPLIER_HELPER_TEXT;
+    }
+    return 'Explore public-safe business information, capability signals, and trust context for this TexQtic ecosystem participant.';
+  })();
 
   const toPublicDiscoveryStatus = (eligibilityPosture: string, publicationPosture: string) => {
     if (isReferencePreview) {
       return REFERENCE_SUPPLIER_PROFILE_LABEL;
+    }
+    if (isDemoPilotSupplier) {
+      return DEMO_PILOT_SUPPLIER_LABEL;
     }
     if (eligibilityPosture === 'PUBLICATION_ELIGIBLE' && (publicationPosture === 'B2B_PUBLIC' || publicationPosture === 'BOTH')) {
       return 'Discoverable on TexQtic';
@@ -134,6 +167,9 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
   const toProfileSummary = (currentProfile: SupplierProfile) => {
     if (isReferencePreview) {
       return 'This reference supplier profile shows how TexQtic can frame capability, category, and textile ecosystem context before a business publishes genuine public discovery data.';
+    }
+    if (isDemoPilotSupplier) {
+      return DEMO_PILOT_SUPPLIER_HELPER_TEXT;
     }
     if (currentProfile.taxonomy?.primarySegment) {
       return `A quick view of this participant's public role in the textile ecosystem. ${currentProfile.legalName} is currently discoverable through ${currentProfile.taxonomy.primarySegment.toLowerCase()} capability context.`;
@@ -242,15 +278,13 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
           <div className="bg-[#071a2f] px-6 py-12">
             <div className="mx-auto max-w-5xl">
               <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">
-                {isReferencePreview ? REFERENCE_SUPPLIER_PROFILE_LABEL : 'Public Textile Profile'}
+                {heroProfileLabel}
               </p>
               <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.02em] text-white md:text-4xl">
                 {profile.legalName}
               </h1>
               <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-200">
-                {isReferencePreview
-                  ? 'Explore a clearly labeled reference supplier example that shows how public-safe business information and capability context can appear before genuine businesses onboard.'
-                  : 'Explore public-safe business information, capability signals, and trust context for this TexQtic ecosystem participant.'}
+                {heroProfileDescription}
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">

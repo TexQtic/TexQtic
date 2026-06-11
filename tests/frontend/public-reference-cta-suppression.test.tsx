@@ -10,6 +10,7 @@
  *   RCS-003 — PublicSupplierProfile suppresses inquiry form when serving a reference profile (API 404).
  *   RCS-004 — Live inquiry path confirmed available (covered by PSI-001 in
  *             tests/frontend/public-supplier-profile-inquiry.test.tsx).
+ *   RCS-005 — Public B2B discovery cards wire demo/pilot supplier labeling.
  *
  * Harness: vitest + @testing-library/react + jsdom (for RCS-003); Node.js fs (for RCS-001, RCS-002).
  */
@@ -31,11 +32,15 @@ const REPO_ROOT = join(__filename, '..', '..', '..');
 const COLLECTION_DETAIL_SRC = join(REPO_ROOT, 'components', 'Public', 'PublicCollectionDetail.tsx');
 const CATEGORY_PAGE_SRC     = join(REPO_ROOT, 'components', 'Public', 'PublicB2CCategoryPage.tsx');
 const SUPPLIER_PROFILE_SRC  = join(REPO_ROOT, 'components', 'Public', 'PublicSupplierProfile.tsx');
+const B2B_DISCOVERY_SRC     = join(REPO_ROOT, 'components', 'Public', 'B2BDiscovery.tsx');
 
 // ─── Module mock (for RCS-003) ────────────────────────────────────────────────
 
 vi.mock('../../services/publicB2BService', () => ({
+  DEMO_PILOT_SUPPLIER_HELPER_TEXT: 'Reference profile for launch testing; not a verified commercial supplier.',
+  DEMO_PILOT_SUPPLIER_LABEL: 'Demo / pilot supplier',
   getPublicSupplierBySlug: vi.fn(),
+  isDemoPilotSupplierSlug: (slug: string) => slug.trim().toLowerCase() === 'lt-b2b-001',
   submitPublicInquiry: vi.fn(),
 }));
 
@@ -93,6 +98,21 @@ describe('public reference CTA suppression — source checks', () => {
     expect(src).toContain('Send an inquiry');
     // Guard must precede the inquiry section
     expect(src).toMatch(/!isReferencePreview[\s\S]*?Send an inquiry/);
+  });
+
+  /**
+   * RCS-005 — Public B2B discovery cards must use the shared demo/pilot supplier helper.
+   *
+   * This keeps the live lt-b2b-001 directory card clearly labeled without changing
+   * the public API payload or production supplier data.
+   */
+  it('RCS-005 — Public B2B discovery cards use demo/pilot supplier labeling', () => {
+    const src = readFileSync(B2B_DISCOVERY_SRC, 'utf-8');
+
+    expect(src).toContain('DEMO_PILOT_SUPPLIER_LABEL');
+    expect(src).toContain('DEMO_PILOT_SUPPLIER_HELPER_TEXT');
+    expect(src).toContain('isDemoPilotSupplierSlug');
+    expect(src).toMatch(/isDemoPilotSupplierSlug\(supplier\.slug\)[\s\S]*?DEMO_PILOT_SUPPLIER_LABEL/);
   });
 });
 
