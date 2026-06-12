@@ -7,7 +7,7 @@
  * - Branding configuration
  */
 
-import { post } from './apiClient';
+import { APIError, getAuthRealm, getToken, post } from './apiClient';
 import { tenantDelete, tenantGet, tenantPost, tenantPut, tenantPatch } from './tenantApiClient';
 
 // ==================== ACTIVATION ====================
@@ -292,4 +292,60 @@ export async function updateBranding(
   request: UpdateBrandingRequest
 ): Promise<UpdateBrandingResponse> {
   return tenantPut<UpdateBrandingResponse>('/api/tenant/branding', request);
+}
+
+export interface UploadTenantLogoResponse {
+  logoUrl: string;
+}
+
+/**
+ * Upload a tenant logo file for the current tenant and return the hosted URL.
+ */
+export async function uploadTenantLogo(file: unknown): Promise<UploadTenantLogoResponse> {
+  const realm = getAuthRealm();
+  if (realm !== 'TENANT') {
+    throw new Error(`REALM_MISMATCH: Tenant endpoint requires TENANT realm, got ${realm || 'NONE'}`);
+  }
+
+  if (!(file instanceof globalThis.Blob)) {
+    throw new APIError(400, 'A valid logo image file is required.', 'FILE_REQUIRED');
+  }
+
+  const token = getToken();
+  if (!token) {
+    throw new APIError(401, 'Unauthorized.', 'UNAUTHORIZED');
+  }
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+  const endpoint = '/api/tenant/profile/logo/upload';
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'X-Texqtic-Realm': 'tenant',
+    },
+    body: formData,
+  });
+
+  let parsed: any = null;
+  try {
+    parsed = await response.json();
+  } catch {
+    parsed = null;
+  }
+
+  if (!response.ok) {
+    const message = parsed?.error?.message || parsed?.message || 'Tenant logo upload failed.';
+    const code = parsed?.error?.code || 'UPLOAD_FAILED';
+    throw new APIError(response.status, message, code, parsed?.error?.details);
+  }
+
+  if (parsed?.success !== true || !parsed?.data?.logoUrl) {
+    throw new APIError(500, 'Tenant logo upload failed.', 'UPLOAD_FAILED');
+  }
+
+  return parsed.data as UploadTenantLogoResponse;
 }

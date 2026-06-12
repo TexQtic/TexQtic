@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TenantConfig } from '../../types';
-import { updateBranding } from '../../services/tenantService';
+import { updateBranding, uploadTenantLogo } from '../../services/tenantService';
 import { APIError } from '../../services/apiClient';
 import { WLDppLabelPanel } from '../WhiteLabelAdmin/WLDppLabelPanel';
 
@@ -26,8 +26,38 @@ export const WhiteLabelSettings: React.FC<{
       : ''
   );
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const handleLogoUpload = async (file: File | null) => {
+    if (!file) {
+      return;
+    }
+
+    setUploadingLogo(true);
+    setSaveError(null);
+    setSaveSuccess(false);
+
+    try {
+      const uploadResult = await uploadTenantLogo(file);
+      await updateBranding({
+        logoUrl: uploadResult.logoUrl,
+      });
+
+      setLogoUrl(uploadResult.logoUrl);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      if (err instanceof APIError) {
+        setSaveError(err.message);
+      } else {
+        setSaveError('Failed to upload logo. Please try again.');
+      }
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -153,6 +183,39 @@ export const WhiteLabelSettings: React.FC<{
                 placeholder="https://cdn.yourbrand.com/logo.png"
               />
             </div>
+            <div className="space-y-2">
+              <label htmlFor="logoUpload" className="text-[10px] font-bold uppercase text-slate-400">
+                Upload Logo (JPG, PNG, WEBP)
+              </label>
+              <input
+                id="logoUpload"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm"
+                disabled={uploadingLogo}
+                onChange={e => {
+                  const selectedFile = e.target.files?.[0] ?? null;
+                  void handleLogoUpload(selectedFile);
+                  e.currentTarget.value = '';
+                }}
+              />
+              <p className="text-xs text-slate-500">
+                Uploading a logo stores it to tenant media and updates the logo URL automatically.
+              </p>
+              {uploadingLogo && (
+                <p className="text-xs text-indigo-700 font-medium">Uploading logo...</p>
+              )}
+            </div>
+            {logoUrl && (
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold uppercase text-slate-400">Logo Preview</p>
+                <img
+                  src={logoUrl}
+                  alt="Tenant logo preview"
+                  className="h-16 w-auto max-w-full object-contain border border-slate-200 rounded-lg bg-white p-2"
+                />
+              </div>
+            )}
           </section>
         </div>
 
@@ -190,7 +253,7 @@ export const WhiteLabelSettings: React.FC<{
 
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || uploadingLogo}
             className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold uppercase text-xs tracking-widest hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? 'Saving…' : 'Save Changes'}

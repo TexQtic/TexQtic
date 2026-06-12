@@ -139,6 +139,11 @@ import {
   uploadCatalogImageToStorage,
   type CatalogImageUploadErrorCode,
 } from '../services/storage/catalogImage.storage.js';
+import {
+  TenantLogoUploadError,
+  uploadTenantLogoToStorage,
+  type TenantLogoUploadErrorCode,
+} from '../services/storage/tenantLogo.storage.js';
 
 type InviteEmailDeliveryStatus = EmailDispatchOutcome['status'] | 'FAILED_NON_FATAL';
 
@@ -2916,6 +2921,57 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         }
 
         return sendError(reply, 'UPLOAD_FAILED', 'Catalog image upload failed.', 500);
+      }
+    }
+  );
+
+  /**
+   * POST /api/tenant/profile/logo/upload
+   * Upload a tenant logo and return a public logoUrl.
+   * Route is authenticated and tenant-scoped.
+   */
+  fastify.post(
+    '/tenant/profile/logo/upload',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
+      try {
+        const file = await request.file();
+        if (!file) {
+          return sendError(reply, 'FILE_REQUIRED', 'A logo file is required.', 400);
+        }
+
+        const fileBuffer = await file.toBuffer();
+        if ((file.file as NodeJS.ReadableStream & { truncated?: boolean }).truncated) {
+          return sendError(reply, 'FILE_TOO_LARGE', 'File exceeds 2 MB upload limit.', 400);
+        }
+
+        const result = await uploadTenantLogoToStorage({
+          orgId: dbContext.orgId,
+          fileBuffer,
+        });
+
+        return sendSuccess(reply, {
+          logoUrl: result.logoUrl,
+        });
+      } catch (error) {
+        if (error instanceof TenantLogoUploadError) {
+          const code: TenantLogoUploadErrorCode = error.code;
+          return sendError(reply, code, error.message, error.statusCode);
+        }
+
+        const message = error instanceof Error ? error.message : 'Tenant logo upload failed.';
+        if (message.toLowerCase().includes('file too large')) {
+          return sendError(reply, 'FILE_TOO_LARGE', 'File exceeds 2 MB upload limit.', 400);
+        }
+
+        return sendError(reply, 'UPLOAD_FAILED', 'Tenant logo upload failed.', 500);
       }
     }
   );
