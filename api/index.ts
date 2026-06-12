@@ -22,6 +22,7 @@ import fastifyCors from '@fastify/cors';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCookie from '@fastify/cookie';
 import fastifyJwt from '@fastify/jwt';
+import fastifyMultipart from '@fastify/multipart';
 import { config } from '../server/src/config/index.js';
 import { realmHintGuardOnRequest } from '../server/src/middleware/realmGuard.js';
 import { tenantResolutionHook } from '../server/src/hooks/tenantResolutionHook.js';
@@ -101,6 +102,14 @@ await fastify.register(fastifyCors, {
 await fastify.register(fastifyCookie, {
   secret: config.JWT_REFRESH_SECRET,
   parseOptions: {},
+});
+
+// Keep multipart parser parity with local server bootstrap.
+await fastify.register(fastifyMultipart, {
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+    files: 1,
+  },
 });
 
 // JWT for tenant realm
