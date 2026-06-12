@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { Prisma } from '@prisma/client';
+import fastifyMultipart from '@fastify/multipart';
 import type {
   TenantPlan,
   BuyerCatalogPdpView,
@@ -2067,6 +2068,15 @@ export function assembleStructuredRfqRequirementSummaryText(rfq: {
 }
 
 const tenantRoutes: FastifyPluginAsync = async fastify => {
+  // Register multipart parser in the tenant plugin so both app entrypoints
+  // share the same upload parsing behavior without serverless bootstrap drift.
+  await fastify.register(fastifyMultipart, {
+    limits: {
+      fileSize: 5 * 1024 * 1024,
+      files: 1,
+    },
+  });
+
   /**
    * GET /api/me
    * Get current authenticated user (tenant realm)
