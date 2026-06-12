@@ -7880,6 +7880,181 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     }
   });
 
+  /**
+   * GET /api/tenant/profile
+   * Read normal B2B company profile identity.
+   * Read allowed to any authenticated tenant member.
+   */
+  fastify.get('/tenant/profile', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
+    const { userRole } = request;
+
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
+
+    try {
+      const profile = await withDbContext(prisma, dbContext, async tx => {
+        await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
+        await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
+
+        const org = await tx.organizations.findUnique({
+          where: { id: dbContext.orgId },
+          select: {
+            id: true,
+            slug: true,
+            legal_name: true,
+            org_type: true,
+            status: true,
+            plan: true,
+            primary_segment_key: true,
+            secondary_segments: {
+              select: { segment_key: true },
+              orderBy: { segment_key: 'asc' },
+            },
+            role_positions: {
+              select: { role_position_key: true },
+              orderBy: { role_position_key: 'asc' },
+            },
+          },
+        });
+
+        if (!org) {
+          throw new OrganizationNotFoundError(dbContext.orgId);
+        }
+
+        const branding = await tx.tenantBranding.findUnique({
+          where: { tenantId: dbContext.orgId },
+          select: { logoUrl: true },
+        });
+
+        return {
+          id: org.id,
+          slug: org.slug,
+          displayName: org.legal_name,
+          tenantType: org.org_type,
+          status: org.status,
+          plan: canonicalizeTenantPlan(org.plan),
+          primarySegmentKey: org.primary_segment_key,
+          secondarySegmentKeys: org.secondary_segments.map((entry: { segment_key: string }) => entry.segment_key),
+          rolePositionKeys: org.role_positions.map((entry: { role_position_key: string }) => entry.role_position_key),
+          logoUrl: branding?.logoUrl ?? null,
+          canEdit: userRole === 'OWNER' || userRole === 'ADMIN',
+        };
+      });
+
+      return sendSuccess(reply, { profile });
+    } catch (error: unknown) {
+      if (error instanceof OrganizationNotFoundError) {
+        return sendNotFound(reply, 'Tenant profile not found');
+      }
+
+      fastify.log.error({ err: error }, '[Get Tenant Profile] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to load tenant profile', 500);
+    }
+  });
+
+  /**
+   * PUT /api/tenant/profile
+   * Update normal B2B company profile identity.
+   * Requires OWNER or ADMIN role.
+   */
+  fastify.put('/tenant/profile', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
+    const { tenantId, userRole } = request;
+
+    if (userRole !== 'OWNER' && userRole !== 'ADMIN') {
+      return sendError(reply, 'FORBIDDEN', 'Insufficient permissions', 403);
+    }
+
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
+
+    const bodySchema = z.object({
+      displayName: z.string().trim().min(2).max(255),
+    });
+
+    const parseResult = bodySchema.safeParse(request.body);
+    if (!parseResult.success) {
+      return sendValidationError(reply, parseResult.error.errors);
+    }
+
+    try {
+      const profile = await withDbContext(prisma, dbContext, async tx => {
+        await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
+        await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
+
+        const org = await tx.organizations.update({
+          where: { id: dbContext.orgId },
+          data: {
+            legal_name: parseResult.data.displayName,
+          },
+          select: {
+            id: true,
+            slug: true,
+            legal_name: true,
+            org_type: true,
+            status: true,
+            plan: true,
+            primary_segment_key: true,
+            secondary_segments: {
+              select: { segment_key: true },
+              orderBy: { segment_key: 'asc' },
+            },
+            role_positions: {
+              select: { role_position_key: true },
+              orderBy: { role_position_key: 'asc' },
+            },
+          },
+        });
+
+        // Keep tenants table display name aligned with organizations.legal_name for compatibility.
+        await tx.tenant.update({
+          where: { id: dbContext.orgId },
+          data: { name: parseResult.data.displayName },
+        });
+
+        const branding = await tx.tenantBranding.findUnique({
+          where: { tenantId: dbContext.orgId },
+          select: { logoUrl: true },
+        });
+
+        return {
+          id: org.id,
+          slug: org.slug,
+          displayName: org.legal_name,
+          tenantType: org.org_type,
+          status: org.status,
+          plan: canonicalizeTenantPlan(org.plan),
+          primarySegmentKey: org.primary_segment_key,
+          secondarySegmentKeys: org.secondary_segments.map((entry: { segment_key: string }) => entry.segment_key),
+          rolePositionKeys: org.role_positions.map((entry: { role_position_key: string }) => entry.role_position_key),
+          logoUrl: branding?.logoUrl ?? null,
+          canEdit: true,
+        };
+      });
+
+      await writeAuditLog(prisma, {
+        tenantId: tenantId ?? null,
+        realm: 'TENANT',
+        actorType: 'USER',
+        actorId: request.userId ?? null,
+        action: 'profile.updated',
+        entity: 'organization',
+        entityId: dbContext.orgId,
+        metadataJson: {
+          displayName: parseResult.data.displayName,
+        },
+      });
+
+      return sendSuccess(reply, { profile });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Update Tenant Profile] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to update tenant profile', 500);
+    }
+  });
+
   // ─── G-025: DPP Snapshot API ─────────────────────────────────────────────────
   // GET /api/tenant/dpp/:nodeId
   // Read-only. Queries 3 SQL views created in TECS 4B (G-025-DPP-SNAPSHOT-VIEWS-IMPLEMENT-001).

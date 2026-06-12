@@ -8,6 +8,7 @@ interface TenantShellNavigationContract {
   surface: RuntimeShellNavigationSurface | null;
   onNavigateRoute: (routeKey: RuntimeLocalRouteKey) => void;
   onNavigateTeam?: () => void;
+  onNavigateCompanyProfile?: () => void;
   showAuthenticatedAffordances?: boolean;
   b2cSearchValue?: string;
   onB2CSearchChange?: (value: string) => void;
@@ -342,6 +343,7 @@ export const B2BShell: React.FC<B2BShellProps> = ({
         ...(hasShellRoute(navigation.surface, 'nc_pool_demand_lines') ? [{ key: 'nc_pool_demand_lines', label: 'Demand Lines', active: activeRouteKey === 'nc_pool_demand_lines', onSelect: () => navigation.onNavigateRoute('nc_pool_demand_lines') }] : []),
         ...(hasShellRoute(navigation.surface, 'nc_pool_rfq') ? [{ key: 'nc_pool_rfq', label: 'Pool RFQ', active: activeRouteKey === 'nc_pool_rfq', onSelect: () => navigation.onNavigateRoute('nc_pool_rfq') }] : []),
         ...(hasShellRoute(navigation.surface, 'nc_pool_invite_inbox') ? [{ key: 'nc_pool_invite_inbox', label: 'Supplier Invites', active: activeRouteKey === 'nc_pool_invite_inbox', onSelect: () => navigation.onNavigateRoute('nc_pool_invite_inbox') }] : []),
+        ...(navigation.onNavigateCompanyProfile ? [{ key: 'company_profile', label: 'Company Profile', onSelect: navigation.onNavigateCompanyProfile }] : []),
         { key: 'team', label: 'Team Access', onSelect: navigation.onNavigateTeam },
       ];
 
@@ -392,6 +394,7 @@ export const B2BShell: React.FC<B2BShellProps> = ({
             {hasShellRoute(navigation.surface, 'nc_pool_rfq') && <button onClick={() => navigation.onNavigateRoute('nc_pool_rfq')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'nc_pool_rfq' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>📤 Pool RFQ</button>}
             {hasShellRoute(navigation.surface, 'nc_pool_invite_inbox') && <button onClick={() => navigation.onNavigateRoute('nc_pool_invite_inbox')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'nc_pool_invite_inbox' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>📥 Supplier Invites</button>}
             
+            {navigation.onNavigateCompanyProfile && <button onClick={navigation.onNavigateCompanyProfile} className="w-full flex items-center gap-3 p-2 rounded text-left transition text-slate-300 hover:text-white hover:bg-slate-700/50">🏢 Company Profile</button>}
             <button onClick={navigation.onNavigateTeam} className="w-full flex items-center gap-3 p-2 rounded text-left transition text-slate-300 hover:text-white hover:bg-slate-700/50">👥 Team Access</button>
           </nav>
         )}

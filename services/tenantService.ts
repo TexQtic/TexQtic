@@ -284,6 +284,43 @@ export interface UpdateBrandingResponse {
   };
 }
 
+export interface TenantProfileResponse {
+  profile: {
+    id: string;
+    slug: string;
+    displayName: string;
+    tenantType: string;
+    status: string;
+    plan: string;
+    primarySegmentKey: string | null;
+    secondarySegmentKeys: string[];
+    rolePositionKeys: string[];
+    logoUrl: string | null;
+    canEdit: boolean;
+  };
+}
+
+export interface UpdateTenantProfileRequest {
+  displayName: string;
+}
+
+/**
+ * Read normal tenant company profile details for the current authenticated tenant.
+ */
+export async function getTenantProfile(): Promise<TenantProfileResponse> {
+  return tenantGet<TenantProfileResponse>('/api/tenant/profile');
+}
+
+/**
+ * Update normal tenant company profile details.
+ * Requires OWNER or ADMIN role.
+ */
+export async function updateTenantProfile(
+  request: UpdateTenantProfileRequest
+): Promise<TenantProfileResponse> {
+  return tenantPut<TenantProfileResponse>('/api/tenant/profile', request);
+}
+
 /**
  * Update tenant branding settings
  * Requires OWNER or ADMIN role
