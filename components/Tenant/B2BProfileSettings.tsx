@@ -1,7 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { TenantConfig } from '../../types';
 import { APIError } from '../../services/apiClient';
-import { getTenantProfile, updateTenantProfile, type TenantProfileResponse } from '../../services/tenantService';
+import {
+  getTenantProfile,
+  updateBranding,
+  updateTenantProfile,
+  uploadTenantLogo,
+  type TenantProfileResponse,
+} from '../../services/tenantService';
 
 interface B2BProfileSettingsProps {
   tenant: TenantConfig;
@@ -14,6 +20,7 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
 }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [profile, setProfile] = useState<TenantProfileResponse['profile'] | null>(null);
@@ -107,6 +114,55 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
     }
   };
 
+  const handleLogoUpload = async (file: File | null) => {
+    if (!file) {
+      return;
+    }
+
+    const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+    if (!allowedMimeTypes.has(file.type)) {
+      setError('Only JPG, PNG, and WEBP files are allowed.');
+      return;
+    }
+
+    const maxBytes = 2 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setError('File exceeds 2 MB upload limit.');
+      return;
+    }
+
+    setUploadingLogo(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const uploadResult = await uploadTenantLogo(file);
+      const brandingResult = await updateBranding({ logoUrl: uploadResult.logoUrl });
+
+      setProfile(current => {
+        if (!current) {
+          return current;
+        }
+
+        return {
+          ...current,
+          logoUrl: brandingResult.branding.logoUrl ?? uploadResult.logoUrl,
+        };
+      });
+
+      setSuccess('Company logo uploaded and saved.');
+      globalThis.setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      if (err instanceof APIError) {
+        setError(err.message);
+      } else {
+        setError('Failed to upload logo. Please try again.');
+      }
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm space-y-6">
@@ -170,9 +226,33 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
                 No Logo
               </div>
             )}
-            <p className="text-xs text-slate-500">
-              Logo upload will be enabled in the next media integration step.
-            </p>
+            {canEdit ? (
+              <div className="space-y-2">
+                <label htmlFor="company-logo-upload" className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                  Upload Logo
+                </label>
+                <input
+                  id="company-logo-upload"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={loading || saving || uploadingLogo}
+                  onChange={event => {
+                    const selectedFile = event.target.files?.[0] ?? null;
+                    void handleLogoUpload(selectedFile);
+                    event.currentTarget.value = '';
+                  }}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 disabled:bg-slate-100 disabled:text-slate-500"
+                />
+                <p className="text-xs text-slate-500">
+                  JPG, PNG, or WEBP only. Maximum file size: 2 MB.
+                </p>
+                {uploadingLogo && <p className="text-xs text-slate-600">Uploading logo...</p>}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500">
+                OWNER or ADMIN role is required to upload a company logo.
+              </p>
+            )}
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
@@ -197,7 +277,7 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
           <button
             type="button"
             onClick={handleSave}
-            disabled={loading || saving || !canEdit || !hasUnsavedChanges}
+            disabled={loading || saving || uploadingLogo || !canEdit || !hasUnsavedChanges}
             className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             {saving ? 'Saving...' : 'Save Company Profile'}
