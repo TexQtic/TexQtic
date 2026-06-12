@@ -6,6 +6,7 @@ import fastifyCors from '@fastify/cors';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCookie from '@fastify/cookie';
 import fastifyJwt from '@fastify/jwt';
+import fastifyMultipart from '@fastify/multipart';
 import { config } from './config/index.js';
 import { realmHintGuardOnRequest } from './middleware/realmGuard.js';
 import { tenantResolutionHook } from './hooks/tenantResolutionHook.js';
@@ -93,6 +94,14 @@ await fastify.register(fastifyCors, {
 await fastify.register(fastifyCookie, {
   secret: config.JWT_REFRESH_SECRET,
   parseOptions: {},
+});
+
+// FTR-SL-013A1: Multipart support for authenticated catalog image upload.
+await fastify.register(fastifyMultipart, {
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+    files: 1,
+  },
 });
 
 // JWT for tenant realm

@@ -130,6 +130,7 @@ import {
   createCatalogItem,
   updateCatalogItem,
   deleteCatalogItem,
+  uploadCatalogImage,
   createRfq,
   getBuyerRfqs,
   getBuyerRfqDetail,
@@ -2658,6 +2659,7 @@ const App: React.FC = () => {
     stageAttributes: {} as Record<string, string>,
   });
   const [addItemLoading, setAddItemLoading] = useState(false);
+  const [addItemUploadLoading, setAddItemUploadLoading] = useState(false);
   const [addItemError, setAddItemError] = useState<string | null>(null);
   const [editingCatalogItemId, setEditingCatalogItemId] = useState<string | null>(null);
   const [editItemFormData, setEditItemFormData] = useState({
@@ -2670,6 +2672,7 @@ const App: React.FC = () => {
     stageAttributes: {} as Record<string, string>,
   });
   const [editItemLoading, setEditItemLoading] = useState(false);
+  const [editItemUploadLoading, setEditItemUploadLoading] = useState(false);
   const [editItemError, setEditItemError] = useState<string | null>(null);
   const [deleteItemLoadingId, setDeleteItemLoadingId] = useState<string | null>(null);
   const editingCatalogItem = editingCatalogItemId
@@ -4794,6 +4797,62 @@ const App: React.FC = () => {
     setAppState('AUTH');
   };
 
+  const handleCatalogImageUpload = async (file: unknown, mode: 'add' | 'edit') => {
+    const maxBytes = 5 * 1024 * 1024;
+    const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+    if (!(file instanceof globalThis.Blob)) {
+      if (mode === 'add') {
+        setAddItemError('A valid image file is required.');
+      } else {
+        setEditItemError('A valid image file is required.');
+      }
+      return;
+    }
+
+    const setModeError = (message: string | null) => {
+      if (mode === 'add') {
+        setAddItemError(message);
+      } else {
+        setEditItemError(message);
+      }
+    };
+
+    if (file.size > maxBytes) {
+      setModeError('File exceeds 5 MB upload limit.');
+      return;
+    }
+
+    if (!allowedTypes.has(file.type)) {
+      setModeError('Only JPG, PNG, and WEBP files are allowed.');
+      return;
+    }
+
+    if (mode === 'add') {
+      setAddItemUploadLoading(true);
+    } else {
+      setEditItemUploadLoading(true);
+    }
+    setModeError(null);
+
+    try {
+      const result = await uploadCatalogImage(file);
+      if (mode === 'add') {
+        setAddItemFormData(data => ({ ...data, imageUrl: result.imageUrl }));
+      } else {
+        setEditItemFormData(data => ({ ...data, imageUrl: result.imageUrl }));
+      }
+    } catch (err: any) {
+      setModeError(err?.message || 'Catalog image upload failed.');
+    } finally {
+      if (mode === 'add') {
+        setAddItemUploadLoading(false);
+      } else {
+        setEditItemUploadLoading(false);
+      }
+    }
+  };
+
   /** RU-003: Handle inline catalog item creation */
   const handleCreateItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -4840,6 +4899,7 @@ const App: React.FC = () => {
       });
       setProducts(prev => [result.item, ...prev]);
       setAddItemFormData({ name: '', price: '', sku: '', imageUrl: '', description: '', moq: '', productCategory: '', fabricType: '', gsm: '', material: '', composition: '', color: '', widthCm: '', construction: '', certifications: '', catalogStage: '', stageAttributes: {} });
+      setAddItemUploadLoading(false);
       setShowAddItemForm(false);
     } catch (err: any) {
       setAddItemError(err?.message || 'Failed to create item.');
@@ -4856,6 +4916,7 @@ const App: React.FC = () => {
       composition: '', color: '', widthCm: '', construction: '', certifications: '',
       catalogStage: '', stageAttributes: {},
     });
+    setEditItemUploadLoading(false);
     setEditItemError(null);
   };
 
@@ -5379,14 +5440,14 @@ const App: React.FC = () => {
                 <div className="flex gap-3">
                   <button
                     type="submit"
-                    disabled={addItemLoading}
+                    disabled={addItemLoading || addItemUploadLoading}
                     className="px-6 py-2 bg-slate-900 text-white rounded-lg font-bold text-sm hover:bg-slate-700 transition disabled:opacity-50"
                   >
-                    {addItemLoading ? 'Saving...' : 'Save Item'}
+                    {addItemLoading ? 'Saving...' : (addItemUploadLoading && 'Uploading...') || 'Save Item'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setShowAddItemForm(false); setAddItemError(null); }}
+                    onClick={() => { setShowAddItemForm(false); setAddItemError(null); setAddItemUploadLoading(false); }}
                     className="px-6 py-2 text-slate-500 font-bold text-sm hover:text-slate-800 transition"
                   >
                     Cancel
@@ -5560,7 +5621,7 @@ const App: React.FC = () => {
                     />
                   </div>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <label htmlFor="b2b-add-image-url" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Image URL</label>
                   <input
                     id="b2b-add-image-url"
@@ -5570,6 +5631,23 @@ const App: React.FC = () => {
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                     placeholder="https://example.com/product-image.jpg"
                   />
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                    <input
+                      id="b2b-add-image-file"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={event => {
+                        const file = event.target.files?.[0];
+                        if (file) {
+                          void handleCatalogImageUpload(file, 'add');
+                        }
+                        event.currentTarget.value = '';
+                      }}
+                      className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
+                    />
+                    {addItemUploadLoading && <span className="text-xs text-slate-500">Uploading image...</span>}
+                  </div>
+                  <p className="text-xs text-slate-500">Upload JPG, PNG, or WEBP (max 5 MB), or paste a URL manually.</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1 md:col-span-2">
@@ -5717,14 +5795,14 @@ const App: React.FC = () => {
                 <div className="flex gap-3">
                   <button
                     type="submit"
-                    disabled={addItemLoading}
+                    disabled={addItemLoading || addItemUploadLoading}
                     className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition disabled:opacity-50"
                   >
-                    {addItemLoading ? 'Saving...' : 'Save Item'}
+                    {addItemLoading ? 'Saving...' : (addItemUploadLoading && 'Uploading...') || 'Save Item'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setShowAddItemForm(false); setAddItemError(null); }}
+                    onClick={() => { setShowAddItemForm(false); setAddItemError(null); setAddItemUploadLoading(false); }}
                     className="px-6 py-2 text-slate-500 font-bold text-sm hover:text-slate-800 transition"
                   >
                     Cancel
@@ -8579,7 +8657,7 @@ const App: React.FC = () => {
                     placeholder="Optional SKU"
                   />
                 </div>
-                <div className="space-y-1 md:col-span-3">
+                <div className="space-y-2 md:col-span-3">
                   <label htmlFor="edit-item-image-url" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
                     Image URL
                   </label>
@@ -8591,6 +8669,23 @@ const App: React.FC = () => {
                     className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                     placeholder="https://example.com/product-image.jpg"
                   />
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                    <input
+                      id="edit-item-image-file"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={event => {
+                        const file = event.target.files?.[0];
+                        if (file) {
+                          void handleCatalogImageUpload(file, 'edit');
+                        }
+                        event.currentTarget.value = '';
+                      }}
+                      className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
+                    />
+                    {editItemUploadLoading && <span className="text-xs text-slate-500">Uploading image...</span>}
+                  </div>
+                  <p className="text-xs text-slate-500">Upload JPG, PNG, or WEBP (max 5 MB), or keep/paste a URL manually.</p>
                 </div>
                 <div className="space-y-1 md:col-span-2">
                   <label htmlFor="edit-item-description" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
@@ -8748,17 +8843,17 @@ const App: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleCloseEditItem}
-                  disabled={editItemLoading}
+                  disabled={editItemLoading || editItemUploadLoading}
                   className="px-5 py-3 text-sm font-semibold text-slate-500 hover:text-slate-900 transition disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={editItemLoading}
+                  disabled={editItemLoading || editItemUploadLoading}
                   className="px-5 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {editItemLoading ? 'Saving...' : 'Save Changes'}
+                  {editItemLoading ? 'Saving...' : (editItemUploadLoading && 'Uploading...') || 'Save Changes'}
                 </button>
               </div>
             </form>

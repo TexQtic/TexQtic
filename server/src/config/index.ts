@@ -11,6 +11,13 @@ const envSchema = z.object({
   HOST: z.string().default('0.0.0.0'),
   DATABASE_URL: z.string().url(),
 
+  // Catalog image storage (FTR-SL-013A1)
+  // Optional at bootstrap so non-upload routes can still run in environments
+  // where storage is intentionally not configured.
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  CATALOG_IMAGE_BUCKET: z.string().min(1).optional(),
+
   // JWT
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),

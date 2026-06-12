@@ -134,6 +134,11 @@ import {
   runPassportAssistantInference,
   type PassportAssistantBuyerContext,
 } from '../services/passportAssistant.js';
+import {
+  CatalogImageUploadError,
+  uploadCatalogImageToStorage,
+  type CatalogImageUploadErrorCode,
+} from '../services/storage/catalogImage.storage.js';
 
 type InviteEmailDeliveryStatus = EmailDispatchOutcome['status'] | 'FAILED_NON_FATAL';
 
@@ -2861,6 +2866,57 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         count: resultItems.length,
         nextCursor,
       });
+    }
+  );
+
+  /**
+   * POST /api/tenant/catalog/images/upload
+   * Upload a catalog image and return a public imageUrl.
+   * Route is authenticated and tenant-scoped.
+   */
+  fastify.post(
+    '/tenant/catalog/images/upload',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      if (await isOrgVerificationBlocked(dbContext.orgId, reply)) return;
+
+      try {
+        const file = await request.file();
+        if (!file) {
+          return sendError(reply, 'FILE_REQUIRED', 'A file is required.', 400);
+        }
+
+        const fileBuffer = await file.toBuffer();
+        if ((file.file as NodeJS.ReadableStream & { truncated?: boolean }).truncated) {
+          return sendError(reply, 'FILE_TOO_LARGE', 'File exceeds 5 MB upload limit.', 400);
+        }
+
+        const result = await uploadCatalogImageToStorage({
+          orgId: dbContext.orgId,
+          fileBuffer,
+        });
+
+        return sendSuccess(reply, {
+          imageUrl: result.imageUrl,
+        });
+      } catch (error) {
+        if (error instanceof CatalogImageUploadError) {
+          const code: CatalogImageUploadErrorCode = error.code;
+          return sendError(reply, code, error.message, error.statusCode);
+        }
+
+        const message = error instanceof Error ? error.message : 'Catalog image upload failed.';
+        if (message.toLowerCase().includes('file too large')) {
+          return sendError(reply, 'FILE_TOO_LARGE', 'File exceeds 5 MB upload limit.', 400);
+        }
+
+        return sendError(reply, 'UPLOAD_FAILED', 'Catalog image upload failed.', 500);
+      }
     }
   );
 
