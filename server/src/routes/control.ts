@@ -2953,22 +2953,25 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
     try {
       const result = await withAdminContext(async tx => {
-        const [currentTenant, currentOrg] = await Promise.all([
-          tx.tenant.findUnique({
-            where: { id },
-            select: { id: true, slug: true, name: true },
-          }),
-          tx.organizations.findUnique({
-            where: { id },
-            select: {
-              id: true,
-              org_type: true,
-              is_qa_sentinel: true,
-            },
-          }),
-        ]);
+        const currentTenant = await tx.tenant.findUnique({
+          where: { id },
+          select: { id: true, slug: true, name: true },
+        });
 
-        if (!currentTenant || !currentOrg) {
+        if (!currentTenant) {
+          return { kind: 'not_found' as const };
+        }
+
+        const currentOrg = await tx.organizations.findUnique({
+          where: { id },
+          select: {
+            id: true,
+            org_type: true,
+            is_qa_sentinel: true,
+          },
+        });
+
+        if (!currentOrg) {
           return { kind: 'not_found' as const };
         }
 
