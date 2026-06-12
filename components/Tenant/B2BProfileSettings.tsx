@@ -216,11 +216,13 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3">
             <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Company Logo</div>
             {resolvedLogoUrl ? (
-              <img
-                src={resolvedLogoUrl}
-                alt="Company logo"
-                className="h-16 w-16 rounded-xl border border-slate-200 object-cover bg-white"
-              />
+              <div className="h-16 w-24 rounded-xl border border-slate-200 bg-white p-2">
+                <img
+                  src={resolvedLogoUrl}
+                  alt="Company logo"
+                  className="h-full w-full object-contain"
+                />
+              </div>
             ) : (
               <div className="h-16 w-16 rounded-xl border border-dashed border-slate-300 bg-white grid place-items-center text-slate-400 text-xs">
                 No Logo

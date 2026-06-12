@@ -63,6 +63,7 @@ export type PublicB2BOfferingPreviewItem = {
 export type PublicB2BSupplierEntry = {
   slug: string;
   legalName: string;
+  logoUrl: string | null;
   orgType: string;
   jurisdiction: string;
   certificationCount: number;
@@ -125,6 +126,11 @@ type CatalogItemRow = {
   moq: number;
   imageUrl: string | null;
   publicationPosture: string;
+};
+
+type BrandingRow = {
+  tenantId: string;
+  logoUrl: string | null;
 };
 
 // ── main service function ─────────────────────────────────────────────────────
@@ -218,6 +224,19 @@ export async function listPublicB2BSuppliers(
 
   const eligibleOrgIds = eligibleOrgs.map((o) => o.id);
 
+  // Tenant branding logo projection for public cards.
+  const brandingRows: BrandingRow[] = await withAdminContext(prismaClient, async tx => {
+    return tx.tenantBranding.findMany({
+      where: {
+        tenantId: { in: eligibleOrgIds },
+      },
+      select: {
+        tenantId: true,
+        logoUrl: true,
+      },
+    });
+  });
+
   // ── Certifications: APPROVED only (issuedAt IS NOT NULL) ─────────────────────
   const certRows: CertificationRow[] = await withAdminContext(prismaClient, async tx => {
     return tx.certification.findMany({
@@ -293,6 +312,11 @@ export async function listPublicB2BSuppliers(
     }
   }
 
+  const logoByTenantId = new Map<string, string | null>();
+  for (const row of brandingRows) {
+    logoByTenantId.set(row.tenantId, row.logoUrl ?? null);
+  }
+
   // ── build projection entries ──────────────────────────────────────────────────
 
   const allItems: PublicB2BSupplierEntry[] = eligibleOrgs.map((org) => {
@@ -305,6 +329,7 @@ export async function listPublicB2BSuppliers(
     return {
       slug: org.slug,
       legalName: org.legal_name,
+      logoUrl: logoByTenantId.get(org.id) ?? null,
       orgType: org.org_type,
       jurisdiction: org.jurisdiction,
       certificationCount: certs.count,
@@ -419,6 +444,13 @@ export async function getPublicB2BSupplierBySlug(
     return null;
   }
 
+  const brandingRow = await withAdminContext(prismaClient, async tx => {
+    return tx.tenantBranding.findUnique({
+      where: { tenantId: org.id },
+      select: { logoUrl: true },
+    });
+  });
+
   // ── Certifications ────────────────────────────────────────────────────────────
   const certRows: CertificationRow[] = await withAdminContext(prismaClient, async tx => {
     return tx.certification.findMany({
@@ -471,6 +503,7 @@ export async function getPublicB2BSupplierBySlug(
   const profile: PublicB2BSupplierProfile = {
     slug: org.slug,
     legalName: org.legal_name,
+    logoUrl: brandingRow?.logoUrl ?? null,
     orgType: org.org_type,
     jurisdiction: org.jurisdiction,
     certificationCount: certCount,

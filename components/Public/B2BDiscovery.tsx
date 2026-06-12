@@ -766,7 +766,22 @@ function SupplierCard({ supplier, onViewOfferings, onViewProfile, onSignIn }: Su
   return (
     <article className="rounded-[28px] border border-[#d9e5ea] bg-white p-6 shadow-[0_8px_28px_rgba(7,26,47,0.07)]">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="flex items-start gap-3">
+          <div className="h-14 w-14 shrink-0 rounded-xl border border-[#d9e5ea] bg-[#f7fbfc] p-2">
+            {supplier.logoUrl ? (
+              <img
+                src={supplier.logoUrl}
+                alt={`${supplier.legalName} logo`}
+                className="h-full w-full object-contain"
+                loading="lazy"
+              />
+            ) : (
+              <div className="grid h-full w-full place-items-center text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                Logo
+              </div>
+            )}
+          </div>
+          <div>
           {isReferencePreview ? (
             <ReferencePreviewBadge label={REFERENCE_SUPPLIER_PROFILE_LABEL} />
           ) : (
@@ -777,7 +792,8 @@ function SupplierCard({ supplier, onViewOfferings, onViewProfile, onSignIn }: Su
               {DEMO_PILOT_SUPPLIER_HELPER_TEXT}
             </p>
           )}
-          <h3 className="mt-1 text-lg font-semibold leading-tight text-[#0a2036]">{supplier.legalName}</h3>
+            <h3 className="mt-1 text-lg font-semibold leading-tight text-[#0a2036]">{supplier.legalName}</h3>
+          </div>
         </div>
         <span className="shrink-0 rounded-full border border-[#d6e4e8] bg-[#f0f8fb] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#2f8094]">
           {supplier.jurisdiction}

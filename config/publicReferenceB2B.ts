@@ -8,6 +8,7 @@ const PUBLIC_REFERENCE_B2B_SUPPLIERS: readonly PublicReferenceB2BSupplier[] = [
   {
     slug: 'reference-weaving-unit',
     legalName: 'Reference Weaving Unit',
+    logoUrl: null,
     orgType: 'B2B',
     jurisdiction: 'India',
     certificationCount: 0,
@@ -29,6 +30,7 @@ const PUBLIC_REFERENCE_B2B_SUPPLIERS: readonly PublicReferenceB2BSupplier[] = [
   {
     slug: 'reference-home-textiles-maker',
     legalName: 'Reference Home Textiles Maker',
+    logoUrl: null,
     orgType: 'B2B',
     jurisdiction: 'Portugal',
     certificationCount: 0,
@@ -50,6 +52,7 @@ const PUBLIC_REFERENCE_B2B_SUPPLIERS: readonly PublicReferenceB2BSupplier[] = [
   {
     slug: 'reference-performance-textiles-studio',
     legalName: 'Reference Performance Textiles Studio',
+    logoUrl: null,
     orgType: 'B2B',
     jurisdiction: 'Vietnam',
     certificationCount: 0,

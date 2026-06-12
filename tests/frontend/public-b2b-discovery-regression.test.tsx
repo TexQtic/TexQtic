@@ -25,6 +25,7 @@ const DIRECTORY_RESPONSE: PublicB2BSuppliersResponse = {
     {
       slug: 'shraddha-industries',
       legalName: 'Shraddha Industries',
+      logoUrl: 'https://cdn.example.com/shraddha-logo.png',
       orgType: 'B2B',
       jurisdiction: 'Surat, Gujarat',
       certificationCount: 0,
@@ -42,6 +43,7 @@ const DIRECTORY_RESPONSE: PublicB2BSuppliersResponse = {
     {
       slug: 'lt-b2b-001',
       legalName: 'Launch Test Supplier B2B 001',
+      logoUrl: null,
       orgType: 'B2B',
       jurisdiction: 'IN',
       certificationCount: 0,
@@ -171,6 +173,26 @@ describe('B2BDiscoveryPage public directory regression guard', () => {
 
     expect(screen.getByRole('button', { name: /View offerings/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/No public offerings yet/i)).toBeInTheDocument();
+  });
+
+  it('renders supplier logo when logoUrl exists and fallback badge when missing', async () => {
+    vi.mocked(getPublicB2BSuppliers).mockResolvedValue(DIRECTORY_RESPONSE);
+
+    renderDirectory();
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const shraddhaLogo = screen.getByAltText('Shraddha Industries logo');
+    expect(shraddhaLogo).toBeInTheDocument();
+
+    const testSupplierCard = screen.getByText('Launch Test Supplier B2B 001').closest('article');
+    expect(testSupplierCard).not.toBeNull();
+    if (!testSupplierCard || !(testSupplierCard instanceof window.HTMLElement)) {
+      throw new Error('Expected launch test supplier card to render as an article element.');
+    }
+    expect(within(testSupplierCard).getByText('Logo')).toBeInTheDocument();
   });
 
   it('opens and closes the offerings drawer without navigating to the supplier profile route', async () => {

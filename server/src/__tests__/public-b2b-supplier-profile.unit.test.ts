@@ -29,12 +29,16 @@ import {
 function makeMockPrisma(overrides: {
   orgs?: unknown[];
   tenants?: unknown[];
+  brandingRows?: unknown[];
+  brandingSingle?: unknown;
   certifications?: unknown[];
   traceabilityNodes?: unknown[];
   catalogItems?: unknown[];
 } = {}) {
   const orgs = overrides.orgs ?? [];
   const tenants = overrides.tenants ?? [];
+  const brandingRows = overrides.brandingRows ?? [];
+  const brandingSingle = overrides.brandingSingle ?? null;
   const certifications = overrides.certifications ?? [];
   const traceabilityNodes = overrides.traceabilityNodes ?? [];
   const catalogItems = overrides.catalogItems ?? [];
@@ -46,6 +50,10 @@ function makeMockPrisma(overrides: {
     },
     tenant: {
       findMany: vi.fn().mockResolvedValue(tenants),
+    },
+    tenantBranding: {
+      findMany: vi.fn().mockResolvedValue(brandingRows),
+      findUnique: vi.fn().mockResolvedValue(brandingSingle),
     },
     certification: {
       findMany: vi.fn().mockResolvedValue(certifications),
@@ -126,6 +134,7 @@ describe('getPublicB2BSupplierBySlug', () => {
     const prisma = makeMockPrisma({
       orgs: [orgRow],
       tenants: [tenantRow],
+      brandingSingle: { logoUrl: 'https://cdn.example.com/acme-logo.png' },
       certifications: [certRow],
       traceabilityNodes: [evidenceRow],
       catalogItems: [catalogRow],
@@ -139,6 +148,7 @@ describe('getPublicB2BSupplierBySlug', () => {
     // profile shape
     expect(profile.slug).toBe('acme-textiles');
     expect(profile.legalName).toBe('Acme Textiles Ltd');
+    expect(profile.logoUrl).toBe('https://cdn.example.com/acme-logo.png');
     expect(profile.orgType).toBe('B2B');
     expect(profile.jurisdiction).toBe('IN');
     expect(profile.certificationCount).toBe(1);

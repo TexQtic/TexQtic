@@ -29,12 +29,16 @@ import {
 function makeMockPrisma(overrides: {
   orgs?: unknown[];
   tenants?: unknown[];
+  brandingRows?: unknown[];
+  brandingSingle?: unknown;
   certifications?: unknown[];
   traceabilityNodes?: unknown[];
   catalogItems?: unknown[];
 } = {}) {
   const orgs = overrides.orgs ?? [];
   const tenants = overrides.tenants ?? [];
+  const brandingRows = overrides.brandingRows ?? [];
+  const brandingSingle = overrides.brandingSingle ?? null;
   const certifications = overrides.certifications ?? [];
   const traceabilityNodes = overrides.traceabilityNodes ?? [];
   const catalogItems = overrides.catalogItems ?? [];
@@ -49,6 +53,10 @@ function makeMockPrisma(overrides: {
     },
     tenant: {
       findMany: vi.fn().mockResolvedValue(tenants),
+    },
+    tenantBranding: {
+      findMany: vi.fn().mockResolvedValue(brandingRows),
+      findUnique: vi.fn().mockResolvedValue(brandingSingle),
     },
     certification: {
       findMany: vi.fn().mockResolvedValue(certifications),
@@ -129,6 +137,7 @@ describe('listPublicB2BSuppliers', () => {
     const prisma = makeMockPrisma({
       orgs: [orgRow],
       tenants: [tenantRow],
+      brandingRows: [{ tenantId: 'org-uuid-001', logoUrl: 'https://cdn.example.com/acme-logo.png' }],
       certifications: [certRow],
       traceabilityNodes: [evidenceRow],
       catalogItems: [catalogRow],
@@ -144,6 +153,7 @@ describe('listPublicB2BSuppliers', () => {
     const entry = result.items[0];
     expect(entry.slug).toBe('acme-ltd');
     expect(entry.legalName).toBe('Acme Ltd');
+    expect(entry.logoUrl).toBe('https://cdn.example.com/acme-logo.png');
     expect(entry.orgType).toBe('B2B');
     expect(entry.jurisdiction).toBe('US');
     expect(entry.certificationCount).toBe(1);

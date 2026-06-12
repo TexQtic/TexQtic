@@ -24,6 +24,7 @@ export interface PublicB2BSupplierOfferingPreviewItem {
 export interface PublicB2BSupplierEntry {
   slug: string;
   legalName: string;
+  logoUrl: string | null;
   orgType: string;
   jurisdiction: string;
   certificationCount: number;
@@ -69,6 +70,7 @@ export async function getPublicB2BSuppliers(
 export interface PublicB2BSupplierProfile {
   slug: string;
   legalName: string;
+  logoUrl: string | null;
   orgType: string;
   jurisdiction: string;
   certificationCount: number;

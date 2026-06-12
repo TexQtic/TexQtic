@@ -90,6 +90,7 @@ const ELIGIBLE_SUPPLIER_RESULT = {
   profile: {
     slug: 'acme-textiles',
     legalName: 'Acme Textiles Ltd',
+    logoUrl: null,
     orgType: 'B2B',
     jurisdiction: 'IN',
     certificationCount: 2,
