@@ -2952,7 +2952,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     const { id } = paramsResult.data;
 
     try {
-      const result = await withAdminContext(async tx => {
+      const result = await withOrgAdminContext(id, adminId, async tx => {
         const currentTenant = await tx.tenant.findUnique({
           where: { id },
           select: { id: true, slug: true, name: true },
