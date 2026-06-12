@@ -1,6 +1,6 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { B2BDiscoveryPage } from '../../components/Public/B2BDiscovery';
 import type { PublicNavbarProps } from '../../components/Public/PublicNavbar';
 import { getPublicB2BSuppliers, type PublicB2BSuppliersResponse } from '../../services/publicB2BService';
@@ -61,7 +61,10 @@ const DIRECTORY_RESPONSE: PublicB2BSuppliersResponse = {
   ],
 };
 
-function renderDirectory(): void {
+function renderDirectory(overrides: {
+  onViewProfile?: ReturnType<typeof vi.fn>;
+  onSignIn?: ReturnType<typeof vi.fn>;
+} = {}): void {
   const nav: PublicNavbarProps = {
     activeSection: 'b2b',
     onGoHome: () => {},
@@ -80,9 +83,9 @@ function renderDirectory(): void {
   render(
     <B2BDiscoveryPage
       onBack={() => {}}
-      onSignIn={() => {}}
+      onSignIn={overrides.onSignIn ?? (() => {})}
       onListBusiness={() => {}}
-      onViewProfile={() => {}}
+      onViewProfile={overrides.onViewProfile ?? (() => {})}
       nav={nav}
     />,
   );
@@ -155,5 +158,63 @@ describe('B2BDiscoveryPage public directory regression guard', () => {
     expect(screen.queryByText('Shraddha Industries')).toBeNull();
     expect(screen.queryByText('Launch Test Supplier B2B 001')).toBeNull();
     expect(screen.queryByText('Demo / pilot supplier')).toBeNull();
+  });
+
+  it('shows a view offerings CTA only for suppliers with public offering previews', async () => {
+    vi.mocked(getPublicB2BSuppliers).mockResolvedValue(DIRECTORY_RESPONSE);
+
+    renderDirectory();
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole('button', { name: /View offerings/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/No public offerings yet/i)).toBeInTheDocument();
+  });
+
+  it('opens and closes the offerings drawer without navigating to the supplier profile route', async () => {
+    const onViewProfile = vi.fn();
+    vi.mocked(getPublicB2BSuppliers).mockResolvedValue(DIRECTORY_RESPONSE);
+
+    renderDirectory({ onViewProfile });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /View offerings/i }));
+
+    const dialog = screen.getByRole('dialog', { name: /Launch Test Supplier B2B 001/i });
+    expect(within(dialog).getByText('Public B2B offerings')).toBeInTheDocument();
+    expect(within(dialog).getByText('LT Fabric Sample 001')).toBeInTheDocument();
+    expect(within(dialog).getByText('MOQ 100')).toBeInTheDocument();
+    expect(within(dialog).getAllByText('Demo / pilot supplier').length).toBeGreaterThan(0);
+    expect(within(dialog).getByText(/Reference profile for launch testing; not a verified commercial supplier./i)).toBeInTheDocument();
+    expect(within(dialog).queryByText(/\$|USD|EUR/)).toBeNull();
+    expect(within(dialog).queryByText(/contact/i)).toBeNull();
+    expect(onViewProfile).not.toHaveBeenCalled();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: /Close/i }));
+    expect(screen.queryByRole('dialog', { name: /Launch Test Supplier B2B 001/i })).toBeNull();
+  });
+
+  it('keeps Shraddha in a neutral empty-offerings state without inventing preview items', async () => {
+    vi.mocked(getPublicB2BSuppliers).mockResolvedValue(DIRECTORY_RESPONSE);
+
+    renderDirectory();
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const shraddhaCard = screen.getByText('Shraddha Industries').closest('article');
+    expect(shraddhaCard).not.toBeNull();
+    if (!shraddhaCard || !(shraddhaCard instanceof window.HTMLElement)) {
+      throw new Error('Expected Shraddha supplier card to render as an article element.');
+    }
+    expect(within(shraddhaCard).queryByRole('button', { name: /View offerings/i })).toBeNull();
+    expect(within(shraddhaCard).getByLabelText(/No public offerings yet/i)).toBeInTheDocument();
+    expect(within(shraddhaCard).queryByText('LT Fabric Sample 001')).toBeNull();
   });
 });

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   DEMO_PILOT_SUPPLIER_HELPER_TEXT,
   DEMO_PILOT_SUPPLIER_LABEL,
@@ -38,6 +38,8 @@ type ScrollTarget = {
   scrollIntoView: (options?: Record<string, unknown>) => void;
   focus?: () => void;
 };
+
+type DisplaySupplier = PublicB2BSupplierEntry | PublicReferenceB2BSupplier;
 
 const CATEGORY_ALIASES: Record<string, string[]> = {
   'fabric-manufacturers': [
@@ -112,6 +114,8 @@ export function B2BDiscoveryPage({ onBack: _onBack, onSignIn, onListBusiness, on
   const [certificationFilter, setCertificationFilter] = useState('all');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [resultsSection, setResultsSection] = useState<ScrollTarget | null>(null);
+  const [offeringsDrawerSupplier, setOfferingsDrawerSupplier] = useState<DisplaySupplier | null>(null);
+  const offeringsDrawerCloseButtonRef = useRef<React.ElementRef<'button'> | null>(null);
   const referenceItems = useMemo(() => getPublicReferenceB2BSuppliers(), []);
 
   useEffect(() => {
@@ -187,8 +191,35 @@ export function B2BDiscoveryPage({ onBack: _onBack, onSignIn, onListBusiness, on
   }, [items]);
 
   const usingReferencePreview = !loading && !error && items.length === 0;
-  const displayItems: readonly (PublicB2BSupplierEntry | PublicReferenceB2BSupplier)[] =
+  const displayItems: readonly DisplaySupplier[] =
     usingReferencePreview ? referenceItems : items;
+
+  useEffect(() => {
+    if (!offeringsDrawerSupplier) {
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (event: { key: string }) => {
+      if (event.key === 'Escape') {
+        setOfferingsDrawerSupplier(null);
+      }
+    };
+
+    const focusTimeout = window.setTimeout(() => {
+      offeringsDrawerCloseButtonRef.current?.focus();
+    }, 0);
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.clearTimeout(focusTimeout);
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [offeringsDrawerSupplier]);
 
   const filteredItems = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -538,6 +569,7 @@ export function B2BDiscoveryPage({ onBack: _onBack, onSignIn, onListBusiness, on
                 <SupplierCard
                   key={supplier.slug}
                   supplier={supplier}
+                  onViewOfferings={() => setOfferingsDrawerSupplier(supplier)}
                   onViewProfile={onViewProfile}
                   onSignIn={onSignIn}
                 />
@@ -545,6 +577,14 @@ export function B2BDiscoveryPage({ onBack: _onBack, onSignIn, onListBusiness, on
             </div>
           )}
         </section>
+
+        {offeringsDrawerSupplier && (
+          <OfferingsDrawer
+            supplier={offeringsDrawerSupplier}
+            closeButtonRef={offeringsDrawerCloseButtonRef}
+            onClose={() => setOfferingsDrawerSupplier(null)}
+          />
+        )}
 
         <section className="mt-8 rounded-[32px] bg-[linear-gradient(135deg,_#08233a_0%,_#0e304a_100%)] p-8 text-white shadow-[0_24px_70px_rgba(7,26,47,0.20)] md:p-10">
           <div className="max-w-3xl">
@@ -690,16 +730,18 @@ export function B2BDiscoveryPage({ onBack: _onBack, onSignIn, onListBusiness, on
 }
 
 interface SupplierCardProps {
-  readonly supplier: PublicB2BSupplierEntry | PublicReferenceB2BSupplier;
+  readonly supplier: DisplaySupplier;
+  readonly onViewOfferings: () => void;
   readonly onViewProfile: (slug: string) => void;
   readonly onSignIn: () => void;
 }
 
-function SupplierCard({ supplier, onViewProfile, onSignIn }: SupplierCardProps) {
+function SupplierCard({ supplier, onViewOfferings, onViewProfile, onSignIn }: SupplierCardProps) {
   const taxonomy = supplier.taxonomy;
   const previewItems = supplier.offeringPreview.slice(0, 3);
   const isReferencePreview = 'isReferencePreview' in supplier && supplier.isReferencePreview;
   const isDemoPilotSupplier = !isReferencePreview && isDemoPilotSupplierSlug(supplier.slug);
+  const hasPublicOfferings = previewItems.length > 0;
   let trustBadge = 'Public-safe profile';
   if (isReferencePreview) {
     trustBadge = REFERENCE_SUPPLIER_PROFILE_LABEL;
@@ -814,6 +856,22 @@ function SupplierCard({ supplier, onViewProfile, onSignIn }: SupplierCardProps) 
       )}
 
       <div className="mt-6 flex flex-wrap gap-2">
+        {hasPublicOfferings ? (
+          <button
+            type="button"
+            onClick={onViewOfferings}
+            className="inline-flex items-center justify-center rounded-full bg-[#7fd5de] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-[#08233a] transition hover:bg-[#98e2e9]"
+          >
+            View offerings
+          </button>
+        ) : (
+          <span
+            aria-label="No public offerings yet"
+            className="inline-flex items-center justify-center rounded-full border border-[#d9e5ea] bg-[#f7fbfc] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400"
+          >
+            No public offerings yet
+          </span>
+        )}
         <button
           type="button"
           onClick={() => onViewProfile(supplier.slug)}
@@ -830,5 +888,129 @@ function SupplierCard({ supplier, onViewProfile, onSignIn }: SupplierCardProps) 
         </button>
       </div>
     </article>
+  );
+}
+
+interface OfferingsDrawerProps {
+  readonly supplier: DisplaySupplier;
+  readonly closeButtonRef: React.RefObject<React.ElementRef<'button'> | null>;
+  readonly onClose: () => void;
+}
+
+function OfferingsDrawer({ supplier, closeButtonRef, onClose }: OfferingsDrawerProps) {
+  const isReferencePreview = 'isReferencePreview' in supplier && supplier.isReferencePreview;
+  const isDemoPilotSupplier = !isReferencePreview && isDemoPilotSupplierSlug(supplier.slug);
+  const taxonomyLabel = supplier.taxonomy?.primarySegment;
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-[#071a2f]/45" aria-hidden={false}>
+      <button
+        type="button"
+        aria-label="Close offerings drawer overlay"
+        onClick={onClose}
+        className="absolute inset-0 cursor-default"
+      />
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="b2b-offerings-drawer-title"
+        className="relative flex h-full w-full max-w-xl flex-col overflow-hidden bg-white shadow-[0_24px_90px_rgba(7,26,47,0.28)]"
+      >
+        <div className="border-b border-[#d9e5ea] px-6 py-5 sm:px-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#2f8094]">Public B2B offerings</p>
+              <h2 id="b2b-offerings-drawer-title" className="mt-2 text-2xl font-semibold text-[#0a2036]">
+                {supplier.legalName}
+              </h2>
+              <p className="mt-3 max-w-lg text-sm leading-6 text-slate-600">
+                These are public-safe preview offerings approved for B2B discovery. Private pricing, negotiation, and documents remain inside authenticated workflows.
+              </p>
+              {taxonomyLabel && (
+                <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  {taxonomyLabel}
+                </p>
+              )}
+              {isDemoPilotSupplier && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9a5a00]">
+                    {DEMO_PILOT_SUPPLIER_LABEL}
+                  </p>
+                  <p className="text-sm leading-6 text-slate-600">{DEMO_PILOT_SUPPLIER_HELPER_TEXT}</p>
+                </div>
+              )}
+              {isReferencePreview && (
+                <div className="mt-4 space-y-2">
+                  <ReferencePreviewBadge label={REFERENCE_SUPPLIER_PROFILE_LABEL} />
+                  <p className="text-sm leading-6 text-slate-600">{NOT_LIVE_COMMERCIAL_OFFER_COPY}</p>
+                </div>
+              )}
+            </div>
+            <button
+              ref={closeButtonRef}
+              type="button"
+              onClick={onClose}
+              className="inline-flex items-center justify-center rounded-full border border-[#d1dee3] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036]"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-8">
+          {supplier.offeringPreview.length === 0 ? (
+            <div className="rounded-[24px] border border-[#d9e5ea] bg-[#f7fbfc] px-6 py-8">
+              <p className="text-sm font-semibold text-[#0a2036]">No public offerings yet.</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                This supplier can still be discovered publicly, but public-safe B2B offering previews are not available yet.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {supplier.offeringPreview.map((item) => (
+                <article key={item.name} className="rounded-[24px] border border-[#d9e5ea] bg-[#fbfdfe] p-4 shadow-sm">
+                  <div className="flex flex-col gap-4 sm:flex-row">
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="h-28 w-full rounded-[18px] object-cover sm:w-36"
+                      />
+                    ) : (
+                      <div className="flex h-28 w-full items-center justify-center rounded-[18px] border border-dashed border-[#d9e5ea] bg-white text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 sm:w-36">
+                        No image
+                      </div>
+                    )}
+
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#2f8094]">Public B2B offering</p>
+                      <h3 className="mt-2 text-base font-semibold leading-6 text-[#0a2036]">{item.name}</h3>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="rounded-full border border-[#d9e5ea] bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600">
+                          MOQ {item.moq}
+                        </span>
+                        <span className="rounded-full border border-[#d9e5ea] bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600">
+                          {supplier.legalName}
+                        </span>
+                        {taxonomyLabel && (
+                          <span className="rounded-full border border-[#d9e5ea] bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600">
+                            {taxonomyLabel}
+                          </span>
+                        )}
+                        {isDemoPilotSupplier && (
+                          <span className="rounded-full border border-[#f3d49e] bg-[#fff6e8] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#9a5a00]">
+                            {DEMO_PILOT_SUPPLIER_LABEL}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
   );
 }
