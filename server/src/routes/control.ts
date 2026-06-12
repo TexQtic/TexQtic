@@ -2924,6 +2924,121 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   });
 
   /**
+   * GET /api/control/tenants/:id/catalog-items
+   * Read catalog item posture-readiness fields for a supplier tenant (SUPER_ADMIN only).
+   *
+   * Slice boundary:
+   * - SUPER_ADMIN only
+   * - B2B organizations only
+   * - blocks QA sentinel orgs
+   * - returns only posture-readiness fields: id, name, sku, active, publicationPosture, catalogVisibilityPolicyMode, createdAt, updatedAt
+   * - never returns price, moq, description, inventory, contacts, orders, images, memberships, plan, or payment data
+   */
+  fastify.get('/tenants/:id/catalog-items', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
+    if (!request.adminId) {
+      return sendUnauthorized(reply, 'Admin authentication required');
+    }
+
+    const paramsSchema = z.object({
+      id: z.string().uuid('Invalid tenant id format'),
+    });
+
+    const paramsResult = paramsSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return sendValidationError(reply, paramsResult.error.errors);
+    }
+
+    const adminId = request.adminId;
+    const { id } = paramsResult.data;
+
+    try {
+      const result = await withAdminContext(async tx => {
+        const [currentTenant, currentOrg] = await Promise.all([
+          tx.tenant.findUnique({
+            where: { id },
+            select: { id: true, slug: true, name: true },
+          }),
+          tx.organizations.findUnique({
+            where: { id },
+            select: {
+              id: true,
+              org_type: true,
+              is_qa_sentinel: true,
+            },
+          }),
+        ]);
+
+        if (!currentTenant || !currentOrg) {
+          return { kind: 'not_found' as const };
+        }
+
+        if (currentOrg.is_qa_sentinel) {
+          return { kind: 'qa_sentinel' as const, currentTenant };
+        }
+
+        if (currentOrg.org_type !== 'B2B') {
+          return { kind: 'not_b2b' as const, currentTenant };
+        }
+
+        const items = await tx.catalogItem.findMany({
+          where: { tenantId: id },
+          select: {
+            id: true,
+            name: true,
+            sku: true,
+            active: true,
+            publicationPosture: true,
+            catalogVisibilityPolicyMode: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+          orderBy: [{ createdAt: 'asc' }],
+        });
+
+        return { kind: 'ok' as const, currentTenant, items };
+      });
+
+      if (result.kind === 'not_found') {
+        return sendNotFound(reply, 'Tenant organization not found');
+      }
+
+      if (result.kind === 'qa_sentinel') {
+        return sendForbidden(
+          reply,
+          `Tenant ${result.currentTenant.slug} is a QA sentinel and cannot be read through this endpoint`
+        );
+      }
+
+      if (result.kind === 'not_b2b') {
+        return sendError(
+          reply,
+          'CATALOG_ITEMS_NOT_B2B',
+          'Catalog item posture readiness can only be read for B2B supplier organizations',
+          409
+        );
+      }
+
+      await writeAuditLog(
+        prisma,
+        createAdminAudit(adminId, 'control.tenants.catalog_items.posture_read', 'catalog_item', {
+          tenantId: id,
+          slug: result.currentTenant.slug,
+          count: result.items.length,
+        })
+      );
+
+      return sendSuccess(reply, {
+        tenantId: id,
+        slug: result.currentTenant.slug,
+        items: result.items,
+      });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error, tenantId: id, adminId }, '[Catalog Items Posture Read] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to read catalog items', 500);
+    }
+  });
+
+  /**
    * POST /api/control/tenants/:id/catalog-items/:itemId/publication-posture
    * Set public-safe offering-preview posture for an existing supplier-owned catalog item.
    *

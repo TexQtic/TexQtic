@@ -37,6 +37,7 @@ const {
     },
     catalogItem: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
       update: vi.fn(),
     },
     legalConsentSnapshot: {
@@ -661,6 +662,148 @@ describe('POST /api/control/tenants/:id/profile-completeness', () => {
     expect(response.statusCode).toBe(403);
     expect(response.json().error).toEqual(expect.objectContaining({ code: 'FORBIDDEN' }));
     expect(FAKE_TX.tenant.findUnique).not.toHaveBeenCalled();
+  });
+});
+
+// ─── GET /catalog-items (posture readiness read) ─────────────────────────────
+
+describe('GET /api/control/tenants/:id/catalog-items', () => {
+  let server: FastifyInstance;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    setAdminRole('SUPER_ADMIN');
+    FAKE_TX.$executeRawUnsafe.mockResolvedValue(undefined);
+    FAKE_TX.organizations.findUnique.mockReset();
+    FAKE_TX.tenant.findUnique.mockReset();
+    FAKE_TX.catalogItem.findMany.mockReset();
+    FAKE_TX.invite.findMany.mockResolvedValue([]);
+    server = await buildServer();
+  });
+
+  afterEach(async () => {
+    await server.close();
+  });
+
+  function mockB2BTenantWithItems(items: unknown[] = []): void {
+    FAKE_TX.tenant.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      slug: 'shraddha-industries',
+      name: 'SHRADDHA INDUSTRIES',
+    });
+    FAKE_TX.organizations.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      org_type: 'B2B',
+      is_qa_sentinel: false,
+    });
+    FAKE_TX.catalogItem.findMany.mockResolvedValue(items);
+  }
+
+  it('returns 200 with item list for a valid B2B tenant', async () => {
+    mockB2BTenantWithItems([
+      {
+        id: '33333333-3333-3333-3333-333333333333',
+        name: 'SILK CREPE',
+        sku: 'SC-001',
+        active: true,
+        publicationPosture: 'PRIVATE_OR_AUTH_ONLY',
+        catalogVisibilityPolicyMode: null,
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      },
+    ]);
+
+    const response = await server.inject({
+      method: 'GET',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/catalog-items`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.success).toBe(true);
+    expect(body.data.tenantId).toBe(TEST_TENANT_ID);
+    expect(body.data.slug).toBe('shraddha-industries');
+    expect(body.data.items).toHaveLength(1);
+    expect(body.data.items[0].id).toBe('33333333-3333-3333-3333-333333333333');
+    expect(body.data.items[0].name).toBe('SILK CREPE');
+    expect(body.data.items[0].publicationPosture).toBe('PRIVATE_OR_AUTH_ONLY');
+    expect(body.data.items[0]).not.toHaveProperty('price');
+    expect(body.data.items[0]).not.toHaveProperty('moq');
+    expect(body.data.items[0]).not.toHaveProperty('description');
+  });
+
+  it('returns 200 with empty items array when tenant has no catalog items', async () => {
+    mockB2BTenantWithItems([]);
+
+    const response = await server.inject({
+      method: 'GET',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/catalog-items`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.data.items).toHaveLength(0);
+  });
+
+  it('returns 404 when tenant is not found', async () => {
+    FAKE_TX.tenant.findUnique.mockResolvedValue(null);
+    FAKE_TX.organizations.findUnique.mockResolvedValue(null);
+
+    const response = await server.inject({
+      method: 'GET',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/catalog-items`,
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(FAKE_TX.catalogItem.findMany).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 when tenant organization is not B2B', async () => {
+    FAKE_TX.tenant.findUnique.mockResolvedValue({ id: TEST_TENANT_ID, slug: 'test', name: 'Test' });
+    FAKE_TX.organizations.findUnique.mockResolvedValue({ id: TEST_TENANT_ID, org_type: 'B2C', is_qa_sentinel: false });
+
+    const response = await server.inject({
+      method: 'GET',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/catalog-items`,
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json().error).toEqual(expect.objectContaining({ code: 'CATALOG_ITEMS_NOT_B2B' }));
+    expect(FAKE_TX.catalogItem.findMany).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when tenant is a QA sentinel', async () => {
+    FAKE_TX.tenant.findUnique.mockResolvedValue({ id: TEST_TENANT_ID, slug: 'qa-test', name: 'QA Test' });
+    FAKE_TX.organizations.findUnique.mockResolvedValue({ id: TEST_TENANT_ID, org_type: 'B2B', is_qa_sentinel: true });
+
+    const response = await server.inject({
+      method: 'GET',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/catalog-items`,
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(FAKE_TX.catalogItem.findMany).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 for non-SUPER_ADMIN role', async () => {
+    setAdminRole('ADMIN');
+
+    const response = await server.inject({
+      method: 'GET',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/catalog-items`,
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(FAKE_TX.tenant.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for invalid tenant UUID', async () => {
+    const response = await server.inject({
+      method: 'GET',
+      url: '/api/control/tenants/not-a-uuid/catalog-items',
+    });
+
+    expect(response.statusCode).toBe(400);
   });
 });
 
