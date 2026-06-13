@@ -8194,18 +8194,23 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         .filter(([, value]) => value !== undefined)
         .map(([key]) => key);
 
-      await writeAuditLog(prisma, {
-        tenantId: tenantId ?? null,
-        realm: 'TENANT',
-        actorType: 'USER',
-        actorId: request.userId ?? null,
-        action: 'profile.updated',
-        entity: 'organization',
-        entityId: dbContext.orgId,
-        metadataJson: {
-          updatedFields,
-        },
-      });
+      // Audit/event logging is best-effort and must not flip a successful profile mutation to 500.
+      try {
+        await writeAuditLog(prisma, {
+          tenantId: tenantId ?? null,
+          realm: 'TENANT',
+          actorType: 'USER',
+          actorId: request.userId ?? null,
+          action: 'profile.updated',
+          entity: 'organization',
+          entityId: dbContext.orgId,
+          metadataJson: {
+            updatedFields,
+          },
+        });
+      } catch (error: unknown) {
+        fastify.log.warn({ err: error, orgId: dbContext.orgId }, '[Update Tenant Profile] audit log failed; returning success');
+      }
 
       return sendSuccess(reply, { profile });
     } catch (error: unknown) {
