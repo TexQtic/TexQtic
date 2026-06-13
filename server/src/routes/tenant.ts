@@ -158,6 +158,12 @@ const SAFE_HANDOFF_TX_OPTIONS: DbContextTransactionOptions = {
   maxWaitMs: 5_000,
 };
 
+const TENANT_PROFILE_TX_OPTIONS: DbContextTransactionOptions = {
+  // Profile reads/writes can cross Prisma interactive tx defaults under production latency.
+  timeoutMs: 20_000,
+  maxWaitMs: 5_000,
+};
+
 function failedInviteEmailDeliveryOutcome(): InviteEmailDeliveryOutcome {
   return { status: 'FAILED_NON_FATAL' };
 }
@@ -8068,7 +8074,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
 
         return loadTenantProfileSnapshot(tx, dbContext.orgId, userRole === 'OWNER' || userRole === 'ADMIN');
-      });
+      }, TENANT_PROFILE_TX_OPTIONS);
 
       return sendSuccess(reply, { profile });
     } catch (error: unknown) {
@@ -8188,7 +8194,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         }
 
         return loadTenantProfileSnapshot(tx, dbContext.orgId, true);
-      });
+      }, TENANT_PROFILE_TX_OPTIONS);
 
       const updatedFields = Object.entries(parseResult.data)
         .filter(([, value]) => value !== undefined)
