@@ -231,6 +231,10 @@ export class CertificationService {
           stateKey: string;
           issuedAt: Date | null;
           expiresAt: Date | null;
+          documentOriginalName: string | null;
+          documentMimeType: string | null;
+          documentSizeBytes: number | null;
+          documentUploadedAt: Date | null;
           createdAt: Date;
           updatedAt: Date;
         }>;
@@ -260,6 +264,10 @@ export class CertificationService {
             lifecycleState: { select: { stateKey: true } },
             issuedAt: true,
             expiresAt: true,
+            documentOriginalName: true,
+            documentMimeType: true,
+            documentSizeBytes: true,
+            documentUploadedAt: true,
             createdAt: true,
             updatedAt: true,
           },
@@ -279,6 +287,10 @@ export class CertificationService {
           stateKey: c.lifecycleState.stateKey,
           issuedAt: c.issuedAt,
           expiresAt: c.expiresAt,
+          documentOriginalName: c.documentOriginalName,
+          documentMimeType: c.documentMimeType,
+          documentSizeBytes: c.documentSizeBytes,
+          documentUploadedAt: c.documentUploadedAt,
           createdAt: c.createdAt,
           updatedAt: c.updatedAt,
         })),
@@ -313,6 +325,10 @@ export class CertificationService {
           stateKey: string;
           issuedAt: Date | null;
           expiresAt: Date | null;
+          documentOriginalName: string | null;
+          documentMimeType: string | null;
+          documentSizeBytes: number | null;
+          documentUploadedAt: Date | null;
           createdByUserId: string | null;
           createdAt: Date;
           updatedAt: Date;
@@ -330,6 +346,10 @@ export class CertificationService {
           lifecycleState: { select: { stateKey: true } },
           issuedAt: true,
           expiresAt: true,
+          documentOriginalName: true,
+          documentMimeType: true,
+          documentSizeBytes: true,
+          documentUploadedAt: true,
           createdByUserId: true,
           createdAt: true,
           updatedAt: true,
@@ -353,6 +373,10 @@ export class CertificationService {
           stateKey: cert.lifecycleState.stateKey,
           issuedAt: cert.issuedAt,
           expiresAt: cert.expiresAt,
+          documentOriginalName: cert.documentOriginalName,
+          documentMimeType: cert.documentMimeType,
+          documentSizeBytes: cert.documentSizeBytes,
+          documentUploadedAt: cert.documentUploadedAt,
           createdByUserId: cert.createdByUserId,
           createdAt: cert.createdAt,
           updatedAt: cert.updatedAt,

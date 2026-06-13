@@ -30,6 +30,12 @@ import { CertificationService } from '../../services/certification.g019.service.
 import { StateMachineService } from '../../services/stateMachine.service.js';
 import { EscalationService } from '../../services/escalation.service.js';
 import { SanctionsService } from '../../services/sanctions.service.js';
+import {
+  CertificateDocumentStorageError,
+  createCertificateDocumentSignedUrl,
+  uploadCertificateDocumentToStorage,
+  type CertificateDocumentErrorCode,
+} from '../../services/storage/certificateDocument.storage.js';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -346,6 +352,182 @@ const tenantCertificationRoutes: FastifyPluginAsync = async fastify => {
 
         return sendSuccess(reply, { certificationId: result.certificationId });
       });
+    },
+  );
+
+  // ─── POST /api/tenant/certifications/:id/document/upload ────────────────
+  /**
+   * Upload or replace a private certificate document.
+   * OWNER/ADMIN only. orgId is derived from dbContext; storage path is never public.
+   */
+  fastify.post(
+    '/:id/document/upload',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      const { userId, userRole } = request;
+      if (!userId) {
+        return sendError(reply, 'UNAUTHORIZED', 'User ID missing', 401);
+      }
+
+      if (userRole !== 'OWNER' && userRole !== 'ADMIN') {
+        return sendError(reply, 'FORBIDDEN', 'Only OWNER or ADMIN can upload certificate documents.', 403);
+      }
+
+      const paramResult = certIdParamSchema.safeParse(request.params);
+      if (!paramResult.success) {
+        return sendValidationError(reply, paramResult.error.errors);
+      }
+      const { id } = paramResult.data;
+
+      const existing = await withDbContext(prisma, dbContext, async tx => {
+        return tx.certification.findFirst({
+          where: { id, orgId: dbContext.orgId },
+          select: { id: true },
+        });
+      });
+
+      if (!existing) {
+        return sendError(reply, 'NOT_FOUND', 'Certification not found.', 404);
+      }
+
+      try {
+        const file = await request.file();
+        if (!file) {
+          return sendError(reply, 'FILE_REQUIRED', 'A certificate document file is required.', 400);
+        }
+
+        const fileBuffer = await file.toBuffer();
+        if ((file.file as NodeJS.ReadableStream & { truncated?: boolean }).truncated) {
+          return sendError(reply, 'FILE_TOO_LARGE', 'File exceeds 5 MB upload limit.', 400);
+        }
+
+        const uploadResult = await uploadCertificateDocumentToStorage({
+          orgId: dbContext.orgId,
+          certificationId: id,
+          fileBuffer,
+          declaredMimeType: file.mimetype,
+          originalFilename: file.filename,
+        });
+
+        const uploadedAt = new Date();
+
+        await withDbContext(prisma, dbContext, async tx => {
+          await tx.certification.update({
+            where: { id },
+            data: {
+              documentStoragePath: uploadResult.storagePath,
+              documentOriginalName: uploadResult.originalName,
+              documentMimeType: uploadResult.mimeType,
+              documentSizeBytes: uploadResult.sizeBytes,
+              documentUploadedAt: uploadedAt,
+            },
+          });
+
+          await writeAuditLog(tx, {
+            realm: 'TENANT',
+            tenantId: dbContext.orgId,
+            actorType: 'USER',
+            actorId: userId,
+            action: 'CERTIFICATION_DOCUMENT_UPLOADED',
+            entity: 'certification',
+            entityId: id,
+            afterJson: {
+              certificationId: id,
+              documentOriginalName: uploadResult.originalName,
+              documentMimeType: uploadResult.mimeType,
+              documentSizeBytes: uploadResult.sizeBytes,
+            },
+          });
+        });
+
+        return sendSuccess(reply, {
+          certificationId: id,
+          documentOriginalName: uploadResult.originalName,
+          documentMimeType: uploadResult.mimeType,
+          documentSizeBytes: uploadResult.sizeBytes,
+          documentUploadedAt: uploadedAt.toISOString(),
+        });
+      } catch (error) {
+        if (error instanceof CertificateDocumentStorageError) {
+          const code: CertificateDocumentErrorCode = error.code;
+          return sendError(reply, code, error.message, error.statusCode);
+        }
+
+        const message = error instanceof Error ? error.message : 'Certificate document upload failed.';
+        if (message.toLowerCase().includes('file too large')) {
+          return sendError(reply, 'FILE_TOO_LARGE', 'File exceeds 5 MB upload limit.', 400);
+        }
+
+        return sendError(reply, 'UPLOAD_FAILED', 'Certificate document upload failed.', 500);
+      }
+    },
+  );
+
+  // ─── GET /api/tenant/certifications/:id/document ────────────────────────
+  /**
+   * Return a short-lived signed URL for an uploaded certificate document.
+   * Tenant-auth scoped; no public route exposes certificate document storage.
+   */
+  fastify.get(
+    '/:id/document',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      const paramResult = certIdParamSchema.safeParse(request.params);
+      if (!paramResult.success) {
+        return sendValidationError(reply, paramResult.error.errors);
+      }
+      const { id } = paramResult.data;
+
+      const cert = await withDbContext(prisma, dbContext, async tx => {
+        return tx.certification.findFirst({
+          where: { id, orgId: dbContext.orgId },
+          select: {
+            id: true,
+            documentStoragePath: true,
+            documentOriginalName: true,
+            documentMimeType: true,
+            documentSizeBytes: true,
+            documentUploadedAt: true,
+          },
+        });
+      });
+
+      if (!cert) {
+        return sendError(reply, 'NOT_FOUND', 'Certification not found.', 404);
+      }
+
+      if (!cert.documentStoragePath) {
+        return sendError(reply, 'NOT_FOUND', 'Certificate document not found.', 404);
+      }
+
+      try {
+        const { signedUrl } = await createCertificateDocumentSignedUrl(cert.documentStoragePath);
+        return sendSuccess(reply, {
+          certificationId: cert.id,
+          signedUrl,
+          documentOriginalName: cert.documentOriginalName,
+          documentMimeType: cert.documentMimeType,
+          documentSizeBytes: cert.documentSizeBytes,
+          documentUploadedAt: cert.documentUploadedAt,
+        });
+      } catch (error) {
+        if (error instanceof CertificateDocumentStorageError) {
+          const code: CertificateDocumentErrorCode = error.code;
+          return sendError(reply, code, error.message, error.statusCode);
+        }
+
+        return sendError(reply, 'SIGNED_URL_FAILED', 'Certificate document access failed.', 500);
+      }
     },
   );
 

@@ -927,6 +927,11 @@ model Certification {
   issuedAt                     DateTime?                   @map("issued_at") @db.Timestamptz(6)
   /// Nullable: some certifications do not expire.
   expiresAt                    DateTime?                   @map("expires_at") @db.Timestamptz(6)
+  documentStoragePath          String?                     @map("document_storage_path") @db.VarChar(1000)
+  documentOriginalName         String?                     @map("document_original_name") @db.VarChar(255)
+  documentMimeType             String?                     @map("document_mime_type") @db.VarChar(100)
+  documentSizeBytes            Int?                        @map("document_size_bytes")
+  documentUploadedAt           DateTime?                   @map("document_uploaded_at") @db.Timestamptz(6)
   createdByUserId              String?                     @map("created_by_user_id") @db.Uuid
   createdAt                    DateTime                    @default(now()) @map("created_at") @db.Timestamptz(6)
   /// Maintained by DB trigger trg_certifications_set_updated_at on BEFORE UPDATE.

@@ -28,6 +28,7 @@
  *   ❌  Metadata PATCH UI — service type defined here; UI deferred
  */
 
+import { APIError, getAuthRealm, getToken } from './apiClient';
 import { tenantGet, tenantPost, tenantPatch } from './tenantApiClient';
 import { adminGet } from './adminApiClient';
 
@@ -48,6 +49,10 @@ export interface CertificationListItem {
   stateKey: string;
   issuedAt: string | null;
   expiresAt: string | null;
+  documentOriginalName: string | null;
+  documentMimeType: string | null;
+  documentSizeBytes: number | null;
+  documentUploadedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -63,6 +68,10 @@ export interface CertificationDetail {
   stateKey: string;
   issuedAt: string | null;
   expiresAt: string | null;
+  documentOriginalName: string | null;
+  documentMimeType: string | null;
+  documentSizeBytes: number | null;
+  documentUploadedAt: string | null;
   createdByUserId: string | null;
   createdAt: string;
   updatedAt: string;
@@ -130,6 +139,23 @@ export interface UpdateCertificationInput {
 
 export interface UpdateCertificationResult {
   certificationId: string;
+}
+
+export interface UploadCertificationDocumentResult {
+  certificationId: string;
+  documentOriginalName: string | null;
+  documentMimeType: string;
+  documentSizeBytes: number;
+  documentUploadedAt: string;
+}
+
+export interface GetCertificationDocumentAccessResult {
+  certificationId: string;
+  signedUrl: string;
+  documentOriginalName: string | null;
+  documentMimeType: string | null;
+  documentSizeBytes: number | null;
+  documentUploadedAt: string | null;
 }
 
 // ─── Transition ──────────────────────────────────────────────────────────────
@@ -263,6 +289,63 @@ export function updateCertification(
   input: UpdateCertificationInput,
 ): Promise<UpdateCertificationResult> {
   return tenantPatch<UpdateCertificationResult>(`/api/tenant/certifications/${id}`, input);
+}
+
+export async function uploadCertificationDocument(
+  id: string,
+  file: unknown,
+): Promise<UploadCertificationDocumentResult> {
+  const realm = getAuthRealm();
+  if (realm !== 'TENANT') {
+    throw new Error(`REALM_MISMATCH: Tenant endpoint requires TENANT realm, got ${realm || 'NONE'}`);
+  }
+
+  if (!(file instanceof globalThis.Blob)) {
+    throw new APIError(400, 'A valid certificate document file is required.', 'FILE_REQUIRED');
+  }
+
+  const token = getToken();
+  if (!token) {
+    throw new APIError(401, 'Unauthorized.', 'UNAUTHORIZED');
+  }
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/api/tenant/certifications/${id}/document/upload`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'X-Texqtic-Realm': 'tenant',
+    },
+    body: formData,
+  });
+
+  let parsed: any = null;
+  try {
+    parsed = await response.json();
+  } catch {
+    parsed = null;
+  }
+
+  if (!response.ok) {
+    const message = parsed?.error?.message || parsed?.message || 'Certificate document upload failed.';
+    const code = parsed?.error?.code || 'UPLOAD_FAILED';
+    throw new APIError(response.status, message, code, parsed?.error?.details);
+  }
+
+  if (parsed?.success !== true || !parsed?.data?.certificationId) {
+    throw new APIError(500, 'Certificate document upload failed.', 'UPLOAD_FAILED');
+  }
+
+  return parsed.data as UploadCertificationDocumentResult;
+}
+
+export function getCertificationDocumentAccess(
+  id: string,
+): Promise<GetCertificationDocumentAccessResult> {
+  return tenantGet<GetCertificationDocumentAccessResult>(`/api/tenant/certifications/${id}/document`);
 }
 
 /**

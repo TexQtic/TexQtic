@@ -29,6 +29,8 @@ import {
   getCertification,
   createCertification,
   transitionCertification,
+  getCertificationDocumentAccess,
+  uploadCertificationDocument,
   type CertificationListItem,
   type CertificationDetail,
   type TransitionStatus,
@@ -51,6 +53,8 @@ interface Props {
 type PanelView = 'LIST' | 'CREATE' | 'DETAIL';
 type CreatePhase = 'IDLE' | 'SUBMITTING' | 'CREATED' | 'ERROR';
 type TransitionPhase = 'IDLE' | 'SUBMITTING' | 'RESULT' | 'ERROR';
+type DocumentUploadPhase = 'IDLE' | 'UPLOADING' | 'SUCCESS' | 'ERROR';
+type DocumentAccessPhase = 'IDLE' | 'LOADING' | 'ERROR';
 
 // ─── State key → badge color ─────────────────────────────────────────────────
 
@@ -141,6 +145,13 @@ function truncateId(id: string): string {
   return id.length > 13 ? `${id.slice(0, 8)}…` : id;
 }
 
+function formatBytes(bytes: number | null): string {
+  if (!bytes) return '—';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 // Back link shared by sub-views
@@ -191,6 +202,13 @@ export function CertificationsPanel({ onBack }: Props) {
   const [txResult, setTxResult]         = useState<TransitionCertificationResult | null>(null);
   const [txError, setTxError]           = useState<string | null>(null);
 
+  // ── DOCUMENT upload/access state ──
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [documentUploadPhase, setDocumentUploadPhase] = useState<DocumentUploadPhase>('IDLE');
+  const [documentUploadError, setDocumentUploadError] = useState<string | null>(null);
+  const [documentAccessPhase, setDocumentAccessPhase] = useState<DocumentAccessPhase>('IDLE');
+  const [documentAccessError, setDocumentAccessError] = useState<string | null>(null);
+
   // ── Load list ──
   const loadList = useCallback(async () => {
     setListLoading(true);
@@ -234,6 +252,11 @@ export function CertificationsPanel({ onBack }: Props) {
     setTxToState('');
     setTxReason('');
     setTxActorRole('');
+    setDocumentFile(null);
+    setDocumentUploadPhase('IDLE');
+    setDocumentUploadError(null);
+    setDocumentAccessPhase('IDLE');
+    setDocumentAccessError(null);
     setPanelView('DETAIL');
     loadDetail(id);
   };
@@ -301,6 +324,40 @@ export function CertificationsPanel({ onBack }: Props) {
     } catch (err) {
       setTxError(friendlyError(err));
       setTxPhase('ERROR');
+    }
+  };
+
+  const handleDocumentUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedId || !documentFile) {
+      setDocumentUploadError('Select a certificate document before uploading.');
+      return;
+    }
+
+    setDocumentUploadPhase('UPLOADING');
+    setDocumentUploadError(null);
+    try {
+      await uploadCertificationDocument(selectedId, documentFile);
+      setDocumentFile(null);
+      setDocumentUploadPhase('SUCCESS');
+      await loadDetail(selectedId);
+    } catch (err) {
+      setDocumentUploadError(friendlyError(err));
+      setDocumentUploadPhase('ERROR');
+    }
+  };
+
+  const handleOpenDocument = async () => {
+    if (!selectedId) return;
+    setDocumentAccessPhase('LOADING');
+    setDocumentAccessError(null);
+    try {
+      const result = await getCertificationDocumentAccess(selectedId);
+      window.open(result.signedUrl, '_blank', 'noopener,noreferrer');
+      setDocumentAccessPhase('IDLE');
+    } catch (err) {
+      setDocumentAccessError(friendlyError(err));
+      setDocumentAccessPhase('ERROR');
     }
   };
 
@@ -631,6 +688,99 @@ export function CertificationsPanel({ onBack }: Props) {
                 <p className="text-slate-700 mt-0.5">{formatDate(detail.updatedAt)}</p>
               </div>
             </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Certificate Document</h3>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Private tenant document storage. Documents are not shown on public B2B surfaces.
+                </p>
+              </div>
+              {detail.documentUploadedAt && (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+                  Uploaded
+                </span>
+              )}
+            </div>
+
+            {detail.documentUploadedAt ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm bg-slate-50 border border-slate-100 rounded-xl p-4">
+                <div>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Filename</span>
+                  <p className="text-slate-700 mt-0.5 break-words">{detail.documentOriginalName || 'Certificate document'}</p>
+                </div>
+                <div>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Type</span>
+                  <p className="text-slate-700 mt-0.5">{detail.documentMimeType || '—'}</p>
+                </div>
+                <div>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Size</span>
+                  <p className="text-slate-700 mt-0.5">{formatBytes(detail.documentSizeBytes)}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Uploaded</span>
+                  <p className="text-slate-700 mt-0.5">{formatDate(detail.documentUploadedAt)}</p>
+                </div>
+                <div className="flex md:justify-end items-end">
+                  <button
+                    type="button"
+                    onClick={handleOpenDocument}
+                    disabled={documentAccessPhase === 'LOADING'}
+                    className="px-4 py-2 border border-slate-300 text-slate-700 text-sm font-semibold rounded-lg hover:bg-white transition disabled:opacity-50"
+                  >
+                    {documentAccessPhase === 'LOADING' ? 'Opening…' : 'Open Document'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-4 text-sm text-slate-600">
+                No certificate document has been uploaded for this certification.
+              </div>
+            )}
+
+            {documentAccessError && (
+              <div className="bg-rose-50 border border-rose-200 rounded-lg px-4 py-3 text-sm text-rose-700">
+                {documentAccessError}
+              </div>
+            )}
+
+            <form onSubmit={handleDocumentUpload} className="space-y-3 pt-2">
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest" htmlFor="cert-document-file">
+                Upload or replace document
+              </label>
+              <input
+                id="cert-document-file"
+                type="file"
+                accept="application/pdf,image/jpeg,image/png,image/webp"
+                onChange={e => setDocumentFile(e.target.files?.[0] ?? null)}
+                disabled={documentUploadPhase === 'UPLOADING'}
+                className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-700 disabled:opacity-50"
+              />
+              <p className="text-xs text-slate-500">
+                PDF, JPG, PNG, or WEBP up to 5 MB. Upload is restricted to OWNER/ADMIN by the server.
+              </p>
+
+              {documentUploadError && (
+                <div className="bg-rose-50 border border-rose-200 rounded-lg px-4 py-3 text-sm text-rose-700">
+                  {documentUploadError}
+                </div>
+              )}
+              {documentUploadPhase === 'SUCCESS' && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm text-emerald-700">
+                  Certificate document metadata saved.
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={documentUploadPhase === 'UPLOADING' || !documentFile}
+                className="px-5 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-slate-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {documentUploadPhase === 'UPLOADING' ? 'Uploading…' : 'Upload Document'}
+              </button>
+            </form>
           </div>
 
           {/* ── Transition result (rendered when txPhase === 'RESULT') ── */}
