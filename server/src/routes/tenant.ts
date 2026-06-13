@@ -7890,6 +7890,165 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     }
   });
 
+  const loadTenantProfileSnapshot = async (
+    tx: Prisma.TransactionClient,
+    orgId: string,
+    canEdit: boolean,
+  ) => {
+    const org = await tx.organizations.findUnique({
+      where: { id: orgId },
+      select: {
+        id: true,
+        slug: true,
+        legal_name: true,
+        org_type: true,
+        status: true,
+        plan: true,
+        publication_posture: true,
+        primary_segment_key: true,
+      },
+    });
+
+    if (!org) {
+      throw new OrganizationNotFoundError(orgId);
+    }
+
+    let secondarySegmentKeys: string[] = [];
+    try {
+      const secondarySegments = await tx.organizationSecondarySegment.findMany({
+        where: { org_id: orgId },
+        select: { segment_key: true },
+        orderBy: { segment_key: 'asc' },
+      });
+      secondarySegmentKeys = secondarySegments.map(entry => entry.segment_key);
+    } catch (error: unknown) {
+      fastify.log.warn({ err: error, orgId }, '[Tenant Profile] secondary segment read failed; defaulting to []');
+    }
+
+    let rolePositionKeys: string[] = [];
+    try {
+      const rolePositions = await tx.organizationRolePosition.findMany({
+        where: { org_id: orgId },
+        select: { role_position_key: true },
+        orderBy: { role_position_key: 'asc' },
+      });
+      rolePositionKeys = rolePositions.map(entry => entry.role_position_key);
+    } catch (error: unknown) {
+      fastify.log.warn({ err: error, orgId }, '[Tenant Profile] role position read failed; defaulting to []');
+    }
+
+    let branding: { logoUrl: string | null } | null = null;
+    try {
+      branding = await tx.tenantBranding.findUnique({
+        where: { tenantId: orgId },
+        select: { logoUrl: true },
+      });
+    } catch (error: unknown) {
+      fastify.log.warn({ err: error, orgId }, '[Tenant Profile] branding read failed; defaulting to null');
+    }
+
+    let profileDetail: {
+      tagline: string | null;
+      description: string | null;
+      websiteUrl: string | null;
+      businessEmail: string | null;
+      phone: string | null;
+      phonePublic: boolean;
+      city: string | null;
+      state: string | null;
+      companySizeBand: string | null;
+      capacityBand: string | null;
+      cinNumber: string | null;
+      udyamNumber: string | null;
+      iecNumber: string | null;
+    } | null = null;
+    try {
+      profileDetail = await tx.tenantProfileDetail.findUnique({
+        where: { tenantId: orgId },
+        select: {
+          tagline: true,
+          description: true,
+          websiteUrl: true,
+          businessEmail: true,
+          phone: true,
+          phonePublic: true,
+          city: true,
+          state: true,
+          companySizeBand: true,
+          capacityBand: true,
+          cinNumber: true,
+          udyamNumber: true,
+          iecNumber: true,
+        },
+      });
+    } catch (error: unknown) {
+      fastify.log.warn({ err: error, orgId }, '[Tenant Profile] detail read failed; defaulting to null');
+    }
+
+    let tenantRecord: { publicEligibilityPosture: string } | null = null;
+    try {
+      tenantRecord = await tx.tenant.findUnique({
+        where: { id: orgId },
+        select: { publicEligibilityPosture: true },
+      });
+    } catch (error: unknown) {
+      fastify.log.warn({ err: error, orgId }, '[Tenant Profile] tenant posture read failed; defaulting to NO_PUBLIC_PRESENCE');
+    }
+
+    let gstVerification: {
+      gstin: string;
+      review_outcome: string | null;
+      provider_result: string | null;
+    } | null = null;
+    try {
+      gstVerification = await tx.gst_verifications.findUnique({
+        where: { org_id: orgId },
+        select: {
+          gstin: true,
+          review_outcome: true,
+          provider_result: true,
+        },
+      });
+    } catch (error: unknown) {
+      fastify.log.warn({ err: error, orgId }, '[Tenant Profile] GST read failed; defaulting to null');
+    }
+
+    const gstVerificationStatus = gstVerification?.review_outcome ?? gstVerification?.provider_result ?? null;
+    const gstVerified = gstVerification?.review_outcome === 'APPROVED' || gstVerification?.provider_result === 'VERIFIED';
+
+    return {
+      id: org.id,
+      slug: org.slug,
+      displayName: org.legal_name,
+      tenantType: org.org_type,
+      status: org.status,
+      plan: canonicalizeTenantPlan(org.plan),
+      primarySegmentKey: org.primary_segment_key,
+      secondarySegmentKeys,
+      rolePositionKeys,
+      logoUrl: branding?.logoUrl ?? null,
+      tagline: profileDetail?.tagline ?? null,
+      description: profileDetail?.description ?? null,
+      websiteUrl: profileDetail?.websiteUrl ?? null,
+      businessEmail: profileDetail?.businessEmail ?? null,
+      phone: profileDetail?.phone ?? null,
+      phonePublic: profileDetail?.phonePublic ?? false,
+      city: profileDetail?.city ?? null,
+      state: profileDetail?.state ?? null,
+      companySizeBand: profileDetail?.companySizeBand ?? null,
+      capacityBand: profileDetail?.capacityBand ?? null,
+      cinNumber: profileDetail?.cinNumber ?? null,
+      udyamNumber: profileDetail?.udyamNumber ?? null,
+      iecNumber: profileDetail?.iecNumber ?? null,
+      gstin: gstVerification?.gstin ?? null,
+      gstVerified,
+      gstVerificationStatus,
+      publicationPosture: org.publication_posture,
+      publicEligibilityPosture: tenantRecord?.publicEligibilityPosture ?? 'NO_PUBLIC_PRESENCE',
+      canEdit,
+    };
+  };
+
   /**
    * GET /api/tenant/profile
    * Read normal B2B company profile identity.
@@ -7908,104 +8067,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
         await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
 
-        const org = await tx.organizations.findUnique({
-          where: { id: dbContext.orgId },
-          select: {
-            id: true,
-            slug: true,
-            legal_name: true,
-            org_type: true,
-            status: true,
-            plan: true,
-            publication_posture: true,
-            primary_segment_key: true,
-            secondary_segments: {
-              select: { segment_key: true },
-              orderBy: { segment_key: 'asc' },
-            },
-            role_positions: {
-              select: { role_position_key: true },
-              orderBy: { role_position_key: 'asc' },
-            },
-          },
-        });
-
-        if (!org) {
-          throw new OrganizationNotFoundError(dbContext.orgId);
-        }
-
-        const branding = await tx.tenantBranding.findUnique({
-          where: { tenantId: dbContext.orgId },
-          select: { logoUrl: true },
-        });
-
-        const profileDetail = await tx.tenantProfileDetail.findUnique({
-          where: { tenantId: dbContext.orgId },
-          select: {
-            tagline: true,
-            description: true,
-            websiteUrl: true,
-            businessEmail: true,
-            phone: true,
-            phonePublic: true,
-            city: true,
-            state: true,
-            companySizeBand: true,
-            capacityBand: true,
-            cinNumber: true,
-            udyamNumber: true,
-            iecNumber: true,
-          },
-        });
-
-        const tenantRecord = await tx.tenant.findUnique({
-          where: { id: dbContext.orgId },
-          select: { publicEligibilityPosture: true },
-        });
-
-        const gstVerification = await tx.gst_verifications.findUnique({
-          where: { org_id: dbContext.orgId },
-          select: {
-            gstin: true,
-            review_outcome: true,
-            provider_result: true,
-          },
-        });
-
-        const gstVerificationStatus = gstVerification?.review_outcome ?? gstVerification?.provider_result ?? null;
-        const gstVerified = gstVerification?.review_outcome === 'APPROVED' || gstVerification?.provider_result === 'VERIFIED';
-
-        return {
-          id: org.id,
-          slug: org.slug,
-          displayName: org.legal_name,
-          tenantType: org.org_type,
-          status: org.status,
-          plan: canonicalizeTenantPlan(org.plan),
-          primarySegmentKey: org.primary_segment_key,
-          secondarySegmentKeys: org.secondary_segments.map((entry: { segment_key: string }) => entry.segment_key),
-          rolePositionKeys: org.role_positions.map((entry: { role_position_key: string }) => entry.role_position_key),
-          logoUrl: branding?.logoUrl ?? null,
-          tagline: profileDetail?.tagline ?? null,
-          description: profileDetail?.description ?? null,
-          websiteUrl: profileDetail?.websiteUrl ?? null,
-          businessEmail: profileDetail?.businessEmail ?? null,
-          phone: profileDetail?.phone ?? null,
-          phonePublic: profileDetail?.phonePublic ?? false,
-          city: profileDetail?.city ?? null,
-          state: profileDetail?.state ?? null,
-          companySizeBand: profileDetail?.companySizeBand ?? null,
-          capacityBand: profileDetail?.capacityBand ?? null,
-          cinNumber: profileDetail?.cinNumber ?? null,
-          udyamNumber: profileDetail?.udyamNumber ?? null,
-          iecNumber: profileDetail?.iecNumber ?? null,
-          gstin: gstVerification?.gstin ?? null,
-          gstVerified,
-          gstVerificationStatus,
-          publicationPosture: org.publication_posture,
-          publicEligibilityPosture: tenantRecord?.publicEligibilityPosture ?? 'NO_PUBLIC_PRESENCE',
-          canEdit: userRole === 'OWNER' || userRole === 'ADMIN',
-        };
+        return loadTenantProfileSnapshot(tx, dbContext.orgId, userRole === 'OWNER' || userRole === 'ADMIN');
       });
 
       return sendSuccess(reply, { profile });
@@ -8125,104 +8187,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           });
         }
 
-        const org = await tx.organizations.findUnique({
-          where: { id: dbContext.orgId },
-          select: {
-            id: true,
-            slug: true,
-            legal_name: true,
-            org_type: true,
-            status: true,
-            plan: true,
-            publication_posture: true,
-            primary_segment_key: true,
-            secondary_segments: {
-              select: { segment_key: true },
-              orderBy: { segment_key: 'asc' },
-            },
-            role_positions: {
-              select: { role_position_key: true },
-              orderBy: { role_position_key: 'asc' },
-            },
-          },
-        });
-
-        if (!org) {
-          throw new OrganizationNotFoundError(dbContext.orgId);
-        }
-
-        const branding = await tx.tenantBranding.findUnique({
-          where: { tenantId: dbContext.orgId },
-          select: { logoUrl: true },
-        });
-
-        const profileDetail = await tx.tenantProfileDetail.findUnique({
-          where: { tenantId: dbContext.orgId },
-          select: {
-            tagline: true,
-            description: true,
-            websiteUrl: true,
-            businessEmail: true,
-            phone: true,
-            phonePublic: true,
-            city: true,
-            state: true,
-            companySizeBand: true,
-            capacityBand: true,
-            cinNumber: true,
-            udyamNumber: true,
-            iecNumber: true,
-          },
-        });
-
-        const tenantRecord = await tx.tenant.findUnique({
-          where: { id: dbContext.orgId },
-          select: { publicEligibilityPosture: true },
-        });
-
-        const gstVerification = await tx.gst_verifications.findUnique({
-          where: { org_id: dbContext.orgId },
-          select: {
-            gstin: true,
-            review_outcome: true,
-            provider_result: true,
-          },
-        });
-
-        const gstVerificationStatus = gstVerification?.review_outcome ?? gstVerification?.provider_result ?? null;
-        const gstVerified = gstVerification?.review_outcome === 'APPROVED' || gstVerification?.provider_result === 'VERIFIED';
-
-        return {
-          id: org.id,
-          slug: org.slug,
-          displayName: org.legal_name,
-          tenantType: org.org_type,
-          status: org.status,
-          plan: canonicalizeTenantPlan(org.plan),
-          primarySegmentKey: org.primary_segment_key,
-          secondarySegmentKeys: org.secondary_segments.map((entry: { segment_key: string }) => entry.segment_key),
-          rolePositionKeys: org.role_positions.map((entry: { role_position_key: string }) => entry.role_position_key),
-          logoUrl: branding?.logoUrl ?? null,
-          tagline: profileDetail?.tagline ?? null,
-          description: profileDetail?.description ?? null,
-          websiteUrl: profileDetail?.websiteUrl ?? null,
-          businessEmail: profileDetail?.businessEmail ?? null,
-          phone: profileDetail?.phone ?? null,
-          phonePublic: profileDetail?.phonePublic ?? false,
-          city: profileDetail?.city ?? null,
-          state: profileDetail?.state ?? null,
-          companySizeBand: profileDetail?.companySizeBand ?? null,
-          capacityBand: profileDetail?.capacityBand ?? null,
-          cinNumber: profileDetail?.cinNumber ?? null,
-          udyamNumber: profileDetail?.udyamNumber ?? null,
-          iecNumber: profileDetail?.iecNumber ?? null,
-          gstin: gstVerification?.gstin ?? null,
-          gstVerified,
-          gstVerificationStatus,
-          publicationPosture: org.publication_posture,
-          publicEligibilityPosture: tenantRecord?.publicEligibilityPosture ?? 'NO_PUBLIC_PRESENCE',
-          canEdit: true,
-        };
+        return loadTenantProfileSnapshot(tx, dbContext.orgId, true);
       });
 
       const updatedFields = Object.entries(parseResult.data)
