@@ -7,7 +7,7 @@
 - **Mode:** bounded remote DB migration / runtime verification / governance closeout
 - **Base implementation:** `FTR-SL-016B2A-B2B-COMPANY-PROFILE-RICH-FIELDS-SCHEMA-API-IMPLEMENTATION-01`
 - **Base commit:** `4ae699e1a97eb5d353961154ccdaf2c1608b7d48`
-- **Final enum:** `FTR_SL_016B2A1_BLOCKED_MANUAL_DB_MIGRATION_REQUIRED`
+- **Final enum:** `FTR_SL_016B2A1_BLOCKED_RUNTIME_PROFILE_API_FAILED`
 
 ## 2. Repo Preflight
 
@@ -67,50 +67,139 @@ Safety assessment:
 
 Conclusion: SQL safety review PASS.
 
-## 5. Remote DB Execution Blocker
+## 5. DB Apply Governance And Rollback Plan
 
-Attempted lawful remote execution path discovery without secret exposure or command drift.
+Apply method used:
 
-Observed constraints:
+- Repo-configured `psql` lane using the existing TexQtic remote DB connection from `server/.env`
+- `DATABASE_URL` and `DIRECT_DATABASE_URL` both resolved to a Supabase session-pooler endpoint
+- SQL applied with `ON_ERROR_STOP=1`
 
-- The tracked migration is a standalone SQL file, not a Prisma migration directory, so `prisma migrate deploy` / `db:migrate:tracked` would not apply this file automatically.
-- Activated PostgreSQL connection tools and ran `pgsql_list_connection_profiles`.
-- Result: no configured PostgreSQL connection profiles were available in this workspace.
-- The unit's approved shell command list does not authorize ad hoc `psql` execution from the terminal.
+Secrets posture:
 
-Result:
+- No DB URL, password, service key, JWT, cookie, or connection string was printed.
+- Only redacted host/port/database summaries and safe SQL metadata outputs were recorded.
 
-- Remote pre-check could not be performed.
-- Migration could not be applied from this environment without leaving the approved command set.
-- Post-migration verification could not be truthfully completed.
+Rollback plan recorded before apply:
 
-## 6. Manual Action Block Required
+- `DROP TABLE IF EXISTS public.tenant_profile_details CASCADE;`
 
-Manual DB execution is required for this unit to continue truthfully.
+Rollback guardrails:
 
-Required manual action for Paresh:
+- Rollback is allowed only if apply fails partway and leaves a broken partial object, or if post-apply verification proves the object/policies materially wrong before runtime data is written.
+- Because runtime writes did not succeed in this unit and no `tenant_profile_details` rows were committed, rollback remained theoretically available, but it was not needed because the migration itself applied cleanly.
 
-1. Apply `server/prisma/migrations/pr-ftr-sl-016b2a-tenant-profile-details.sql` against the authoritative Supabase/Postgres database using the approved TexQtic direct-SQL lane.
-2. After successful apply, re-open this unit so the following can be completed:
-   - remote table/column/constraint/RLS/policy verification,
-   - live `GET /api/tenant/profile` rich-field verification,
-   - safe `PUT /api/tenant/profile` persistence verification in a QA/demo OWNER/ADMIN tenant,
-   - post-apply public non-exposure confirmation.
+## 6. Remote DB Pre-Check / Apply / Post-Apply Proof
 
-No secrets, URLs, tokens, or SQL credentials were printed.
+### 6.1 Pre-check
 
-## 7. Runtime Verification Performed Before Block
+Read-only pre-checks before apply showed the expected pre-migration state:
 
-### 7.1 Auth and session observations
+- `to_regclass('public.tenant_profile_details')` returned null / empty.
+- `information_schema.columns` returned 0 rows.
+- `pg_class` / `pg_constraint` relation-based queries failed with `relation does not exist`, which is expected pre-apply.
+- `pg_policies` returned 0 rows for the target table.
 
-- Shared tenant browser page remained visually inside Shraddha Industries Company Profile / B2B workspace.
-- Browser-side unauthenticated fetch to `GET /api/tenant/profile` returned `401 UNAUTHORIZED`.
-- Browser-side authenticated fetch using the existing in-browser tenant token returned `500 INTERNAL_ERROR` for `GET /api/tenant/profile`.
+### 6.2 Apply result
+
+Applied exactly:
+
+- `server/prisma/migrations/pr-ftr-sl-016b2a-tenant-profile-details.sql`
+
+Safe apply output summary:
+
+- `CREATE TABLE`
+- `CREATE INDEX`
+- `ALTER TABLE`
+- `ALTER TABLE`
+- expected `DROP POLICY` notices for policies that did not yet exist
+- `CREATE POLICY` x5
+- `GRANT`
+- `GRANT`
+
+No SQL error occurred; `ON_ERROR_STOP=1` did not abort.
+
+### 6.3 Post-apply proof
+
+Verified after apply:
+
+- table exists: `tenant_profile_details`
+- columns verified: `id`, `tenant_id`, `tagline`, `description`, `website_url`, `business_email`, `phone`, `phone_public`, `city`, `state`, `company_size_band`, `capacity_band`, `cin_number`, `udyam_number`, `iec_number`, `created_at`, `updated_at`
+- constraints verified:
+   - primary key on `id`
+   - unique key on `tenant_id`
+   - FK `tenant_id -> tenants(id) ON DELETE CASCADE`
+   - description length check
+   - company-size band check
+   - capacity-band check
+- indexes verified:
+   - `tenant_profile_details_pkey`
+   - `tenant_profile_details_tenant_id_key`
+   - `idx_tenant_profile_details_tenant_updated`
+- RLS verified: `relrowsecurity = true`, `relforcerowsecurity = true`
+- policies verified:
+   - `tenant_profile_details_select_unified`
+   - `tenant_profile_details_insert_unified`
+   - `tenant_profile_details_update_unified`
+   - `tenant_profile_details_delete_unified`
+   - `tenant_profile_details_guard_policy`
+- grants verified for `texqtic_app`: `SELECT`, `INSERT`, `UPDATE`, `DELETE`
+
+Additional bounded DB truth:
+
+- `qa-b2b` and `shraddha-industries` both have matching `tenants` and `organizations` rows.
+- Neither tenant had a committed `tenant_profile_details` row after the failed runtime PUT attempts.
+- Both tenants have exactly one `gst_verifications` row, so duplicate GST rows are not the cause of the observed runtime failures.
+
+## 7. Runtime Verification
+
+### 7.1 Session and GET results
+
+Tenant sessions used:
+
+- Shraddha Industries shared tenant OWNER session
+- QA B2B shared tenant OWNER session (`qa.b2b@texqtic.com`)
+
+Observed results after DB apply:
+
+- unauthenticated `GET /api/tenant/profile` -> `401 UNAUTHORIZED`
+- unauthenticated `PUT /api/tenant/profile` -> `401 UNAUTHORIZED`
+- authenticated Shraddha `GET /api/tenant/profile` -> `200 success=true`
+- authenticated QA B2B `GET /api/tenant/profile` -> `500 INTERNAL_ERROR`
+
+Shraddha live GET proof after DB apply included the full rich-field shape:
+
+- `tagline`
+- `description`
+- `websiteUrl`
+- `businessEmail`
+- `phone`
+- `phonePublic`
+- `city`
+- `state`
+- `companySizeBand`
+- `capacityBand`
+- `cinNumber`
+- `udyamNumber`
+- `iecNumber`
+- `gstin` (masked in reporting)
+- `gstVerified`
+- `gstVerificationStatus`
+- `publicationPosture`
+- `publicEligibilityPosture`
+
+Observed Shraddha sample:
+
+- `displayName = Shraddha Industries`
+- `gstin` present and masked in reporting
+- `publicationPosture = B2B_PUBLIC`
+- `publicEligibilityPosture = PUBLICATION_ELIGIBLE`
+- rich profile fields currently null on first read
 
 Interpretation:
 
-- The route is not runtime-healthy on the deployed lane used for verification.
-- Because the tracked SQL migration is unapplied from this environment and no deployment/restart path was authorized in this unit, this 500 is recorded as runtime evidence but not root-caused to a source regression in this unit.
+- DB apply fixed the live GET path for Shraddha.
+- QA B2B still fails on live GET with `500`, indicating tenant-specific or runtime-path-specific residual failure after migration.
 
 ### 7.2 Read-only mutation rejection
 
@@ -119,7 +208,7 @@ Verified against the live authenticated route using a rejected body only:
 - `PUT /api/tenant/profile` with `{ "gstin": "SHOULD_NOT_BE_ACCEPTED" }` -> `400 VALIDATION_ERROR`
 - Validation detail showed `Expected never, received string` on `gstin`.
 
-Conclusion: read-only GST/publication mutation guard is live for the rejected-field path.
+Conclusion: read-only GST/publication mutation guard is live after DB apply.
 
 ### 7.3 Validation checks verified live
 
@@ -130,27 +219,47 @@ Verified live with non-persisting invalid payloads:
 - invalid `companySizeBand` -> `400 VALIDATION_ERROR`
 - `description` length 2001 -> `400 VALIDATION_ERROR`
 
+Additional check verified after resume:
+
+- invalid `capacityBand` -> `400 VALIDATION_ERROR`
+
 These checks confirm the request-schema validation layer is active before the write path.
 
-### 7.4 Safe checks not completed
+### 7.4 Valid PUT runtime failure
 
-Not completed in this blocked unit:
+Attempted harmless valid PUT payloads:
 
-- valid rich-field `PUT` persistence test,
-- follow-up authenticated `GET` readback after a successful write,
-- post-migration column/table verification,
-- non-OWNER/ADMIN `403` verification,
-- focused DB-backed integration test restoration/execution.
+- QA B2B exact harmless verification payload
+- Shraddha minimal probe payload `{ "tagline": "probe-only" }` only to distinguish QA-only failure from route-wide failure
 
-Reasons:
+Observed results:
 
-- no lawful remote migration execution lane available,
-- no approved QA/demo OWNER/ADMIN browser lane provided for harmless writes,
-- real Shraddha supplier data was not mutated without explicit authorization.
+- QA B2B `PUT /api/tenant/profile` -> `500 INTERNAL_ERROR`
+- Shraddha `PUT /api/tenant/profile` -> `500 INTERNAL_ERROR`
+
+Additional bounded truth:
+
+- direct rollback-only SQL reproduction of the `tenant_profile_details` insert/upsert under `SET LOCAL ROLE texqtic_app` plus canonical `app.org_id` context succeeded (`INSERT 0 1`, then `ROLLBACK`)
+- failed runtime PUT attempts did not commit any `tenant_profile_details` row for either tenant
+
+Interpretation:
+
+- the post-migration runtime failure is not caused by missing table, missing grants, or basic RLS inability to insert into `tenant_profile_details`
+- a real application/runtime bug remains in the successful PUT path
+- per prompt guardrails, source files were not edited in this unit after discovering the runtime bug
+
+### 7.5 Checks not completed because of runtime bug
+
+Not completed:
+
+- successful persisted PUT proof
+- follow-up GET readback after a successful write
+- non-OWNER/ADMIN `403` proof (no safe lower-role session provided, and the route-level OWNER/ADMIN guard remains confirmed by repo truth)
+- focused DB-backed integration test restoration/execution
 
 ## 8. Public Non-Exposure Verification
 
-Verified before block:
+Verified after DB apply:
 
 - `GET /api/public/b2b/suppliers` -> `200 success=true`
 - First returned supplier item keys remained limited to public-safe fields: `slug`, `legalName`, `logoUrl`, `orgType`, `jurisdiction`, `certificationCount`, `certificationTypes`, `hasTraceabilityEvidence`, `taxonomy`, `offeringPreview`, `publicationPosture`, `eligibilityPosture`.
@@ -158,11 +267,17 @@ Verified before block:
 - `/b2b` remained on the public supplier discovery surface with no observed rich-profile exposure.
 - `/products` public surface did not show contact identifiers, CIN/Udyam/IEC, signed-URL text, or storage-path/bucket text during the bounded read-only probe.
 
-Conclusion: no public exposure regression was observed in the bounded pre-block checks.
+Additional `/products` verification after resume:
+
+- no business email / phone / CIN / Udyam / IEC exposure
+- no signed URL pattern
+- no certificate bucket/storage-path exposure
+
+Conclusion: no public exposure regression was observed after DB apply.
 
 ## 9. Validation Commands
 
-To be run after governance closeout update:
+Validation to run after governance closeout update:
 
 - `pnpm --dir server exec prisma validate`
 - `pnpm --dir server exec prisma generate`
@@ -172,12 +287,12 @@ To be run after governance closeout update:
 
 ## 10. Residuals
 
-- Remote DB pre-check/apply/post-check still required.
-- Live authenticated `GET /api/tenant/profile` currently returns `500` on the shared runtime lane.
-- Valid rich-field persistence remains unverified.
-- Non-OWNER/ADMIN permission verification remains unverified.
-- Focused DB-backed test remains deferred until migration is actually applied and a truthful execution lane exists.
+- Rich-profile successful PUT path remains broken at runtime (`500 INTERNAL_ERROR`).
+- QA B2B authenticated GET remains broken at runtime (`500 INTERNAL_ERROR`) even after DB apply.
+- Valid rich-field persistence remains unverified because of the runtime failure.
+- Non-OWNER/ADMIN permission verification remains unverified due missing safe lower-role session.
+- Focused DB-backed test remains deferred; source/test edits were not allowed once the runtime bug was confirmed.
 
 ## 11. Next Recommended Unit
 
-- Resume `FTR-SL-016B2A1-B2B-COMPANY-PROFILE-RICH-FIELDS-DB-MIGRATION-RUNTIME-VERIFY-01` after manual remote migration apply and after a safe QA/demo OWNER/ADMIN tenant session is available for harmless write verification.
+- Open a bounded follow-up bug unit to diagnose and fix the post-migration `PUT /api/tenant/profile` runtime failure before any UI expansion unit proceeds.
