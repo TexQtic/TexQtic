@@ -81,10 +81,10 @@ export interface ActivateTenantResponse {
     name: string;
     slug: string;
     type: string;
-    tenant_category?: string | null;
-    is_white_label?: boolean;
     status: string;
     plan: import('../types').CommercialPlan;
+    tenant_category?: string | null;
+    is_white_label?: boolean;
   };
   membership: {
     role: string;
@@ -296,12 +296,43 @@ export interface TenantProfileResponse {
     secondarySegmentKeys: string[];
     rolePositionKeys: string[];
     logoUrl: string | null;
+    tagline: string | null;
+    description: string | null;
+    websiteUrl: string | null;
+    businessEmail: string | null;
+    phone: string | null;
+    phonePublic: boolean;
+    city: string | null;
+    state: string | null;
+    companySizeBand: string | null;
+    capacityBand: string | null;
+    cinNumber: string | null;
+    udyamNumber: string | null;
+    iecNumber: string | null;
+    gstin: string | null;
+    gstVerified: boolean;
+    gstVerificationStatus: string | null;
+    publicationPosture: string;
+    publicEligibilityPosture: string;
     canEdit: boolean;
   };
 }
 
 export interface UpdateTenantProfileRequest {
-  displayName: string;
+  displayName?: string;
+  tagline?: string | null;
+  description?: string | null;
+  websiteUrl?: string | null;
+  businessEmail?: string | null;
+  phone?: string | null;
+  phonePublic?: boolean;
+  city?: string | null;
+  state?: string | null;
+  companySizeBand?: 'MICRO' | 'SMALL' | 'MEDIUM' | 'LARGE' | 'ENTERPRISE' | 'NOT_DISCLOSED' | null;
+  capacityBand?: 'LOW' | 'MEDIUM' | 'HIGH' | 'VERY_HIGH' | 'NOT_DISCLOSED' | null;
+  cinNumber?: string | null;
+  udyamNumber?: string | null;
+  iecNumber?: string | null;
 }
 
 /**

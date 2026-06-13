@@ -965,6 +965,269 @@
         }
       }
     },
+    "/api/tenant/profile": {
+      "get": {
+        "summary": "Read tenant company profile",
+        "description": "Returns the authenticated tenant's company profile, including tenant-managed rich profile details, GST verification read-only fields, and publication posture metadata.",
+        "security": [{ "tenantJwt": [] }],
+        "responses": {
+          "200": {
+            "description": "Tenant company profile retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "profile": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "string", "format": "uuid" },
+                            "slug": { "type": "string" },
+                            "displayName": { "type": "string" },
+                            "tenantType": { "type": "string" },
+                            "status": { "type": "string" },
+                            "plan": { "type": "string" },
+                            "primarySegmentKey": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "secondarySegmentKeys": {
+                              "type": "array",
+                              "items": { "type": "string" }
+                            },
+                            "rolePositionKeys": {
+                              "type": "array",
+                              "items": { "type": "string" }
+                            },
+                            "logoUrl": {
+                              "type": "string",
+                              "format": "uri",
+                              "nullable": true
+                            },
+                            "tagline": { "type": "string", "nullable": true },
+                            "description": {
+                              "type": "string",
+                              "nullable": true,
+                              "maxLength": 2000
+                            },
+                            "websiteUrl": {
+                              "type": "string",
+                              "format": "uri",
+                              "nullable": true
+                            },
+                            "businessEmail": {
+                              "type": "string",
+                              "format": "email",
+                              "nullable": true
+                            },
+                            "phone": { "type": "string", "nullable": true },
+                            "phonePublic": { "type": "boolean" },
+                            "city": { "type": "string", "nullable": true },
+                            "state": { "type": "string", "nullable": true },
+                            "companySizeBand": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "capacityBand": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "cinNumber": { "type": "string", "nullable": true },
+                            "udyamNumber": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "iecNumber": { "type": "string", "nullable": true },
+                            "gstin": {
+                              "type": "string",
+                              "nullable": true,
+                              "description": "Read-only GSTIN sourced from gst_verifications. Not tenant-editable via this route."
+                            },
+                            "gstVerified": {
+                              "type": "boolean",
+                              "description": "Read-only derived GST verification flag."
+                            },
+                            "gstVerificationStatus": {
+                              "type": "string",
+                              "nullable": true,
+                              "description": "Read-only GST verification status sourced from gst_verifications."
+                            },
+                            "publicationPosture": {
+                              "type": "string",
+                              "description": "Read-only publication posture sourced from organizations.publication_posture."
+                            },
+                            "publicEligibilityPosture": {
+                              "type": "string",
+                              "description": "Read-only tenant public eligibility posture."
+                            },
+                            "canEdit": { "type": "boolean" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Tenant profile not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update tenant company profile",
+        "description": "Update tenant-managed company profile fields. Requires OWNER or ADMIN role. GST verification and publication posture fields remain read-only and cannot be mutated here.",
+        "security": [{ "tenantJwt": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 255
+                  },
+                  "tagline": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 280
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 2000
+                  },
+                  "websiteUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "nullable": true,
+                    "maxLength": 2048
+                  },
+                  "businessEmail": {
+                    "type": "string",
+                    "format": "email",
+                    "nullable": true,
+                    "maxLength": 255
+                  },
+                  "phone": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 50
+                  },
+                  "phonePublic": { "type": "boolean" },
+                  "city": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 100
+                  },
+                  "state": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 100
+                  },
+                  "companySizeBand": {
+                    "type": "string",
+                    "nullable": true,
+                    "enum": [
+                      "MICRO",
+                      "SMALL",
+                      "MEDIUM",
+                      "LARGE",
+                      "ENTERPRISE",
+                      "NOT_DISCLOSED"
+                    ]
+                  },
+                  "capacityBand": {
+                    "type": "string",
+                    "nullable": true,
+                    "enum": [
+                      "LOW",
+                      "MEDIUM",
+                      "HIGH",
+                      "VERY_HIGH",
+                      "NOT_DISCLOSED"
+                    ]
+                  },
+                  "cinNumber": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 100
+                  },
+                  "udyamNumber": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 100
+                  },
+                  "iecNumber": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tenant company profile updated successfully"
+          },
+          "400": {
+            "description": "INVALID_INPUT",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (insufficient permissions)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tenant/catalog/items": {
       "get": {
         "summary": "List catalog items",

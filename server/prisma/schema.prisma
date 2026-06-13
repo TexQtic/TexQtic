@@ -38,6 +38,7 @@ model Tenant {
   rfqsAsBuyer              Rfq[]                          @relation("rfq_buyer_org")
   rfqsAsSupplier           Rfq[]                          @relation("rfq_supplier_org")
   branding                 TenantBranding?
+  profileDetail            TenantProfileDetail?
   domains                  TenantDomain[]
   featureOverrides         TenantFeatureOverride[]
   trades                   Trade[]
@@ -70,6 +71,29 @@ model TenantBranding {
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("tenant_branding")
+}
+
+model TenantProfileDetail {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @unique @map("tenant_id") @db.Uuid
+  tagline         String?  @db.VarChar(280)
+  description     String?  @db.VarChar(2000)
+  websiteUrl      String?  @map("website_url") @db.VarChar(2048)
+  businessEmail   String?  @map("business_email") @db.VarChar(255)
+  phone           String?  @db.VarChar(50)
+  phonePublic     Boolean  @default(false) @map("phone_public")
+  city            String?  @db.VarChar(100)
+  state           String?  @db.VarChar(100)
+  companySizeBand String?  @map("company_size_band") @db.VarChar(30)
+  capacityBand    String?  @map("capacity_band") @db.VarChar(30)
+  cinNumber       String?  @map("cin_number") @db.VarChar(100)
+  udyamNumber     String?  @map("udyam_number") @db.VarChar(100)
+  iecNumber       String?  @map("iec_number") @db.VarChar(100)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_profile_details")
 }
 
 model User {

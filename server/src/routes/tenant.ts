@@ -7917,6 +7917,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             org_type: true,
             status: true,
             plan: true,
+            publication_posture: true,
             primary_segment_key: true,
             secondary_segments: {
               select: { segment_key: true },
@@ -7938,6 +7939,42 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           select: { logoUrl: true },
         });
 
+        const profileDetail = await tx.tenantProfileDetail.findUnique({
+          where: { tenantId: dbContext.orgId },
+          select: {
+            tagline: true,
+            description: true,
+            websiteUrl: true,
+            businessEmail: true,
+            phone: true,
+            phonePublic: true,
+            city: true,
+            state: true,
+            companySizeBand: true,
+            capacityBand: true,
+            cinNumber: true,
+            udyamNumber: true,
+            iecNumber: true,
+          },
+        });
+
+        const tenantRecord = await tx.tenant.findUnique({
+          where: { id: dbContext.orgId },
+          select: { publicEligibilityPosture: true },
+        });
+
+        const gstVerification = await tx.gst_verifications.findUnique({
+          where: { org_id: dbContext.orgId },
+          select: {
+            gstin: true,
+            review_outcome: true,
+            provider_result: true,
+          },
+        });
+
+        const gstVerificationStatus = gstVerification?.review_outcome ?? gstVerification?.provider_result ?? null;
+        const gstVerified = gstVerification?.review_outcome === 'APPROVED' || gstVerification?.provider_result === 'VERIFIED';
+
         return {
           id: org.id,
           slug: org.slug,
@@ -7949,6 +7986,24 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           secondarySegmentKeys: org.secondary_segments.map((entry: { segment_key: string }) => entry.segment_key),
           rolePositionKeys: org.role_positions.map((entry: { role_position_key: string }) => entry.role_position_key),
           logoUrl: branding?.logoUrl ?? null,
+          tagline: profileDetail?.tagline ?? null,
+          description: profileDetail?.description ?? null,
+          websiteUrl: profileDetail?.websiteUrl ?? null,
+          businessEmail: profileDetail?.businessEmail ?? null,
+          phone: profileDetail?.phone ?? null,
+          phonePublic: profileDetail?.phonePublic ?? false,
+          city: profileDetail?.city ?? null,
+          state: profileDetail?.state ?? null,
+          companySizeBand: profileDetail?.companySizeBand ?? null,
+          capacityBand: profileDetail?.capacityBand ?? null,
+          cinNumber: profileDetail?.cinNumber ?? null,
+          udyamNumber: profileDetail?.udyamNumber ?? null,
+          iecNumber: profileDetail?.iecNumber ?? null,
+          gstin: gstVerification?.gstin ?? null,
+          gstVerified,
+          gstVerificationStatus,
+          publicationPosture: org.publication_posture,
+          publicEligibilityPosture: tenantRecord?.publicEligibilityPosture ?? 'NO_PUBLIC_PRESENCE',
           canEdit: userRole === 'OWNER' || userRole === 'ADMIN',
         };
       });
@@ -7982,7 +8037,25 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     }
 
     const bodySchema = z.object({
-      displayName: z.string().trim().min(2).max(255),
+      displayName: z.preprocess(value => typeof value === 'string' ? value.trim() : value, z.string().min(2).max(255).optional()),
+      tagline: z.preprocess(value => typeof value === 'string' ? value.trim() || null : value, z.string().max(280).nullable().optional()),
+      description: z.preprocess(value => typeof value === 'string' ? value.trim() || null : value, z.string().max(2000).nullable().optional()),
+      websiteUrl: z.preprocess(value => typeof value === 'string' ? value.trim() || null : value, z.string().url().max(2048).nullable().optional()),
+      businessEmail: z.preprocess(value => typeof value === 'string' ? value.trim() || null : value, z.string().email().max(255).nullable().optional()),
+      phone: z.preprocess(value => typeof value === 'string' ? value.trim() || null : value, z.string().max(50).nullable().optional()),
+      phonePublic: z.boolean().optional(),
+      city: z.preprocess(value => typeof value === 'string' ? value.trim() || null : value, z.string().max(100).nullable().optional()),
+      state: z.preprocess(value => typeof value === 'string' ? value.trim() || null : value, z.string().max(100).nullable().optional()),
+      companySizeBand: z.enum(['MICRO', 'SMALL', 'MEDIUM', 'LARGE', 'ENTERPRISE', 'NOT_DISCLOSED']).nullable().optional(),
+      capacityBand: z.enum(['LOW', 'MEDIUM', 'HIGH', 'VERY_HIGH', 'NOT_DISCLOSED']).nullable().optional(),
+      cinNumber: z.preprocess(value => typeof value === 'string' ? value.trim() || null : value, z.string().max(100).nullable().optional()),
+      udyamNumber: z.preprocess(value => typeof value === 'string' ? value.trim() || null : value, z.string().max(100).nullable().optional()),
+      iecNumber: z.preprocess(value => typeof value === 'string' ? value.trim() || null : value, z.string().max(100).nullable().optional()),
+      gstin: z.never().optional(),
+      gstVerified: z.never().optional(),
+      gstVerificationStatus: z.never().optional(),
+      publicationPosture: z.never().optional(),
+      publicEligibilityPosture: z.never().optional(),
     });
 
     const parseResult = bodySchema.safeParse(request.body);
@@ -7990,16 +8063,70 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendValidationError(reply, parseResult.error.errors);
     }
 
+    const hasUpdates = Object.values(parseResult.data).some(value => value !== undefined);
+    if (!hasUpdates) {
+      return sendError(reply, 'INVALID_INPUT', 'At least one mutable profile field is required.', 400);
+    }
+
     try {
       const profile = await withDbContext(prisma, dbContext, async tx => {
         await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
         await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
 
-        const org = await tx.organizations.update({
+        if (parseResult.data.displayName !== undefined) {
+          await tx.organizations.update({
+            where: { id: dbContext.orgId },
+            data: {
+              legal_name: parseResult.data.displayName,
+            },
+          });
+
+          await tx.tenant.update({
+            where: { id: dbContext.orgId },
+            data: { name: parseResult.data.displayName },
+          });
+        }
+
+        const profileDetailUpdate: Prisma.TenantProfileDetailUpdateInput = {};
+        if (parseResult.data.tagline !== undefined) profileDetailUpdate.tagline = parseResult.data.tagline;
+        if (parseResult.data.description !== undefined) profileDetailUpdate.description = parseResult.data.description;
+        if (parseResult.data.websiteUrl !== undefined) profileDetailUpdate.websiteUrl = parseResult.data.websiteUrl;
+        if (parseResult.data.businessEmail !== undefined) profileDetailUpdate.businessEmail = parseResult.data.businessEmail;
+        if (parseResult.data.phone !== undefined) profileDetailUpdate.phone = parseResult.data.phone;
+        if (parseResult.data.phonePublic !== undefined) profileDetailUpdate.phonePublic = parseResult.data.phonePublic;
+        if (parseResult.data.city !== undefined) profileDetailUpdate.city = parseResult.data.city;
+        if (parseResult.data.state !== undefined) profileDetailUpdate.state = parseResult.data.state;
+        if (parseResult.data.companySizeBand !== undefined) profileDetailUpdate.companySizeBand = parseResult.data.companySizeBand;
+        if (parseResult.data.capacityBand !== undefined) profileDetailUpdate.capacityBand = parseResult.data.capacityBand;
+        if (parseResult.data.cinNumber !== undefined) profileDetailUpdate.cinNumber = parseResult.data.cinNumber;
+        if (parseResult.data.udyamNumber !== undefined) profileDetailUpdate.udyamNumber = parseResult.data.udyamNumber;
+        if (parseResult.data.iecNumber !== undefined) profileDetailUpdate.iecNumber = parseResult.data.iecNumber;
+
+        if (Object.keys(profileDetailUpdate).length > 0) {
+          await tx.tenantProfileDetail.upsert({
+            where: { tenantId: dbContext.orgId },
+            create: {
+              tenantId: dbContext.orgId,
+              tagline: parseResult.data.tagline ?? null,
+              description: parseResult.data.description ?? null,
+              websiteUrl: parseResult.data.websiteUrl ?? null,
+              businessEmail: parseResult.data.businessEmail ?? null,
+              phone: parseResult.data.phone ?? null,
+              phonePublic: parseResult.data.phonePublic ?? false,
+              city: parseResult.data.city ?? null,
+              state: parseResult.data.state ?? null,
+              companySizeBand: parseResult.data.companySizeBand ?? null,
+              capacityBand: parseResult.data.capacityBand ?? null,
+              cinNumber: parseResult.data.cinNumber ?? null,
+              udyamNumber: parseResult.data.udyamNumber ?? null,
+              iecNumber: parseResult.data.iecNumber ?? null,
+            },
+            update: profileDetailUpdate,
+          });
+        }
+
+        const org = await tx.organizations.findUnique({
           where: { id: dbContext.orgId },
-          data: {
-            legal_name: parseResult.data.displayName,
-          },
           select: {
             id: true,
             slug: true,
@@ -8007,6 +8134,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             org_type: true,
             status: true,
             plan: true,
+            publication_posture: true,
             primary_segment_key: true,
             secondary_segments: {
               select: { segment_key: true },
@@ -8019,16 +8147,50 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           },
         });
 
-        // Keep tenants table display name aligned with organizations.legal_name for compatibility.
-        await tx.tenant.update({
-          where: { id: dbContext.orgId },
-          data: { name: parseResult.data.displayName },
-        });
+        if (!org) {
+          throw new OrganizationNotFoundError(dbContext.orgId);
+        }
 
         const branding = await tx.tenantBranding.findUnique({
           where: { tenantId: dbContext.orgId },
           select: { logoUrl: true },
         });
+
+        const profileDetail = await tx.tenantProfileDetail.findUnique({
+          where: { tenantId: dbContext.orgId },
+          select: {
+            tagline: true,
+            description: true,
+            websiteUrl: true,
+            businessEmail: true,
+            phone: true,
+            phonePublic: true,
+            city: true,
+            state: true,
+            companySizeBand: true,
+            capacityBand: true,
+            cinNumber: true,
+            udyamNumber: true,
+            iecNumber: true,
+          },
+        });
+
+        const tenantRecord = await tx.tenant.findUnique({
+          where: { id: dbContext.orgId },
+          select: { publicEligibilityPosture: true },
+        });
+
+        const gstVerification = await tx.gst_verifications.findUnique({
+          where: { org_id: dbContext.orgId },
+          select: {
+            gstin: true,
+            review_outcome: true,
+            provider_result: true,
+          },
+        });
+
+        const gstVerificationStatus = gstVerification?.review_outcome ?? gstVerification?.provider_result ?? null;
+        const gstVerified = gstVerification?.review_outcome === 'APPROVED' || gstVerification?.provider_result === 'VERIFIED';
 
         return {
           id: org.id,
@@ -8041,9 +8203,31 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           secondarySegmentKeys: org.secondary_segments.map((entry: { segment_key: string }) => entry.segment_key),
           rolePositionKeys: org.role_positions.map((entry: { role_position_key: string }) => entry.role_position_key),
           logoUrl: branding?.logoUrl ?? null,
+          tagline: profileDetail?.tagline ?? null,
+          description: profileDetail?.description ?? null,
+          websiteUrl: profileDetail?.websiteUrl ?? null,
+          businessEmail: profileDetail?.businessEmail ?? null,
+          phone: profileDetail?.phone ?? null,
+          phonePublic: profileDetail?.phonePublic ?? false,
+          city: profileDetail?.city ?? null,
+          state: profileDetail?.state ?? null,
+          companySizeBand: profileDetail?.companySizeBand ?? null,
+          capacityBand: profileDetail?.capacityBand ?? null,
+          cinNumber: profileDetail?.cinNumber ?? null,
+          udyamNumber: profileDetail?.udyamNumber ?? null,
+          iecNumber: profileDetail?.iecNumber ?? null,
+          gstin: gstVerification?.gstin ?? null,
+          gstVerified,
+          gstVerificationStatus,
+          publicationPosture: org.publication_posture,
+          publicEligibilityPosture: tenantRecord?.publicEligibilityPosture ?? 'NO_PUBLIC_PRESENCE',
           canEdit: true,
         };
       });
+
+      const updatedFields = Object.entries(parseResult.data)
+        .filter(([, value]) => value !== undefined)
+        .map(([key]) => key);
 
       await writeAuditLog(prisma, {
         tenantId: tenantId ?? null,
@@ -8054,7 +8238,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         entity: 'organization',
         entityId: dbContext.orgId,
         metadataJson: {
-          displayName: parseResult.data.displayName,
+          updatedFields,
         },
       });
 
