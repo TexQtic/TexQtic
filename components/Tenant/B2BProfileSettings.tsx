@@ -8,6 +8,7 @@ import {
   uploadTenantLogo,
   type TenantProfileResponse,
 } from '../../services/tenantService';
+import { CertificationDocumentsWidget } from './CertificationDocumentsWidget';
 
 interface B2BProfileSettingsProps {
   tenant: TenantConfig;
@@ -163,6 +164,21 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
     }
   };
 
+  const handleManageCertifications = () => {
+    const shellButtons = Array.from(document.querySelectorAll('button'));
+    const certificationsButton = shellButtons.find(button => {
+      const label = button.textContent?.trim().toLowerCase() ?? '';
+      return label.includes('certifications') && !label.includes('manage all');
+    });
+
+    if (certificationsButton) {
+      certificationsButton.click();
+      return;
+    }
+
+    setError('Use the workspace navigation Certifications entry for full lifecycle management.');
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm space-y-6">
@@ -289,6 +305,11 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
           )}
         </div>
       </section>
+
+      <CertificationDocumentsWidget
+        canEdit={canEdit}
+        onManageCertifications={handleManageCertifications}
+      />
     </div>
   );
 };
