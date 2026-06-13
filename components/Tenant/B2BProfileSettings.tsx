@@ -7,6 +7,7 @@ import {
   updateTenantProfile,
   uploadTenantLogo,
   type TenantProfileResponse,
+  type UpdateTenantProfileRequest,
 } from '../../services/tenantService';
 import { CertificationDocumentsWidget } from './CertificationDocumentsWidget';
 
@@ -14,6 +15,152 @@ interface B2BProfileSettingsProps {
   tenant: TenantConfig;
   onDisplayNameUpdated?: (displayName: string) => void;
 }
+
+type CompanySizeBand = Exclude<UpdateTenantProfileRequest['companySizeBand'], null | undefined>;
+type CapacityBand = Exclude<UpdateTenantProfileRequest['capacityBand'], null | undefined>;
+
+interface EditableProfileFormState {
+  displayName: string;
+  tagline: string;
+  description: string;
+  websiteUrl: string;
+  businessEmail: string;
+  phone: string;
+  phonePublic: boolean;
+  city: string;
+  state: string;
+  companySizeBand: CompanySizeBand | '';
+  capacityBand: CapacityBand | '';
+  cinNumber: string;
+  udyamNumber: string;
+  iecNumber: string;
+}
+
+const COMPANY_SIZE_BAND_OPTIONS: Array<{ value: CompanySizeBand; label: string }> = [
+  { value: 'MICRO', label: 'Micro (small team)' },
+  { value: 'SMALL', label: 'Small' },
+  { value: 'MEDIUM', label: 'Medium' },
+  { value: 'LARGE', label: 'Large' },
+  { value: 'ENTERPRISE', label: 'Enterprise' },
+  { value: 'NOT_DISCLOSED', label: 'Not disclosed' },
+];
+
+const CAPACITY_BAND_OPTIONS: Array<{ value: CapacityBand; label: string }> = [
+  { value: 'LOW', label: 'Low' },
+  { value: 'MEDIUM', label: 'Medium' },
+  { value: 'HIGH', label: 'High' },
+  { value: 'VERY_HIGH', label: 'Very high' },
+  { value: 'NOT_DISCLOSED', label: 'Not disclosed' },
+];
+
+const COMPANY_SIZE_BAND_VALUES = new Set(COMPANY_SIZE_BAND_OPTIONS.map(option => option.value));
+const CAPACITY_BAND_VALUES = new Set(CAPACITY_BAND_OPTIONS.map(option => option.value));
+
+const toOptionalText = (value: string): string | null => {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+const isUrlLike = (value: string): boolean => {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
+const isEmailLike = (value: string): boolean => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+};
+
+const getLabelForCompanySizeBand = (value: string | null): string => {
+  if (!value) {
+    return 'Not set';
+  }
+
+  return COMPANY_SIZE_BAND_OPTIONS.find(option => option.value === value)?.label ?? value;
+};
+
+const getLabelForCapacityBand = (value: string | null): string => {
+  if (!value) {
+    return 'Not set';
+  }
+
+  return CAPACITY_BAND_OPTIONS.find(option => option.value === value)?.label ?? value;
+};
+
+const maskGstin = (value: string | null): string => {
+  if (!value) {
+    return 'Not available';
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length <= 8) {
+    return trimmed;
+  }
+
+  const visiblePrefix = trimmed.slice(0, 4);
+  const visibleSuffix = trimmed.slice(-4);
+  return `${visiblePrefix}${'*'.repeat(Math.max(trimmed.length - 8, 2))}${visibleSuffix}`;
+};
+
+const createFormStateFromProfile = (profile: TenantProfileResponse['profile']): EditableProfileFormState => {
+  return {
+    displayName: profile.displayName,
+    tagline: profile.tagline ?? '',
+    description: profile.description ?? '',
+    websiteUrl: profile.websiteUrl ?? '',
+    businessEmail: profile.businessEmail ?? '',
+    phone: profile.phone ?? '',
+    phonePublic: profile.phonePublic,
+    city: profile.city ?? '',
+    state: profile.state ?? '',
+    companySizeBand: (profile.companySizeBand as CompanySizeBand | null) ?? '',
+    capacityBand: (profile.capacityBand as CapacityBand | null) ?? '',
+    cinNumber: profile.cinNumber ?? '',
+    udyamNumber: profile.udyamNumber ?? '',
+    iecNumber: profile.iecNumber ?? '',
+  };
+};
+
+const createPayloadFromForm = (form: EditableProfileFormState): UpdateTenantProfileRequest => {
+  return {
+    displayName: form.displayName.trim(),
+    tagline: toOptionalText(form.tagline),
+    description: toOptionalText(form.description),
+    websiteUrl: toOptionalText(form.websiteUrl),
+    businessEmail: toOptionalText(form.businessEmail),
+    phone: toOptionalText(form.phone),
+    phonePublic: form.phonePublic,
+    city: toOptionalText(form.city),
+    state: toOptionalText(form.state),
+    companySizeBand: form.companySizeBand || null,
+    capacityBand: form.capacityBand || null,
+    cinNumber: toOptionalText(form.cinNumber),
+    udyamNumber: toOptionalText(form.udyamNumber),
+    iecNumber: toOptionalText(form.iecNumber),
+  };
+};
+
+const createPayloadFromProfile = (profile: TenantProfileResponse['profile']): UpdateTenantProfileRequest => {
+  return {
+    displayName: profile.displayName.trim(),
+    tagline: profile.tagline,
+    description: profile.description,
+    websiteUrl: profile.websiteUrl,
+    businessEmail: profile.businessEmail,
+    phone: profile.phone,
+    phonePublic: profile.phonePublic,
+    city: profile.city,
+    state: profile.state,
+    companySizeBand: (profile.companySizeBand as CompanySizeBand | null) ?? null,
+    capacityBand: (profile.capacityBand as CapacityBand | null) ?? null,
+    cinNumber: profile.cinNumber,
+    udyamNumber: profile.udyamNumber,
+    iecNumber: profile.iecNumber,
+  };
+};
 
 export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
   tenant,
@@ -25,7 +172,22 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [profile, setProfile] = useState<TenantProfileResponse['profile'] | null>(null);
-  const [displayNameDraft, setDisplayNameDraft] = useState(tenant.name);
+  const [form, setForm] = useState<EditableProfileFormState>({
+    displayName: tenant.name,
+    tagline: '',
+    description: '',
+    websiteUrl: '',
+    businessEmail: '',
+    phone: '',
+    phonePublic: false,
+    city: '',
+    state: '',
+    companySizeBand: '',
+    capacityBand: '',
+    cinNumber: '',
+    udyamNumber: '',
+    iecNumber: '',
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -39,7 +201,7 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
         if (!mounted) return;
 
         setProfile(response.profile);
-        setDisplayNameDraft(response.profile.displayName);
+        setForm(createFormStateFromProfile(response.profile));
       } catch (err) {
         if (!mounted) return;
 
@@ -65,27 +227,86 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
   const resolvedDisplayName = profile?.displayName ?? tenant.name;
   const resolvedLogoUrl = profile?.logoUrl ?? (tenant.theme.logo?.startsWith('http') ? tenant.theme.logo : null);
   const canEdit = profile?.canEdit ?? false;
-  const hasUnsavedChanges = displayNameDraft.trim() !== resolvedDisplayName.trim();
+  const draftPayload = useMemo(() => createPayloadFromForm(form), [form]);
+  const hasUnsavedChanges = useMemo(() => {
+    if (!profile) {
+      return false;
+    }
+
+    return JSON.stringify(draftPayload) !== JSON.stringify(createPayloadFromProfile(profile));
+  }, [draftPayload, profile]);
 
   const profileCompleteness = useMemo(() => {
     const checks = [
       Boolean(resolvedDisplayName.trim()),
       Boolean(resolvedLogoUrl),
-      (profile?.secondarySegmentKeys.length ?? tenant.secondary_segment_keys?.length ?? 0) > 0,
+      Boolean((profile?.tagline ?? '').trim()),
+      Boolean((profile?.description ?? '').trim()),
+      Boolean((profile?.websiteUrl ?? '').trim()),
+      Boolean((profile?.city ?? '').trim() && (profile?.state ?? '').trim()),
+      Boolean(profile?.companySizeBand),
+      Boolean(profile?.capacityBand),
+      Boolean((profile?.businessEmail ?? '').trim() || (profile?.phone ?? '').trim()),
+      true,
     ];
 
     const completeChecks = checks.filter(Boolean).length;
     return {
       completeChecks,
       totalChecks: checks.length,
-      label: completeChecks === checks.length ? 'Profile baseline complete' : 'Profile baseline in progress',
+      label: completeChecks === checks.length ? 'Rich profile launch-ready baseline complete' : 'Rich profile launch baseline in progress',
     };
-  }, [resolvedDisplayName, resolvedLogoUrl, profile?.secondarySegmentKeys.length, tenant.secondary_segment_keys?.length]);
+  }, [
+    resolvedDisplayName,
+    resolvedLogoUrl,
+    profile?.tagline,
+    profile?.description,
+    profile?.websiteUrl,
+    profile?.city,
+    profile?.state,
+    profile?.companySizeBand,
+    profile?.capacityBand,
+    profile?.businessEmail,
+    profile?.phone,
+  ]);
+
+  const descriptionLength = form.description.trim().length;
 
   const handleSave = async () => {
-    const nextDisplayName = displayNameDraft.trim();
+    if (!canEdit) {
+      return;
+    }
+
+    const nextDisplayName = form.displayName.trim();
     if (!nextDisplayName) {
       setError('Company name cannot be empty.');
+      return;
+    }
+
+    if (descriptionLength > 2000) {
+      setError('Description must be 2000 characters or fewer.');
+      return;
+    }
+
+    const websiteUrl = toOptionalText(form.websiteUrl);
+    if (websiteUrl && !isUrlLike(websiteUrl)) {
+      setError('Website URL must start with http:// or https:// and be a valid URL.');
+      return;
+    }
+
+    const businessEmail = toOptionalText(form.businessEmail);
+    if (businessEmail && !isEmailLike(businessEmail)) {
+      setError('Business email must be a valid email address.');
+      return;
+    }
+
+    if (form.companySizeBand && !COMPANY_SIZE_BAND_VALUES.has(form.companySizeBand)) {
+      setError('Company size selection is invalid.');
+      return;
+    }
+
+    if (form.capacityBand && !CAPACITY_BAND_VALUES.has(form.capacityBand)) {
+      setError('Capacity selection is invalid.');
       return;
     }
 
@@ -94,12 +315,10 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
     setSuccess(null);
 
     try {
-      const response = await updateTenantProfile({
-        displayName: nextDisplayName,
-      });
+      const response = await updateTenantProfile(draftPayload);
 
       setProfile(response.profile);
-      setDisplayNameDraft(response.profile.displayName);
+      setForm(createFormStateFromProfile(response.profile));
       onDisplayNameUpdated?.(response.profile.displayName);
       setSuccess('Company profile updated.');
 
@@ -189,14 +408,14 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
             </div>
             <h1 className="text-3xl font-bold text-slate-900">Company Profile</h1>
             <p className="text-base leading-7 text-slate-600">
-              Manage normal B2B company identity details for this workspace. White-label storefront branding remains separate.
+              Manage rich B2B company profile details for this workspace. White-label storefront branding remains separate.
             </p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 xl:max-w-sm">
             <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Profile status</div>
             <div className="mt-2 text-lg font-semibold text-slate-900">{profileCompleteness.label}</div>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              {profileCompleteness.completeChecks}/{profileCompleteness.totalChecks} baseline identity checks complete.
+              {profileCompleteness.completeChecks}/{profileCompleteness.totalChecks} rich launch-profile checks complete.
             </p>
           </div>
         </div>
@@ -218,8 +437,8 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
             <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Company Name</div>
             <input
               type="text"
-              value={displayNameDraft}
-              onChange={event => setDisplayNameDraft(event.target.value)}
+              value={form.displayName}
+              onChange={event => setForm(current => ({ ...current, displayName: event.target.value }))}
               disabled={loading || !canEdit || saving}
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 disabled:bg-slate-100 disabled:text-slate-500"
               placeholder="Enter company display name"
@@ -289,6 +508,222 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
               Profile read is available to authenticated tenant users. Profile update is limited to OWNER and ADMIN roles.
             </p>
           </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3 md:col-span-2">
+            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Business Introduction</div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-600">Tagline</label>
+                <input
+                  type="text"
+                  value={form.tagline}
+                  onChange={event => setForm(current => ({ ...current, tagline: event.target.value }))}
+                  disabled={loading || !canEdit || saving}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 disabled:bg-slate-100 disabled:text-slate-500"
+                  placeholder="One-line company positioning"
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="block text-xs font-semibold text-slate-600">Description</label>
+                <textarea
+                  value={form.description}
+                  onChange={event => setForm(current => ({ ...current, description: event.target.value }))}
+                  disabled={loading || !canEdit || saving}
+                  rows={5}
+                  maxLength={2200}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 disabled:bg-slate-100 disabled:text-slate-500"
+                  placeholder="Describe capabilities, specialization, and buyer-fit signals (max 2000 characters)."
+                />
+                <p className="text-xs text-slate-500">
+                  {Math.min(descriptionLength, 2000)}/2000 characters used.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3">
+            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Location &amp; Web Presence</div>
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-600">Website URL</label>
+                <input
+                  type="url"
+                  value={form.websiteUrl}
+                  onChange={event => setForm(current => ({ ...current, websiteUrl: event.target.value }))}
+                  disabled={loading || !canEdit || saving}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 disabled:bg-slate-100 disabled:text-slate-500"
+                  placeholder="https://example.com"
+                />
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-slate-600">City</label>
+                  <input
+                    type="text"
+                    value={form.city}
+                    onChange={event => setForm(current => ({ ...current, city: event.target.value }))}
+                    disabled={loading || !canEdit || saving}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 disabled:bg-slate-100 disabled:text-slate-500"
+                    placeholder="City"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-slate-600">State</label>
+                  <input
+                    type="text"
+                    value={form.state}
+                    onChange={event => setForm(current => ({ ...current, state: event.target.value }))}
+                    disabled={loading || !canEdit || saving}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 disabled:bg-slate-100 disabled:text-slate-500"
+                    placeholder="State"
+                  />
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-slate-500">
+              Website may appear on public surfaces later after publication approvals. It is not publicly projected in this phase.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3">
+            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Buyer Contact Preferences</div>
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-600">Business Email</label>
+                <input
+                  type="email"
+                  value={form.businessEmail}
+                  onChange={event => setForm(current => ({ ...current, businessEmail: event.target.value }))}
+                  disabled={loading || !canEdit || saving}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 disabled:bg-slate-100 disabled:text-slate-500"
+                  placeholder="hello@company.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-600">Phone</label>
+                <input
+                  type="text"
+                  value={form.phone}
+                  onChange={event => setForm(current => ({ ...current, phone: event.target.value }))}
+                  disabled={loading || !canEdit || saving}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 disabled:bg-slate-100 disabled:text-slate-500"
+                  placeholder="Primary inquiry phone"
+                />
+              </div>
+              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={form.phonePublic}
+                  onChange={event => setForm(current => ({ ...current, phonePublic: event.target.checked }))}
+                  disabled={loading || !canEdit || saving}
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+                Capture phone as future public-display preference
+              </label>
+            </div>
+            <p className="text-xs text-slate-500">
+              Email and phone are used for tenant-auth and inquiry workflows only in this phase. They are not public yet.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3">
+            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Scale &amp; Capability Signals</div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-600">Company Size Band</label>
+                <select
+                  value={form.companySizeBand}
+                  onChange={event => setForm(current => ({ ...current, companySizeBand: event.target.value as CompanySizeBand | '' }))}
+                  disabled={loading || !canEdit || saving}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 disabled:bg-slate-100 disabled:text-slate-500"
+                >
+                  <option value="">Select size band</option>
+                  {COMPANY_SIZE_BAND_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-600">Capacity Band</label>
+                <select
+                  value={form.capacityBand}
+                  onChange={event => setForm(current => ({ ...current, capacityBand: event.target.value as CapacityBand | '' }))}
+                  disabled={loading || !canEdit || saving}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 disabled:bg-slate-100 disabled:text-slate-500"
+                >
+                  <option value="">Select capacity band</option>
+                  {CAPACITY_BAND_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3">
+            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Compliance Identifiers</div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-600">CIN Number (optional)</label>
+                <input
+                  type="text"
+                  value={form.cinNumber}
+                  onChange={event => setForm(current => ({ ...current, cinNumber: event.target.value }))}
+                  disabled={loading || !canEdit || saving}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 disabled:bg-slate-100 disabled:text-slate-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-600">Udyam Number (optional)</label>
+                <input
+                  type="text"
+                  value={form.udyamNumber}
+                  onChange={event => setForm(current => ({ ...current, udyamNumber: event.target.value }))}
+                  disabled={loading || !canEdit || saving}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 disabled:bg-slate-100 disabled:text-slate-500"
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="block text-xs font-semibold text-slate-600">IEC Number (optional)</label>
+                <input
+                  type="text"
+                  value={form.iecNumber}
+                  onChange={event => setForm(current => ({ ...current, iecNumber: event.target.value }))}
+                  disabled={loading || !canEdit || saving}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 disabled:bg-slate-100 disabled:text-slate-500"
+                />
+              </div>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 space-y-1">
+              <div><span className="font-semibold">GSTIN:</span> {maskGstin(profile?.gstin ?? null)}</div>
+              <div><span className="font-semibold">GST Verified:</span> {profile?.gstVerified ? 'Yes' : 'No'}</div>
+              <div><span className="font-semibold">GST Verification Status:</span> {profile?.gstVerificationStatus ?? 'Not set'}</div>
+            </div>
+            <p className="text-xs text-slate-500">
+              GST and publication postures are system-controlled and read-only in Company Profile.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 md:col-span-2">
+            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Public Readiness Status</div>
+            <div className="mt-3 grid gap-3 md:grid-cols-2 text-sm text-slate-700">
+              <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                <div className="text-xs text-slate-500 uppercase tracking-[0.14em]">Publication Posture</div>
+                <div className="mt-1 font-semibold">{profile?.publicationPosture ?? 'Not set'}</div>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                <div className="text-xs text-slate-500 uppercase tracking-[0.14em]">Public Eligibility</div>
+                <div className="mt-1 font-semibold">{profile?.publicEligibilityPosture ?? 'Not set'}</div>
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-slate-500">
+              Certificate documents remain private and are never publicly exposed. Phone public preference is captured now for future policy-controlled display.
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -301,7 +736,7 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
             {saving ? 'Saving...' : 'Save Company Profile'}
           </button>
           {!canEdit && !loading && (
-            <span className="text-xs text-slate-500">OWNER or ADMIN role is required to edit company profile.</span>
+            <span className="text-xs text-slate-500">OWNER or ADMIN role is required to edit company profile. You can still review all rich profile details in read-only mode.</span>
           )}
         </div>
       </section>
