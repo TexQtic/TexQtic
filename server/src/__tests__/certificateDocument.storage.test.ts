@@ -1,7 +1,26 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const storageRemoveMock = vi.hoisted(() => vi.fn());
+const storageFromMock = vi.hoisted(() => vi.fn(() => ({ remove: storageRemoveMock })));
+const createClientMock = vi.hoisted(() => vi.fn(() => ({ storage: { from: storageFromMock } })));
+const mockConfig = vi.hoisted(() => ({
+  SUPABASE_URL: 'https://example.supabase.co',
+  SUPABASE_SERVICE_ROLE_KEY: 'service-role-redacted',
+  CERTIFICATE_DOCUMENT_BUCKET: 'certificate-documents',
+}));
+
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: createClientMock,
+}));
+
+vi.mock('../config/index.js', () => ({
+  config: mockConfig,
+}));
+
 import {
   CertificateDocumentStorageError,
   MAX_CERTIFICATE_DOCUMENT_BYTES,
+  deleteCertificateDocumentFromStorage,
   validateCertificateDocumentBuffer,
 } from '../services/storage/certificateDocument.storage.js';
 
@@ -13,6 +32,15 @@ const MINIMAL_PNG = Buffer.from([
   0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53,
   0xde,
 ]);
+
+beforeEach(() => {
+  storageRemoveMock.mockReset();
+  storageFromMock.mockClear();
+  createClientMock.mockClear();
+  mockConfig.SUPABASE_URL = 'https://example.supabase.co';
+  mockConfig.SUPABASE_SERVICE_ROLE_KEY = 'service-role-redacted';
+  mockConfig.CERTIFICATE_DOCUMENT_BUCKET = 'certificate-documents';
+});
 
 describe('certificate document storage validation', () => {
   it('accepts PDF certificate documents', async () => {
@@ -45,6 +73,33 @@ describe('certificate document storage validation', () => {
       .rejects.toMatchObject({
         code: 'FILE_TOO_LARGE',
         statusCode: 400,
+      } satisfies Partial<CertificateDocumentStorageError>);
+  });
+
+  it('deletes certificate documents from the configured private bucket', async () => {
+    storageRemoveMock.mockResolvedValueOnce({ data: [{ name: 'document.pdf' }], error: null });
+
+    await expect(deleteCertificateDocumentFromStorage('org/certificates/cert/document.pdf'))
+      .resolves.toBeUndefined();
+
+    expect(storageFromMock).toHaveBeenCalledWith('certificate-documents');
+    expect(storageRemoveMock).toHaveBeenCalledWith(['org/certificates/cert/document.pdf']);
+  });
+
+  it('treats a missing storage object as already removed', async () => {
+    storageRemoveMock.mockResolvedValueOnce({ data: null, error: { statusCode: 404, message: 'not found' } });
+
+    await expect(deleteCertificateDocumentFromStorage('org/certificates/cert/missing.pdf'))
+      .resolves.toBeUndefined();
+  });
+
+  it('fails safely when document storage is not configured', async () => {
+    mockConfig.CERTIFICATE_DOCUMENT_BUCKET = undefined as unknown as string;
+
+    await expect(deleteCertificateDocumentFromStorage('org/certificates/cert/document.pdf'))
+      .rejects.toMatchObject({
+        code: 'STORAGE_NOT_CONFIGURED',
+        statusCode: 500,
       } satisfies Partial<CertificateDocumentStorageError>);
   });
 });

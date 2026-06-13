@@ -33,6 +33,7 @@ import { SanctionsService } from '../../services/sanctions.service.js';
 import {
   CertificateDocumentStorageError,
   createCertificateDocumentSignedUrl,
+  deleteCertificateDocumentFromStorage,
   uploadCertificateDocumentToStorage,
   type CertificateDocumentErrorCode,
 } from '../../services/storage/certificateDocument.storage.js';
@@ -527,6 +528,110 @@ const tenantCertificationRoutes: FastifyPluginAsync = async fastify => {
         }
 
         return sendError(reply, 'SIGNED_URL_FAILED', 'Certificate document access failed.', 500);
+      }
+    },
+  );
+
+  // ─── DELETE /api/tenant/certifications/:id/document ─────────────────────
+  /**
+   * Remove a private certificate document and clear safe metadata.
+   * OWNER/ADMIN only. orgId is derived from dbContext; storage path is never returned.
+   */
+  fastify.delete(
+    '/:id/document',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      const { userId, userRole } = request;
+      if (!userId) {
+        return sendError(reply, 'UNAUTHORIZED', 'User ID missing', 401);
+      }
+
+      if (userRole !== 'OWNER' && userRole !== 'ADMIN') {
+        return sendError(reply, 'FORBIDDEN', 'Only OWNER or ADMIN can remove certificate documents.', 403);
+      }
+
+      const paramResult = certIdParamSchema.safeParse(request.params);
+      if (!paramResult.success) {
+        return sendValidationError(reply, paramResult.error.errors);
+      }
+      const { id } = paramResult.data;
+
+      const cert = await withDbContext(prisma, dbContext, async tx => {
+        return tx.certification.findFirst({
+          where: { id, orgId: dbContext.orgId },
+          select: {
+            id: true,
+            documentStoragePath: true,
+            documentOriginalName: true,
+            documentMimeType: true,
+            documentSizeBytes: true,
+          },
+        });
+      });
+
+      if (!cert) {
+        return sendError(reply, 'NOT_FOUND', 'Certification not found.', 404);
+      }
+
+      if (!cert.documentStoragePath) {
+        return sendError(reply, 'NOT_FOUND', 'Certificate document not found.', 404);
+      }
+
+      try {
+        await deleteCertificateDocumentFromStorage(cert.documentStoragePath);
+
+        await withDbContext(prisma, dbContext, async tx => {
+          const updateResult = await tx.certification.updateMany({
+            where: { id, orgId: dbContext.orgId },
+            data: {
+              documentStoragePath: null,
+              documentOriginalName: null,
+              documentMimeType: null,
+              documentSizeBytes: null,
+              documentUploadedAt: null,
+            },
+          });
+
+          if (updateResult.count !== 1) {
+            throw new Error('Certification document metadata delete target changed.');
+          }
+
+          await writeAuditLog(tx, {
+            realm: 'TENANT',
+            tenantId: dbContext.orgId,
+            actorType: 'USER',
+            actorId: userId,
+            action: 'CERTIFICATION_DOCUMENT_REMOVED',
+            entity: 'certification',
+            entityId: id,
+            beforeJson: {
+              certificationId: id,
+              documentOriginalName: cert.documentOriginalName,
+              documentMimeType: cert.documentMimeType,
+              documentSizeBytes: cert.documentSizeBytes,
+            },
+          });
+        });
+
+        return sendSuccess(reply, {
+          certificationId: id,
+          documentOriginalName: null,
+          documentMimeType: null,
+          documentSizeBytes: null,
+          documentUploadedAt: null,
+        });
+      } catch (error) {
+        if (error instanceof CertificateDocumentStorageError) {
+          const code: CertificateDocumentErrorCode = error.code;
+          return sendError(reply, code, error.message, error.statusCode);
+        }
+
+        return sendError(reply, 'DELETE_FAILED', 'Certificate document delete failed.', 500);
       }
     },
   );

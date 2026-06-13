@@ -31,6 +31,7 @@ import {
   transitionCertification,
   getCertificationDocumentAccess,
   uploadCertificationDocument,
+  deleteCertificationDocument,
   type CertificationListItem,
   type CertificationDetail,
   type TransitionStatus,
@@ -55,6 +56,7 @@ type CreatePhase = 'IDLE' | 'SUBMITTING' | 'CREATED' | 'ERROR';
 type TransitionPhase = 'IDLE' | 'SUBMITTING' | 'RESULT' | 'ERROR';
 type DocumentUploadPhase = 'IDLE' | 'UPLOADING' | 'SUCCESS' | 'ERROR';
 type DocumentAccessPhase = 'IDLE' | 'LOADING' | 'ERROR';
+type DocumentDeletePhase = 'IDLE' | 'DELETING' | 'SUCCESS' | 'ERROR';
 
 // ─── State key → badge color ─────────────────────────────────────────────────
 
@@ -208,6 +210,8 @@ export function CertificationsPanel({ onBack }: Props) {
   const [documentUploadError, setDocumentUploadError] = useState<string | null>(null);
   const [documentAccessPhase, setDocumentAccessPhase] = useState<DocumentAccessPhase>('IDLE');
   const [documentAccessError, setDocumentAccessError] = useState<string | null>(null);
+  const [documentDeletePhase, setDocumentDeletePhase] = useState<DocumentDeletePhase>('IDLE');
+  const [documentDeleteError, setDocumentDeleteError] = useState<string | null>(null);
 
   // ── Load list ──
   const loadList = useCallback(async () => {
@@ -257,6 +261,8 @@ export function CertificationsPanel({ onBack }: Props) {
     setDocumentUploadError(null);
     setDocumentAccessPhase('IDLE');
     setDocumentAccessError(null);
+    setDocumentDeletePhase('IDLE');
+    setDocumentDeleteError(null);
     setPanelView('DETAIL');
     loadDetail(id);
   };
@@ -340,10 +346,32 @@ export function CertificationsPanel({ onBack }: Props) {
       await uploadCertificationDocument(selectedId, documentFile);
       setDocumentFile(null);
       setDocumentUploadPhase('SUCCESS');
+      setDocumentDeletePhase('IDLE');
+      setDocumentDeleteError(null);
       await loadDetail(selectedId);
     } catch (err) {
       setDocumentUploadError(friendlyError(err));
       setDocumentUploadPhase('ERROR');
+    }
+  };
+
+  const handleDeleteDocument = async () => {
+    if (!selectedId || !detail?.documentUploadedAt) return;
+    const confirmed = window.confirm('Remove this certificate document? This clears the stored private document and its metadata.');
+    if (!confirmed) return;
+
+    setDocumentDeletePhase('DELETING');
+    setDocumentDeleteError(null);
+    setDocumentAccessError(null);
+    try {
+      await deleteCertificationDocument(selectedId);
+      setDocumentFile(null);
+      setDocumentDeletePhase('SUCCESS');
+      setDocumentUploadPhase('IDLE');
+      await loadDetail(selectedId);
+    } catch (err) {
+      setDocumentDeleteError(friendlyError(err));
+      setDocumentDeletePhase('ERROR');
     }
   };
 
@@ -723,14 +751,22 @@ export function CertificationsPanel({ onBack }: Props) {
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Uploaded</span>
                   <p className="text-slate-700 mt-0.5">{formatDate(detail.documentUploadedAt)}</p>
                 </div>
-                <div className="flex md:justify-end items-end">
+                <div className="flex flex-wrap gap-2 md:justify-end items-end">
                   <button
                     type="button"
                     onClick={handleOpenDocument}
-                    disabled={documentAccessPhase === 'LOADING'}
+                    disabled={documentAccessPhase === 'LOADING' || documentDeletePhase === 'DELETING'}
                     className="px-4 py-2 border border-slate-300 text-slate-700 text-sm font-semibold rounded-lg hover:bg-white transition disabled:opacity-50"
                   >
                     {documentAccessPhase === 'LOADING' ? 'Opening…' : 'Open Document'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteDocument}
+                    disabled={documentDeletePhase === 'DELETING'}
+                    className="px-4 py-2 border border-rose-200 text-rose-700 text-sm font-semibold rounded-lg hover:bg-rose-50 transition disabled:opacity-50"
+                  >
+                    {documentDeletePhase === 'DELETING' ? 'Removing…' : 'Remove Document'}
                   </button>
                 </div>
               </div>
@@ -743,6 +779,18 @@ export function CertificationsPanel({ onBack }: Props) {
             {documentAccessError && (
               <div className="bg-rose-50 border border-rose-200 rounded-lg px-4 py-3 text-sm text-rose-700">
                 {documentAccessError}
+              </div>
+            )}
+
+            {documentDeleteError && (
+              <div className="bg-rose-50 border border-rose-200 rounded-lg px-4 py-3 text-sm text-rose-700">
+                {documentDeleteError}
+              </div>
+            )}
+
+            {documentDeletePhase === 'SUCCESS' && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm text-emerald-700">
+                Certificate document removed.
               </div>
             )}
 

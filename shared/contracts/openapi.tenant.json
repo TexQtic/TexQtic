@@ -3262,6 +3262,54 @@
             "description": "STORAGE_NOT_CONFIGURED or SIGNED_URL_FAILED"
           }
         }
+      },
+      "delete": {
+        "summary": "Remove a private certificate document",
+        "tags": ["Tenant - Certifications"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Certificate document removed and metadata cleared",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "certificationId": { "type": "string", "format": "uuid" },
+                    "documentOriginalName": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "documentMimeType": { "type": "string", "nullable": true },
+                    "documentSizeBytes": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "documentUploadedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "UNAUTHORIZED" },
+          "403": { "description": "FORBIDDEN — OWNER or ADMIN required" },
+          "404": { "description": "NOT_FOUND" },
+          "500": {
+            "description": "STORAGE_NOT_CONFIGURED or DELETE_FAILED"
+          }
+        }
       }
     },
     "/api/tenant/certifications/{id}/transition": {

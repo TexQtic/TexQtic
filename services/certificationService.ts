@@ -29,7 +29,7 @@
  */
 
 import { APIError, getAuthRealm, getToken } from './apiClient';
-import { tenantGet, tenantPost, tenantPatch } from './tenantApiClient';
+import { tenantDelete, tenantGet, tenantPost, tenantPatch } from './tenantApiClient';
 import { adminGet } from './adminApiClient';
 
 // ============================================================
@@ -156,6 +156,14 @@ export interface GetCertificationDocumentAccessResult {
   documentMimeType: string | null;
   documentSizeBytes: number | null;
   documentUploadedAt: string | null;
+}
+
+export interface DeleteCertificationDocumentResult {
+  certificationId: string;
+  documentOriginalName: null;
+  documentMimeType: null;
+  documentSizeBytes: null;
+  documentUploadedAt: null;
 }
 
 // ─── Transition ──────────────────────────────────────────────────────────────
@@ -346,6 +354,12 @@ export function getCertificationDocumentAccess(
   id: string,
 ): Promise<GetCertificationDocumentAccessResult> {
   return tenantGet<GetCertificationDocumentAccessResult>(`/api/tenant/certifications/${id}/document`);
+}
+
+export function deleteCertificationDocument(
+  id: string,
+): Promise<DeleteCertificationDocumentResult> {
+  return tenantDelete<DeleteCertificationDocumentResult>(`/api/tenant/certifications/${id}/document`);
 }
 
 /**

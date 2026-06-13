@@ -32,7 +32,8 @@ export type CertificateDocumentErrorCode =
   | 'INVALID_FILE_TYPE'
   | 'STORAGE_NOT_CONFIGURED'
   | 'UPLOAD_FAILED'
-  | 'SIGNED_URL_FAILED';
+  | 'SIGNED_URL_FAILED'
+  | 'DELETE_FAILED';
 
 export class CertificateDocumentStorageError extends Error {
   readonly code: CertificateDocumentErrorCode;
@@ -183,4 +184,20 @@ export async function createCertificateDocumentSignedUrl(
   }
 
   return { signedUrl: data.signedUrl };
+}
+
+function isStorageObjectMissingError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const maybeError = error as { statusCode?: number | string; status?: number | string; message?: string };
+  const status = String(maybeError.statusCode ?? maybeError.status ?? '');
+  return status === '404' || maybeError.message?.toLowerCase().includes('not found') === true;
+}
+
+export async function deleteCertificateDocumentFromStorage(storagePath: string): Promise<void> {
+  const { supabase, bucket } = createStorageClient();
+  const { error } = await supabase.storage.from(bucket).remove([storagePath]);
+
+  if (error && !isStorageObjectMissingError(error)) {
+    throw new CertificateDocumentStorageError('DELETE_FAILED', 'Certificate document delete failed.', 500);
+  }
 }
