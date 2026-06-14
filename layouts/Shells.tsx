@@ -43,6 +43,7 @@ interface MobileShellMenuProps {
   tone?: 'light' | 'dark';
   breakpoint?: 'md' | 'lg';
   align?: 'left' | 'right';
+  scrollablePanel?: boolean;
 }
 
 const hasShellRoute = (surface: RuntimeShellNavigationSurface | null, routeKey: RuntimeLocalRouteKey) => {
@@ -171,6 +172,7 @@ const MobileShellMenu: React.FC<MobileShellMenuProps> = ({
   tone = 'light',
   breakpoint = 'md',
   align = 'right',
+  scrollablePanel = false,
 }) => {
   const menuRef = React.useRef<HTMLDetailsElement>(null);
 
@@ -197,6 +199,9 @@ const MobileShellMenu: React.FC<MobileShellMenuProps> = ({
     ? 'px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500'
     : 'px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400';
   const actionCount = items.filter(item => item.kind !== 'section').length;
+  const panelScrollClassName = scrollablePanel
+    ? 'max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain'
+    : '';
 
   return (
     <details
@@ -213,7 +218,7 @@ const MobileShellMenu: React.FC<MobileShellMenuProps> = ({
         <span className="sr-only">{title}</span>
       </summary>
       <div
-        className={`absolute ${alignClassName} top-full z-50 mt-3 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border p-3 ${panelClassName}`}
+        className={`absolute ${alignClassName} top-full z-50 mt-3 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border p-3 ${panelClassName} ${panelScrollClassName}`}
       >
         <div className={`px-2 pb-2 text-[10px] font-bold uppercase tracking-[0.22em] ${labelClassName}`}>
           Navigation
@@ -412,6 +417,7 @@ export const B2BShell: React.FC<B2BShellProps> = ({
               tone="light"
               breakpoint="lg"
               align="left"
+              scrollablePanel
             />
             <h2 className="font-semibold text-slate-600 truncate">{shellHeaderTitle}</h2>
           </div>
