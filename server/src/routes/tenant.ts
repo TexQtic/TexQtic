@@ -8148,11 +8148,6 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
               legal_name: parseResult.data.displayName,
             },
           });
-
-          await tx.tenant.update({
-            where: { id: dbContext.orgId },
-            data: { name: parseResult.data.displayName },
-          });
         }
 
         const profileDetailUpdate: Prisma.TenantProfileDetailUpdateInput = {};
