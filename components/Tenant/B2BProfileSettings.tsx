@@ -272,68 +272,6 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
 
   const descriptionLength = form.description.trim().length;
 
-  const handleSave = async () => {
-    if (!canEdit) {
-      return;
-    }
-
-    const nextDisplayName = form.displayName.trim();
-    if (!nextDisplayName) {
-      setError('Company name cannot be empty.');
-      return;
-    }
-
-    if (descriptionLength > 2000) {
-      setError('Description must be 2000 characters or fewer.');
-      return;
-    }
-
-    const websiteUrl = toOptionalText(form.websiteUrl);
-    if (websiteUrl && !isUrlLike(websiteUrl)) {
-      setError('Website URL must start with http:// or https:// and be a valid URL.');
-      return;
-    }
-
-    const businessEmail = toOptionalText(form.businessEmail);
-    if (businessEmail && !isEmailLike(businessEmail)) {
-      setError('Business email must be a valid email address.');
-      return;
-    }
-
-    if (form.companySizeBand && !COMPANY_SIZE_BAND_VALUES.has(form.companySizeBand)) {
-      setError('Company size selection is invalid.');
-      return;
-    }
-
-    if (form.capacityBand && !CAPACITY_BAND_VALUES.has(form.capacityBand)) {
-      setError('Capacity selection is invalid.');
-      return;
-    }
-
-    setSaving(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      const response = await updateTenantProfile(draftPayload);
-
-      setProfile(response.profile);
-      setForm(createFormStateFromProfile(response.profile));
-      onDisplayNameUpdated?.(response.profile.displayName);
-      setSuccess('Company profile updated.');
-
-      globalThis.setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      if (err instanceof APIError) {
-        setError(err.message);
-      } else {
-        setError('Failed to update company profile. Please try again.');
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleLogoUpload = async (file: File | null) => {
     if (!file) {
       return;
@@ -398,41 +336,229 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
     setError('Use the workspace navigation Certifications entry for full lifecycle management.');
   };
 
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+
+  // Override success state to show inline badge for longer
+  const handleSaveInternal = async () => {
+    if (!canEdit) {
+      return;
+    }
+
+    const nextDisplayName = form.displayName.trim();
+    if (!nextDisplayName) {
+      setError('Company name cannot be empty.');
+      return;
+    }
+
+    if (descriptionLength > 2000) {
+      setError('Description must be 2000 characters or fewer.');
+      return;
+    }
+
+    const websiteUrl = toOptionalText(form.websiteUrl);
+    if (websiteUrl && !isUrlLike(websiteUrl)) {
+      setError('Website URL must start with http:// or https:// and be a valid URL.');
+      return;
+    }
+
+    const businessEmail = toOptionalText(form.businessEmail);
+    if (businessEmail && !isEmailLike(businessEmail)) {
+      setError('Business email must be a valid email address.');
+      return;
+    }
+
+    if (form.companySizeBand && !COMPANY_SIZE_BAND_VALUES.has(form.companySizeBand)) {
+      setError('Company size selection is invalid.');
+      return;
+    }
+
+    if (form.capacityBand && !CAPACITY_BAND_VALUES.has(form.capacityBand)) {
+      setError('Capacity selection is invalid.');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    setShowSaveSuccess(false);
+
+    try {
+      const response = await updateTenantProfile(draftPayload);
+
+      setProfile(response.profile);
+      setForm(createFormStateFromProfile(response.profile));
+      onDisplayNameUpdated?.(response.profile.displayName);
+      setSuccess('Company profile updated.');
+      setShowSaveSuccess(true);
+
+      globalThis.setTimeout(() => setSuccess(null), 3000);
+      globalThis.setTimeout(() => setShowSaveSuccess(false), 5000);
+    } catch (err) {
+      if (err instanceof APIError) {
+        setError(err.message);
+      } else {
+        setError('Failed to update company profile. Please try again.');
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm space-y-6">
-        <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
-          <div className="space-y-3 max-w-3xl">
-            <div className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600">
-              Company Profile
-            </div>
-            <h1 className="text-3xl font-bold text-slate-900">Company Profile</h1>
-            <p className="text-base leading-7 text-slate-600">
-              Manage rich B2B company profile details for this workspace. White-label storefront branding remains separate.
-            </p>
+      {/* Page Header */}
+      <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm space-y-4">
+        <div className="space-y-3">
+          <div className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600">
+            Company Profile
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 xl:max-w-sm">
-            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Profile status</div>
-            <div className="mt-2 text-lg font-semibold text-slate-900">{profileCompleteness.label}</div>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              {profileCompleteness.completeChecks}/{profileCompleteness.totalChecks} rich launch-profile checks complete.
-            </p>
-          </div>
+          <h1 className="text-3xl font-bold text-slate-900">Company Profile</h1>
+          <p className="text-base leading-7 text-slate-600 max-w-3xl">
+            Manage the supplier identity used inside TexQtic. Public profile projection remains controlled separately and launched in a future phase.
+          </p>
         </div>
+      </section>
 
-        {error && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            {error}
+      {/* Profile Preview Section */}
+      <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm space-y-6">
+        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-4">Profile Preview</div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12 text-slate-500">
+            <span>Loading company profile...</span>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Logo and Identity */}
+            <div className="flex flex-col items-center gap-6">
+              <div className="h-32 w-32 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center">
+                {resolvedLogoUrl ? (
+                  <img
+                    src={resolvedLogoUrl}
+                    alt="Company logo"
+                    className="h-full w-full object-contain p-2"
+                  />
+                ) : (
+                  <div className="text-slate-400 text-sm text-center px-4">Logo not set</div>
+                )}
+              </div>
+
+              <div className="text-center space-y-2 max-w-2xl">
+                <h2 className="text-2xl font-bold text-slate-900">{resolvedDisplayName}</h2>
+                {(profile?.tagline ?? '').trim() ? (
+                  <p className="text-base italic text-slate-700">{profile?.tagline}</p>
+                ) : (
+                  <p className="text-base text-slate-400 italic">Tagline not set</p>
+                )}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="text-center space-y-2">
+              <div className="text-sm leading-6 text-slate-700 max-w-2xl mx-auto">
+                {(profile?.description ?? '').trim() ? (
+                  <p>{(profile?.description ?? '').substring(0, 250)}{((profile?.description ?? '').length > 250 ? '...' : '')}</p>
+                ) : (
+                  <p className="text-slate-400">No business description provided yet</p>
+                )}
+              </div>
+            </div>
+
+            {/* Location and Web */}
+            <div className="flex flex-col items-center gap-4">
+              {(profile?.city ?? '').trim() || (profile?.state ?? '').trim() ? (
+                <div className="text-sm text-slate-600">
+                  📍 {[profile?.city?.trim(), profile?.state?.trim()].filter(Boolean).join(', ')}
+                </div>
+              ) : (
+                <div className="text-sm text-slate-400">Location not set</div>
+              )}
+
+              {(profile?.websiteUrl ?? '').trim() ? (
+                <div className="text-sm">
+                  <a
+                    href={profile?.websiteUrl ?? '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    🔗 {profile?.websiteUrl}
+                  </a>
+                </div>
+              ) : (
+                <div className="text-sm text-slate-400">Website not set</div>
+              )}
+            </div>
+
+            {/* Badges and Summary */}
+            <div className="flex flex-wrap gap-3 justify-center pt-4 border-t border-slate-200">
+              {profile?.companySizeBand && (
+                <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                  Size: {getLabelForCompanySizeBand(profile.companySizeBand)}
+                </div>
+              )}
+              {profile?.capacityBand && (
+                <div className="inline-flex items-center gap-2 rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+                  Capacity: {getLabelForCapacityBand(profile.capacityBand)}
+                </div>
+              )}
+              {profile?.gstVerified && (
+                <div className="inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                  ✓ GST Verified
+                </div>
+              )}
+              {profile?.publicationPosture === 'B2B_PUBLIC' && (
+                <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  Public Ready
+                </div>
+              )}
+            </div>
+
+            {/* Certification Summary */}
+            {profile && (
+              <div className="text-xs text-center text-slate-600 pt-2 border-t border-slate-200">
+                Profile contains private business details and compliance identifiers. Public rich profile projection is managed separately.
+              </div>
+            )}
           </div>
         )}
+      </section>
 
-        {success && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            {success}
+      {/* Manage Details Section - Only for canEdit users */}
+      {canEdit && (
+        <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm space-y-6">
+          <div className="flex flex-col gap-4">
+            <div className="space-y-2">
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Manage Details</div>
+              <p className="text-sm text-slate-600">Edit company profile information. Changes are saved directly to the workspace profile.</p>
+            </div>
+
+            {/* Profile Status */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Profile Status</div>
+              <div className="mt-2 text-lg font-semibold text-slate-900">{profileCompleteness.label}</div>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                {profileCompleteness.completeChecks}/{profileCompleteness.totalChecks} rich launch-profile checks complete.
+              </p>
+            </div>
           </div>
-        )}
 
-        <div className="grid gap-4 md:grid-cols-2">
+          {/* Error and Success Messages */}
+          {error && (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 flex items-center justify-between">
+              <span>{success}</span>
+              {showSaveSuccess && <span className="text-xs font-semibold">✓ All changes saved</span>}
+            </div>
+          )}
+
+          {/* Form Sections */}
+          <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3">
             <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Company Name</div>
             <input
@@ -729,18 +855,21 @@ export const B2BProfileSettings: React.FC<B2BProfileSettingsProps> = ({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={handleSave}
+            onClick={handleSaveInternal}
             disabled={loading || saving || uploadingLogo || !canEdit || !hasUnsavedChanges}
             className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+            title={!hasUnsavedChanges ? "No changes to save" : ""}
           >
             {saving ? 'Saving...' : 'Save Company Profile'}
           </button>
-          {!canEdit && !loading && (
-            <span className="text-xs text-slate-500">OWNER or ADMIN role is required to edit company profile. You can still review all rich profile details in read-only mode.</span>
+          {!hasUnsavedChanges && !saving && (
+            <span className="text-xs text-slate-500">No changes to save</span>
           )}
         </div>
       </section>
+      )}
 
+      {/* Certification Widget */}
       <CertificationDocumentsWidget
         canEdit={canEdit}
         onManageCertifications={handleManageCertifications}
