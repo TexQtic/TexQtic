@@ -1,11 +1,11 @@
-# FTR-SL-016B2B1 - QA B2B Session Recovery + Save/Readback Verify
+# FTR-SL-016B2B1 - QA B2B Save/Readback Blocker Record
 
 ## 1. Unit Identity
 
 - Unit ID: FTR-SL-016B2B1-B2B-COMPANY-PROFILE-RICH-FIELDS-UI-SAVE-READBACK-VERIFY-01
 - Date: 2026-06-14
-- Mode: governance-only session-lane recovery and verification closeout
-- Final enum: FTR_SL_016B2B1_BLOCKED_QA_B2B_SESSION_REQUIRED
+- Mode: governance-only runtime blocker closeout
+- Final enum: FTR_SL_016B2B1_BLOCKED_API_PERSISTENCE_FAILURE
 
 ## 2. Repo Preflight
 
@@ -72,7 +72,7 @@
   - direct `https://app.texqtic.com/qa-b2b` probe returned `Page Not Found`
 - Conclusion:
   - QA B2B is documented and auth-state-backed
-  - current blocker is session recovery, not tenant absence
+  - auth/session gate is now valid; the remaining blocker is backend/API write failure, not tenant absence
 
 ## 4. Deployment / Active Runtime Basis
 
@@ -88,7 +88,7 @@
 ## 5. Owner/Admin UI Save-Readback Verification
 
 - Target tenant/session: QA B2B OWNER/ADMIN
-- Session recovery result: BLOCKED
+- Session recovery result: PASS
 
 ### 5.1 What Was Required
 
@@ -100,27 +100,29 @@
 
 ### 5.2 What Actually Happened
 
-- No recoverable QA B2B owner/admin browser lane was available in the shared IDE browser during this continuation
-- No safe way was available to inject or replay `.auth/qa-b2b.json` into the shared browser with the current workspace tooling without exposing secrets
-- Therefore the following were not executed in this unit:
-  - Company Profile open in QA B2B owner/admin lane
-  - safe QA value entry
-  - UI save
-  - authenticated PUT proof
-  - authenticated GET/readback persistence proof
+- QA B2B Company Profile runtime verification was attempted in the live QA B2B tenant session
+- Session remained valid: realm `TENANT`
+- tenant token present
+- role `OWNER`
+- Protected read remained healthy: `GET /api/tenant/profile = 200`
+- `canEdit = true`
+- UI save returned failure state: `Service temporarily unavailable`
+- Authenticated protected write probe returned `500 INTERNAL_ERROR`
+- Values did not persist after attempted save
+- Hard reload kept the session valid and readback continued to return `200`
 
 ### 5.3 Status Fields
 
-- Company Profile opened: NO
-- Rich sections rendered: carry-forward only from FTR-SL-016B2B prior runtime evidence
-- Safe QA values used: NOT EXECUTED
-- Save result: NOT EXECUTED
-- PUT result: NOT EXECUTED
+- Company Profile opened: YES
+- Rich sections rendered: YES
+- Safe QA values used: YES
+- Save result: FAILURE
+- PUT result: `500 INTERNAL_ERROR`
 - UI success state: NOT OBSERVED
-- GET/readback result: NOT EXECUTED
-- Persisted fields verified: NONE IN THIS CONTINUATION
+- GET/readback result: `200`
+- Persisted fields verified: NONE; edited values reverted to prior saved state
 - Certification widget still rendered: carry-forward only from prior FTR-SL-016B2B runtime evidence
-- Console/runtime errors: none captured because save/readback path was not entered
+- Console/runtime errors: `Service temporarily unavailable` and `Failed to update tenant profile`
 
 ## 6. Lower-Role Authorization Recap
 
@@ -195,19 +197,19 @@ Commands/results:
 
 ## 11. Hub-Sync Checklist
 
-1. Did this unit change launch readiness truth? Yes. It confirms the remaining B2B1 residual is a session-recovery blocker, not missing QA fixture data.
+1. Did this unit change launch readiness truth? Yes. It confirms the remaining B2B1 residual is a backend/API write-path blocker, not missing QA fixture data or auth/session instability.
 
 1. Which family or requirement changed? FTR-SL-016B2B1 save/readback verification closure status.
 
 1. Which hub documents need to be updated? `governance/launch-readiness/FUTURE-TODO-REGISTER.md` and this B2B1 blocker artifact.
 
-1. What evidence supports the update? Repo preflight, QA seed evidence docs, `.auth/qa-b2b.json` presence, shared browser sign-in/mismatch evidence, and the public non-exposure recheck.
+1. What evidence supports the update? Repo preflight, QA seed evidence docs, `.auth/qa-b2b.json` presence, live QA B2B runtime session evidence, authenticated `GET /api/tenant/profile = 200`, authenticated `PUT /api/tenant/profile = 500 INTERNAL_ERROR`, and the public non-exposure recheck.
 
 1. Are CRM/CAE details at risk of duplication? No.
 
-1. Are any planned items at risk of incorrect MVP promotion? Yes. Rich Company Profile UI must not be promoted from runtime-partial to fully verified until QA B2B owner/admin save/readback executes.
+1. Are any planned items at risk of incorrect MVP promotion? Yes. Rich Company Profile UI must not be promoted from runtime-partial to fully verified until the PUT 500 blocker is fixed and owner/admin save/readback is rerun successfully.
 
-1. Are any stale hub rows superseded? Only the current residual interpretation is sharpened: previous session mismatches must not be read as QA B2B absence.
+1. Are any stale hub rows superseded? Yes. The prior session-instability interpretation is superseded by the new API persistence-failure classification.
 
 1. If no hub update is needed, record reason. Hub update was needed and performed.
 
@@ -215,8 +217,8 @@ Commands/results:
 
 ## 12. Residuals / Blockers
 
-- R1: QA B2B OWNER/ADMIN shared browser lane still required to execute save/readback proof.
-- R2: `.auth/qa-b2b.json` exists, but no usable local Playwright runner was available to replay auth-state into the shared IDE browser in this workspace.
+- R1: QA B2B OWNER/ADMIN lane is present and healthy for read access, but save/readback is blocked by backend/API persistence failure.
+- R2: `.auth/qa-b2b.json` exists; session/auth is not the blocker for this unit.
 - R3: Prior wrong-lane observations (QA WL / signed-out admin page) must not be treated as proof that QA B2B is missing.
 
 ## 13. Adjacent Findings
@@ -233,13 +235,19 @@ Commands/results:
 - Priority: P2
 - Owner/status: local QA tooling / OPEN
 
+- ID: AF-016B2B1-API-PUT-500
+- Finding: QA B2B OWNER can read tenant profile with `canEdit=true`, but UI save/authenticated PUT `/api/tenant/profile` returns `500 INTERNAL_ERROR` with message `Failed to update tenant profile`.
+- Disposition: backend/API write-path blocker; next source-fix unit required.
+- Priority: P1
+- Owner/status: runtime persistence failure / OPEN
+
 ## 14. Required Session Handoff
 
 Exact handoff required for the next continuation:
 
-Paresh, please switch/open the IDE browser to QA B2B OWNER/ADMIN at app.texqtic.com for Company Profile rich fields UI save/readback verification. Do not paste credentials, tokens, cookies, or secrets here.
+Paresh, please open the next bounded source-fix unit for the PUT /api/tenant/profile 500 persistence failure. Do not treat B2B1 as verified until the write-path defect is fixed and save/readback is rerun.
 
 ## 15. Commit / Push Proof
 
-- Governance commit target message: `[TEXQTIC] governance: close rich company profile UI save verification`
+- Governance commit target message: `[TEXQTIC] governance: record B2B rich profile save-readback blocker`
 - Actual commit hash / push proof: recorded in the same-unit final report after the atomic governance commit and push complete
