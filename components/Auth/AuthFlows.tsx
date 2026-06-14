@@ -97,8 +97,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
     } catch (err: any) {
       if (err.status === 429 || err.code === 'RATE_LIMIT_EXCEEDED') {
         setError('Too many attempts. Wait 10 minutes.');
+      } else if (err.status === 401 && err.code === 'AUTH_UNVERIFIED') {
+        setError('Email verification required. Verify your email before signing in.');
       } else if (err.status === 401) {
         setError('Invalid credentials.');
+      } else if (err.status === 403 && err.code === 'AUTH_FORBIDDEN') {
+        setError('Access denied for this organisation. Contact your administrator.');
       } else {
         setError(`Login failed: ${err.message || 'Unknown error.'}`);
       }
