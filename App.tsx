@@ -8640,15 +8640,15 @@ const App: React.FC = () => {
     <div className="relative font-sans">
       {editingCatalogItem && !isVerificationBlockedTenantWorkspace && canMutateCatalog && (
         <div className="fixed inset-0 bg-slate-950/45 z-[195] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl border border-slate-200 space-y-6">
-            <div>
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 max-h-[90dvh] flex flex-col">
+            <div className="p-8 pb-4 flex-shrink-0">
               <h2 className="text-xl font-bold text-slate-900">Edit Catalog Item</h2>
               <p className="text-sm text-slate-500 mt-2">
                 Update the existing tenant catalog item without widening into search, storefront, or control-plane work.
               </p>
             </div>
 
-            <form className="space-y-5" onSubmit={event => {
+            <form className="overflow-y-auto flex-1 px-8 pb-8 space-y-5 overscroll-contain" onSubmit={event => {
               event.preventDefault();
               void handleUpdateItem();
             }}>
