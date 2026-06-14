@@ -1,12 +1,18 @@
 # FTR-SL-016B2C — Company Profile Completeness/Readiness Checklist
 
+**⚠️ CORRECTION NOTE (2026-06-14):**
+
+This unit's readiness conclusion has been **superseded by FTR-SL-016B2C1** after Paresh manual QA discovered a **product design UX gap** (always-edit form, no separate view mode). While this B2C checklist verified technical functionality correctly, it did NOT assess product/UX design readiness. The B2C1 corrective unit downgrades readiness and requires explicit design decision before launch confirmation. See `FTR-SL-016B2C1-COMPANY-PROFILE-UX-RUNTIME-DESIGN-CORRECTION-01.md`.
+
+---
+
 ## 1. Unit Identity
 
 - Unit ID: `FTR-SL-016B2C-COMPANY-PROFILE-COMPLETENESS-READINESS-CHECKLIST-01`
 - Type: Governance-only readiness checklist
 - Date: 2026-06-14
 - Mode: No source changes, no database changes, no schema changes
-- Final enum: `FTR_SL_016B2C_COMPANY_PROFILE_READY_FOR_FTR_SL_017_WITH_FOLLOWUPS`
+- Final enum: `FTR_SL_016B2C_COMPANY_PROFILE_READY_FOR_FTR_SL_017_WITH_FOLLOWUPS` (SUPERSEDED)
 
 ## 2. Repo Preflight
 
