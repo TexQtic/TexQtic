@@ -36,6 +36,7 @@ export interface CatalogItem {
   category?: string;
   moq?: number;
   catalogVisibilityPolicyMode?: CatalogVisibilityPolicyMode | null;
+  publicationPosture?: 'B2B_PUBLIC' | 'PRIVATE_OR_AUTH_ONLY' | 'BOTH' | null;
 }
 
 export interface CatalogResponse {

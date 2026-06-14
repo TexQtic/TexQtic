@@ -194,6 +194,18 @@ function resolveItemCatalogVisibilityForRoute(
   return policy;
 }
 
+function mapCatalogVisibilityModeToPublicationPosture(
+  mode: unknown,
+): 'B2B_PUBLIC' | 'PRIVATE_OR_AUTH_ONLY' | undefined {
+  if (mode === 'PUBLIC') {
+    return 'B2B_PUBLIC';
+  }
+  if (mode === 'APPROVED_BUYER_ONLY' || mode === 'HIDDEN') {
+    return 'PRIVATE_OR_AUTH_ONLY';
+  }
+  return undefined;
+}
+
 type ConsentScaffoldValidationFailureCode =
   | 'CONSENT_REQUIRED'
   | 'CONSENT_METADATA_MISSING'
@@ -2833,7 +2845,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       // Gate B.2: RLS-enforced query (no manual tenantId filter)
       // Tenant isolation enforced by: catalog_items tenant_id = app.current_org_id()
       // Explicit select: tenant-scoped catalog fields are returned for supplier UI readback.
-      // Only internal-only fields (publicationPosture, priceDisclosurePolicyMode, tenantId) remain excluded.
+      // Internal-only fields priceDisclosurePolicyMode and tenantId remain excluded.
       const items = await withDbContext(prisma, request.dbContext, async tx => {
         return await tx.catalogItem.findMany({
           where: {
@@ -2869,6 +2881,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             catalogStage: true,
             stageAttributes: true,
             catalogVisibilityPolicyMode: true,
+            publicationPosture: true,
           },
           orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
           take: limit + 1,
@@ -3054,6 +3067,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         catalogStage, stageAttributes, catalogVisibilityPolicyMode,
       } = parseResult.data;
 
+      const derivedPublicationPosture = mapCatalogVisibilityModeToPublicationPosture(catalogVisibilityPolicyMode);
+
       // Validate stage-specific stageAttributes if present.
       let validatedStageAttributes: Record<string, unknown> | null = null;
       if (catalogStage && stageAttributes) {
@@ -3095,6 +3110,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             stageAttributes: validatedStageAttributes !== null ? (validatedStageAttributes as unknown as Prisma.InputJsonValue) : null,
             // Catalog visibility policy
             catalogVisibilityPolicyMode: catalogVisibilityPolicyMode ?? null,
+            ...(derivedPublicationPosture !== undefined ? { publicationPosture: derivedPublicationPosture } : {}),
           },
         });
 
@@ -3213,27 +3229,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       const data = parseResult.data;
 
-      // Validate: HIDDEN visibility policy contradicts B2B_PUBLIC or BOTH publication posture.
-      if (data.catalogVisibilityPolicyMode === 'HIDDEN') {
-        const existingPosture = await withDbContext(prisma, dbContext, async tx => {
-          return tx.catalogItem.findFirst({
-            where: { id, tenantId: dbContext.orgId },
-            select: { publicationPosture: true },
-          });
-        });
-        if (
-          existingPosture &&
-          (existingPosture.publicationPosture === 'B2B_PUBLIC' ||
-            existingPosture.publicationPosture === 'BOTH')
-        ) {
-          return sendError(
-            reply,
-            'VALIDATION_ERROR',
-            'HIDDEN policy cannot be combined with B2B_PUBLIC or BOTH publication posture',
-            422,
-          );
-        }
-      }
+      const derivedPublicationPosture = mapCatalogVisibilityModeToPublicationPosture(data.catalogVisibilityPolicyMode);
 
       const updated = await withDbContext(prisma, dbContext, async tx => {
         // Org-scoped lookup: confirms item belongs to this tenant before update.
@@ -3275,6 +3271,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
               : {}),
             // Catalog visibility policy
             ...(data.catalogVisibilityPolicyMode !== undefined ? { catalogVisibilityPolicyMode: data.catalogVisibilityPolicyMode } : {}),
+            ...(derivedPublicationPosture !== undefined ? { publicationPosture: derivedPublicationPosture } : {}),
           },
         });
 
