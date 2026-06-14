@@ -191,3 +191,10 @@ Important repo truth preserved:
 ## 15. Next-Step Request
 
 Open a dedicated auth/session bug unit using this artifact as the bounded evidence base. B2B1 should stay paused until the same IDE-browser QA B2B session yields `GET /api/tenant/profile` = `200`.
+
+## 16. Supersession Addendum (B2B1A1)
+
+- Date: 2026-06-14
+- Follow-up unit: `FTR-SL-016B2B1A1-QA-B2B-UI-SESSION-BACKEND-AUTH-MISMATCH-INVESTIGATION-FIX-01`
+- Update: B2B1A1 reproduced that protected endpoints return `401` when called without `Authorization` header, but return `200` in the same live QA B2B session when called with the tenant Bearer token.
+- Correction scope: The B2B1A mismatch signal is superseded for this specific probe path; no source-level auth/session defect was proven in B2B1A1.
