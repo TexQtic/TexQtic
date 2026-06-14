@@ -250,4 +250,19 @@ Paresh, please open the next bounded source-fix unit for the PUT /api/tenant/pro
 ## 15. Commit / Push Proof
 
 - Governance commit target message: `[TEXQTIC] governance: record B2B rich profile save-readback blocker`
-- Actual commit hash / push proof: recorded in the same-unit final report after the atomic governance commit and push complete
+- Actual commit hash: `70178c695a67536d95122e299f571ff15ccb3534`
+- Push status: `Everything up-to-date` on `origin/main`
+- Final `git status --short`: clean
+
+## 16. Supersession Note (B2B1B)
+
+- Superseded by: `FTR-SL-016B2B1B-TENANT-PROFILE-PUT-500-PERSISTENCE-FIX-01`
+- B2B1B source fix removed the failing legacy displayName mirror write in `server/src/routes/tenant.ts` and preserved canonical organization + profile detail behavior.
+- Post-push deployed runtime verification in QA B2B showed:
+  - UI save with payload including `displayName` now returns `200`
+  - authenticated `PUT /api/tenant/profile` with `displayName` now returns `200`
+  - protected `GET /api/tenant/profile` readback persists values
+  - hard reload preserves persisted values
+- Residual status:
+  - original B2B1 backend write-path blocker is fixed by B2B1B
+  - adjacent public-surface finding remains open for follow-up governance: public supplier payload still exposes a public logo storage path URL
