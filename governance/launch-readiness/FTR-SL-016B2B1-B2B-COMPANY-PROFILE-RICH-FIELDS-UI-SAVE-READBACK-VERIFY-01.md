@@ -195,33 +195,23 @@ Commands/results:
 
 ## 11. Hub-Sync Checklist
 
-1. Did this unit change launch readiness truth?
-- Yes. It confirms the remaining B2B1 residual is a session-recovery blocker, not missing QA fixture data.
+1. Did this unit change launch readiness truth? Yes. It confirms the remaining B2B1 residual is a session-recovery blocker, not missing QA fixture data.
 
-2. Which family or requirement changed?
-- FTR-SL-016B2B1 save/readback verification closure status.
+1. Which family or requirement changed? FTR-SL-016B2B1 save/readback verification closure status.
 
-3. Which hub documents need to be updated?
-- `governance/launch-readiness/FUTURE-TODO-REGISTER.md`
-- this B2B1 blocker artifact
+1. Which hub documents need to be updated? `governance/launch-readiness/FUTURE-TODO-REGISTER.md` and this B2B1 blocker artifact.
 
-4. What evidence supports the update?
-- repo preflight, QA seed evidence docs, `.auth/qa-b2b.json` presence, shared browser sign-in/mismatch evidence, public non-exposure recheck.
+1. What evidence supports the update? Repo preflight, QA seed evidence docs, `.auth/qa-b2b.json` presence, shared browser sign-in/mismatch evidence, and the public non-exposure recheck.
 
-5. Are CRM/CAE details at risk of duplication?
-- No.
+1. Are CRM/CAE details at risk of duplication? No.
 
-6. Are any planned items at risk of incorrect MVP promotion?
-- Yes. Rich Company Profile UI must not be promoted from runtime-partial to fully verified until QA B2B owner/admin save/readback executes.
+1. Are any planned items at risk of incorrect MVP promotion? Yes. Rich Company Profile UI must not be promoted from runtime-partial to fully verified until QA B2B owner/admin save/readback executes.
 
-7. Are any stale hub rows superseded?
-- Only the current residual interpretation is sharpened: previous session mismatches must not be read as QA B2B absence.
+1. Are any stale hub rows superseded? Only the current residual interpretation is sharpened: previous session mismatches must not be read as QA B2B absence.
 
-8. If no hub update is needed, record reason.
-- Hub update was needed and performed.
+1. If no hub update is needed, record reason. Hub update was needed and performed.
 
-9. Were hub files allowlisted?
-- Yes.
+1. Were hub files allowlisted? Yes.
 
 ## 12. Residuals / Blockers
 
