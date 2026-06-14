@@ -277,7 +277,12 @@ export async function listPublicB2BSuppliers(
         tenantId: { in: eligibleOrgIds },
         active: true,
         publicationPosture: { in: [...PUBLICATION_POSTURE_PUBLIC] },
-        NOT: { catalogVisibilityPolicyMode: 'HIDDEN' },
+        // Visibility fallback: legacy NULL mode must remain publicly discoverable
+        // when publicationPosture is public-compatible; explicit PUBLIC also allowed.
+        OR: [
+          { catalogVisibilityPolicyMode: null },
+          { catalogVisibilityPolicyMode: 'PUBLIC' },
+        ],
       },
       select: {
         tenantId: true,
@@ -486,7 +491,10 @@ export async function getPublicB2BSupplierBySlug(
         tenantId: org.id,
         active: true,
         publicationPosture: { in: [...PUBLICATION_POSTURE_PUBLIC] },
-        NOT: { catalogVisibilityPolicyMode: 'HIDDEN' },
+        OR: [
+          { catalogVisibilityPolicyMode: null },
+          { catalogVisibilityPolicyMode: 'PUBLIC' },
+        ],
       },
       select: {
         tenantId: true,

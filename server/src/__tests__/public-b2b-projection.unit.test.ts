@@ -325,7 +325,10 @@ describe('listPublicB2BSuppliers', () => {
           tenantId: { in: ['org-uuid-001'] },
           active: true,
           publicationPosture: { in: ['B2B_PUBLIC', 'BOTH'] },
-          NOT: { catalogVisibilityPolicyMode: 'HIDDEN' },
+          OR: [
+            { catalogVisibilityPolicyMode: null },
+            { catalogVisibilityPolicyMode: 'PUBLIC' },
+          ],
         }),
         select: expect.not.objectContaining({ price: true }),
       }),
