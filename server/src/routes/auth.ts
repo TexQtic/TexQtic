@@ -1239,9 +1239,13 @@ const authRoutes: FastifyPluginAsync = async fastify => {
 
       // Update password and mark token as used (in transaction)
       await prisma.$transaction(async tx => {
+        // Also mark emailVerified=true: completing a password reset proves the user
+        // controls the email inbox, so verification is implicitly satisfied.
+        // Without this, users whose emailVerified flag is false cannot log in after
+        // a successful reset — they receive AUTH_UNVERIFIED and appear locked out.
         await tx.user.update({
           where: { id: matchedToken.userId },
-          data: { passwordHash },
+          data: { passwordHash, emailVerified: true, emailVerifiedAt: new Date() },
         });
 
         await tx.passwordResetToken.update({

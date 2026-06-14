@@ -380,7 +380,7 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
         throw new APIError(
           401,
           errorData.error?.message || 'Unauthorized.',
-          'UNAUTHORIZED'
+          errorData.error?.code || 'UNAUTHORIZED'
         );
       }
 
