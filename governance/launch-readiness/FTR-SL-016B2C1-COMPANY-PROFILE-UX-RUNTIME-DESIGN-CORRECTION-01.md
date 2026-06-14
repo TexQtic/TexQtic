@@ -389,7 +389,51 @@ Do not start FTR-SL-017 until:
 
 ---
 
-**Unit Status:** AWAITING PARESH DESIGN DECISION
+**Unit Status:** PARESH DESIGN DECISION RECEIVED — OPTION 3 SELECTED
 
-**Completion Gate:** This artifact + FUTURE-TODO-REGISTER update + Paresh option selection + commit/push
+**Paresh's Decision (B2C1 → B2C3):** Rejected Options 1 & 2, selected **Option 3 (Split Preview + Manage Details)** as launch-grade solution.
+
+---
+
+## 19. B2C3 Implementation Status
+
+**Reference:** [FTR-SL-016B2C3-COMPANY-PROFILE-SPLIT-PREVIEW-MANAGE-DETAILS-UX-01.md](FTR-SL-016B2C3-COMPANY-PROFILE-SPLIT-PREVIEW-MANAGE-DETAILS-UX-01.md)
+
+**Implementation Completed:** ✅ YES
+
+**Details:**
+- Refactored B2BProfileSettings.tsx to split layout (Profile Preview + Manage Details sections)
+- Profile Preview: Polished company presentation (read-only, centered logo, tags, badges)
+- Manage Details: Edit workspace (OWNER/ADMIN only, form grid, save button)
+- TypeScript compilation: ✅ PASS (0 errors)
+- ESLint: ✅ PASS (no errors in target component)
+- Source commit: `e9041b7952a3cc703f16bb8aa4e79abb90bfa349` ([TEXQTIC] frontend: add split company profile workspace)
+- Status: Implementation complete, runtime verification pending
+
+**B2C Readiness:** ⏳ PENDING runtime verification (Shraddha Industries workspace QA required)
+
+**FTR-SL-017 Unblocking:** 🔴 BLOCKED until B2C3 runtime QA passes
+
+---
+
+**Completion Gate:** This artifact + FUTURE-TODO-REGISTER update + B2C3 artifact + commit/push
+
+---
+
+## 20. Option 3 Runtime Closure (B2C3A)
+
+**Runtime closure unit:** `FTR-SL-016B2C3A-SPLIT-COMPANY-PROFILE-RUNTIME-VERIFY-AND-CLOSE-01`
+
+**Outcome:**
+- Deployed split UX verified live in Shraddha Industries workspace
+- Profile Preview + Manage Details separation verified
+- Save/readback verified (`PUT /api/tenant/profile = 200`)
+- Hard refresh persistence verified
+- Public non-exposure smoke (`/api/public/b2b/suppliers`, `/b2b`, `/products`) clean
+
+**B2C readiness:** RESTORED
+
+**FTR-SL-017 gate:** Can start next (not started in this unit)
+
+**Closure enum:** `FTR_SL_016B2C3A_SPLIT_PROFILE_UX_RUNTIME_VERIFIED_B2C_READY`
 
