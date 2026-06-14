@@ -130,21 +130,23 @@
 
 - AF-016B2B1B-PUBLIC-LOGO-STORAGE-PATH
   - finding: public supplier payload includes a public storage URL path for supplier logo
-  - impact on this unit: does not reintroduce `PUT /api/tenant/profile` 500; separate public-projection/privacy governance concern
-  - disposition: OPEN as adjacent follow-up; not fixed in this bounded unit
+  - B2B1C disposition: non-blocking / separate follow-up
+  - classification: expected public media URL behavior in current projection model (logo intentionally public)
+  - no leakage observed for signed URLs, private certificate/document URLs, private rich-profile values, or QA verification values
+  - follow-up registration: `QA-MEDIA-003 / FTR-SL-015D` (Public media URL abstraction/logo storage-path hardening), priority `P3`, status `QUEUED`, non-blocking
 
 ## 17. B2B1 Relationship / Supersession
 
 - B2B1 blocker root cause fixed in B2B1B:
   - removed failing legacy mirror write in displayName path
-  - deployed runtime now confirms displayName-including saves return `200` with readback persistence
-- B2B1 verification status for launch closure:
-  - save/readback path is verified for the original 500 blocker
-  - keep broader closure conservative pending explicit disposition of the adjacent public storage-path finding
+  - deployed runtime confirms displayName-including saves return `200` with readback persistence
+- Closure outcome after B2B1C:
+  - B2B1 is now verified for Company Profile save/readback scope
+  - adjacent logo URL finding does not block B2B1 closure
 
 ## 18. Governance Commit / Push Proof
 
 - Governance commit message target: `[TEXQTIC] governance: record tenant profile PUT persistence fix`
-- Governance commit hash: recorded after governance commit in this unit
-- Push status: recorded after governance push in this unit
-- Final `git status --short`: recorded after governance push in this unit
+- Governance commit hash: `f4a3352c264d6ea25d5c4c3945251277892234a0`
+- Push status: `origin/main` aligned at `f4a3352c264d6ea25d5c4c3945251277892234a0`
+- Final `git status --short`: clean at B2B1B closeout point
