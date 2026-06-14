@@ -109,7 +109,7 @@ Decision rationale:
 
 ## 12. Governance Commit / Push Proof
 
-- Governance commit message target: `[TEXQTIC] governance: close B2B profile save-readback verification`
-- Governance commit hash: recorded after commit in this unit
-- Push status: recorded after push in this unit
-- Final `git status --short`: recorded after push in this unit
+- Governance commit message: `[TEXQTIC] governance: close B2B profile save-readback verification`
+- Governance commit hash: `d5c972157da8f8d77a307f4ac9bf57be0ca4b2b8`
+- Push status: `origin/main` aligned (no commits ahead of remote after push)
+- Final `git status --short`: clean
