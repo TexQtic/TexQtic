@@ -132,6 +132,7 @@ describe('listPublicB2BSuppliers', () => {
       moq: 500,
       imageUrl: 'https://cdn.example.com/item.jpg',
       publicationPosture: 'B2B_PUBLIC',
+      catalogVisibilityPolicyMode: 'PUBLIC',
     };
 
     const prisma = makeMockPrisma({
@@ -324,6 +325,7 @@ describe('listPublicB2BSuppliers', () => {
           tenantId: { in: ['org-uuid-001'] },
           active: true,
           publicationPosture: { in: ['B2B_PUBLIC', 'BOTH'] },
+          NOT: { catalogVisibilityPolicyMode: 'HIDDEN' },
         }),
         select: expect.not.objectContaining({ price: true }),
       }),

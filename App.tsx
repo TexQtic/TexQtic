@@ -154,6 +154,7 @@ import {
   CATALOG_STAGE_VALUES,
   SERVICE_TYPE_VALUES,
   type CatalogStage,
+  type CatalogVisibilityPolicyMode,
   requestRfqAssist,
   type RfqAssistSuggestions,
   // TECS-B2B-BUYER-CATALOG-PDP-001 P-2: PDP service call
@@ -2658,6 +2659,7 @@ const App: React.FC = () => {
     // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
     catalogStage: '',
     stageAttributes: {} as Record<string, string>,
+    catalogVisibilityPolicyMode: 'PUBLIC' as CatalogVisibilityPolicyMode,
   });
   const [addItemLoading, setAddItemLoading] = useState(false);
   const [addItemUploadLoading, setAddItemUploadLoading] = useState(false);
@@ -2671,6 +2673,7 @@ const App: React.FC = () => {
     // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
     catalogStage: '',
     stageAttributes: {} as Record<string, string>,
+    catalogVisibilityPolicyMode: 'PUBLIC' as CatalogVisibilityPolicyMode,
   });
   const [editItemLoading, setEditItemLoading] = useState(false);
   const [editItemUploadLoading, setEditItemUploadLoading] = useState(false);
@@ -2874,6 +2877,16 @@ const App: React.FC = () => {
   }, [isVerificationBlockedTenantWorkspace, currentTenantId]);
   const verificationBlockedActionMessage = currentOnboardingStatusContinuity?.detail
     ?? 'Business verification approval is required before this action is available.';
+  const canMutateCatalog = tenantAuthenticatedRole === 'OWNER' || tenantAuthenticatedRole === 'ADMIN';
+  const catalogMutationForbiddenMessage = 'Only OWNER or ADMIN can manage catalog items.';
+  const catalogVisibilityPolicyOptions: Array<{
+    value: CatalogVisibilityPolicyMode;
+    label: string;
+  }> = [
+    { value: 'PUBLIC', label: 'Visible to all buyers' },
+    { value: 'APPROVED_BUYER_ONLY', label: 'Approved buyers only' },
+    { value: 'HIDDEN', label: 'Hidden from buyers' },
+  ];
   const tenantDefaultLocalRouteKey = tenantWorkspaceRuntimeHandoff?.defaultLocalRouteKey ?? null;
   const navigateTenantManifestRoute = (
     routeKey: RuntimeLocalRouteKey,
@@ -4866,6 +4879,11 @@ const App: React.FC = () => {
       return;
     }
 
+    if (!canMutateCatalog) {
+      setAddItemError(catalogMutationForbiddenMessage);
+      return;
+    }
+
     setAddItemLoading(true);
     setAddItemError(null);
     try {
@@ -4900,9 +4918,10 @@ const App: React.FC = () => {
         // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
         ...(addItemFormData.catalogStage ? { catalogStage: addItemFormData.catalogStage as CatalogStage } : {}),
         ...(Object.keys(addItemFormData.stageAttributes).length > 0 ? { stageAttributes: addItemFormData.stageAttributes as Record<string, unknown> } : {}),
+        catalogVisibilityPolicyMode: addItemFormData.catalogVisibilityPolicyMode,
       });
       setProducts(prev => [result.item, ...prev]);
-      setAddItemFormData({ name: '', price: '', sku: '', imageUrl: '', description: '', moq: '', productCategory: '', fabricType: '', gsm: '', material: '', composition: '', color: '', widthCm: '', construction: '', certifications: '', catalogStage: '', stageAttributes: {} });
+      setAddItemFormData({ name: '', price: '', sku: '', imageUrl: '', description: '', moq: '', productCategory: '', fabricType: '', gsm: '', material: '', composition: '', color: '', widthCm: '', construction: '', certifications: '', catalogStage: '', stageAttributes: {}, catalogVisibilityPolicyMode: 'PUBLIC' });
       setAddItemUploadLoading(false);
       setShowAddItemForm(false);
     } catch (err: any) {
@@ -4919,6 +4938,7 @@ const App: React.FC = () => {
       productCategory: '', fabricType: '', gsm: '', material: '',
       composition: '', color: '', widthCm: '', construction: '', certifications: '',
       catalogStage: '', stageAttributes: {},
+      catalogVisibilityPolicyMode: 'PUBLIC',
     });
     setEditItemUploadLoading(false);
     setEditItemError(null);
@@ -4927,6 +4947,11 @@ const App: React.FC = () => {
   const handleOpenEditItem = (product: CatalogItem) => {
     if (isVerificationBlockedTenantWorkspace) {
       setCatalogError(verificationBlockedActionMessage);
+      return;
+    }
+
+    if (!canMutateCatalog) {
+      setCatalogError(catalogMutationForbiddenMessage);
       return;
     }
 
@@ -4954,6 +4979,7 @@ const App: React.FC = () => {
       // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
       catalogStage: ((product as unknown) as Record<string, unknown>).catalogStage as string || '',
       stageAttributes: (((product as unknown) as Record<string, unknown>).stageAttributes as Record<string, string>) ?? {},
+      catalogVisibilityPolicyMode: (((product as unknown) as Record<string, unknown>).catalogVisibilityPolicyMode as CatalogVisibilityPolicyMode) ?? 'PUBLIC',
     });
     setEditItemError(null);
   };
@@ -4970,6 +4996,11 @@ const App: React.FC = () => {
 
     if (isVerificationBlockedTenantWorkspace) {
       setEditItemError(verificationBlockedActionMessage);
+      return;
+    }
+
+    if (!canMutateCatalog) {
+      setEditItemError(catalogMutationForbiddenMessage);
       return;
     }
 
@@ -5013,6 +5044,7 @@ const App: React.FC = () => {
         // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
         catalogStage: editItemFormData.catalogStage as CatalogStage || null,
         stageAttributes: Object.keys(editItemFormData.stageAttributes).length > 0 ? editItemFormData.stageAttributes as Record<string, unknown> : null,
+        catalogVisibilityPolicyMode: editItemFormData.catalogVisibilityPolicyMode,
       });
 
       setProducts(prev => prev.map(product => (
@@ -5029,6 +5061,11 @@ const App: React.FC = () => {
   const handleDeleteItem = async (product: CatalogItem) => {
     if (isVerificationBlockedTenantWorkspace) {
       setCatalogError(verificationBlockedActionMessage);
+      return;
+    }
+
+    if (!canMutateCatalog) {
+      setCatalogError(catalogMutationForbiddenMessage);
       return;
     }
 
@@ -5055,6 +5092,10 @@ const App: React.FC = () => {
   };
 
   const renderCatalogItemMutationActions = (product: CatalogItem) => {
+    if (!canMutateCatalog) {
+      return null;
+    }
+
     const isDeleting = deleteItemLoadingId === product.id;
 
     return (
@@ -5391,14 +5432,21 @@ const App: React.FC = () => {
                 <p className="text-slate-500 text-sm mt-0.5">Manage your store inventory.</p>
               </div>
               <button
-                onClick={() => setShowAddItemForm(v => !v)}
+                onClick={() => {
+                  if (!canMutateCatalog) {
+                    setCatalogError(catalogMutationForbiddenMessage);
+                    return;
+                  }
+                  setShowAddItemForm(v => !v);
+                }}
+                disabled={!canMutateCatalog}
                 className="bg-slate-900 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-slate-700 transition"
               >
                 + Add Item
               </button>
             </div>
 
-            {showAddItemForm && (
+            {showAddItemForm && canMutateCatalog && (
               <form onSubmit={handleCreateItem} className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 shadow-sm">
                 <h3 className="font-bold text-slate-800">New Catalog Item</h3>
                 {addItemError && (
@@ -5458,6 +5506,12 @@ const App: React.FC = () => {
                   </button>
                 </div>
               </form>
+            )}
+
+            {!canMutateCatalog && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+                {catalogMutationForbiddenMessage}
+              </div>
             )}
 
             {catalogLoading && (
@@ -5570,6 +5624,7 @@ const App: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setShowAddItemForm(v => !v)}
+                  disabled={!canMutateCatalog}
                   className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-indigo-700 transition text-sm"
                 >
                   + Add Item
@@ -5577,12 +5632,18 @@ const App: React.FC = () => {
               </div>
             </div>
 
+            {!canMutateCatalog && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+                {catalogMutationForbiddenMessage}
+              </div>
+            )}
+
             <B2BTenantTaxonomyPanel tenant={currentTenant} />
 
             {/* TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001: Supplier-internal only */}
             <SupplierProfileCompletenessCard />
 
-            {showAddItemForm && (
+            {showAddItemForm && canMutateCatalog && (
               <form onSubmit={handleCreateItem} className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
                 <h3 className="font-bold text-slate-800">New Catalog Item</h3>
                 {addItemError && (
@@ -5623,6 +5684,19 @@ const App: React.FC = () => {
                       className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                       placeholder="Optional SKU"
                     />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="b2b-add-catalog-visibility" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Catalogue Visibility</label>
+                    <select
+                      id="b2b-add-catalog-visibility"
+                      value={addItemFormData.catalogVisibilityPolicyMode}
+                      onChange={e => setAddItemFormData(d => ({ ...d, catalogVisibilityPolicyMode: e.target.value as CatalogVisibilityPolicyMode }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
+                    >
+                      {catalogVisibilityPolicyOptions.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -8564,7 +8638,7 @@ const App: React.FC = () => {
 
   return (
     <div className="relative font-sans">
-      {editingCatalogItem && !isVerificationBlockedTenantWorkspace && (
+      {editingCatalogItem && !isVerificationBlockedTenantWorkspace && canMutateCatalog && (
         <div className="fixed inset-0 bg-slate-950/45 z-[195] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl border border-slate-200 space-y-6">
             <div>
@@ -8674,6 +8748,21 @@ const App: React.FC = () => {
                     onChange={e => setEditItemFormData(data => ({ ...data, moq: e.target.value }))}
                     className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                   />
+                </div>
+                <div className="space-y-1 md:col-span-3">
+                  <label htmlFor="edit-item-catalog-visibility" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                    Catalogue Visibility
+                  </label>
+                  <select
+                    id="edit-item-catalog-visibility"
+                    value={editItemFormData.catalogVisibilityPolicyMode}
+                    onChange={e => setEditItemFormData(data => ({ ...data, catalogVisibilityPolicyMode: e.target.value as CatalogVisibilityPolicyMode }))}
+                    className="mt-2 w-full px-4 py-3 border border-slate-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                  >
+                    {catalogVisibilityPolicyOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

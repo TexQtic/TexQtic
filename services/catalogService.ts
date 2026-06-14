@@ -9,6 +9,13 @@
 import { APIError, getAuthRealm, getToken } from './apiClient';
 import { tenantDelete, tenantGet, tenantPatch, tenantPost } from './tenantApiClient';
 
+export type CatalogVisibilityPolicyMode =
+  | 'PUBLIC'
+  | 'AUTHENTICATED_ONLY'
+  | 'APPROVED_BUYER_ONLY'
+  | 'HIDDEN'
+  | 'RELATIONSHIP_GATED';
+
 export interface CatalogItem {
   id: string;
   tenantId: string;
@@ -28,6 +35,7 @@ export interface CatalogItem {
    */
   category?: string;
   moq?: number;
+  catalogVisibilityPolicyMode?: CatalogVisibilityPolicyMode | null;
 }
 
 export interface CatalogResponse {
@@ -162,6 +170,8 @@ export interface CreateCatalogItemRequest {
   // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
   catalogStage?: CatalogStage;
   stageAttributes?: Record<string, unknown>;
+  // Supplier catalog visibility control (FTR-SL-017A)
+  catalogVisibilityPolicyMode?: CatalogVisibilityPolicyMode | null;
 }
 
 export interface CreateCatalogItemResponse {
@@ -189,6 +199,8 @@ export interface UpdateCatalogItemRequest {
   // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
   catalogStage?: CatalogStage | null;
   stageAttributes?: Record<string, unknown> | null;
+  // Supplier catalog visibility control (FTR-SL-017A)
+  catalogVisibilityPolicyMode?: CatalogVisibilityPolicyMode | null;
 }
 
 export interface UpdateCatalogItemResponse {

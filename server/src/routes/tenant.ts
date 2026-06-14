@@ -2832,8 +2832,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       // Gate B.2: RLS-enforced query (no manual tenantId filter)
       // Tenant isolation enforced by: catalog_items tenant_id = app.current_org_id()
-      // Explicit select: policy-internal fields (catalogVisibilityPolicyMode, publicationPosture,
-      // priceDisclosurePolicyMode, tenantId) are excluded from the response.
+      // Explicit select: tenant-scoped catalog fields are returned for supplier UI readback.
+      // Only internal-only fields (publicationPosture, priceDisclosurePolicyMode, tenantId) remain excluded.
       const items = await withDbContext(prisma, request.dbContext, async tx => {
         return await tx.catalogItem.findMany({
           where: {
@@ -2868,6 +2868,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             certifications: true,
             catalogStage: true,
             stageAttributes: true,
+            catalogVisibilityPolicyMode: true,
           },
           orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
           take: limit + 1,

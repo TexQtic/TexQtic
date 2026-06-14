@@ -126,6 +126,7 @@ type CatalogItemRow = {
   moq: number;
   imageUrl: string | null;
   publicationPosture: string;
+  catalogVisibilityPolicyMode: string | null;
 };
 
 type BrandingRow = {
@@ -276,6 +277,7 @@ export async function listPublicB2BSuppliers(
         tenantId: { in: eligibleOrgIds },
         active: true,
         publicationPosture: { in: [...PUBLICATION_POSTURE_PUBLIC] },
+        NOT: { catalogVisibilityPolicyMode: 'HIDDEN' },
       },
       select: {
         tenantId: true,
@@ -283,6 +285,7 @@ export async function listPublicB2BSuppliers(
         moq: true,
         imageUrl: true,
         publicationPosture: true,
+        catalogVisibilityPolicyMode: true,
         // price: explicitly NOT selected (Gate E prohibition)
       },
       orderBy: [{ tenantId: 'asc' }, { createdAt: 'asc' }],
@@ -483,6 +486,7 @@ export async function getPublicB2BSupplierBySlug(
         tenantId: org.id,
         active: true,
         publicationPosture: { in: [...PUBLICATION_POSTURE_PUBLIC] },
+        NOT: { catalogVisibilityPolicyMode: 'HIDDEN' },
       },
       select: {
         tenantId: true,
@@ -490,6 +494,7 @@ export async function getPublicB2BSupplierBySlug(
         moq: true,
         imageUrl: true,
         publicationPosture: true,
+        catalogVisibilityPolicyMode: true,
         // price: explicitly NOT selected (Gate E prohibition)
       },
       orderBy: [{ createdAt: 'asc' }],
