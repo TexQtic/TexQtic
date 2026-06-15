@@ -754,6 +754,8 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
               count={card.count}
               description={card.description}
               routeKey={card.routeKey}
+              loading={loading}
+              onNavigateRoute={onNavigateRoute}
             />
           ))}
         </div>
@@ -766,6 +768,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
             emptyMessage="No tenants are pending approval."
             routeKey="tenant_registry_pending"
             ctaLabel="Review all pending approvals"
+            onNavigateRoute={onNavigateRoute}
           />
           <QueuePreviewSection
             title="Verification Approved Queue"
@@ -774,6 +777,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
             emptyMessage="No verification-approved tenants are awaiting activation."
             routeKey="tenant_registry_pending"
             ctaLabel="Open pending activation work"
+            onNavigateRoute={onNavigateRoute}
           />
         </div>
       </div>
