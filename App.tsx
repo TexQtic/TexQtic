@@ -6943,6 +6943,7 @@ const App: React.FC = () => {
 
     if (
       controlPlaneLocalRouteSelection.routeKey === 'tenant_detail' ||
+      controlPlaneLocalRouteSelection.routeKey === 'tenant_detail_pending' ||
       controlPlaneLocalRouteSelection.routeKey === 'tenant_detail_invited' ||
       controlPlaneLocalRouteSelection.routeKey === 'tenant_detail_closed'
     ) {
@@ -6950,10 +6951,16 @@ const App: React.FC = () => {
         return null;
       }
 
-      let backRouteKey: 'tenant_registry' | 'tenant_registry_invited' | 'tenant_registry_closed' =
+      let backRouteKey:
+        | 'tenant_registry'
+        | 'tenant_registry_pending'
+        | 'tenant_registry_invited'
+        | 'tenant_registry_closed' =
         'tenant_registry';
 
-      if (controlPlaneLocalRouteSelection.routeKey === 'tenant_detail_invited') {
+      if (controlPlaneLocalRouteSelection.routeKey === 'tenant_detail_pending') {
+        backRouteKey = 'tenant_registry_pending';
+      } else if (controlPlaneLocalRouteSelection.routeKey === 'tenant_detail_invited') {
         backRouteKey = 'tenant_registry_invited';
       } else if (controlPlaneLocalRouteSelection.routeKey === 'tenant_detail_closed') {
         backRouteKey = 'tenant_registry_closed';
@@ -6974,12 +6981,15 @@ const App: React.FC = () => {
 
     if (
       controlPlaneLocalRouteSelection.routeKey === 'tenant_registry' ||
+      controlPlaneLocalRouteSelection.routeKey === 'tenant_registry_pending' ||
       controlPlaneLocalRouteSelection.routeKey === 'tenant_registry_invited' ||
       controlPlaneLocalRouteSelection.routeKey === 'tenant_registry_closed'
     ) {
-      let lifecycleView: 'ACTIVE' | 'INVITED' | 'CLOSED' = 'ACTIVE';
+      let lifecycleView: 'ACTIVE' | 'PENDING_APPROVAL' | 'INVITED' | 'CLOSED' = 'ACTIVE';
 
-      if (controlPlaneLocalRouteSelection.routeKey === 'tenant_registry_invited') {
+      if (controlPlaneLocalRouteSelection.routeKey === 'tenant_registry_pending') {
+        lifecycleView = 'PENDING_APPROVAL';
+      } else if (controlPlaneLocalRouteSelection.routeKey === 'tenant_registry_invited') {
         lifecycleView = 'INVITED';
       } else if (controlPlaneLocalRouteSelection.routeKey === 'tenant_registry_closed') {
         lifecycleView = 'CLOSED';

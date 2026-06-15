@@ -134,9 +134,11 @@ export type RuntimeLocalRouteKey =
   | 'domains'
   | 'dpp_label'
   | 'tenant_registry'
+  | 'tenant_registry_pending'
   | 'tenant_registry_invited'
   | 'tenant_registry_closed'
   | 'tenant_detail'
+  | 'tenant_detail_pending'
   | 'tenant_detail_invited'
   | 'tenant_detail_closed'
   | 'flags'
@@ -318,6 +320,14 @@ const CONTROL_PLANE_ROUTE_GROUP = defineRuntimeRouteGroup('control_plane_operati
     adminView: 'TENANTS',
     requiresSelectedTenant: false,
   }, { defaultForGroup: true }),
+  defineRuntimeRoute('tenant_detail_pending', 'Tenant Detail', 'TENANT_DETAIL', {
+    adminView: 'TENANTS_PENDING_APPROVAL',
+    requiresSelectedTenant: true,
+  }),
+  defineRuntimeRoute('tenant_registry_pending', 'Pending Approval', 'TENANTS_PENDING_APPROVAL', {
+    adminView: 'TENANTS_PENDING_APPROVAL',
+    requiresSelectedTenant: false,
+  }),
   defineRuntimeRoute('tenant_detail_invited', 'Tenant Detail', 'TENANT_DETAIL', {
     adminView: 'TENANTS_INVITED',
     requiresSelectedTenant: true,
@@ -499,6 +509,7 @@ const WL_ADMIN_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
 
 const CONTROL_PLANE_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
   'tenant_registry',
+  'tenant_registry_pending',
   'tenant_registry_invited',
   'tenant_registry_closed',
   'flags',

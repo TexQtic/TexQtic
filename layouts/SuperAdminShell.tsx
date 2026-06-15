@@ -32,6 +32,7 @@ export const formatControlPlaneActorLabel = (identity: ControlPlaneIdentity | nu
 
 export type AdminView =
   | 'TENANTS'
+  | 'TENANTS_PENDING_APPROVAL'
   | 'TENANTS_INVITED'
   | 'TENANTS_CLOSED'
   | 'FLAGS'
@@ -79,6 +80,7 @@ const isActiveNavigationRoute = (navigation: RuntimeShellNavigationSurface | nul
 
 const CONTROL_PLANE_NAV = [
   { routeKey: 'tenant_registry', icon: '🏢', label: 'Active Tenants' },
+  { routeKey: 'tenant_registry_pending', icon: '⏳', label: 'Pending Approval' },
   { routeKey: 'tenant_registry_invited', icon: '📨', label: 'Invited Tenants' },
   { routeKey: 'tenant_registry_closed', icon: '🗃️', label: 'Closed Tenants' },
   { routeKey: 'flags', icon: '🚩', label: 'Feature Flags' },

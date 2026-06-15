@@ -10,7 +10,7 @@ import { EmptyState, ErrorState, TenantRowSkeleton } from '../shared';
 import { APIError } from '../../services/apiClient';
 
 interface TenantRegistryProps {
-  lifecycleView: 'ACTIVE' | 'INVITED' | 'CLOSED';
+  lifecycleView: 'ACTIVE' | 'PENDING_APPROVAL' | 'INVITED' | 'CLOSED';
   onSelectTenant: (tenant: TenantConfig) => void;
   onImpersonate: (tenant: TenantConfig) => void;
 }
@@ -300,23 +300,44 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   };
 
   // Compute stats from actual tenant data
+  const isInvitedTenant = (tenant: Tenant) => tenant.has_pending_first_owner_preparation_invite === true;
+  const isClosedTenant = (tenant: Tenant) => tenant.status?.toUpperCase() === 'CLOSED';
+  const isPendingApprovalTenant = (tenant: Tenant) => {
+    const onboardingStatus = tenant.onboarding_status?.toUpperCase();
+    const lifecycleStatus = tenant.status?.toUpperCase();
+
+    return !isInvitedTenant(tenant)
+      && (onboardingStatus === 'PENDING_VERIFICATION' || lifecycleStatus === 'PENDING_VERIFICATION');
+  };
+
   const stats = {
     total: tenants.length,
     active: tenants.filter(
-      t => t.status?.toUpperCase() !== 'CLOSED' && !t.has_pending_first_owner_preparation_invite
+      t => !isClosedTenant(t) && !isInvitedTenant(t) && !isPendingApprovalTenant(t)
     ).length,
-    invited: tenants.filter(t => t.has_pending_first_owner_preparation_invite === true).length,
-    closed: tenants.filter(t => t.status?.toUpperCase() === 'CLOSED').length,
+    pendingApproval: tenants.filter(t => isPendingApprovalTenant(t)).length,
+    invited: tenants.filter(t => isInvitedTenant(t)).length,
+    closed: tenants.filter(t => isClosedTenant(t)).length,
   };
 
   const activeTenants = tenants.filter(
-    t => t.status?.toUpperCase() !== 'CLOSED' && !t.has_pending_first_owner_preparation_invite
+    t => !isClosedTenant(t) && !isInvitedTenant(t) && !isPendingApprovalTenant(t)
   );
-  const invitedTenants = tenants.filter(t => t.has_pending_first_owner_preparation_invite === true);
-  const closedTenants = tenants.filter(t => t.status?.toUpperCase() === 'CLOSED');
+  const pendingApprovalTenants = tenants.filter(t => isPendingApprovalTenant(t));
+  const invitedTenants = tenants.filter(t => isInvitedTenant(t));
+  const closedTenants = tenants.filter(t => isClosedTenant(t));
 
   const currentView = (() => {
     switch (lifecycleView) {
+      case 'PENDING_APPROVAL':
+        return {
+          title: 'Pending Approval',
+          description:
+            'Tenants currently in PENDING_VERIFICATION onboarding status and ready for superadmin outcome decisions.',
+          count: pendingApprovalTenants.length,
+          tenantList: pendingApprovalTenants,
+          emptyMessage: 'No tenants are pending approval.',
+        };
       case 'INVITED':
         return {
           title: 'Invited Tenants',
@@ -338,7 +359,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
         return {
           title: 'Active Tenants',
           description:
-            'Tenants whose lifecycle status is not CLOSED and that do not currently satisfy the invited classifier.',
+            'Tenants whose lifecycle status is not CLOSED and that are not currently invited or pending approval.',
           count: activeTenants.length,
           tenantList: activeTenants,
           emptyMessage: 'No active tenants are currently visible.',
@@ -514,10 +535,11 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
         {[
           { label: 'Total Tenants', value: loading ? '...' : stats.total.toString() },
           { label: 'Active', value: loading ? '...' : stats.active.toString() },
+          { label: 'Pending Approval', value: loading ? '...' : stats.pendingApproval.toString() },
           { label: 'Invited', value: loading ? '...' : stats.invited.toString() },
           { label: 'Closed', value: loading ? '...' : stats.closed.toString() },
         ].map((stat, i) => (
