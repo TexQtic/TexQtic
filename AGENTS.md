@@ -1,365 +1,232 @@
-# AGENTS.md — TexQtic Codex / Copilot Operating Playbook
+# AGENTS.md — TexQtic Repository Instructions for Codex
 
-> **Canonical operating instructions for all automated agents working in this repository.**
-> Read this file in full before making any change of any kind.
+## Authority
 
----
+This repository follows **TECS v2.0.2 — TexQtic Execution & Compliance System**.
 
-## 1. Mission
+Codex must treat the following as binding unless Paresh explicitly overrides them in the current task:
 
-Agents operating in this repository exist to make precise, minimal, auditable changes to the TexQtic platform — without breaking tenant isolation, auth integrity, database safety, or governance contracts.
+1. The current user prompt.
+2. This `AGENTS.md`.
+3. `docs/governance/TECS_v2.0.2.md`.
+4. Current repo truth from inspected files.
+5. Existing tests, scripts, route behavior, schema, and deployment reality.
 
-**The primary directive:** produce the smallest safe change that satisfies the task. No more.
-
-Four non-negotiable constraints:
-- **Correctness first.** A working, correct narrow fix beats a clean broad refactor.
-- **Minimal diffs.** Change only what the task requires. Every extra line is a liability.
-- **Preserve architecture.** Do not reshape boundaries, domains, or tenancy patterns unless explicitly instructed.
-- **Preserve tenancy boundaries.** `org_id` isolation is constitutional. It cannot be weakened, removed, or deferred.
+If instructions conflict, stop and ask for clarification. Do not guess.
 
 ---
 
-## 2. Project Context
+## Mandatory TexQtic Workflow
 
-| Dimension | Value |
-|---|---|
-| Frontend | Vite + React SPA (not file-based routing) |
-| Backend | Fastify 5, running on `http://localhost:3001` |
-| Database | Supabase-hosted PostgreSQL (remote; authoritative) |
-| ORM | Prisma (repo-pinned via `pnpm -C server exec prisma`) |
-| Package manager | pnpm + Turbo monorepo |
-| Auth | Supabase Auth with RLS-sensitive behavior and realm separation |
-| Tenancy key | **`org_id`** — the canonical tenant boundary throughout the system |
-| Platform nature | **Not** an open listing marketplace; private B2B with isolated tenant contexts |
-| Finance surfaces | Read-only audit/reporting only; must not imply money movement behavior |
-| Node target | Node 22 LTS (Node 24+ is NOT allowed without explicit approval) |
+Codex must not jump directly into broad implementation.
 
-Governance contracts live in `/shared/contracts/` and `/docs/contracts/`. Review the relevant contracts before touching their domains.
+For every task:
 
-> **Active context:** The codebase is undergoing modularization and domain boundary refinement. Work in progress may exist across services. Do not assume any file is stable without reading it first. Do not speculate on future architecture — act only on what is currently present.
-
----
-
-## 3. Default Working Mode
-
-Every task follows this exact sequence. Do not skip steps.
-
-### Step 1 — Inspect
-- Read the relevant file(s) before writing anything.
-- Understand the current implementation, not just the surface symptom.
-- Check for adjacent dependencies (imports, service calls, DB queries).
-
-### Step 2 — Trace
-For any contract-touching change, trace the full call chain:
-
-```
-Frontend component → API client → Backend route → Service layer → Prisma → DB
-```
-
-Do not patch one layer without understanding what the adjacent layers expect.
-
-### Step 3 — Plan
-- Articulate the minimal change required.
-- Identify which files must change and which must not.
-- Name any governance contracts that apply (`openapi`, `db-naming-rules`, `rls-policy`, `event-names`).
-- State any risks before writing a single line.
-
-### Step 4 — Write
-- Make only the changes identified in the plan.
-- No unrelated refactors, formatting passes, or "while I'm here" edits.
-- **Prefer the smallest safe fix over the cleanest possible refactor.** A correct narrow change ships. A broad elegant refactor breaks things.
-- Only touch files directly related to the task. If a file is not in the plan, do not open it for editing.
-- Preserve existing design patterns and architecture unless the task explicitly requires changing them.
-
-### Step 5 — Validate
-- Run the narrowest relevant validation first. Prefer filter-scoped commands:
-  ```
-  pnpm --filter <target> typecheck
-  pnpm --filter <target> lint
-  pnpm --filter <target> test
-  ```
-- Escalate to broader commands only when a narrow check is insufficient and you can justify why.
-- Do not run repo-wide formatters or test suites opportunistically.
-
-### Step 6 — Report
-- Summarize: plan, root cause (if a bug fix), files changed, changes made, validation output, risks and follow-up.
-- Stage only the allowlisted files.
-- Propose one atomic commit message.
+1. Restate the unit ID and lane.
+2. Inspect current repo truth before editing.
+3. Identify the exact files expected to change.
+4. Modify only allowlisted files.
+5. Avoid opportunistic cleanup.
+6. Run required validation.
+7. Report exact files changed.
+8. Classify readiness using TECS readiness enums.
+9. Register every adjacent finding.
+10. Commit only when the prompt explicitly allows it.
+11. Push only when the prompt explicitly allows it.
 
 ---
 
-## 4. High-Risk Areas — Do Not Change Without Explicit Need
+## TECS Lane Model
 
-These areas require explicit user approval before any edit. Do not touch them opportunistically.
+Use the TECS v2.0.2 lane model:
 
-| Area | Why it is high-risk |
-|---|---|
-| Auth middleware and session logic | Breaks realm separation and RLS enforcement; affects all authenticated requests |
-| `org_id` tenancy enforcement | Canonical tenancy boundary; any weakening is a data isolation failure |
-| RLS-sensitive query logic | Incorrect queries can leak cross-tenant data silently |
-| Payment / checkout critical logic | Financial correctness; cannot imply platform-held funds |
-| `server/prisma/schema.prisma` | Schema drift breaks migrations, RLS policies, and downstream types |
-| `server/prisma/migrations/` | Migration history is immutable once applied |
-| `.env` / environment variables | Secrets and DB URL governance; never print or modify |
-| Supabase RLS policies | Tenant data isolation; incorrect policy = data leak |
-| `shared/contracts/` | Cross-system API and event contracts |
-| `package.json` (any) | Version drift causes runtime incompatibilities |
-| `middleware.ts` (root) | Affects all request handling |
-| `server/src/plugins/` | Auth and Fastify plugin chain |
-| Infra / deployment config | Vercel config, Docker compose, env-level changes affect all environments |
-| Broad Prisma schema redesign | Cascades into migrations, generated types, API contracts, and runtime behavior |
-| Finance-related components | Must not imply money movement or platform-held funds |
+* **Lane A:** Launch feature implementation.
+* **Lane B:** Bounded fix or launch improvement.
+* **Lane C:** Research, design, triage, or investigation.
+* **Lane D:** Verification only.
+* **Lane E:** Governance/truth sync only.
+
+If the prompt does not declare a lane, ask Paresh before proceeding.
 
 ---
 
-## 5. Multi-Tenancy / Data Safety Rules
+## Safe-Write Mode
 
-1. **`org_id` is the canonical tenancy boundary.** Every DB query, API route, and service call that accesses tenant-scoped data MUST scope by `org_id`. There is no alternative tenancy key. Do not use `tenant_id` as a substitute.
+Codex must follow Safe-Write Mode:
 
-2. **Never weaken tenant scoping.** Do not remove `org_id` filters, relax RLS policies, or add query paths that bypass tenant isolation — even temporarily.
-
-3. **Preserve `org_id` isolation in all new code.** Any new route, service, or query that touches tenant data must include `org_id` as a required, validated input — not an optional one.
-
-4. **RLS is not optional.** Supabase RLS is a constitutional constraint. Do not add service-role queries that bypass RLS without explicit, documented approval.
-
-5. **Cross-tenant queries are forbidden** unless you are operating in the control-plane context with explicit super-admin auth. Control-plane and tenant-plane must remain separate.
-
-6. **Flag cross-tenant risk immediately.** If any proposed change touches a query, route, or data path that could expose one tenant's data to another, stop and flag it before writing any code.
-
-7. **Prefer explicit tenant-safe filters.** When adding or modifying DB queries, explicitly include `where: { org_id }` rather than relying on implicit RLS alone. Defense in depth.
-
-8. **Do not create shared mutable state** across tenant contexts. Caches, in-memory stores, or global maps MUST be keyed by `org_id` at minimum.
+* Modify only files explicitly allowed by the prompt.
+* Do not perform hidden refactors.
+* Do not rename files, move folders, or restructure modules unless explicitly authorized.
+* Do not change database schema, migrations, SQL, Supabase config, auth providers, Vercel config, or environment handling unless explicitly in scope.
+* Do not mix unrelated adjacent fixes into the active unit.
+* Do not change public/private access boundaries unless explicitly authorized.
 
 ---
 
-## 6. Prisma / Database Rules
+## Secret-Safe Runtime Rule
 
-### Execution Model
+Never request, print, log, expose, screenshot, or summarize:
 
-- **Database authority:** Remote Supabase PostgreSQL. Never treat local Postgres as authoritative.
-- **Prisma must be run via:** `pnpm -C server exec prisma <command>`
-- **Never use:** `npx prisma`, `prisma db push`, `prisma migrate dev`, or global Prisma installs.
+* passwords
+* tokens
+* cookies
+* JWTs
+* refresh tokens
+* access tokens
+* service-role keys
+* DB URLs
+* invite links
+* reset links
+* raw auth payloads
+* raw localStorage/sessionStorage values containing secrets
+* `.env` values
 
-### Allowed Prisma Commands
+If runtime auth context is needed, ask Paresh only to open or switch the IDE/browser to the required authenticated session.
 
-| Command | Allowed | Condition |
-|---|---|---|
-| `prisma db pull` | ✅ | After SQL is applied and verified |
-| `prisma generate` | ✅ | After schema is confirmed correct |
-| `prisma migrate deploy` | ⚠️ | Explicit user approval only |
-| `prisma migrate dev` | ❌ | Never |
-| `prisma db push` | ❌ | Never |
-| `prisma studio` | ⚠️ | Read-only inspection only |
+Use this wording:
 
-### When SQL Changes Are Required
-
-Follow this sequence exactly. Stop if any step fails.
-
-1. Apply SQL manually via `psql` using `DATABASE_URL`
-2. Verify SQL success — no `ERROR` or `ROLLBACK` in output
-3. Run `pnpm -C server exec prisma db pull`
-4. Run `pnpm -C server exec prisma generate`
-5. Restart the server
-
-### Database URL Rules
-
-- **Never print, log, or echo** any connection string or `.env` value.
-- `DATABASE_URL` is for SQL inspection, RLS policy application, and schema introspection only.
-- `DIRECT_DATABASE_URL` is for Prisma migration engine only — do not use it implicitly.
-- `SHADOW_DATABASE_URL` — **forbidden** in TexQtic. If Prisma demands it, stop and report.
-
-### Schema Change Rules
-
-Before proposing any `schema.prisma` change:
-1. Explain precisely what is changing and why.
-2. Identify every downstream impact: generated types, API response shapes, frontend consumers.
-3. Confirm no opportunistic "while I'm here" field additions or type changes are included.
-4. Get explicit approval before running any migration command.
-
-### Stop Conditions
-
-Stop and emit a blocker report if:
-- Any DB URL is missing or invalid
-- Prisma requests a shadow database
-- A migration requires schema changes not in the plan
-- An RLS policy affects the write path unexpectedly
-- A pooler rejects DDL
-- A schema change would break downstream API contracts not covered by the task
+> Paresh, please switch/open the required authenticated session in the IDE browser. Do not paste passwords, tokens, cookies, JWTs, or secrets.
 
 ---
 
-## 7. API / Backend Rules
+## Repo Truth First
 
-1. **Backend is Fastify 5.** Do not introduce Express patterns or incompatible Fastify v4 APIs.
+Before editing, inspect relevant files, scripts, and tests.
 
-2. **All routes must respect the control-plane / tenant-plane separation.** Control-plane routes operate on all tenants; tenant-plane routes must be scoped to the authenticated `org_id`.
+Do not rely only on prior reports, stale line numbers, or assumed architecture.
 
-3. **Validate `org_id` at the route level** — not just in the service layer — for all tenant-scoped endpoints.
+Every implementation or verification report must include:
 
-4. **API contracts are governed by:**
-   - `/shared/contracts/openapi.control-plane.json`
-   - `/shared/contracts/openapi.tenant.json`
-
-   Do not change request/response shapes without updating the relevant OpenAPI contract.
-
-5. **Do not add unauthenticated routes** without explicit approval.
-
-6. **Trace before patching.** When a frontend API call breaks, trace the full path — do not patch the client without understanding what the server returns, and vice versa. Document both sides before changing a mismatch.
-
-7. **Fix root cause, not symptom.** Do not mask a backend contract failure with a frontend workaround, a hardcoded fallback, or a silent error catch. Identify the actual failure point and fix it there.
-
-8. **Health check endpoint (`GET /health`) must remain stable.** Do not alter its response shape.
-
-9. **Error responses must follow the established error schema.** Do not introduce novel error shapes.
+* files inspected
+* files changed
+* commands run
+* validation results
+* runtime verification performed or why it was not possible
+* readiness classification
+* adjacent findings registered
 
 ---
 
-## 8. Frontend Rules
+## DB / SQL / Migration Rule
 
-1. **TexQtic uses Vite + React SPA — not file-based routing.** Do not introduce Next.js, Remix, or file-system routing patterns.
+No database changes may be assumed applied.
 
-2. **Routing is managed explicitly** in the React + router configuration. Verify existing route structure before adding routes.
+If a unit touches SQL, Prisma, migrations, Supabase policies, RLS, schema, or DB apply steps, Codex must require:
 
-3. **Do not patch missing backend behavior with mock-only UI.** If a backend endpoint does not exist or returns incorrect data, fix the backend — do not wrap the frontend in fake data, hardcoded stubs, or silent fallbacks. Exception: only if the task explicitly requests a mock-first approach.
+* exact tracked SQL or migration path
+* approved apply method
+* rollback plan
+* post-apply proof queries
+* clear statement that tracked SQL files are not automatically applied by Prisma unless the repo process says so
 
-4. **Finance surfaces are read-only.** Components that display financial data must not include action elements that imply money movement (e.g., withdraw, transfer, payout buttons) without explicit product approval.
-
-5. **`org_id` must flow through all tenant-scoped API calls** from the frontend. Do not hardcode tenant identifiers.
-
-6. **Auth state is managed by `authService` and the auth context.** Do not read auth tokens or session state outside of established patterns.
-
-7. **Keep state and data-flow changes minimal.** When fixing a data display issue, change only the affected component and its direct data dependencies. Do not reshape the state model or context structure opportunistically.
-
-8. **Do not add new npm dependencies** without explicit approval and a stated reason.
-
-9. **Component boundaries matter.** `ControlPlane/` components are for super-admin contexts only. `Tenant/` components are for tenant-scoped views. Do not mix them.
-
-10. **Preserve existing design and UI patterns.** Match the component style, spacing conventions, and interaction patterns already present in the surrounding code.
-
-11. **Do not run `vite build` or broad type-checks** across the full repo as part of a single-file patch. Run narrowly scoped validation only.
+If the prompt does not explicitly authorize DB apply, classify the task as implementation-only and register a separate DB-apply unit.
 
 ---
 
-## 9. Validation Rules
+## Production-Dependent Runtime Rule
 
-**Validation hierarchy — always prefer narrower over broader:**
+For production-dependent behavior, local validation is not enough.
 
-```
-pnpm --filter <target> typecheck     ← preferred first
-pnpm --filter <target> lint
-pnpm --filter <target> test
-```
+Use:
 
-Escalate to broader commands only when a narrower check is insufficient and the reason is explicit.
+> implement → commit → deploy → verify → minimal truth sync
 
-1. **Run the narrowest validation first.** For a single-file change, run the type-check or unit test for that file or package only. Do not trigger full repo builds opportunistically.
+A unit cannot close as `READY_FOR_LAUNCH` until required runtime or production proof passes.
 
-2. **Type errors must be resolved, not suppressed.** Do not add `// @ts-ignore` or `any` casts as a workaround without explicit approval.
+If source validates but production verification remains pending, classify:
 
-3. **Lint only the changed files or package.** Do not run formatters or linters across the entire repo.
-
-4. **Unit tests must pass before commit.** If the change affects a tested module, run the relevant test suite and confirm it passes.
-
-5. **Do not silently skip failing tests.** If a test fails unexpectedly, stop and report — do not delete, comment out, or skip the test.
-
-6. **Health check after server changes.** After backend changes, verify `GET /health` returns 200 before reporting completion.
+`TECHNICALLY_FUNCTIONAL_PRODUCT_ACCEPTANCE_PENDING`
 
 ---
 
-## 10. Commit Discipline
+## Readiness Classification Enums
 
-1. **One prompt = one atomic commit.** Do not mix features, fixes, and refactors in the same commit.
+Use exactly one of these in final reports:
 
-2. **Stage only the allowlisted files.** Before committing, run `git status --short` and confirm only intended files are staged.
-
-3. **Commit message format:**
-   ```
-   [TEXQTIC] <scope>: <short description>
-   ```
-   Examples:
-   - `[TEXQTIC] backend: fix org_id scoping on invoice route`
-   - `[TEXQTIC] frontend: add dispute status badge to tenant view`
-   - `[TEXQTIC] governance: add repo agent operating playbook`
-
-4. **Do not commit without evidence.** Required before committing:
-   - `git diff --name-only` — must show only allowlisted files
-   - Runtime proof (server start line or health check output, where applicable)
-
-5. **Do not auto-commit.** Propose the commit message and wait for user approval unless the prompt explicitly authorizes automatic commit.
-
-6. **Do not amend or force-push** without explicit instruction.
+* `READY_FOR_LAUNCH`
+* `TECHNICALLY_FUNCTIONAL_PRODUCT_ACCEPTANCE_PENDING`
+* `BLOCKED_BY_DEPLOYMENT_NOT_UPDATED`
+* `BLOCKED_BY_RUNTIME_DEFECT`
+* `BLOCKED_BY_AUTH_OR_SECURITY_RISK`
+* `BLOCKED_BY_PRODUCT_DESIGN_GAP`
+* `BLOCKED_BY_SCOPE_EXPANSION_REQUIRED`
 
 ---
 
-## 11. Forbidden Actions
+## Adjacent Finding Rule
 
-The following are unconditionally forbidden:
+No loose notes.
 
-| Action | Reason |
-|---|---|
-| Printing `.env` contents, DB URLs, passwords, JWTs, or API keys | Secrets governance — zero tolerance |
-| Modifying files outside the prompt's explicit allowlist | No file creep |
-| Running `prisma migrate dev` or `prisma db push` | Schema mutation without migration trail |
-| Using `npx prisma` instead of `pnpm -C server exec prisma` | ORM version drift |
-| Installing packages without approval | Version and supply-chain safety |
-| Upgrading package versions without approval | Runtime compatibility |
-| Removing `org_id` filters from any query | Tenant isolation is constitutional |
-| Adding unauthenticated routes without approval | Auth integrity |
-| Mixing control-plane and tenant-plane logic | Plane separation doctrine |
-| Creating "temporary" scripts or helper files not in allowlist | No file creep |
-| Refactoring unrelated code while patching a specific bug | Minimal diff discipline |
-| Suppressing TypeScript errors with `@ts-ignore` or `any` casts | Type safety |
-| Running broad formatters (Prettier, ESLint fix-all) across the repo | Diff pollution |
-| Committing with unstaged unintended files | Atomic commit discipline |
-| Deleting files without an explicit need stated in the task | Irreversible without git history review |
-| Implying money movement in finance UI components | Product policy |
-| Touching auth/session logic without explicit approval | Auth integrity |
-| Modifying RLS policies without explicit approval | Tenant isolation |
-| Changing infra/deployment config without explicit approval | Environment-wide impact |
-| Mass-formatting files unrelated to the task | Diff pollution; obscures real changes |
+Every adjacent finding must be handled as one of:
+
+| Finding type               | Required action                                                           |
+| -------------------------- | ------------------------------------------------------------------------- |
+| Safe, small, in-scope      | Fix immediately within the same unit if the prompt permits source changes |
+| Real but out-of-scope      | Register as a follow-up unit with ID, priority, owner/status              |
+| Unclear / needs repo truth | Register as an investigation/preflight unit                               |
+
+Lane D verification prompts must not fix adjacent findings. They must only register them.
 
 ---
 
-## 12. Required Output Format For Every Task
+## Runtime / Browser Guardrails
 
-Every task response must include all of the following sections, in order:
+For Superadmin, auth, onboarding, tenant lifecycle, payments, or public/private projection work:
 
-```
-### Plan
-[What change is being made and why. Which files will change. Which governance contracts apply.]
-
-### Findings / Root Cause
-[What was observed during inspection. Current behavior vs. expected behavior.
-Root cause if this is a bug fix. "No issue found" is a valid finding.]
-
-### Files to Change
-[Exact list of files that will be modified, created, or deleted — stated before writing.]
-
-### Changes Made
-[What was actually changed. Diff summary or description of each edit.]
-
-### Validation Run
-[Commands run. Full output or key lines. Pass / Fail status for each.]
-
-### Risks / Follow-up
-[Edge cases, downstream effects, or concerns the user should review.
-Any follow-up tasks that are out of scope for this prompt.]
-
-### Commit Message
-[TEXQTIC] <scope>: <brief summary>
-```
-
-If any section cannot be completed (e.g., validation blocked), emit a blocker report instead of proceeding:
-
-```
-🛑 TEXQTIC EXECUTION BLOCKER DETECTED
-Task: <description>
-Blocker Type: <type>
-Evidence: <command> → <output>
-Required User Decision: <explicit question or approval needed>
-No further actions taken.
-```
+* Do not click approve, reject, activate, archive, delete, provision, suspend, restore, charge, invoice, sync, or payment mutation controls unless explicitly authorized.
+* Do not create production records unless explicitly authorized.
+* Do not use raw passwords in browser-driven flows that may leak into logs or screenshots.
+* Do not ask Paresh to paste secrets.
+* Use visible UI evidence where possible.
 
 ---
 
-*Last updated: 2026-03-06 — TexQtic governance corpus, main branch.*
+## Commit Discipline
+
+When commits are authorized:
+
+* Make atomic commits.
+* Use a clear commit message matching the unit.
+* Do not bundle governance/truth-sync changes with source implementation unless the prompt explicitly allows it.
+* If TECS requires separate commits, use separate commits.
+* Push only when explicitly authorized.
+
+If commits are not authorized, state:
+
+`No commit. Verification/design/report-only unit.`
+
+---
+
+## Standard Final Report Format
+
+Use this format unless the prompt specifies another:
+
+1. Plan
+2. Repo Truth Inspected
+3. Changes Made or Runtime QA Performed
+4. Files Changed
+5. Validation Run
+6. Runtime / Production Verification
+7. Readiness Classification
+8. Risks / Follow-up
+9. Adjacent Findings Registered
+10. Commit / Push Status
+
+---
+
+## Current TexQtic Operating Context
+
+TexQtic is a launch-critical textile B2B/B2C/D2C platform using:
+
+* pnpm + Turbo monorepo
+* Next.js / React frontend
+* Node backend
+* Supabase Postgres/Auth
+* Prisma
+* strict multi-tenancy with `org_id` and RLS expectations
+* Vercel deployment
+* TECS governance and launch-readiness tracking
+
+Current work must prioritize launch readiness, production safety, tenant isolation, Superadmin safety, public/private route correctness, and secret-safe verification.
+
+Do not broaden Superadmin read-all semantics unless `CONTROL-PLANE-READ-ALL-DECISION-001` is explicitly resolved.
