@@ -112,6 +112,14 @@ type EligibleOrgRow = {
 type EligibleTenantRow = {
   id: string;
   publicEligibilityPosture: string;
+};
+
+// Approved public company profile fields from tenant_profile_details table
+// (PUBLIC-SAFE-COMPANY-PROJECTION-001 / PUBLIC-SAFE-COMPANY-PROJECTION-001-HOTFIX)
+// PROHIBITED in this select: websiteUrl, businessEmail, phone, phonePublic,
+// city, state, cinNumber, udyamNumber, iecNumber — must never appear in public payload.
+type TenantProfileDetailRow = {
+  tenantId: string;
   tagline: string | null;
   description: string | null;
   companySizeBand: string | null;
@@ -219,10 +227,6 @@ export async function listPublicB2BSuppliers(
       select: {
         id: true,
         publicEligibilityPosture: true,
-        tagline: true,
-        description: true,
-        companySizeBand: true,
-        capacityBand: true,
       },
     });
   });
@@ -237,6 +241,27 @@ export async function listPublicB2BSuppliers(
   }
 
   const eligibleOrgIds = eligibleOrgs.map((o) => o.id);
+
+  // ── Approved company profile fields from tenant_profile_details ──────────────
+  // ONLY approved public fields selected. Private fields (email, phone, website,
+  // city, state, CIN, UDYAM, IEC) are explicitly NOT selected.
+  const profileDetailRows: TenantProfileDetailRow[] = await withAdminContext(prismaClient, async tx => {
+    return tx.tenantProfileDetail.findMany({
+      where: { tenantId: { in: eligibleOrgIds } },
+      select: {
+        tenantId: true,
+        tagline: true,
+        description: true,
+        companySizeBand: true,
+        capacityBand: true,
+        // websiteUrl: NOT selected (out of scope)
+        // businessEmail: NOT selected (prohibited — private contact data)
+        // phone / phonePublic: NOT selected (prohibited)
+        // city / state: NOT selected (not in approved projection list)
+        // cinNumber / udyamNumber / iecNumber: NOT selected (private registration data)
+      },
+    });
+  });
 
   // Tenant branding logo projection for public cards.
   const brandingRows: BrandingRow[] = await withAdminContext(prismaClient, async tx => {
@@ -338,14 +363,9 @@ export async function listPublicB2BSuppliers(
     logoByTenantId.set(row.tenantId, row.logoUrl ?? null);
   }
 
-  const tenantProfileByOrgId = new Map<string, Pick<EligibleTenantRow, 'tagline' | 'description' | 'companySizeBand' | 'capacityBand'>>();
-  for (const t of tenantRows) {
-    tenantProfileByOrgId.set(t.id, {
-      tagline: t.tagline,
-      description: t.description,
-      companySizeBand: t.companySizeBand,
-      capacityBand: t.capacityBand,
-    });
+  const tenantProfileByOrgId = new Map<string, TenantProfileDetailRow>();
+  for (const row of profileDetailRows) {
+    tenantProfileByOrgId.set(row.tenantId, row);
   }
 
   // ── build projection entries ──────────────────────────────────────────────────
@@ -472,10 +492,6 @@ export async function getPublicB2BSupplierBySlug(
       select: {
         id: true,
         publicEligibilityPosture: true,
-        tagline: true,
-        description: true,
-        companySizeBand: true,
-        capacityBand: true,
       },
     });
   });
@@ -488,6 +504,22 @@ export async function getPublicB2BSupplierBySlug(
     return tx.tenantBranding.findUnique({
       where: { tenantId: org.id },
       select: { logoUrl: true },
+    });
+  });
+
+  // ── Approved company profile fields from tenant_profile_details ──────────────
+  // ONLY approved public fields selected. Private fields are explicitly NOT selected.
+  const profileDetailRow: TenantProfileDetailRow | null = await withAdminContext(prismaClient, async tx => {
+    return tx.tenantProfileDetail.findUnique({
+      where: { tenantId: org.id },
+      select: {
+        tenantId: true,
+        tagline: true,
+        description: true,
+        companySizeBand: true,
+        capacityBand: true,
+        // websiteUrl / businessEmail / phone / city / state / cinNumber etc: NOT selected
+      },
     });
   });
 
@@ -566,10 +598,10 @@ export async function getPublicB2BSupplierBySlug(
     })),
     publicationPosture: posture,
     eligibilityPosture: 'PUBLICATION_ELIGIBLE',
-    tagline: tenantRows[0].tagline,
-    description: tenantRows[0].description,
-    companySizeBand: tenantRows[0].companySizeBand,
-    capacityBand: tenantRows[0].capacityBand,
+    tagline: profileDetailRow?.tagline ?? null,
+    description: profileDetailRow?.description ?? null,
+    companySizeBand: profileDetailRow?.companySizeBand ?? null,
+    capacityBand: profileDetailRow?.capacityBand ?? null,
   };
 
   return { profile, orgId: org.id };
