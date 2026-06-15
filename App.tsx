@@ -2056,6 +2056,25 @@ const hasStoredAuthenticatedSession = () => {
   );
 };
 
+const hasStoredValidControlPlaneSession = () => {
+  if (getCurrentAuthRealm('TENANT') !== 'CONTROL_PLANE') {
+    return false;
+  }
+
+  const claims = readStoredAdminJwtClaims();
+  const storedIdentity = readStoredControlPlaneIdentity();
+
+  if (!claims?.adminId || !storedIdentity?.id) {
+    return false;
+  }
+
+  if (claims.exp && claims.exp * 1000 <= Date.now()) {
+    return false;
+  }
+
+  return claims.adminId === storedIdentity.id;
+};
+
 const resolveInitialAppState = (): AppState => {
   if (globalThis.window !== undefined) {
     // TECS-DPP-PASSPORT-NETWORK-007: Public passport path — /passport/:id
@@ -2147,7 +2166,7 @@ const resolveInitialAppState = (): AppState => {
       globalThis.window.location.pathname,
     );
     if (registerPathMatch) {
-      return 'PUBLIC_REGISTER';
+      return hasStoredValidControlPlaneSession() ? 'AUTH' : 'PUBLIC_REGISTER';
     }
 
     // PUBLIC-INQUIRY-INTENT-CAPTURE-PAGE-IMPLEMENTATION-001: /inquiry route
@@ -2200,6 +2219,13 @@ const resolveInitialAuthRealm = (): 'TENANT' | 'CONTROL_PLANE' => {
   return hasStoredAuthenticatedSession()
     ? getCurrentAuthRealm('TENANT') ?? 'TENANT'
     : 'TENANT';
+};
+
+export const __APP_ROUTING_TESTING__ = {
+  hasStoredAuthenticatedSession,
+  hasStoredValidControlPlaneSession,
+  resolveInitialAppState,
+  resolveInitialAuthRealm,
 };
 
 const isNeutralPublicEntryDescriptor = (
