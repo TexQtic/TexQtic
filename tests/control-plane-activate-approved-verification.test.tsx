@@ -184,7 +184,58 @@ describe('HARDENING-005 — Activation button guard', () => {
   });
 });
 
-// ─── 2. Activation — success path ────────────────────────────────────────────
+// ─── 2. Two-step confirmation guard ─────────────────────────────────────────
+
+describe('HARDENING-005 — Two-step activation confirmation guard (QA-CONTROL-005E)', () => {
+  beforeEach(() => {
+    getTenantByIdMock.mockReset();
+    activateApprovedOnboardingMock.mockReset();
+    stubMembershipsEmpty();
+  });
+
+  it('clicking primary Activate button shows confirmation panel without calling API', async () => {
+    render(
+      <TenantDetails
+        tenant={makeTenantConfig({
+          onboarding_status: 'VERIFICATION_APPROVED',
+          status: TenantStatus.ACTIVE,
+        })}
+        onBack={() => undefined}
+        onImpersonate={() => undefined}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Activate Approved Tenant/i }));
+
+    expect(screen.getByRole('button', { name: /Confirm Activation/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Cancel/i })).toBeInTheDocument();
+    expect(activateApprovedOnboardingMock).not.toHaveBeenCalled();
+  });
+
+  it('clicking Cancel in confirmation panel hides confirmation and does not call API', async () => {
+    render(
+      <TenantDetails
+        tenant={makeTenantConfig({
+          onboarding_status: 'VERIFICATION_APPROVED',
+          status: TenantStatus.ACTIVE,
+        })}
+        onBack={() => undefined}
+        onImpersonate={() => undefined}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Activate Approved Tenant/i }));
+    expect(screen.getByRole('button', { name: /Confirm Activation/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Cancel/i }));
+
+    expect(screen.getByRole('button', { name: /Activate Approved Tenant/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Confirm Activation/i })).not.toBeInTheDocument();
+    expect(activateApprovedOnboardingMock).not.toHaveBeenCalled();
+  });
+});
+
+// ─── 3. Activation — success path ────────────────────────────────────────────
 
 describe('HARDENING-005 — Activation success path', () => {
   beforeEach(() => {
@@ -210,6 +261,7 @@ describe('HARDENING-005 — Activation success path', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Activate Approved Tenant/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Confirm Activation/i }));
 
     await waitFor(() => {
       expect(activateApprovedOnboardingMock).toHaveBeenCalledWith('tenant-act-001');
@@ -233,6 +285,7 @@ describe('HARDENING-005 — Activation success path', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Activate Approved Tenant/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Confirm Activation/i }));
 
     await waitFor(() => {
       expect(activateApprovedOnboardingMock).toHaveBeenCalledTimes(1);
@@ -256,6 +309,7 @@ describe('HARDENING-005 — Activation success path', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Activate Approved Tenant/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Confirm Activation/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Approved onboarding activation recorded/i)).toBeInTheDocument();
@@ -281,16 +335,20 @@ describe('HARDENING-005 — Activation success path', () => {
     expect(screen.getByRole('button', { name: /Activate Approved Tenant/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Activate Approved Tenant/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Confirm Activation/i }));
 
     await waitFor(() => {
       expect(
-        screen.queryByRole('button', { name: /Activate Approved Tenant/i }),
+        screen.queryByRole('button', { name: /Confirm Activation/i }),
       ).not.toBeInTheDocument();
     });
+    expect(
+      screen.queryByRole('button', { name: /Activate Approved Tenant/i }),
+    ).not.toBeInTheDocument();
   });
 });
 
-// ─── 3. Activation — loading state ───────────────────────────────────────────
+// ─── 4. Activation — loading state ───────────────────────────────────────────
 
 describe('HARDENING-005 — Activation loading state', () => {
   beforeEach(() => {
@@ -299,7 +357,7 @@ describe('HARDENING-005 — Activation loading state', () => {
     stubMembershipsEmpty();
   });
 
-  it('disables Activate button with loading label while activation is in flight', async () => {
+  it('disables Confirm button with loading label while activation is in flight', async () => {
     let resolveActivation!: (v: unknown) => void;
     activateApprovedOnboardingMock.mockImplementationOnce(
       () => new Promise(res => { resolveActivation = res; }),
@@ -317,6 +375,7 @@ describe('HARDENING-005 — Activation loading state', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Activate Approved Tenant/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Confirm Activation/i }));
 
     await waitFor(() => {
       expect(
@@ -333,8 +392,6 @@ describe('HARDENING-005 — Activation loading state', () => {
     });
   });
 });
-
-// ─── 4. Activation — error path ───────────────────────────────────────────────
 
 describe('HARDENING-005 — Activation error path', () => {
   beforeEach(() => {
@@ -360,6 +417,7 @@ describe('HARDENING-005 — Activation error path', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Activate Approved Tenant/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Confirm Activation/i }));
 
     await waitFor(() => {
       expect(
@@ -385,6 +443,7 @@ describe('HARDENING-005 — Activation error path', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Activate Approved Tenant/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Confirm Activation/i }));
 
     await waitFor(() => {
       expect(
@@ -410,6 +469,7 @@ describe('HARDENING-005 — Activation error path', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Activate Approved Tenant/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Confirm Activation/i }));
 
     await waitFor(() => {
       expect(activateApprovedOnboardingMock).toHaveBeenCalledTimes(1);
@@ -435,6 +495,7 @@ describe('HARDENING-005 — Activation error path', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Activate Approved Tenant/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Confirm Activation/i }));
 
     await waitFor(() => {
       expect(

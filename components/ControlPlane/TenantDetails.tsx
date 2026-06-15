@@ -101,6 +101,7 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
   const [activationLoading, setActivationLoading] = useState(false);
   const [activationError, setActivationError] = useState<string | null>(null);
   const [activationNotice, setActivationNotice] = useState<string | null>(null);
+  const [activationConfirmPending, setActivationConfirmPending] = useState(false);
   const [archiveReason, setArchiveReason] = useState('');
   const [archiveSlugConfirmation, setArchiveSlugConfirmation] = useState('');
   const [archiveLoading, setArchiveLoading] = useState(false);
@@ -265,6 +266,7 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
       setActivationError(error?.message || 'Failed to activate approved onboarding state.');
     } finally {
       setActivationLoading(false);
+      setActivationConfirmPending(false);
     }
   };
 
@@ -348,6 +350,20 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
   } else {
     archivePanelContent = (
       <>
+        <div className="rounded border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-300 space-y-1">
+          <div className="font-semibold text-rose-200 mb-1">What will happen:</div>
+          <div>• Tenant runtime status will be set to CLOSED.</div>
+          <div>• Organization lifecycle state will be set to CLOSED.</div>
+          <div>• Tenant removed from active sign-in, impersonation, and domain resolution flows.</div>
+          <div>• This action is recorded in the audit log against this tenant only.</div>
+          <div>• Only this tenant ({tenant.slug}) is affected.</div>
+        </div>
+        <div className="rounded border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-400 space-y-1">
+          <div className="font-semibold text-slate-300 mb-1">What will not happen:</div>
+          <div>• Audit history and records are not deleted.</div>
+          <div>• Tenant data is preserved in read-only oversight.</div>
+          <div>• No tenant user accounts are deleted.</div>
+        </div>
         <label className="block space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Archive Reason</span>
           <textarea
@@ -565,6 +581,33 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
                           <option value="NEEDS_MORE_INFO">NEEDS_MORE_INFO — Request additional information</option>
                         </select>
                       </label>
+                      {outcomeSelected && (
+                        <div className="rounded border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-300 space-y-1">
+                          {outcomeSelected === 'APPROVED' && (
+                            <>
+                              <div className="font-semibold text-emerald-300 mb-1">Outcome: APPROVED</div>
+                              <div>• Advances onboarding status to VERIFICATION_APPROVED.</div>
+                              <div>• Tenant becomes eligible for activation — activation is a separate step.</div>
+                              <div>• No runtime access is granted yet.</div>
+                            </>
+                          )}
+                          {outcomeSelected === 'REJECTED' && (
+                            <>
+                              <div className="font-semibold text-rose-300 mb-1">Outcome: REJECTED</div>
+                              <div>• Sets onboarding status to VERIFICATION_REJECTED.</div>
+                              <div>• Tenant cannot proceed until the onboarding posture changes.</div>
+                            </>
+                          )}
+                          {outcomeSelected === 'NEEDS_MORE_INFO' && (
+                            <>
+                              <div className="font-semibold text-amber-300 mb-1">Outcome: NEEDS MORE INFO</div>
+                              <div>• Sets onboarding status to VERIFICATION_NEEDS_MORE_INFO.</div>
+                              <div>• Tenant is placed in a pending-information state.</div>
+                            </>
+                          )}
+                          <div className="mt-1 text-slate-500">Affected tenant: {tenant.slug} — this outcome is recorded in the audit log.</div>
+                        </div>
+                      )}
                       <label className="block space-y-1">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                           Reason{' '}
@@ -596,16 +639,61 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
                   )}
                   {canActivateApproved && (
                     <div className="space-y-2">
-                      <button
-                        onClick={handleActivateApproved}
-                        disabled={activationLoading}
-                        className="w-full py-2 bg-emerald-600 text-white rounded font-bold text-xs uppercase transition disabled:opacity-60 disabled:cursor-not-allowed hover:bg-emerald-700"
-                      >
-                        {activationLoading ? 'Activating Approved Tenant...' : 'Activate Approved Tenant'}
-                      </button>
-                      <div className="text-[10px] uppercase tracking-widest text-slate-500">
-                        Submitting this action records an audit entry.
-                      </div>
+                      {!activationConfirmPending ? (
+                        <>
+                          <button
+                            onClick={() => setActivationConfirmPending(true)}
+                            disabled={activationLoading}
+                            className="w-full py-2 bg-emerald-600 text-white rounded font-bold text-xs uppercase transition disabled:opacity-60 disabled:cursor-not-allowed hover:bg-emerald-700"
+                          >
+                            Activate Approved Tenant
+                          </button>
+                          <div className="text-[10px] uppercase tracking-widest text-slate-500">
+                            This action will advance the tenant to ACTIVE and record an audit entry.
+                          </div>
+                        </>
+                      ) : (
+                        <div className="rounded border border-emerald-500/40 bg-emerald-500/10 p-4 space-y-3">
+                          <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-200">
+                            Confirm Activation
+                          </div>
+                          <div className="text-xs font-semibold text-slate-100">
+                            Tenant: {tenant.name}
+                          </div>
+                          <div className="text-[10px] uppercase tracking-widest text-slate-400">
+                            Current onboarding status: VERIFICATION_APPROVED
+                          </div>
+                          <div className="rounded border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-300 space-y-1">
+                            <div className="font-semibold text-slate-100 mb-1">What will happen:</div>
+                            <div>• Runtime status set to ACTIVE — tenant eligible for normal sign-in and control-plane supervision.</div>
+                            <div>• Onboarding status set to ACTIVE.</div>
+                            <div>• This action is recorded in the audit log against this tenant only.</div>
+                            <div>• Only this tenant ({tenant.slug}) is affected.</div>
+                          </div>
+                          <div className="rounded border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-400 space-y-1">
+                            <div className="font-semibold text-slate-300 mb-1">What will not happen:</div>
+                            <div>• No tenant data is deleted.</div>
+                            <div>• No audit history is removed.</div>
+                            <div>• This action does not provision credentials — use tenant sign-in with provisioned credentials.</div>
+                          </div>
+                          <div className="flex gap-2 pt-1">
+                            <button
+                              onClick={() => setActivationConfirmPending(false)}
+                              disabled={activationLoading}
+                              className="flex-1 py-2 rounded border border-slate-600 text-xs font-bold uppercase text-slate-300 hover:border-slate-400 hover:text-white transition disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleActivateApproved}
+                              disabled={activationLoading}
+                              className="flex-1 py-2 bg-emerald-600 text-white rounded font-bold text-xs uppercase transition disabled:opacity-60 disabled:cursor-not-allowed hover:bg-emerald-700"
+                            >
+                              {activationLoading ? 'Activating Approved Tenant...' : 'Confirm Activation'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                   {!canRecordOnboardingOutcome && !canActivateApproved && (
