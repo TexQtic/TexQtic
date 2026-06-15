@@ -150,6 +150,14 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   const [detailLoadingTenantId, setDetailLoadingTenantId] = useState<string | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
 
+  // QA-CONTROL-005B: search, filter, sort, pagination state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [sortField, setSortField] = useState<'name' | 'createdAt' | 'status' | 'plan'>('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 50;
+
   const provisionCanonicalPreview = resolveCanonicalPreviewFromProvisionForm(provisionForm);
   const provisionCategoryGuidance = getProvisionCategoryGuidance(provisionForm.tenant_category);
   const provisionPlanGuidance = getProvisionPlanGuidance(provisionForm.plan);
@@ -283,6 +291,11 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     fetchTenants();
   }, []);
 
+  // QA-CONTROL-005B: Reset to page 1 when search, filter, sort, or lifecycle view changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, sortField, sortDir, lifecycleView]);
+
   const getStatusColor = (status: string) => {
     const upperStatus = status.toUpperCase();
     switch (upperStatus) {
@@ -366,6 +379,60 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
         };
     }
   })();
+
+  // QA-CONTROL-005B: Filtered, sorted, and paginated list derived from current lifecycle view
+  const searchTrimmed = searchQuery.trim().toLowerCase();
+  const filteredList = currentView.tenantList.filter(t => {
+    if (searchTrimmed) {
+      const matchSearch =
+        (t.name ?? '').toLowerCase().includes(searchTrimmed) ||
+        (t.slug ?? '').toLowerCase().includes(searchTrimmed) ||
+        (t.status ?? '').toLowerCase().includes(searchTrimmed) ||
+        (t.onboarding_status ?? '').toLowerCase().includes(searchTrimmed) ||
+        (t.plan ?? '').toLowerCase().includes(searchTrimmed) ||
+        (t.base_family ?? '').toLowerCase().includes(searchTrimmed) ||
+        (t.tenant_category ?? '').toLowerCase().includes(searchTrimmed) ||
+        (t.type ?? '').toLowerCase().includes(searchTrimmed);
+      if (!matchSearch) return false;
+    }
+    if (statusFilter !== 'ALL') {
+      const onb = (t.onboarding_status ?? '').toUpperCase();
+      const st = (t.status ?? '').toUpperCase();
+      if (onb !== statusFilter && st !== statusFilter) return false;
+    }
+    return true;
+  });
+
+  const sortedList = [...filteredList].sort((a, b) => {
+    let aVal: string;
+    let bVal: string;
+    switch (sortField) {
+      case 'status':
+        aVal = a.status ?? '';
+        bVal = b.status ?? '';
+        break;
+      case 'plan':
+        aVal = a.plan ?? '';
+        bVal = b.plan ?? '';
+        break;
+      case 'createdAt':
+        aVal = a.createdAt ?? '';
+        bVal = b.createdAt ?? '';
+        break;
+      default:
+        aVal = a.name ?? '';
+        bVal = b.name ?? '';
+    }
+    const cmp = aVal.localeCompare(bVal);
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
+
+  const totalFiltered = sortedList.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginationStart = (safePage - 1) * PAGE_SIZE;
+  const paginatedList = sortedList.slice(paginationStart, paginationStart + PAGE_SIZE);
+  const hasActiveFilter = searchTrimmed.length > 0 || statusFilter !== 'ALL';
 
   const renderTenantTable = (tenantList: Tenant[]) => (
     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
@@ -582,6 +649,65 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
       {/* Data state */}
       {!loading && tenants.length > 0 && (
         <div className="space-y-3">
+          {/* QA-CONTROL-005B: Search / filter / sort controls */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[200px]">
+              <input
+                type="search"
+                aria-label="Search tenants"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search by name, slug, status, plan…"
+                className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg pl-3 pr-8 py-2 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-slate-500"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  aria-label="Clear search"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-2 flex items-center text-slate-500 hover:text-slate-200"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <select
+              aria-label="Filter by status"
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              className="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-slate-500"
+            >
+              <option value="ALL">All statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="PENDING_VERIFICATION">Pending Verification</option>
+              <option value="VERIFICATION_APPROVED">Verification Approved</option>
+              <option value="VERIFICATION_REJECTED">Verification Rejected</option>
+              <option value="VERIFICATION_NEEDS_MORE_INFO">Needs More Info</option>
+              <option value="CLOSED">Closed</option>
+            </select>
+            <select
+              aria-label="Sort tenants"
+              value={`${sortField}:${sortDir}`}
+              onChange={e => {
+                const [field, dir] = e.target.value.split(':');
+                setSortField(field as 'name' | 'createdAt' | 'status' | 'plan');
+                setSortDir(dir as 'asc' | 'desc');
+              }}
+              className="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-slate-500"
+            >
+              <option value="name:asc">Name A→Z</option>
+              <option value="name:desc">Name Z→A</option>
+              <option value="createdAt:desc">Newest first</option>
+              <option value="createdAt:asc">Oldest first</option>
+              <option value="status:asc">Status A→Z</option>
+              <option value="plan:asc">Plan A→Z</option>
+            </select>
+            <div className="text-xs text-slate-500 whitespace-nowrap">
+              {hasActiveFilter
+                ? `${totalFiltered} of ${currentView.count} matching`
+                : `${currentView.count} records`}
+            </div>
+          </div>
           <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="text-sm font-bold uppercase tracking-widest text-slate-200">
@@ -590,14 +716,53 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
               <p className="text-xs text-slate-500">{currentView.description}</p>
             </div>
             <div className="rounded border border-slate-800 bg-slate-900 px-3 py-1 text-xs font-bold text-slate-300">
-              {currentView.count}
+              {hasActiveFilter ? totalFiltered : currentView.count}
             </div>
           </div>
-          {currentView.tenantList.length > 0 ? (
-            renderTenantTable(currentView.tenantList)
-          ) : (
+          {currentView.tenantList.length === 0 ? (
             <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-6 text-sm text-slate-400">
               {currentView.emptyMessage}
+            </div>
+          ) : paginatedList.length > 0 ? (
+            <>
+              {renderTenantTable(paginatedList)}
+              {/* QA-CONTROL-005B: Pagination footer */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between gap-4 px-1 pt-1">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={safePage === 1}
+                    className="px-3 py-1.5 border border-slate-700 text-slate-300 text-xs font-bold rounded-lg hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    ← Prev
+                  </button>
+                  <span className="text-xs text-slate-500">
+                    Showing {paginationStart + 1}–{Math.min(paginationStart + PAGE_SIZE, totalFiltered)} of {totalFiltered}
+                    {' '}· Page {safePage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={safePage === totalPages}
+                    className="px-3 py-1.5 border border-slate-700 text-slate-300 text-xs font-bold rounded-lg hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    Next →
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-6 text-center text-sm text-slate-400">
+              <div className="text-2xl mb-2">🔍</div>
+              <div className="font-bold text-slate-300 mb-1">No tenants match the current search or filters.</div>
+              <div className="text-slate-500">
+                Clear search and filters to see all records in this lifecycle.
+              </div>
+              <button
+                onClick={() => { setSearchQuery(''); setStatusFilter('ALL'); }}
+                className="mt-3 px-4 py-1.5 border border-slate-700 text-slate-300 text-xs font-bold rounded-lg hover:bg-slate-800 transition"
+              >
+                Clear filters
+              </button>
             </div>
           )}
         </div>
