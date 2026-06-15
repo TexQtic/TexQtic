@@ -244,6 +244,8 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
   const consentSnapshot = consentObservability?.latest_snapshot ?? null;
   const consentEvents = consentObservability?.recent_events ?? [];
   const hasLegalApprovedConsent = Boolean(consentObservability?.has_legal_approved_record);
+  const runtimeStatusPresentation = buildRuntimeStatusPresentation(tenantStatus);
+  const onboardingStatusPresentation = buildOnboardingStatusPresentation(onboardingStatus);
 
   const handleActivateApproved = async () => {
     setActivationLoading(true);
@@ -310,12 +312,12 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
         payload.reason = outcomeReason.trim();
       }
       await recordOnboardingOutcome(tenant.id, payload);
-      const nextStatus =
-        outcomeSelected === 'APPROVED'
-          ? 'VERIFICATION_APPROVED'
-          : outcomeSelected === 'REJECTED'
-            ? 'VERIFICATION_REJECTED'
-            : 'VERIFICATION_NEEDS_MORE_INFO';
+      let nextStatus = 'VERIFICATION_NEEDS_MORE_INFO';
+      if (outcomeSelected === 'APPROVED') {
+        nextStatus = 'VERIFICATION_APPROVED';
+      } else if (outcomeSelected === 'REJECTED') {
+        nextStatus = 'VERIFICATION_REJECTED';
+      }
       setOnboardingStatus(nextStatus);
       setOutcomeNotice(
         `Onboarding outcome recorded: ${outcomeSelected}. Lifecycle status updated to ${nextStatus}.`,
@@ -334,7 +336,7 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
   if (isProtectedArchiveTarget) {
     archivePanelContent = (
       <div className="rounded border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-xs text-amber-200">
-        This tenant is on the protected keep-set and cannot be archived from this surface.
+        This tenant is protected and cannot be archived from this control.
       </div>
     );
   } else if (tenantStatus === TenantStatus.CLOSED) {
@@ -449,6 +451,27 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
               <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800">
                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Lifecycle Management</h3>
                 <div className="space-y-3">
+                  <div className="rounded border border-slate-700 bg-slate-950/60 p-4 space-y-4">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Current Lifecycle State</div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="rounded border border-slate-700 bg-slate-950/70 px-3 py-3">
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Runtime Status</div>
+                        <div className="mt-1 text-sm font-bold text-slate-100">{runtimeStatusPresentation.label}</div>
+                        <div className="mt-1 text-[10px] uppercase tracking-widest text-slate-500">
+                          Machine state: {runtimeStatusPresentation.machine}
+                        </div>
+                        <div className="mt-2 text-xs text-slate-300">{runtimeStatusPresentation.meaning}</div>
+                      </div>
+                      <div className="rounded border border-slate-700 bg-slate-950/70 px-3 py-3">
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Onboarding Status</div>
+                        <div className="mt-1 text-sm font-bold text-slate-100">{onboardingStatusPresentation.label}</div>
+                        <div className="mt-1 text-[10px] uppercase tracking-widest text-slate-500">
+                          Machine state: {onboardingStatusPresentation.machine}
+                        </div>
+                        <div className="mt-2 text-xs text-slate-300">{onboardingStatusPresentation.meaning}</div>
+                      </div>
+                    </div>
+                  </div>
                   <div className="rounded border border-amber-500/30 bg-amber-500/10 p-4 space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="text-[10px] font-bold uppercase tracking-widest text-amber-200">
@@ -516,6 +539,11 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
                       </div>
                     )}
                   </div>
+                  <div className="rounded border border-slate-700 bg-slate-950/60 p-4 space-y-3">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Lifecycle Action Controls</div>
+                    <div className="text-xs text-slate-400">
+                      Only use these controls after reviewing tenant identity, onboarding status, and supporting context. Lifecycle actions may write audit records.
+                    </div>
                   {canRecordOnboardingOutcome && (
                     <div className="rounded border border-indigo-500/30 bg-indigo-500/10 p-4 space-y-3">
                       <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">
@@ -561,23 +589,46 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
                       >
                         {outcomeLoading ? 'Recording Outcome...' : 'Record Onboarding Outcome'}
                       </button>
+                      <div className="text-[10px] uppercase tracking-widest text-slate-500">
+                        Submitting this action records an audit entry.
+                      </div>
                     </div>
                   )}
                   {canActivateApproved && (
-                    <button
-                      onClick={handleActivateApproved}
-                      disabled={activationLoading}
-                      className="w-full py-2 bg-emerald-600 text-white rounded font-bold text-xs uppercase transition disabled:opacity-60 disabled:cursor-not-allowed hover:bg-emerald-700"
-                    >
-                      {activationLoading ? 'Activating Approved Tenant...' : 'Activate Approved Tenant'}
-                    </button>
-                  )}
-                  <div className="rounded border border-slate-700 bg-slate-950/60 p-4 space-y-3">
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Archive Tenant</div>
-                    <div className="text-xs text-slate-400">
-                      Archive is a bounded control-plane action. It sets both runtime and organization lifecycle state to CLOSED, removing the tenant from ACTIVE sign-in, impersonation, and domain resolution flows without deleting audit history.
+                    <div className="space-y-2">
+                      <button
+                        onClick={handleActivateApproved}
+                        disabled={activationLoading}
+                        className="w-full py-2 bg-emerald-600 text-white rounded font-bold text-xs uppercase transition disabled:opacity-60 disabled:cursor-not-allowed hover:bg-emerald-700"
+                      >
+                        {activationLoading ? 'Activating Approved Tenant...' : 'Activate Approved Tenant'}
+                      </button>
+                      <div className="text-[10px] uppercase tracking-widest text-slate-500">
+                        Submitting this action records an audit entry.
+                      </div>
                     </div>
-                    {archivePanelContent}
+                  )}
+                  {!canRecordOnboardingOutcome && !canActivateApproved && (
+                    <div className="rounded border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-300">
+                      This action is unavailable because the tenant is not in an eligible lifecycle state.
+                    </div>
+                  )}
+                  </div>
+                  <div className="rounded border border-rose-500/40 bg-rose-500/10 p-4 space-y-3">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-rose-300">Danger Zone</div>
+                    <div className="text-xs text-slate-400">
+                      Danger Zone actions can remove a tenant from active operational views. Use only after confirming this is intentional and governed.
+                    </div>
+                    <div className="rounded border border-rose-500/30 bg-slate-950/60 p-4 space-y-3">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-rose-300">Archive Tenant</div>
+                      <div className="text-xs text-slate-300">
+                        Archive is a bounded control-plane action. It sets both runtime and organization lifecycle state to CLOSED, removing the tenant from ACTIVE sign-in, impersonation, and domain resolution flows without deleting audit history.
+                      </div>
+                      <div className="text-[10px] uppercase tracking-widest text-slate-500">
+                        Submitting this action records an audit entry.
+                      </div>
+                      {archivePanelContent}
+                    </div>
                   </div>
                   <div className="space-y-3 rounded border border-dashed border-slate-700/80 bg-slate-950/40 p-3">
                     <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
@@ -596,7 +647,7 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({
                         ))}
                       </div>
                       <div className="mt-2 text-[10px] uppercase tracking-widest text-slate-500">
-                        No broad lifecycle suite is available from this deep-dive.
+                        This action is unavailable because the tenant is not in an eligible lifecycle state.
                       </div>
                     </div>
                   </div>
@@ -899,3 +950,72 @@ const renderTabNoticePanel = ({
     <div className="mt-3 text-sm text-slate-400">{detail}</div>
   </div>
 );
+
+const STATUS_COPY_FALLBACK =
+  'This lifecycle state is not fully described in the current control-plane copy. Review the raw status before taking action.';
+
+const LIFECYCLE_STATUS_MEANINGS: Record<string, string> = {
+  PENDING_VERIFICATION:
+    'This tenant is awaiting superadmin verification outcome review before approval or rejection is recorded.',
+  VERIFICATION_APPROVED:
+    'This tenant has passed verification review and may be eligible for activation if all other requirements are satisfied.',
+  VERIFICATION_REJECTED:
+    'This tenant was rejected during verification review and cannot proceed until the onboarding posture changes.',
+  VERIFICATION_NEEDS_MORE_INFO:
+    'This tenant requires additional information before a final verification outcome can be recorded.',
+  ACTIVE:
+    'This tenant is in active runtime operation and is eligible for normal control-plane supervision.',
+  CLOSED:
+    'This tenant is archived for bounded read-only oversight and is removed from active operational runtime paths.',
+};
+
+const ONBOARDING_STATUS_LABELS: Record<string, string> = {
+  PENDING_VERIFICATION: 'Pending Verification',
+  VERIFICATION_APPROVED: 'Verification Approved',
+  VERIFICATION_REJECTED: 'Verification Rejected',
+  VERIFICATION_NEEDS_MORE_INFO: 'Verification Needs More Info',
+  ACTIVE: 'Active',
+  CLOSED: 'Closed',
+};
+
+const RUNTIME_STATUS_LABELS: Record<string, string> = {
+  ACTIVE: 'Active',
+  CLOSED: 'Closed',
+  SUSPENDED: 'Suspended',
+  TRIAL: 'Trial',
+};
+
+const formatMachineStatusLabel = (status: string): string => {
+  const normalized = status.trim();
+  if (!normalized) return 'Unknown';
+
+  return normalized
+    .toLowerCase()
+    .split('_')
+    .map(segment => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(' ');
+};
+
+const getLifecycleStatusMeaning = (machineStatus: string): string => {
+  return LIFECYCLE_STATUS_MEANINGS[machineStatus] ?? STATUS_COPY_FALLBACK;
+};
+
+const buildOnboardingStatusPresentation = (onboardingStatus: string | null) => {
+  const machine = onboardingStatus?.trim().toUpperCase() || 'UNKNOWN';
+
+  return {
+    label: ONBOARDING_STATUS_LABELS[machine] ?? formatMachineStatusLabel(machine),
+    machine,
+    meaning: getLifecycleStatusMeaning(machine),
+  };
+};
+
+const buildRuntimeStatusPresentation = (status: TenantStatus) => {
+  const machine = String(status).trim().toUpperCase() || 'UNKNOWN';
+
+  return {
+    label: RUNTIME_STATUS_LABELS[machine] ?? formatMachineStatusLabel(machine),
+    machine,
+    meaning: getLifecycleStatusMeaning(machine),
+  };
+};
