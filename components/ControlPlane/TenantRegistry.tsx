@@ -9,6 +9,11 @@ import {
 import { EmptyState, ErrorState, TenantRowSkeleton } from '../shared';
 import { APIError } from '../../services/apiClient';
 import type { RuntimeLocalRouteKey } from '../../runtime/sessionRuntimeDescriptor';
+import {
+  classifyTenantVisibility,
+  isQaTestDemoTenant,
+  type TenantVisibilityClassification,
+} from './tenantClassification';
 
 interface TenantRegistryProps {
   lifecycleView: 'ACTIVE' | 'PENDING_APPROVAL' | 'INVITED' | 'CLOSED';
@@ -223,6 +228,24 @@ const QueuePreviewSection: React.FC<QueuePreviewSectionProps> = ({
   </div>
 );
 
+const VISIBILITY_BADGE_UI: Record<
+  TenantVisibilityClassification,
+  { label: string; className: string }
+> = {
+  REAL: {
+    label: 'Real',
+    className: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
+  },
+  QA_TEST_DEMO: {
+    label: 'QA/Test/Demo',
+    className: 'border-amber-500/30 bg-amber-500/10 text-amber-300',
+  },
+  PROTECTED: {
+    label: 'Protected',
+    className: 'border-slate-500/40 bg-slate-500/20 text-slate-200',
+  },
+};
+
 export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   lifecycleView,
   onSelectTenant,
@@ -259,6 +282,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   const [sortField, setSortField] = useState<'name' | 'createdAt' | 'status' | 'plan'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
+  const [includeQaTestDemo, setIncludeQaTestDemo] = useState(false);
   const PAGE_SIZE = 50;
 
   const provisionCanonicalPreview = resolveCanonicalPreviewFromProvisionForm(provisionForm);
@@ -397,7 +421,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   // QA-CONTROL-005B: Reset to page 1 when search, filter, sort, or lifecycle view changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter, sortField, sortDir, lifecycleView]);
+  }, [searchQuery, statusFilter, sortField, sortDir, lifecycleView, includeQaTestDemo]);
 
   const getStatusColor = (status: string) => {
     const upperStatus = status.toUpperCase();
@@ -489,9 +513,34 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     }
   })();
 
+  const classificationByTenantId = new Map<string, TenantVisibilityClassification>(
+    currentView.tenantList.map(tenant => [tenant.id, classifyTenantVisibility(tenant)])
+  );
+
+  const visibilityScopedTenantList = includeQaTestDemo
+    ? currentView.tenantList
+    : currentView.tenantList.filter(tenant => !isQaTestDemoTenant(tenant));
+
+  const hiddenQaTestDemoCount = currentView.tenantList.length - visibilityScopedTenantList.length;
+
+  const visibleClassificationCounts = visibilityScopedTenantList.reduce(
+    (acc, tenant) => {
+      const classification = classificationByTenantId.get(tenant.id) ?? 'REAL';
+      if (classification === 'QA_TEST_DEMO') {
+        acc.qaTestDemo += 1;
+      } else if (classification === 'PROTECTED') {
+        acc.protected += 1;
+      } else {
+        acc.real += 1;
+      }
+      return acc;
+    },
+    { real: 0, qaTestDemo: 0, protected: 0 }
+  );
+
   // QA-CONTROL-005B: Filtered, sorted, and paginated list derived from current lifecycle view
   const searchTrimmed = searchQuery.trim().toLowerCase();
-  const filteredList = currentView.tenantList.filter(t => {
+  const filteredList = visibilityScopedTenantList.filter(t => {
     if (searchTrimmed) {
       const matchSearch =
         (t.name ?? '').toLowerCase().includes(searchTrimmed) ||
@@ -542,6 +591,8 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   const paginationStart = (safePage - 1) * PAGE_SIZE;
   const paginatedList = sortedList.slice(paginationStart, paginationStart + PAGE_SIZE);
   const hasActiveFilter = searchTrimmed.length > 0 || statusFilter !== 'ALL';
+  const hasLifecycleRows = visibilityScopedTenantList.length > 0;
+  const hasPaginatedRows = paginatedList.length > 0;
 
   const renderTenantTable = (tenantList: Tenant[]) => (
     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
@@ -592,6 +643,20 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                       <div className="font-bold text-slate-100">{tenant.name}</div>
                       <div className="text-[10px] text-slate-500 font-mono">
                         {tenant.slug}.texqtic.com
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        {(() => {
+                          const classification = classificationByTenantId.get(tenant.id) ?? 'REAL';
+                          const badge = VISIBILITY_BADGE_UI[classification];
+
+                          return (
+                            <span
+                              className={`rounded border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] ${badge.className}`}
+                            >
+                              {badge.label}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -901,9 +966,31 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
             </select>
             <div className="text-xs text-slate-500 whitespace-nowrap">
               {hasActiveFilter
-                ? `${totalFiltered} of ${currentView.count} matching`
-                : `${currentView.count} records`}
+                ? `${totalFiltered} of ${visibilityScopedTenantList.length} matching`
+                : `${visibilityScopedTenantList.length} records`}
             </div>
+          </div>
+          <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2 text-xs text-slate-400">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <label className="inline-flex items-center gap-2 text-slate-200 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeQaTestDemo}
+                  onChange={e => setIncludeQaTestDemo(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-600 bg-slate-950 text-indigo-500 focus:ring-indigo-500"
+                />
+                <span>Include QA/Test/Demo</span>
+              </label>
+              <div>Real visible: {visibleClassificationCounts.real}</div>
+              <div>QA/Test/Demo visible: {visibleClassificationCounts.qaTestDemo}</div>
+              <div>Protected visible: {visibleClassificationCounts.protected}</div>
+              {!includeQaTestDemo && hiddenQaTestDemoCount > 0 && (
+                <div>Hidden QA/Test/Demo: {hiddenQaTestDemoCount}</div>
+              )}
+            </div>
+            <p className="mt-2 text-[11px] text-slate-500">
+              QA/Test/Demo labels are visibility-only. Cleanup or archive actions are handled in a separate governed unit.
+            </p>
           </div>
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -913,14 +1000,17 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
               <p className="text-xs text-slate-500">{currentView.description}</p>
             </div>
             <div className="rounded border border-slate-800 bg-slate-900 px-3 py-1 text-xs font-bold text-slate-300">
-              {hasActiveFilter ? totalFiltered : currentView.count}
+              {hasActiveFilter ? totalFiltered : visibilityScopedTenantList.length}
             </div>
           </div>
-          {currentView.tenantList.length === 0 ? (
+          {!hasLifecycleRows && (
             <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-6 text-sm text-slate-400">
-              {currentView.emptyMessage}
+              {includeQaTestDemo
+                ? currentView.emptyMessage
+                : `${currentView.emptyMessage} Toggle "Include QA/Test/Demo" to inspect classified QA records.`}
             </div>
-          ) : paginatedList.length > 0 ? (
+          )}
+          {hasLifecycleRows && hasPaginatedRows && (
             <>
               {renderTenantTable(paginatedList)}
               {/* QA-CONTROL-005B: Pagination footer */}
@@ -947,7 +1037,8 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                 </div>
               )}
             </>
-          ) : (
+          )}
+          {hasLifecycleRows && !hasPaginatedRows && (
             <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-6 text-center text-sm text-slate-400">
               <div className="text-2xl mb-2">🔍</div>
               <div className="font-bold text-slate-300 mb-1">No tenants match the current search or filters.</div>
