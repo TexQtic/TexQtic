@@ -10,6 +10,12 @@
 
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
+unit_id: FTR-SL-004-SUPPLIER-INQUIRY-INBOX-DESIGN-01
+type: DESIGN
+title: Supplier inquiry inbox design candidate pending Paresh authorization
+prerequisites_met: false
+authorized_by: PENDING_PARESH_AUTHORIZATION
+date_authorized: null
 governance_exception_active: false
 product_delivery_priority: >-
   LAUNCH_GATE_CLOSED — TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 (2026-05-02).

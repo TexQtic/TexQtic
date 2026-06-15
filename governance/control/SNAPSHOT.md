@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-05-02 (TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 — VERIFIED_COMPLETE; DPP Passport Network PRODUCTION_READY; launch authorization HOLD_FOR_PARESH_DECISION; PROD-AUDIT-002 authority commit 17c252c)
+**Updated:** 2026-06-15 (GOV-LAYER0-LINT-COUPDATE-001 — governance co-update completed for Layer 0 lint closure; no source/runtime changes)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -219,3 +219,10 @@ layer_0_identity_root: governance/control/
 - Read `OPEN-SET.md`, `NEXT-ACTION.md`, and `BLOCKED.md` first, in that order.
 - Use this file only when current opening-layer context is missing or historically ambiguous.
 - Subscription slice 3C is implemented, VERIFIED_CLEAN, and closed; no product-facing implementation unit is currently open.
+
+## 2026-06-15 Layer 0 Co-update Snapshot
+
+- **0 implementation units are currently OPEN.**
+- `OPEN-SET.md` canonical table and summary are structurally aligned.
+- `NEXT-ACTION.md` includes required top-level governance fields (`unit_id`, `type`, `title`, `prerequisites_met`, `authorized_by`, `date_authorized`).
+- This co-update is governance-only and preserves accepted product/runtime truth.

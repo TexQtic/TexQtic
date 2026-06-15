@@ -10,6 +10,18 @@
 
 ---
 
+## Canonical Layer 0 Open Set
+
+- **OPEN** (implementation-ready): **0**
+- **BLOCKED**: 0
+- **DEFERRED**: 1
+- **DESIGN_GATE**: 0
+- **Total non-terminal units: 1**
+
+| UNIT-ID | Title | Status | Wave | Last Updated |
+| --- | --- | --- | --- | --- |
+| FTR-SL-004-SUPPLIER-INQUIRY-INBOX-DESIGN-01 | Supplier inquiry inbox design candidate | DEFERRED | July launch P1 | 2026-06-11 |
+
 ## Layer 0 Role
 
 - Layer 0 confirms current governed-unit state, blocker/hold posture, audit posture, and

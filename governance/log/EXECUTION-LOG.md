@@ -103,6 +103,25 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### GOV-LAYER0-LINT-COUPDATE-001 — 2026-06-15
+Type: GOVERNANCE_CLOSURE — Layer 0 lint-required co-update synchronization
+Status: VERIFIED_COMPLETE
+Commit: PENDING
+Title: Complete Layer 0 governance co-update to satisfy governance:lint co-update gate
+Summary: Executed authorized Layer 0 co-update after structural repairs in OPEN-SET and NEXT-ACTION.
+  Added minimal synchronized Layer 0 snapshot context in SNAPSHOT.md and recorded this closure entry
+  in EXECUTION-LOG.md so co-update requirements are met. Governance-only truth sync; no source,
+  test, backend, schema, auth, env, or runtime files changed.
+Layer Impact: Layer 0 (OPEN-SET, NEXT-ACTION, SNAPSHOT), Layer 3 (this file)
+Notes: Preserved accepted truth for QA-CONTROL-005A/005B/005C/005D/005E closures and QA-RUNTIME-SESSION-001B
+  production-validation note. Preserved follow-up pointers including AF-TECS-ENUM-DRIFT-001,
+  QA-CONTROL-005E-AF-001, QA-CONTROL-005B-PV-AF-001, REGISTRY-SEARCH-DEBOUNCE-001,
+  SERVER-SIDE-SEARCH-001, CURSOR-PAGINATION-001, QA-CONTROL-001A-EXEC, AF-QA-AUTH-001-04,
+  OBS-AUTH-001, CONTROL-PLANE-READ-ALL-DECISION-001.
+  GOV-LAYER0-LINT-COUPDATE-SCOPE-001 resolved by authorization and co-update completion when lint passes.
+
+---
+
 ### TECS-DPP-PASSPORT-NETWORK-LAUNCH-GATE-001 — 2026-05-02
 Type: GOVERNANCE_CLOSURE — Production Readiness Closure + Launch Authorization Decision
 Status: VERIFIED_COMPLETE
@@ -7071,9 +7090,9 @@ QA fixture passport (48d83d5a) will return passportMaturityLabel: "Silver -- Tra
 
 ---
 
-## [2026-05-15] Slice 4 � Invoice Domain
+## [2026-05-15] Slice 4 � Invoice Domain
 
-**Commit:** `4d51f6e` � `feat(tradetrust-pay): add invoice domain`
+**Commit:** `4d51f6e` � `feat(tradetrust-pay): add invoice domain`
 **Tests:** 18 invoice unit tests pass; 116 regression tests pass; tsc clean
 **Governance record:** `governance/decisions/PRODUCT-DEC-TRADETRUST-PAY-SLICE-4-INVOICE-DOMAIN-VERIFIED-001.md`
 **Status:** SLICE_4_INVOICE_DOMAIN_GATE_VERIFIED_COMPLETE
