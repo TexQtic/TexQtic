@@ -736,172 +736,203 @@ interface SupplierCardProps {
   readonly onSignIn: () => void;
 }
 
-function SupplierCard({ supplier, onViewOfferings, onViewProfile, onSignIn }: SupplierCardProps) {
+function SupplierCard({ supplier, onViewOfferings, onViewProfile, onSignIn: _onSignIn }: SupplierCardProps) {
   const taxonomy = supplier.taxonomy;
   const previewItems = supplier.offeringPreview.slice(0, 3);
+  // Cover image: first offering image if present and non-empty (public-safe — already rendered in OfferingsDrawer and PublicSupplierProfile)
+  const coverImageUrl = supplier.offeringPreview[0]?.imageUrl || null;
   const isReferencePreview = 'isReferencePreview' in supplier && supplier.isReferencePreview;
   const isDemoPilotSupplier = !isReferencePreview && isDemoPilotSupplierSlug(supplier.slug);
   const hasPublicOfferings = previewItems.length > 0;
-  let trustBadge = 'Public-safe profile';
+
+  // Initials fallback for logo and cover placeholder
+  const initials = supplier.legalName
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('');
+
+  // Trust posture label — simplified for card context
+  let trustLabel: string;
   if (isReferencePreview) {
-    trustBadge = REFERENCE_SUPPLIER_PROFILE_LABEL;
+    trustLabel = REFERENCE_SUPPLIER_PROFILE_LABEL;
   } else if (isDemoPilotSupplier) {
-    trustBadge = DEMO_PILOT_SUPPLIER_LABEL;
+    trustLabel = DEMO_PILOT_SUPPLIER_LABEL;
   } else if (
     supplier.eligibilityPosture === 'PUBLICATION_ELIGIBLE'
     && (supplier.publicationPosture === 'B2B_PUBLIC' || supplier.publicationPosture === 'BOTH')
   ) {
-    trustBadge = 'Public profile approved';
+    trustLabel = 'Approved';
+  } else {
+    trustLabel = 'Public profile';
   }
 
-  let summary = `A public-safe ${supplier.orgType.toLowerCase()} participant available for discovery.`;
-  if (isReferencePreview) {
-    summary = 'Reference preview of how a supplier profile can show category fit, capability context, and public-safe storytelling before a business publishes live discovery data.';
-  } else if (isDemoPilotSupplier) {
-    summary = DEMO_PILOT_SUPPLIER_HELPER_TEXT;
-  } else if (taxonomy?.primarySegment) {
-    summary = `A ${supplier.orgType.toLowerCase()} participant with ${taxonomy.primarySegment.toLowerCase()} capability available for discovery.`;
-  }
+  // Named cert chips — up to 3, overflow count if more
+  const certChips = supplier.certificationTypes.slice(0, 3);
+  const certOverflow = supplier.certificationTypes.length > 3 ? supplier.certificationTypes.length - 3 : 0;
+
+  // Summary text shown only for reference/demo cards — live profiles rely on image + taxonomy
+  const showSummary = isReferencePreview || isDemoPilotSupplier;
+  const summaryText = isReferencePreview
+    ? 'Reference preview: shows how a supplier profile can present category fit, capability context, and public-safe storytelling.'
+    : DEMO_PILOT_SUPPLIER_HELPER_TEXT;
 
   return (
-    <article className="rounded-[28px] border border-[#d9e5ea] bg-white p-6 shadow-[0_8px_28px_rgba(7,26,47,0.07)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="h-14 w-14 shrink-0 rounded-xl border border-[#d9e5ea] bg-[#f7fbfc] p-2">
+    <article className="overflow-hidden rounded-[28px] border border-[#d9e5ea] bg-white shadow-[0_8px_28px_rgba(7,26,47,0.07)] transition hover:border-[#b9d2d9] hover:shadow-[0_14px_42px_rgba(7,26,47,0.12)]">
+      {/* Cover image or segment/initials placeholder */}
+      <div className="relative aspect-[4/3] overflow-hidden">
+        {coverImageUrl ? (
+          <img
+            src={coverImageUrl}
+            alt={`${supplier.legalName} offering preview`}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-[#e5f3f7] to-[#d2eaf0] px-6 text-center">
+            <span className="text-4xl font-bold tracking-tight text-[#2f8094]/30">{initials}</span>
+            {taxonomy?.primarySegment && (
+              <span className="mt-2 text-[10px] font-bold uppercase tracking-[0.24em] text-[#2f8094]/50">
+                {taxonomy.primarySegment}
+              </span>
+            )}
+          </div>
+        )}
+        {/* Reference / demo label overlay on cover */}
+        {(isReferencePreview || isDemoPilotSupplier) && (
+          <div className="absolute left-3 top-3">
+            {isReferencePreview ? (
+              <ReferencePreviewBadge label={REFERENCE_SUPPLIER_PROFILE_LABEL} />
+            ) : (
+              <span className="inline-flex items-center rounded-full border border-[#f3d49e] bg-[#fff6e8]/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#9a5a00]">
+                {DEMO_PILOT_SUPPLIER_LABEL}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Card body */}
+      <div className="p-5">
+        {/* Header: logo · org type · company name · jurisdiction */}
+        <div className="flex items-center gap-3">
+          <div className="shrink-0">
             {supplier.logoUrl ? (
               <img
                 src={supplier.logoUrl}
                 alt={`${supplier.legalName} logo`}
-                className="h-full w-full object-contain"
+                className="h-10 w-10 rounded-lg border border-[#d9e5ea] bg-white object-contain p-1"
                 loading="lazy"
               />
             ) : (
-              <div className="grid h-full w-full place-items-center text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">
-                Logo
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#071a2f] text-sm font-bold text-white">
+                {initials.slice(0, 2)}
               </div>
             )}
           </div>
-          <div>
-          {isReferencePreview ? (
-            <ReferencePreviewBadge label={REFERENCE_SUPPLIER_PROFILE_LABEL} />
-          ) : (
-            <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-[#2f8094]">{supplier.orgType}</p>
-          )}
-          {isDemoPilotSupplier && (
-            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#9a5a00]">
-              {DEMO_PILOT_SUPPLIER_HELPER_TEXT}
-            </p>
-          )}
-            <h3 className="mt-1 text-lg font-semibold leading-tight text-[#0a2036]">{supplier.legalName}</h3>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#2f8094]">{supplier.orgType}</p>
+            <h3 className="truncate text-base font-semibold leading-tight text-[#0a2036]">{supplier.legalName}</h3>
           </div>
+          <span className="shrink-0 rounded-full border border-[#d6e4e8] bg-[#f0f8fb] px-2.5 py-1 text-[10px] font-semibold text-[#2f8094]">
+            {supplier.jurisdiction}
+          </span>
         </div>
-        <span className="shrink-0 rounded-full border border-[#d6e4e8] bg-[#f0f8fb] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#2f8094]">
-          {supplier.jurisdiction}
-        </span>
-      </div>
 
-      {taxonomy && (
-        <div className="mt-4 space-y-1.5">
-          <p className="text-xs font-semibold text-[#0a2036]">{taxonomy.primarySegment}</p>
-          <p className="text-sm leading-6 text-slate-500">{taxonomy.secondarySegments.slice(0, 3).join(' · ')}</p>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-            {taxonomy.rolePositions.slice(0, 4).join(' · ')}
+        {/* Taxonomy */}
+        {taxonomy && (
+          <div className="mt-3">
+            {taxonomy.secondarySegments.length > 0 && (
+              <p className="text-xs leading-5 text-slate-500">
+                {taxonomy.secondarySegments.slice(0, 3).join(' · ')}
+              </p>
+            )}
+            {taxonomy.rolePositions.length > 0 && (
+              <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                {taxonomy.rolePositions.slice(0, 3).join(' · ')}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Trust posture + named certification chips + traceability */}
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {!isReferencePreview && !isDemoPilotSupplier && (
+            <span className="inline-flex items-center rounded-full border border-[#d6e4e8] bg-[#eef7fa] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#2f8094]">
+              {trustLabel}
+            </span>
+          )}
+          {certChips.map((cert) => (
+            <span
+              key={cert}
+              className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700"
+            >
+              {cert}
+            </span>
+          ))}
+          {certOverflow > 0 && (
+            <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700">
+              +{certOverflow} more
+            </span>
+          )}
+          {supplier.hasTraceabilityEvidence && (
+            <span className="inline-flex items-center rounded-full border border-[#c5dfe6] bg-[#eef7fa] px-2.5 py-1 text-[10px] font-semibold text-[#2f8094]">
+              Traceability
+            </span>
+          )}
+        </div>
+
+        {/* Summary — reference/demo only; live commercial profiles rely on image + taxonomy */}
+        {showSummary && (
+          <p className="mt-3 text-xs leading-5 text-slate-500">{summaryText}</p>
+        )}
+
+        {/* NOT_LIVE_COMMERCIAL_OFFER notice for reference previews */}
+        {isReferencePreview && (
+          <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9a5a00]">
+            {NOT_LIVE_COMMERCIAL_OFFER_COPY}
           </p>
-        </div>
-      )}
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        <span className="inline-flex items-center gap-1 rounded-full border border-[#d6e4e8] bg-[#eef7fa] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#2f8094]">
-          {trustBadge}
-        </span>
-        {supplier.certificationCount > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700">
-            {supplier.certificationCount} cert{supplier.certificationCount === 1 ? '' : 's'}
-          </span>
         )}
-        {supplier.hasTraceabilityEvidence && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-[#d6e4e8] bg-[#eef7fa] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#2f8094]">
-            Traceability evidence
-          </span>
+
+        {/* Offering chips — shown only when no cover image to avoid duplication */}
+        {previewItems.length > 0 && !coverImageUrl && (
+          <div className="mt-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Offerings</p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {previewItems.map((item) => (
+                <span
+                  key={item.name}
+                  className="rounded-full border border-[#d9e5ea] bg-[#f7fbfc] px-2.5 py-1 text-[11px] font-medium text-[#0a2036]"
+                >
+                  {item.name}
+                  {!isReferencePreview && (
+                    <span className="ml-1.5 text-slate-400">· MOQ {item.moq}</span>
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
         )}
-      </div>
 
-      <p className="mt-4 text-sm leading-6 text-slate-600">{summary}</p>
-
-      {isReferencePreview && (
-        <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#9a5a00]">
-          {NOT_LIVE_COMMERCIAL_OFFER_COPY}
-        </p>
-      )}
-
-      {supplier.certificationTypes.length > 0 && (
-        <div className="mt-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Certification summary</p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {supplier.certificationTypes.slice(0, 4).map((certification) => (
-              <span
-                key={certification}
-                className="rounded-full border border-[#d9e5ea] bg-[#f5fafb] px-2.5 py-0.5 text-[10px] font-medium text-[#2f8094]"
-              >
-                {certification}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {previewItems.length > 0 && (
-        <div className="mt-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Product/service examples</p>
-          <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-            {previewItems.map((item) => (
-              <div
-                key={item.name}
-                className="min-w-[9rem] rounded-[18px] border border-[#d9e5ea] bg-[#f7fbfc] px-3 py-2"
-              >
-                <p className="text-xs font-semibold text-[#0a2036]">{item.name}</p>
-                {isReferencePreview ? (
-                  <p className="mt-1 text-[11px] leading-5 text-slate-500">Reference capability example</p>
-                ) : (
-                  <p className="mt-1 text-[11px] leading-5 text-slate-500">MOQ {item.moq}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="mt-6 flex flex-wrap gap-2">
-        {hasPublicOfferings ? (
+        {/* CTAs — max 2: primary View Profile + secondary View Offerings (when available) */}
+        <div className="mt-5 flex gap-2">
           <button
             type="button"
-            onClick={onViewOfferings}
-            className="inline-flex items-center justify-center rounded-full bg-[#7fd5de] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-[#08233a] transition hover:bg-[#98e2e9]"
+            onClick={() => onViewProfile(supplier.slug)}
+            className="flex-1 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
           >
-            View offerings
+            {isReferencePreview ? 'View Reference' : 'View Profile'}
           </button>
-        ) : (
-          <span
-            aria-label="No public offerings yet"
-            className="inline-flex items-center justify-center rounded-full border border-[#d9e5ea] bg-[#f7fbfc] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400"
-          >
-            No public offerings yet
-          </span>
-        )}
-        <button
-          type="button"
-          onClick={() => onViewProfile(supplier.slug)}
-          className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
-        >
-          {isReferencePreview ? 'View Reference Profile' : 'View Public Profile'}
-        </button>
-        <button
-          type="button"
-          onClick={onSignIn}
-          className="inline-flex items-center justify-center rounded-full border border-[#d1dee3] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036]"
-        >
-          Sign in to Connect
-        </button>
+          {hasPublicOfferings && (
+            <button
+              type="button"
+              onClick={onViewOfferings}
+              className="flex-1 inline-flex items-center justify-center rounded-full border border-[#c5dfe6] bg-[#eef7fa] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-[#0a4a58] transition hover:border-[#2f8094] hover:bg-[#d8eff4]"
+            >
+              View Offerings
+            </button>
+          )}
+        </div>
       </div>
     </article>
   );
