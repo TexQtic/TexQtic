@@ -104,6 +104,10 @@ const ELIGIBLE_SUPPLIER_RESULT = {
     offeringPreview: [],
     publicationPosture: 'B2B_PUBLIC' as const,
     eligibilityPosture: 'PUBLICATION_ELIGIBLE' as const,
+    tagline: null,
+    description: null,
+    companySizeBand: null,
+    capacityBand: null,
   },
 };
 

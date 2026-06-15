@@ -283,6 +283,11 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
               <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.02em] text-white md:text-4xl">
                 {profile.legalName}
               </h1>
+              {!isReferencePreview && !isDemoPilotSupplier && profile.tagline && (
+                <p className="mt-2 text-base font-medium leading-snug text-[#7fd5de]">
+                  {profile.tagline.trim()}
+                </p>
+              )}
               <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-200">
                 {heroProfileDescription}
               </p>
@@ -343,6 +348,17 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
               )}
             </section>
 
+            {!isReferencePreview && !isDemoPilotSupplier && profile.description && (
+              <section className="mt-6 rounded-2xl border border-[#d9e5ea] bg-white p-6 shadow-sm">
+                <h2 className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+                  About this business
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-slate-700">
+                  {profile.description.trim().slice(0, 1200)}
+                </p>
+              </section>
+            )}
+
             <section className="mt-6 rounded-2xl border border-[#d9e5ea] bg-white p-6 shadow-sm">
               <h2 className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
                 Business snapshot
@@ -384,6 +400,18 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
                     {toVisibilityLabel(profile.publicationPosture)}
                   </p>
                 </article>
+                {profile.companySizeBand && (
+                  <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Company Size</p>
+                    <p className="mt-2 text-sm font-semibold text-[#071a2f]">{profile.companySizeBand}</p>
+                  </article>
+                )}
+                {profile.capacityBand && (
+                  <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Capacity Band</p>
+                    <p className="mt-2 text-sm font-semibold text-[#071a2f]">{profile.capacityBand}</p>
+                  </article>
+                )}
               </div>
             </section>
 

@@ -73,6 +73,11 @@ export type PublicB2BSupplierEntry = {
   offeringPreview: PublicB2BOfferingPreviewItem[];
   publicationPosture: 'B2B_PUBLIC' | 'BOTH';
   eligibilityPosture: 'PUBLICATION_ELIGIBLE';
+  // Approved public company profile fields (PUBLIC-SAFE-COMPANY-PROJECTION-001)
+  tagline: string | null;
+  description: string | null;
+  companySizeBand: string | null;
+  capacityBand: string | null;
 };
 
 export type PublicB2BDiscoveryResponse = {
@@ -107,6 +112,10 @@ type EligibleOrgRow = {
 type EligibleTenantRow = {
   id: string;
   publicEligibilityPosture: string;
+  tagline: string | null;
+  description: string | null;
+  companySizeBand: string | null;
+  capacityBand: string | null;
 };
 
 type CertificationRow = {
@@ -210,6 +219,10 @@ export async function listPublicB2BSuppliers(
       select: {
         id: true,
         publicEligibilityPosture: true,
+        tagline: true,
+        description: true,
+        companySizeBand: true,
+        capacityBand: true,
       },
     });
   });
@@ -325,11 +338,22 @@ export async function listPublicB2BSuppliers(
     logoByTenantId.set(row.tenantId, row.logoUrl ?? null);
   }
 
+  const tenantProfileByOrgId = new Map<string, Pick<EligibleTenantRow, 'tagline' | 'description' | 'companySizeBand' | 'capacityBand'>>();
+  for (const t of tenantRows) {
+    tenantProfileByOrgId.set(t.id, {
+      tagline: t.tagline,
+      description: t.description,
+      companySizeBand: t.companySizeBand,
+      capacityBand: t.capacityBand,
+    });
+  }
+
   // ── build projection entries ──────────────────────────────────────────────────
 
   const allItems: PublicB2BSupplierEntry[] = eligibleOrgs.map((org) => {
     const certs = certsByOrgId.get(org.id) ?? { count: 0, types: [] };
     const catalog = catalogByTenantId.get(org.id) ?? [];
+    const tenantProfile = tenantProfileByOrgId.get(org.id);
 
     // Validated at DB query level, but narrow here for type safety
     const posture = org.publication_posture as 'B2B_PUBLIC' | 'BOTH';
@@ -355,6 +379,10 @@ export async function listPublicB2BSuppliers(
       })),
       publicationPosture: posture,
       eligibilityPosture: 'PUBLICATION_ELIGIBLE',
+      tagline: tenantProfile?.tagline ?? null,
+      description: tenantProfile?.description ?? null,
+      companySizeBand: tenantProfile?.companySizeBand ?? null,
+      capacityBand: tenantProfile?.capacityBand ?? null,
     };
   });
 
@@ -444,6 +472,10 @@ export async function getPublicB2BSupplierBySlug(
       select: {
         id: true,
         publicEligibilityPosture: true,
+        tagline: true,
+        description: true,
+        companySizeBand: true,
+        capacityBand: true,
       },
     });
   });
@@ -534,6 +566,10 @@ export async function getPublicB2BSupplierBySlug(
     })),
     publicationPosture: posture,
     eligibilityPosture: 'PUBLICATION_ELIGIBLE',
+    tagline: tenantRows[0].tagline,
+    description: tenantRows[0].description,
+    companySizeBand: tenantRows[0].companySizeBand,
+    capacityBand: tenantRows[0].capacityBand,
   };
 
   return { profile, orgId: org.id };

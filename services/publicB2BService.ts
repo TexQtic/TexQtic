@@ -34,6 +34,11 @@ export interface PublicB2BSupplierEntry {
   offeringPreview: PublicB2BSupplierOfferingPreviewItem[];
   publicationPosture: string;
   eligibilityPosture: string;
+  // Approved public company profile fields (PUBLIC-SAFE-COMPANY-PROJECTION-001)
+  tagline?: string | null;
+  description?: string | null;
+  companySizeBand?: string | null;
+  capacityBand?: string | null;
 }
 
 export interface PublicB2BSuppliersResponse {
@@ -80,6 +85,11 @@ export interface PublicB2BSupplierProfile {
   offeringPreview: PublicB2BSupplierOfferingPreviewItem[];
   publicationPosture: string;
   eligibilityPosture: string;
+  // Approved public company profile fields (PUBLIC-SAFE-COMPANY-PROJECTION-001)
+  tagline?: string | null;
+  description?: string | null;
+  companySizeBand?: string | null;
+  capacityBand?: string | null;
 }
 
 /**
