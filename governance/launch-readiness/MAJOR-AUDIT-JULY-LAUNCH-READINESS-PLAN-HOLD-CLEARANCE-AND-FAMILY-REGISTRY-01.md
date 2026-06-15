@@ -9,6 +9,91 @@
 
 ---
 
+## §0 Last Repo-Truth Sync — 2026-06-15
+
+**Last repo-truth sync**
+
+- **Unit:** `MAJOR-AUDIT-JULY-LAUNCH-READINESS-SYNC-001`
+- **Date/time:** 2026-06-15 19:22:32 +05:30
+- **Basis:** `FUTURE-TODO-REGISTER.md`, `LAUNCH-FAMILY-INDEX.md`, Layer 0 control files, current git history through `59885cf3`, and direct source inspection of the public projection path.
+- **Scope:** Audit/tracker truth only; no application source, tests, backend, schema, SQL, Supabase, auth, env, deployment, payment, CRM, legal, or runtime configuration changes.
+- **Historical note:** The original 2026-06-11 audit body is preserved below. Where this section conflicts with older rows, this §0 sync is the current repo-truth overlay.
+
+### §0.1 Implemented / Closed Units Recorded
+
+| Unit ID | Status | Evidence commit(s) | Verification evidence | Notes |
+|---|---|---|---|---|
+| QA-CONTROL-005A through QA-CONTROL-005D | READY_FOR_LAUNCH / CLOSED | Accepted current-thread truth; execution log preserves A-E closure set | Preserved in `governance/log/EXECUTION-LOG.md`; no contrary repo evidence found in this sync | Do not reopen; individual detailed rows were not broadened in this audit sync |
+| QA-CONTROL-005E | READY_FOR_LAUNCH / CLOSED | `31acee39` source implementation; `07d51082` governance close | Future Todo records production/manual QA acceptance; validation passed (`pnpm run typecheck`, focused activation tests 17/17, regression tests 24/24); no final lifecycle mutation executed | Safe tenant action confirmations accepted; follow-up `QA-CONTROL-005E-AF-001` remains tooling-only/post-MVP |
+| TLRH-SUPERADMIN-POST-MVP-REGISTER-001 | CLOSED | `568d1472` | Future Todo §7 rows added for 005F and Superadmin deferred/post-MVP items | FAM-10 already `VERIFIED_COMPLETE`; no Launch Family Index change required |
+| FAM-08 formal close | VERIFIED_COMPLETE_WITH_RESIDUALS | Layer 0 records `6c3e8174`; Launch Family Index records `GOV-FAM-08-FORMAL-CLOSE-WITH-RESIDUALS-01` | T-1 through T-6 evidence preserved; residuals explicitly carried as post-launch or decision-gated | Supersedes older `CLOSE_READY_WITH_RESIDUALS` rows in this audit |
+| FAM-09 formal close | VERIFIED_COMPLETE_WITH_LAUNCH_RESIDUALS | Layer 0 records `3996e571`; Launch Family Index records `GOV-FAM-09-FORMAL-CLOSE-WITH-LAUNCH-RESIDUALS-01` | lt-b2b-001 runtime path proven; Paresh decision: carry forward as labelled demo/pilot supplier | Supersedes older `CLOSE_READY_WITH_LAUNCH_TEST_RESIDUALS` rows |
+| FTR-OPS-003 rollback runbook | READY_FOR_LAUNCH / CLOSED | Layer 0 records `d2ab1caa`; Future Todo §8 records closure | `PRODUCTION-ROLLBACK-RUNBOOK.md` completed; docs-only, no source/schema/env changes | Supersedes older `NOT_ASSESSED` rows in this audit |
+| PUBLIC-B2B-DISCOVERY-CARDS-001 | READY_FOR_LAUNCH / CLOSED | `7cf36dd8` | Accepted current-thread truth: production verification completed after discovery-card improvement | No Future Todo row found; status recorded here to prevent stale audit drift |
+
+### §0.2 Source-Complete / Verification-Pending Units
+
+| Unit ID | Status | Evidence commit(s) | Verification evidence | Notes |
+|---|---|---|---|---|
+| PUBLIC-SAFE-COMPANY-PROJECTION-001 | SOURCE_COMPLETE_PRODUCTION_VERIFICATION_PENDING | `e013d38f` | Source projects approved fields: `tagline`, `description`, `companySizeBand`, `capacityBand`; no production close proof found in repo during this sync | Public-safe allowlist preserved; do not mark closed without runtime proof |
+| PUBLIC-SAFE-COMPANY-PROJECTION-001-HOTFIX | SOURCE_COMPLETE_PRODUCTION_VERIFICATION_PENDING | `59885cf3` (current `HEAD` / `origin/main`) | Source hotfix moves approved public profile fields to `tenant_profile_details` reads for list and slug paths; no production verification proof found in repo during this sync | This supersedes the previously observed `/b2b` public profile loading regression after `e013d38f`, but still requires runtime/manual verification before close |
+| FTR-ACQ-001 | SOURCE_COMPLETE_PRODUCTION_VERIFICATION_PENDING | Layer 0 records `adb55ab1` implementation complete | Layer 0 says 429 runtime verification is safe to run anytime; no code change needed | Supersedes older `IMPLEMENTATION_READY` rows; verification remains open |
+
+### §0.3 Pending / Open / Blocked Units Recorded
+
+| Unit ID | Status | Priority | Gate | Next action | Owner / IDE recommendation |
+|---|---|---|---|---|---|
+| QA-CONTROL-005F | OPEN / RECOMMENDED_NEXT_SLICE | P1 | Frontend display-copy only; `TenantDetails.tsx` bounded | Add positive active/operational tenant state copy and protected-tenant Danger Zone explanation | Codex after Paresh authorization |
+| FTR-LEGAL-003C | BLOCKED_BY_SCOPE_EXPANSION_REQUIRED | P0 | Paresh legal review, OQ-02 counsel decision, OQ-03 CIN/entity details; separate `texqtic.com` repo | Publish SaaS legal pages only after explicit legal/content authorization | Paresh / legal / marketing-repo unit |
+| FAM-07 L13A / FAM-07L14 | BLOCKED_BY_AUTH_OR_SECURITY_RISK | P0 | Human legal inputs and Paresh Authorization 2 | Do not open L14 until L13A exit criteria are satisfied | Paresh / legal / later governed implementation unit |
+| FTR-OPS-001 | TECHNICALLY_FUNCTIONAL_PRODUCT_ACCEPTANCE_PENDING | P1 | Sentry first-event dashboard proof | Paresh checks `texqtic-backend` and `texqtic-frontend` Sentry projects for first event evidence | Paresh dashboard check; secret-safe |
+| FTR-SL-004-SUPPLIER-INQUIRY-INBOX-DESIGN-01 | OPEN / RECOMMENDED_NEXT_SLICE | P1 | Paresh authorization required; design-first | Open supplier inquiry inbox design slice when selected | Codex after Paresh authorization |
+| FTU-COMM-002D / Razorpay checkout | BLOCKED_BY_SCOPE_EXPANSION_REQUIRED | P1 | Legal pages and Razorpay prerequisite confirmation | Keep checkout implementation blocked until legal gate clears | Paresh/legal/payment-gated unit |
+| PUBLIC-SAFE-COMPANY-PROJECTION-001-HOTFIX-VERIFY | OPEN / RECOMMENDED_NEXT_SLICE | P0 | Production/runtime proof for `59885cf3` | Verify `/b2b` and `/supplier/:slug` profile loading and allowed/prohibited field projection after deployment | Lane D verification; no mutation |
+
+### §0.4 Deferred / Post-MVP Units Preserved
+
+| Unit ID | Status | Reason |
+|---|---|---|
+| QA-CONTROL-005F-AF-001 | DEFERRED / POST_MVP | Audit Log quick-link UX; not a launch blocker |
+| REGISTRY-SEARCH-DEBOUNCE-001 | DEFERRED / POST_MVP | Current MVP tenant scale does not require debounce |
+| SERVER-SIDE-SEARCH-001 | DEFERRED / POST_MVP | Client-side search acceptable for launch scale |
+| CURSOR-PAGINATION-001 | DEFERRED / POST_MVP | Long-term architecture; not required for MVP |
+| QA-CONTROL-005E-AF-001 | DEFERRED / POST_MVP | Tooling-only Playwright navigation limitation; manual QA passed |
+| QA-CONTROL-005B-PV-AF-001 | WATCH_ITEM / INVESTIGATE_IF_REPRODUCIBLE | No current repo evidence of active TenantDetails loading defect |
+| QA-CONTROL-001A-EXEC | DEFERRED / DB_GOVERNED_UNIT_REQUIRED | Requires explicit DB apply, rollback, and proof-query governance |
+| CONTROL-PLANE-READ-ALL-DECISION-001 | DECISION_GATED | Product/security decision required before broad Superadmin read-all semantics |
+| AF-QA-AUTH-001-04 | OPEN / SEPARATE_AUTH_INVESTIGATION | Separate auth/onboarding audit; not bundled with Superadmin UX |
+| OBS-AUTH-001 | OPEN / SEPARATE_OBSERVABILITY_UNIT | Separate observability unit |
+| GOV-LAYER3-EXECLOG-ENUM-DRIFT-001 | DEFERRED / POST_MVP | Historical `.md` enum drift only; non-runtime governance lint debt |
+| PUBLIC-SUPPLIER-PROFILE-QUICK-WINS-001 | DEFERRED / POST_MVP | Public profile polish; do not mix into projection safety hotfix |
+| PUBLIC-TRUST-CERT-METADATA-RULES-001 | DEFERRED / POST_MVP | Certificate metadata policy requires separate public/private classification |
+| PUBLIC-GATING-VERIFICATION-001 | DEFERRED / POST_MVP | Separate public-gate verification |
+| FIX-TAXONOMY-LABEL-DISPLAY-001 | DEFERRED / POST_MVP | Label display polish; not a projection close blocker |
+| DISPLAY-BAND-LABEL-NORMALIZATION-001 | DEFERRED / POST_MVP | Band-label presentation normalization |
+| TECH-DEBT-PUBLIC-API-TYPES-001 | DEFERRED / POST_MVP | Public API type cleanup |
+| FIX-B2B-PROFILE-COMPLETENESS-PLACEHOLDER-001 | DEFERRED / POST_MVP | Placeholder copy polish |
+| FIX-PUBLIC-NAVBAR-OVERFLOW-001 | DEFERRED / POST_MVP | Public nav polish |
+| TECH-DEBT-DEMO-PILOT-SLUG-HARDCODE-001 | DEFERRED / POST_MVP | Demo/pilot slug hardcode cleanup |
+| PUBLIC-B2C-VISUAL-ALIGNMENT-001 | DEFERRED / POST_MVP | Visual alignment polish |
+| PUBLIC-PRICING-PROJECTION-POLICY-001 | DEFERRED / POST_MVP | Pricing projection policy must remain separate from company projection |
+| PUBLIC-DPP-PROFILE-BOUNDARY-AUDIT-001 | DEFERRED / POST_MVP | DPP/profile boundary audit; not launch-critical |
+
+### §0.5 Public Experience Reframe
+
+`QA-PUBLIC-001 / FTR-SL-016B2D` is superseded/reframed by the `PUBLIC-EXPERIENCE-REDESIGN-001` public experience redesign family. This audit preserves the product decision that public supplier/company profiles may show only tenant-approved public-safe fields: `tagline`, `description`, `companySizeBand`, and `capacityBand`. Public surfaces must not expose certificate documents, email, phone, private pricing, trade documents, GST/KYC, raw registration identifiers, or private compliance data.
+
+### §0.6 Discrepancies Resolved by This Sync
+
+| Audit area | Older audit status | Current reconciled status | Action in this sync |
+|---|---|---|---|
+| FAM-08 | `CLOSE_READY_WITH_RESIDUALS` | `VERIFIED_COMPLETE_WITH_RESIDUALS` | Marked superseded in §0 |
+| FAM-09 | `CLOSE_READY_WITH_LAUNCH_TEST_RESIDUALS` | `VERIFIED_COMPLETE_WITH_LAUNCH_RESIDUALS` | Marked superseded in §0 |
+| FTR-OPS-003 | `NOT_ASSESSED` | `READY_FOR_LAUNCH / CLOSED` | Marked superseded in §0 |
+| Superadmin 005A-E | Absent from original audit | A-E closed; 005F recommended next | Added §0 summary and deferred follow-up preservation |
+| Public discovery cards | Absent from original audit | `PUBLIC-B2B-DISCOVERY-CARDS-001` closed | Added §0 implemented/closed row |
+| Public company projection | Absent from original audit | Source complete; hotfix source complete; production verification pending | Added §0 source-complete and verification-pending rows |
+
 ## §1 Business Direction Inputs (Paresh — session)
 
 The following business direction statements were provided by Paresh as inputs to this audit. These are recorded here verbatim as authoritative context; they do NOT constitute governed implementation decisions until Paresh signs off on specific family cycles.
