@@ -8,11 +8,13 @@ import {
 } from '../../types';
 import { EmptyState, ErrorState, TenantRowSkeleton } from '../shared';
 import { APIError } from '../../services/apiClient';
+import type { RuntimeLocalRouteKey } from '../../runtime/sessionRuntimeDescriptor';
 
 interface TenantRegistryProps {
   lifecycleView: 'ACTIVE' | 'PENDING_APPROVAL' | 'INVITED' | 'CLOSED';
   onSelectTenant: (tenant: TenantConfig) => void;
   onImpersonate: (tenant: TenantConfig) => void;
+  onNavigateRoute: (routeKey: RuntimeLocalRouteKey) => void;
 }
 
 type ProvisionTenantCategory = 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL';
@@ -121,10 +123,111 @@ const getProvisionWhiteLabelGuidance = (
   return 'White-label overlay is enabled on top of the selected base/runtime posture.';
 };
 
+interface OverviewSummaryCardProps {
+  label: string;
+  count: number;
+  description: string;
+  routeKey: RuntimeLocalRouteKey;
+  loading: boolean;
+  onNavigateRoute: (routeKey: RuntimeLocalRouteKey) => void;
+}
+
+const OverviewSummaryCard: React.FC<OverviewSummaryCardProps> = ({
+  label,
+  count,
+  description,
+  routeKey,
+  loading,
+  onNavigateRoute,
+}) => (
+  <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 flex flex-col gap-3">
+    <div>
+      <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
+        {label}
+      </div>
+      <div className="mt-1 text-2xl font-bold text-slate-100">{loading ? '...' : count}</div>
+    </div>
+    <p className="text-xs leading-5 text-slate-400">{description}</p>
+    <button
+      type="button"
+      onClick={() => onNavigateRoute(routeKey)}
+      className="inline-flex w-fit items-center rounded border border-slate-700 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-200 hover:bg-slate-800 transition"
+    >
+      Open {label}
+    </button>
+  </div>
+);
+
+interface QueuePreviewSectionProps {
+  title: string;
+  description: string;
+  tenantsList: Tenant[];
+  emptyMessage: string;
+  routeKey: RuntimeLocalRouteKey;
+  ctaLabel: string;
+  onNavigateRoute: (routeKey: RuntimeLocalRouteKey) => void;
+}
+
+const QueuePreviewSection: React.FC<QueuePreviewSectionProps> = ({
+  title,
+  description,
+  tenantsList,
+  emptyMessage,
+  routeKey,
+  ctaLabel,
+  onNavigateRoute,
+}) => (
+  <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 space-y-3">
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
+          {title}
+        </div>
+        <p className="mt-1 text-sm text-slate-300">{description}</p>
+      </div>
+      <button
+        type="button"
+        onClick={() => onNavigateRoute(routeKey)}
+        className="inline-flex items-center rounded border border-slate-700 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-200 hover:bg-slate-800 transition"
+      >
+        {ctaLabel}
+      </button>
+    </div>
+
+    {tenantsList.length === 0 ? (
+      <div className="rounded-lg border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-slate-400">
+        {emptyMessage}
+      </div>
+    ) : (
+      <div className="space-y-2">
+        {tenantsList.slice(0, 5).map(tenant => (
+          <div key={tenant.id} className="rounded-lg border border-slate-800 bg-slate-950 px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div className="font-bold text-slate-100">{tenant.name}</div>
+                <div className="text-[10px] font-mono text-slate-500">{tenant.slug}.texqtic.com</div>
+              </div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                {tenant.status ?? 'UNKNOWN'}
+              </div>
+            </div>
+          </div>
+        ))}
+        {tenantsList.length > 5 && (
+          <div className="text-xs text-slate-500">
+            Showing top {Math.min(5, tenantsList.length)} of {tenantsList.length} records.
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+);
+
 export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   lifecycleView,
   onSelectTenant,
   onImpersonate,
+  onNavigateRoute,
 }) => {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -339,6 +442,12 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   const pendingApprovalTenants = tenants.filter(t => isPendingApprovalTenant(t));
   const invitedTenants = tenants.filter(t => isInvitedTenant(t));
   const closedTenants = tenants.filter(t => isClosedTenant(t));
+  const verificationApprovedAwaitingActivationTenants = tenants.filter(t => {
+    const onboardingStatus = t.onboarding_status?.toUpperCase();
+    const lifecycleStatus = t.status?.toUpperCase();
+
+    return onboardingStatus === 'VERIFICATION_APPROVED' && lifecycleStatus !== 'ACTIVE';
+  });
 
   const currentView = (() => {
     switch (lifecycleView) {
@@ -568,6 +677,39 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     </div>
   );
 
+  const overviewCards = [
+    {
+      label: 'Active Tenants',
+      count: stats.active,
+      description: 'Currently operating tenants ready for normal control-plane work.',
+      routeKey: 'tenant_registry' as const,
+    },
+    {
+      label: 'Pending Approval',
+      count: stats.pendingApproval,
+      description: 'Tenants waiting for a superadmin onboarding outcome.',
+      routeKey: 'tenant_registry_pending' as const,
+    },
+    {
+      label: 'Invited Tenants',
+      count: stats.invited,
+      description: 'Invited tenants awaiting first-owner preparation completion.',
+      routeKey: 'tenant_registry_invited' as const,
+    },
+    {
+      label: 'Closed Tenants',
+      count: stats.closed,
+      description: 'Archived tenants kept for bounded read-only oversight.',
+      routeKey: 'tenant_registry_closed' as const,
+    },
+    {
+      label: 'Total Records',
+      count: stats.total,
+      description: 'All tenant records visible to this control-plane registry.',
+      routeKey: 'tenant_registry' as const,
+    },
+  ];
+
   // Error state
   if (error && !loading) {
     return (
@@ -585,6 +727,57 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
 
   return (
     <div className="space-y-6">
+      <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/80 p-5 shadow-2xl">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.26em] text-slate-500">
+              Superadmin Operations Overview
+            </div>
+            <h2 className="mt-2 text-xl font-bold text-slate-100">Operations Command Center</h2>
+            <p className="mt-1 text-sm text-slate-400 max-w-2xl">
+              Fast triage across lifecycle queues with direct jumps into the existing registry views.
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-right">
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
+              Total Records
+            </div>
+            <div className="text-2xl font-bold text-slate-100">{loading ? '...' : stats.total}</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+          {overviewCards.map(card => (
+            <OverviewSummaryCard
+              key={card.label}
+              label={card.label}
+              count={card.count}
+              description={card.description}
+              routeKey={card.routeKey}
+            />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <QueuePreviewSection
+            title="Pending Approval Queue"
+            description="Tenants currently in PENDING_VERIFICATION and ready for superadmin outcome review."
+            tenantsList={pendingApprovalTenants}
+            emptyMessage="No tenants are pending approval."
+            routeKey="tenant_registry_pending"
+            ctaLabel="Review all pending approvals"
+          />
+          <QueuePreviewSection
+            title="Verification Approved Queue"
+            description="Tenants approved for verification and awaiting activation."
+            tenantsList={verificationApprovedAwaitingActivationTenants}
+            emptyMessage="No verification-approved tenants are awaiting activation."
+            routeKey="tenant_registry_pending"
+            ctaLabel="Open pending activation work"
+          />
+        </div>
+      </div>
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-white">{currentView.title}</h1>

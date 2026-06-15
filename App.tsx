@@ -7000,6 +7000,7 @@ const App: React.FC = () => {
           lifecycleView={lifecycleView}
           onSelectTenant={setSelectedTenant}
           onImpersonate={handleImpersonate}
+          onNavigateRoute={navigateControlPlaneManifestRoute}
         />
       );
     }
