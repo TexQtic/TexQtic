@@ -192,7 +192,11 @@ describe('B2BDiscoveryPage public directory regression guard', () => {
     if (!testSupplierCard || !(testSupplierCard instanceof window.HTMLElement)) {
       throw new Error('Expected launch test supplier card to render as an article element.');
     }
-    expect(within(testSupplierCard).getByText('Logo')).toBeInTheDocument();
+    // After card redesign (7cf36dd8), the fallback badge shows computed initials, not the word 'Logo'.
+    // 'Launch Test Supplier B2B 001' → first two word initials → 'LT'
+    expect(within(testSupplierCard).queryByAltText('Launch Test Supplier B2B 001 logo')).toBeNull();
+    const initialsBadges = within(testSupplierCard).getAllByText('LT');
+    expect(initialsBadges.length).toBeGreaterThan(0);
   });
 
   it('opens and closes the offerings drawer without navigating to the supplier profile route', async () => {

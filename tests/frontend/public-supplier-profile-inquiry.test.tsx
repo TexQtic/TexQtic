@@ -292,4 +292,52 @@ describe('PublicSupplierProfile — inquiry form (INQUIRY-004)', () => {
     expect(screen.getAllByText(publicB2BService.DEMO_PILOT_SUPPLIER_LABEL).length).toBeGreaterThan(0);
     expect(screen.getAllByText(publicB2BService.DEMO_PILOT_SUPPLIER_HELPER_TEXT).length).toBeGreaterThan(0);
   });
+
+  it('PUBLIC-SUPPLIER-PROFILE-QUICK-WINS-001 — renders approved story fields and band labels', async () => {
+    vi.mocked(publicB2BService.getPublicSupplierBySlug).mockResolvedValueOnce({
+      ...MOCK_PROFILE,
+      tagline: '  Reliable knitted fabric partner for launch buyers  ',
+      description: '  Acme supports knitted textile sourcing with approved public capability context.  ',
+      companySizeBand: 'MEDIUM',
+      capacityBand: 'VERY_HIGH',
+      taxonomy: {
+        primarySegment: 'Fabric',
+        secondarySegments: ['Knits', 'Dyeing'],
+        rolePositions: ['Manufacturer'],
+      },
+    });
+
+    await renderAndWaitForProfile();
+
+    expect(screen.getByText('Reliable knitted fabric partner for launch buyers')).toBeInTheDocument();
+    expect(screen.getByText('Acme supports knitted textile sourcing with approved public capability context.')).toBeInTheDocument();
+    expect(screen.getByText('Company Size')).toBeInTheDocument();
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+    expect(screen.getByText('Capacity Band')).toBeInTheDocument();
+    expect(screen.getByText('Very high')).toBeInTheDocument();
+    expect(screen.getAllByText('Knits').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Dyeing').length).toBeGreaterThan(0);
+    expect(screen.queryByText('MEDIUM')).toBeNull();
+    expect(screen.queryByText('VERY_HIGH')).toBeNull();
+  });
+
+  it('PUBLIC-SUPPLIER-PROFILE-QUICK-WINS-001 — omits blank optional profile fields', async () => {
+    vi.mocked(publicB2BService.getPublicSupplierBySlug).mockResolvedValueOnce({
+      ...MOCK_PROFILE,
+      tagline: '   ',
+      description: '   ',
+      companySizeBand: null,
+      capacityBand: null,
+    });
+
+    await renderAndWaitForProfile();
+
+    expect(screen.queryByText(/About this business/i)).toBeNull();
+    expect(screen.queryByText(/Company Size/i)).toBeNull();
+    expect(screen.queryByText(/Capacity Band/i)).toBeNull();
+
+    const pageText = document.body.textContent ?? '';
+    expect(pageText).not.toMatch(/\bnull\b/i);
+    expect(pageText).not.toMatch(/\bundefined\b/i);
+  });
 });

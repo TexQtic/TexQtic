@@ -923,7 +923,7 @@ function SupplierCard({ supplier, onViewOfferings, onViewProfile, onSignIn: _onS
           >
             {isReferencePreview ? 'View Reference' : 'View Profile'}
           </button>
-          {hasPublicOfferings && (
+          {hasPublicOfferings ? (
             <button
               type="button"
               onClick={onViewOfferings}
@@ -931,6 +931,8 @@ function SupplierCard({ supplier, onViewOfferings, onViewProfile, onSignIn: _onS
             >
               View Offerings
             </button>
+          ) : (
+            <span aria-label="No public offerings yet" className="sr-only" />
           )}
         </div>
       </div>

@@ -31,6 +31,65 @@ interface PublicSupplierProfileProps {
   readonly nav: PublicNavbarProps;
 }
 
+type SnapshotFact = {
+  readonly label: string;
+  readonly value: string;
+};
+
+const COMPANY_SIZE_BAND_LABELS: Record<string, string> = {
+  MICRO: 'Micro (small team)',
+  SMALL: 'Small',
+  MEDIUM: 'Medium',
+  LARGE: 'Large',
+  ENTERPRISE: 'Enterprise',
+  NOT_DISCLOSED: 'Not disclosed',
+};
+
+const CAPACITY_BAND_LABELS: Record<string, string> = {
+  LOW: 'Low',
+  MEDIUM: 'Medium',
+  HIGH: 'High',
+  VERY_HIGH: 'Very high',
+  NOT_DISCLOSED: 'Not disclosed',
+};
+
+const toOptionalText = (value?: string | null): string | null => {
+  const trimmed = value?.trim() ?? '';
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+const toFallbackBandLabel = (value: string): string => {
+  return value
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ');
+};
+
+const getCompanySizeBandLabel = (value?: string | null): string | null => {
+  const normalized = toOptionalText(value);
+  if (!normalized) {
+    return null;
+  }
+
+  const key = normalized.toUpperCase();
+  return COMPANY_SIZE_BAND_LABELS[key] ?? toFallbackBandLabel(normalized);
+};
+
+const getCapacityBandLabel = (value?: string | null): string | null => {
+  const normalized = toOptionalText(value);
+  if (!normalized) {
+    return null;
+  }
+
+  const key = normalized.toUpperCase();
+  return CAPACITY_BAND_LABELS[key] ?? toFallbackBandLabel(normalized);
+};
+
+const isSnapshotFact = (fact: SnapshotFact | null): fact is SnapshotFact => {
+  return fact !== null;
+};
+
 export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onRequestAccess, nav }: PublicSupplierProfileProps) {
   const [profile, setProfile] = useState<SupplierProfile | null>(null);
   const [loading, setLoading] = useState(Boolean(slug));
@@ -211,6 +270,51 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
     });
   };
 
+  const publicTagline = !isReferencePreview && !isDemoPilotSupplier
+    ? toOptionalText(profile?.tagline)
+    : null;
+  const publicDescription = !isReferencePreview && !isDemoPilotSupplier
+    ? toOptionalText(profile?.description)
+    : null;
+  const primarySegment = toOptionalText(profile?.taxonomy?.primarySegment);
+  const primaryRole = toOptionalText(profile?.taxonomy?.rolePositions?.[0]);
+  const jurisdictionLabel = toOptionalText(profile?.jurisdiction);
+  const orgTypeLabel = toOptionalText(profile?.orgType);
+  const companySizeLabel = getCompanySizeBandLabel(profile?.companySizeBand);
+  const capacityLabel = getCapacityBandLabel(profile?.capacityBand);
+  const activeValueChainStages = profile ? deriveStageSignals(profile) : [];
+
+  const heroCapabilitySummary = (() => {
+    if (!profile || isReferencePreview || isDemoPilotSupplier) {
+      return null;
+    }
+
+    const capability = [primarySegment, primaryRole].filter(Boolean).join(' / ');
+    if (capability && jurisdictionLabel) {
+      return `${capability} in ${jurisdictionLabel}`;
+    }
+    return capability || jurisdictionLabel;
+  })();
+
+  const businessSnapshotFacts = profile
+    ? [
+        orgTypeLabel ? { label: 'Business Type', value: orgTypeLabel } : null,
+        primarySegment ? { label: 'Textile Segment', value: primarySegment } : null,
+        primaryRole ? { label: 'Primary Role', value: primaryRole } : null,
+        jurisdictionLabel ? { label: 'Market / Jurisdiction', value: jurisdictionLabel } : null,
+        {
+          label: 'Public Discovery Status',
+          value: toPublicDiscoveryStatus(profile.eligibilityPosture, profile.publicationPosture),
+        },
+        {
+          label: 'Visibility',
+          value: toVisibilityLabel(profile.publicationPosture),
+        },
+        companySizeLabel ? { label: 'Company Size', value: companySizeLabel } : null,
+        capacityLabel ? { label: 'Capacity Band', value: capacityLabel } : null,
+      ].filter(isSnapshotFact)
+    : [];
+
   return (
     <div className="min-h-screen bg-[#f3f8fb] font-sans">
       <PublicNavbar {...nav} />
@@ -276,28 +380,38 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
         <>
           {/* Hero */}
           <div className="bg-[#071a2f] px-6 py-12">
-            <div className="mx-auto max-w-5xl">
+            <div className="mx-auto max-w-6xl">
               <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">
                 {heroProfileLabel}
               </p>
-              <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.02em] text-white md:text-4xl">
+              <h1 className="mt-3 max-w-4xl text-3xl font-semibold leading-tight text-white md:text-5xl">
                 {profile.legalName}
               </h1>
-              {!isReferencePreview && !isDemoPilotSupplier && profile.tagline && (
-                <p className="mt-2 text-base font-medium leading-snug text-[#7fd5de]">
-                  {profile.tagline.trim()}
+              {publicTagline && (
+                <p className="mt-3 max-w-3xl text-lg font-medium leading-snug text-[#7fd5de]">
+                  {publicTagline}
                 </p>
               )}
-              <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-200">
+              {heroCapabilitySummary && (
+                <p className="mt-4 text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">
+                  {heroCapabilitySummary}
+                </p>
+              )}
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-200">
                 {heroProfileDescription}
               </p>
-              <div className="mt-4 flex flex-wrap gap-3">
+              <div className="mt-5 flex flex-wrap gap-3">
                 <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
                   {profile.orgType}
                 </span>
-                {profile.jurisdiction && (
+                {jurisdictionLabel && (
                   <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-slate-200">
-                    {profile.jurisdiction}
+                    {jurisdictionLabel}
+                  </span>
+                )}
+                {primarySegment && (
+                  <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-slate-200">
+                    {primarySegment}
                   </span>
                 )}
                 <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-slate-200">
@@ -348,13 +462,13 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
               )}
             </section>
 
-            {!isReferencePreview && !isDemoPilotSupplier && profile.description && (
+            {publicDescription && (
               <section className="mt-6 rounded-2xl border border-[#d9e5ea] bg-white p-6 shadow-sm">
                 <h2 className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
                   About this business
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-slate-700">
-                  {profile.description.trim().slice(0, 1200)}
+                  {publicDescription.slice(0, 1200)}
                 </p>
               </section>
             )}
@@ -368,50 +482,12 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
               </p>
 
               <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Business Type</p>
-                  <p className="mt-2 text-sm font-semibold text-[#071a2f]">{profile.orgType}</p>
-                </article>
-                <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Textile Segment</p>
-                  <p className="mt-2 text-sm font-semibold text-[#071a2f]">
-                    {profile.taxonomy?.primarySegment ?? 'Public textile ecosystem participant'}
-                  </p>
-                </article>
-                <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Primary Role</p>
-                  <p className="mt-2 text-sm font-semibold text-[#071a2f]">
-                    {profile.taxonomy?.rolePositions?.[0] ?? 'Profile role available after sign-in context'}
-                  </p>
-                </article>
-                <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Market / Jurisdiction</p>
-                  <p className="mt-2 text-sm font-semibold text-[#071a2f]">{profile.jurisdiction || 'Public market context available'}</p>
-                </article>
-                <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Public Discovery Status</p>
-                  <p className="mt-2 text-sm font-semibold text-[#071a2f]">
-                    {toPublicDiscoveryStatus(profile.eligibilityPosture, profile.publicationPosture)}
-                  </p>
-                </article>
-                <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Visibility</p>
-                  <p className="mt-2 text-sm font-semibold text-[#071a2f]">
-                    {toVisibilityLabel(profile.publicationPosture)}
-                  </p>
-                </article>
-                {profile.companySizeBand && (
-                  <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Company Size</p>
-                    <p className="mt-2 text-sm font-semibold text-[#071a2f]">{profile.companySizeBand}</p>
+                {businessSnapshotFacts.map((fact) => (
+                  <article key={`${fact.label}:${fact.value}`} className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">{fact.label}</p>
+                    <p className="mt-2 text-sm font-semibold text-[#071a2f]">{fact.value}</p>
                   </article>
-                )}
-                {profile.capacityBand && (
-                  <article className="rounded-xl border border-[#e1eaee] bg-[#fbfdfe] p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Capacity Band</p>
-                    <p className="mt-2 text-sm font-semibold text-[#071a2f]">{profile.capacityBand}</p>
-                  </article>
-                )}
+                ))}
               </div>
             </section>
 
@@ -429,6 +505,11 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
                     {profile.taxonomy.primarySegment}
                   </span>
                 )}
+                {profile.taxonomy?.secondarySegments.slice(0, 4).map((segment) => (
+                  <span key={segment} className="rounded-full border border-[#d6e4e8] bg-[#f5fafb] px-3 py-1 text-xs font-medium text-[#2f8094]">
+                    {segment}
+                  </span>
+                ))}
                 {profile.taxonomy?.rolePositions.slice(0, 4).map((role) => (
                   <span key={role} className="rounded-full border border-[#d6e4e8] bg-[#f5fafb] px-3 py-1 text-xs font-medium text-[#2f8094]">
                     {role}
@@ -462,8 +543,7 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {valueChainStages.map((stage) => {
-                  const activeStages = deriveStageSignals(profile);
-                  const isActive = activeStages.includes(stage);
+                  const isActive = activeValueChainStages.includes(stage);
                   return (
                     <span
                       key={stage}
@@ -613,6 +693,9 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
                 <h2 className="mb-4 text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
                   Offering preview
                 </h2>
+                <p className="mb-4 max-w-2xl text-sm leading-6 text-slate-600">
+                  Public offering previews are shown only from the existing approved discovery projection.
+                </p>
                 <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
                   {profile.offeringPreview.map((item) => (
                     <div
@@ -629,7 +712,9 @@ export function PublicSupplierProfile({ slug, source, onBack, onSignIn, onReques
                       )}
                       <p className="text-sm font-semibold text-[#071a2f]">{item.name}</p>
                       {item.moq != null && item.moq > 0 && (
-                        <p className="mt-1 text-xs text-slate-500">MOQ: {item.moq}</p>
+                        <p className="mt-2 inline-flex rounded-full bg-[#f5fafb] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                          MOQ {item.moq}
+                        </p>
                       )}
                     </div>
                   ))}
